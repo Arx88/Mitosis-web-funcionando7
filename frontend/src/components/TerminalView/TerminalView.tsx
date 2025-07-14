@@ -443,39 +443,92 @@ export const TerminalView = ({
         
         {/* Monitor Content - Expandido para usar todo el ancho */}
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar w-full" ref={monitorRef}>
-          {currentPage ? (
+          {/* Show initialization steps when initializing */}
+          {isInitializing && !isSystemOnline && (
             <div className="space-y-4 w-full">
-              {currentPage.type === 'plan' || currentPage.type === 'report' ? (
-                <div className="w-full">
-                  {formatMarkdownContent(currentPage.content)}
+              <div className="flex items-center gap-2 text-sm text-orange-400 border-b border-[#404040] pb-2">
+                <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+                <span className="font-medium">ENVIRONMENT INITIALIZATION</span>
+                <span className="text-xs ml-auto">System Status: OFFLINE</span>
+              </div>
+              
+              <div className="space-y-2">
+                {initializationSteps.map((step, index) => (
+                  <div key={step.id} className="flex items-center gap-3 text-sm">
+                    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                      index < initializationStep ? 'bg-green-500' :
+                      index === initializationStep ? 'bg-blue-500 animate-pulse' :
+                      'bg-gray-600'
+                    }`}>
+                      {index < initializationStep ? (
+                        <CheckCircle className="w-3 h-3 text-white" />
+                      ) : index === initializationStep ? (
+                        <Loader2 className="w-3 h-3 text-white animate-spin" />
+                      ) : (
+                        <Circle className="w-3 h-3 text-gray-400" />
+                      )}
+                    </div>
+                    <span className={`${
+                      index < initializationStep ? 'text-green-400' :
+                      index === initializationStep ? 'text-blue-400' :
+                      'text-gray-400'
+                    }`}>
+                      {step.title}
+                      {index === initializationStep && '...'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-4 p-3 bg-[#1a1a1a] rounded border border-[#404040]">
+                <div className="text-xs text-gray-400 font-mono">
+                  {'>'} Initializing environment for: {taskTitle}
+                </div>
+                <div className="text-xs text-gray-400 font-mono mt-1">
+                  {'>'} Please wait while the system comes online...
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Normal content when not initializing */}
+          {(!isInitializing || isSystemOnline) && (
+            <>
+              {currentPage ? (
+                <div className="space-y-4 w-full">
+                  {currentPage.type === 'plan' || currentPage.type === 'report' ? (
+                    <div className="w-full">
+                      {formatMarkdownContent(currentPage.content)}
+                    </div>
+                  ) : (
+                    <div className="space-y-2 w-full">
+                      <div className="flex items-center gap-2 text-sm text-[#ACACAC] border-b border-[#404040] pb-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          currentPage.type === 'tool-execution' ? 'bg-blue-400' :
+                          currentPage.type === 'file' ? 'bg-green-400' :
+                          currentPage.type === 'error' ? 'bg-red-400' :
+                          'bg-gray-400'
+                        }`} />
+                        <span className="font-medium">{currentPage.type.toUpperCase()}</span>
+                        <span className="text-xs ml-auto">{currentPage.timestamp.toLocaleString()}</span>
+                      </div>
+                      
+                      <div className="terminal-pager w-full">
+                        <pre className="text-sm font-mono text-[#e0e0e0] whitespace-pre-wrap w-full max-w-none overflow-x-auto">
+                          {currentPage.content}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="space-y-2 w-full">
-                  <div className="flex items-center gap-2 text-sm text-[#ACACAC] border-b border-[#404040] pb-2">
-                    <div className={`w-2 h-2 rounded-full ${
-                      currentPage.type === 'tool-execution' ? 'bg-blue-400' :
-                      currentPage.type === 'file' ? 'bg-green-400' :
-                      currentPage.type === 'error' ? 'bg-red-400' :
-                      'bg-gray-400'
-                    }`} />
-                    <span className="font-medium">{currentPage.type.toUpperCase()}</span>
-                    <span className="text-xs ml-auto">{currentPage.timestamp.toLocaleString()}</span>
-                  </div>
-                  
-                  <div className="terminal-pager w-full">
-                    <pre className="text-sm font-mono text-[#e0e0e0] whitespace-pre-wrap w-full max-w-none overflow-x-auto">
-                      {currentPage.content}
-                    </pre>
-                  </div>
+                <div className="flex flex-col items-center justify-center h-full w-full text-[#7f7f7f]">
+                  <Monitor className="w-12 h-12 mb-3 opacity-50" />
+                  <p className="text-center">Sistema de monitoreo listo</p>
+                  <p className="text-sm mt-1 text-center">Esperando datos del agente...</p>
                 </div>
               )}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full w-full text-[#7f7f7f]">
-              <Monitor className="w-12 h-12 mb-3 opacity-50" />
-              <p className="text-center">Inicializando sistema de monitoreo...</p>
-              <p className="text-sm mt-1 text-center">Esperando datos del agente...</p>
-            </div>
+            </>
           )}
         </div>
 
