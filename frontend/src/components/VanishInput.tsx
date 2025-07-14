@@ -360,10 +360,10 @@ export const VanishInput: React.FC<VanishInputProps> = ({
                   type="button"
                   onClick={handleDeepSearch}
                   disabled={isWebSearchProcessing || isDeepSearchProcessing}
-                  className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 transition-all duration-200 group text-xs z-30 rounded-lg ${
+                  className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 transition-all duration-200 group text-xs z-30 rounded-lg border ${
                     deepSearchActive || isDeepSearchProcessing
-                      ? 'bg-purple-500/20 hover:bg-purple-500/30' 
-                      : 'bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.1)]'
+                      ? 'bg-[rgba(168,85,247,0.2)] border-purple-400/50 text-purple-400' 
+                      : 'bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(168,85,247,0.2)] hover:border-purple-400/50 border-transparent text-[#ACACAC] hover:text-purple-400'
                   } ${(isWebSearchProcessing || isDeepSearchProcessing) ? 'opacity-50 cursor-not-allowed' : ''}`}
                   title="Investigación profunda"
                 >
