@@ -18,6 +18,7 @@ class EnvironmentSetupManager:
         self.name = "environment_setup"
         self.description = "Gestiona la configuración y preparación de entornos para tareas"
         self.setup_sessions = {}  # Almacenar sesiones de setup activas
+        self.container_manager = ContainerManager()  # Inicializar gestor de contenedores
         
     def get_task_type(self, task_title: str, task_content: str = "") -> str:
         """Detectar el tipo de tarea basado en el título y contenido"""
