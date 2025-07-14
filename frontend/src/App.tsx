@@ -284,8 +284,6 @@ export function App() {
   };
 
   const handleSuggestedIdea = (idea: typeof suggestedIdeas[0]) => {
-    // Reset any previous task state before creating new task
-    setActiveTaskId(null);
     createTask(idea.title);
   };
 
