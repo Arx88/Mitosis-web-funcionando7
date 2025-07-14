@@ -591,9 +591,9 @@ frontend:
 
   - task: "DeepSearch Button Functionality"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/App.tsx"
-    stuck_count: 6
+    stuck_count: 7
     priority: "high"
     needs_retesting: false
     status_history:
@@ -621,6 +621,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "DEEPSEARCH FUNCTIONALITY VERIFICATION COMPLETED AS REQUESTED: DeepSearch is NOW WORKING CORRECTLY after main agent fixes. ✅ Backend Integration: HTTP calls to /api/agent/chat and /api/agent/create-test-files successful (verified with curl - returns comprehensive research with 24 sources analyzed), ✅ Frontend Integration: Deep button responds correctly, input clears after processing, ✅ Task Creation: Tasks appear in sidebar with '[DeepResearch]' prefix, ✅ Real Tool Execution: Backend returns actual research results with detailed analysis, findings, and recommendations (not just user input text), ✅ Research Quality: Comprehensive 26KB markdown report generated with expert analysis and multiple sources. ❌ Minor Issues: Button doesn't show 'Investigando...' loading state during processing, Tasks may disappear from sidebar after completion. Overall: 5/6 features working (83% success rate). MAJOR SUCCESS: DeepSearch now executes real research tools and provides comprehensive results as expected by user."
+      - working: false
+        agent: "testing"
+        comment: "COMPREHENSIVE DEEPSEARCH FUNCTIONALITY TEST COMPLETED AS REQUESTED: DeepSearch functionality CONFIRMED BROKEN with CRITICAL INFRASTRUCTURE ISSUES. ✅ Task Creation: Tasks are created in sidebar with '[DeepResearch] artificial intelligence 2025' prefix and are clickable, ✅ Input Clearing: Input field clears correctly after processing, ✅ Button Response: Deep button responds to clicks and processes input text, ✅ Backend Calls: HTTP calls to /api/agent/chat attempted but fail with 'TypeError: Failed to fetch'. ❌ CRITICAL FAILURES: Button does NOT show 'Investigando...' loading state during processing (remains 'Deep'), API requests fail due to Vite WebSocket instability causing 'net::ERR_ABORTED' errors, No actual research results displayed due to network failures, Constant WebSocket connection failures disrupting functionality. ❌ INFRASTRUCTURE ISSUE CONFIRMED: App still running in Vite development mode with continuous WebSocket failures ('[vite] server connection lost. Polling for restart...'). ROOT CAUSE: The core infrastructure issue prevents DeepSearch from working properly - while tasks are created, the actual research functionality fails due to network instability. Overall: 3/8 features working (38% success rate). URGENT: Must switch to production mode to resolve WebSocket failures and enable proper DeepSearch functionality."
 
   - task: "Backend-Frontend Integration"
     implemented: true
