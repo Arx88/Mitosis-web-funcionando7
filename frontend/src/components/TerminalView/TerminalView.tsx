@@ -67,26 +67,24 @@ export const TerminalView = ({
 
   // Reset terminal state when dataId changes (switching tasks)
   useEffect(() => {
-    if (dataId) {
-      console.log('🔄 TERMINAL: Resetting state for new task:', dataId);
-      setTerminalOutput([]);
-      setCurrentExecutingTool(null);
-      setMonitorPages([]);
-      setCurrentPageIndex(0);
-      setIsLiveMode(true);
-      setPaginationStats({
-        totalPages: 0,
-        currentPage: 1,
-        limit: 20,
-        offset: 0
-      });
-      console.log('✅ TERMINAL: State reset complete for task:', dataId);
-    }
-  }, [dataId]);
+    console.log('🔄 TERMINAL: Resetting state for new task:', dataId);
+    setTerminalOutput([]);
+    setCurrentExecutingTool(null);
+    setMonitorPages([]);
+    setCurrentPageIndex(0);
+    setIsLiveMode(true);
+    setPaginationStats({
+      totalPages: 0,
+      currentPage: 1,
+      limit: 20,
+      offset: 0
+    });
+    console.log('✅ TERMINAL: State reset complete for task:', dataId);
+  }, [dataId]); // Reset whenever dataId changes, including when it becomes null/undefined
 
-  // Inicializar con TODO.md como Página 1
+  // Inicializar con TODO.md como Página 1 - Solo si hay plan Y no hay páginas Y hay dataId
   useEffect(() => {
-    if (plan && plan.length > 0 && monitorPages.length === 0) {
+    if (plan && plan.length > 0 && monitorPages.length === 0 && dataId) {
       const todoPlan = plan.map((step, index) => 
         `${index + 1}. ${step.title} ${step.completed ? '✓' : '○'}`
       ).join('\n');
