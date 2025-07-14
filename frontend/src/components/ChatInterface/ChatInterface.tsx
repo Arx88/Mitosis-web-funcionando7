@@ -1673,20 +1673,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     
                     console.log('📁 FILES TO SHOW:', filesToShow, 'Length:', filesToShow.length);
                     
-                    // Show component if we have files to display OR if success pattern detected
-                    if (filesToShow.length > 0 || hasSuccessPattern) {
+                    // Show component only if we have real files to display
+                    if (filesToShow.length > 0) {
                       console.log('🚀 RENDERING FileUploadSuccess COMPONENT');
                       
                       return (
                         <div className="mt-4">
                           <FileUploadSuccess
-                            files={filesToShow.length > 0 ? filesToShow : [{
-                              id: `default-file-${Date.now()}`,
-                              name: 'archivo_procesado.md',
-                              size: 15000,
-                              type: 'text/markdown',
-                              url: undefined
-                            }]}
+                            files={filesToShow}
                             onFileView={(file) => {
                               console.log('File view clicked:', file);
                               if (onLogToTerminal) {
