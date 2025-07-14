@@ -30,6 +30,15 @@ task_files = {}
 # Inicializar Environment Setup Manager
 environment_setup_manager = EnvironmentSetupManager()
 
+# Inicializar Task Planner
+task_planner = TaskPlanner()
+
+# Inicializar Execution Engine
+execution_engine = ExecutionEngine(
+    tool_manager=current_app.tool_manager if current_app else None,
+    environment_manager=environment_setup_manager
+)
+
 @agent_bp.route('/setup-environment', methods=['POST'])
 def setup_environment():
     """Endpoint para configurar entorno de una tarea"""
