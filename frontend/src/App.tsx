@@ -131,8 +131,7 @@ export function App() {
       messages: [],
       terminalCommands: [], // Start with empty terminal commands for each task
       isFavorite: false,
-      progress: 0, // Initialize progress at 0
-      isInitializing: true // Nueva propiedad para manejar inicialización
+      progress: 0 // Initialize progress at 0
     };
     setTasks(prev => [newTask, ...prev]);
     setActiveTaskId(newTask.id);
