@@ -291,17 +291,19 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
 
                     <div>
                       <label className="block text-[#DADADA] mb-2">Modelo</label>
-                      <select
+                      <CustomSelect
                         value={tempConfig.openrouter.model}
-                        onChange={(e) => updateConfig('openrouter.model', e.target.value)}
-                        className="w-full bg-[#2A2A2B] rounded-lg p-3 text-[#DADADA] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,255,255,0.16)]"
-                      >
-                        <option value="mistral-7b-instruct">Mistral 7B Instruct</option>
-                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                        <option value="gpt-4">GPT-4</option>
-                        <option value="claude-3-sonnet">Claude 3 Sonnet</option>
-                        <option value="llama-2-70b-chat">Llama 2 70B Chat</option>
-                      </select>
+                        onChange={(value) => updateConfig('openrouter.model', value)}
+                        options={[
+                          { value: 'mistral-7b-instruct', label: 'Mistral 7B Instruct' },
+                          { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
+                          { value: 'gpt-4', label: 'GPT-4' },
+                          { value: 'claude-3-sonnet', label: 'Claude 3 Sonnet' },
+                          { value: 'llama-2-70b-chat', label: 'Llama 2 70B Chat' }
+                        ]}
+                        placeholder="Seleccionar modelo..."
+                        disabled={!tempConfig.openrouter.enabled}
+                      />
                     </div>
 
                     <div>
@@ -330,13 +332,13 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
 
                     <div>
                       <label className="block text-[#DADADA] mb-2">Máximo de tokens</label>
-                      <input
-                        type="number"
+                      <NumberInput
                         value={tempConfig.openrouter.maxTokens}
-                        onChange={(e) => updateConfig('openrouter.maxTokens', parseInt(e.target.value))}
-                        className="w-full bg-[#2A2A2B] rounded-lg p-3 text-[#DADADA] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,255,255,0.16)]"
-                        min="100"
-                        max="4096"
+                        onChange={(value) => updateConfig('openrouter.maxTokens', value)}
+                        min={100}
+                        max={4096}
+                        step={100}
+                        placeholder="Número de tokens"
                       />
                     </div>
 
