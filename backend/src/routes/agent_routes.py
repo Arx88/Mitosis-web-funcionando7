@@ -25,6 +25,9 @@ shared_conversations = {}
 # Almacenamiento temporal para archivos por tarea
 task_files = {}
 
+# Inicializar Environment Setup Manager
+environment_setup_manager = EnvironmentSetupManager()
+
 @agent_bp.route('/health', methods=['GET'])
 def health_check():
     """Endpoint de salud del agente"""
