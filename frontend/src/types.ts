@@ -9,7 +9,6 @@ export interface Task {
   isFavorite?: boolean;
   iconType?: string; // Agregar el tipo de icono
   progress?: number; // Progress from 0 to 100
-  isInitializing?: boolean; // Nueva propiedad para manejar inicialización
 }
 
 export interface Message {
