@@ -542,7 +542,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
             isLive={task.status === 'in-progress'}
             plan={task.plan}
             onToggleTaskStep={toggleTaskStep}
-            externalLogs={terminalLogs}
+            externalLogs={[...terminalLogs, ...externalLogs]}
           />
         </div>
       </div>
