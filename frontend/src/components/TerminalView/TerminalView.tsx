@@ -38,6 +38,11 @@ export interface TerminalViewProps {
   plan?: TaskStep[];
   onToggleTaskStep?: (stepId: string) => void;
   externalLogs?: Array<{message: string, type: 'info' | 'success' | 'error', timestamp: Date}>;
+  isInitializing?: boolean;
+  onInitializationComplete?: () => void;
+  onInitializationLog?: (message: string, type: 'info' | 'success' | 'error') => void;
+  taskId?: string;
+  taskTitle?: string;
 }
 
 export const TerminalView = ({
