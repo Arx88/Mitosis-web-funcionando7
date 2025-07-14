@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <title>Mitosis</title>
+    <style>
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      @keyframes fadeOutUp {
+        from {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+      }
+      
+      .animate-fadeInUp {
+        animation: fadeInUp 0.8s ease-out;
+      }
+      
+      .animate-fadeOutUp {
+        animation: fadeOutUp 0.8s ease-out;
+      }
+      
+      .animate-scroll-up {
+        animation: fadeInUp 0.8s ease-out, fadeOutUp 0.8s ease-out 3s;
+      }
+      
+      .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #4a4a4c #2a2a2a;
+      }
+      
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #2a2a2a;
+        border-radius: 4px;
+      }
+      
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #4a4a4c;
+        border-radius: 4px;
+      }
+      
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #5a5a5c;
+      }
+      
+      .terminal-pager {
+        position: relative;
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 16px;
+        font-family: 'Courier New', monospace;
+        color: #e0e0e0;
+        line-height: 1.6;
+        overflow-y: auto;
+        max-height: 80vh;
+      }
+      
+      .terminal-pager h1, .terminal-pager h2, .terminal-pager h3 {
+        color: #4a9eff;
+        font-weight: bold;
+        margin: 20px 0 10px 0;
+      }
+      
+      .terminal-pager h1 {
+        font-size: 1.5em;
+        text-align: center;
+        border-bottom: 2px solid #4a9eff;
+        padding-bottom: 10px;
+      }
+      
+      .terminal-pager h2 {
+        font-size: 1.2em;
+        color: #6eb5ff;
+      }
+      
+      .terminal-pager h3 {
+        font-size: 1.1em;
+        color: #8cc8ff;
+      }
+      
+      .terminal-pager p {
+        margin: 10px 0;
+        text-align: justify;
+      }
+      
+      .terminal-pager strong {
+        color: #ffd700;
+        font-weight: bold;
+      }
+      
+      .terminal-pager ul, .terminal-pager ol {
+        margin: 10px 0;
+        padding-left: 20px;
+      }
+      
+      .terminal-pager li {
+        margin: 5px 0;
+      }
+      
+      .terminal-pager blockquote {
+        border-left: 4px solid #4a9eff;
+        padding-left: 16px;
+        margin: 10px 0;
+        color: #a0a0a0;
+        font-style: italic;
+      }
+      
+      .terminal-pager code {
+        background: #2a2a2a;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #ff6b6b;
+        font-family: 'Courier New', monospace;
+      }
+      
+      .terminal-pager pre {
+        background: #2a2a2a;
+        padding: 12px;
+        border-radius: 6px;
+        overflow-x: auto;
+        margin: 10px 0;
+        border: 1px solid #444;
+      }
+      
+      .terminal-pager pre code {
+        background: none;
+        padding: 0;
+        color: #e0e0e0;
+      }
+      
+      .terminal-pager .academic-title {
+        text-align: center;
+        font-size: 1.8em;
+        color: #4a9eff;
+        font-weight: bold;
+        margin: 30px 0;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+      
+      .terminal-pager .academic-section {
+        margin: 25px 0;
+      }
+      
+      .terminal-pager .academic-section h2 {
+        color: #6eb5ff;
+        font-size: 1.3em;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      
+      .terminal-pager .academic-meta {
+        text-align: center;
+        color: #888;
+        font-size: 0.9em;
+        margin: 20px 0;
+        padding: 10px;
+        border-top: 1px solid #333;
+        border-bottom: 1px solid #333;
+      }
+      
+      .pager-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 16px;
+        background: #2a2a2a;
+        border-radius: 6px;
+        border: 1px solid #444;
+        margin-top: 12px;
+      }
+      
+      .pager-controls button {
+        background: #3a3a3a;
+        border: 1px solid #555;
+        border-radius: 4px;
+        padding: 6px 12px;
+        color: #e0e0e0;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+      }
+      
+      .pager-controls button:hover {
+        background: #4a4a4a;
+        border-color: #666;
+      }
+      
+      .pager-controls button:disabled {
+        background: #2a2a2a;
+        border-color: #333;
+        color: #666;
+        cursor: not-allowed;
+      }
+      
+      .pager-controls .file-indicator {
+        flex: 1;
+        text-align: center;
+        color: #888;
+        font-size: 12px;
+      }
+      
+      .pager-controls .progress-bar {
+        flex: 1;
+        height: 4px;
+        background: #333;
+        border-radius: 2px;
+        overflow: hidden;
+        margin: 0 16px;
+      }
+      
+      .pager-controls .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4a9eff 0%, #6eb5ff 100%);
+        transition: width 0.3s ease;
+        border-radius: 2px;
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/index-Hh0_Iiqs.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-6F4zURhM.js">
+    <link rel="modulepreload" crossorigin href="/assets/icons-DzgYpOD4.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-DEZkoCWo.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
