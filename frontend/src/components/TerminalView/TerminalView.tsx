@@ -449,16 +449,16 @@ export const TerminalView = ({
           {isInitializing && !isSystemOnline && (
             <div className="flex items-center justify-center h-full w-full">
               <div className="max-w-xs w-full space-y-6">
-                {/* Computer Icon - Using existing Monitor icon */}
+                {/* Computer Icon - Using existing Monitor icon in GRAY */}
                 <div className="flex justify-center mb-8">
-                  <Monitor size={48} className="text-blue-400" />
+                  <Monitor size={48} className="text-gray-400" />
                 </div>
                 
-                {/* Steps - Granular with checkmarks */}
+                {/* Steps - Granular with checkmarks - CENTERED */}
                 <div className="space-y-3">
                   {initializationSteps.map((step, index) => (
-                    <div key={step.id} className="flex items-center justify-between">
-                      <div className={`text-sm transition-all duration-500 ${
+                    <div key={step.id} className="flex items-center justify-center">
+                      <div className={`text-sm transition-all duration-500 text-center ${
                         index < initializationStep ? 'text-gray-400' :
                         index === initializationStep ? 'text-gray-300' :
                         'text-gray-600'
@@ -484,7 +484,7 @@ export const TerminalView = ({
                   ))}
                 </div>
                 
-                {/* Progress Bar - 40% narrower and more stable */}
+                {/* Progress Bar - 40% narrower and more stable - CENTERED */}
                 <div className="space-y-3 mt-8">
                   <div className="flex justify-center">
                     <div className="w-3/5 bg-gray-700 rounded-full h-1.5">
