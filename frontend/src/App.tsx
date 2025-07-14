@@ -510,7 +510,6 @@ export function App() {
                 task={activeTask} 
                 onUpdateTask={updateTask}
                 onUpdateTaskProgress={updateTaskProgress}
-                onEnvironmentSetupComplete={handleEnvironmentSetupComplete}
                 isThinking={appState.isThinking}
                 onTerminalResize={handleTerminalResize}
               />
