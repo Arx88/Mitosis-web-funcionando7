@@ -403,7 +403,7 @@ export const FilesModal: React.FC<FilesModalProps> = ({
                           <button
                             onClick={() => onDownload(file)}
                             disabled={isLoading}
-                            className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
+                            className="p-2 text-[#7f7f7f] hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors disabled:opacity-50"
                             title="Descargar archivo"
                           >
                             <Download className="w-4 h-4" />
@@ -419,8 +419,8 @@ export const FilesModal: React.FC<FilesModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-4 border-t border-gray-200 bg-gray-50">
-          <div className="text-sm text-gray-500">
+        <div className="flex items-center justify-between p-4 border-t border-[rgba(255,255,255,0.08)] bg-[#383739]">
+          <div className="text-sm text-[#ACACAC]">
             {activeTab !== 'memory' && (
               <>
                 Total: {filteredFiles.length} archivo{filteredFiles.length !== 1 ? 's' : ''} 
@@ -430,7 +430,7 @@ export const FilesModal: React.FC<FilesModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+            className="px-4 py-2 text-[#ACACAC] hover:text-[#DADADA] transition-colors"
           >
             Cerrar
           </button>
