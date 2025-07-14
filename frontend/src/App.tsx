@@ -809,6 +809,14 @@ export function App() {
             onClose={() => setShowFileUpload(false)}
             onFilesUploaded={handleFilesUploaded}
           />
+
+          {/* Environment Setup Loader */}
+          <EnvironmentSetupLoader
+            isVisible={showEnvironmentSetup}
+            onComplete={handleEnvironmentSetupComplete}
+            taskTitle={environmentSetupTaskTitle}
+            taskType="general"
+          />
         </>
       )}
     </div>
