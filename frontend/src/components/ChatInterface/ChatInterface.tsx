@@ -237,14 +237,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   }, [isNewTask, onTaskReset]);
 
-  // Effect to reset state when task ID changes (switching between tasks)
+  // Effect to reset state when task ID changes (switching between tasks) or when no task is active
   useEffect(() => {
-    if (dataId) { // Solo resetear si hay un dataId válido
-      resetChatState();
-      // Call the task reset function to reset terminal/computer state
-      if (onTaskReset) {
-        onTaskReset();
-      }
+    console.log('🔄 CHAT: dataId changed to:', dataId);
+    resetChatState();
+    // Call the task reset function to reset terminal/computer state
+    if (onTaskReset) {
+      onTaskReset();
     }
   }, [dataId, onTaskReset]);
 
