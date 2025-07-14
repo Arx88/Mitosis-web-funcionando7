@@ -11,9 +11,11 @@ import os
 import json
 import zipfile
 import tempfile
+import asyncio
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from src.utils.json_encoder import MongoJSONEncoder, mongo_json_serializer
+from src.tools.environment_setup_manager import EnvironmentSetupManager
 
 agent_bp = Blueprint('agent', __name__)
 
