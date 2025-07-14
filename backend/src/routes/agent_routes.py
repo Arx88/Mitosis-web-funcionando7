@@ -16,6 +16,8 @@ from pathlib import Path
 from werkzeug.utils import secure_filename
 from src.utils.json_encoder import MongoJSONEncoder, mongo_json_serializer
 from src.tools.environment_setup_manager import EnvironmentSetupManager
+from src.tools.task_planner import TaskPlanner
+from src.tools.execution_engine import ExecutionEngine
 
 agent_bp = Blueprint('agent', __name__)
 
