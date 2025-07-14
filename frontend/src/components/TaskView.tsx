@@ -26,7 +26,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
   onUpdateTask,
   onUpdateTaskProgress,
   isThinking,
-  externalLogs = []
+  externalLogs = [],
+  isInitializing = false,
+  onInitializationComplete,
+  onInitializationLog
 }) => {
   const [isTyping, setIsTyping] = useState(false);
   const [showFilesModal, setShowFilesModal] = useState(false);
