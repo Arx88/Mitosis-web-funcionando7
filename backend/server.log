@@ -1,0 +1,28 @@
+nohup: ignoring input
+🚀 Iniciando Test Server...
+🔗 Host: 0.0.0.0:8001
+🛠️  Debug: True
+✅ Ollama conectado exitosamente
+📚 Modelos disponibles: ['llama3.2', 'llama3.1', 'mistral', 'codellama', 'phi3']
+🔧 Herramientas disponibles: 8
+   - shell: Ejecuta comandos de terminal de forma segura
+   - web_search: Busca información en internet y extrae contenido de páginas web de manera mejorada
+   - file_manager: Gestiona archivos y directorios de forma segura
+   - tavily_search: Busca información en internet usando Tavily API - más preciso y actualizado que otras herramientas
+   - deep_research: Realiza investigación profunda y análisis detallado sobre un tema específico de manera simulada
+   - comprehensive_research: Realiza investigación profunda multi-sitio con contenido e imágenes, generando un informe consolidado
+   - web_search: Busca información en internet y extrae contenido de páginas web de manera mejorada
+   - deep_research: Realiza investigación profunda y análisis detallado sobre un tema específico de manera simulada
+🎯 Servidor listo para recibir conexiones
+ * Serving Flask app 'test_server'
+ * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://169.254.0.21:8001
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 831-523-311
+127.0.0.1 - - [14/Jul/2025 01:23:27] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [14/Jul/2025 01:23:42] "POST /api/agent/chat HTTP/1.1" 200 -

@@ -1,0 +1,808 @@
+/* PLEASE NOTE: THESE TAILWIND IMPORTS SHOULD NEVER BE DELETED */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+/* DO NOT DELETE THESE TAILWIND IMPORTS, OTHERWISE THE STYLING WILL NOT RENDER AT ALL */
+
+/* Import Segoe UI Variable Display font */
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&display=swap');
+
+/* Text selection colors */
+::selection {
+  background-color: #335c65;
+  color: #20e0ff;
+}
+
+::-moz-selection {
+  background-color: #335c65;
+  color: #20e0ff;
+}
+
+/* Performance optimizations */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Preload critical resources */
+.preload-critical {
+  will-change: transform, opacity;
+}
+
+/* Force Lucide icons to have proper stroke */
+svg.lucide {
+  stroke: currentColor !important;
+  fill: none !important;
+  stroke-width: 2 !important;
+}
+
+/* Remove border stroke from active task buttons, but NOT icons */
+.task-button-active {
+  border: none !important;
+  outline: none !important;
+}
+
+/* Only remove stroke from border elements, NOT content SVGs */
+.task-button-active > svg:not(.lucide) {
+  stroke: none !important;
+}
+
+/* Task completed animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out forwards;
+}
+
+/* Optimized animations */
+@layer components {
+  .animate-optimized {
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* Performance: GPU acceleration for smooth scrolling */
+.smooth-scroll {
+  overflow-scrolling: touch;
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+}
+
+/* Chat container optimizations */
+.chat-container {
+  contain: layout style paint;
+  will-change: scroll-position;
+}
+
+/* File attachment improvements */
+.file-attachment-wrapper {
+  contain: layout;
+  will-change: transform;
+}
+
+/* Loading optimizations */
+.loading-shimmer {
+  background: linear-gradient(90deg, 
+    rgba(58, 58, 59, 0.5) 25%, 
+    rgba(74, 74, 75, 0.8) 50%, 
+    rgba(58, 58, 59, 0.5) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Improved contrast for accessibility */
+.high-contrast {
+  filter: contrast(1.1) brightness(1.05);
+}
+
+/* Typography optimizations */
+.text-optimized {
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  text-rendering: optimizeLegibility;
+}
+
+/* Global styles to prevent horizontal scroll */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+body {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+}
+
+/* Ensure no element exceeds viewport width */
+.no-horizontal-scroll {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* Force break long words to prevent horizontal scroll */
+.break-words-force {
+  word-break: break-all;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Line clamp utilities for compact text */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Academic document styling for reports */
+.academic-document {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  line-height: 1.6;
+  color: #1a1a1a;
+}
+
+.academic-document h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-align: center;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.academic-document h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #374151;
+}
+
+.academic-document h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #4b5563;
+}
+
+.academic-document p {
+  margin-bottom: 1rem;
+  text-align: justify;
+}
+
+.academic-document ul, .academic-document ol {
+  margin-bottom: 1rem;
+  padding-left: 2rem;
+}
+
+.academic-document li {
+  margin-bottom: 0.5rem;
+}
+
+.academic-document code {
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', monospace;
+}
+
+.academic-document pre {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+/* Custom gradient animations - Suavizado para mayor profesionalismo */
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Gradiente más sutil y lento para AURA */
+@keyframes gradient-subtle {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Animation for streaming data fade-in */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animation for streaming data flowing upward */
+@keyframes streamUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.animate-gradient {
+  animation: gradient 8s ease-in-out infinite;
+}
+
+.animate-gradient-subtle {
+  animation: gradient-subtle 12s ease-in-out infinite;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.animate-streamUp {
+  animation: streamUp 4s ease-in-out forwards;
+}
+
+.bg-300\% {
+  background-size: 300% 300%;
+}
+
+.bg-400\% {
+  background-size: 400% 400%;
+}
+
+/* Chat text selection colors */
+.chat-text-selection *::selection {
+  background-color: #335c65;
+  color: #20e0ff;
+}
+
+.chat-text-selection {
+  -moz-user-select: text;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Modern scrollbar styles - Consistent and clean throughout the app */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  transition: background-color 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Modern scrollbar for VanishInput */
+.vanish-input-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.vanish-input-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.vanish-input-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.vanish-input-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  transition: background-color 0.2s ease;
+}
+
+.vanish-input-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.vanish-input-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Enhanced terminal scrollbar - eliminate horizontal scroll */
+.terminal-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.4) transparent;
+  overflow-x: hidden; /* Eliminate horizontal scroll */
+  overflow-y: auto; /* Keep vertical scroll */
+}
+
+.terminal-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.terminal-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.terminal-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.6), rgba(99, 102, 241, 0.6));
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.terminal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.8), rgba(99, 102, 241, 0.8));
+}
+
+.terminal-scrollbar::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 1), rgba(99, 102, 241, 1));
+}
+
+/* Academic report scrollbar - elegant and professional */
+.academic-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 85, 247, 0.4) transparent;
+}
+
+.academic-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.academic-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.academic-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.5), rgba(79, 70, 229, 0.5));
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+.academic-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.7), rgba(79, 70, 229, 0.7));
+}
+
+/* Prevent text wrapping issues that cause horizontal scroll */
+.terminal-text {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* Line clamping utility for text truncation */
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Star Wars continuous text flow effect - NO BLOCKS, NO BULLETS */
+.star-wars-text {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+.streaming-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  animation: starWarsFlow 20s linear infinite;
+  color: #DADADA;
+  font-size: 14px;
+  line-height: 1.8;
+  font-family: 'Arial', sans-serif;
+}
+
+.continuous-text {
+  margin: 0;
+  padding: 0;
+  display: inline;
+}
+
+@keyframes starWarsFlow {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+/* NUEVO: Efecto Star Wars sin perspectiva - Solo texto fluyendo hacia arriba */
+.star-wars-flow {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+.streaming-paragraphs {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  animation: continuousFlow 25s linear infinite;
+  color: #DADADA;
+  font-size: 14px;
+  line-height: 1.8;
+  font-family: 'Arial', sans-serif;
+  padding: 0 16px;
+}
+
+.flowing-paragraph {
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+@keyframes continuousFlow {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+/* Enhanced streaming animations for DeepResearch */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0.6;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+
+@keyframes streaming {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-15px);
+  }
+}
+
+/* Streaming container animation */
+@keyframes streamingFlow {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-5px);
+  }
+}
+
+/* New auto-scrolling animation for streaming text */
+@keyframes streamUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.streaming-container {
+  animation: streamingFlow 2s ease-in-out infinite alternate;
+}
+
+.animate-slideInUp {
+  animation: slideInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-fadeUp {
+  animation: fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-streaming {
+  animation: streaming 3s ease-in-out infinite;
+}
+
+.animate-streamUp {
+  animation: streamUp 4s ease-in-out forwards;
+}
+
+.paragraph-stream {
+  transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.paragraph-stream:hover {
+  transform: translateY(-4px) scale(1.02) !important;
+  opacity: 1 !important;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+}
+
+/* Terminal pager controls */
+.pager-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #383739;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.75rem;
+  color: #acacac;
+}
+
+.pager-controls button {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  background: #2a2a2b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.375rem;
+  color: #dadada;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.75rem;
+}
+
+.pager-controls button:hover:not(:disabled) {
+  background: #3a3a3b;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.pager-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pager-controls .file-indicator {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: #7f7f7f;
+}
+
+.pager-controls .progress-bar {
+  width: 60px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-left: 0.5rem;
+}
+
+.pager-controls .progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Academic document styling - Professional PDF format with APA 2025 standards */
+.academic-document {
+  font-family: 'Times New Roman', serif;
+  line-height: 2;
+  max-width: 8.5in;
+  margin: 0 auto;
+  padding: 1in;
+  background: white;
+  color: #000000;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+}
+
+.academic-document h1 {
+  font-size: 16pt;
+  font-weight: bold;
+  text-align: center;
+  margin: 0 0 24pt 0;
+  page-break-after: avoid;
+  color: #000000;
+}
+
+.academic-document h2 {
+  font-size: 14pt;
+  font-weight: bold;
+  margin: 24pt 0 12pt 0;
+  page-break-after: avoid;
+  color: #000000;
+}
+
+.academic-document h3 {
+  font-size: 12pt;
+  font-weight: bold;
+  margin: 18pt 0 12pt 0;
+  page-break-after: avoid;
+  color: #000000;
+}
+
+.academic-document p {
+  font-size: 12pt;
+  margin: 0 0 12pt 0;
+  text-align: justify;
+  text-indent: 0.5in;
+  color: #000000;
+}
+
+.academic-document ul, .academic-document ol {
+  margin: 12pt 0;
+  padding-left: 0.5in;
+}
+
+.academic-document li {
+  font-size: 12pt;
+  margin: 6pt 0;
+  color: #000000;
+}
+
+.academic-document blockquote {
+  margin: 12pt 0.5in;
+  padding: 0;
+  border-left: none;
+  font-style: italic;
+  color: #000000;
+}
+
+.academic-document code {
+  font-family: 'Courier New', monospace;
+  background: #f5f5f5;
+  padding: 2pt 4pt;
+  border-radius: 2pt;
+  color: #000000;
+}
+
+.academic-document pre {
+  font-family: 'Courier New', monospace;
+  background: #f8f8f8;
+  padding: 12pt;
+  border-radius: 4pt;
+  margin: 12pt 0;
+  border: 1pt solid #e0e0e0;
+  color: #000000;
+  overflow-x: auto;
+}
+
+.academic-document table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12pt 0;
+}
+
+.academic-document th, .academic-document td {
+  border: 1pt solid #000000;
+  padding: 6pt 12pt;
+  text-align: left;
+  font-size: 12pt;
+  color: #000000;
+}
+
+.academic-document th {
+  background: #f0f0f0;
+  font-weight: bold;
+}
+
+.academic-document a {
+  color: #0066cc;
+  text-decoration: underline;
+}
+
+.academic-document strong {
+  font-weight: bold;
+  color: #000000;
+}
+
+.academic-document em {
+  font-style: italic;
+  color: #000000;
+}

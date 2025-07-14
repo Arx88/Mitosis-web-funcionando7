@@ -1,0 +1,223 @@
+
+================================================================================
+REPORTE FINAL - TEST INTEGRAL DE ARCHIVOS ADJUNTOS
+================================================================================
+
+🕒 Timestamp: 2025-07-12T05:07:52.450597
+🎯 Task ID de prueba: test-task-1752296794
+📊 Total de tests: 7
+
+RESUMEN DE RESULTADOS:
+----------------------------------------
+🔧 Backend APIs: 2/2 exitosos
+🌐 Frontend Tests: 4/4 exitosos
+❌ Errores encontrados: 5
+
+DIAGNÓSTICO:
+----------------------------------------
+{
+  "backend_upload_working": true,
+  "backend_deepresearch_working": true,
+  "frontend_modal_working": false,
+  "frontend_components_rendering": false,
+  "failure_point": "frontend_upload_modal",
+  "recommended_fixes": [
+    "Verificar que el botón de adjuntar esté correctamente wired",
+    "Revisar estado showFileUpload en ChatInterface",
+    "Verificar que FileUploadModal se renderice cuando showFileUpload=true"
+  ]
+}
+
+DETALLES TÉCNICOS:
+----------------------------------------
+Backend APIs:
+{
+  "upload": {
+    "success": true,
+    "status_code": 200,
+    "files_uploaded": 1,
+    "response_structure": {
+      "has_success": true,
+      "has_files": true,
+      "has_message": true,
+      "has_upload_data": true
+    },
+    "first_file_metadata": {
+      "created_at": "2025-07-12T05:06:35.760741",
+      "file_id": "c65db43b-4d32-40ed-bdb4-8a015f21d651",
+      "id": "c65db43b-4d32-40ed-bdb4-8a015f21d651",
+      "mime_type": "text/plain",
+      "name": "test_archivo_adjunto.txt",
+      "path": "/tmp/task_files/test-task-1752296794/test_archivo_adjunto.txt",
+      "size": 304,
+      "source": "uploaded",
+      "task_id": "test-task-1752296794",
+      "type": "file"
+    }
+  },
+  "deepresearch": {
+    "success": true,
+    "status_code": 200,
+    "search_mode": "deepsearch",
+    "files_created": 1,
+    "created_files_structure": [
+      {
+        "created_at": "2025-07-12T05:07:00.601027",
+        "file_id": "a7cf985a-8114-4542-82d0-1ec78e08414d",
+        "id": "9c896d2d-ad10-4f7c-a4b4-3d9bcd2fac63",
+        "mime_type": "text/markdown",
+        "name": "informe_test_de_archivos_adjuntos.md",
+        "path": "/app/backend/reports/informe_test_de_archivos_adjuntos_test-tas.md",
+        "size": 27839,
+        "source": "agent",
+        "task_id": "test-task-1752296794",
+        "type": "file"
+      }
+    ],
+    "has_search_data": true,
+    "response_keys": [
+      "created_files",
+      "model",
+      "response",
+      "search_data",
+      "search_mode",
+      "timestamp",
+      "tool_calls",
+      "tool_results"
+    ]
+  }
+}
+
+Frontend Components:
+{
+  "navigation": {
+    "page_loaded": true,
+    "task_created": true,
+    "url": "https://25b68c6d-6666-4abc-bb68-64e095e3dc43.preview.emergentagent.com/"
+  },
+  "upload_modal": {
+    "opened": false,
+    "attach_button_found": false
+  },
+  "deepresearch_execution": {
+    "input_found": true,
+    "query_sent": true,
+    "components": {
+      "success_message": {
+        "found": false,
+        "count": 0
+      },
+      "enhanced_file_display": {
+        "found": false,
+        "count": 0
+      },
+      "file_upload_success": {
+        "found": false,
+        "count": 0
+      },
+      "file_upload_parser": {
+        "found": false,
+        "count": 0
+      },
+      "dropdown_triggers": {
+        "found": false,
+        "count": 0
+      },
+      "colored_file_icons": {
+        "found": false,
+        "count": 0
+      },
+      "action_buttons": {
+        "found": false,
+        "count": 0
+      }
+    },
+    "has_success_indicators": false,
+    "chat_content_sample": "\n    \n    \n  \n"
+  },
+  "javascript_debug": {
+    "components": {},
+    "dom_elements": {
+      "enhanced_file_display": 0,
+      "file_upload_success": 0,
+      "file_upload_parser": 0,
+      "dropdown_triggers": 0,
+      "file_icons": 0,
+      "success_messages": 0
+    },
+    "react_components": {
+      "react_root": true,
+      "has_react_fiber": false,
+      "chat_interface": 0
+    },
+    "console_logs": []
+  }
+}
+
+LOGS COMPLETOS:
+----------------------------------------
+[05:06:34] INFO: 🚀 Iniciando test integral de archivos adjuntos
+[05:06:35] INFO: ✅ Setup completado
+[05:06:35] INFO: 
+📤 TEST 1: Backend File Upload API
+[05:06:35] INFO: ✅ Upload exitoso: 1 archivo(s)
+[05:06:35] INFO:    📄 Estructura: test_archivo_adjunto.txt
+[05:06:35] INFO:    📊 Tamaño: 304 bytes
+[05:06:35] INFO: 
+🔬 TEST 2: Backend DeepResearch File Creation
+[05:07:00] INFO: ✅ DeepResearch exitoso: 1 archivo(s) creado(s)
+[05:07:00] INFO:    📄 Archivo 1: informe_test_de_archivos_adjuntos.md
+[05:07:00] INFO:       💾 Tamaño: 27839 bytes
+[05:07:00] INFO:       🏷️  Tipo: text/markdown
+[05:07:00] INFO:       🎯 Source: agent
+[05:07:00] INFO: 
+🌐 TEST 3: Frontend Navigation and Task Creation
+[05:07:09] INFO: ✅ Tarea creada con selector: text=Nueva Tarea
+[05:07:11] INFO: ✅ Navegación exitosa y tarea creada
+[05:07:11] INFO: 
+📎 TEST 4: Frontend File Upload Modal
+[05:07:22] ERROR: ❌ No se pudo abrir modal de upload
+[05:07:22] INFO: 
+🔬 TEST 5: Frontend DeepResearch Execution
+[05:07:22] INFO: 🌐 CONSOLE: Archivos creados automáticamente para la tarea: [DeepResearch] archivos adjuntos test
+[05:07:22] INFO: ✅ Consulta enviada con selector: textarea
+[05:07:22] INFO: 🔍 Monitoreando aparición de componentes...
+[05:07:52] INFO: ❌ success_message: NO encontrado
+[05:07:52] INFO: ❌ enhanced_file_display: NO encontrado
+[05:07:52] INFO: ❌ file_upload_success: NO encontrado
+[05:07:52] INFO: ❌ file_upload_parser: NO encontrado
+[05:07:52] INFO: ❌ dropdown_triggers: NO encontrado
+[05:07:52] INFO: ❌ colored_file_icons: NO encontrado
+[05:07:52] INFO: ❌ action_buttons: NO encontrado
+[05:07:52] ERROR: ❌ NO se detectaron indicadores de éxito
+[05:07:52] INFO: 
+🔍 TEST 6: JavaScript State Debug
+[05:07:52] INFO: 🔍 Estado JavaScript capturado:
+[05:07:52] INFO:    📊 DOM Elements: {'enhanced_file_display': 0, 'file_upload_success': 0, 'file_upload_parser': 0, 'dropdown_triggers': 0, 'file_icons': 0, 'success_messages': 0}
+[05:07:52] INFO:    ⚛️  React Components: {'react_root': True, 'has_react_fiber': False, 'chat_interface': 0}
+[05:07:52] ERROR: ❌ CRÍTICO: EnhancedFileDisplay NO encontrado en DOM
+[05:07:52] ERROR: ❌ CRÍTICO: FileUploadSuccess NO encontrado en DOM
+[05:07:52] ERROR: ❌ CRÍTICO: Dropdown triggers NO encontrados en DOM
+[05:07:52] INFO: 
+🔄 TEST 7: Integration Flow Analysis
+[05:07:52] INFO: 🔄 DIAGNÓSTICO INTEGRAL:
+[05:07:52] INFO:    🔧 Backend Upload: ✅
+[05:07:52] INFO:    🔬 Backend DeepResearch: ✅
+[05:07:52] INFO:    📎 Frontend Modal: ❌
+[05:07:52] INFO:    🎨 Frontend Components: ❌
+[05:07:52] INFO:    🎯 Punto de falla: frontend_upload_modal
+[05:07:52] INFO:    💡 Verificar que el botón de adjuntar esté correctamente wired
+[05:07:52] INFO:    💡 Revisar estado showFileUpload en ChatInterface
+[05:07:52] INFO:    💡 Verificar que FileUploadModal se renderice cuando showFileUpload=true
+[05:07:52] INFO: 
+📋 GENERANDO REPORTE FINAL...
+
+ERRORES ENCONTRADOS:
+--------------------
+❌ No se pudo abrir modal de upload
+❌ NO se detectaron indicadores de éxito
+❌ CRÍTICO: EnhancedFileDisplay NO encontrado en DOM
+❌ CRÍTICO: FileUploadSuccess NO encontrado en DOM
+❌ CRÍTICO: Dropdown triggers NO encontrados en DOM
+
+================================================================================

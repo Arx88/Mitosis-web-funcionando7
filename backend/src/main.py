@@ -1,0 +1,123 @@
+#!/usr/bin/env python3
+"""
+Agente General - Backend Principal
+Servidor Flask que integra Ollama con un sistema de herramientas extensible
+"""
+
+import os
+import sys
+from datetime import datetime
+from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
+from dotenv import load_dotenv
+
+# Cargar variables de entorno
+load_dotenv()
+
+# Importar módulos del agente
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from routes.agent_routes import agent_bp
+from tools.tool_manager import ToolManager
+from services.ollama_service import OllamaService
+from services.database import DatabaseService
+
+# Configuración
+HOST = os.getenv('HOST', '0.0.0.0')
+PORT = int(os.getenv('PORT', 8001))
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
+
+# Configurar CORS
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:3000", "http://localhost:5173"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
+
+# Inicializar servicios
+ollama_service = OllamaService()
+tool_manager = ToolManager()
+database_service = DatabaseService()
+
+# Hacer servicios disponibles globalmente
+app.ollama_service = ollama_service
+app.tool_manager = tool_manager
+app.database_service = database_service
+
+# Registrar blueprints
+app.register_blueprint(agent_bp, url_prefix='/api/agent')
+
+# Servir archivos estáticos del frontend
+@app.route('/')
+def serve_frontend():
+    return send_from_directory('static', 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    return send_from_directory('static', path)
+
+# Endpoint de salud
+@app.route('/health')
+def health_check():
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat(),
+        'services': {
+            'ollama': ollama_service.is_healthy(),
+            'tools': len(tool_manager.get_available_tools()),
+            'database': database_service.is_connected()
+        }
+    })
+
+# Endpoint de estadísticas de la base de datos
+@app.route('/api/stats')
+def get_stats():
+    stats = database_service.get_stats()
+    return jsonify(stats)
+
+# Manejo de errores
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({'error': 'Endpoint not found'}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({'error': 'Internal server error'}), 500
+
+if __name__ == '__main__':
+    print(f"🚀 Iniciando Agente General Backend...")
+    print(f"🔗 Host: {HOST}:{PORT}")
+    print(f"🛠️  Debug: {DEBUG}")
+    print(f"🔧 Puerto configurado: {PORT}")
+    print(f"🧠 Conectando a Ollama...")
+    
+    # Verificar conexión con Ollama
+    if ollama_service.is_healthy():
+        print("✅ Ollama conectado exitosamente")
+        models = ollama_service.get_available_models()
+        print(f"📚 Modelos disponibles: {models}")
+    else:
+        print("⚠️  Advertencia: No se pudo conectar a Ollama")
+        print("   Asegúrate de que Ollama esté ejecutándose en localhost:11434")
+    
+    # Verificar conexión con MongoDB
+    if database_service.is_connected():
+        print("✅ MongoDB conectado exitosamente")
+        stats = database_service.get_stats()
+        print(f"📊 Estadísticas DB: {stats}")
+    else:
+        print("⚠️  Advertencia: No se pudo conectar a MongoDB")
+    
+    # Mostrar herramientas disponibles
+    tools = tool_manager.get_available_tools()
+    print(f"🔧 Herramientas disponibles: {len(tools)}")
+    for tool in tools:
+        print(f"   - {tool['name']}: {tool['description']}")
+    
+    print("🎯 Servidor listo para recibir conexiones")
+    app.run(host=HOST, port=PORT, debug=DEBUG)

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Chat Scroll</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #272728;
+            color: #DADADA;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .chat-section {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            border-right: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        .header {
+            background-color: #383739;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0;
+        }
+        
+        .messages-container {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+        
+        .messages {
+            height: 100%;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .message {
+            background-color: #383739;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 90%;
+            word-wrap: break-word;
+        }
+        
+        .input-section {
+            border-top: 1px solid rgba(255,255,255,0.08);
+            padding: 16px;
+            background-color: #272728;
+            flex-shrink: 0;
+        }
+        
+        .input-box {
+            width: 100%;
+            background-color: #363537;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 12px;
+            color: #DADADA;
+            resize: none;
+            min-height: 48px;
+            max-height: 150px;
+        }
+        
+        .terminal-section {
+            width: 50%;
+            background-color: #1e1e1e;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .terminal-content {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+        
+        /* Custom scrollbar */
+        .messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .messages::-webkit-scrollbar-track {
+            background: #383739;
+            border-radius: 4px;
+        }
+        
+        .messages::-webkit-scrollbar-thumb {
+            background: #7f7f7f;
+            border-radius: 4px;
+        }
+        
+        .messages::-webkit-scrollbar-thumb:hover {
+            background: #9f9f9f;
+        }
+        
+        .test-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        
+        .test-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-section">
+            <div class="header">
+                <h2>Chat Test - Scroll Fix</h2>
+                <div style="font-size: 12px; color: #7f7f7f;">Testing proper scroll behavior</div>
+            </div>
+            
+            <div class="messages-container">
+                <div class="messages" id="messages">
+                    <div class="message">
+                        Bienvenido al test de scroll. Esta es una prueba para verificar que el scroll funciona correctamente.
+                    </div>
+                    <div class="message">
+                        Puedes hacer clic en "Agregar Mensaje" para agregar más mensajes y probar el comportamiento de scroll.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <textarea class="input-box" placeholder="Escribe un mensaje de prueba..."></textarea>
+                <button class="test-button" onclick="addMessage()">Agregar Mensaje</button>
+                <button class="test-button" onclick="addManyMessages()">Agregar Muchos Mensajes</button>
+            </div>
+        </div>
+        
+        <div class="terminal-section">
+            <div class="header">
+                <h2>Terminal</h2>
+            </div>
+            <div class="terminal-content">
+                <pre>$ Terminal section - this should stay fixed
+$ The scroll should only affect the chat messages
+$ Not the entire layout</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let messageCount = 3;
+        
+        function addMessage() {
+            const messagesContainer = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.textContent = `Mensaje ${messageCount}: Este es un mensaje de prueba agregado dinámicamente. El scroll debería funcionar correctamente y solo afectar el área de mensajes, no todo el layout.`;
+            messagesContainer.appendChild(messageDiv);
+            messageCount++;
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        function addManyMessages() {
+            for (let i = 0; i < 10; i++) {
+                const messagesContainer = document.getElementById('messages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                messageDiv.textContent = `Mensaje masivo ${messageCount}: Este es un mensaje muy largo que debería causar scroll. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.`;
+                messagesContainer.appendChild(messageDiv);
+                messageCount++;
+            }
+            
+            // Scroll to bottom
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>
