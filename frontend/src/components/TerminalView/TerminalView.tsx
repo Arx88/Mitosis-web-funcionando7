@@ -556,12 +556,15 @@ export const TerminalView = ({
           
           <button 
             onClick={handleLiveMode}
-            disabled={isLastPage && isLiveMode}
-            title="Ir a la última página (tiempo real)"
-            className={`flex items-center gap-1 ${isLiveMode && isLastPage ? 'bg-green-600/20 text-green-400' : ''}`}
+            disabled={!isSystemOnline || (isLastPage && isLiveMode)}
+            title={isSystemOnline ? "Ir a la última página (tiempo real)" : "Sistema offline"}
+            className={`flex items-center gap-1 ${
+              isLiveMode && isLastPage && isSystemOnline ? 'bg-green-600/20 text-green-400' : 
+              !isSystemOnline ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             <Radio size={14} />
-            Live
+            {isSystemOnline ? 'Live' : 'Offline'}
           </button>
           
           <button 
