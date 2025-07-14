@@ -5,6 +5,7 @@ import { TaskView } from './components/TaskView';
 import { ConfigPanel } from './components/ConfigPanel';
 import { FileUploadModal } from './components/FileUploadModal';
 import { LoadingPlaceholder, MessageLoadingPlaceholder } from './components/LoadingPlaceholder';
+import { EnvironmentSetupLoader } from './components/EnvironmentSetupLoader';
 import { Task, Message, AppState, AgentConfig } from './types';
 import { generateRandomIcon } from './components/TaskIcon';
 import { Globe, FileText, Presentation, Smartphone, Search, Gamepad2 } from 'lucide-react';
