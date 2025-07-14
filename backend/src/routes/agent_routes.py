@@ -28,6 +28,61 @@ task_files = {}
 # Inicializar Environment Setup Manager
 environment_setup_manager = EnvironmentSetupManager()
 
+@agent_bp.route('/setup-environment', methods=['POST'])
+def setup_environment():
+    """Endpoint para configurar entorno de una tarea"""
+    try:
+        data = request.get_json()
+        task_id = data.get('task_id')
+        task_title = data.get('task_title', '')
+        task_type = data.get('task_type', 'general')
+        
+        if not task_id:
+            return jsonify({'error': 'task_id is required'}), 400
+        
+        # Iniciar setup de manera asíncrona (simulamos con threading)
+        import threading
+        
+        def run_async_setup():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(
+                    environment_setup_manager.setup_environment(task_id, task_title, task_type)
+                )
+            finally:
+                loop.close()
+        
+        setup_thread = threading.Thread(target=run_async_setup)
+        setup_thread.start()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Environment setup started',
+            'task_id': task_id,
+            'estimated_duration': '1-2 minutes',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/setup-status/<task_id>', methods=['GET'])
+def get_setup_status(task_id):
+    """Obtener estado del setup de environment"""
+    try:
+        status = environment_setup_manager.get_setup_status(task_id)
+        return jsonify(status)
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 @agent_bp.route('/health', methods=['GET'])
 def health_check():
     """Endpoint de salud del agente"""
