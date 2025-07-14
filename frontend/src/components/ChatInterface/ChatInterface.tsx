@@ -224,8 +224,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   useEffect(() => {
     if (isNewTask) {
       resetChatState();
+      // Call the task reset function to reset terminal/computer state for new tasks
+      if (onTaskReset) {
+        onTaskReset();
+      }
     }
-  }, [isNewTask]);
+  }, [isNewTask, onTaskReset]);
 
   // Effect to reset state when task ID changes (switching between tasks)
   useEffect(() => {
