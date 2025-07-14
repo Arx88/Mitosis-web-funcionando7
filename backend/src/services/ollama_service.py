@@ -28,11 +28,28 @@ class OllamaService:
         ]
         
     def is_healthy(self) -> bool:
-        """Verificar si Ollama está disponible - Siempre True en modo dummy"""
-        return True
+        """Verificar si Ollama está disponible"""
+        try:
+            import requests
+            response = requests.get(f"{self.base_url}/api/tags", timeout=5)
+            return response.status_code == 200
+        except:
+            return False
     
     def get_available_models(self) -> List[str]:
-        """Obtener lista de modelos disponibles - Lista predefinida"""
+        """Obtener lista de modelos disponibles desde Ollama real, fallback a dummy"""
+        try:
+            import requests
+            response = requests.get(f"{self.base_url}/api/tags", timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                models = [model['name'] for model in data.get('models', [])]
+                if models:
+                    return models
+        except:
+            pass
+        
+        # Fallback a modelos dummy si Ollama no está disponible
         return [
             "llama3.2",
             "llama3.1",
