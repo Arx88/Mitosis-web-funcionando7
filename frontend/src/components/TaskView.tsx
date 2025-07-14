@@ -470,8 +470,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 Compartir
               </button>
               <button
-                onClick={() => {
+                onClick={(e) => {
                   console.log('⭐ Favorite button clicked');
+                  e.preventDefault();
+                  e.stopPropagation();
                   const updatedTask = {
                     ...task,
                     isFavorite: !task.isFavorite
