@@ -454,42 +454,34 @@ export const TerminalView = ({
                   <Monitor size={48} className="text-gray-400" />
                 </div>
                 
-                {/* Steps - Granular with checkmarks - CENTERED */}
+                {/* Steps - Granular with checkmarks - CENTERED TEXTS */}
                 <div className="space-y-3">
                   {initializationSteps.map((step, index) => (
-                    <div key={step.id} className="flex items-center justify-center">
-                      <div className={`text-sm transition-all duration-500 text-center ${
+                    <div key={step.id} className="text-center">
+                      <div className={`text-sm ${
                         index < initializationStep ? 'text-gray-400' :
                         index === initializationStep ? 'text-gray-300' :
                         'text-gray-600'
                       }`}>
                         {step.title}
-                        {index === initializationStep && (
-                          <span className="inline-block ml-1">
-                            <span className="animate-pulse">.</span>
-                            <span className="animate-pulse delay-300">.</span>
-                            <span className="animate-pulse delay-600">.</span>
+                        {index === initializationStep && '...'}
+                        {/* Checkmark for completed steps - CONSISTENT WITH PLAN DE ACCION */}
+                        {index < initializationStep && (
+                          <span className="ml-2">
+                            <Check className="w-3 h-3 text-green-500 inline" />
                           </span>
                         )}
-                      </div>
-                      {/* Checkmark for completed steps */}
-                      <div className={`ml-3 transition-all duration-500 ${
-                        index < initializationStep ? 'opacity-100' : 'opacity-0'
-                      }`}>
-                        <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
                 
-                {/* Progress Bar - 40% narrower and more stable - CENTERED */}
+                {/* Progress Bar - 40% narrower and stable - CENTERED */}
                 <div className="space-y-3 mt-8">
                   <div className="flex justify-center">
                     <div className="w-3/5 bg-gray-700 rounded-full h-1.5">
                       <div 
-                        className="bg-blue-500 h-1.5 rounded-full transition-all duration-1000 ease-out"
+                        className="bg-blue-500 h-1.5 rounded-full transition-all duration-500 ease-out"
                         style={{ 
                           width: `${(initializationStep / initializationSteps.length) * 100}%` 
                         }}
