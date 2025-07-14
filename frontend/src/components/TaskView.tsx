@@ -496,7 +496,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 }`}
                 title={task.isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
               >
-                <Star className={`w-3 h-3 ${task.isFavorite ? 'fill-current' : ''}`} />
+                <Star className={`w-3 h-3 ${task.isFavorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />
                 {task.isFavorite ? 'Favorito' : 'Favorito'}
               </button>
             </div>
