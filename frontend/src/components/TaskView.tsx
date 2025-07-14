@@ -467,6 +467,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
               </button>
               <button
                 onClick={() => {
+                  console.log('⭐ Favorite button clicked');
                   const updatedTask = {
                     ...task,
                     isFavorite: !task.isFavorite
