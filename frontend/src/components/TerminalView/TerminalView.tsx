@@ -382,8 +382,8 @@ export const TerminalView = ({
         <div className="flex-1 text-lg font-semibold">{title}</div>
         <div className="flex items-center gap-3 text-sm text-[#7f7f7f]">
           <div className="flex items-center gap-1">
-            <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-400 animate-pulse' : 'bg-[#7f7f7f]'}`} />
-            <span>{isLive ? 'En vivo' : 'Offline'}</span>
+            <div className={`w-2 h-2 rounded-full ${isSystemOnline ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
+            <span>{isSystemOnline ? 'ONLINE' : 'OFFLINE'}</span>
           </div>
           <div className="flex items-center gap-1">
             <Radio size={14} className="text-blue-400" />
