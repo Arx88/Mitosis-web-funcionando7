@@ -21,7 +21,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
   task,
   onUpdateTask,
   onUpdateTaskProgress,
-  onEnvironmentSetupComplete,
   isThinking
 }) => {
   const [isTyping, setIsTyping] = useState(false);
