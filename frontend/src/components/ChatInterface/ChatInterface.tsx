@@ -226,7 +226,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     console.log('✅ CHAT STATE RESET COMPLETE - Terminal cleared');
   };
 
-  // Effect to reset state when new task is created or when explicitly called
+  // Effect to reset state when new task is created 
   useEffect(() => {
     if (isNewTask) {
       resetChatState();
@@ -235,7 +235,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         onTaskReset();
       }
     }
-  }, [isNewTask, onTaskReset]);
+  }, [isNewTask]); // Removed onTaskReset from dependencies to prevent infinite loop
 
   // Effect to reset state when task ID changes (switching between tasks) or when no task is active
   useEffect(() => {
