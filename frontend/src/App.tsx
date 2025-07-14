@@ -555,9 +555,6 @@ export function App() {
                       <VanishInput
                         onSendMessage={async (message) => {
                           if (message.trim()) {
-                            // Reset any previous task state before creating new task
-                            setActiveTaskId(null);
-                            
                             // Crear la tarea con el texto exacto del usuario
                             const newTask = await createTask(message.trim());
                             
