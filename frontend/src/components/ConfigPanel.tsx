@@ -138,25 +138,25 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
 
                     <div>
                       <label className="block text-[#DADADA] mb-2">Máximo de mensajes</label>
-                      <input
-                        type="number"
+                      <NumberInput
                         value={tempConfig.memory.maxMessages}
-                        onChange={(e) => updateConfig('memory.maxMessages', parseInt(e.target.value))}
-                        className="w-full bg-[#2A2A2B] rounded-lg p-3 text-[#DADADA] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,255,255,0.16)]"
-                        min="1"
-                        max="100"
+                        onChange={(value) => updateConfig('memory.maxMessages', value)}
+                        min={1}
+                        max={100}
+                        step={1}
+                        placeholder="Número de mensajes"
                       />
                     </div>
 
                     <div>
                       <label className="block text-[#DADADA] mb-2">Ventana de contexto</label>
-                      <input
-                        type="number"
+                      <NumberInput
                         value={tempConfig.memory.contextWindow}
-                        onChange={(e) => updateConfig('memory.contextWindow', parseInt(e.target.value))}
-                        className="w-full bg-[#2A2A2B] rounded-lg p-3 text-[#DADADA] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,255,255,0.16)]"
-                        min="1024"
-                        max="32768"
+                        onChange={(value) => updateConfig('memory.contextWindow', value)}
+                        min={1024}
+                        max={32768}
+                        step={1024}
+                        placeholder="Tamaño de contexto"
                       />
                     </div>
                   </div>
