@@ -275,6 +275,27 @@ class ToolManager:
             # Fallback a ejecución normal en caso de error
             return self.tools[tool_name].execute(parameters, config)
     
+    def _check_security_constraints(self, tool_name: str, parameters: Dict[str, Any]) -> bool:
+        """Verificar restricciones de seguridad para una herramienta"""
+        
+        if tool_name == 'shell':
+            command = parameters.get('command', '')
+            blocked_commands = self.security_config['shell']['blocked_commands']
+            
+            # Verificar comandos bloqueados
+            for blocked in blocked_commands:
+                if blocked in command:
+                    return False
+            
+            return True
+        
+        elif tool_name == 'file_manager':
+            path = parameters.get('path', '')
+            return self._is_path_allowed(path)
+        
+        # Para otras herramientas, permitir por defecto
+        return True
+
     def _apply_security_checks(self, tool_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Aplicar verificaciones de seguridad específicas por herramienta"""
         
