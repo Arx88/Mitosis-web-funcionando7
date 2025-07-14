@@ -200,6 +200,9 @@ export const TaskView: React.FC<TaskViewProps> = ({
   }, [showFilesModal]);
 
   const handleSendMessage = (content: string) => {
+    // Check if this is the first message
+    const isFirstMessage = task.messages.length === 0;
+    
     // Add user message
     const userMessage: Message = {
       id: `msg-${Date.now()}`,
@@ -215,13 +218,35 @@ export const TaskView: React.FC<TaskViewProps> = ({
     };
     onUpdateTask(updatedTask);
 
+    // If this is the first message, start environment initialization in terminal
+    if (isFirstMessage) {
+      // Log environment initialization steps to terminal
+      logToTerminal('🚀 Initializing task environment...', 'info');
+      
+      setTimeout(() => {
+        logToTerminal('⚙️  Setting up environment...', 'info');
+      }, 500);
+      
+      setTimeout(() => {
+        logToTerminal('📦 Installing dependencies...', 'info');
+      }, 1500);
+      
+      setTimeout(() => {
+        logToTerminal('🤖 Initializing agent...', 'info');
+      }, 2500);
+      
+      setTimeout(() => {
+        logToTerminal('✅ Environment ready! Starting task execution...', 'success');
+      }, 3500);
+    }
+
     // Simulate agent typing
     setIsTyping(true);
 
     // Simulate agent response after a delay
     setTimeout(() => {
       // If this is the first message, generate a plan
-      if (task.messages.length === 0) {
+      if (isFirstMessage) {
         const plan = generatePlan();
         
         // Add terminal command
