@@ -37,6 +37,15 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [taskFiles, setTaskFiles] = useState<FileItem[]>([]);
   const [terminalLogs, setTerminalLogs] = useState<Array<{message: string, type: 'info' | 'success' | 'error', timestamp: Date}>>([]);
   
+  // Debug effects for modal states
+  useEffect(() => {
+    console.log('🗂️ FilesModal state changed:', showFilesModal);
+  }, [showFilesModal]);
+
+  useEffect(() => {
+    console.log('🔗 ShareModal state changed:', showShareModal);
+  }, [showShareModal]);
+
   // Memory Manager
   const {
     memoryFiles,
