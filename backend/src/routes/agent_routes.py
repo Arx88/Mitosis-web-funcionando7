@@ -128,24 +128,22 @@ def chat():
                 })
         
         elif search_mode == 'deepsearch':
-            # Usar Enhanced Deep Research para DeepResearch
+            # Usar deep_research para DeepResearch
             try:
-                result = tool_manager.execute_tool('enhanced_deep_research', {
+                result = tool_manager.execute_tool('deep_research', {
                     'query': message,
                     'max_sources': 20,
-                    'max_images': 10,
-                    'generate_report': True,
-                    'task_id': task_id
+                    'research_depth': 'comprehensive'
                 })
                 tool_results.append({
-                    'tool': 'enhanced_deep_research',
-                    'parameters': {'query': message, 'max_sources': 20, 'max_images': 10, 'generate_report': True, 'task_id': task_id},
+                    'tool': 'deep_research',
+                    'parameters': {'query': message, 'max_sources': 20, 'research_depth': 'comprehensive'},
                     'result': result
                 })
                 
                 # Si hay un archivo de informe, agregarlo a los archivos de la tarea
-                if result.get('success') and result.get('result', {}).get('report_file'):
-                    report_file_path = result['result']['report_file']
+                if result.get('success') and result.get('report_file'):
+                    report_file_path = result['report_file']
                     file_info = {
                         'id': str(uuid.uuid4()),
                         'file_id': str(uuid.uuid4()),
@@ -167,8 +165,8 @@ def chat():
                     
             except Exception as e:
                 tool_results.append({
-                    'tool': 'enhanced_deep_research',
-                    'parameters': {'query': message, 'max_sources': 20, 'max_images': 10, 'generate_report': True, 'task_id': task_id},
+                    'tool': 'deep_research',
+                    'parameters': {'query': message, 'max_sources': 20, 'research_depth': 'comprehensive'},
                     'result': {'error': str(e)}
                 })
         
