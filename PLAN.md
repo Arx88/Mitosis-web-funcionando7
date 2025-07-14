@@ -213,9 +213,30 @@ Transformar el agente actual en un sistema completamente autónomo capaz de reso
 3. ✅ Crear backend endpoint para environment setup (COMPLETADO)
 4. ✅ Integrar loading con animaciones (COMPLETADO)
 5. ✅ Testear loading completo con animaciones (COMPLETADO)
-6. 🔄 **SIGUIENTE: Implementar Container Manager**
-7. 🔄 **SIGUIENTE: Sistema de aislamiento por tarea**
+6. ✅ Implementar Container Manager (COMPLETADO)
+7. ✅ Sistema de aislamiento por tarea (COMPLETADO)
+8. 🔄 **ACTUAL: Optimización UX - Inicialización Minimalista**
+9. 🔄 **SIGUIENTE: Execution Engine Integration**
+
+## 🎯 MEJORA UX ACTUAL - INICIALIZACIÓN MINIMALISTA (Enero 2025)
+
+### 📋 PROBLEMA IDENTIFICADO
+- **Environment Setup UI demasiado gigante y tosca**
+- **Interrupción en el flujo de trabajo del usuario**
+- **Experiencia no fluida al crear tareas**
+
+### 🎯 SOLUCIÓN IMPLEMENTADA
+- **Eliminación del EnvironmentSetupLoader gigante**
+- **Creación directa de tareas al hacer clic "Nueva tarea"**
+- **Inicialización sutil mostrada en terminal/consola**
+- **Experiencia más fluida y minimalista**
+
+### 🛠️ COMPONENTES MODIFICADOS
+- App.tsx - Eliminación del modal gigante
+- MinimalTaskInitializer.tsx - Nuevo componente sutil
+- TerminalView.tsx - Integración de logs de inicialización
+- TaskView.tsx - Flujo optimizado
 
 ---
 *Plan actualizado: 2025-01-15*
-*Estado: INICIANDO FASE 1.1*
+*Estado: OPTIMIZANDO UX - INICIALIZACIÓN MINIMALISTA*
