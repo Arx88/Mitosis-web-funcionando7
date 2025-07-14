@@ -154,107 +154,126 @@ class ToolManager:
         """Verificar si una herramienta está habilitada"""
         return self.security_config.get(tool_name, {}).get('enabled', False)
     
-    def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Ejecutar una herramienta específica con manejo mejorado de errores
-        
-        Args:
-            tool_name: Nombre de la herramienta
-            parameters: Parámetros para la herramienta
-            
-        Returns:
-            Resultado de la ejecución
-        """
+    def execute_tool(self, tool_name: str, parameters: Dict[str, Any], 
+                    config: Dict[str, Any] = None, task_id: str = None) -> Dict[str, Any]:
+        """Ejecutar una herramienta con configuración y estadísticas mejoradas"""
         import time
-        start_time = time.time()
         
-        # Actualizar estadísticas
-        if tool_name in self.usage_stats:
-            self.usage_stats[tool_name]['calls'] += 1
+        if config is None:
+            config = {}
         
+        # Verificar si la herramienta existe
         if tool_name not in self.tools:
-            error_result = {
+            return {
                 'error': f'Tool {tool_name} not found',
-                'available_tools': list(self.tools.keys()),
-                'success': False
+                'available_tools': list(self.tools.keys())
             }
-            if tool_name in self.usage_stats:
-                self.usage_stats[tool_name]['errors'] += 1
-            return error_result
         
+        # Verificar si la herramienta está habilitada
         if not self.is_tool_enabled(tool_name):
-            error_result = {
+            return {
                 'error': f'Tool {tool_name} is disabled',
-                'success': False
+                'enabled': False
             }
-            if tool_name in self.usage_stats:
-                self.usage_stats[tool_name]['errors'] += 1
-            return error_result
+        
+        # Obtener herramienta
+        tool = self.tools[tool_name]
+        
+        # Validar parámetros
+        if hasattr(tool, 'validate_parameters'):
+            validation = tool.validate_parameters(parameters)
+            if not validation.get('valid', True):
+                return {
+                    'error': validation.get('error', 'Invalid parameters'),
+                    'validation': validation
+                }
+        
+        # Verificar restricciones de seguridad
+        if not self._check_security_constraints(tool_name, parameters):
+            return {
+                'error': f'Security constraints violated for tool {tool_name}',
+                'parameters': parameters
+            }
+        
+        # Registrar inicio de ejecución
+        start_time = time.time()
+        self.usage_stats[tool_name]['calls'] += 1
         
         try:
-            tool = self.tools[tool_name]
-            config = self.security_config.get(tool_name, {})
+            # Verificar si debemos ejecutar en container
+            if task_id and self._should_execute_in_container(tool_name):
+                result = self._execute_in_container(tool_name, parameters, config, task_id)
+            else:
+                # Ejecutar normalmente
+                result = tool.execute(parameters, config)
             
-            # Validar parámetros si el método existe
-            if hasattr(tool, 'validate_parameters'):
-                validation_result = tool.validate_parameters(parameters)
-                if not validation_result.get('valid', True):
-                    error_result = {
-                        'error': f'Invalid parameters: {validation_result.get("error", "Unknown validation error")}',
-                        'expected_parameters': tool.get_parameters() if hasattr(tool, 'get_parameters') else [],
-                        'success': False
-                    }
-                    self.usage_stats[tool_name]['errors'] += 1
-                    return error_result
-            
-            # Aplicar configuración de seguridad
-            security_check = self._apply_security_checks(tool_name, parameters)
-            if not security_check['allowed']:
-                error_result = {
-                    'error': security_check['reason'],
-                    'success': False
-                }
-                self.usage_stats[tool_name]['errors'] += 1
-                return error_result
-            
-            # Ejecutar herramienta
-            result = tool.execute(parameters, config)
-            
-            # Calcular tiempo de ejecución
+            # Registrar tiempo de ejecución
             execution_time = time.time() - start_time
             self.usage_stats[tool_name]['total_time'] += execution_time
             
-            # Formatear resultado
-            if isinstance(result, dict) and 'success' in result:
-                # La herramienta ya incluye el campo success
-                final_result = result
-            else:
-                # Envolver resultado para consistencia
-                final_result = {
-                    'success': True,
-                    'result': result
-                }
+            # Agregar metadata
+            if isinstance(result, dict):
+                result['execution_time'] = execution_time
+                result['tool_name'] = tool_name
+                result['timestamp'] = time.time()
             
-            final_result.update({
-                'tool': tool_name,
-                'timestamp': time.time(),
-                'execution_time': execution_time
-            })
-            
-            return final_result
+            return result
             
         except Exception as e:
-            execution_time = time.time() - start_time
+            # Registrar error
             self.usage_stats[tool_name]['errors'] += 1
+            execution_time = time.time() - start_time
             self.usage_stats[tool_name]['total_time'] += execution_time
             
             return {
                 'error': str(e),
-                'tool': tool_name,
-                'timestamp': time.time(),
+                'tool_name': tool_name,
                 'execution_time': execution_time,
-                'success': False
+                'timestamp': time.time()
             }
+    
+    def _should_execute_in_container(self, tool_name: str) -> bool:
+        """Determinar si una herramienta debe ejecutarse en container"""
+        # Herramientas que se benefician de aislamiento
+        containerized_tools = ['shell', 'file_manager']
+        return tool_name in containerized_tools
+    
+    def _execute_in_container(self, tool_name: str, parameters: Dict[str, Any], 
+                             config: Dict[str, Any], task_id: str) -> Dict[str, Any]:
+        """Ejecutar herramienta dentro de un container"""
+        try:
+            # Obtener información del container
+            container_info = self.container_manager.get_container_info(task_id)
+            
+            if 'error' in container_info:
+                # Fallback a ejecución normal
+                return self.tools[tool_name].execute(parameters, config)
+            
+            # Para shell tool, ejecutar comando en container
+            if tool_name == 'shell':
+                command = parameters.get('command', '')
+                timeout = config.get('timeout', 30)
+                return self.container_manager.execute_command(task_id, command, timeout)
+            
+            # Para file manager, ajustar paths al workspace del container
+            elif tool_name == 'file_manager':
+                workspace_path = container_info.get('workspace_path', '')
+                if workspace_path:
+                    # Ajustar path relative al workspace del container
+                    if 'path' in parameters:
+                        rel_path = parameters['path']
+                        if not rel_path.startswith('/'):
+                            parameters['path'] = os.path.join(workspace_path, rel_path)
+                
+                return self.tools[tool_name].execute(parameters, config)
+            
+            else:
+                # Para otras herramientas, ejecutar normalmente
+                return self.tools[tool_name].execute(parameters, config)
+        
+        except Exception as e:
+            # Fallback a ejecución normal en caso de error
+            return self.tools[tool_name].execute(parameters, config)
     
     def _apply_security_checks(self, tool_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Aplicar verificaciones de seguridad específicas por herramienta"""
