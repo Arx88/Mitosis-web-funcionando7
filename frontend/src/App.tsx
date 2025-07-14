@@ -526,29 +526,17 @@ export function App() {
           
           <div className="flex-1 flex flex-col overflow-hidden">
             {activeTask ? (
-              <>
-                {/* Mostrar inicializador minimalista si está inicializando */}
-                {initializingTaskId === activeTask.id && (
-                  <div className="bg-[#1E1E1E] border-b border-[rgba(255,255,255,0.1)] p-4">
-                    <MinimalTaskInitializer
-                      taskId={activeTask.id}
-                      taskTitle={activeTask.title}
-                      taskType="general"
-                      onComplete={handleInitializationComplete}
-                      onLogUpdate={handleInitializationLog}
-                    />
-                  </div>
-                )}
-                
-                <TaskView 
-                  task={activeTask} 
-                  onUpdateTask={updateTask}
-                  onUpdateTaskProgress={updateTaskProgress}
-                  isThinking={appState.isThinking}
-                  onTerminalResize={handleTerminalResize}
-                  externalLogs={initializationLogs}
-                />
-              </>
+              <TaskView 
+                task={activeTask} 
+                onUpdateTask={updateTask}
+                onUpdateTaskProgress={updateTaskProgress}
+                isThinking={appState.isThinking}
+                onTerminalResize={handleTerminalResize}
+                externalLogs={initializationLogs}
+                isInitializing={initializingTaskId === activeTask.id}
+                onInitializationComplete={handleInitializationComplete}
+                onInitializationLog={handleInitializationLog}
+              />
             ) : (
               <div className="flex flex-1 items-center justify-center bg-[#272728] p-8">
                 <div className="text-left max-w-4xl w-full">
