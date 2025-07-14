@@ -31,7 +31,11 @@ class ToolManager:
             'deep_research': DeepResearchTool(),  # Usar versión mejorada
             'comprehensive_research': ComprehensiveResearchTool(),
             'enhanced_web_search': EnhancedWebSearchTool(),  # Alias para compatibilidad
-            'enhanced_deep_research': DeepResearchTool()  # Alias para compatibilidad
+            'enhanced_deep_research': DeepResearchTool(),  # Alias para compatibilidad
+            # Nuevas herramientas
+            'firecrawl': FirecrawlTool(),
+            'qstash': QStashTool(),
+            'playwright': PlaywrightTool()
         }
         
         # Configuración de seguridad mejorada
