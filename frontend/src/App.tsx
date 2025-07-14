@@ -567,9 +567,33 @@ export function App() {
                             
                             // Crear la tarea con el texto exacto del usuario
                             const newTask = await createTask(message.trim());
-                            // Inmediatamente enviar el mensaje del usuario a la tarea creada
-                            setTimeout(() => {
-                              if (newTask) {
+                            
+                            // Enviar el mensaje al backend API
+                            try {
+                              const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+                              console.log('🔗 Backend URL for regular task:', backendUrl);
+                              console.log('📤 Sending regular task request to backend');
+                              
+                              const response = await fetch(`${backendUrl}/api/agent/chat`, {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                  message: message.trim(),
+                                  context: { task_id: newTask.id }
+                                })
+                              });
+
+                              console.log('📡 Regular task response status:', response.status);
+
+                              if (response.ok) {
+                                const chatResponse = await response.json();
+                                console.log('✅ Regular task response received:', chatResponse);
+                                
+                                // Generar plan genérico para tareas normales
+                                const genericPlan = generateTaskPlan(message.trim());
+                                
                                 const userMessage = {
                                   id: `msg-${Date.now()}`,
                                   content: message.trim(),
@@ -577,22 +601,72 @@ export function App() {
                                   timestamp: new Date()
                                 };
                                 
-                                // Generar plan genérico para tareas normales
+                                const agentMessage = {
+                                  id: `msg-${Date.now() + 1}`,
+                                  content: chatResponse.response || 'Procesando tu tarea...',
+                                  sender: 'agent' as const,
+                                  timestamp: new Date()
+                                };
+                                
+                                const updatedTask = {
+                                  ...newTask,
+                                  messages: [userMessage, agentMessage],
+                                  plan: genericPlan,
+                                  status: 'in-progress' as const,
+                                  progress: 20 // Start with some progress
+                                };
+                                
+                                setTasks(prev => prev.map(task => 
+                                  task.id === newTask.id ? updatedTask : task
+                                ));
+                              } else {
+                                console.error('❌ Regular task error response:', response.status, response.statusText);
+                                // Fallback to local task creation
+                                const userMessage = {
+                                  id: `msg-${Date.now()}`,
+                                  content: message.trim(),
+                                  sender: 'user' as const,
+                                  timestamp: new Date()
+                                };
+                                
                                 const genericPlan = generateTaskPlan(message.trim());
                                 
                                 const updatedTask = {
                                   ...newTask,
                                   messages: [userMessage],
-                                  plan: genericPlan, // Asignar plan genérico
+                                  plan: genericPlan,
                                   status: 'in-progress' as const,
-                                  progress: 0 // Start at 0, progress will be based on plan completion
+                                  progress: 0
                                 };
                                 
                                 setTasks(prev => prev.map(task => 
                                   task.id === newTask.id ? updatedTask : task
                                 ));
                               }
-                            }, 100);
+                            } catch (error) {
+                              console.error('💥 Error executing regular task:', error);
+                              // Fallback to local task creation
+                              const userMessage = {
+                                id: `msg-${Date.now()}`,
+                                content: message.trim(),
+                                sender: 'user' as const,
+                                timestamp: new Date()
+                              };
+                              
+                              const genericPlan = generateTaskPlan(message.trim());
+                              
+                              const updatedTask = {
+                                ...newTask,
+                                messages: [userMessage],
+                                plan: genericPlan,
+                                status: 'in-progress' as const,
+                                progress: 0
+                              };
+                              
+                              setTasks(prev => prev.map(task => 
+                                task.id === newTask.id ? updatedTask : task
+                              ));
+                            }
                           }
                         }}
                         placeholder="Escribe tu tarea aquí..."
