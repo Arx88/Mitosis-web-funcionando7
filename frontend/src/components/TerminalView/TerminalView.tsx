@@ -54,7 +54,12 @@ export const TerminalView = ({
   toolResults = [],
   plan = [],
   onToggleTaskStep,
-  externalLogs = []
+  externalLogs = [],
+  isInitializing = false,
+  onInitializationComplete,
+  onInitializationLog,
+  taskId,
+  taskTitle
 }: TerminalViewProps) => {
   const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
   const [isPlanExpanded, setIsPlanExpanded] = useState(true);
