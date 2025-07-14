@@ -554,6 +554,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
             onInitializationLog={onInitializationLog}
             taskId={task.id}
             taskTitle={task.title}
+            data-id={task.id}
           />
         </div>
       </div>
