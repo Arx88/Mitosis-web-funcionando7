@@ -109,6 +109,9 @@ export function App() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isTaskCreating, setIsTaskCreating] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [showEnvironmentSetup, setShowEnvironmentSetup] = useState(false);
+  const [environmentSetupTaskId, setEnvironmentSetupTaskId] = useState<string | null>(null);
+  const [environmentSetupTaskTitle, setEnvironmentSetupTaskTitle] = useState<string>('');
   
   const createTask = async (title: string) => {
     // Reset any previous task state before creating new task
