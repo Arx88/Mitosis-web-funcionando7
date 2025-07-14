@@ -109,23 +109,20 @@ def chat():
         created_files = []
         
         if search_mode == 'websearch':
-            # Usar Enhanced Web Search para WebSearch
+            # Usar web_search para WebSearch
             try:
-                result = tool_manager.execute_tool('enhanced_web_search', {
+                result = tool_manager.execute_tool('web_search', {
                     'query': message,
-                    'max_results': 10,
-                    'max_images': 5,
-                    'include_summary': True,
-                    'search_depth': 'basic'
+                    'max_results': 10
                 })
                 tool_results.append({
-                    'tool': 'enhanced_web_search',
-                    'parameters': {'query': message, 'max_results': 10, 'max_images': 5, 'include_summary': True, 'search_depth': 'basic'},
+                    'tool': 'web_search',
+                    'parameters': {'query': message, 'max_results': 10},
                     'result': result
                 })
             except Exception as e:
                 tool_results.append({
-                    'tool': 'enhanced_web_search',
+                    'tool': 'web_search',
                     'parameters': {'query': message},
                     'result': {'error': str(e)}
                 })
