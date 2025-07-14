@@ -103,7 +103,7 @@ export const TerminalView = ({
     console.log('✅ TERMINAL: State reset complete for task:', dataId);
   }, [dataId]); // Reset whenever dataId changes, including when it becomes null/undefined
 
-  // Handle environment initialization
+  // Handle environment initialization - Fixed dependency array
   useEffect(() => {
     if (isInitializing && taskId && taskTitle) {
       console.log('🚀 TERMINAL: Starting environment initialization');
@@ -146,7 +146,7 @@ export const TerminalView = ({
       
       processStep(0);
     }
-  }, [isInitializing, taskId, taskTitle, onInitializationLog, onInitializationComplete, initializationSteps]);
+  }, [isInitializing, taskId, taskTitle, onInitializationLog, onInitializationComplete]); // Removed initializationSteps
 
   // Inicializar con TODO.md como Página 1 - Solo si hay plan Y no hay páginas Y hay dataId
   useEffect(() => {
