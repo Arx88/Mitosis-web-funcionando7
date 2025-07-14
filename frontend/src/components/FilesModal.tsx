@@ -143,7 +143,7 @@ export const FilesModal: React.FC<FilesModalProps> = ({
   };
 
   const getFileIcon = (file: FileItem) => {
-    if (!file) return <FileText className="w-4 h-4 text-gray-400" />;
+    if (!file) return <FileText className="w-4 h-4 text-[#7f7f7f]" />;
     
     if (file.type === 'directory') {
       return <Archive className="w-4 h-4 text-yellow-500" />;
@@ -162,7 +162,7 @@ export const FilesModal: React.FC<FilesModalProps> = ({
     } else if (mimeType.includes('text') || mimeType.includes('json')) {
       return <FileText className="w-4 h-4 text-blue-400" />;
     } else {
-      return <FileText className="w-4 h-4 text-gray-400" />;
+      return <FileText className="w-4 h-4 text-[#7f7f7f]" />;
     }
   };
 
