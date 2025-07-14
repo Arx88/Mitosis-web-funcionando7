@@ -4,7 +4,7 @@
 
 Este documento describe todas las APIs y servicios externos utilizados en la aplicación Mitosis.
 
-### APIs Actualmente Integradas ✅
+### APIs Integradas y Funcionando ✅
 
 #### 1. **Tavily API** - Búsqueda Web
 - **Propósito**: Búsqueda web avanzada con resultados enriquecidos
@@ -25,49 +25,59 @@ Este documento describe todas las APIs y servicios externos utilizados en la apl
   - `src/services/database.py`
 - **Uso**: Almacenamiento de todas las operaciones
 
-### APIs Disponibles para Integración 🔄
-
-#### 3. **Firecrawl** - Web Scraping Avanzado
+#### 3. **Firecrawl API** - Web Scraping Avanzado
 - **Propósito**: Scraping web más sofisticado que BeautifulSoup
+- **Estado**: ✅ Integrado y configurado
 - **Clave**: `fc-d7697dffe9a04c4e973e213284e9de76`
-- **Valor agregado**: 
+- **Ubicación**: `/app/backend/.env`
+- **Archivos**:
+  - `src/tools/firecrawl_tool.py`
+- **Funcionalidades**:
   - Extracción de contenido estructurado
   - Manejo de JavaScript y SPAs
-  - Mejores resultados que BeautifulSoup
-- **Recomendación**: ✅ INTEGRAR - Mejora significativa sobre el scraping actual
+  - Soporte para múltiples formatos de salida
+  - Crawling de múltiples páginas
 
-#### 4. **QStash** - Jobs en Background
+#### 4. **QStash (Redis)** - Jobs en Background
 - **Propósito**: Procesamiento de trabajos en segundo plano
-- **Clave**: `redis://default:AeJLAAIjcDE4NmM1NWI5ZjQwYjE0NDIwYjRhNWZmNDhmOTk2OGU1MHAxMA@normal-vervet-57931.upstash.io:6379`
-- **Valor agregado**:
-  - Tareas de investigación profunda sin bloquear UI
-  - Procesamiento de archivos grandes
-  - Tareas programadas
-- **Recomendación**: ✅ INTEGRAR - Mejora UX para tareas largas
+- **Estado**: ✅ Integrado y configurado
+- **URL**: `redis://default:AeJLAAIjcDE4NmM1NWI5ZjQwYjE0NDIwYjRhNWZmNDhmOTk2OGU1MHAxMA@normal-vervet-57931.upstash.io:6379`
+- **Ubicación**: `/app/backend/.env`
+- **Archivos**:
+  - `src/tools/qstash_tool.py`
+- **Funcionalidades**:
+  - Creación y gestión de trabajos
+  - Monitoreo de progreso
+  - Colas de prioridad
+  - Timeout y cancelación
 
-#### 5. **RapidAPI** - APIs Externas
-- **Propósito**: Acceso a múltiples APIs de terceros
-- **Clave**: `e3c8f40077msh2383361adacc215p1fb470jsn0a2150f802f9`
-- **Valor agregado**:
-  - Acceso a APIs especializadas
-  - Datos de mercado, clima, noticias, etc.
-- **Recomendación**: ⚠️ EVALUAR - Solo si se necesitan APIs específicas
-
-#### 6. **Smithery** - Agentes Personalizados
-- **Propósito**: Desarrollo de agentes especializados
-- **Clave**: `generous-zebra-3J27EB`
-- **Valor agregado**:
-  - Agentes especializados por dominio
-  - Flujos de trabajo personalizados
-- **Recomendación**: 🔍 INVESTIGAR - Requiere análisis del servicio
-
-#### 7. **Playwright** - Automatización de Navegadores
-- **Propósito**: Automatización web y testing
-- **Valor agregado**:
-  - Scraping de contenido dinámico
-  - Testing automatizado
+#### 5. **Playwright** - Automatización de Navegadores
+- **Propósito**: Automatización web y scraping avanzado
+- **Estado**: ✅ Integrado y configurado
+- **Dependencias**: `playwright>=1.40.0`
+- **Ubicación**: `/app/backend/requirements.txt`
+- **Archivos**:
+  - `src/tools/playwright_tool.py`
+- **Funcionalidades**:
+  - Navegación automatizada
   - Capturas de pantalla
-- **Recomendación**: ✅ INTEGRAR - Útil para scraping avanzado
+  - Extracción de contenido dinámico
+  - Interacción con formularios
+  - Ejecución de JavaScript
+
+### APIs Disponibles (No Integradas) 🔄
+
+#### 6. **RapidAPI** - APIs Externas
+- **Propósito**: Acceso a múltiples APIs de terceros
+- **Estado**: 🔄 Clave disponible, pendiente de uso específico
+- **Clave**: `e3c8f40077msh2383361adacc215p1fb470jsn0a2150f802f9`
+- **Recomendación**: Solo integrar si se necesitan APIs específicas
+
+#### 7. **Smithery** - Agentes Personalizados
+- **Propósito**: Desarrollo de agentes especializados
+- **Estado**: 🔄 Clave disponible, pendiente de investigación
+- **Clave**: `generous-zebra-3J27EB`
+- **Recomendación**: Investigar capacidades antes de integrar
 
 ### Funcionalidades Ya Implementadas (No Necesitan APIs Externas)
 
