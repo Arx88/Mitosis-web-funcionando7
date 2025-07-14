@@ -92,6 +92,27 @@ class ToolManager:
                 'max_images': 15,
                 'timeout': 60,
                 'confidence_threshold': 0.75
+            },
+            # Nuevas herramientas
+            'firecrawl': {
+                'enabled': True,
+                'timeout': 30,
+                'max_pages': 10,
+                'include_images': True,
+                'include_links': True
+            },
+            'qstash': {
+                'enabled': True,
+                'max_jobs': 100,
+                'default_timeout': 300,
+                'max_priority_jobs': 10
+            },
+            'playwright': {
+                'enabled': True,
+                'headless': True,
+                'timeout': 30000,
+                'viewport_width': 1920,
+                'viewport_height': 1080
             }
         }
         
