@@ -114,6 +114,9 @@ export function App() {
     setActiveTaskId(null);
     setIsTaskCreating(true);
     
+    // Reset terminal/computer state for new task
+    console.log('🔄 Resetting terminal state for new task');
+    
     const newTask: Task = {
       id: `task-${Date.now()}`,
       title,

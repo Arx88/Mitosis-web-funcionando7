@@ -537,7 +537,15 @@ export const TerminalView = ({
                         'bg-[#3a3a3c] text-[#7f7f7f] group-hover:bg-[#4a4a4c] group-hover:text-[#ACACAC]'
                       }`}>
                         {step.completed ? (
-                          <CheckCircle className="w-3 h-3" />
+                          <Check className="w-3 h-3" />
+                        ) : step.active ? (
+                          <div className="w-4 h-4 flex items-center justify-center">
+                            <div className="w-3 h-3 rounded-sm loader-spin" 
+                                 style={{
+                                   background: 'linear-gradient(-45deg, #fc00ff 0%, #00dbde 100%)'
+                                 }}>
+                            </div>
+                          </div>
                         ) : (
                           <span className="text-xs font-semibold">{index + 1}</span>
                         )}

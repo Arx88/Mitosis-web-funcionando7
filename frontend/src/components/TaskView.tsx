@@ -285,24 +285,55 @@ export const TaskView: React.FC<TaskViewProps> = ({
         if (!s.completed) {
           return { ...s, completed: true, active: false };
         } else {
-          // Si se descompleta, activarlo
+          // Si se descompleta, activarlo y desactivar todos los demás
           return { ...s, completed: false, active: true };
         }
       }
-      // Si completamos un paso, activar el siguiente
-      if (!step.completed && index === currentIndex + 1) {
-        return { ...s, active: true };
+      
+      // Lógica para manejar otros pasos
+      if (!step.completed) {
+        // Si estamos completando el paso actual
+        if (index === currentIndex + 1) {
+          // Activar el siguiente paso solo si no hay pasos incompletos anteriores
+          const hasIncompleteStepsBefore = task.plan.slice(0, index).some(prevStep => !prevStep.completed && prevStep.id !== stepId);
+          return { ...s, active: !hasIncompleteStepsBefore, completed: false };
+        } else if (index > currentIndex) {
+          // Desactivar todos los pasos posteriores
+          return { ...s, active: false, completed: false };
+        } else {
+          // Mantener pasos anteriores como están
+          return s;
+        }
+      } else {
+        // Si estamos descompletando el paso actual
+        if (index > currentIndex) {
+          // Desactivar y descompletar todos los pasos siguientes
+          return { ...s, active: false, completed: false };
+        } else if (index < currentIndex) {
+          // Mantener pasos anteriores completados
+          return s;
+        } else {
+          // Desactivar todos los otros pasos activos
+          return { ...s, active: false };
+        }
       }
-      // Si descompletamos un paso, desactivar los siguientes
-      if (step.completed && index > currentIndex) {
+    });
+
+    // Asegurar que solo hay un paso activo a la vez
+    let hasActiveStep = false;
+    const finalPlan = updatedPlan.map(s => {
+      if (s.active && !hasActiveStep) {
+        hasActiveStep = true;
+        return s;
+      } else if (s.active && hasActiveStep) {
         return { ...s, active: false };
       }
       return s;
     });
 
     // Calculate progress based on completed steps
-    const completedSteps = updatedPlan.filter(step => step.completed).length;
-    const totalSteps = updatedPlan.length;
+    const completedSteps = finalPlan.filter(step => step.completed).length;
+    const totalSteps = finalPlan.length;
     const planProgress = Math.round((completedSteps / totalSteps) * 100);
     
     // Determine status based on progress
@@ -315,7 +346,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
     onUpdateTask({
       ...task,
-      plan: updatedPlan,
+      plan: finalPlan,
       progress: planProgress,
       status: newStatus
     });
@@ -453,7 +484,9 @@ export const TaskView: React.FC<TaskViewProps> = ({
               }}
               onTaskReset={() => {
                 // Reset task-specific state when switching tasks
-                console.log('Task reset triggered for task:', task.id);
+                console.log('🔄 Task reset triggered for task:', task.id);
+                // Clear terminal logs for new task
+                setTerminalLogs([]);
               }}
               isNewTask={task.messages.length === 0}
             />

@@ -1,0 +1,31 @@
+# Core dependencies from Mitosis_Enhanced
+requests>=2.31.0
+
+# Web framework and API
+Flask>=3.0.0
+Flask-CORS>=4.0.0
+Flask-SocketIO>=5.3.0
+
+# WebSocket support
+python-socketio>=5.8.0
+
+# Database and data handling
+sqlite3  # Built-in Python module
+
+# Async support
+asyncio  # Built-in Python module
+
+# Utilities
+uuid  # Built-in Python module
+datetime  # Built-in Python module
+dataclasses  # Built-in Python module (Python 3.7+)
+typing  # Built-in Python module
+json  # Built-in Python module
+logging  # Built-in Python module
+os  # Built-in Python module
+sys  # Built-in Python module
+time  # Built-in Python module
+
+# Optional: For enhanced functionality
+python-dotenv>=1.0.0  # For environment variable management
+

@@ -806,3 +806,21 @@ body {
   font-style: italic;
   color: #000000;
 }
+/* Loader animation for active tasks */
+@keyframes spin {
+  0% {
+    transform: rotate(-45deg);
+  }
+  50% {
+    transform: rotate(-360deg);
+    border-radius: 50%;
+  }
+  100% {
+    transform: rotate(-45deg);
+  }
+}
+
+.loader-spin {
+  animation: spin 3s infinite;
+}
+
