@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """
-Backend API Test Script for Task Manager Application
+Backend API Test Script for Task Manager Application - OLLAMA SERVICE IMPROVEMENTS TESTING
 
-This script tests the backend API endpoints of the Task Manager application,
-with a focus on enhanced chat interface, structured data, file upload/download,
-and database persistence.
+This script tests the backend API endpoints after UI configuration improvements,
+specifically focusing on:
+1. Ollama models endpoint - real models fetch with fallback to dummy
+2. Health endpoint - correct Ollama status information  
+3. General functionality - main endpoints still working after changes
+4. Status endpoint
+5. Basic chat endpoint
+6. Ollama service handling both successful and failed connections
 """
 
 import requests
