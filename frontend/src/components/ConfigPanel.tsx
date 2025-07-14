@@ -380,13 +380,13 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                       <div className="space-y-3">
                         <div>
                           <label className="block text-[#ACACAC] mb-2">Timeout (segundos)</label>
-                          <input
-                            type="number"
+                          <NumberInput
                             value={tempConfig.tools.shell.timeout}
-                            onChange={(e) => updateConfig('tools.shell.timeout', parseInt(e.target.value))}
-                            className="w-full bg-[#2A2A2B] rounded-lg p-3 text-[#DADADA] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,255,255,0.16)]"
-                            min="5"
-                            max="300"
+                            onChange={(value) => updateConfig('tools.shell.timeout', value)}
+                            min={5}
+                            max={300}
+                            step={5}
+                            placeholder="Timeout en segundos"
                           />
                         </div>
                       </div>
@@ -409,24 +409,24 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                       <div className="space-y-3">
                         <div>
                           <label className="block text-[#ACACAC] mb-2">Máximo de resultados</label>
-                          <input
-                            type="number"
+                          <NumberInput
                             value={tempConfig.tools.webSearch.maxResults}
-                            onChange={(e) => updateConfig('tools.webSearch.maxResults', parseInt(e.target.value))}
-                            className="w-full bg-[#2A2A2B] rounded-lg p-3 text-[#DADADA] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,255,255,0.16)]"
-                            min="1"
-                            max="20"
+                            onChange={(value) => updateConfig('tools.webSearch.maxResults', value)}
+                            min={1}
+                            max={20}
+                            step={1}
+                            placeholder="Número de resultados"
                           />
                         </div>
                         <div>
                           <label className="block text-[#ACACAC] mb-2">Timeout (segundos)</label>
-                          <input
-                            type="number"
+                          <NumberInput
                             value={tempConfig.tools.webSearch.timeout}
-                            onChange={(e) => updateConfig('tools.webSearch.timeout', parseInt(e.target.value))}
-                            className="w-full bg-[#2A2A2B] rounded-lg p-3 text-[#DADADA] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,255,255,0.16)]"
-                            min="5"
-                            max="60"
+                            onChange={(value) => updateConfig('tools.webSearch.timeout', value)}
+                            min={5}
+                            max={60}
+                            step={5}
+                            placeholder="Timeout en segundos"
                           />
                         </div>
                       </div>
@@ -449,13 +449,13 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                       <div className="space-y-3">
                         <div>
                           <label className="block text-[#ACACAC] mb-2">Tamaño máximo de archivo (MB)</label>
-                          <input
-                            type="number"
+                          <NumberInput
                             value={tempConfig.tools.fileManager.maxFileSize}
-                            onChange={(e) => updateConfig('tools.fileManager.maxFileSize', parseInt(e.target.value))}
-                            className="w-full bg-[#2A2A2B] rounded-lg p-3 text-[#DADADA] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,255,255,0.16)]"
-                            min="1"
-                            max="100"
+                            onChange={(value) => updateConfig('tools.fileManager.maxFileSize', value)}
+                            min={1}
+                            max={100}
+                            step={1}
+                            placeholder="Tamaño en MB"
                           />
                         </div>
                       </div>
