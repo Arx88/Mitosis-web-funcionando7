@@ -19,6 +19,7 @@ from .deep_research_tool_improved import DeepResearchTool
 from .firecrawl_tool import FirecrawlTool
 from .qstash_tool import QStashTool
 from .playwright_tool import PlaywrightTool
+from .container_manager import ContainerManager
 
 class ToolManager:
     def __init__(self):
