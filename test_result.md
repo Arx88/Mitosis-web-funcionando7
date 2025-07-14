@@ -515,6 +515,30 @@ command=serve -s dist -l 3000  # Sirve archivos estáticos de producción
 
 ```yaml
 frontend:
+  - task: "Environment Initialization Display"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/TerminalView/TerminalView.tsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "ENVIRONMENT INITIALIZATION FUNCTIONALITY TESTING COMPLETED: Critical failure identified. ✅ Welcome page loads correctly with 'Bienvenido a Mitosis' title and proper UI layout, ✅ Task creation works and navigates away from welcome page successfully, ✅ No initialization appears at top of page (avoiding 'RARA' way). ❌ CRITICAL FAILURES: Terminal/computer section not rendering after task creation, No OFFLINE/ONLINE status indicators found, No initialization steps displayed ('Setting up environment', 'Installing dependencies', 'Initializing agent'), Task view shows loading placeholders instead of actual content. ROOT CAUSE: The environment initialization code exists but the terminal/monitor section is not rendering properly after task creation. The initialization process is completely broken despite having the implementation in TerminalView.tsx and related components. URGENT: Fix terminal view rendering and initialization process integration."
+
+  - task: "Welcome Page Environment Initialization Fix"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "WELCOME PAGE FUNCTIONALITY VERIFIED AS WORKING CORRECTLY: ✅ Title Display: 'Bienvenido a Mitosis' displays correctly without overlapping, ✅ Subtitle Display: '¿Qué puedo hacer por ti?' displays correctly, ✅ Input Field: Textarea input field is visible and functional, ✅ Internal Buttons: All 4 internal buttons (Adjuntar, Web, Deep, Voz) are visible and clickable, ✅ Suggestion Buttons: 5 suggestion buttons working, ✅ Task Creation: Input processing and form submission work correctly, ✅ Navigation: Successfully navigates away from welcome page when task is created, ✅ No Initialization at Top: Initialization does NOT appear at the top of the page (avoiding the 'RARA' way mentioned in requirements). The welcome page aspect of the environment initialization fix is working perfectly."
+
   - task: "Welcome Page UI Layout"
     implemented: true
     working: true
