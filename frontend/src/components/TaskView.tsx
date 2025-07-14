@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Task, Message, TerminalCommand } from '../types';
 import { TerminalView } from './TerminalView';
 import { ChatInterface } from './ChatInterface';
