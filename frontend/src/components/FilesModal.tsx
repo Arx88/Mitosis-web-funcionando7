@@ -199,23 +199,23 @@ export const FilesModal: React.FC<FilesModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+      <div className="bg-[#272728] rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col border border-[rgba(255,255,255,0.08)]">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-[rgba(255,255,255,0.08)]">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Archivos Generados</h2>
-            <p className="text-sm text-gray-500 mt-1">{taskTitle}</p>
+            <h2 className="text-xl font-semibold text-[#DADADA]">Archivos Generados</h2>
+            <p className="text-sm text-[#ACACAC] mt-1">{taskTitle}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-[rgba(255,255,255,0.08)] rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-[#ACACAC]" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-[rgba(255,255,255,0.08)]">
           <button
             onClick={() => setActiveTab('agent')}
             className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
