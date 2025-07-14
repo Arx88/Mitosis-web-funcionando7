@@ -105,6 +105,77 @@
 
 ---
 
+## 🎯 **CRITICAL CRASH ISSUE RESOLVED** (Julio 2025)
+
+### ✅ **ROOT CAUSE IDENTIFIED AND FIXED**
+
+**PROBLEMA REPORTADO**: "el sitio crashea solucionalo" (the site crashes, fix it)
+
+**CAUSA RAÍZ ENCONTRADA**:
+1. **Missing httpx dependency**: Backend service crashing due to missing `httpx` module required by `tavily` library
+2. **Development mode running**: Frontend still in Vite development mode instead of production static files
+3. **WebSocket connection failures**: Constant WebSocket failures causing page reloads and crashes
+
+**SOLUCIÓN IMPLEMENTADA**:
+1. **Backend Fix**: Added missing `httpx>=0.24.0` dependency to `requirements.txt` and installed it
+2. **Frontend Fix**: Built production files with `npm run build` and configured supervisor to use `serve` instead of `vite`
+3. **Production Mode**: Switched from `yarn start` (development) to `serve -s dist -p 3000` (production static files)
+
+### 🔧 **TECHNICAL CHANGES MADE**
+
+**Backend Changes**:
+- Added `httpx>=0.24.0` to `/app/backend/requirements.txt`
+- Installed missing httpx dependency with `pip install httpx>=0.24.0`
+- Backend service now starts correctly without import errors
+
+**Frontend Changes**:
+- Built production files: `npm run build` creates optimized static files in `/app/frontend/dist/`
+- Updated supervisor configuration: Changed from `yarn start` to `serve -s dist -p 3000`
+- Installed `serve` globally: `npm install -g serve`
+- Frontend now serves static files instead of development server
+
+**Supervisor Configuration**:
+```diff
+[program:frontend]
+- command=yarn start
+- environment=HOST="0.0.0.0",PORT="3000",
++ command=serve -s dist -p 3000
+directory=/app/frontend
+```
+
+### 🧪 **VERIFICATION RESULTS**
+
+**Backend Status**: ✅ **HEALTHY**
+- Service running on port 8001
+- 11 tools available 
+- Database connection working
+- Health endpoint responding correctly
+
+**Frontend Status**: ✅ **STABLE**
+- Production build serving static files
+- No more WebSocket connection failures
+- No more Vite development server crashes
+- Application loads correctly without reloads
+
+**API Testing**:
+- ✅ Backend health check: `curl http://localhost:8001/health` returns status "healthy"
+- ✅ Frontend loading: `curl http://localhost:3000` serves static HTML correctly
+- ✅ No development scripts: No `@vite/client` or WebSocket connections in production
+
+### 🎉 **PROBLEM RESOLVED**
+
+**ESTADO FINAL**: ✅ **SITIO YA NO CRASHEA**
+- Backend service estable sin errores de importación
+- Frontend ejecutándose en modo producción con archivos estáticos
+- Sin reinicios automáticos ni fallos de WebSocket
+- Aplicación completamente funcional y estable
+
+**EVIDENCIA**:
+- Supervisor status: Todos los servicios RUNNING
+- Backend logs: Sin errores de ModuleNotFoundError
+- Frontend logs: Serviendo archivos estáticos
+- Browser testing: Sin recargas automáticas ni errores de consola
+
 ## 🎯 **PROBLEMA CRÍTICO RESUELTO - AUTO-REFRESH FIXED** (Enero 2025)
 
 ### ✅ **SOLUCIÓN IMPLEMENTADA AL PROBLEMA DE REINICIO CONSTANTE**
