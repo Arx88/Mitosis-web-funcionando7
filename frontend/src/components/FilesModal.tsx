@@ -272,11 +272,11 @@ export const FilesModal: React.FC<FilesModalProps> = ({
             <>
               {/* Selection Controls */}
               {filteredFiles.length > 0 && (
-                <div className="flex items-center justify-between p-4 bg-gray-50 border-b border-gray-200">
+                <div className="flex items-center justify-between p-4 bg-[#383739] border-b border-[rgba(255,255,255,0.08)]">
                   <div className="flex items-center gap-4">
                     <button
                       onClick={toggleSelectAll}
-                      className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+                      className="flex items-center gap-2 text-sm text-[#ACACAC] hover:text-[#DADADA]"
                     >
                       {isAllSelected ? (
                         <CheckSquare className="w-4 h-4" />
@@ -288,13 +288,13 @@ export const FilesModal: React.FC<FilesModalProps> = ({
                     
                     {selectedFiles.size > 0 && (
                       <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-[#ACACAC]">
                           {selectedFiles.size} archivo{selectedFiles.size !== 1 ? 's' : ''} seleccionado{selectedFiles.size !== 1 ? 's' : ''} 
                           ({formatFileSize(getTotalSelectedSize())})
                         </span>
                         <button
                           onClick={clearSelection}
-                          className="text-sm text-gray-500 hover:text-gray-700"
+                          className="text-sm text-[#7f7f7f] hover:text-[#ACACAC]"
                         >
                           Limpiar selección
                         </button>
