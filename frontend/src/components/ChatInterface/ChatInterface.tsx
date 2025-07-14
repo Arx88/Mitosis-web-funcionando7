@@ -643,79 +643,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         let shouldCreateFileMessage = false;
         let filesToShow = [];
         
-        // Method 1: Upload data from file upload response
+        // Only create file messages for actual file uploads (not for DeepSearch or task execution)
+        // Method 1: Upload data from file upload response (keep this for real file uploads)
         if (response.upload_data && response.upload_data.files && Array.isArray(response.upload_data.files) && response.upload_data.files.length > 0) {
           console.log('📝 Using upload_data files:', response.upload_data.files);
           filesToShow = response.upload_data.files;
           shouldCreateFileMessage = true;
         }
-        // Method 2: Direct created_files array from backend
-        else if (response.created_files && Array.isArray(response.created_files) && response.created_files.length > 0) {
-          console.log('📝 Using created_files array:', response.created_files);
-          filesToShow = response.created_files;
-          shouldCreateFileMessage = true;
-        } 
-        // Method 3: Single created_files object
-        else if (response.created_files && typeof response.created_files === 'object' && !Array.isArray(response.created_files)) {
-          console.log('📝 Using single created_files object:', response.created_files);
-          filesToShow = [response.created_files];
-          shouldCreateFileMessage = true;
-        } 
-        // Method 4: Get recent files from backend if we have task ID
-        else if (dataId && (searchMode === 'deepsearch' || processedMessage.includes('archivo') || processedMessage.includes('adjuntar'))) {
-          console.log('📝 Attempting to get recent files from backend for task:', dataId);
-          
-          try {
-            // Get the actual files from backend
-            const backendFiles = await agentAPI.getTaskFiles(dataId);
-            
-            // Filter for recent files (within last 2 minutes)
-            const recentFiles = backendFiles.filter(file => {
-              const fileTime = new Date(file.created_at);
-              const timeDiff = Date.now() - fileTime.getTime();
-              return timeDiff < 2 * 60 * 1000; // 2 minutes
-            });
-            
-            if (recentFiles.length > 0) {
-              filesToShow = recentFiles.map(file => ({
-                id: file.id || file.file_id,
-                name: file.name,
-                size: file.size,
-                type: file.mime_type || file.type,
-                url: file.url || `${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/agent/download/${file.id || file.file_id}`
-              }));
-              shouldCreateFileMessage = true;
-              console.log('📝 Using recent backend files:', filesToShow);
-            }
-          } catch (error) {
-            console.error('Error retrieving backend files:', error);
-          }
-        }
+        // REMOVED: Automatic file creation for DeepSearch and task execution
+        // This was causing mockup files to appear in chat during task execution
         
-        // Only create test files if no real files were found and this is a test message
-        if (!shouldCreateFileMessage && processedMessage.includes('TEST_FILE_DISPLAY')) {
-          console.log('📝 Creating test files for demonstration');
-          filesToShow = [{
-            id: `test-file-${Date.now()}`,
-            name: 'informe_investigacion.md',
-            size: 25600,
-            type: 'text/markdown',
-            url: undefined
-          }, {
-            id: `test-file-${Date.now()}-2`,
-            name: 'datos_resultados.json',
-            size: 8192,
-            type: 'application/json',
-            url: undefined
-          }, {
-            id: `test-file-${Date.now()}-3`,
-            name: 'imagen_grafico.png',
-            size: 204800,
-            type: 'image/png',
-            url: undefined
-          }];
-          shouldCreateFileMessage = true;
-        }
+        // REMOVED: Test file creation logic
+        // This was causing mockup files to appear in chat
         
         console.log('File creation decision:', { shouldCreateFileMessage, filesCount: filesToShow.length });
         
