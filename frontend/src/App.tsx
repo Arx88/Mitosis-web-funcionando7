@@ -112,12 +112,7 @@ export function App() {
   const [initializationLogs, setInitializationLogs] = useState<Array<{message: string, type: 'info' | 'success' | 'error', timestamp: Date}>>([]);
   
   const createTask = async (title: string) => {
-    // Reset any previous task state before creating new task
-    setActiveTaskId(null);
     setIsTaskCreating(true);
-    
-    // Reset terminal/computer state for new task - MORE COMPREHENSIVE RESET
-    console.log('🔄 Resetting terminal and computer state for new task');
     
     // Reset any thinking state
     setAppState(prev => ({
