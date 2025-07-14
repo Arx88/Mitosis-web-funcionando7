@@ -448,25 +448,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
           </div>
         </div>
         
-        {/* Minimal Task Initializer - Solo si la tarea está inicializando */}
-        {task.isInitializing && (
-          <div className="px-4 py-2 border-b border-[rgba(255,255,255,0.05)]">
-            <MinimalTaskInitializer
-              taskId={task.id}
-              taskTitle={task.title}
-              taskType="general"
-              onComplete={() => {
-                if (onEnvironmentSetupComplete) {
-                  onEnvironmentSetupComplete(task.id);
-                }
-              }}
-              onLogUpdate={(message, type) => {
-                logToTerminal(message, type);
-              }}
-            />
-          </div>
-        )}
-        
         {/* Chat Interface - con altura completa disponible */}
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 min-h-0">
