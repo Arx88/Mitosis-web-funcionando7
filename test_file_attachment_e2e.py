@@ -30,7 +30,7 @@ import sys
 
 # Configuración
 BACKEND_URL = "http://localhost:8001"
-FRONTEND_URL = "https://25b68c6d-6666-4abc-bb68-64e095e3dc43.preview.emergentagent.com"
+FRONTEND_URL = "https://206ab649-14f2-404c-8b9e-1a8a9841066b.preview.emergentagent.com"
 TEST_TASK_ID = f"test-task-{int(time.time())}"
 
 class FileAttachmentE2ETest:
