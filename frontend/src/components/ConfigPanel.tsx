@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { AgentConfig } from '../types';
 import { X, Settings, Brain, Database, Cpu, Wrench, Save, RefreshCw } from 'lucide-react';
+import { NumberInput } from './ui/NumberInput';
+import { CustomSelect } from './ui/CustomSelect';
+import { ConnectionStatus } from './ui/ConnectionStatus';
+import { useOllamaConnection } from '../hooks/useOllamaConnection';
 
 interface ConfigPanelProps {
   config: AgentConfig;
