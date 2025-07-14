@@ -83,6 +83,87 @@ def get_setup_status(task_id):
             'timestamp': datetime.now().isoformat()
         }), 500
 
+@agent_bp.route('/container/execute/<task_id>', methods=['POST'])
+def execute_in_container(task_id):
+    """Ejecutar comando en el contenedor de una tarea"""
+    try:
+        data = request.get_json()
+        command = data.get('command')
+        timeout = data.get('timeout', 30)
+        
+        if not command:
+            return jsonify({'error': 'command is required'}), 400
+        
+        # Ejecutar comando a través del environment setup manager
+        result = environment_setup_manager.execute_in_container(task_id, command, timeout)
+        
+        return jsonify({
+            'success': result.get('success', False),
+            'result': result,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/container/info/<task_id>', methods=['GET'])
+def get_container_info(task_id):
+    """Obtener información del contenedor de una tarea"""
+    try:
+        container_manager = environment_setup_manager.get_container_manager()
+        info = container_manager.get_container_info(task_id)
+        
+        return jsonify({
+            'container_info': info,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/container/list', methods=['GET'])
+def list_containers():
+    """Listar todos los contenedores activos"""
+    try:
+        container_manager = environment_setup_manager.get_container_manager()
+        containers = container_manager.list_containers()
+        
+        return jsonify({
+            'containers': containers,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/container/cleanup/<task_id>', methods=['DELETE'])
+def cleanup_container(task_id):
+    """Limpiar contenedor de una tarea"""
+    try:
+        # Limpiar a través del environment setup manager
+        environment_setup_manager.cleanup_session(task_id)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Container for task {task_id} cleaned up',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 @agent_bp.route('/health', methods=['GET'])
 def health_check():
     """Endpoint de salud del agente"""
