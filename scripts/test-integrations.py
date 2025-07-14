@@ -9,6 +9,10 @@ import sys
 import json
 from datetime import datetime
 
+# Cargar variables de entorno
+from dotenv import load_dotenv
+load_dotenv('/app/backend/.env')
+
 # Agregar el directorio src al path
 sys.path.append('/app/backend/src')
 
