@@ -131,36 +131,15 @@ export function App() {
       messages: [],
       terminalCommands: [], // Start with empty terminal commands for each task
       isFavorite: false,
-      progress: 0 // Initialize progress at 0
+      progress: 0, // Initialize progress at 0
+      isInitializing: true // Nueva propiedad para manejar inicialización
     };
     setTasks(prev => [newTask, ...prev]);
     setActiveTaskId(newTask.id);
-    
-    // Show environment setup instead of immediate task creation
-    setEnvironmentSetupTaskId(newTask.id);
-    setEnvironmentSetupTaskTitle(title);
-    setShowEnvironmentSetup(true);
     setIsTaskCreating(false);
     
-    // Start environment setup in background
-    try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
-      await fetch(`${backendUrl}/api/agent/setup-environment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          task_id: newTask.id,
-          task_title: title,
-          task_type: 'general' // TODO: Detectar tipo automáticamente
-        })
-      });
-    } catch (error) {
-      console.error('Error starting environment setup:', error);
-    }
-    
-    console.log('✅ Task created with environment setup:', newTask.id);
+    // La tarea se abre inmediatamente, la inicialización se maneja en TaskView
+    console.log('✅ Task created and opened immediately:', newTask.id);
     
     return newTask;
   };
