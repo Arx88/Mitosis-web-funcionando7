@@ -93,7 +93,7 @@ export const MinimalTaskInitializer: React.FC<MinimalTaskInitializerProps> = ({
         if (onComplete) {
           onComplete();
         }
-      }, 500);
+      }, 1000); // Mayor tiempo para mejor visibilidad
       return;
     }
 
