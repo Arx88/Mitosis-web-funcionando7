@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Check, ChevronDown, Maximize2, Rewind, Terminal, AlertCircle, CheckCircle, Circle, ChevronUp, Clock, Activity, Zap, FileText, SkipBack, SkipForward, Monitor, Radio, ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
+import { Check, ChevronDown, Maximize2, Rewind, Terminal, AlertCircle, CheckCircle, Circle, ChevronUp, Clock, Activity, Zap, FileText, SkipBack, SkipForward, Monitor, Radio, ArrowLeft, ArrowRight, RotateCcw, Loader2 } from 'lucide-react';
 import { ToolResult } from '../../services/api';
 import { TaskStep } from '../../types';
 import { TaskIcon } from '../TaskIcon';
