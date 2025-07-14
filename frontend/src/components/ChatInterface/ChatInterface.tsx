@@ -772,11 +772,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         // Set agent status to task completed
         setAgentStatus('task_completed');
         
-        // After 3 seconds, set back to idle
+        // After 5 seconds, set back to idle (aumentado para mejor visibilidad)
         setTimeout(() => {
           setAgentStatus('idle');
           setIsLoadingMessages(false);
-        }, 3000);
+        }, 5000);  // Aumentado de 3000 a 5000ms
 
         // Log tool executions to terminal
         if (response.tool_results && response.tool_results.length > 0 && onLogToTerminal) {
