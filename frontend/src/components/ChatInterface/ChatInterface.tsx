@@ -1667,14 +1667,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                         url: att.url
                       }));
                     } else if (hasSuccessPattern) {
-                      // Create fake files when success pattern is detected but no attachments
-                      filesToShow = [{
-                        id: `success-file-${Date.now()}`,
-                        name: 'archivo_generado.md',
-                        size: 25000,
-                        type: 'text/markdown',
-                        url: undefined
-                      }];
+                      // Solo mostrar si hay información útil, no crear archivos fake
+                      return null;
                     }
                     
                     console.log('📁 FILES TO SHOW:', filesToShow, 'Length:', filesToShow.length);
