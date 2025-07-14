@@ -539,10 +539,16 @@ export const TerminalView = ({
           </div>
           
           <div className="flex items-center gap-3 text-xs">
-            {isLiveMode && (
+            {isLiveMode && isSystemOnline && (
               <div className="flex items-center gap-1 text-green-400">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span>MODO LIVE</span>
+                <span>ONLINE</span>
+              </div>
+            )}
+            {!isSystemOnline && (
+              <div className="flex items-center gap-1 text-red-400">
+                <div className="w-2 h-2 bg-red-400 rounded-full" />
+                <span>OFFLINE</span>
               </div>
             )}
             <div className="text-[#7f7f7f]">
