@@ -144,14 +144,15 @@ export function App() {
     return newTask;
   };
 
-  const handleEnvironmentSetupComplete = () => {
-    console.log('🎉 Environment setup completed for task:', environmentSetupTaskId);
-    setShowEnvironmentSetup(false);
-    setEnvironmentSetupTaskId(null);
-    setEnvironmentSetupTaskTitle('');
+  const handleEnvironmentSetupComplete = (taskId: string) => {
+    console.log('🎉 Environment setup completed for task:', taskId);
     
-    // La tarea ya está activa, no necesitamos hacer nada más
-    // El usuario puede empezar a interactuar con ella inmediatamente
+    // Marcar la tarea como lista para usar
+    setTasks(prev => prev.map(task => 
+      task.id === taskId 
+        ? { ...task, isInitializing: false, status: 'ready' }
+        : task
+    ));
   };
 
   const deleteTask = (taskId: string) => {
