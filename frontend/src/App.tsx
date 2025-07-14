@@ -109,6 +109,8 @@ export function App() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isTaskCreating, setIsTaskCreating] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [initializingTaskId, setInitializingTaskId] = useState<string | null>(null);
+  const [initializationLogs, setInitializationLogs] = useState<Array<{message: string, type: 'info' | 'success' | 'error', timestamp: Date}>>([]);
   
   const createTask = async (title: string) => {
     // Reset any previous task state before creating new task
