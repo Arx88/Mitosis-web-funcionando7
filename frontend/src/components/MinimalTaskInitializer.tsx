@@ -34,21 +34,21 @@ export const MinimalTaskInitializer: React.FC<MinimalTaskInitializerProps> = ({
       {
         id: 'environment',
         title: 'Setting up environment',
-        duration: 800,
+        duration: 1500, // Incrementado para ser más visible
         status: 'pending',
         icon: Settings
       },
       {
         id: 'dependencies',
         title: 'Installing dependencies',
-        duration: 1200,
+        duration: 2000, // Incrementado para ser más visible
         status: 'pending',
         icon: Package
       },
       {
         id: 'agent',
         title: 'Initializing agent',
-        duration: 600,
+        duration: 1000, // Incrementado para ser más visible
         status: 'pending',
         icon: Play
       }
@@ -57,10 +57,10 @@ export const MinimalTaskInitializer: React.FC<MinimalTaskInitializerProps> = ({
     // Personalizar según tipo de tarea
     if (taskType === 'web-development') {
       baseSteps[1].title = 'Installing web dev tools';
-      baseSteps[1].duration = 1500;
+      baseSteps[1].duration = 2500;
     } else if (taskType === 'data-processing') {
       baseSteps[1].title = 'Installing data libraries';
-      baseSteps[1].duration = 1800;
+      baseSteps[1].duration = 3000;
     }
 
     return baseSteps;
