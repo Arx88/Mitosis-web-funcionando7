@@ -329,8 +329,8 @@ export const FilesModal: React.FC<FilesModalProps> = ({
               {/* Files List */}
               <div className="flex-1 overflow-y-auto">
                 {filteredFiles.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-                    <FileText className="w-12 h-12 mb-4 text-gray-300" />
+                  <div className="flex flex-col items-center justify-center h-64 text-[#7f7f7f]">
+                    <FileText className="w-12 h-12 mb-4 text-[#4A4A4C]" />
                     <p className="text-lg font-medium">No hay archivos</p>
                     <p className="text-sm">
                       {activeTab === 'agent' 
@@ -340,12 +340,12 @@ export const FilesModal: React.FC<FilesModalProps> = ({
                     </p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-200">
+                  <div className="divide-y divide-[rgba(255,255,255,0.08)]">
                     {filteredFiles.map((file) => (
                       <div
                         key={file.id}
-                        className={`flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors ${
-                          selectedFiles.has(file.id) ? 'bg-blue-50' : ''
+                        className={`flex items-center gap-4 p-4 hover:bg-[#383739] transition-colors ${
+                          selectedFiles.has(file.id) ? 'bg-blue-500/10' : ''
                         }`}
                       >
                         <button
