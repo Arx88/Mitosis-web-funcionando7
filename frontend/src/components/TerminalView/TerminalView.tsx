@@ -104,7 +104,7 @@ export const TerminalView = ({
       setMonitorPages([todoPage]);
       setPaginationStats(prev => ({ ...prev, totalPages: 1 }));
     }
-  }, [plan]);
+  }, [plan, monitorPages.length, dataId]); // Agregar dataId como dependencia para evitar conflictos
 
   // Procesar herramientas y crear páginas
   useEffect(() => {
