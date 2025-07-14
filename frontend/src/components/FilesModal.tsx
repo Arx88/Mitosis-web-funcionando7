@@ -220,8 +220,8 @@ export const FilesModal: React.FC<FilesModalProps> = ({
             onClick={() => setActiveTab('agent')}
             className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
               activeTab === 'agent'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-blue-500 text-blue-400'
+                : 'border-transparent text-[#ACACAC] hover:text-[#DADADA]'
             }`}
           >
             <Bot className="w-4 h-4" />
@@ -231,8 +231,8 @@ export const FilesModal: React.FC<FilesModalProps> = ({
             onClick={() => setActiveTab('uploaded')}
             className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
               activeTab === 'uploaded'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-blue-500 text-blue-400'
+                : 'border-transparent text-[#ACACAC] hover:text-[#DADADA]'
             }`}
           >
             <Upload className="w-4 h-4" />
@@ -242,8 +242,8 @@ export const FilesModal: React.FC<FilesModalProps> = ({
             onClick={() => setActiveTab('memory')}
             className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
               activeTab === 'memory'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-blue-500 text-blue-400'
+                : 'border-transparent text-[#ACACAC] hover:text-[#DADADA]'
             }`}
           >
             <Brain className="w-4 h-4" />
