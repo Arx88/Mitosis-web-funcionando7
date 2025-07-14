@@ -95,7 +95,7 @@
 
 - ✅ Frontend: Funcionando correctamente con todas las correcciones aplicadas
 - ✅ Backend: Servicios corriendo sin problemas
-- ✅ Preview: Disponible en https://50fe2d18-264c-4c95-8fc7-05c2bc61aa66.preview.emergentagent.com
+- ✅ Preview: Disponible en https://ddb1d4ef-64a3-4cd6-8e14-c2c316252791.preview.emergentagent.com
 - ✅ Títulos: Espaciado corregido y funcionando
 - ✅ WebSearch: Toggle funcionando correctamente
 - ✅ Iconos: Visibles en pestañas activas
@@ -229,7 +229,7 @@ command=serve -s dist -l 3000  # Sirve archivos estáticos de producción
 
 - ✅ Frontend: Funcionando correctamente con todos los cambios aplicados
 - ✅ Backend: Servicios corriendo sin problemas
-- ✅ Preview: Disponible en https://50fe2d18-264c-4c95-8fc7-05c2bc61aa66.preview.emergentagent.com
+- ✅ Preview: Disponible en https://ddb1d4ef-64a3-4cd6-8e14-c2c316252791.preview.emergentagent.com
 - ✅ Sidebar: Centrado corregido y funcionando
 - ✅ Animación: Velocidad ajustada correctamente
 - ✅ Placeholder: Formato académico funcionando completamente
