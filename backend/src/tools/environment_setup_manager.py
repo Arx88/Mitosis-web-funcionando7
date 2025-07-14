@@ -313,5 +313,17 @@ class EnvironmentSetupManager:
     
     def cleanup_session(self, task_id: str):
         """Limpiar sesión de configuración"""
+        # Limpiar contenedor si existe
+        self.container_manager.stop_container(task_id)
+        
+        # Limpiar sesión
         if task_id in self.setup_sessions:
             del self.setup_sessions[task_id]
+    
+    def get_container_manager(self) -> ContainerManager:
+        """Obtener el gestor de contenedores"""
+        return self.container_manager
+    
+    def execute_in_container(self, task_id: str, command: str, timeout: int = 30) -> Dict[str, Any]:
+        """Ejecutar comando en el contenedor de una tarea"""
+        return self.container_manager.execute_command(task_id, command, timeout)
