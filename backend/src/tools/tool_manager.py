@@ -39,6 +39,9 @@ class ToolManager:
             'playwright': PlaywrightTool()
         }
         
+        # Inicializar container manager
+        self.container_manager = ContainerManager()
+        
         # Configuración de seguridad mejorada
         self.security_config = {
             'shell': {
