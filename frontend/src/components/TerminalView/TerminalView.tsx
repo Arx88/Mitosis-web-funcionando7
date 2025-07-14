@@ -65,6 +65,25 @@ export const TerminalView = ({
   });
   const monitorRef = useRef<HTMLDivElement>(null);
 
+  // Reset terminal state when dataId changes (switching tasks)
+  useEffect(() => {
+    if (dataId) {
+      console.log('🔄 TERMINAL: Resetting state for new task:', dataId);
+      setTerminalOutput([]);
+      setCurrentExecutingTool(null);
+      setMonitorPages([]);
+      setCurrentPageIndex(0);
+      setIsLiveMode(true);
+      setPaginationStats({
+        totalPages: 0,
+        currentPage: 1,
+        limit: 20,
+        offset: 0
+      });
+      console.log('✅ TERMINAL: State reset complete for task:', dataId);
+    }
+  }, [dataId]);
+
   // Inicializar con TODO.md como Página 1
   useEffect(() => {
     if (plan && plan.length > 0 && monitorPages.length === 0) {
