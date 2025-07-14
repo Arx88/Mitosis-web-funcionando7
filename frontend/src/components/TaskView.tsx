@@ -456,8 +456,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 Archivos
               </button>
               <button
-                onClick={() => {
+                onClick={(e) => {
                   console.log('🔗 Share button clicked');
+                  e.preventDefault();
+                  e.stopPropagation();
                   setShowShareModal(true);
                 }}
                 className="flex items-center gap-1 px-3 py-1.5 bg-[#4A4A4C] hover:bg-[#5A5A5C] rounded-lg text-xs text-[#DADADA] transition-colors"
