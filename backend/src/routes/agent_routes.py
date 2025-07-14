@@ -226,116 +226,71 @@ def chat():
         else:
             # Crear respuesta estructurada basada en los resultados de búsqueda
             if tool_results and tool_results[0]['result'].get('success'):
-                tool_result = tool_results[0]['result']['result']
+                tool_result = tool_results[0]['result']
                 
                 if search_mode == 'websearch':
-                    # Datos estructurados para Enhanced WebSearch
-                    direct_answer = tool_result.get('direct_answer', '')
-                    sources = tool_result.get('sources', [])
-                    images = tool_result.get('images', [])
+                    # Datos estructurados para WebSearch
+                    search_results = tool_result.get('search_results', [])
                     summary = tool_result.get('summary', '')
-                    search_stats = tool_result.get('search_stats', {})
-                    console_display = tool_result.get('console_display', '')
                     
                     # Formatear fuentes para el componente SearchResults
                     formatted_sources = []
-                    for source in sources:
+                    for i, result in enumerate(search_results[:5]):
                         formatted_sources.append({
-                            'title': source.get('title', 'Sin título'),
-                            'content': source.get('content', 'Sin descripción'),
-                            'url': source.get('url', ''),
-                            'domain': source.get('domain', ''),
-                            'score': source.get('score', 0)
+                            'title': result.get('title', f'Resultado {i+1}'),
+                            'content': result.get('snippet', 'Sin descripción'),
+                            'url': result.get('url', ''),
+                            'domain': result.get('domain', ''),
+                            'score': result.get('score', 0)
                         })
                     
                     response = {
-                        'response': f"🌐 **Búsqueda Web Mejorada**\n\n**Pregunta:** {message}\n\n**Respuesta Directa:**\n{direct_answer}\n\n**Resumen:**\n{summary}\n\n**Estadísticas:**\n• Fuentes encontradas: {search_stats.get('total_sources', 0)}\n• Imágenes recopiladas: {search_stats.get('total_images', 0)}\n• Profundidad: {search_stats.get('search_depth', 'basic')}\n\n**Fuentes principales:**\n" + 
-                                  "\n".join([f"{i+1}. **{source.get('title', 'Sin título')}**\n   {source.get('content', 'Sin descripción')[:150]}...\n   🔗 {source.get('url', '')}" 
-                                            for i, source in enumerate(sources[:3])]),
-                        'model': 'enhanced-web-search',
+                        'response': f"🌐 **Búsqueda Web**\n\n**Pregunta:** {message}\n\n**Resumen:**\n{summary}\n\n**Resultados encontrados:** {len(search_results)}\n\n**Fuentes principales:**\n" + 
+                                  "\n".join([f"{i+1}. **{result.get('title', 'Sin título')}**\n   {result.get('snippet', 'Sin descripción')[:150]}...\n   🔗 {result.get('url', '')}" 
+                                            for i, result in enumerate(search_results[:3])]),
+                        'model': 'web-search',
                         'search_data': {
                             'query': message,
-                            'directAnswer': direct_answer,
+                            'directAnswer': summary,
                             'sources': formatted_sources,
-                            'images': images,
+                            'images': [],
                             'summary': summary,
-                            'search_stats': search_stats,
-                            'console_display': console_display,
+                            'search_stats': {'total_sources': len(search_results)},
                             'type': 'websearch'
                         }
                     }
                 
                 elif search_mode == 'deepsearch':
-                    # Datos estructurados para Enhanced DeepResearch
-                    if tool_results[0]['tool'] == 'enhanced_deep_research':
-                        # Respuesta del enhanced_deep_research_tool
-                        executive_summary = tool_result.get('executive_summary', '')
-                        key_findings = tool_result.get('key_findings', [])
-                        recommendations = tool_result.get('recommendations', [])
-                        sources_analyzed = tool_result.get('sources_analyzed', 0)
-                        images_collected = tool_result.get('images_collected', 0)
-                        console_report = tool_result.get('console_report', '')
-                        
-                        # Formatear fuentes para el componente SearchResults
-                        formatted_sources = []
-                        sources = tool_result.get('sources', [])
-                        for i, source in enumerate(sources[:5]):
-                            formatted_sources.append({
-                                'title': source.get('title', f'Fuente {i+1}'),
-                                'content': source.get('snippet', 'Contenido disponible'),
-                                'url': source.get('url', '')
-                            })
-                        
-                        response = {
-                            'response': f"🔬 **Investigación Profunda Completada**\n\n**Tema:** {message}\n\n**Resumen Ejecutivo:**\n{executive_summary}\n\n**Hallazgos Clave:**\n" + 
-                                      "\n".join([f"• {finding}" for finding in key_findings[:3]]) + 
-                                      "\n\n**Recomendaciones:**\n" + 
-                                      "\n".join([f"• {rec}" for rec in recommendations[:3]]) +
-                                      f"\n\n**Estadísticas:**\n• Fuentes analizadas: {sources_analyzed}\n• Imágenes recopiladas: {images_collected}",
-                            'model': 'enhanced-deep-research',
-                            'search_data': {
-                                'query': message,
-                                'directAnswer': executive_summary,
-                                'sources': formatted_sources,
-                                'type': 'deepsearch',
-                                'key_findings': key_findings,
-                                'recommendations': recommendations,
-                                'sources_analyzed': sources_analyzed,
-                                'images_collected': images_collected,
-                                'console_report': console_report
-                            }
+                    # Datos estructurados para DeepResearch
+                    analysis = tool_result.get('analysis', '')
+                    key_findings = tool_result.get('key_findings', [])
+                    recommendations = tool_result.get('recommendations', [])
+                    sources = tool_result.get('sources', [])
+                    
+                    # Formatear fuentes para el componente SearchResults
+                    formatted_sources = []
+                    for i, source in enumerate(sources[:5]):
+                        formatted_sources.append({
+                            'title': f'Fuente {i+1}',
+                            'content': source if isinstance(source, str) else str(source),
+                            'url': ''
+                        })
+                    
+                    response = {
+                        'response': f"🔬 **Investigación Profunda**\n\n**Tema:** {message}\n\n**Análisis Comprehensivo:**\n{analysis}\n\n**Hallazgos Clave:**\n" + 
+                                  "\n".join([f"• {finding}" for finding in key_findings[:3]]) + 
+                                  "\n\n**Recomendaciones:**\n" + 
+                                  "\n".join([f"• {rec}" for rec in recommendations[:3]]),
+                        'model': 'deep-research',
+                        'search_data': {
+                            'query': message,
+                            'directAnswer': analysis,
+                            'sources': formatted_sources,
+                            'type': 'deepsearch',
+                            'key_findings': key_findings,
+                            'recommendations': recommendations
                         }
-                    else:
-                        # Fallback para deep_research_tool original
-                        analysis = tool_result.get('analysis', '')
-                        key_findings = tool_result.get('key_findings', [])
-                        recommendations = tool_result.get('recommendations', [])
-                        sources = tool_result.get('sources', [])
-                        
-                        # Formatear fuentes para el componente SearchResults
-                        formatted_sources = []
-                        for i, source in enumerate(sources[:5]):
-                            formatted_sources.append({
-                                'title': f'Fuente {i+1}',
-                                'content': source if isinstance(source, str) else str(source),
-                                'url': ''
-                            })
-                        
-                        response = {
-                            'response': f"🔬 **Investigación Profunda**\n\n**Tema:** {message}\n\n**Análisis Comprehensivo:**\n{analysis}\n\n**Hallazgos Clave:**\n" + 
-                                      "\n".join([f"• {finding}" for finding in key_findings[:3]]) + 
-                                      "\n\n**Recomendaciones:**\n" + 
-                                      "\n".join([f"• {rec}" for rec in recommendations[:3]]),
-                            'model': 'deep-research',
-                            'search_data': {
-                                'query': message,
-                                'directAnswer': analysis,
-                                'sources': formatted_sources,
-                                'type': 'deepsearch',
-                                'key_findings': key_findings,
-                                'recommendations': recommendations
-                            }
-                        }
+                    }
             else:
                 # Error en la búsqueda
                 error_msg = tool_results[0]['result'].get('error', 'Error desconocido') if tool_results else 'No se pudo realizar la búsqueda'
