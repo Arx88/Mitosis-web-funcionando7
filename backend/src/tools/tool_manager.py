@@ -15,6 +15,11 @@ from .comprehensive_research_tool import ComprehensiveResearchTool
 from .enhanced_web_search_tool_improved import EnhancedWebSearchTool
 from .deep_research_tool_improved import DeepResearchTool
 
+# Importar nuevas herramientas
+from .firecrawl_tool import FirecrawlTool
+from .qstash_tool import QStashTool
+from .playwright_tool import PlaywrightTool
+
 class ToolManager:
     def __init__(self):
         # Inicializar herramientas con versiones mejoradas
