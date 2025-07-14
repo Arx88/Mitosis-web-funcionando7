@@ -169,6 +169,16 @@ export function App() {
     return newTask;
   };
 
+  const handleEnvironmentSetupComplete = () => {
+    console.log('🎉 Environment setup completed for task:', environmentSetupTaskId);
+    setShowEnvironmentSetup(false);
+    setEnvironmentSetupTaskId(null);
+    setEnvironmentSetupTaskTitle('');
+    
+    // La tarea ya está activa, no necesitamos hacer nada más
+    // El usuario puede empezar a interactuar con ella inmediatamente
+  };
+
   const deleteTask = (taskId: string) => {
     setTasks(prev => prev.filter(task => task.id !== taskId));
     
