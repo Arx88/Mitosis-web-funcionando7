@@ -532,12 +532,12 @@ export const TerminalView = ({
                       onClick={() => onToggleTaskStep?.(step.id)}
                     >
                       <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 ${
-                        step.completed ? 'bg-green-500 text-white shadow-md' :
-                        step.active ? 'bg-blue-500 text-white animate-pulse shadow-md' :
+                        step.completed ? 'text-green-500' :
+                        step.active ? 'text-blue-500' :
                         'bg-[#3a3a3c] text-[#7f7f7f] group-hover:bg-[#4a4a4c] group-hover:text-[#ACACAC]'
                       }`}>
                         {step.completed ? (
-                          <Check className="w-3 h-3" />
+                          <Check className="w-3 h-3 text-green-500" />
                         ) : step.active ? (
                           <div className="w-4 h-4 flex items-center justify-center">
                             <div className="w-3 h-3 rounded-sm loader-spin" 
