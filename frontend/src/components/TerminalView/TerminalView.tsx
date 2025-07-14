@@ -90,6 +90,8 @@ export const TerminalView = ({
     setMonitorPages([]);
     setCurrentPageIndex(0);
     setIsLiveMode(true);
+    setIsSystemOnline(false);
+    setInitializationStep(0);
     setPaginationStats({
       totalPages: 0,
       currentPage: 1,
@@ -98,6 +100,51 @@ export const TerminalView = ({
     });
     console.log('✅ TERMINAL: State reset complete for task:', dataId);
   }, [dataId]); // Reset whenever dataId changes, including when it becomes null/undefined
+
+  // Handle environment initialization
+  useEffect(() => {
+    if (isInitializing && taskId && taskTitle) {
+      console.log('🚀 TERMINAL: Starting environment initialization');
+      setIsSystemOnline(false);
+      setInitializationStep(0);
+      
+      // Log initial message
+      if (onInitializationLog) {
+        onInitializationLog(`🚀 Initializing environment for: ${taskTitle}`, 'info');
+      }
+      
+      // Process initialization steps
+      const processStep = (stepIndex: number) => {
+        if (stepIndex >= initializationSteps.length) {
+          // All steps completed
+          setIsSystemOnline(true);
+          if (onInitializationLog) {
+            onInitializationLog('✅ Environment ready! System is now ONLINE', 'success');
+          }
+          if (onInitializationComplete) {
+            onInitializationComplete();
+          }
+          return;
+        }
+        
+        const step = initializationSteps[stepIndex];
+        setInitializationStep(stepIndex);
+        
+        if (onInitializationLog) {
+          onInitializationLog(`⚙️ ${step.title}...`, 'info');
+        }
+        
+        setTimeout(() => {
+          if (onInitializationLog) {
+            onInitializationLog(`✓ ${step.title} completed`, 'success');
+          }
+          processStep(stepIndex + 1);
+        }, step.duration);
+      };
+      
+      processStep(0);
+    }
+  }, [isInitializing, taskId, taskTitle, onInitializationLog, onInitializationComplete, initializationSteps]);
 
   // Inicializar con TODO.md como Página 1 - Solo si hay plan Y no hay páginas Y hay dataId
   useEffect(() => {
