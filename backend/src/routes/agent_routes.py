@@ -592,6 +592,309 @@ def set_model():
             'timestamp': datetime.now().isoformat()
         }), 500
 
+# ==========================================
+# NUEVOS ENDPOINTS - ORQUESTADOR INTELIGENTE
+# ==========================================
+
+@agent_bp.route('/task/analyze', methods=['POST'])
+def analyze_task():
+    """Analizar una tarea y generar plan de ejecución"""
+    try:
+        data = request.get_json()
+        task_title = data.get('task_title', '')
+        task_description = data.get('task_description', '')
+        
+        if not task_title:
+            return jsonify({'error': 'task_title is required'}), 400
+        
+        # Analizar tarea
+        analysis = task_planner.analyze_task(task_title, task_description)
+        
+        return jsonify({
+            'success': True,
+            'analysis': analysis,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/task/plan', methods=['POST'])
+def generate_task_plan():
+    """Generar plan de ejecución detallado para una tarea"""
+    try:
+        data = request.get_json()
+        task_id = data.get('task_id')
+        task_title = data.get('task_title', '')
+        task_description = data.get('task_description', '')
+        
+        if not task_id or not task_title:
+            return jsonify({'error': 'task_id and task_title are required'}), 400
+        
+        # Generar plan de ejecución
+        execution_plan = task_planner.generate_execution_plan(task_id, task_title, task_description)
+        
+        # Convertir a diccionario para JSON
+        plan_dict = {
+            'task_id': execution_plan.task_id,
+            'title': execution_plan.title,
+            'steps': [
+                {
+                    'id': step.id,
+                    'title': step.title,
+                    'description': step.description,
+                    'tool': step.tool,
+                    'parameters': step.parameters,
+                    'dependencies': step.dependencies,
+                    'estimated_duration': step.estimated_duration,
+                    'complexity': step.complexity,
+                    'required_skills': step.required_skills
+                }
+                for step in execution_plan.steps
+            ],
+            'total_estimated_duration': execution_plan.total_estimated_duration,
+            'complexity_score': execution_plan.complexity_score,
+            'required_tools': execution_plan.required_tools,
+            'success_probability': execution_plan.success_probability,
+            'risk_factors': execution_plan.risk_factors,
+            'prerequisites': execution_plan.prerequisites
+        }
+        
+        return jsonify({
+            'success': True,
+            'execution_plan': plan_dict,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/task/execute', methods=['POST'])
+def execute_task():
+    """Ejecutar una tarea de manera autónoma usando el Execution Engine"""
+    try:
+        data = request.get_json()
+        task_id = data.get('task_id')
+        task_title = data.get('task_title', '')
+        task_description = data.get('task_description', '')
+        config = data.get('config', {})
+        
+        if not task_id or not task_title:
+            return jsonify({'error': 'task_id and task_title are required'}), 400
+        
+        # Inicializar execution engine con tool_manager
+        if hasattr(current_app, 'tool_manager'):
+            global execution_engine
+            execution_engine = ExecutionEngine(
+                tool_manager=current_app.tool_manager,
+                environment_manager=environment_setup_manager
+            )
+        
+        # Ejecutar tarea de manera asíncrona
+        import threading
+        
+        def run_async_execution():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                result = loop.run_until_complete(
+                    execution_engine.execute_task(task_id, task_title, task_description, config)
+                )
+                # Aquí podrías guardar el resultado en una base de datos o storage
+                print(f"Task {task_id} execution completed with status: {result.status}")
+            except Exception as e:
+                print(f"Task {task_id} execution failed: {str(e)}")
+            finally:
+                loop.close()
+        
+        execution_thread = threading.Thread(target=run_async_execution)
+        execution_thread.start()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Task execution started',
+            'task_id': task_id,
+            'status': 'executing',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/task/execution-status/<task_id>', methods=['GET'])
+def get_execution_status(task_id):
+    """Obtener estado de ejecución de una tarea"""
+    try:
+        if hasattr(current_app, 'tool_manager'):
+            global execution_engine
+            execution_engine = ExecutionEngine(
+                tool_manager=current_app.tool_manager,
+                environment_manager=environment_setup_manager
+            )
+        
+        status = execution_engine.get_execution_status(task_id)
+        
+        return jsonify({
+            'success': True,
+            'execution_status': status,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/task/stop/<task_id>', methods=['POST'])
+def stop_task_execution(task_id):
+    """Detener ejecución de una tarea"""
+    try:
+        if hasattr(current_app, 'tool_manager'):
+            global execution_engine
+            execution_engine = ExecutionEngine(
+                tool_manager=current_app.tool_manager,
+                environment_manager=environment_setup_manager
+            )
+        
+        success = execution_engine.stop_execution(task_id)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Task {task_id} execution stopped',
+                'timestamp': datetime.now().isoformat()
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': f'Task {task_id} not found or already stopped',
+                'timestamp': datetime.now().isoformat()
+            })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/task/cleanup/<task_id>', methods=['DELETE'])
+def cleanup_task_execution(task_id):
+    """Limpiar recursos de ejecución de una tarea"""
+    try:
+        if hasattr(current_app, 'tool_manager'):
+            global execution_engine
+            execution_engine = ExecutionEngine(
+                tool_manager=current_app.tool_manager,
+                environment_manager=environment_setup_manager
+            )
+        
+        # Limpiar execution engine
+        execution_engine.cleanup_execution(task_id)
+        
+        # Limpiar environment setup
+        environment_setup_manager.cleanup_session(task_id)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Task {task_id} resources cleaned up',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+# ==========================================
+# ENDPOINTS PARA GESTIÓN DE PLANES
+# ==========================================
+
+@agent_bp.route('/plans/templates', methods=['GET'])
+def get_plan_templates():
+    """Obtener templates de planes disponibles"""
+    try:
+        templates = {
+            'web_development': {
+                'name': 'Desarrollo Web',
+                'description': 'Template para proyectos de desarrollo web',
+                'steps': 5,
+                'estimated_duration': 600,
+                'complexity': 'medium',
+                'required_tools': ['file_manager', 'shell', 'web_search']
+            },
+            'data_analysis': {
+                'name': 'Análisis de Datos',
+                'description': 'Template para análisis y procesamiento de datos',
+                'steps': 5,
+                'estimated_duration': 660,
+                'complexity': 'high',
+                'required_tools': ['file_manager', 'shell', 'web_search', 'enhanced_deep_research']
+            },
+            'file_processing': {
+                'name': 'Procesamiento de Archivos',
+                'description': 'Template para procesamiento y manipulación de archivos',
+                'steps': 3,
+                'estimated_duration': 165,
+                'complexity': 'low',
+                'required_tools': ['file_manager', 'shell']
+            },
+            'system_administration': {
+                'name': 'Administración de Sistema',
+                'description': 'Template para tareas de administración del sistema',
+                'steps': 3,
+                'estimated_duration': 270,
+                'complexity': 'medium',
+                'required_tools': ['shell', 'file_manager']
+            },
+            'research': {
+                'name': 'Investigación',
+                'description': 'Template para investigación y recopilación de información',
+                'steps': 3,
+                'estimated_duration': 450,
+                'complexity': 'medium',
+                'required_tools': ['web_search', 'enhanced_deep_research', 'tavily_search']
+            },
+            'automation': {
+                'name': 'Automatización',
+                'description': 'Template para tareas de automatización y scripting',
+                'steps': 3,
+                'estimated_duration': 330,
+                'complexity': 'high',
+                'required_tools': ['shell', 'file_manager', 'playwright']
+            },
+            'general': {
+                'name': 'General',
+                'description': 'Template genérico para tareas no clasificadas',
+                'steps': 4,
+                'estimated_duration': 300,
+                'complexity': 'medium',
+                'required_tools': ['enhanced_web_search', 'enhanced_deep_research', 'file_manager']
+            }
+        }
+        
+        return jsonify({
+            'success': True,
+            'templates': templates,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 @agent_bp.route('/share', methods=['POST'])
 def share_conversation():
     """Crear enlace compartible para una conversación"""
