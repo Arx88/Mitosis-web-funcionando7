@@ -741,21 +741,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             }));
           }, 2000);
           
-          // FORCE FILE DISPLAY - Create a file upload success message for DeepResearch
-          if (filesToShow.length === 0 && response.tool_results && response.tool_results.length > 0) {
-            // Create a fake file entry based on the DeepResearch result
-            const fakeFile = {
-              id: `deepresearch-${Date.now()}`,
-              name: `informe_${message.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}.md`,
-              size: 25000, // Default size
-              type: 'text/markdown',
-              mime_type: 'text/markdown',
-              url: undefined // Will be handled by the backend
-            };
-            
-            filesToShow = [fakeFile];
-            console.log('🎯 FORCED: Created fake file for DeepResearch:', fakeFile);
-          }
+          // NO crear archivos fake para DeepSearch - solo mostrar el resultado real
           
           // Mostrar informe en consola si está disponible
           if (toolResult.result?.result?.console_report && onLogToTerminal) {
