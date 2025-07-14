@@ -1,12 +1,13 @@
 """
-Servicio de integración con Ollama - Versión Dummy
-Simula la comunicación con el modelo de lenguaje sin requerir Ollama
+Servicio de integración con Ollama - Versión Real
+Conecta directamente con Ollama para generar respuestas
 """
 
 import json
 import time
 from typing import Dict, List, Optional, Any
-import random
+import requests
+from requests.exceptions import RequestException, Timeout
 
 class OllamaService:
     def __init__(self, base_url: str = "http://localhost:11434"):
@@ -14,45 +15,31 @@ class OllamaService:
         self.default_model = "llama3.2"
         self.current_model = None
         self.conversation_history = []
-        
-        # Respuestas predefinidas para simular el comportamiento de Ollama
-        self.dummy_responses = [
-            "Entiendo tu solicitud. Voy a ayudarte con eso.",
-            "Basándome en la información proporcionada, puedo sugerir lo siguiente:",
-            "He analizado tu consulta y aquí está mi respuesta:",
-            "Permíteme procesar esa información y proporcionarte una respuesta útil.",
-            "Excelente pregunta. Aquí tienes mi análisis:",
-            "Voy a usar las herramientas disponibles para ayudarte con esta tarea.",
-            "Entiendo lo que necesitas. Déjame trabajar en eso para ti.",
-            "Basándome en tu solicitud, voy a proceder de la siguiente manera:"
-        ]
+        self.request_timeout = 30  # Timeout para requests a Ollama
         
     def is_healthy(self) -> bool:
         """Verificar si Ollama está disponible"""
         try:
-            import requests
             response = requests.get(f"{self.base_url}/api/tags", timeout=5)
             return response.status_code == 200
         except:
             return False
     
     def get_available_models(self) -> List[str]:
-        """Obtener lista de modelos disponibles desde Ollama real, fallback a dummy"""
+        """Obtener lista de modelos disponibles desde Ollama"""
         try:
-            import requests
             response = requests.get(f"{self.base_url}/api/tags", timeout=5)
             if response.status_code == 200:
                 data = response.json()
                 models = [model['name'] for model in data.get('models', [])]
-                if models:
-                    return models
+                return models
         except:
             pass
         
-        # Fallback a modelos dummy si Ollama no está disponible
+        # Fallback a modelos conocidos si no se puede conectar
         return [
             "llama3.2",
-            "llama3.1",
+            "llama3.1", 
             "mistral",
             "codellama",
             "phi3"
@@ -68,13 +55,11 @@ class OllamaService:
     
     def get_current_model(self) -> str:
         """Obtener el modelo actual"""
-        if self.current_model:
-            return self.current_model
-        return self.default_model
+        return self.current_model or self.default_model
     
     def generate_response(self, prompt: str, context: Dict = None, use_tools: bool = True) -> Dict[str, Any]:
         """
-        Generar respuesta usando simulación de Ollama
+        Generar respuesta usando Ollama real
         
         Args:
             prompt: Mensaje del usuario
@@ -84,98 +69,94 @@ class OllamaService:
         Returns:
             Dict con respuesta, tool_calls, y metadatos
         """
-        model = self.get_current_model()
+        if not self.is_healthy():
+            return {
+                'response': "⚠️ Ollama no está disponible en este momento. Asegúrate de que esté ejecutándose en localhost:11434",
+                'tool_calls': [],
+                'raw_response': "",
+                'model': self.get_current_model(),
+                'timestamp': time.time(),
+                'error': 'Ollama no disponible'
+            }
         
-        # Simular tiempo de procesamiento
-        time.sleep(random.uniform(0.5, 2.0))
-        
-        # Generar respuesta basada en el prompt
-        response_text = self._generate_dummy_response(prompt, use_tools)
-        
-        # Parsear respuesta para detectar llamadas a herramientas
-        parsed_response = self._parse_response(response_text)
-        
-        return {
-            'response': parsed_response['text'],
-            'tool_calls': parsed_response['tool_calls'],
-            'raw_response': response_text,
-            'model': model,
-            'timestamp': time.time()
-        }
+        try:
+            # Construir el prompt completo
+            system_prompt = self._build_system_prompt(use_tools)
+            full_prompt = self._build_full_prompt(prompt, context, system_prompt)
+            
+            # Hacer la llamada a Ollama
+            response = self._call_ollama_api(full_prompt)
+            
+            if response.get('error'):
+                return {
+                    'response': f"❌ Error al generar respuesta: {response['error']}",
+                    'tool_calls': [],
+                    'raw_response': "",
+                    'model': self.get_current_model(),
+                    'timestamp': time.time(),
+                    'error': response['error']
+                }
+            
+            # Parsear la respuesta
+            parsed_response = self._parse_response(response.get('response', ''))
+            
+            return {
+                'response': parsed_response['text'],
+                'tool_calls': parsed_response['tool_calls'],
+                'raw_response': response.get('response', ''),
+                'model': self.get_current_model(),
+                'timestamp': time.time()
+            }
+            
+        except Exception as e:
+            return {
+                'response': f"❌ Error interno: {str(e)}",
+                'tool_calls': [],
+                'raw_response': "",
+                'model': self.get_current_model(),
+                'timestamp': time.time(),
+                'error': str(e)
+            }
     
-    def _generate_dummy_response(self, prompt: str, use_tools: bool) -> str:
-        """Generar respuesta dummy basada en el prompt"""
-        prompt_lower = prompt.lower()
-        
-        # Detectar tipo de solicitud y generar respuesta apropiada
-        if any(word in prompt_lower for word in ['buscar', 'search', 'investigar', 'información']):
-            if use_tools:
-                return f"""Voy a buscar información sobre tu consulta: "{prompt}"
-
-```json
-{{
-  "tool_call": {{
-    "tool": "web_search",
-    "parameters": {{
-      "query": "{prompt[:50]}..."
-    }}
-  }}
-}}
-```
-
-Te ayudo a encontrar la información más relevante sobre este tema."""
+    def _call_ollama_api(self, prompt: str) -> Dict[str, Any]:
+        """Hacer llamada real a la API de Ollama"""
+        try:
+            payload = {
+                "model": self.get_current_model(),
+                "prompt": prompt,
+                "stream": False,
+                "options": {
+                    "temperature": 0.7,
+                    "top_p": 0.9,
+                    "top_k": 40
+                }
+            }
+            
+            response = requests.post(
+                f"{self.base_url}/api/generate",
+                json=payload,
+                timeout=self.request_timeout
+            )
+            
+            if response.status_code == 200:
+                return response.json()
             else:
-                return f"Basándome en mi conocimiento, puedo decirte que {prompt} es un tema interesante. {random.choice(self.dummy_responses)}"
-        
-        elif any(word in prompt_lower for word in ['archivo', 'file', 'documento', 'leer']):
-            if use_tools:
-                return f"""Voy a ayudarte con el manejo de archivos.
-
-```json
-{{
-  "tool_call": {{
-    "tool": "file_manager",
-    "parameters": {{
-      "action": "read",
-      "path": "/tmp/example.txt"
-    }}
-  }}
-}}
-```
-
-Procesando tu solicitud de archivo..."""
-            else:
-                return "Entiendo que necesitas ayuda con archivos. Te puedo asistir con la gestión de documentos."
-        
-        elif any(word in prompt_lower for word in ['ejecutar', 'comando', 'shell', 'terminal']):
-            if use_tools:
-                return f"""Voy a ejecutar el comando solicitado.
-
-```json
-{{
-  "tool_call": {{
-    "tool": "shell",
-    "parameters": {{
-      "command": "echo 'Ejecutando comando...'"
-    }}
-  }}
-}}
-```
-
-Procesando comando..."""
-            else:
-                return "Entiendo que quieres ejecutar un comando. Te puedo ayudar con tareas de terminal."
-        
-        elif any(word in prompt_lower for word in ['crear', 'generar', 'hacer', 'desarrollar']):
-            return f"Perfecto, voy a ayudarte a crear lo que necesitas. {random.choice(self.dummy_responses)} Basándome en tu solicitud '{prompt}', puedo sugerir varios enfoques para lograr el resultado deseado."
-        
-        elif any(word in prompt_lower for word in ['explicar', 'qué es', 'cómo', 'por qué']):
-            return f"Excelente pregunta sobre '{prompt}'. {random.choice(self.dummy_responses)} Te explico de manera detallada para que puedas entender completamente el concepto."
-        
-        else:
-            # Respuesta genérica
-            base_response = random.choice(self.dummy_responses)
-            return f"{base_response} Respecto a tu consulta: '{prompt}', puedo proporcionarte información útil y asistencia personalizada."
+                return {
+                    'error': f"HTTP {response.status_code}: {response.text}"
+                }
+                
+        except Timeout:
+            return {
+                'error': f"Timeout después de {self.request_timeout} segundos"
+            }
+        except RequestException as e:
+            return {
+                'error': f"Error de conexión: {str(e)}"
+            }
+        except Exception as e:
+            return {
+                'error': f"Error inesperado: {str(e)}"
+            }
     
     def _parse_response(self, response_text: str) -> Dict[str, Any]:
         """Parsear respuesta para extraer texto y tool calls"""
@@ -206,7 +187,9 @@ Procesando comando..."""
     def _build_system_prompt(self, use_tools: bool) -> str:
         """Construir prompt del sistema"""
         base_prompt = """Eres un asistente de IA general llamado 'Agente General' que puede ayudar con una amplia variedad de tareas. 
-Eres inteligente, útil y puedes usar herramientas para realizar acciones concretas."""
+Eres inteligente, útil y puedes usar herramientas para realizar acciones concretas.
+
+Responde en español de manera clara y concisa. Si necesitas usar herramientas, explica qué vas a hacer antes de usarlas."""
         
         if use_tools:
             tools_prompt = """
@@ -228,6 +211,7 @@ Herramientas disponibles:
 2. **web_search** - Buscar información en internet
 3. **file_manager** - Gestionar archivos y directorios
 4. **deep_research** - Investigación profunda
+5. **tavily_search** - Búsqueda avanzada web
 """
             return base_prompt + tools_prompt
         
@@ -252,4 +236,60 @@ Herramientas disponibles:
         full_prompt += f"Usuario: {prompt}\nAsistente: "
         
         return full_prompt
-
+    
+    def chat_streaming(self, prompt: str, context: Dict = None, use_tools: bool = True):
+        """
+        Generar respuesta streaming usando Ollama
+        Devuelve un generator que produce chunks de respuesta
+        """
+        if not self.is_healthy():
+            yield {
+                'response': "⚠️ Ollama no está disponible en este momento.",
+                'done': True,
+                'error': 'Ollama no disponible'
+            }
+            return
+        
+        try:
+            system_prompt = self._build_system_prompt(use_tools)
+            full_prompt = self._build_full_prompt(prompt, context, system_prompt)
+            
+            payload = {
+                "model": self.get_current_model(),
+                "prompt": full_prompt,
+                "stream": True,
+                "options": {
+                    "temperature": 0.7,
+                    "top_p": 0.9,
+                    "top_k": 40
+                }
+            }
+            
+            response = requests.post(
+                f"{self.base_url}/api/generate",
+                json=payload,
+                timeout=self.request_timeout,
+                stream=True
+            )
+            
+            if response.status_code == 200:
+                for line in response.iter_lines():
+                    if line:
+                        try:
+                            chunk = json.loads(line.decode('utf-8'))
+                            yield chunk
+                        except json.JSONDecodeError:
+                            continue
+            else:
+                yield {
+                    'response': f"❌ Error HTTP {response.status_code}: {response.text}",
+                    'done': True,
+                    'error': f"HTTP {response.status_code}"
+                }
+                
+        except Exception as e:
+            yield {
+                'response': f"❌ Error: {str(e)}",
+                'done': True,
+                'error': str(e)
+            }
