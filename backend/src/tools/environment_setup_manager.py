@@ -11,6 +11,7 @@ from datetime import datetime
 import json
 import tempfile
 from pathlib import Path
+from .container_manager import ContainerManager
 
 class EnvironmentSetupManager:
     def __init__(self):
