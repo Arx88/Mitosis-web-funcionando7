@@ -2160,11 +2160,181 @@ def test_deepresearch_created_files():
         print(f"RESULT: ❌ FAILED (Exception)")
         return False, None
 
+def test_intelligent_orchestrator_endpoints():
+    """Test the new intelligent orchestrator endpoints as requested in review"""
+    print(f"\n{'='*80}")
+    print(f"🎯 TESTING INTELLIGENT ORCHESTRATOR ENDPOINTS - AS REQUESTED IN REVIEW")
+    print(f"{'='*80}")
+    
+    # Test 1: Task Analysis Endpoint - Simple Task
+    print(f"\n🔍 TEST 1: Task Analysis - Simple Task")
+    simple_task_data = {
+        "task_title": "Crear una página web simple",
+        "task_description": "Crear una página web básica con HTML, CSS y JavaScript que muestre información personal"
+    }
+    
+    passed_simple, response_simple = run_test(
+        "Task Analysis - Simple Task", 
+        f"{API_PREFIX}/task/analyze", 
+        method="POST",
+        data=simple_task_data,
+        expected_keys=["success", "analysis", "timestamp"]
+    )
+    
+    if passed_simple and response_simple:
+        analysis = response_simple.get('analysis', {})
+        print(f"   ✅ Analysis received:")
+        print(f"      - Task Type: {analysis.get('task_type', 'NOT FOUND')}")
+        print(f"      - Complexity: {analysis.get('complexity', 'NOT FOUND')}")
+        print(f"      - Required Tools: {analysis.get('required_tools', 'NOT FOUND')}")
+        print(f"      - Estimated Duration: {analysis.get('estimated_duration', 'NOT FOUND')}")
+        print(f"      - Success Probability: {analysis.get('success_probability', 'NOT FOUND')}")
+    
+    # Test 2: Task Analysis Endpoint - Complex Task
+    print(f"\n🔍 TEST 2: Task Analysis - Complex Task")
+    complex_task_data = {
+        "task_title": "Analizar datos de ventas y generar reporte",
+        "task_description": "Procesar archivos CSV con datos de ventas, realizar análisis estadístico, identificar tendencias y generar un reporte ejecutivo con gráficos y recomendaciones"
+    }
+    
+    passed_complex, response_complex = run_test(
+        "Task Analysis - Complex Task", 
+        f"{API_PREFIX}/task/analyze", 
+        method="POST",
+        data=complex_task_data,
+        expected_keys=["success", "analysis", "timestamp"]
+    )
+    
+    if passed_complex and response_complex:
+        analysis = response_complex.get('analysis', {})
+        print(f"   ✅ Analysis received:")
+        print(f"      - Task Type: {analysis.get('task_type', 'NOT FOUND')}")
+        print(f"      - Complexity: {analysis.get('complexity', 'NOT FOUND')}")
+        print(f"      - Required Tools: {analysis.get('required_tools', 'NOT FOUND')}")
+        print(f"      - Estimated Duration: {analysis.get('estimated_duration', 'NOT FOUND')}")
+        print(f"      - Success Probability: {analysis.get('success_probability', 'NOT FOUND')}")
+    
+    # Test 3: Task Plan Generation - Web Development
+    print(f"\n🔍 TEST 3: Task Plan Generation - Web Development")
+    task_id = f"test-plan-{uuid.uuid4()}"
+    plan_data = {
+        "task_id": task_id,
+        "task_title": "Desarrollar aplicación web moderna",
+        "task_description": "Crear una aplicación web completa con frontend React, backend Node.js y base de datos MongoDB"
+    }
+    
+    passed_plan, response_plan = run_test(
+        "Task Plan Generation - Web Development", 
+        f"{API_PREFIX}/task/plan", 
+        method="POST",
+        data=plan_data,
+        expected_keys=["success", "execution_plan", "timestamp"]
+    )
+    
+    if passed_plan and response_plan:
+        execution_plan = response_plan.get('execution_plan', {})
+        steps = execution_plan.get('steps', [])
+        print(f"   ✅ Execution Plan received:")
+        print(f"      - Task ID: {execution_plan.get('task_id', 'NOT FOUND')}")
+        print(f"      - Title: {execution_plan.get('title', 'NOT FOUND')}")
+        print(f"      - Total Steps: {len(steps)}")
+        print(f"      - Total Duration: {execution_plan.get('total_estimated_duration', 'NOT FOUND')}")
+        print(f"      - Complexity Score: {execution_plan.get('complexity_score', 'NOT FOUND')}")
+        print(f"      - Required Tools: {execution_plan.get('required_tools', 'NOT FOUND')}")
+        print(f"      - Success Probability: {execution_plan.get('success_probability', 'NOT FOUND')}")
+        
+        # Verify step structure
+        if steps:
+            print(f"   ✅ Steps structure verification:")
+            for i, step in enumerate(steps[:3]):  # Show first 3 steps
+                print(f"      Step {i+1}:")
+                print(f"         - ID: {step.get('id', 'NOT FOUND')}")
+                print(f"         - Title: {step.get('title', 'NOT FOUND')}")
+                print(f"         - Description: {step.get('description', 'NOT FOUND')[:50]}...")
+                print(f"         - Tool: {step.get('tool', 'NOT FOUND')}")
+                print(f"         - Parameters: {step.get('parameters', 'NOT FOUND')}")
+                print(f"         - Dependencies: {step.get('dependencies', 'NOT FOUND')}")
+                print(f"         - Estimated Duration: {step.get('estimated_duration', 'NOT FOUND')}")
+                print(f"         - Complexity: {step.get('complexity', 'NOT FOUND')}")
+    
+    # Test 4: Plan Templates Endpoint
+    print(f"\n🔍 TEST 4: Plan Templates Retrieval")
+    passed_templates, response_templates = run_test(
+        "Plan Templates Retrieval", 
+        f"{API_PREFIX}/plans/templates", 
+        method="GET",
+        expected_keys=["success", "templates", "timestamp"]
+    )
+    
+    if passed_templates and response_templates:
+        templates = response_templates.get('templates', {})
+        print(f"   ✅ Templates received:")
+        print(f"      - Total Templates: {len(templates)}")
+        
+        # Verify template structure
+        for template_key, template_info in list(templates.items())[:3]:  # Show first 3 templates
+            print(f"      Template '{template_key}':")
+            print(f"         - Name: {template_info.get('name', 'NOT FOUND')}")
+            print(f"         - Description: {template_info.get('description', 'NOT FOUND')}")
+            print(f"         - Steps: {template_info.get('steps', 'NOT FOUND')}")
+            print(f"         - Duration: {template_info.get('estimated_duration', 'NOT FOUND')}")
+            print(f"         - Complexity: {template_info.get('complexity', 'NOT FOUND')}")
+            print(f"         - Required Tools: {template_info.get('required_tools', 'NOT FOUND')}")
+    
+    # Test 5: Error Handling - Missing Parameters
+    print(f"\n🔍 TEST 5: Error Handling - Missing Parameters")
+    
+    # Test task analysis without required parameters
+    run_test(
+        "Task Analysis - Missing Title", 
+        f"{API_PREFIX}/task/analyze", 
+        method="POST",
+        data={"task_description": "Some description"},
+        expected_status=400
+    )
+    
+    # Test task plan without required parameters
+    run_test(
+        "Task Plan - Missing Task ID", 
+        f"{API_PREFIX}/task/plan", 
+        method="POST",
+        data={"task_title": "Some title"},
+        expected_status=400
+    )
+    
+    # Summary of orchestrator testing
+    print(f"\n🎯 INTELLIGENT ORCHESTRATOR TESTING SUMMARY:")
+    orchestrator_tests = [
+        ("Task Analysis - Simple", passed_simple),
+        ("Task Analysis - Complex", passed_complex), 
+        ("Task Plan Generation", passed_plan),
+        ("Plan Templates", passed_templates)
+    ]
+    
+    passed_count = sum(1 for _, passed in orchestrator_tests if passed)
+    total_count = len(orchestrator_tests)
+    
+    print(f"   ✅ Passed: {passed_count}/{total_count} tests")
+    print(f"   📊 Success Rate: {passed_count/total_count*100:.1f}%")
+    
+    if passed_count == total_count:
+        print(f"   🎉 ALL ORCHESTRATOR ENDPOINTS WORKING CORRECTLY!")
+    else:
+        print(f"   ⚠️  Some orchestrator endpoints need attention")
+    
+    return passed_count == total_count
+
 def main():
     """Run all tests"""
     print("Starting Task Manager Backend API Tests")
     print(f"Base URL: {BASE_URL}")
     print(f"Timestamp: {test_results['timestamp']}")
+    
+    # 🎯 NEW: Test Intelligent Orchestrator Endpoints (AS REQUESTED IN REVIEW)
+    print(f"\n{'='*80}")
+    print("🎯 PRIORITY TEST: Intelligent Orchestrator Endpoints")
+    print(f"{'='*80}")
+    orchestrator_success = test_intelligent_orchestrator_endpoints()
     
     # PRIORITY TEST: DeepResearch Created Files Functionality
     print(f"\n{'='*80}")
