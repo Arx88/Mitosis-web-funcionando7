@@ -21,6 +21,12 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'prompt' | 'memory' | 'ollama' | 'openrouter' | 'tools'>('prompt');
   const [tempConfig, setTempConfig] = useState<AgentConfig>(config);
+  
+  // Ollama connection hook
+  const ollamaConnection = useOllamaConnection({
+    endpoint: tempConfig.ollama.endpoint,
+    enabled: tempConfig.ollama.enabled
+  });
 
   const handleSave = () => {
     onConfigChange(tempConfig);
