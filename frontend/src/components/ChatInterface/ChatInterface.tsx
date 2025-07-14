@@ -220,17 +220,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setAgentStatus('idle');
     setCurrentStepName('');
     setIsLoadingMessages(false);
-    setCurrentExecutingTool(null);
-    // Reset terminal-specific states
-    setMonitorPages([]);
-    setCurrentPageIndex(0);
-    setIsLiveMode(true);
-    setPaginationStats({
-      totalPages: 0,
-      currentPage: 1,
-      limit: 20,
-      offset: 0
-    });
+    setShowPDFViewer(false);
+    setPDFViewerContent('');
+    setPDFViewerTitle('');
     console.log('✅ CHAT STATE RESET COMPLETE - Terminal cleared');
   };
 
