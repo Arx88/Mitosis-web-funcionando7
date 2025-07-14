@@ -483,10 +483,23 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 onUpdateTask(updatedTask);
               }}
               onTaskReset={() => {
-                // Reset task-specific state when switching tasks
+                // Reset task-specific state when switching tasks - MORE COMPREHENSIVE RESET
                 console.log('🔄 Task reset triggered for task:', task.id);
+                
                 // Clear terminal logs for new task
                 setTerminalLogs([]);
+                
+                // Reset any file-related state
+                setTaskFiles([]);
+                
+                // Reset any typing state
+                setIsTyping(false);
+                
+                // Reset modal states
+                setShowFilesModal(false);
+                setShowShareModal(false);
+                
+                console.log('🖥️ Terminal/computer state fully reset for task:', task.id);
               }}
               isNewTask={task.messages.length === 0}
             />
