@@ -143,17 +143,6 @@ export function App() {
     return newTask;
   };
 
-  const handleEnvironmentSetupComplete = (taskId: string) => {
-    console.log('🎉 Environment setup completed for task:', taskId);
-    
-    // Marcar la tarea como lista para usar
-    setTasks(prev => prev.map(task => 
-      task.id === taskId 
-        ? { ...task, isInitializing: false, status: 'ready' }
-        : task
-    ));
-  };
-
   const deleteTask = (taskId: string) => {
     setTasks(prev => prev.filter(task => task.id !== taskId));
     
