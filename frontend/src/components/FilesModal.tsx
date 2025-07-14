@@ -253,8 +253,8 @@ export const FilesModal: React.FC<FilesModalProps> = ({
 
         {/* Error Display */}
         {error && (
-          <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="mx-6 mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <p className="text-sm text-red-400">{error}</p>
           </div>
         )}
 
