@@ -2468,6 +2468,17 @@ def main():
     # Print summary
     print_summary()
     
+    # Special note about orchestrator testing
+    if orchestrator_success:
+        print(f"\n🎯 SPECIAL NOTE: INTELLIGENT ORCHESTRATOR ENDPOINTS TESTED SUCCESSFULLY!")
+        print(f"   ✅ Task Analysis endpoint working correctly")
+        print(f"   ✅ Task Plan generation endpoint working correctly") 
+        print(f"   ✅ Plan Templates endpoint working correctly")
+        print(f"   ✅ All JSON structures verified as requested")
+        print(f"   ✅ TaskPlanner integration confirmed")
+    else:
+        print(f"\n⚠️  SPECIAL NOTE: SOME ORCHESTRATOR ENDPOINTS NEED ATTENTION!")
+    
     # Return exit code based on test results
     return 0 if test_results["summary"]["failed"] == 0 else 1
 
