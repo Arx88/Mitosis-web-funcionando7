@@ -390,10 +390,10 @@ export const TerminalView = ({
               )}
             </div>
           ) : (
-            <div className="text-center text-[#7f7f7f] py-8 w-full">
-              <Monitor className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Inicializando sistema de monitoreo...</p>
-              <p className="text-sm mt-1">Esperando datos del agente...</p>
+            <div className="flex flex-col items-center justify-center h-full w-full text-[#7f7f7f]">
+              <Monitor className="w-12 h-12 mb-3 opacity-50" />
+              <p className="text-center">Inicializando sistema de monitoreo...</p>
+              <p className="text-sm mt-1 text-center">Esperando datos del agente...</p>
             </div>
           )}
         </div>
