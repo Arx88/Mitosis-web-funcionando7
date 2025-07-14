@@ -140,10 +140,31 @@ export function App() {
     setTasks(prev => [newTask, ...prev]);
     setActiveTaskId(newTask.id);
     
-    // Removed automatic test file creation to prevent mockup files from appearing
-    console.log('✅ Task created without automatic file generation:', newTask.id);
-    console.log('🖥️ Terminal/computer state reset for new task');
+    // Show environment setup instead of immediate task creation
+    setEnvironmentSetupTaskId(newTask.id);
+    setEnvironmentSetupTaskTitle(title);
+    setShowEnvironmentSetup(true);
     setIsTaskCreating(false);
+    
+    // Start environment setup in background
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+      await fetch(`${backendUrl}/api/agent/setup-environment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          task_id: newTask.id,
+          task_title: title,
+          task_type: 'general' // TODO: Detectar tipo automáticamente
+        })
+      });
+    } catch (error) {
+      console.error('Error starting environment setup:', error);
+    }
+    
+    console.log('✅ Task created with environment setup:', newTask.id);
     
     return newTask;
   };
