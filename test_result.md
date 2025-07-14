@@ -95,7 +95,7 @@
 
 - ✅ Frontend: Funcionando correctamente con todas las correcciones aplicadas
 - ✅ Backend: Servicios corriendo sin problemas
-- ✅ Preview: Disponible en https://d1adcbdf-54f7-4078-8d93-733b138d444d.preview.emergentagent.com
+- ✅ Preview: Disponible en https://89f825a2-e5a1-4932-b902-d1c629df8f08.preview.emergentagent.com
 - ✅ Títulos: Espaciado corregido y funcionando
 - ✅ WebSearch: Toggle funcionando correctamente
 - ✅ Iconos: Visibles en pestañas activas
@@ -183,7 +183,7 @@ directory=/app/frontend
 **TESTING REQUEST**: Test the AgentStatusBar functionality in the Mitosis application to verify if the agent status bar appears above the chatbox input during task execution.
 
 **TESTING METHODOLOGY**:
-1. Navigated to https://d1adcbdf-54f7-4078-8d93-733b138d444d.preview.emergentagent.com
+1. Navigated to https://89f825a2-e5a1-4932-b902-d1c629df8f08.preview.emergentagent.com
 2. Created tasks to trigger AgentStatusBar functionality
 3. Monitored for different agent states during task execution
 4. Captured screenshots during task processing
@@ -371,7 +371,7 @@ command=serve -s dist -l 3000  # Sirve archivos estáticos de producción
 
 - ✅ Frontend: Funcionando correctamente con todos los cambios aplicados
 - ✅ Backend: Servicios corriendo sin problemas
-- ✅ Preview: Disponible en https://d1adcbdf-54f7-4078-8d93-733b138d444d.preview.emergentagent.com
+- ✅ Preview: Disponible en https://89f825a2-e5a1-4932-b902-d1c629df8f08.preview.emergentagent.com
 - ✅ Sidebar: Centrado corregido y funcionando
 - ✅ Animación: Velocidad ajustada correctamente
 - ✅ Placeholder: Formato académico funcionando completamente
