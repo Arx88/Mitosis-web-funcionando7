@@ -353,9 +353,9 @@ export const FilesModal: React.FC<FilesModalProps> = ({
                           className="flex-shrink-0"
                         >
                           {selectedFiles.has(file.id) ? (
-                            <CheckSquare className="w-5 h-5 text-blue-600" />
+                            <CheckSquare className="w-5 h-5 text-blue-400" />
                           ) : (
-                            <Square className="w-5 h-5 text-gray-400" />
+                            <Square className="w-5 h-5 text-[#7f7f7f]" />
                           )}
                         </button>
 
@@ -365,24 +365,24 @@ export const FilesModal: React.FC<FilesModalProps> = ({
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            <p className="text-sm font-medium text-[#DADADA] truncate">
                               {file.name}
                             </p>
                             {file.source === 'uploaded' && (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
                                 Subido
                               </span>
                             )}
                           </div>
                           <div className="flex items-center gap-4 mt-1">
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-[#ACACAC]">
                               {formatFileSize(file.size)}
                             </p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-[#ACACAC]">
                               {formatDate(file.created_at)}
                             </p>
                             {file.mime_type && (
-                              <p className="text-xs text-gray-400">
+                              <p className="text-xs text-[#7f7f7f]">
                                 {file.mime_type}
                               </p>
                             )}
@@ -393,7 +393,7 @@ export const FilesModal: React.FC<FilesModalProps> = ({
                           {onAddFileToMemory && (
                             <button
                               onClick={() => onAddFileToMemory(file)}
-                              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              className="p-2 text-[#7f7f7f] hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
                               title="Añadir a memoria"
                             >
                               <Brain className="w-4 h-4" />
