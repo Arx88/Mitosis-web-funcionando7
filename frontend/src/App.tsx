@@ -114,8 +114,14 @@ export function App() {
     setActiveTaskId(null);
     setIsTaskCreating(true);
     
-    // Reset terminal/computer state for new task
-    console.log('🔄 Resetting terminal state for new task');
+    // Reset terminal/computer state for new task - MORE COMPREHENSIVE RESET
+    console.log('🔄 Resetting terminal and computer state for new task');
+    
+    // Reset any thinking state
+    setAppState(prev => ({
+      ...prev,
+      isThinking: false
+    }));
     
     const newTask: Task = {
       id: `task-${Date.now()}`,
@@ -123,7 +129,7 @@ export function App() {
       createdAt: new Date(),
       status: 'pending',
       messages: [],
-      terminalCommands: [],
+      terminalCommands: [], // Start with empty terminal commands for each task
       isFavorite: false,
       progress: 0 // Initialize progress at 0
     };
@@ -132,6 +138,7 @@ export function App() {
     
     // Removed automatic test file creation to prevent mockup files from appearing
     console.log('✅ Task created without automatic file generation:', newTask.id);
+    console.log('🖥️ Terminal/computer state reset for new task');
     setIsTaskCreating(false);
     
     return newTask;
