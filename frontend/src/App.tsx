@@ -140,10 +140,38 @@ export function App() {
     setActiveTaskId(newTask.id);
     setIsTaskCreating(false);
     
-    // La tarea se abre inmediatamente, la inicialización se maneja en TaskView
-    console.log('✅ Task created and opened immediately:', newTask.id);
+    // Inicializar el proceso de inicialización
+    setInitializingTaskId(newTask.id);
+    setInitializationLogs([]);
+    console.log('✅ Task created, starting initialization:', newTask.id);
     
     return newTask;
+  };
+
+  // Función para manejar logs de inicialización
+  const handleInitializationLog = (message: string, type: 'info' | 'success' | 'error') => {
+    const logEntry = {
+      message,
+      type,
+      timestamp: new Date()
+    };
+    
+    setInitializationLogs(prev => [...prev, logEntry]);
+    console.log(`📝 Initialization log (${type}):`, message);
+  };
+
+  // Función para completar la inicialización
+  const handleInitializationComplete = () => {
+    console.log('✅ Task initialization completed');
+    setInitializingTaskId(null);
+    
+    // Agregar log final de inicialización completada
+    handleInitializationLog('🎉 Environment ready! You can start working now.', 'success');
+    
+    // Opcional: Limpiar logs después de un tiempo
+    setTimeout(() => {
+      setInitializationLogs([]);
+    }, 10000); // Limpiar logs después de 10 segundos
   };
 
   const deleteTask = (taskId: string) => {
