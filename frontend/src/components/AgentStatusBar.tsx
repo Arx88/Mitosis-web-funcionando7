@@ -41,7 +41,16 @@ export const AgentStatusBar: React.FC<AgentStatusBarProps> = ({
   };
 
   if (status === 'idle') {
-    return null;
+    return (
+      <div className={`w-full px-4 py-2 bg-[#2A2A2C] border-t border-[rgba(255,255,255,0.08)] overflow-x-hidden ${className}`} style={{ fontFamily: "'Open Sans', sans-serif" }}>
+        <div className="flex items-center gap-3">
+          <Bot className="w-4 h-4 text-gray-500 flex-shrink-0" />
+          <span className="text-xs font-light text-gray-500">
+            Agente en espera...
+          </span>
+        </div>
+      </div>
+    );
   }
 
   return (
