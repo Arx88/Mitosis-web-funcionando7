@@ -183,18 +183,51 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                       </label>
                     </div>
 
+                    {/* Connection Status */}
+                    <div className="bg-[#2A2A2B] rounded-lg p-4 border border-[rgba(255,255,255,0.08)]">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[#DADADA] text-sm font-medium">Estado de Conexión</span>
+                        <button
+                          onClick={ollamaConnection.checkConnection}
+                          disabled={!tempConfig.ollama.enabled || ollamaConnection.isLoading}
+                          className="text-xs text-blue-400 hover:text-blue-300 disabled:text-gray-500"
+                        >
+                          Verificar
+                        </button>
+                      </div>
+                      <ConnectionStatus
+                        isConnected={ollamaConnection.isConnected}
+                        isLoading={ollamaConnection.isLoading}
+                        label="Ollama"
+                        errorMessage={ollamaConnection.error || undefined}
+                      />
+                    </div>
+
                     <div>
                       <label className="block text-[#DADADA] mb-2">Modelo</label>
-                      <select
+                      <CustomSelect
                         value={tempConfig.ollama.model}
-                        onChange={(e) => updateConfig('ollama.model', e.target.value)}
-                        className="w-full bg-[#2A2A2B] rounded-lg p-3 text-[#DADADA] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,255,255,0.16)]"
-                      >
-                        <option value="llama3.2">Llama 3.2</option>
-                        <option value="mistral">Mistral</option>
-                        <option value="codellama">CodeLlama</option>
-                        <option value="phi">Phi</option>
-                      </select>
+                        onChange={(value) => updateConfig('ollama.model', value)}
+                        options={[
+                          ...ollamaConnection.models.map(model => ({
+                            value: model.name,
+                            label: model.label
+                          })),
+                          // Fallback options if no models are available
+                          ...(ollamaConnection.models.length === 0 ? [
+                            { value: 'llama3.2', label: 'Llama 3.2' },
+                            { value: 'mistral', label: 'Mistral' },
+                            { value: 'codellama', label: 'CodeLlama' },
+                            { value: 'phi', label: 'Phi' }
+                          ] : [])
+                        ]}
+                        placeholder="Seleccionar modelo..."
+                        loading={ollamaConnection.isLoading}
+                        showConnectionStatus={true}
+                        isConnected={ollamaConnection.isConnected}
+                        onRefresh={ollamaConnection.fetchModels}
+                        disabled={!tempConfig.ollama.enabled}
+                      />
                     </div>
 
                     <div>
@@ -212,13 +245,13 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
 
                     <div>
                       <label className="block text-[#DADADA] mb-2">Máximo de tokens</label>
-                      <input
-                        type="number"
+                      <NumberInput
                         value={tempConfig.ollama.maxTokens}
-                        onChange={(e) => updateConfig('ollama.maxTokens', parseInt(e.target.value))}
-                        className="w-full bg-[#2A2A2B] rounded-lg p-3 text-[#DADADA] border border-[rgba(255,255,255,0.08)] focus:outline-none focus:ring-2 focus:ring-[rgba(255,255,255,0.16)]"
-                        min="100"
-                        max="4096"
+                        onChange={(value) => updateConfig('ollama.maxTokens', value)}
+                        min={100}
+                        max={4096}
+                        step={100}
+                        placeholder="Número de tokens"
                       />
                     </div>
 
