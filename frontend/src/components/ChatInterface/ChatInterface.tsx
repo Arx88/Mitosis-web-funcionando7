@@ -245,7 +245,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     if (onTaskReset) {
       onTaskReset();
     }
-  }, [dataId, onTaskReset]);
+  }, [dataId]); // Removed onTaskReset from dependencies to prevent infinite loop
 
   // Optimized scroll effect
   useEffect(() => {
