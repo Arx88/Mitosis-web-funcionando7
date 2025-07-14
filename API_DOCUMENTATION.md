@@ -102,43 +102,75 @@ Este documento describe todas las APIs y servicios externos utilizados en la apl
 1. **Smithery** - Después de investigar capacidades
 2. **RapidAPI** - Solo APIs específicas necesarias
 
-### Estructura de Archivos para Nuevas Integraciones
+### Estructura de Archivos - Estado Actual
 
 ```
 /app/backend/src/tools/
-├── firecrawl_tool.py         # 🔄 Por crear
-├── qstash_tool.py            # 🔄 Por crear
-├── playwright_tool.py        # 🔄 Por crear
-├── rapidapi_tool.py          # 🔄 Por crear (opcional)
-└── smithery_tool.py          # 🔄 Por crear (opcional)
+├── shell_tool.py                 # ✅ Comandos shell
+├── file_manager_tool.py          # ✅ Gestión de archivos
+├── tavily_search_tool.py         # ✅ Búsqueda Tavily
+├── enhanced_web_search_tool.py   # ✅ Búsqueda web mejorada
+├── deep_research_tool.py         # ✅ Investigación profunda
+├── comprehensive_research_tool.py # ✅ Investigación comprehensiva
+├── firecrawl_tool.py             # ✅ NUEVO - Web scraping avanzado
+├── qstash_tool.py                # ✅ NUEVO - Jobs en background
+├── playwright_tool.py            # ✅ NUEVO - Automatización navegadores
+├── rapidapi_tool.py              # 🔄 Por crear (si se necesita)
+└── smithery_tool.py              # 🔄 Por crear (si se necesita)
 ```
 
-### Variables de Entorno Necesarias
+### Variables de Entorno - Estado Actual
 
 ```bash
 # /app/backend/.env
-# Existentes
+# Existentes y funcionando
 TAVILY_API_KEY=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
 MONGO_URL=mongodb://localhost:27017/task_manager
 
-# Nuevas por agregar
+# Nuevas integradas
 FIRECRAWL_API_KEY=fc-d7697dffe9a04c4e973e213284e9de76
 QSTASH_URL=redis://default:AeJLAAIjcDE4NmM1NWI5ZjQwYjE0NDIwYjRhNWZmNDhmOTk2OGU1MHAxMA@normal-vervet-57931.upstash.io:6379
+
+# Disponibles pero no integradas
 RAPIDAPI_KEY=e3c8f40077msh2383361adacc215p1fb470jsn0a2150f802f9
 SMITHERY_KEY=generous-zebra-3J27EB
 ```
 
+### Dependencias Instaladas
+
+```bash
+# /app/backend/requirements.txt
+# Dependencias nuevas agregadas
+playwright>=1.40.0           # ✅ Instalado
+redis>=5.0.0                 # ✅ Instalado
+firecrawl-py>=0.0.11         # ✅ Instalado
+```
+
 ### Estado de Servicios
 
-| Servicio | Estado | Funcionalidad | Mejora |
-|----------|--------|---------------|---------|
-| Tavily | ✅ Activo | Búsqueda web | - |
-| MongoDB | ✅ Activo | Base de datos | - |
-| Firecrawl | 🔄 Pendiente | Web scraping | +++ |
-| QStash | 🔄 Pendiente | Jobs background | +++ |
-| Playwright | 🔄 Pendiente | Automatización | ++ |
-| RapidAPI | 🔄 Pendiente | APIs externas | + |
-| Smithery | 🔄 Pendiente | Agentes custom | ? |
+| Servicio | Estado | Herramientas | Funcionalidad |
+|----------|--------|--------------|---------------|
+| Backend | ✅ Running | 11 tools | Chat, APIs, Tools |
+| Frontend | ✅ Running | Production | UI, Tasks, WebSearch |
+| MongoDB | ✅ Running | Connected | Datos persistentes |
+| Tavily | ✅ Active | Web Search | Búsqueda web |
+| Firecrawl | ✅ Active | Advanced Scraping | Web scraping |
+| QStash | ✅ Active | Background Jobs | Jobs async |
+| Playwright | ✅ Active | Browser Automation | Automatización |
+
+### Herramientas Disponibles en Tool Manager
+
+1. **shell** - Comandos del sistema
+2. **web_search** - Búsqueda web mejorada
+3. **file_manager** - Gestión de archivos
+4. **tavily_search** - Búsqueda Tavily
+5. **deep_research** - Investigación profunda
+6. **comprehensive_research** - Investigación comprehensiva
+7. **enhanced_web_search** - Búsqueda web mejorada
+8. **enhanced_deep_research** - Investigación mejorada
+9. **firecrawl** - 🆕 Web scraping avanzado
+10. **qstash** - 🆕 Jobs en background
+11. **playwright** - 🆕 Automatización de navegadores
 
 ### Notas de Implementación
 
