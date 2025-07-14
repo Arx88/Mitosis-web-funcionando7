@@ -179,24 +179,33 @@ class EnvironmentSetupManager:
             return False
     
     async def _setup_safe_environment(self, session: Dict[str, Any]) -> bool:
-        """Configurar entorno seguro e aislado"""
+        """Configurar entorno seguro e aislado usando containers"""
         task_id = session['task_id']
+        task_type = session['task_type']
         
-        # Crear directorio de trabajo aislado
-        workspace_path = Path(tempfile.gettempdir()) / 'agent_workspaces' / task_id
-        workspace_path.mkdir(parents=True, exist_ok=True)
-        
-        session['environment_path'] = str(workspace_path)
-        
-        # Simular configuración de permisos
+        # Usar container manager para crear entorno aislado
+        self._log_step(session, f"Creating isolated container for {task_type} task...")
         await asyncio.sleep(0.5)
-        self._log_step(session, f"Created isolated workspace: {workspace_path}")
         
-        # Simular inicialización de container (simulado)
-        await asyncio.sleep(1)
-        self._log_step(session, "Container environment initialized")
+        container_result = self.container_manager.create_container(task_id, task_type)
         
-        return True
+        if container_result['success']:
+            session['container_info'] = container_result['container_info']
+            session['environment_path'] = container_result['container_info']['workspace_path']
+            
+            if container_result['container_info'].get('simulated', False):
+                self._log_step(session, "Simulated container environment created (Docker not available)")
+            else:
+                self._log_step(session, f"Docker container created: {container_result['container_info']['container_name']}")
+            
+            # Verificar entorno
+            await asyncio.sleep(1)
+            self._log_step(session, "Container environment verified and ready")
+            
+            return True
+        else:
+            self._log_step(session, f"Failed to create container: {container_result.get('error', 'Unknown error')}")
+            return False
     
     async def _initialize_cloud_environment(self, session: Dict[str, Any]) -> bool:
         """Inicializar entorno en la nube"""
