@@ -69,11 +69,6 @@ export const TerminalView = ({
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [isSystemOnline, setIsSystemOnline] = useState(false);
   const [initializationStep, setInitializationStep] = useState(0);
-  const [initializationSteps] = useState([
-    { id: 'env', title: 'Setting up environment', duration: 1500 },
-    { id: 'deps', title: 'Installing dependencies', duration: 2000 },
-    { id: 'agent', title: 'Initializing agent', duration: 1000 }
-  ]);
   const [paginationStats, setPaginationStats] = useState({
     totalPages: 0,
     currentPage: 1,
@@ -81,6 +76,13 @@ export const TerminalView = ({
     offset: 0
   });
   const monitorRef = useRef<HTMLDivElement>(null);
+
+  // Define initialization steps as constant to avoid infinite re-renders
+  const initializationSteps = [
+    { id: 'env', title: 'Setting up environment', duration: 1500 },
+    { id: 'deps', title: 'Installing dependencies', duration: 2000 },
+    { id: 'agent', title: 'Initializing agent', duration: 1000 }
+  ];
 
   // Reset terminal state when dataId changes (switching tasks)
   useEffect(() => {
