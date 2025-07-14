@@ -130,31 +130,9 @@ export function App() {
     setTasks(prev => [newTask, ...prev]);
     setActiveTaskId(newTask.id);
     
-    // Crear archivos automáticamente para la nueva tarea
-    try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
-      console.log('🔗 Backend URL:', backendUrl);
-      console.log('🚀 Creating test files for task:', newTask.id);
-      
-      const response = await fetch(`${backendUrl}/api/agent/create-test-files/${newTask.id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      console.log('📡 Response status:', response.status);
-
-      if (response.ok) {
-        console.log(`✅ Archivos creados automáticamente para la tarea: ${newTask.title}`);
-      } else {
-        console.error('❌ Error response:', response.status, response.statusText);
-      }
-    } catch (error) {
-      console.error('💥 Error creating files for new task:', error);
-    } finally {
-      setIsTaskCreating(false);
-    }
+    // Removed automatic test file creation to prevent mockup files from appearing
+    console.log('✅ Task created without automatic file generation:', newTask.id);
+    setIsTaskCreating(false);
     
     return newTask;
   };
