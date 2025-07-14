@@ -549,6 +549,11 @@ export const TaskView: React.FC<TaskViewProps> = ({
             plan={task.plan}
             onToggleTaskStep={toggleTaskStep}
             externalLogs={[...terminalLogs, ...externalLogs]}
+            isInitializing={isInitializing}
+            onInitializationComplete={onInitializationComplete}
+            onInitializationLog={onInitializationLog}
+            taskId={task.id}
+            taskTitle={task.title}
           />
         </div>
       </div>
