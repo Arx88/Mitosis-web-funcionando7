@@ -448,30 +448,19 @@ export const TerminalView = ({
           {/* Show initialization steps when initializing - MINIMALIST COMPUTER DESIGN */}
           {isInitializing && !isSystemOnline && (
             <div className="flex items-center justify-center h-full w-full">
-              <div className="max-w-xs w-full space-y-4">
-                {/* Computer Icon - Centered */}
-                <div className="flex justify-center mb-6">
-                  <div className="relative">
-                    {/* Computer Screen */}
-                    <div className="w-16 h-10 bg-gray-800 rounded-t-md border-2 border-gray-600 flex items-center justify-center">
-                      <div className="w-12 h-6 bg-gray-700 rounded-sm flex items-center justify-center">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                      </div>
-                    </div>
-                    {/* Computer Base */}
-                    <div className="w-20 h-2 bg-gray-700 rounded-b-md -mt-1"></div>
-                    {/* Computer Stand */}
-                    <div className="w-8 h-3 bg-gray-600 rounded-md mx-auto"></div>
-                  </div>
+              <div className="max-w-xs w-full space-y-6">
+                {/* Computer Icon - Using existing Monitor icon */}
+                <div className="flex justify-center mb-8">
+                  <Monitor size={48} className="text-blue-400" />
                 </div>
                 
-                {/* Steps - Granular and Minimalist */}
-                <div className="space-y-2">
+                {/* Steps - Granular with checkmarks */}
+                <div className="space-y-3">
                   {initializationSteps.map((step, index) => (
-                    <div key={step.id} className="text-center">
-                      <div className={`text-xs transition-all duration-300 ${
-                        index < initializationStep ? 'text-gray-500' :
-                        index === initializationStep ? 'text-gray-400' :
+                    <div key={step.id} className="flex items-center justify-between">
+                      <div className={`text-sm transition-all duration-500 ${
+                        index < initializationStep ? 'text-gray-400' :
+                        index === initializationStep ? 'text-gray-300' :
                         'text-gray-600'
                       }`}>
                         {step.title}
@@ -483,19 +472,29 @@ export const TerminalView = ({
                           </span>
                         )}
                       </div>
+                      {/* Checkmark for completed steps */}
+                      <div className={`ml-3 transition-all duration-500 ${
+                        index < initializationStep ? 'opacity-100' : 'opacity-0'
+                      }`}>
+                        <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
                 
-                {/* Progress Bar - Smaller and Minimalist */}
-                <div className="space-y-2 mt-6">
-                  <div className="w-full bg-gray-700 rounded-full h-1">
-                    <div 
-                      className="bg-blue-500 h-1 rounded-full transition-all duration-700 ease-out"
-                      style={{ 
-                        width: `${(initializationStep / initializationSteps.length) * 100}%` 
-                      }}
-                    />
+                {/* Progress Bar - 40% narrower and more stable */}
+                <div className="space-y-3 mt-8">
+                  <div className="flex justify-center">
+                    <div className="w-3/5 bg-gray-700 rounded-full h-1.5">
+                      <div 
+                        className="bg-blue-500 h-1.5 rounded-full transition-all duration-1000 ease-out"
+                        style={{ 
+                          width: `${(initializationStep / initializationSteps.length) * 100}%` 
+                        }}
+                      />
+                    </div>
                   </div>
                   <div className="text-center text-xs text-gray-500">
                     {Math.round((initializationStep / initializationSteps.length) * 100)}%
