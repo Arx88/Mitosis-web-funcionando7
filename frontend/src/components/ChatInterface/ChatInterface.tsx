@@ -231,8 +231,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   useEffect(() => {
     if (dataId) { // Solo resetear si hay un dataId válido
       resetChatState();
+      // Call the task reset function to reset terminal/computer state
+      if (onTaskReset) {
+        onTaskReset();
+      }
     }
-  }, [dataId]);
+  }, [dataId, onTaskReset]);
 
   // Optimized scroll effect
   useEffect(() => {
