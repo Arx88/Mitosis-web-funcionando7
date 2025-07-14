@@ -15,6 +15,7 @@ interface TaskViewProps {
   onUpdateTaskProgress?: (taskId: string) => void;
   isThinking: boolean;
   onTerminalResize?: (height: number) => void;
+  externalLogs?: Array<{message: string, type: 'info' | 'success' | 'error', timestamp: Date}>;
 }
 
 export const TaskView: React.FC<TaskViewProps> = ({
