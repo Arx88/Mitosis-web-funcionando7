@@ -573,7 +573,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
       </div>
 
       {/* Files Modal */}
-      {console.log('🗂️ Rendering FilesModal, showFilesModal:', showFilesModal)}
       <FilesModal
         isOpen={showFilesModal}
         onClose={() => setShowFilesModal(false)}
@@ -591,7 +590,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
       />
 
       {/* Share Modal */}
-      {console.log('🔗 Rendering ShareModal, showShareModal:', showShareModal)}
       <ShareModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
