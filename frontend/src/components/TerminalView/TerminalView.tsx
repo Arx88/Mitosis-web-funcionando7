@@ -445,49 +445,69 @@ export const TerminalView = ({
         
         {/* Monitor Content - Expandido para usar todo el ancho */}
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar w-full" ref={monitorRef}>
-          {/* Show initialization steps when initializing */}
+          {/* Show initialization steps when initializing - CENTERED MINIMALIST DESIGN */}
           {isInitializing && !isSystemOnline && (
-            <div className="space-y-4 w-full">
-              <div className="flex items-center gap-2 text-sm text-orange-400 border-b border-[#404040] pb-2">
-                <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
-                <span className="font-medium">ENVIRONMENT INITIALIZATION</span>
-                <span className="text-xs ml-auto">System Status: OFFLINE</span>
-              </div>
-              
-              <div className="space-y-2">
-                {initializationSteps.map((step, index) => (
-                  <div key={step.id} className="flex items-center gap-3 text-sm">
-                    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                      index < initializationStep ? 'bg-green-500' :
-                      index === initializationStep ? 'bg-blue-500 animate-pulse' :
-                      'bg-gray-600'
-                    }`}>
-                      {index < initializationStep ? (
-                        <CheckCircle className="w-3 h-3 text-white" />
-                      ) : index === initializationStep ? (
-                        <Loader2 className="w-3 h-3 text-white animate-spin" />
-                      ) : (
-                        <Circle className="w-3 h-3 text-gray-400" />
-                      )}
-                    </div>
-                    <span className={`${
-                      index < initializationStep ? 'text-green-400' :
-                      index === initializationStep ? 'text-blue-400' :
-                      'text-gray-400'
-                    }`}>
-                      {step.title}
-                      {index === initializationStep && '...'}
-                    </span>
+            <div className="flex items-center justify-center h-full w-full">
+              <div className="max-w-md w-full space-y-6">
+                {/* Header - Minimalist */}
+                <div className="text-center space-y-2">
+                  <div className="w-3 h-3 bg-gray-400 rounded-full animate-pulse mx-auto" />
+                  <div className="text-sm text-gray-400 font-medium">
+                    ENVIRONMENT INITIALIZATION
                   </div>
-                ))}
-              </div>
-              
-              <div className="mt-4 p-3 bg-[#1a1a1a] rounded border border-[#404040]">
-                <div className="text-xs text-gray-400 font-mono">
-                  {'>'} Initializing environment for: {taskTitle}
+                  <div className="text-xs text-gray-500">
+                    System Status: OFFLINE
+                  </div>
                 </div>
-                <div className="text-xs text-gray-400 font-mono mt-1">
-                  {'>'} Please wait while the system comes online...
+                
+                {/* Progress Steps - Minimalist Centered */}
+                <div className="space-y-4">
+                  {initializationSteps.map((step, index) => (
+                    <div key={step.id} className="flex items-center gap-3 justify-center">
+                      <div className={`w-3 h-3 rounded-full flex items-center justify-center ${
+                        index < initializationStep ? 'bg-gray-500' :
+                        index === initializationStep ? 'bg-blue-500 animate-pulse' :
+                        'bg-gray-700'
+                      }`}>
+                        {index < initializationStep ? (
+                          <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                        ) : index === initializationStep ? (
+                          <Loader2 className="w-2 h-2 text-white animate-spin" />
+                        ) : (
+                          <div className="w-1 h-1 bg-gray-500 rounded-full" />
+                        )}
+                      </div>
+                      <span className={`text-sm ${
+                        index < initializationStep ? 'text-gray-400' :
+                        index === initializationStep ? 'text-blue-400' :
+                        'text-gray-600'
+                      }`}>
+                        {step.title}
+                        {index === initializationStep && '...'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Progress Bar - Subtle Blue */}
+                <div className="space-y-2">
+                  <div className="w-full bg-gray-700 rounded-full h-1">
+                    <div 
+                      className="bg-blue-500 h-1 rounded-full transition-all duration-500 ease-out"
+                      style={{ 
+                        width: `${(initializationStep / initializationSteps.length) * 100}%` 
+                      }}
+                    />
+                  </div>
+                  <div className="text-center text-xs text-gray-500">
+                    {Math.round((initializationStep / initializationSteps.length) * 100)}% Complete
+                  </div>
+                </div>
+                
+                {/* Status Message - Minimal */}
+                <div className="text-center text-xs text-gray-500 space-y-1">
+                  <div>Initializing environment for: {taskTitle}</div>
+                  <div>Please wait while the system comes online...</div>
                 </div>
               </div>
             </div>
