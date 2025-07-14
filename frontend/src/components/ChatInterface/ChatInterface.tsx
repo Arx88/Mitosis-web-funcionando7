@@ -500,10 +500,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       // Set agent status to task received
       setAgentStatus('task_received');
       
-      // After a brief moment, change to analyzing task
+      // After a longer moment, change to analyzing task
       setTimeout(() => {
         setAgentStatus('analyzing_task');
-      }, 1000);
+      }, 2000);  // Aumentado de 1000 a 2000ms
 
       // Modificar el mensaje basado en el modo de búsqueda
       let processedMessage = message;
