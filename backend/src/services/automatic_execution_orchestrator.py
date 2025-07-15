@@ -51,6 +51,18 @@ class AutomaticExecutionOrchestrator:
         NO te detengas hasta completar la tarea completamente.
         """
     
+    def execute_task_with_tools_sync(self, task: str, task_id: str = None) -> Dict[str, Any]:
+        """Versión síncrona de execute_task_with_tools para usar en Flask"""
+        # Crear event loop si no existe
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        # Ejecutar la versión async
+        return loop.run_until_complete(self.execute_task_with_tools(task, task_id))
+    
     async def execute_task_with_tools(self, task: str, task_id: str = None) -> Dict[str, Any]:
         """Ejecuta tarea con herramientas automáticamente"""
         start_time = time.time()
