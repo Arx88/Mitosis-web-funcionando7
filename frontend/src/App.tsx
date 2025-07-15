@@ -273,26 +273,15 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
 
     if (response.ok) {
       const planData = await response.json();
-      return planData.plan || getDefaultTaskPlan();
+      return planData.plan || [];
     } else {
-      console.warn('Failed to generate dynamic plan, using default');
-      return getDefaultTaskPlan();
+      console.warn('Failed to generate dynamic plan, creating minimal plan');
+      return [];
     }
   } catch (error) {
     console.error('Error generating dynamic plan:', error);
-    return getDefaultTaskPlan();
+    return [];
   }
-};
-
-// Plan básico de respaldo
-const getDefaultTaskPlan = () => {
-  return [
-    { id: 'step-1', title: 'Analizando la tarea', completed: false, active: true },
-    { id: 'step-2', title: 'Generando plan de acción', completed: false, active: false },
-    { id: 'step-3', title: 'Ejecutando acciones necesarias', completed: false, active: false },
-    { id: 'step-4', title: 'Verificando resultados', completed: false, active: false },
-    { id: 'step-5', title: 'Finalizando tarea', completed: false, active: false }
-  ];
 };
 
   const handleDynamicIdea = (idea: any) => {
