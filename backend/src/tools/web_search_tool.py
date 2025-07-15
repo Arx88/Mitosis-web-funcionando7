@@ -4,7 +4,7 @@ Herramienta de búsqueda web - Busca información en internet
 
 import requests
 from bs4 import BeautifulSoup
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 import time
 from typing import Dict, Any, List
 from urllib.parse import urljoin, urlparse
