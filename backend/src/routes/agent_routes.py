@@ -5,6 +5,9 @@ Endpoints para comunicación con el frontend
 
 from flask import Blueprint, request, jsonify, current_app, send_file
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 import time
 import uuid
 import os
