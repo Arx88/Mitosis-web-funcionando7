@@ -354,11 +354,11 @@ def chat():
             search_mode = 'deepsearch'
             message = message.replace('[DeepResearch]', '').strip()
         
-        # **NUEVO: Usar ExecutionEngine para ejecución autónoma REAL**
+        # **NUEVO: Usar AutomaticExecutionOrchestrator para ejecución autónoma REAL**
         if not search_mode:
-            # Para tareas generales, usar ExecutionEngine
+            # Para tareas generales, usar AutomaticExecutionOrchestrator
             try:
-                print(f"🚀 Iniciando ejecución autónoma para tarea: {task_id}")
+                print(f"🚀 Iniciando ejecución autónoma con AutomaticExecutionOrchestrator para tarea: {task_id}")
                 
                 # Configurar endpoint Ollama
                 ollama_endpoint = "https://9g1hiqvg9k@wnbaldwy.com"
@@ -368,84 +368,57 @@ def chat():
                 ollama_service.base_url = ollama_endpoint
                 ollama_service.current_model = ollama_model
                 
-                # **NUEVO: Usar DynamicTaskPlanner directamente**
-                try:
-                    from src.tools.dynamic_task_planner import get_dynamic_task_planner
-                    from src.tools.task_planner import TaskPlanner
-                    
-                    # Usar TaskPlanner estático como fallback más seguro
-                    task_planner = TaskPlanner()
-                    execution_plan = task_planner.generate_execution_plan(
-                        task_id=task_id,
-                        task_title=message,
-                        task_description=f"Tarea iniciada por usuario: {message}"
-                    )
-                    
-                    print(f"📋 Plan generado con {len(execution_plan.steps)} pasos")
-                    
-                    # Convertir a formato de respuesta
-                    steps_summary = []
-                    for i, step in enumerate(execution_plan.steps):
-                        steps_summary.append(f"{i+1}. {step.title}")
-                    
-                    response_text = f"📋 **Plan de ejecución generado:**\n\n"
-                    response_text += "\n".join(steps_summary)
-                    response_text += f"\n\n⏱️ **Tiempo estimado:** {execution_plan.total_estimated_duration} segundos"
-                    response_text += f"\n📊 **Complejidad:** {execution_plan.complexity_score:.2f}/10.0"
-                    response_text += f"\n🎯 **Probabilidad de éxito:** {execution_plan.success_probability:.1%}"
-                    
-                    if execution_plan.risk_factors:
-                        response_text += f"\n⚠️ **Factores de riesgo:** {', '.join(execution_plan.risk_factors)}"
-                    
-                    return jsonify({
-                        'response': response_text,
-                        'execution_plan': {
-                            'task_id': task_id,
-                            'title': execution_plan.title,
-                            'steps': [
-                                {
-                                    'id': step.id,
-                                    'title': step.title,
-                                    'description': step.description,
-                                    'tool': step.tool,
-                                    'complexity': step.complexity,
-                                    'estimated_duration': step.estimated_duration
-                                } for step in execution_plan.steps
-                            ],
-                            'total_estimated_duration': execution_plan.total_estimated_duration,
-                            'complexity_score': execution_plan.complexity_score,
-                            'success_probability': execution_plan.success_probability,
-                            'risk_factors': execution_plan.risk_factors
-                        },
-                        'autonomous_execution': True,
-                        'model': ollama_model,
-                        'timestamp': datetime.now().isoformat()
-                    })
-                    
-                except Exception as planning_error:
-                    print(f"❌ Error en planificación: {str(planning_error)}")
-                    # Fallback a respuesta simple
-                    return jsonify({
-                        'response': f"📝 **Análisis de tarea:** {message}\n\n🤖 **Procesando con agente autónomo...**\n\nLa tarea será procesada utilizando las herramientas disponibles.",
-                        'autonomous_execution': True,
-                        'model': ollama_model,
-                        'planning_error': str(planning_error),
-                        'timestamp': datetime.now().isoformat()
-                    })
+                # **NUEVO: Usar AutomaticExecutionOrchestrator**
+                from src.services.automatic_execution_orchestrator import AutomaticExecutionOrchestrator
+                
+                # Crear instancia del orquestador
+                orchestrator = AutomaticExecutionOrchestrator(ollama_service, tool_manager)
+                
+                # Ejecutar tarea con herramientas automáticamente (sin await ya que no es async)
+                result = orchestrator.execute_task_with_tools_sync(message, task_id)
+                
+                print(f"✅ AutomaticExecutionOrchestrator completó tarea con {result.get('tools_count', 0)} herramientas")
+                
+                return jsonify({
+                    'response': result.get('final_response', result.get('plan', 'Tarea procesada')),
+                    'execution_plan': {
+                        'task_id': task_id,
+                        'title': message,
+                        'executed_tools': result.get('executed_tools', []),
+                        'tools_count': result.get('tools_count', 0),
+                        'execution_time': result.get('execution_time', 0),
+                        'autonomous_execution': result.get('autonomous_execution', True)
+                    },
+                    'tool_calls': result.get('executed_tools', []),
+                    'autonomous_execution': result.get('autonomous_execution', True),
+                    'orchestrator_used': True,
+                    'model': ollama_model,
+                    'timestamp': datetime.now().isoformat()
+                })
                     
             except Exception as e:
-                print(f"❌ Error en ejecución autónoma: {str(e)}")
+                print(f"❌ Error en AutomaticExecutionOrchestrator: {str(e)}")
                 # Fallback a ejecución con Ollama
-                response = ollama_service.generate_response(message, context, use_tools=True)
-                return jsonify({
-                    'response': response.get('response', f"Error en ejecución autónoma: {str(e)}"),
-                    'tool_calls': response.get('tool_calls', []),
-                    'autonomous_execution': False,
-                    'fallback_used': True,
-                    'error': str(e),
-                    'timestamp': datetime.now().isoformat(),
-                    'model': response.get('model', 'unknown')
-                })
+                try:
+                    response = ollama_service.generate_response(message, context, use_tools=True)
+                    return jsonify({
+                        'response': response.get('response', f"Error en ejecución autónoma: {str(e)}"),
+                        'tool_calls': response.get('tool_calls', []),
+                        'autonomous_execution': False,
+                        'fallback_used': True,
+                        'error': str(e),
+                        'timestamp': datetime.now().isoformat(),
+                        'model': response.get('model', 'unknown')
+                    })
+                except Exception as fallback_error:
+                    print(f"❌ Error en fallback: {str(fallback_error)}")
+                    return jsonify({
+                        'response': f"Error procesando tarea: {message}",
+                        'autonomous_execution': False,
+                        'error': str(e),
+                        'fallback_error': str(fallback_error),
+                        'timestamp': datetime.now().isoformat()
+                    })
         
         # Mantener comportamiento existente para WebSearch y DeepSearch
         tool_results = []
