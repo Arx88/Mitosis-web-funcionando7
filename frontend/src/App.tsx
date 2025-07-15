@@ -655,12 +655,12 @@ const getDefaultTaskPlan = () => {
                                 timestamp: new Date()
                               };
                               
-                              const genericPlan = generateTaskPlan(message.trim());
+                              const fallbackPlan = await generateDynamicTaskPlan(message.trim());
                               
                               const updatedTask = {
                                 ...newTask,
                                 messages: [userMessage],
-                                plan: genericPlan,
+                                plan: fallbackPlan,
                                 status: 'in-progress' as const,
                                 progress: 0
                               };
