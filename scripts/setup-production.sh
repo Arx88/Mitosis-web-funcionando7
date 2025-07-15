@@ -92,7 +92,7 @@ fi
 
 echo ""
 echo "🎉 Setup complete! Mitosis is now running in stable production mode."
-echo "🌐 Application available at: https://95fe10fc-174a-4183-9650-b6907471d5af.preview.emergentagent.com"
+echo "🌐 Application available at: https://ebb060d6-ecc0-419e-a1a5-857a24795fd6.preview.emergentagent.com"
 echo ""
 echo "📋 Service status:"
 supervisorctl status
