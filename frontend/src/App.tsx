@@ -375,7 +375,7 @@ const getDefaultTaskPlan = () => {
         };
         
         // Generar plan específico para archivos adjuntos
-        const fileAttachmentPlan = generateTaskPlan('Archivos adjuntos');
+        const fileAttachmentPlan = await generateDynamicTaskPlan('Archivos adjuntos');
         
         const updatedTask = {
           ...newTask,
