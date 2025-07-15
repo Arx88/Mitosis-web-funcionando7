@@ -33,10 +33,10 @@ Siempre explica lo que estás haciendo y por qué, para que el usuario pueda ent
   },
   ollama: {
     enabled: true,
-    model: "llama3.2",
+    model: "llama3.1:8b",
     temperature: 0.7,
     maxTokens: 2048,
-    endpoint: "http://localhost:11434"
+    endpoint: "https://78d08925604a.ngrok-free.app"
   },
   openrouter: {
     enabled: false,
