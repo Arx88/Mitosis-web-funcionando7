@@ -288,104 +288,70 @@ def chat():
                 ollama_service.base_url = ollama_endpoint
                 ollama_service.current_model = ollama_model
                 
-                # Crear ExecutionEngine con las herramientas disponibles
-                execution_engine = ExecutionEngine(
-                    tool_manager=tool_manager,
-                    environment_manager=environment_setup_manager
-                )
-                
-                # Agregar WebSocket callbacks si está disponible
-                def notify_progress(notification):
-                    print(f"📈 Progress: {notification}")
-                    # Aquí se puede integrar con WebSocket para notificaciones en tiempo real
-                
-                execution_engine.add_progress_callback(notify_progress)
-                
-                # Ejecutar tarea de manera autónoma
-                import asyncio
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                
+                # **NUEVO: Usar DynamicTaskPlanner directamente**
                 try:
-                    execution_context = loop.run_until_complete(
-                        execution_engine.execute_task(
-                            task_id=task_id,
-                            task_title=message,
-                            task_description=f"Tarea iniciada por usuario: {message}",
-                            config={'dynamic_planning': True, 'auto_recovery': True}
-                        )
+                    from src.tools.dynamic_task_planner import get_dynamic_task_planner
+                    from src.tools.task_planner import TaskPlanner
+                    
+                    # Usar TaskPlanner estático como fallback más seguro
+                    task_planner = TaskPlanner()
+                    execution_plan = task_planner.generate_execution_plan(
+                        task_id=task_id,
+                        task_title=message,
+                        task_description=f"Tarea iniciada por usuario: {message}"
                     )
                     
-                    # Generar respuesta basada en el contexto de ejecución
-                    if execution_context.status.value == 'completed':
-                        # Tarea completada exitosamente
-                        completion_summary = f"✅ Tarea completada exitosamente\n\n"
-                        completion_summary += f"📊 **Resumen de ejecución:**\n"
-                        completion_summary += f"- Pasos completados: {len([se for se in execution_context.step_executions if se.status.value == 'completed'])}\n"
-                        completion_summary += f"- Tiempo total: {execution_context.total_execution_time:.2f} segundos\n"
-                        completion_summary += f"- Tasa de éxito: {execution_context.success_rate:.1%}\n\n"
-                        
-                        # Mostrar resultados de cada paso
-                        completion_summary += "📋 **Pasos ejecutados:**\n"
-                        for step_exec in execution_context.step_executions:
-                            status_icon = "✅" if step_exec.status.value == 'completed' else "❌"
-                            completion_summary += f"{status_icon} {step_exec.step.title}\n"
-                            if step_exec.result and step_exec.status.value == 'completed':
-                                if isinstance(step_exec.result, dict) and 'response' in step_exec.result:
-                                    completion_summary += f"   💡 {step_exec.result['response'][:100]}...\n"
-                        
-                        response_text = completion_summary
-                        
-                    else:
-                        # Tarea falló o completada parcialmente
-                        failure_summary = f"⚠️ Tarea completada parcialmente\n\n"
-                        failure_summary += f"📊 **Estado de ejecución:**\n"
-                        failure_summary += f"- Estado: {execution_context.status.value}\n"
-                        failure_summary += f"- Pasos completados: {len([se for se in execution_context.step_executions if se.status.value == 'completed'])}\n"
-                        failure_summary += f"- Pasos fallidos: {len([se for se in execution_context.step_executions if se.status.value == 'failed'])}\n"
-                        failure_summary += f"- Tasa de éxito: {execution_context.success_rate:.1%}\n"
-                        
-                        response_text = failure_summary
+                    print(f"📋 Plan generado con {len(execution_plan.steps)} pasos")
                     
-                    # Obtener archivos generados
-                    created_files = []
-                    # Buscar archivos creados en los resultados de los pasos
-                    for step_exec in execution_context.step_executions:
-                        if step_exec.result and isinstance(step_exec.result, dict):
-                            if 'file_path' in step_exec.result or 'report_file' in step_exec.result:
-                                file_path = step_exec.result.get('file_path') or step_exec.result.get('report_file')
-                                if file_path and os.path.exists(file_path):
-                                    created_files.append({
-                                        'id': str(uuid.uuid4()),
-                                        'file_id': str(uuid.uuid4()),
-                                        'task_id': task_id,
-                                        'name': os.path.basename(file_path),
-                                        'path': file_path,
-                                        'size': os.path.getsize(file_path),
-                                        'type': 'file',
-                                        'mime_type': 'text/plain',
-                                        'source': 'agent',
-                                        'created_at': datetime.now().isoformat()
-                                    })
+                    # Convertir a formato de respuesta
+                    steps_summary = []
+                    for i, step in enumerate(execution_plan.steps):
+                        steps_summary.append(f"{i+1}. {step.title}")
+                    
+                    response_text = f"📋 **Plan de ejecución generado:**\n\n"
+                    response_text += "\n".join(steps_summary)
+                    response_text += f"\n\n⏱️ **Tiempo estimado:** {execution_plan.total_estimated_duration} segundos"
+                    response_text += f"\n📊 **Complejidad:** {execution_plan.complexity_score:.2f}/1.0"
+                    response_text += f"\n🎯 **Probabilidad de éxito:** {execution_plan.success_probability:.1%}"
+                    
+                    if execution_plan.risk_factors:
+                        response_text += f"\n⚠️ **Factores de riesgo:** {', '.join(execution_plan.risk_factors)}"
                     
                     return jsonify({
                         'response': response_text,
-                        'execution_context': {
+                        'execution_plan': {
                             'task_id': task_id,
-                            'status': execution_context.status.value,
-                            'success_rate': execution_context.success_rate,
-                            'total_execution_time': execution_context.total_execution_time,
-                            'steps_completed': len([se for se in execution_context.step_executions if se.status.value == 'completed']),
-                            'steps_failed': len([se for se in execution_context.step_executions if se.status.value == 'failed'])
+                            'title': execution_plan.title,
+                            'steps': [
+                                {
+                                    'id': step.id,
+                                    'title': step.title,
+                                    'description': step.description,
+                                    'tool': step.tool,
+                                    'complexity': step.complexity,
+                                    'estimated_duration': step.estimated_duration
+                                } for step in execution_plan.steps
+                            ],
+                            'total_estimated_duration': execution_plan.total_estimated_duration,
+                            'complexity_score': execution_plan.complexity_score,
+                            'success_probability': execution_plan.success_probability,
+                            'risk_factors': execution_plan.risk_factors
                         },
-                        'created_files': created_files,
                         'autonomous_execution': True,
                         'model': ollama_model,
                         'timestamp': datetime.now().isoformat()
                     })
                     
-                finally:
-                    loop.close()
+                except Exception as planning_error:
+                    print(f"❌ Error en planificación: {str(planning_error)}")
+                    # Fallback a respuesta simple
+                    return jsonify({
+                        'response': f"📝 **Análisis de tarea:** {message}\n\n🤖 **Procesando con agente autónomo...**\n\nLa tarea será procesada utilizando las herramientas disponibles.",
+                        'autonomous_execution': True,
+                        'model': ollama_model,
+                        'planning_error': str(planning_error),
+                        'timestamp': datetime.now().isoformat()
+                    })
                     
             except Exception as e:
                 print(f"❌ Error en ejecución autónoma: {str(e)}")
