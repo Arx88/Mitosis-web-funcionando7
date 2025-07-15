@@ -650,6 +650,25 @@ export const TaskView: React.FC<TaskViewProps> = ({
           </div>
         </div>
         
+        {/* 🚀 Agent Status - mostrar estado del agente en tiempo real */}
+        <div className="px-4 py-2">
+          <AgentStatus
+            taskId={task.id}
+            isExecuting={agentStatus.isExecuting}
+            currentStep={agentStatus.currentStep}
+            totalSteps={agentStatus.totalSteps}
+            completedSteps={agentStatus.completedSteps}
+            executionTime={agentStatus.executionTime}
+            successRate={agentStatus.successRate}
+            steps={agentStatus.steps}
+            planUpdates={agentStatus.planUpdates}
+            onStepClick={(stepId) => {
+              console.log('📋 Step clicked:', stepId);
+              logToTerminal(`📋 Detalles del paso: ${stepId}`, 'info');
+            }}
+          />
+        </div>
+        
         {/* Chat Interface - con altura completa disponible */}
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 min-h-0">
