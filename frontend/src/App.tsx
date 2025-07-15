@@ -550,9 +550,7 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                                 const chatResponse = await response.json();
                                 console.log('✅ Regular task response received:', chatResponse);
                                 
-                                // Generar plan dinámico para tareas normales
-                                const dynamicPlan = await generateDynamicTaskPlan(message.trim());
-                                
+                                // Procesar respuesta real del backend
                                 const userMessage = {
                                   id: `msg-${Date.now()}`,
                                   content: message.trim(),
@@ -560,19 +558,51 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                                   timestamp: new Date()
                                 };
                                 
+                                // Crear respuesta limpia para el chat (sin información técnica)
+                                let cleanResponse = "He iniciado la ejecución de tu tarea. Puedes ver el progreso en el plan de acción y los detalles técnicos en el terminal.";
+                                
+                                // Si hay herramientas ejecutadas, proporcionar información de alto nivel
+                                if (chatResponse.execution_plan && chatResponse.execution_plan.executed_tools) {
+                                  const toolsCount = chatResponse.execution_plan.tools_count || 0;
+                                  cleanResponse = `He completado tu tarea ejecutando ${toolsCount} herramienta${toolsCount !== 1 ? 's' : ''} automáticamente. Los resultados están disponibles en el terminal.`;
+                                }
+                                
                                 const agentMessage = {
                                   id: `msg-${Date.now() + 1}`,
-                                  content: chatResponse.response || 'Procesando tu tarea...',
+                                  content: cleanResponse,
                                   sender: 'agent' as const,
                                   timestamp: new Date()
                                 };
                                 
+                                // Usar plan dinámico pero procesarlo con información real del backend
+                                const dynamicPlan = await generateDynamicTaskPlan(message.trim());
+                                
+                                // Actualizar el plan basado en la ejecución real
+                                let updatedPlan = dynamicPlan;
+                                if (chatResponse.execution_plan && chatResponse.execution_plan.executed_tools) {
+                                  // Marcar pasos como completados basado en herramientas ejecutadas
+                                  updatedPlan = dynamicPlan.map((step, index) => {
+                                    if (index < chatResponse.execution_plan.tools_count) {
+                                      return { ...step, completed: true, active: false };
+                                    } else if (index === chatResponse.execution_plan.tools_count) {
+                                      return { ...step, completed: false, active: true };
+                                    }
+                                    return { ...step, completed: false, active: false };
+                                  });
+                                }
+                                
+                                // Calcular progreso real
+                                const completedSteps = updatedPlan.filter(step => step.completed).length;
+                                const totalSteps = updatedPlan.length;
+                                const realProgress = Math.round((completedSteps / totalSteps) * 100);
+                                
                                 const updatedTask = {
                                   ...newTask,
                                   messages: [userMessage, agentMessage],
-                                  plan: dynamicPlan,
-                                  status: 'in-progress' as const,
-                                  progress: 20 // Start with some progress
+                                  plan: updatedPlan,
+                                  status: realProgress === 100 ? 'completed' as const : 'in-progress' as const,
+                                  progress: realProgress,
+                                  executionData: chatResponse.execution_plan // Guardar datos de ejecución para el terminal
                                 };
                                 
                                 setTasks(prev => prev.map(task => 
