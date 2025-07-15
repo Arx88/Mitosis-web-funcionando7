@@ -192,31 +192,52 @@ def generate_dynamic_plan():
 
 @agent_bp.route('/generate-suggestions', methods=['POST'])
 def generate_dynamic_suggestions():
-    """Generar sugerencias dinámicas para la página de bienvenida"""
+    """Generar sugerencias dinámicas REALES usando capacidades del agente"""
     try:
-        # Sugerencias rotativas dinámicas
-        suggestions_sets = [
-            [
-                {'title': 'Investigar tendencias IA 2025'},
-                {'title': 'Analizar documento científico'},
-                {'title': 'Crear script automatización'}
-            ],
-            [
-                {'title': 'Comparar tecnologías emergentes'},
-                {'title': 'Resumir artículo técnico'},
-                {'title': 'Generar código Python'}
-            ],
-            [
-                {'title': 'Buscar mejores prácticas'},
-                {'title': 'Procesar datos CSV'},
-                {'title': 'Escribir documentación'}
+        # Obtener servicios
+        tool_manager = current_app.tool_manager
+        
+        # Generar sugerencias basadas en herramientas disponibles
+        available_tools = tool_manager.get_available_tools() if tool_manager else []
+        
+        suggestions = []
+        
+        # Sugerencias basadas en herramientas disponibles
+        tool_suggestions = {
+            'web_search': ['Investigar últimas tendencias en tecnología', 'Buscar información sobre un tema específico'],
+            'deep_research': ['Realizar análisis profundo sobre un tema', 'Investigar tecnologías emergentes'],
+            'file_manager': ['Crear documentos estructurados', 'Generar reportes profesionales'],
+            'shell': ['Automatizar tareas del sistema', 'Ejecutar procesos de configuración'],
+            'comprehensive_research': ['Análisis completo de mercado', 'Investigación académica detallada']
+        }
+        
+        # Generar sugerencias dinámicas
+        for tool_info in available_tools[:5]:  # Máximo 5 sugerencias
+            tool_name = tool_info['name']
+            if tool_name in tool_suggestions:
+                import random
+                suggestion = random.choice(tool_suggestions[tool_name])
+                suggestions.append({
+                    'title': suggestion,
+                    'tool': tool_name,
+                    'description': tool_info.get('description', '')
+                })
+        
+        # Si no hay suficientes sugerencias, agregar algunas genéricas
+        if len(suggestions) < 3:
+            generic_suggestions = [
+                {'title': 'Analizar un problema complejo', 'tool': 'analysis', 'description': 'Análisis detallado de cualquier situación'},
+                {'title': 'Crear contenido profesional', 'tool': 'content', 'description': 'Generar documentos o contenido estructurado'},
+                {'title': 'Optimizar un proceso', 'tool': 'optimization', 'description': 'Mejorar eficiencia de procesos existentes'}
             ]
-        ]
+            
+            suggestions.extend(generic_suggestions[:3-len(suggestions)])
         
-        import random
-        selected_suggestions = random.choice(suggestions_sets)
-        
-        return jsonify({'suggestions': selected_suggestions})
+        return jsonify({
+            'suggestions': suggestions[:3],  # Máximo 3 sugerencias
+            'generated_dynamically': True,
+            'based_on_available_tools': [tool['name'] for tool in available_tools]
+        })
         
     except Exception as e:
         return jsonify({
