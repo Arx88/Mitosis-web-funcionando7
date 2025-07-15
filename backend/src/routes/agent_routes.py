@@ -29,16 +29,20 @@ shared_conversations = {}
 # Almacenamiento temporal para archivos por tarea
 task_files = {}
 
-# Inicializar Environment Setup Manager
-environment_setup_manager = EnvironmentSetupManager()
+# Inicializar componentes
+tool_manager = ToolManager()
+task_planner = TaskPlanner(tool_manager)
+execution_engine = ExecutionEngine(tool_manager)
+environment_setup_manager = EnvironmentSetupManager(tool_manager)
 
-# Inicializar Task Planner
-task_planner = TaskPlanner()
+# Nuevo sistema de orquestación avanzada
+from src.services.ollama_service import OllamaService
+ollama_service = OllamaService()
 
-# Inicializar Execution Engine
-execution_engine = ExecutionEngine(
-    tool_manager=current_app.tool_manager if current_app else None,
-    environment_manager=environment_setup_manager
+task_orchestrator = TaskOrchestrator(
+    tool_manager=tool_manager,
+    memory_manager=None,  # Se integrará en fase 2
+    llm_service=ollama_service
 )
 
 @agent_bp.route('/health', methods=['GET'])
