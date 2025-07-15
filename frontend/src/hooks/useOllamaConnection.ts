@@ -71,6 +71,7 @@ export const useOllamaConnection = ({ endpoint, enabled }: UseOllamaConnectionPr
   };
 
   const checkConnection = async () => {
+    console.log('🔍 checkConnection called', { enabled, endpoint });
     if (!enabled || !endpoint) {
       setIsConnected(false);
       return;
@@ -81,6 +82,7 @@ export const useOllamaConnection = ({ endpoint, enabled }: UseOllamaConnectionPr
 
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+      console.log('🌐 Making request to backend:', `${backendUrl}/api/agent/ollama/check`);
       const response = await fetch(`${backendUrl}/api/agent/ollama/check`, {
         method: 'POST',
         headers: {
@@ -91,23 +93,27 @@ export const useOllamaConnection = ({ endpoint, enabled }: UseOllamaConnectionPr
         })
       });
       
+      console.log('📡 Response status:', response.status);
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('📊 Response data:', data);
       
       if (data.error) {
         throw new Error(data.error);
       }
       
       setIsConnected(data.is_connected);
+      console.log('✅ Connection status updated:', data.is_connected);
       
       if (!data.is_connected) {
         setError('No se pudo conectar con el endpoint de Ollama');
       }
     } catch (err) {
-      console.error('Error checking Ollama connection:', err);
+      console.error('❌ Error checking Ollama connection:', err);
       setError(err instanceof Error ? err.message : 'Error de conexión');
       setIsConnected(false);
     } finally {
