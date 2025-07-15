@@ -361,7 +361,7 @@ def chat():
                 print(f"🚀 Iniciando ejecución autónoma con AutomaticExecutionOrchestrator para tarea: {task_id}")
                 
                 # Configurar endpoint Ollama
-                ollama_endpoint = "https://9g1hiqvg9k@wnbaldwy.com"
+                ollama_endpoint = "https://78d08925604a.ngrok-free.app"
                 ollama_model = "llama3.1:8b"
                 
                 # Actualizar configuración de Ollama
