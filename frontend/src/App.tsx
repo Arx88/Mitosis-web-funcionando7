@@ -97,6 +97,7 @@ export function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [hasCreatedExampleTasks, setHasCreatedExampleTasks] = useState(false);
+  const [dynamicIdeas, setDynamicIdeas] = useState<any[]>([]);
   const [appState, setAppState] = useState<AppState>({
     sidebarCollapsed: false,
     terminalSize: 300,
@@ -109,6 +110,15 @@ export function App() {
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [initializingTaskId, setInitializingTaskId] = useState<string | null>(null);
   const [initializationLogs, setInitializationLogs] = useState<Array<{message: string, type: 'info' | 'success' | 'error', timestamp: Date}>>([]);
+
+  // Cargar ideas dinámicas solo cuando no hay tareas activas
+  useEffect(() => {
+    if (!activeTaskId && dynamicIdeas.length === 0) {
+      generateDynamicIdeas().then(ideas => {
+        setDynamicIdeas(ideas.slice(0, 3)); // Mostrar solo 3 ideas
+      });
+    }
+  }, [activeTaskId, dynamicIdeas.length]);
   
   const createTask = async (title: string) => {
     setIsTaskCreating(true);
