@@ -60,7 +60,7 @@ class ShellTool:
                 capture_output=True,
                 text=True,
                 timeout=timeout,
-                cwd=config.get('working_directory', '/tmp')
+                cwd=config.get('working_directory', '/app')
             )
             
             execution_time = time.time() - start_time
