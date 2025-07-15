@@ -170,69 +170,127 @@ def test_ollama_configuration():
     print("Testing Ollama configuration with default values...")
     
     try:
-        # Test Ollama check endpoint
-        check_url = f"{BASE_URL}{API_PREFIX}/ollama/check"
-        print(f"Ollama Check URL: {check_url}")
+        # First, get the current status to see what's configured
+        status_url = f"{BASE_URL}{API_PREFIX}/status"
+        print(f"Status URL: {status_url}")
         
-        check_response = requests.get(check_url, timeout=15)
-        check_status = check_response.status_code
-        print(f"Ollama Check Status: {check_status}")
+        status_response = requests.get(status_url, timeout=15)
+        status_code = status_response.status_code
+        print(f"Status Code: {status_code}")
         
-        if check_status != 200:
-            return False, {"error": f"Ollama check endpoint returned status {check_status}"}
-        
-        try:
-            check_data = check_response.json()
-            print(f"Ollama Check Response: {json.dumps(check_data, indent=2)}")
-        except:
-            check_data = {"raw_response": check_response.text}
-            print(f"Ollama Check Raw Response: {check_response.text}")
-        
-        # Verify default endpoint
-        endpoint = check_data.get("endpoint") or check_data.get("data", {}).get("endpoint")
-        if endpoint != EXPECTED_OLLAMA_ENDPOINT:
-            return False, {
-                "error": f"Ollama endpoint mismatch. Expected: {EXPECTED_OLLAMA_ENDPOINT}, Got: {endpoint}"
-            }
-        
-        print(f"✅ Ollama endpoint correctly set to: {endpoint}")
-        
-        # Test connection status
-        is_connected = check_data.get("is_connected") or check_data.get("data", {}).get("is_connected")
-        print(f"Ollama Connection Status: {is_connected}")
-        
-        # Test Ollama models endpoint
-        models_url = f"{BASE_URL}{API_PREFIX}/ollama/models"
-        print(f"Ollama Models URL: {models_url}")
-        
-        models_response = requests.get(models_url, timeout=15)
-        models_status = models_response.status_code
-        print(f"Ollama Models Status: {models_status}")
-        
-        if models_status != 200:
-            return False, {"error": f"Ollama models endpoint returned status {models_status}"}
+        if status_code != 200:
+            return False, {"error": f"Status endpoint returned status {status_code}"}
         
         try:
-            models_data = models_response.json()
-            print(f"Ollama Models Response: {json.dumps(models_data, indent=2)}")
+            status_data = status_response.json()
+            print(f"Status Response: {json.dumps(status_data, indent=2)}")
         except:
-            models_data = {"raw_response": models_response.text}
-            print(f"Ollama Models Raw Response: {models_response.text}")
+            status_data = {"raw_response": status_response.text}
+            print(f"Status Raw Response: {status_response.text}")
         
-        # Check if expected model is available
-        models = models_data.get("models") or models_data.get("data", {}).get("models", [])
-        print(f"Available Models: {models}")
+        # Check Ollama connection status
+        ollama_status = status_data.get("ollama_status")
+        print(f"Ollama Status: {ollama_status}")
         
-        if EXPECTED_OLLAMA_MODEL in models:
+        # Check available models
+        available_models = status_data.get("available_models", [])
+        print(f"Available Models: {available_models}")
+        
+        # Check current model
+        current_model = status_data.get("current_model")
+        print(f"Current Model: {current_model}")
+        
+        # Verify expected model is available
+        expected_model_available = EXPECTED_OLLAMA_MODEL in available_models
+        if expected_model_available:
             print(f"✅ Expected model '{EXPECTED_OLLAMA_MODEL}' is available")
         else:
             print(f"⚠️ Expected model '{EXPECTED_OLLAMA_MODEL}' not found in available models")
         
-        return True, {
-            "endpoint": endpoint,
-            "is_connected": is_connected,
-            "models": models,
-            "expected_model_available": EXPECTED_OLLAMA_MODEL in models
+        # Verify current model matches expected
+        current_model_correct = current_model == EXPECTED_OLLAMA_MODEL
+        if current_model_correct:
+            print(f"✅ Current model correctly set to: {current_model}")
+        else:
+            print(f"⚠️ Current model is '{current_model}', expected '{EXPECTED_OLLAMA_MODEL}'")
+        
+        # Test Ollama check endpoint with the expected endpoint
+        print(f"\nTesting Ollama check endpoint with expected endpoint...")
+        check_url = f"{BASE_URL}{API_PREFIX}/ollama/check"
+        check_data = {"endpoint": EXPECTED_OLLAMA_ENDPOINT}
+        
+        print(f"Ollama Check URL: {check_url}")
+        print(f"Check Data: {json.dumps(check_data, indent=2)}")
+        
+        check_response = requests.post(check_url, json=check_data, timeout=15)
+        check_status = check_response.status_code
+        print(f"Ollama Check Status: {check_status}")
+        
+        if check_status == 200:
+            try:
+                check_response_data = check_response.json()
+                print(f"Ollama Check Response: {json.dumps(check_response_data, indent=2)}")
+                
+                endpoint_check = check_response_data.get("endpoint")
+                is_connected = check_response_data.get("is_connected")
+                
+                print(f"Endpoint Check: {endpoint_check}")
+                print(f"Connection Check: {is_connected}")
+                
+                if endpoint_check == EXPECTED_OLLAMA_ENDPOINT:
+                    print(f"✅ Ollama check endpoint working correctly")
+                else:
+                    print(f"⚠️ Endpoint mismatch in check response")
+                
+            except:
+                check_response_data = {"raw_response": check_response.text}
+                print(f"Check Raw Response: {check_response.text}")
+                is_connected = False
+        else:
+            print(f"⚠️ Ollama check endpoint returned status {check_status}")
+            is_connected = False
+        
+        # Test Ollama models endpoint with the expected endpoint
+        print(f"\nTesting Ollama models endpoint with expected endpoint...")
+        models_url = f"{BASE_URL}{API_PREFIX}/ollama/models"
+        models_data = {"endpoint": EXPECTED_OLLAMA_ENDPOINT}
+        
+        print(f"Ollama Models URL: {models_url}")
+        print(f"Models Data: {json.dumps(models_data, indent=2)}")
+        
+        models_response = requests.post(models_url, json=models_data, timeout=15)
+        models_status = models_response.status_code
+        print(f"Ollama Models Status: {models_status}")
+        
+        if models_status == 200:
+            try:
+                models_response_data = models_response.json()
+                print(f"Ollama Models Response: {json.dumps(models_response_data, indent=2)}")
+                
+                models_from_endpoint = models_response_data.get("models", [])
+                print(f"Models from endpoint: {models_from_endpoint}")
+                
+            except:
+                models_response_data = {"raw_response": models_response.text}
+                print(f"Models Raw Response: {models_response.text}")
+        else:
+            print(f"⚠️ Ollama models endpoint returned status {models_status}")
+        
+        # Overall assessment
+        is_working = (
+            ollama_status == "connected" and
+            expected_model_available and
+            current_model_correct
+        )
+        
+        return is_working, {
+            "ollama_status": ollama_status,
+            "available_models": available_models,
+            "current_model": current_model,
+            "expected_model_available": expected_model_available,
+            "current_model_correct": current_model_correct,
+            "endpoint_check_working": check_status == 200,
+            "models_endpoint_working": models_status == 200
         }
     
     except Exception as e:
