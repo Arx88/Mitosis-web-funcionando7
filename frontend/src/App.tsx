@@ -705,7 +705,7 @@ const getDefaultTaskPlan = () => {
                                 console.log('✅ WebSearch response received:', chatResponse);
                                 
                                 // Generar plan específico para WebSearch
-                                const webSearchPlan = generateTaskPlan(`[WebSearch] ${inputText.trim()}`);
+                                const webSearchPlan = await generateDynamicTaskPlan(`[WebSearch] ${inputText.trim()}`);
                                 
                                 const userMessage = {
                                   id: `msg-${Date.now()}`,
