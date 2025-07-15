@@ -196,47 +196,131 @@ def generate_dynamic_suggestions():
     try:
         # Obtener servicios
         tool_manager = current_app.tool_manager
+        ollama_service = current_app.ollama_service
         
         # Generar sugerencias basadas en herramientas disponibles
         available_tools = tool_manager.get_available_tools() if tool_manager else []
         
         suggestions = []
         
-        # Sugerencias basadas en herramientas disponibles
-        tool_suggestions = {
-            'web_search': ['Investigar últimas tendencias en tecnología', 'Buscar información sobre un tema específico'],
-            'deep_research': ['Realizar análisis profundo sobre un tema', 'Investigar tecnologías emergentes'],
-            'file_manager': ['Crear documentos estructurados', 'Generar reportes profesionales'],
-            'shell': ['Automatizar tareas del sistema', 'Ejecutar procesos de configuración'],
-            'comprehensive_research': ['Análisis completo de mercado', 'Investigación académica detallada']
-        }
-        
-        # Generar sugerencias dinámicas
-        for tool_info in available_tools[:5]:  # Máximo 5 sugerencias
-            tool_name = tool_info['name']
-            if tool_name in tool_suggestions:
-                import random
-                suggestion = random.choice(tool_suggestions[tool_name])
-                suggestions.append({
-                    'title': suggestion,
-                    'tool': tool_name,
-                    'description': tool_info.get('description', '')
-                })
-        
-        # Si no hay suficientes sugerencias, agregar algunas genéricas
-        if len(suggestions) < 3:
-            generic_suggestions = [
-                {'title': 'Analizar un problema complejo', 'tool': 'analysis', 'description': 'Análisis detallado de cualquier situación'},
-                {'title': 'Crear contenido profesional', 'tool': 'content', 'description': 'Generar documentos o contenido estructurado'},
-                {'title': 'Optimizar un proceso', 'tool': 'optimization', 'description': 'Mejorar eficiencia de procesos existentes'}
-            ]
+        # Generar sugerencias dinámicas basadas en análisis real de herramientas
+        if available_tools:
+            # Usar Ollama para generar sugerencias contextualmente relevantes
+            tool_capabilities = []
+            for tool_info in available_tools:
+                tool_capabilities.append(f"- {tool_info['name']}: {tool_info.get('description', 'Herramienta disponible')}")
             
-            suggestions.extend(generic_suggestions[:3-len(suggestions)])
+            tools_context = "\n".join(tool_capabilities)
+            
+            # Prompt para generar sugerencias dinámicas
+            suggestion_prompt = f"""Basándote en las siguientes herramientas disponibles, genera 3 sugerencias específicas y útiles de tareas que un usuario podría querer realizar:
+
+Herramientas disponibles:
+{tools_context}
+
+Genera 3 sugerencias prácticas y específicas. Cada sugerencia debe ser:
+1. Específica y accionable
+2. Relevante para las capacidades reales del sistema
+3. Útil para usuarios reales
+
+Responde solo con las 3 sugerencias, una por línea, sin numeración ni puntos."""
+            
+            try:
+                # Generar sugerencias usando Ollama
+                response = ollama_service.generate_response(
+                    suggestion_prompt,
+                    context={'generate_suggestions': True},
+                    use_tools=False
+                )
+                
+                if response and response.get('response'):
+                    suggestion_lines = response['response'].strip().split('\n')
+                    
+                    # Procesar sugerencias generadas
+                    for i, line in enumerate(suggestion_lines[:3]):
+                        if line.strip():
+                            # Determinar herramienta más relevante basada en el contenido
+                            relevant_tool = 'general'
+                            line_lower = line.lower()
+                            
+                            if any(word in line_lower for word in ['buscar', 'investigar', 'web', 'información']):
+                                relevant_tool = 'web_search'
+                            elif any(word in line_lower for word in ['análisis', 'profundo', 'investigación', 'research']):
+                                relevant_tool = 'deep_research'
+                            elif any(word in line_lower for word in ['archivo', 'documento', 'crear', 'generar']):
+                                relevant_tool = 'file_manager'
+                            elif any(word in line_lower for word in ['comando', 'ejecutar', 'sistema']):
+                                relevant_tool = 'shell'
+                            
+                            suggestions.append({
+                                'title': line.strip(),
+                                'tool': relevant_tool,
+                                'description': f'Tarea generada dinámicamente usando {relevant_tool}'
+                            })
+                
+            except Exception as ollama_error:
+                print(f"Error generating suggestions with Ollama: {ollama_error}")
+                # Fallback: generar sugerencias basadas en análisis de herramientas
+                pass
+        
+        # Si no se generaron sugerencias, usar análisis de herramientas como fallback
+        if not suggestions and available_tools:
+            # Generar sugerencias basadas en capacidades reales de las herramientas
+            tool_categories = {}
+            for tool_info in available_tools:
+                tool_name = tool_info['name']
+                tool_desc = tool_info.get('description', '').lower()
+                
+                if 'search' in tool_desc or 'web' in tool_desc:
+                    tool_categories.setdefault('research', []).append(tool_name)
+                elif 'file' in tool_desc or 'document' in tool_desc:
+                    tool_categories.setdefault('content', []).append(tool_name)
+                elif 'shell' in tool_desc or 'command' in tool_desc:
+                    tool_categories.setdefault('automation', []).append(tool_name)
+                else:
+                    tool_categories.setdefault('general', []).append(tool_name)
+            
+            # Generar sugerencias basadas en categorías
+            category_suggestions = {
+                'research': 'Investigar un tema específico de tu interés',
+                'content': 'Crear y organizar documentos profesionales',
+                'automation': 'Automatizar tareas repetitivas del sistema',
+                'general': 'Resolver un problema específico que tengas'
+            }
+            
+            for category, tools in tool_categories.items():
+                if len(suggestions) < 3:
+                    suggestions.append({
+                        'title': category_suggestions.get(category, f'Usar {category}'),
+                        'tool': tools[0] if tools else 'general',
+                        'description': f'Capacidad disponible usando {", ".join(tools[:2])}'
+                    })
+        
+        # Si aún no hay sugerencias, usar capacidades básicas del sistema
+        if not suggestions:
+            suggestions = [
+                {
+                    'title': 'Analizar información específica',
+                    'tool': 'analysis',
+                    'description': 'Analizar datos o información que necesites procesar'
+                },
+                {
+                    'title': 'Buscar información actualizada',
+                    'tool': 'search',
+                    'description': 'Encontrar información reciente sobre cualquier tema'
+                },
+                {
+                    'title': 'Procesar y organizar contenido',
+                    'tool': 'processing',
+                    'description': 'Organizar y estructurar información de manera eficiente'
+                }
+            ]
         
         return jsonify({
             'suggestions': suggestions[:3],  # Máximo 3 sugerencias
             'generated_dynamically': True,
-            'based_on_available_tools': [tool['name'] for tool in available_tools]
+            'based_on_available_tools': [tool['name'] for tool in available_tools],
+            'generation_method': 'dynamic_analysis'
         })
         
     except Exception as e:
