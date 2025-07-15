@@ -25,8 +25,6 @@ from .container_manager import ContainerManager
 class ToolManager:
     def __init__(self):
         # Inicializar herramientas con versiones REALES (no simuladas)
-        from .web_search_tool import WebSearchTool  # Importar herramienta real
-        
         self.tools = {
             'shell': ShellTool(),
             'web_search': WebSearchTool(),  # USAR HERRAMIENTA REAL
