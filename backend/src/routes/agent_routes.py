@@ -1235,6 +1235,161 @@ def download_all_files(task_id):
             'error': str(e),
             'timestamp': datetime.now().isoformat()
         }), 500
+@agent_bp.route('/generate-plan', methods=['POST'])
+def generate_dynamic_plan():
+    """Generar plan dinámico específico para una tarea"""
+    try:
+        data = request.get_json()
+        task_title = data.get('task_title', '')
+        context = data.get('context', {})
+        
+        if not task_title:
+            return jsonify({'error': 'task_title is required'}), 400
+        
+        # Obtener servicio de Ollama
+        ollama_service = current_app.ollama_service
+        
+        # Generar plan específico usando IA
+        plan_prompt = f"""
+        Genera un plan de acción específico y detallado para la siguiente tarea: "{task_title}"
+        
+        El plan debe ser:
+        1. ESPECÍFICO para esta tarea exacta (no genérico)
+        2. DETALLADO con pasos concretos
+        3. PRÁCTICO y realizable
+        4. ESTRUCTURADO en orden lógico
+        5. Máximo 5 pasos
+        
+        Devuelve SOLO un JSON con el siguiente formato:
+        {{
+            "plan": [
+                {{"id": "step-1", "title": "Paso específico 1", "completed": false, "active": true}},
+                {{"id": "step-2", "title": "Paso específico 2", "completed": false, "active": false}},
+                {{"id": "step-3", "title": "Paso específico 3", "completed": false, "active": false}},
+                {{"id": "step-4", "title": "Paso específico 4", "completed": false, "active": false}},
+                {{"id": "step-5", "title": "Paso específico 5", "completed": false, "active": false}}
+            ]
+        }}
+        """
+        
+        # Generar respuesta usando Ollama
+        response = ollama_service.generate_response(plan_prompt, context)
+        
+        if response.get('error'):
+            # Plan por defecto si hay error
+            return jsonify({
+                'plan': [
+                    {'id': 'step-1', 'title': f'Analizando: {task_title}', 'completed': False, 'active': True},
+                    {'id': 'step-2', 'title': 'Generando plan de acción', 'completed': False, 'active': False},
+                    {'id': 'step-3', 'title': 'Ejecutando acciones necesarias', 'completed': False, 'active': False},
+                    {'id': 'step-4', 'title': 'Verificando resultados', 'completed': False, 'active': False},
+                    {'id': 'step-5', 'title': 'Finalizando tarea', 'completed': False, 'active': False}
+                ]
+            })
+        
+        # Intentar parsear JSON del response
+        try:
+            response_text = response.get('response', '')
+            # Extraer JSON del response
+            import re
+            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            if json_match:
+                plan_data = json.loads(json_match.group())
+                return jsonify(plan_data)
+            else:
+                raise ValueError("No JSON found in response")
+        except (json.JSONDecodeError, ValueError):
+            # Plan por defecto si no se puede parsear
+            return jsonify({
+                'plan': [
+                    {'id': 'step-1', 'title': f'Analizando: {task_title}', 'completed': False, 'active': True},
+                    {'id': 'step-2', 'title': 'Generando plan de acción', 'completed': False, 'active': False},
+                    {'id': 'step-3', 'title': 'Ejecutando acciones necesarias', 'completed': False, 'active': False},
+                    {'id': 'step-4', 'title': 'Verificando resultados', 'completed': False, 'active': False},
+                    {'id': 'step-5', 'title': 'Finalizando tarea', 'completed': False, 'active': False}
+                ]
+            })
+            
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/generate-suggestions', methods=['POST'])
+def generate_dynamic_suggestions():
+    """Generar sugerencias dinámicas para la página de bienvenida"""
+    try:
+        data = request.get_json()
+        context = data.get('context', {})
+        
+        # Obtener servicio de Ollama
+        ollama_service = current_app.ollama_service
+        
+        # Generar sugerencias usando IA
+        suggestions_prompt = """
+        Genera 3 sugerencias útiles y variadas para un agente general de IA que puede ayudar con:
+        - Búsquedas web y investigación
+        - Análisis de archivos
+        - Programación y desarrollo
+        - Tareas administrativas
+        - Análisis de datos
+        
+        Las sugerencias deben ser:
+        1. Específicas y prácticas
+        2. Diferentes entre sí
+        3. Atractivas para el usuario
+        4. Máximo 6 palabras cada una
+        
+        Devuelve SOLO un JSON con el siguiente formato:
+        {
+            "suggestions": [
+                {"title": "Sugerencia específica 1"},
+                {"title": "Sugerencia específica 2"},
+                {"title": "Sugerencia específica 3"}
+            ]
+        }
+        """
+        
+        # Generar respuesta usando Ollama
+        response = ollama_service.generate_response(suggestions_prompt, context)
+        
+        if response.get('error'):
+            # Sugerencias por defecto si hay error
+            return jsonify({
+                'suggestions': [
+                    {'title': 'Investigar tendencias tecnológicas'},
+                    {'title': 'Analizar documento científico'},
+                    {'title': 'Crear script automatización'}
+                ]
+            })
+        
+        # Intentar parsear JSON del response
+        try:
+            response_text = response.get('response', '')
+            # Extraer JSON del response
+            import re
+            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            if json_match:
+                suggestions_data = json.loads(json_match.group())
+                return jsonify(suggestions_data)
+            else:
+                raise ValueError("No JSON found in response")
+        except (json.JSONDecodeError, ValueError):
+            # Sugerencias por defecto si no se puede parsear
+            return jsonify({
+                'suggestions': [
+                    {'title': 'Investigar tendencias tecnológicas'},
+                    {'title': 'Analizar documento científico'},
+                    {'title': 'Crear script automatización'}
+                ]
+            })
+            
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
 
 # ==========================================
 # ENDPOINTS - CONTEXT MANAGER
