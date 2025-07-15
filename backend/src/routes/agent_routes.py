@@ -202,17 +202,24 @@ def generate_dynamic_suggestions():
             tools_context = "\n".join(tool_capabilities)
             
             # Prompt para generar sugerencias dinámicas
-            suggestion_prompt = f"""Basándote en las siguientes herramientas disponibles, genera 3 sugerencias específicas y útiles de tareas que un usuario podría querer realizar:
+            suggestion_prompt = f"""Basándote en las siguientes herramientas disponibles, genera exactamente 3 sugerencias prácticas y específicas que un usuario real podría querer hacer:
 
 Herramientas disponibles:
 {tools_context}
 
-Genera 3 sugerencias prácticas y específicas. Cada sugerencia debe ser:
-1. Específica y accionable
-2. Relevante para las capacidades reales del sistema
-3. Útil para usuarios reales
+Reglas importantes:
+1. Cada sugerencia debe ser UNA SOLA ORACIÓN CLARA
+2. Las sugerencias deben ser ESPECÍFICAS y PRÁCTICAS
+3. Deben ser tareas reales que alguien querría realizar
+4. NO uses formato de "SUGERENCIA 1" o "PLAN DE ACCIÓN"
+5. Responde SOLO las 3 sugerencias, una por línea
 
-Responde solo con las 3 sugerencias, una por línea, sin numeración ni puntos."""
+Ejemplo de formato correcto:
+Analizar tendencias de ventas del último trimestre
+Crear un sitio web para mi negocio local
+Automatizar el backup de archivos importantes
+
+Ahora genera 3 sugerencias específicas y únicas:"""
             
             try:
                 # Generar sugerencias usando Ollama
