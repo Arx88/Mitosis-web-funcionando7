@@ -1341,8 +1341,102 @@ def get_context_statistics():
             'error': str(e),
             'timestamp': datetime.now().isoformat()
         }), 500
+@agent_bp.route('/upload-files', methods=['POST'])
 def upload_files():
     """Subir archivos para una tarea específica"""
+    try:
+        task_id = request.form.get('task_id')
+        if not task_id:
+            return jsonify({'error': 'task_id is required'}), 400
+        
+        if 'files' not in request.files:
+            return jsonify({'error': 'No files provided'}), 400
+        
+        files = request.files.getlist('files')
+        if not files or len(files) == 0:
+            return jsonify({'error': 'No files provided'}), 400
+        
+        # Obtener servicios
+        database_service = current_app.database_service
+        
+        # Crear directorio para la tarea si no existe
+        task_dir = Path(tempfile.gettempdir()) / 'task_files' / task_id
+        task_dir.mkdir(parents=True, exist_ok=True)
+        
+        uploaded_files = []
+        
+        for file in files:
+            if file.filename == '':
+                continue
+                
+            # Asegurar nombre de archivo seguro
+            filename = secure_filename(file.filename)
+            file_path = task_dir / filename
+            
+            # Guardar archivo
+            file.save(str(file_path))
+            
+            # Obtener información del archivo
+            file_stats = os.stat(file_path)
+            
+            # Crear información del archivo
+            file_id = str(uuid.uuid4())
+            file_info = {
+                'id': file_id,
+                'file_id': file_id,
+                'task_id': task_id,
+                'name': filename,
+                'path': str(file_path),
+                'size': file_stats.st_size,
+                'type': 'file',
+                'mime_type': file.content_type or 'application/octet-stream',
+                'source': 'uploaded',
+                'created_at': datetime.now().isoformat()
+            }
+            
+            # Guardar en la base de datos - DESACTIVADO TEMPORALMENTE
+            # if database_service.is_connected():
+            #     try:
+            #         # Convertir ObjectId a string antes de devolver la respuesta
+            #         mongo_id = database_service.save_file(file_info)
+            #         if mongo_id:
+            #             file_info['mongo_id'] = str(mongo_id)
+            #     except Exception as e:
+            #         print(f"Error saving file to database: {e}")
+            
+            uploaded_files.append(file_info)
+        
+        # Mantener compatibilidad con sistema actual
+        if task_id not in task_files:
+            task_files[task_id] = []
+        
+        # Agregar archivos a la memoria temporal para compatibilidad
+        task_files[task_id].extend(uploaded_files)
+        
+        # Crear respuesta estructurada para el frontend
+        response_data = {
+            'success': True,
+            'message': f'Uploaded {len(uploaded_files)} files',
+            'files': uploaded_files,
+            'task_id': task_id,
+            'timestamp': datetime.now().isoformat(),
+            'upload_data': {
+                'files': uploaded_files,
+                'count': len(uploaded_files),
+                'total_size': sum(f['size'] for f in uploaded_files)
+            }
+        }
+        
+        return jsonify(response_data)
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+def upload_files_old():
+    """Subir archivos para una tarea específica - OLD VERSION"""
     try:
         task_id = request.form.get('task_id')
         if not task_id:
