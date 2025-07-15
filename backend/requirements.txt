@@ -29,3 +29,6 @@ primp>=0.6.0
 lxml>=4.9.0
 bidict>=0.23.1
 eventlet>=0.40.0
+# Dependencias para orquestación avanzada
+networkx>=3.1.0
+psutil>=5.9.0
