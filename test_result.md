@@ -95,7 +95,7 @@
 
 - ✅ Frontend: Funcionando correctamente con todas las correcciones aplicadas
 - ✅ Backend: Servicios corriendo sin problemas
-- ✅ Preview: Disponible en https://b96b3206-2d28-46c3-bb19-84435e832e7d.preview.emergentagent.com
+- ✅ Preview: Disponible en https://548b7423-7173-420a-9fbc-5a3b85e72f91.preview.emergentagent.com
 - ✅ Títulos: Espaciado corregido y funcionando
 - ✅ WebSearch: Toggle funcionando correctamente
 - ✅ Iconos: Visibles en pestañas activas
@@ -183,7 +183,7 @@ directory=/app/frontend
 **TESTING REQUEST**: Test the AgentStatusBar functionality in the Mitosis application to verify if the agent status bar appears above the chatbox input during task execution.
 
 **TESTING METHODOLOGY**:
-1. Navigated to https://b96b3206-2d28-46c3-bb19-84435e832e7d.preview.emergentagent.com
+1. Navigated to https://548b7423-7173-420a-9fbc-5a3b85e72f91.preview.emergentagent.com
 2. Created tasks to trigger AgentStatusBar functionality
 3. Monitored for different agent states during task execution
 4. Captured screenshots during task processing
@@ -371,7 +371,7 @@ command=serve -s dist -l 3000  # Sirve archivos estáticos de producción
 
 - ✅ Frontend: Funcionando correctamente con todos los cambios aplicados
 - ✅ Backend: Servicios corriendo sin problemas
-- ✅ Preview: Disponible en https://b96b3206-2d28-46c3-bb19-84435e832e7d.preview.emergentagent.com
+- ✅ Preview: Disponible en https://548b7423-7173-420a-9fbc-5a3b85e72f91.preview.emergentagent.com
 - ✅ Sidebar: Centrado corregido y funcionando
 - ✅ Animación: Velocidad ajustada correctamente
 - ✅ Placeholder: Formato académico funcionando completamente
@@ -416,7 +416,7 @@ command=serve -s dist -l 3000  # Sirve archivos estáticos de producción
 2. **FILES button (ARCHIVOS) - UI Theme Issue**: The FilesModal should have a DARK/GRAY theme, not white
 
 **TESTING METHODOLOGY**:
-1. Navigated to https://b96b3206-2d28-46c3-bb19-84435e832e7d.preview.emergentagent.com
+1. Navigated to https://548b7423-7173-420a-9fbc-5a3b85e72f91.preview.emergentagent.com
 2. Created test task to access task view with the buttons
 3. Tested FAVORITES button star fill functionality
 4. Tested FILES button modal theme consistency
