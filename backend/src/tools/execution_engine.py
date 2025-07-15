@@ -58,6 +58,7 @@ class ExecutionEngine:
         self.tool_manager = tool_manager
         self.environment_manager = environment_manager
         self.task_planner = TaskPlanner()
+        self.context_manager = ContextManager()  # Inicializar context manager
         
         # Configuración de ejecución
         self.config = {
@@ -66,7 +67,9 @@ class ExecutionEngine:
             'timeout_per_step': 300,  # 5 minutos
             'parallel_execution': False,
             'fail_fast': False,
-            'auto_recovery': True
+            'auto_recovery': True,
+            'auto_checkpoint': True,  # Checkpoints automáticos
+            'checkpoint_frequency': 3  # Cada 3 pasos
         }
         
         # Contextos de ejecución activos
