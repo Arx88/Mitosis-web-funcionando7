@@ -808,4 +808,187 @@ class ExecutionEngine:
         """Limpiar contexto de ejecución de una tarea"""
         
         if task_id in self.execution_contexts:
+            context = self.execution_contexts[task_id]
+            
+            # Cerrar sesión del context manager
+            if context.context_session_id:
+                self.context_manager.close_session(context.context_session_id)
+            
             del self.execution_contexts[task_id]
+    
+    def get_context_info(self, task_id: str) -> Dict[str, Any]:
+        """Obtener información del contexto de una tarea"""
+        
+        if task_id not in self.execution_contexts:
+            return {'error': 'Task not found'}
+        
+        context = self.execution_contexts[task_id]
+        
+        if not context.context_session_id:
+            return {'error': 'No context session found'}
+        
+        return self.context_manager.get_session_info(context.context_session_id)
+    
+    def create_manual_checkpoint(self, task_id: str, description: str = "") -> Dict[str, Any]:
+        """Crear checkpoint manual"""
+        
+        if task_id not in self.execution_contexts:
+            return {'error': 'Task not found'}
+        
+        context = self.execution_contexts[task_id]
+        
+        if not context.context_session_id:
+            return {'error': 'No context session found'}
+        
+        try:
+            checkpoint_id = self.context_manager.create_checkpoint(
+                context.context_session_id,
+                f"manual_{context.current_step_index}",
+                description or f"Manual checkpoint at step {context.current_step_index}",
+                auto_created=False
+            )
+            
+            return {
+                'success': True,
+                'checkpoint_id': checkpoint_id,
+                'created_at': datetime.now().isoformat()
+            }
+        except Exception as e:
+            return {'error': str(e)}
+    
+    def restore_checkpoint(self, task_id: str, checkpoint_id: str) -> Dict[str, Any]:
+        """Restaurar checkpoint"""
+        
+        if task_id not in self.execution_contexts:
+            return {'error': 'Task not found'}
+        
+        context = self.execution_contexts[task_id]
+        
+        if not context.context_session_id:
+            return {'error': 'No context session found'}
+        
+        try:
+            success = self.context_manager.restore_checkpoint(
+                context.context_session_id,
+                checkpoint_id
+            )
+            
+            if success:
+                return {
+                    'success': True,
+                    'message': f'Checkpoint {checkpoint_id} restored successfully',
+                    'restored_at': datetime.now().isoformat()
+                }
+            else:
+                return {'error': 'Checkpoint not found or restoration failed'}
+                
+        except Exception as e:
+            return {'error': str(e)}
+    
+    def get_checkpoints(self, task_id: str) -> Dict[str, Any]:
+        """Obtener lista de checkpoints"""
+        
+        if task_id not in self.execution_contexts:
+            return {'error': 'Task not found'}
+        
+        context = self.execution_contexts[task_id]
+        
+        if not context.context_session_id:
+            return {'error': 'No context session found'}
+        
+        try:
+            checkpoints = self.context_manager.get_checkpoints(context.context_session_id)
+            return {
+                'success': True,
+                'checkpoints': checkpoints,
+                'total_checkpoints': len(checkpoints)
+            }
+        except Exception as e:
+            return {'error': str(e)}
+    
+    def get_context_variables(self, task_id: str, scope: str = None) -> Dict[str, Any]:
+        """Obtener variables del contexto"""
+        
+        if task_id not in self.execution_contexts:
+            return {'error': 'Task not found'}
+        
+        context = self.execution_contexts[task_id]
+        
+        if not context.context_session_id:
+            return {'error': 'No context session found'}
+        
+        try:
+            # Convertir scope string a enum
+            context_scope = None
+            if scope:
+                try:
+                    context_scope = ContextScope(scope)
+                except ValueError:
+                    return {'error': f'Invalid scope: {scope}'}
+            
+            variables = self.context_manager.get_all_variables(
+                context.context_session_id,
+                context_scope
+            )
+            
+            return {
+                'success': True,
+                'variables': variables,
+                'total_variables': len(variables),
+                'scope': scope
+            }
+        except Exception as e:
+            return {'error': str(e)}
+    
+    def set_context_variable(self, task_id: str, key: str, value: Any, 
+                           var_type: str = "object", scope: str = "task") -> Dict[str, Any]:
+        """Establecer variable en el contexto"""
+        
+        if task_id not in self.execution_contexts:
+            return {'error': 'Task not found'}
+        
+        context = self.execution_contexts[task_id]
+        
+        if not context.context_session_id:
+            return {'error': 'No context session found'}
+        
+        try:
+            # Convertir strings a enums
+            variable_type = VariableType(var_type)
+            context_scope = ContextScope(scope)
+            
+            success = self.context_manager.set_variable(
+                context.context_session_id,
+                key,
+                value,
+                variable_type,
+                context_scope,
+                source_step="manual"
+            )
+            
+            if success:
+                return {
+                    'success': True,
+                    'message': f'Variable {key} set successfully',
+                    'set_at': datetime.now().isoformat()
+                }
+            else:
+                return {'error': 'Failed to set variable'}
+                
+        except ValueError as e:
+            return {'error': f'Invalid type or scope: {str(e)}'}
+        except Exception as e:
+            return {'error': str(e)}
+    
+    def get_context_statistics(self) -> Dict[str, Any]:
+        """Obtener estadísticas del context manager"""
+        
+        try:
+            stats = self.context_manager.get_statistics()
+            return {
+                'success': True,
+                'statistics': stats,
+                'active_executions': len(self.execution_contexts)
+            }
+        except Exception as e:
+            return {'error': str(e)}
