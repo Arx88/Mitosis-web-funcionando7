@@ -96,7 +96,6 @@ const generateDynamicIdeas = async () => {
 export function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
-  const [hasCreatedExampleTasks, setHasCreatedExampleTasks] = useState(false);
   const [dynamicIdeas, setDynamicIdeas] = useState<any[]>([]);
   const [appState, setAppState] = useState<AppState>({
     sidebarCollapsed: false,
