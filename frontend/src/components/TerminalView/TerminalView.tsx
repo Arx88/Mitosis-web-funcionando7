@@ -43,6 +43,7 @@ export interface TerminalViewProps {
   onInitializationLog?: (message: string, type: 'info' | 'success' | 'error') => void;
   taskId?: string;
   taskTitle?: string;
+  executionData?: any; // Datos de ejecución del backend
 }
 
 export const TerminalView = ({
