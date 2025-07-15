@@ -1092,7 +1092,204 @@ def download_all_files(task_id):
             'timestamp': datetime.now().isoformat()
         }), 500
 
-@agent_bp.route('/upload-files', methods=['POST'])
+# ==========================================
+# ENDPOINTS - CONTEXT MANAGER
+# ==========================================
+
+@agent_bp.route('/context/info/<task_id>', methods=['GET'])
+def get_context_info(task_id):
+    """Obtener información del contexto de una tarea"""
+    try:
+        if hasattr(current_app, 'tool_manager'):
+            global execution_engine
+            execution_engine = ExecutionEngine(
+                tool_manager=current_app.tool_manager,
+                environment_manager=environment_setup_manager
+            )
+        
+        context_info = execution_engine.get_context_info(task_id)
+        
+        return jsonify({
+            'success': True,
+            'context_info': context_info,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/context/variables/<task_id>', methods=['GET'])
+def get_context_variables(task_id):
+    """Obtener variables del contexto"""
+    try:
+        scope = request.args.get('scope', None)
+        
+        if hasattr(current_app, 'tool_manager'):
+            global execution_engine
+            execution_engine = ExecutionEngine(
+                tool_manager=current_app.tool_manager,
+                environment_manager=environment_setup_manager
+            )
+        
+        variables = execution_engine.get_context_variables(task_id, scope)
+        
+        return jsonify({
+            'success': True,
+            'variables': variables,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/context/variables/<task_id>', methods=['POST'])
+def set_context_variable(task_id):
+    """Establecer variable en el contexto"""
+    try:
+        data = request.get_json()
+        key = data.get('key')
+        value = data.get('value')
+        var_type = data.get('type', 'object')
+        scope = data.get('scope', 'task')
+        
+        if not key:
+            return jsonify({'error': 'key is required'}), 400
+        
+        if hasattr(current_app, 'tool_manager'):
+            global execution_engine
+            execution_engine = ExecutionEngine(
+                tool_manager=current_app.tool_manager,
+                environment_manager=environment_setup_manager
+            )
+        
+        result = execution_engine.set_context_variable(task_id, key, value, var_type, scope)
+        
+        return jsonify({
+            'success': result.get('success', False),
+            'result': result,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/context/checkpoints/<task_id>', methods=['GET'])
+def get_checkpoints(task_id):
+    """Obtener lista de checkpoints"""
+    try:
+        if hasattr(current_app, 'tool_manager'):
+            global execution_engine
+            execution_engine = ExecutionEngine(
+                tool_manager=current_app.tool_manager,
+                environment_manager=environment_setup_manager
+            )
+        
+        checkpoints = execution_engine.get_checkpoints(task_id)
+        
+        return jsonify({
+            'success': True,
+            'checkpoints': checkpoints,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/context/checkpoints/<task_id>', methods=['POST'])
+def create_checkpoint(task_id):
+    """Crear checkpoint manual"""
+    try:
+        data = request.get_json()
+        description = data.get('description', '')
+        
+        if hasattr(current_app, 'tool_manager'):
+            global execution_engine
+            execution_engine = ExecutionEngine(
+                tool_manager=current_app.tool_manager,
+                environment_manager=environment_setup_manager
+            )
+        
+        result = execution_engine.create_manual_checkpoint(task_id, description)
+        
+        return jsonify({
+            'success': result.get('success', False),
+            'result': result,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/context/checkpoints/<task_id>/restore', methods=['POST'])
+def restore_checkpoint(task_id):
+    """Restaurar checkpoint"""
+    try:
+        data = request.get_json()
+        checkpoint_id = data.get('checkpoint_id')
+        
+        if not checkpoint_id:
+            return jsonify({'error': 'checkpoint_id is required'}), 400
+        
+        if hasattr(current_app, 'tool_manager'):
+            global execution_engine
+            execution_engine = ExecutionEngine(
+                tool_manager=current_app.tool_manager,
+                environment_manager=environment_setup_manager
+            )
+        
+        result = execution_engine.restore_checkpoint(task_id, checkpoint_id)
+        
+        return jsonify({
+            'success': result.get('success', False),
+            'result': result,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/context/statistics', methods=['GET'])
+def get_context_statistics():
+    """Obtener estadísticas del context manager"""
+    try:
+        if hasattr(current_app, 'tool_manager'):
+            global execution_engine
+            execution_engine = ExecutionEngine(
+                tool_manager=current_app.tool_manager,
+                environment_manager=environment_setup_manager
+            )
+        
+        stats = execution_engine.get_context_statistics()
+        
+        return jsonify({
+            'success': True,
+            'statistics': stats,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
 def upload_files():
     """Subir archivos para una tarea específica"""
     try:
