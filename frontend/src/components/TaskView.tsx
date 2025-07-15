@@ -64,6 +64,103 @@ export const TaskView: React.FC<TaskViewProps> = ({
     planUpdates: [] as any[],
   });
   
+  // 🚀 WebSocket Effects - Gestión de conexión y eventos
+  useEffect(() => {
+    if (isConnected && task.id) {
+      console.log('🏠 Joining task room for:', task.id);
+      joinTaskRoom(task.id);
+
+      // Configurar event listeners
+      addEventListeners({
+        task_started: (data) => {
+          console.log('📋 Task started:', data);
+          setAgentStatus(prev => ({
+            ...prev,
+            isExecuting: true,
+            totalSteps: data.data?.plan?.steps?.length || 0,
+            completedSteps: 0,
+            executionTime: 0,
+            steps: data.data?.plan?.steps?.map((step: any) => ({
+              id: step.id,
+              title: step.title,
+              status: 'pending',
+            })) || [],
+          }));
+          logToTerminal('🚀 Ejecución de tarea iniciada', 'info');
+        },
+
+        task_progress: (data) => {
+          console.log('⏳ Task progress:', data);
+          setAgentStatus(prev => ({
+            ...prev,
+            currentStep: data.data?.step_id || '',
+            completedSteps: data.data?.progress ? Math.round(data.data.progress * prev.totalSteps) : prev.completedSteps,
+            executionTime: data.data?.execution_time || prev.executionTime,
+            steps: prev.steps.map(step => 
+              step.id === data.data?.step_id 
+                ? { ...step, status: 'running', progress: data.data?.progress }
+                : step
+            ),
+          }));
+          logToTerminal(`⏳ Progreso: ${data.data?.step_id || 'Paso actual'}`, 'info');
+        },
+
+        task_completed: (data) => {
+          console.log('✅ Task completed:', data);
+          setAgentStatus(prev => ({
+            ...prev,
+            isExecuting: false,
+            completedSteps: prev.totalSteps,
+            successRate: data.success_rate || 1.0,
+            steps: prev.steps.map(step => 
+              step.status === 'running' ? { ...step, status: 'completed' } : step
+            ),
+          }));
+          logToTerminal('✅ Tarea completada exitosamente', 'success');
+        },
+
+        task_failed: (data) => {
+          console.log('❌ Task failed:', data);
+          setAgentStatus(prev => ({
+            ...prev,
+            isExecuting: false,
+            steps: prev.steps.map(step => 
+              step.status === 'running' ? { ...step, status: 'failed', error: data.error } : step
+            ),
+          }));
+          logToTerminal(`❌ Error en la tarea: ${data.error || 'Error desconocido'}`, 'error');
+        },
+
+        plan_updated: (data) => {
+          console.log('📋 Plan updated:', data);
+          setAgentStatus(prev => ({
+            ...prev,
+            planUpdates: [...prev.planUpdates, data.plan_change],
+            steps: data.new_plan?.steps?.map((step: any) => ({
+              id: step.id,
+              title: step.title,
+              status: 'pending',
+            })) || prev.steps,
+          }));
+          logToTerminal('📋 Plan actualizado dinámicamente', 'info');
+        },
+
+        context_changed: (data) => {
+          console.log('🔄 Context changed:', data);
+          logToTerminal('🔄 Contexto de ejecución actualizado', 'info');
+        },
+      });
+
+      // Cleanup al cambiar de tarea
+      return () => {
+        if (task.id) {
+          leaveTaskRoom(task.id);
+        }
+        removeEventListeners();
+      };
+    }
+  }, [isConnected, task.id, joinTaskRoom, leaveTaskRoom, addEventListeners, removeEventListeners]);
+
   // Debug effects for modal states
   useEffect(() => {
     console.log('🗂️ FilesModal state changed:', showFilesModal);
