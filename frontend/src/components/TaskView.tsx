@@ -757,18 +757,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
         onGenerateLink={generateShareLink}
       />
 
-      {/* Advanced Task Manager */}
-      {showAdvancedManager && (
-        <div className="absolute top-0 left-0 right-0 bg-[#272728] border-b border-[rgba(255,255,255,0.08)] z-10">
-          <AdvancedTaskManager
-            taskId={task.id}
-            taskTitle={task.title}
-            taskDescription={task.messages.length > 0 ? task.messages[0].content : ''}
-            isVisible={showAdvancedManager}
-            onTaskUpdate={handleAdvancedTaskUpdate}
-          />
-        </div>
-      )}
+
     </div>
   );
 };
