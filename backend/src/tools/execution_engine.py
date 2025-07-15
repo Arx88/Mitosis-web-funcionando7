@@ -14,6 +14,7 @@ from dataclasses import dataclass, asdict
 from .task_planner import TaskPlanner, ExecutionPlan, TaskStep
 from .tool_manager import ToolManager
 from .environment_setup_manager import EnvironmentSetupManager
+from .context_manager import ContextManager, ContextScope, VariableType
 
 class StepStatus(Enum):
     PENDING = "pending"
