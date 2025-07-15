@@ -10,6 +10,7 @@ from .shell_tool import ShellTool
 from .file_manager_tool import FileManagerTool
 from .tavily_search_tool import TavilySearchTool
 from .comprehensive_research_tool import ComprehensiveResearchTool
+from .web_search_tool import WebSearchTool  # Importar herramienta real
 
 # Importar herramientas mejoradas
 from .enhanced_web_search_tool_improved import EnhancedWebSearchTool
