@@ -100,7 +100,8 @@ class WebSearchTool:
             ddgs = DDGS()
             results = []
             
-            for result in ddgs.text(query, max_results=max_results):
+            search_results = ddgs.text(query, max_results=max_results)
+            for result in search_results:
                 results.append({
                     'title': result.get('title', ''),
                     'url': result.get('href', ''),
