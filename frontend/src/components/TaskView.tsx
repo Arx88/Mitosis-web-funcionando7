@@ -337,11 +337,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
   }, [showFilesModal]);
 
   // Manejador para el Advanced Task Manager
-  const handleAdvancedTaskUpdate = (taskData: any) => {
-    setAdvancedTaskData(prev => ({ ...prev, ...taskData }));
-    logToTerminal(`🔬 Advanced Task Manager: ${JSON.stringify(taskData)}`, 'info');
-  };
-
   const handleSendMessage = (content: string) => {
     // Check if this is the first message
     const isFirstMessage = task.messages.length === 0;
