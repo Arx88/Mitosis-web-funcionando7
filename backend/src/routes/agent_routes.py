@@ -1236,7 +1236,7 @@ def download_all_files(task_id):
             'timestamp': datetime.now().isoformat()
         }), 500
 @agent_bp.route('/generate-plan', methods=['POST'])
-def generate_dynamic_plan():
+def generate_dynamic_plan_for_frontend():
     """Generar plan dinámico específico para una tarea"""
     try:
         data = request.get_json()
