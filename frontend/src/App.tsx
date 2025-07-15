@@ -593,8 +593,8 @@ const getDefaultTaskPlan = () => {
                                 const chatResponse = await response.json();
                                 console.log('✅ Regular task response received:', chatResponse);
                                 
-                                // Generar plan genérico para tareas normales
-                                const genericPlan = generateTaskPlan(message.trim());
+                                // Generar plan dinámico para tareas normales
+                                const dynamicPlan = await generateDynamicTaskPlan(message.trim());
                                 
                                 const userMessage = {
                                   id: `msg-${Date.now()}`,
@@ -613,7 +613,7 @@ const getDefaultTaskPlan = () => {
                                 const updatedTask = {
                                   ...newTask,
                                   messages: [userMessage, agentMessage],
-                                  plan: genericPlan,
+                                  plan: dynamicPlan,
                                   status: 'in-progress' as const,
                                   progress: 20 // Start with some progress
                                 };
