@@ -229,7 +229,7 @@ def get_deep_research_progress(task_id):
 
 @agent_bp.route('/chat', methods=['POST'])
 def chat():
-    """Endpoint principal para chat con el agente"""
+    """Endpoint principal para chat con el agente - CON EJECUCIÓN AUTÓNOMA"""
     try:
         data = request.get_json()
         message = data.get('message', '')
@@ -256,6 +256,55 @@ def chat():
             search_mode = 'deepsearch'
             message = message.replace('[DeepResearch]', '').strip()
         
+        # 🚀 NUEVO: Usar ExecutionEngine para tareas regulares (no WebSearch/DeepSearch)
+        if not search_mode and task_id:
+            try:
+                # Inicializar execution engine
+                global execution_engine
+                execution_engine = ExecutionEngine(
+                    tool_manager=tool_manager,
+                    environment_manager=environment_setup_manager
+                )
+                
+                # 🎯 EJECUCIÓN AUTÓNOMA: Ejecutar tarea con ExecutionEngine
+                # Ejecutar de manera asíncrona en un thread separado
+                import threading
+                
+                def run_autonomous_execution():
+                    """Ejecutar tarea autónoma en thread separado"""
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        result = loop.run_until_complete(
+                            execution_engine.execute_task(task_id, message, message)
+                        )
+                        print(f"✅ Autonomous execution completed for task {task_id}")
+                        print(f"📊 Status: {result.status.value}, Success rate: {result.success_rate}")
+                        # Aquí se podrían enviar updates via WebSocket al frontend
+                    except Exception as e:
+                        print(f"❌ Autonomous execution failed for task {task_id}: {str(e)}")
+                    finally:
+                        loop.close()
+                
+                # Iniciar ejecución autónoma en background
+                execution_thread = threading.Thread(target=run_autonomous_execution)
+                execution_thread.daemon = True
+                execution_thread.start()
+                
+                # Respuesta inmediata para el frontend
+                return jsonify({
+                    'response': f'🤖 **Ejecución Autónoma Iniciada**\n\n**Tarea:** {message}\n\n🔄 El agente está analizando tu solicitud y ejecutando las acciones necesarias de forma autónoma...\n\n📋 **Proceso:**\n• Análisis de la tarea\n• Generación de plan de ejecución\n• Ejecución automática de pasos\n• Validación de resultados\n\n⏱️ **Estado:** Ejecutando en segundo plano\n\n*Los resultados aparecerán automáticamente cuando se complete la ejecución.*',
+                    'autonomous_execution': True,
+                    'task_id': task_id,
+                    'execution_status': 'started',
+                    'timestamp': datetime.now().isoformat(),
+                    'model': 'autonomous-agent'
+                })
+                
+            except Exception as e:
+                print(f"❌ Error in autonomous execution: {str(e)}")
+                # Fallback a ejecución regular
+                
         # Ejecutar herramientas directamente según el modo de búsqueda
         tool_results = []
         created_files = []
@@ -481,6 +530,8 @@ def chat():
             'created_files': created_files,
             'search_mode': search_mode,
             'search_data': response.get('search_data'),  # Datos estructurados para frontend
+            'autonomous_execution': response.get('autonomous_execution', False),
+            'execution_status': response.get('execution_status'),
             'timestamp': datetime.now().isoformat(),
             'model': response.get('model', 'unknown')
         })
