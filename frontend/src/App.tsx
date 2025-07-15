@@ -789,7 +789,7 @@ const getDefaultTaskPlan = () => {
                                 console.log('✅ DeepSearch response received:', chatResponse);
                                 
                                 // Generar plan específico para DeepResearch
-                                const deepResearchPlan = generateTaskPlan(`[DeepResearch] ${inputText.trim()}`);
+                                const deepResearchPlan = await generateDynamicTaskPlan(`[DeepResearch] ${inputText.trim()}`);
                                 
                                 const userMessage = {
                                   id: `msg-${Date.now()}`,
