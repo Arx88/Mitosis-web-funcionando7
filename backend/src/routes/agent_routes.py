@@ -247,7 +247,7 @@ def generate_dynamic_suggestions():
 
 @agent_bp.route('/chat', methods=['POST'])
 def chat():
-    """Endpoint principal para chat con el agente - CON EJECUCIÓN AUTÓNOMA"""
+    """Endpoint principal para chat con el agente - EJECUCIÓN AUTÓNOMA REAL"""
     try:
         data = request.get_json()
         message = data.get('message', '')
@@ -263,7 +263,7 @@ def chat():
         database_service = current_app.database_service
         
         # Obtener task_id del contexto
-        task_id = context.get('task_id')
+        task_id = context.get('task_id', f"task_{int(time.time())}")
         
         # Detectar modo de búsqueda desde el mensaje
         original_message = message
@@ -274,7 +274,134 @@ def chat():
             search_mode = 'deepsearch'
             message = message.replace('[DeepResearch]', '').strip()
         
-        # Ejecutar herramientas directamente según el modo de búsqueda
+        # **NUEVO: Usar ExecutionEngine para ejecución autónoma REAL**
+        if not search_mode:
+            # Para tareas generales, usar ExecutionEngine
+            try:
+                print(f"🚀 Iniciando ejecución autónoma para tarea: {task_id}")
+                
+                # Configurar endpoint Ollama
+                ollama_endpoint = "https://9g1hiqvg9k@wnbaldwy.com"
+                ollama_model = "llama3.1:8b"
+                
+                # Actualizar configuración de Ollama
+                ollama_service.base_url = ollama_endpoint
+                ollama_service.current_model = ollama_model
+                
+                # Crear ExecutionEngine con las herramientas disponibles
+                execution_engine = ExecutionEngine(
+                    tool_manager=tool_manager,
+                    environment_manager=environment_setup_manager
+                )
+                
+                # Agregar WebSocket callbacks si está disponible
+                def notify_progress(notification):
+                    print(f"📈 Progress: {notification}")
+                    # Aquí se puede integrar con WebSocket para notificaciones en tiempo real
+                
+                execution_engine.add_progress_callback(notify_progress)
+                
+                # Ejecutar tarea de manera autónoma
+                import asyncio
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                
+                try:
+                    execution_context = loop.run_until_complete(
+                        execution_engine.execute_task(
+                            task_id=task_id,
+                            task_title=message,
+                            task_description=f"Tarea iniciada por usuario: {message}",
+                            config={'dynamic_planning': True, 'auto_recovery': True}
+                        )
+                    )
+                    
+                    # Generar respuesta basada en el contexto de ejecución
+                    if execution_context.status.value == 'completed':
+                        # Tarea completada exitosamente
+                        completion_summary = f"✅ Tarea completada exitosamente\n\n"
+                        completion_summary += f"📊 **Resumen de ejecución:**\n"
+                        completion_summary += f"- Pasos completados: {len([se for se in execution_context.step_executions if se.status.value == 'completed'])}\n"
+                        completion_summary += f"- Tiempo total: {execution_context.total_execution_time:.2f} segundos\n"
+                        completion_summary += f"- Tasa de éxito: {execution_context.success_rate:.1%}\n\n"
+                        
+                        # Mostrar resultados de cada paso
+                        completion_summary += "📋 **Pasos ejecutados:**\n"
+                        for step_exec in execution_context.step_executions:
+                            status_icon = "✅" if step_exec.status.value == 'completed' else "❌"
+                            completion_summary += f"{status_icon} {step_exec.step.title}\n"
+                            if step_exec.result and step_exec.status.value == 'completed':
+                                if isinstance(step_exec.result, dict) and 'response' in step_exec.result:
+                                    completion_summary += f"   💡 {step_exec.result['response'][:100]}...\n"
+                        
+                        response_text = completion_summary
+                        
+                    else:
+                        # Tarea falló o completada parcialmente
+                        failure_summary = f"⚠️ Tarea completada parcialmente\n\n"
+                        failure_summary += f"📊 **Estado de ejecución:**\n"
+                        failure_summary += f"- Estado: {execution_context.status.value}\n"
+                        failure_summary += f"- Pasos completados: {len([se for se in execution_context.step_executions if se.status.value == 'completed'])}\n"
+                        failure_summary += f"- Pasos fallidos: {len([se for se in execution_context.step_executions if se.status.value == 'failed'])}\n"
+                        failure_summary += f"- Tasa de éxito: {execution_context.success_rate:.1%}\n"
+                        
+                        response_text = failure_summary
+                    
+                    # Obtener archivos generados
+                    created_files = []
+                    # Buscar archivos creados en los resultados de los pasos
+                    for step_exec in execution_context.step_executions:
+                        if step_exec.result and isinstance(step_exec.result, dict):
+                            if 'file_path' in step_exec.result or 'report_file' in step_exec.result:
+                                file_path = step_exec.result.get('file_path') or step_exec.result.get('report_file')
+                                if file_path and os.path.exists(file_path):
+                                    created_files.append({
+                                        'id': str(uuid.uuid4()),
+                                        'file_id': str(uuid.uuid4()),
+                                        'task_id': task_id,
+                                        'name': os.path.basename(file_path),
+                                        'path': file_path,
+                                        'size': os.path.getsize(file_path),
+                                        'type': 'file',
+                                        'mime_type': 'text/plain',
+                                        'source': 'agent',
+                                        'created_at': datetime.now().isoformat()
+                                    })
+                    
+                    return jsonify({
+                        'response': response_text,
+                        'execution_context': {
+                            'task_id': task_id,
+                            'status': execution_context.status.value,
+                            'success_rate': execution_context.success_rate,
+                            'total_execution_time': execution_context.total_execution_time,
+                            'steps_completed': len([se for se in execution_context.step_executions if se.status.value == 'completed']),
+                            'steps_failed': len([se for se in execution_context.step_executions if se.status.value == 'failed'])
+                        },
+                        'created_files': created_files,
+                        'autonomous_execution': True,
+                        'model': ollama_model,
+                        'timestamp': datetime.now().isoformat()
+                    })
+                    
+                finally:
+                    loop.close()
+                    
+            except Exception as e:
+                print(f"❌ Error en ejecución autónoma: {str(e)}")
+                # Fallback a ejecución con Ollama
+                response = ollama_service.generate_response(message, context, use_tools=True)
+                return jsonify({
+                    'response': response.get('response', f"Error en ejecución autónoma: {str(e)}"),
+                    'tool_calls': response.get('tool_calls', []),
+                    'autonomous_execution': False,
+                    'fallback_used': True,
+                    'error': str(e),
+                    'timestamp': datetime.now().isoformat(),
+                    'model': response.get('model', 'unknown')
+                })
+        
+        # Mantener comportamiento existente para WebSearch y DeepSearch
         tool_results = []
         created_files = []
         
