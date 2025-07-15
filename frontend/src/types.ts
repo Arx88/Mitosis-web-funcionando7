@@ -9,6 +9,7 @@ export interface Task {
   isFavorite?: boolean;
   iconType?: string; // Agregar el tipo de icono
   progress?: number; // Progress from 0 to 100
+  executionData?: any; // Datos de ejecución del backend para mostrar en terminal
 }
 
 export interface Message {
