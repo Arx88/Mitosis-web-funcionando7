@@ -151,7 +151,7 @@ def generate_dynamic_plan():
             execution_plan = loop.run_until_complete(
                 dynamic_planner.create_dynamic_plan(
                     task_id=f"plan_{int(time.time())}",
-                    task_description=task_title,
+                    user_input=task_title,
                     context={
                         'available_tools': tool_manager.get_available_tools() if tool_manager else [],
                         'environment_state': {'initial_tools': tool_manager.get_available_tools() if tool_manager else []}
