@@ -295,7 +295,7 @@ const getDefaultTaskPlan = () => {
   ];
 };
 
-  const handleSuggestedIdea = (idea: typeof suggestedIdeas[0]) => {
+  const handleDynamicIdea = (idea: any) => {
     createTask(idea.title);
   };
 
