@@ -116,6 +116,7 @@ export const useOllamaConnection = ({ endpoint, enabled }: UseOllamaConnectionPr
   };
 
   useEffect(() => {
+    console.log('🔄 useOllamaConnection useEffect triggered', { enabled, endpoint });
     if (enabled && endpoint) {
       checkConnection();
       fetchModels();
