@@ -23,6 +23,7 @@ from src.tools.tool_manager import ToolManager
 from src.services.ollama_service import OllamaService
 from src.services.database import DatabaseService
 from src.utils.json_encoder import MongoJSONEncoder
+from src.websocket.websocket_manager import initialize_websocket
 
 # Configuración
 HOST = os.getenv('HOST', '0.0.0.0')
@@ -47,6 +48,11 @@ CORS(app, resources={
         "allow_headers": ["Content-Type", "Authorization"]
     }
 })
+
+# 🚀 Inicializar WebSocket para updates en tiempo real
+print("🔌 Initializing WebSocket for real-time updates...")
+websocket_manager = initialize_websocket(app)
+print("✅ WebSocket initialized successfully")
 
 # Inicializar servicios
 ollama_service = OllamaService()
