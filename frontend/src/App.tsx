@@ -412,37 +412,6 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
 
   const activeTask = tasks.find(task => task.id === activeTaskId);
 
-  // Remove example tasks - no longer needed
-  // useEffect(() => {
-  //   if (!hasCreatedExampleTasks && tasks.length === 0) {
-  //     const exampleTasks = [
-  //       'Tarea Estilo Clásico - Bordes suaves y colores tradicionales',
-  //       'Tarea Estilo Moderno - Líneas limpias y efectos de sombra',
-  //       'Tarea Estilo Neon - Efectos brillantes y colores vibrantes',
-  //       'Tarea Estilo Minimal - Limpio y minimalista',
-  //       'Tarea Estilo Elegante - Gradientes suaves y tipografía refinada',
-  //       'Tarea Estilo Colorido - Múltiples colores y efectos alegres',
-  //       'Tarea Estilo Profesional - Sobrio y empresarial',
-  //       'Tarea Estilo Futurista - Formas geométricas y efectos tech',
-  //       'Tarea Estilo Vintage - Colores cálidos y efectos retro',
-  //       'Tarea Estilo Gaming - Efectos dinámicos y colores vibrantes'
-  //     ];
-
-  //     const newTasks = exampleTasks.map((title, index) => ({
-  //       id: `example-task-${index + 1}`,
-  //       title,
-  //       createdAt: new Date(),
-  //       status: 'pending' as const,
-  //       messages: [],
-  //       terminalCommands: [],
-  //       isFavorite: false
-  //     }));
-
-  //     setTasks(newTasks);
-  //     setHasCreatedExampleTasks(true);
-  //   }
-  // }, [hasCreatedExampleTasks, tasks.length]);
-
   // Optimized keyboard shortcuts
   useEffect(() => {
     const handleKeyboard = (e: KeyboardEvent) => {
