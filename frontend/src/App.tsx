@@ -848,22 +848,24 @@ const getDefaultTaskPlan = () => {
                     )}
                   </div>
                   
-                  {/* Ideas sugeridas - pequeñas y en una fila */}
-                  <div className="mb-12">
-                    <div className="flex items-center justify-center gap-3">
-                      {suggestedIdeas.map((idea, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleSuggestedIdea(idea)}
-                          disabled={isTaskCreating}
-                          className="flex items-center gap-2 px-4 py-2 bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.1)] rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <idea.icon className={`w-4 h-4 ${idea.color}`} />
-                          <span className="text-sm text-[#DADADA]">{idea.title}</span>
-                        </button>
-                      ))}
+                  {/* Ideas dinámicas - solo si hay ideas cargadas */}
+                  {dynamicIdeas.length > 0 && (
+                    <div className="mb-12">
+                      <div className="flex items-center justify-center gap-3">
+                        {dynamicIdeas.map((idea, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleDynamicIdea(idea)}
+                            disabled={isTaskCreating}
+                            className="flex items-center gap-2 px-4 py-2 bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.1)] rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Search className={`w-4 h-4 text-blue-400`} />
+                            <span className="text-sm text-[#DADADA]">{idea.title}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
