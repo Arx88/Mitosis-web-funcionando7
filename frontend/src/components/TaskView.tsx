@@ -5,9 +5,10 @@ import { ChatInterface } from './ChatInterface';
 import { ThinkingAnimation } from './ThinkingAnimation';
 import { FilesModal } from './FilesModal';
 import { ShareModal } from './ShareModal';
+import { AdvancedTaskManager } from './AdvancedTaskManager';
 import { agentAPI, FileItem } from '../services/api';
 import { useMemoryManager } from '../hooks/useMemoryManager';
-import { Star } from 'lucide-react';
+import { Star, Zap } from 'lucide-react';
 
 interface TaskViewProps {
   task: Task;
