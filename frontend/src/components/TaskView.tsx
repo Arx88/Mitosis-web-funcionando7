@@ -589,7 +589,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
       </div>
 
       {/* Terminal Section - llega hasta arriba */}
-      <div className="md:w-1/2 flex flex-col min-h-0">
+      <div className={`md:w-1/2 flex flex-col min-h-0 ${showAdvancedManager ? 'mt-64' : ''}`}>
         <div className="flex-1 min-h-0">
           <TerminalView 
             title="Ejecución de comandos" 
