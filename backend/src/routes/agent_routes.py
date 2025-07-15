@@ -467,32 +467,8 @@ def chat():
                     'result': {'error': str(e)}
                 })
         
-        # Generar respuesta con Ollama si no hay modo de búsqueda específico
-        if not search_mode:
-            response = ollama_service.generate_response(message, context, use_tools=True)
-            
-            # Ejecutar herramientas adicionales si Ollama las solicita
-            if response.get('tool_calls'):
-                for tool_call in response['tool_calls']:
-                    tool_name = tool_call.get('tool')
-                    parameters = tool_call.get('parameters', {})
-                    
-                    try:
-                        result = tool_manager.execute_tool(tool_name, parameters)
-                        tool_results.append({
-                            'tool': tool_name,
-                            'parameters': parameters,
-                            'result': result
-                        })
-                        
-                    except Exception as e:
-                        tool_results.append({
-                            'tool': tool_name,
-                            'parameters': parameters,
-                            'result': {'error': str(e)}
-                        })
-        else:
-            # Crear respuesta estructurada basada en los resultados de búsqueda
+        # Crear respuesta para search modes
+        if search_mode:
             if tool_results and tool_results[0]['result'].get('success'):
                 tool_result = tool_results[0]['result']
                 
@@ -566,17 +542,17 @@ def chat():
                     'response': f"❌ Error en la búsqueda: {error_msg}",
                     'model': f'{search_mode}-error'
                 }
-        
-        return jsonify({
-            'response': response.get('response', 'Sin respuesta'),
-            'tool_calls': response.get('tool_calls', []),
-            'tool_results': tool_results,
-            'created_files': created_files,
-            'search_mode': search_mode,
-            'search_data': response.get('search_data'),
-            'timestamp': datetime.now().isoformat(),
-            'model': response.get('model', 'unknown')
-        })
+            
+            return jsonify({
+                'response': response.get('response', 'Sin respuesta'),
+                'tool_calls': response.get('tool_calls', []),
+                'tool_results': tool_results,
+                'created_files': created_files,
+                'search_mode': search_mode,
+                'search_data': response.get('search_data'),
+                'timestamp': datetime.now().isoformat(),
+                'model': response.get('model', 'unknown')
+            })
         
     except Exception as e:
         return jsonify({
