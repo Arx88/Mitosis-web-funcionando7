@@ -127,7 +127,7 @@ def get_ollama_models():
 
 @agent_bp.route('/generate-plan', methods=['POST'])
 def generate_dynamic_plan():
-    """Generar plan dinámico específico para una tarea"""
+    """Generar plan dinámico REAL usando DynamicTaskPlanner"""
     try:
         data = request.get_json()
         task_title = data.get('task_title', '')
@@ -135,42 +135,54 @@ def generate_dynamic_plan():
         if not task_title:
             return jsonify({'error': 'task_title is required'}), 400
         
-        # Plan específico basado en el título de la tarea
-        if 'websearch' in task_title.lower() or 'web' in task_title.lower():
-            plan = [
-                {'id': 'step-1', 'title': 'Analizando consulta de búsqueda', 'completed': False, 'active': True},
-                {'id': 'step-2', 'title': 'Ejecutando búsqueda web', 'completed': False, 'active': False},
-                {'id': 'step-3', 'title': 'Procesando resultados', 'completed': False, 'active': False},
-                {'id': 'step-4', 'title': 'Generando resumen', 'completed': False, 'active': False},
-                {'id': 'step-5', 'title': 'Presentando información', 'completed': False, 'active': False}
-            ]
-        elif 'deepresearch' in task_title.lower() or 'investigación' in task_title.lower():
-            plan = [
-                {'id': 'step-1', 'title': 'Iniciando investigación profunda', 'completed': False, 'active': True},
-                {'id': 'step-2', 'title': 'Recopilando múltiples fuentes', 'completed': False, 'active': False},
-                {'id': 'step-3', 'title': 'Analizando información', 'completed': False, 'active': False},
-                {'id': 'step-4', 'title': 'Generando hallazgos', 'completed': False, 'active': False},
-                {'id': 'step-5', 'title': 'Creando informe final', 'completed': False, 'active': False}
-            ]
-        elif 'archivos' in task_title.lower() or 'archivo' in task_title.lower():
-            plan = [
-                {'id': 'step-1', 'title': 'Procesando archivos adjuntos', 'completed': False, 'active': True},
-                {'id': 'step-2', 'title': 'Analizando contenido', 'completed': False, 'active': False},
-                {'id': 'step-3', 'title': 'Extrayendo información', 'completed': False, 'active': False},
-                {'id': 'step-4', 'title': 'Generando resumen', 'completed': False, 'active': False},
-                {'id': 'step-5', 'title': 'Finalizando procesamiento', 'completed': False, 'active': False}
-            ]
-        else:
-            # Plan genérico pero personalizado
-            plan = [
-                {'id': 'step-1', 'title': f'Analizando: {task_title[:30]}...', 'completed': False, 'active': True},
-                {'id': 'step-2', 'title': 'Planificando ejecución', 'completed': False, 'active': False},
-                {'id': 'step-3', 'title': 'Ejecutando acciones', 'completed': False, 'active': False},
-                {'id': 'step-4', 'title': 'Verificando resultados', 'completed': False, 'active': False},
-                {'id': 'step-5', 'title': 'Completando tarea', 'completed': False, 'active': False}
-            ]
+        # Obtener servicios
+        tool_manager = current_app.tool_manager
         
-        return jsonify({'plan': plan})
+        # Usar DynamicTaskPlanner REAL para generar plan
+        from src.tools.dynamic_task_planner import get_dynamic_task_planner
+        dynamic_planner = get_dynamic_task_planner()
+        
+        # Crear plan dinámico real
+        import asyncio
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        try:
+            execution_plan = loop.run_until_complete(
+                dynamic_planner.create_dynamic_plan(
+                    task_id=f"plan_{int(time.time())}",
+                    task_description=task_title,
+                    context={
+                        'available_tools': tool_manager.get_available_tools() if tool_manager else [],
+                        'environment_state': {'initial_tools': tool_manager.get_available_tools() if tool_manager else []}
+                    }
+                )
+            )
+            
+            # Convertir ExecutionPlan a formato frontend
+            plan = []
+            for i, step in enumerate(execution_plan.steps):
+                plan.append({
+                    'id': step.id,
+                    'title': step.title,
+                    'description': step.description,
+                    'completed': False,
+                    'active': i == 0,  # Primer paso activo
+                    'tool': step.tool,
+                    'estimated_duration': step.estimated_duration,
+                    'complexity': step.complexity
+                })
+            
+            return jsonify({
+                'plan': plan,
+                'total_estimated_duration': execution_plan.total_estimated_duration,
+                'complexity_score': execution_plan.complexity_score,
+                'success_probability': execution_plan.success_probability,
+                'generated_dynamically': True
+            })
+            
+        finally:
+            loop.close()
         
     except Exception as e:
         return jsonify({
