@@ -65,34 +65,33 @@ Siempre explica lo que estás haciendo y por qué, para que el usuario pueda ent
   }
 };
 
-// Ideas sugeridas para el usuario - Más pequeñas y elegantes
-const suggestedIdeas = [
-  {
-    icon: Globe,
-    title: "Página web",
-    color: "text-blue-400"
-  },
-  {
-    icon: Presentation,
-    title: "Presentación",
-    color: "text-green-400"
-  },
-  {
-    icon: Smartphone,
-    title: "App",
-    color: "text-purple-400"
-  },
-  {
-    icon: Search,
-    title: "Investigación",
-    color: "text-orange-400"
-  },
-  {
-    icon: Gamepad2,
-    title: "Juego",
-    color: "text-red-400"
+// Función para generar ideas dinámicas basadas en contexto
+const generateDynamicIdeas = async () => {
+  try {
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+    
+    const response = await fetch(`${backendUrl}/api/agent/generate-suggestions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        context: { user_context: true, generate_dynamic_suggestions: true }
+      })
+    });
+
+    if (response.ok) {
+      const suggestionsData = await response.json();
+      return suggestionsData.suggestions || [];
+    } else {
+      console.warn('Failed to generate dynamic suggestions, using empty array');
+      return [];
+    }
+  } catch (error) {
+    console.error('Error generating dynamic suggestions:', error);
+    return [];
   }
-];
+};
 
 export function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
