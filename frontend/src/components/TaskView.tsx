@@ -580,23 +580,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={(e) => {
-                  console.log('🔬 Advanced Manager button clicked');
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowAdvancedManager(!showAdvancedManager);
-                }}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs transition-colors ${
-                  showAdvancedManager 
-                    ? 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400' 
-                    : 'bg-[#4A4A4C] hover:bg-[#5A5A5C] text-[#DADADA]'
-                }`}
-                title="Advanced Task Manager"
-              >
-                <Zap className="w-3 h-3" />
-                Advanced
-              </button>
+
               <button
                 onClick={(e) => {
                   console.log('🗂️ Files button clicked');
