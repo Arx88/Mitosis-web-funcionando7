@@ -230,6 +230,17 @@ class ExecutionEngine:
                 step_execution.status = StepStatus.SKIPPED
                 continue
             
+            # Crear checkpoint automático cada N pasos
+            if (self.config.get('auto_checkpoint', True) and 
+                i % self.config.get('checkpoint_frequency', 3) == 0 and 
+                i > 0):
+                self.context_manager.create_checkpoint(
+                    context.context_session_id,
+                    f"step_{i}",
+                    f"Auto checkpoint at step {i}",
+                    auto_created=True
+                )
+            
             # Ejecutar paso con reintentos
             success = await self._execute_step_with_retries(context, step_execution)
             
