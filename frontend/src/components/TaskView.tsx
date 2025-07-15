@@ -48,17 +48,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
     removeEventListeners,
   } = useWebSocket();
 
-  // 🚀 Estado del agente para mostrar progreso en tiempo real
-  const [agentStatus, setAgentStatus] = useState({
-    isExecuting: false,
-    currentStep: '',
-    totalSteps: 0,
-    completedSteps: 0,
-    executionTime: 0,
-    successRate: 0,
-    steps: [] as any[],
-    planUpdates: [] as any[],
-  });
   
   // 🚀 WebSocket Effects - Gestión de conexión y eventos
   useEffect(() => {
