@@ -196,6 +196,71 @@ def health_check():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@agent_bp.route('/ollama/check', methods=['POST'])
+def check_ollama_connection():
+    """Verificar conexión con un endpoint de Ollama específico"""
+    try:
+        data = request.get_json()
+        endpoint = data.get('endpoint')
+        
+        if not endpoint:
+            return jsonify({'error': 'endpoint is required'}), 400
+        
+        # Crear servicio temporal para verificar conexión
+        from src.services.ollama_service import OllamaService
+        temp_service = OllamaService(base_url=endpoint)
+        
+        is_healthy = temp_service.is_healthy()
+        
+        return jsonify({
+            'is_connected': is_healthy,
+            'endpoint': endpoint,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'is_connected': False,
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/ollama/models', methods=['POST'])
+def get_ollama_models():
+    """Obtener modelos de un endpoint de Ollama específico"""
+    try:
+        data = request.get_json()
+        endpoint = data.get('endpoint')
+        
+        if not endpoint:
+            return jsonify({'error': 'endpoint is required'}), 400
+        
+        # Crear servicio temporal para obtener modelos
+        from src.services.ollama_service import OllamaService
+        temp_service = OllamaService(base_url=endpoint)
+        
+        if not temp_service.is_healthy():
+            return jsonify({
+                'error': 'Cannot connect to Ollama endpoint',
+                'models': [],
+                'timestamp': datetime.now().isoformat()
+            }), 503
+        
+        models = temp_service.get_available_models()
+        
+        return jsonify({
+            'models': models,
+            'endpoint': endpoint,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'models': [],
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 @agent_bp.route('/deep-research/progress/<task_id>', methods=['GET'])
 def get_deep_research_progress(task_id):
     """Endpoint para obtener progreso de DeepResearch en tiempo real"""
