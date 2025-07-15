@@ -7,7 +7,11 @@ import os
 import requests
 from typing import Dict, Any, List
 from tavily import TavilyClient
-from duckduckgo_search import DDGS
+try:
+    from duckduckgo_search import DDGS
+except ImportError:
+    print("Warning: duckduckgo_search not available, using fallback")
+    DDGS = None
 from bs4 import BeautifulSoup
 import time
 from urllib.parse import urljoin, urlparse
