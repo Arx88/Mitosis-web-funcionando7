@@ -324,30 +324,31 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
     // Simulate agent response after a delay
     setTimeout(() => {
-      // If this is the first message, generate a plan
+      // If this is the first message, request dynamic plan from backend
       if (isFirstMessage) {
-        const plan = generatePlan();
-        
-        // Add terminal command
-        const terminalCommand: TerminalCommand = {
-          id: `cmd-${Date.now()}`,
-          command: `analyze "${content.replace(/"/g, '\\"')}"`,
-          status: 'completed'
-        };
+        // Request dynamic plan from backend
+        generateDynamicPlan(content).then(plan => {
+          // Add terminal command
+          const terminalCommand: TerminalCommand = {
+            id: `cmd-${Date.now()}`,
+            command: `analyze "${content.replace(/"/g, '\\"')}"`,
+            status: 'completed'
+          };
 
-        // Add agent response
-        const agentMessage: Message = {
-          id: `msg-${Date.now() + 1}`,
-          content: `He analizado tu tarea y he creado un plan para resolverla. Voy a comenzar a trabajar en ella ahora.`,
-          sender: 'agent',
-          timestamp: new Date()
-        };
+          // Add agent response
+          const agentMessage: Message = {
+            id: `msg-${Date.now() + 1}`,
+            content: `He analizado tu tarea y he creado un plan para resolverla. Voy a comenzar a trabajar en ella ahora.`,
+            sender: 'agent',
+            timestamp: new Date()
+          };
 
-        onUpdateTask({
-          ...updatedTask,
-          plan,
-          terminalCommands: [...updatedTask.terminalCommands, terminalCommand],
-          messages: [...updatedTask.messages, agentMessage]
+          onUpdateTask({
+            ...updatedTask,
+            plan,
+            terminalCommands: [...updatedTask.terminalCommands, terminalCommand],
+            messages: [...updatedTask.messages, agentMessage]
+          });
         });
       } else {
         // Add terminal command for subsequent messages
@@ -373,6 +374,35 @@ export const TaskView: React.FC<TaskViewProps> = ({
       }
       setIsTyping(false);
     }, 1500);
+  };
+
+  // Function to generate dynamic plan from backend
+  const generateDynamicPlan = async (taskContent: string) => {
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+      
+      const response = await fetch(`${backendUrl}/api/agent/generate-plan`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          task_title: taskContent,
+          context: { dynamic_planning: true }
+        })
+      });
+
+      if (response.ok) {
+        const planData = await response.json();
+        return planData.plan || [];
+      } else {
+        console.warn('Failed to generate dynamic plan from backend');
+        return [];
+      }
+    } catch (error) {
+      console.error('Error generating dynamic plan:', error);
+      return [];
+    }
   };
 
   const toggleTaskStep = (stepId: string) => {
