@@ -94,7 +94,7 @@ class DynamicTaskPlanner(TaskPlanner):
         logger.info(f"Creating dynamic plan for task: {task_id}")
         
         # Crear plan base usando TaskPlanner
-        base_plan = self.create_execution_plan(task_id, user_input, context or {})
+        base_plan = self.generate_execution_plan(task_id, user_input, user_input)
         
         # Inicializar contexto de ejecución
         execution_context = ExecutionContext(
