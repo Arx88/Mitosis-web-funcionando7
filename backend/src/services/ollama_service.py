@@ -5,13 +5,14 @@ Conecta directamente con Ollama para generar respuestas
 
 import json
 import time
+import os
 from typing import Dict, List, Optional, Any
 import requests
 from requests.exceptions import RequestException, Timeout
 
 class OllamaService:
-    def __init__(self, base_url: str = "http://localhost:11434"):
-        self.base_url = base_url
+    def __init__(self, base_url: str = None):
+        self.base_url = base_url or os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
         self.default_model = "llama3.2"
         self.current_model = None
         self.conversation_history = []
