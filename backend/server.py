@@ -54,8 +54,10 @@ print("🔌 Initializing WebSocket for real-time updates...")
 websocket_manager = initialize_websocket(app)
 print("✅ WebSocket initialized successfully")
 
-# Inicializar servicios
-ollama_service = OllamaService()
+# Inicializar servicios con configuración correcta
+ollama_base_url = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
+print(f"🧠 Inicializando Ollama con URL: {ollama_base_url}")
+ollama_service = OllamaService(base_url=ollama_base_url)
 tool_manager = ToolManager()
 database_service = DatabaseService()
 
