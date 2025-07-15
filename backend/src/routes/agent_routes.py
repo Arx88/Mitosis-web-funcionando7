@@ -311,7 +311,7 @@ def chat():
                     response_text = f"📋 **Plan de ejecución generado:**\n\n"
                     response_text += "\n".join(steps_summary)
                     response_text += f"\n\n⏱️ **Tiempo estimado:** {execution_plan.total_estimated_duration} segundos"
-                    response_text += f"\n📊 **Complejidad:** {execution_plan.complexity_score:.2f}/1.0"
+                    response_text += f"\n📊 **Complejidad:** {execution_plan.complexity_score:.2f}/10.0"
                     response_text += f"\n🎯 **Probabilidad de éxito:** {execution_plan.success_probability:.1%}"
                     
                     if execution_plan.risk_factors:
