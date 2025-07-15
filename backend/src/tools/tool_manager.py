@@ -23,15 +23,17 @@ from .container_manager import ContainerManager
 
 class ToolManager:
     def __init__(self):
-        # Inicializar herramientas con versiones mejoradas
+        # Inicializar herramientas con versiones REALES (no simuladas)
+        from .web_search_tool import WebSearchTool  # Importar herramienta real
+        
         self.tools = {
             'shell': ShellTool(),
-            'web_search': EnhancedWebSearchTool(),  # Usar versión mejorada
+            'web_search': WebSearchTool(),  # USAR HERRAMIENTA REAL
             'file_manager': FileManagerTool(),
             'tavily_search': TavilySearchTool(),
             'deep_research': DeepResearchTool(),  # Usar versión mejorada
             'comprehensive_research': ComprehensiveResearchTool(),
-            'enhanced_web_search': EnhancedWebSearchTool(),  # Alias para compatibilidad
+            'enhanced_web_search': WebSearchTool(),  # Usar herramienta real para compatibilidad
             'enhanced_deep_research': DeepResearchTool(),  # Alias para compatibilidad
             # Nuevas herramientas
             'firecrawl': FirecrawlTool(),
