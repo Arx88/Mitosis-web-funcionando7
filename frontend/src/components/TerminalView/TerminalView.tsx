@@ -273,6 +273,93 @@ export const TerminalView = ({
     }
   }, [externalLogs]);
 
+  // Procesar datos de ejecución del backend
+  useEffect(() => {
+    if (executionData && executionData.executed_tools) {
+      console.log('🔧 Processing execution data in terminal:', executionData);
+      
+      const newPages: MonitorPage[] = [];
+      
+      executionData.executed_tools.forEach((tool: any, index: number) => {
+        if (tool.result && tool.tool) {
+          // Crear página para cada herramienta ejecutada
+          const pageContent = generateBackendToolPageContent(tool);
+          
+          const toolPage: MonitorPage = {
+            id: `backend-tool-${tool.tool}-${index}`,
+            title: `${tool.tool.toUpperCase()} - Ejecutado por Backend`,
+            content: pageContent,
+            type: 'tool-execution',
+            timestamp: new Date(tool.timestamp || new Date()),
+            toolName: tool.tool,
+            toolParams: tool.parameters,
+            metadata: {
+              lineCount: pageContent.split('\n').length,
+              status: tool.success ? 'success' : 'error',
+              executionTime: tool.result?.execution_time || 0
+            }
+          };
+          
+          newPages.push(toolPage);
+        }
+      });
+      
+      if (newPages.length > 0) {
+        setMonitorPages(prev => [...prev, ...newPages]);
+        setPaginationStats(prev => ({
+          ...prev,
+          totalPages: prev.totalPages + newPages.length
+        }));
+        
+        // Agregar logs de terminal para mostrar la ejecución
+        const executionLogs = executionData.executed_tools.map((tool: any, index: number) => 
+          `[${new Date().toLocaleTimeString()}] ✅ ${tool.tool}: ${tool.success ? 'SUCCESS' : 'FAILED'} (${tool.result?.execution_time || 0}s)`
+        );
+        
+        setTerminalOutput(prev => [...prev, ...executionLogs]);
+      }
+    }
+  }, [executionData]);
+
+  const generateBackendToolPageContent = (tool: any): string => {
+    const timestamp = tool.timestamp || new Date().toISOString();
+    let content = `# Ejecución Backend: ${tool.tool.toUpperCase()}\n\n`;
+    content += `**Timestamp:** ${timestamp}\n`;
+    content += `**Status:** ${tool.success ? '✅ SUCCESS' : '❌ FAILED'}\n`;
+    content += `**Tiempo de ejecución:** ${tool.result?.execution_time || 0}s\n\n`;
+    
+    if (tool.parameters) {
+      content += `**Parámetros:**\n\`\`\`json\n${JSON.stringify(tool.parameters, null, 2)}\n\`\`\`\n\n`;
+    }
+    
+    if (tool.result) {
+      content += `**Resultado:**\n\`\`\`json\n${JSON.stringify(tool.result, null, 2)}\n\`\`\`\n\n`;
+    }
+    
+    // Procesamiento específico por herramienta
+    if (tool.tool === 'web_search' && tool.result?.results) {
+      content += `**Resultados de búsqueda:**\n`;
+      tool.result.results.forEach((result: any, index: number) => {
+        content += `${index + 1}. **${result.title}**\n`;
+        content += `   URL: ${result.url}\n`;
+        content += `   Snippet: ${result.snippet || 'N/A'}\n\n`;
+      });
+    } else if (tool.tool === 'shell' && tool.result?.stdout) {
+      content += `**Output:**\n\`\`\`bash\n${tool.result.stdout}\n\`\`\`\n`;
+      if (tool.result.stderr) {
+        content += `**Error:**\n\`\`\`bash\n${tool.result.stderr}\n\`\`\`\n`;
+      }
+    } else if (tool.tool === 'file_manager') {
+      content += `**Operación:** ${tool.parameters?.action || 'N/A'}\n`;
+      content += `**Archivo:** ${tool.parameters?.path || 'N/A'}\n`;
+      if (tool.result?.success) {
+        content += `**Resultado:** Operación completada exitosamente\n`;
+      }
+    }
+    
+    return content;
+  };
+
   const generateToolPageContent = (result: ToolResult): string => {
     const timestamp = new Date().toISOString();
     let content = `# Ejecución de Herramienta: ${result.tool.toUpperCase()}\n\n`;
