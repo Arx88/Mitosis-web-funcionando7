@@ -322,9 +322,8 @@ def chat():
             message = message.replace('[DeepResearch]', '').strip()
         
         # 🚀 NUEVO: Usar ExecutionEngine para tareas regulares (no WebSearch/DeepSearch)
-        # TEMPORARILY DISABLED - CALLING OLLAMA DIRECTLY
-        # if not search_mode and task_id:
-        if False and not search_mode and task_id:
+        # ENABLED FOR AUTONOMOUS EXECUTION
+        if not search_mode and task_id:
             try:
                 # Inicializar execution engine
                 global execution_engine
