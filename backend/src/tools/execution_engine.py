@@ -403,20 +403,191 @@ class ExecutionEngine:
         
         return True
     
-    async def _prepare_step_parameters(self, context: ExecutionContext, 
-                                     step: TaskStep) -> Dict[str, Any]:
-        """Preparar parámetros para un paso, resolviendo variables"""
+    async def _prepare_step_parameters_with_context(self, context: ExecutionContext, 
+                                                  step: TaskStep) -> Dict[str, Any]:
+        """Preparar parámetros para un paso, resolviendo variables del contexto"""
         
         parameters = step.parameters.copy()
         
-        # Resolver variables en parámetros
+        if not context.context_session_id:
+            return parameters
+        
+        # Resolver variables en parámetros usando context manager
         for key, value in parameters.items():
             if isinstance(value, str) and value.startswith('${') and value.endswith('}'):
                 var_name = value[2:-1]
-                if var_name in context.variables:
-                    parameters[key] = context.variables[var_name]
+                
+                # Buscar variable en context manager
+                context_value = self.context_manager.get_variable(
+                    context.context_session_id, var_name
+                )
+                
+                if context_value is not None:
+                    parameters[key] = context_value
+                else:
+                    # Fallback al contexto local
+                    if var_name in context.variables:
+                        parameters[key] = context.variables[var_name]
         
         return parameters
+    
+    async def _extract_and_store_variables(self, context: ExecutionContext, 
+                                         step: TaskStep, result: Dict[str, Any]):
+        """Extraer variables del resultado y guardarlas en context manager"""
+        
+        if not context.context_session_id:
+            return
+        
+        # Extraer paths de archivos creados
+        if step.tool == 'file_manager' and 'path' in result:
+            self.context_manager.set_variable(
+                context.context_session_id,
+                f"{step.id}_file_path",
+                result['path'],
+                VariableType.FILE_PATH,
+                ContextScope.STEP,
+                source_step=step.id
+            )
+        
+        # Extraer resultados de búsqueda
+        if step.tool in ['web_search', 'enhanced_web_search'] and 'search_results' in result:
+            self.context_manager.set_variable(
+                context.context_session_id,
+                f"{step.id}_search_results",
+                result['search_results'],
+                VariableType.RESULT,
+                ContextScope.STEP,
+                source_step=step.id
+            )
+        
+        # Extraer output de comandos shell
+        if step.tool == 'shell' and 'stdout' in result:
+            self.context_manager.set_variable(
+                context.context_session_id,
+                f"{step.id}_output",
+                result['stdout'],
+                VariableType.STRING,
+                ContextScope.STEP,
+                source_step=step.id
+            )
+        
+        # Guardar resultado completo
+        self.context_manager.set_variable(
+            context.context_session_id,
+            f"{step.id}_result",
+            result,
+            VariableType.RESULT,
+            ContextScope.STEP,
+            source_step=step.id
+        )
+        
+        # También mantener compatibilidad con el contexto local
+        context.variables[f"{step.id}_file_path"] = result.get('path')
+        context.variables[f"{step.id}_search_results"] = result.get('search_results')
+        context.variables[f"{step.id}_output"] = result.get('stdout')
+    
+    async def _initialize_context_variables(self, context: ExecutionContext, 
+                                          task_title: str, task_description: str):
+        """Inicializar variables de contexto para la tarea"""
+        
+        if not context.context_session_id:
+            return
+        
+        # Variables básicas de la tarea
+        self.context_manager.set_variable(
+            context.context_session_id,
+            "task_title",
+            task_title,
+            VariableType.STRING,
+            ContextScope.TASK
+        )
+        
+        self.context_manager.set_variable(
+            context.context_session_id,
+            "task_description",
+            task_description,
+            VariableType.STRING,
+            ContextScope.TASK
+        )
+        
+        self.context_manager.set_variable(
+            context.context_session_id,
+            "task_id",
+            context.task_id,
+            VariableType.STRING,
+            ContextScope.TASK
+        )
+        
+        self.context_manager.set_variable(
+            context.context_session_id,
+            "execution_start_time",
+            context.start_time.isoformat(),
+            VariableType.STRING,
+            ContextScope.TASK
+        )
+        
+        # Variables del plan de ejecución
+        self.context_manager.set_variable(
+            context.context_session_id,
+            "total_steps",
+            len(context.execution_plan.steps),
+            VariableType.NUMBER,
+            ContextScope.TASK
+        )
+        
+        self.context_manager.set_variable(
+            context.context_session_id,
+            "estimated_duration",
+            context.execution_plan.total_estimated_duration,
+            VariableType.NUMBER,
+            ContextScope.TASK
+        )
+    
+    async def _save_final_metrics(self, context: ExecutionContext):
+        """Guardar métricas finales en el contexto"""
+        
+        if not context.context_session_id:
+            return
+        
+        self.context_manager.set_variable(
+            context.context_session_id,
+            "final_status",
+            context.status.value,
+            VariableType.STRING,
+            ContextScope.TASK
+        )
+        
+        self.context_manager.set_variable(
+            context.context_session_id,
+            "success_rate",
+            context.success_rate,
+            VariableType.NUMBER,
+            ContextScope.TASK
+        )
+        
+        self.context_manager.set_variable(
+            context.context_session_id,
+            "total_execution_time",
+            context.total_execution_time,
+            VariableType.NUMBER,
+            ContextScope.TASK
+        )
+        
+        self.context_manager.set_variable(
+            context.context_session_id,
+            "completed_steps",
+            sum(1 for se in context.step_executions if se.status == StepStatus.COMPLETED),
+            VariableType.NUMBER,
+            ContextScope.TASK
+        )
+        
+        self.context_manager.set_variable(
+            context.context_session_id,
+            "failed_steps",
+            sum(1 for se in context.step_executions if se.status == StepStatus.FAILED),
+            VariableType.NUMBER,
+            ContextScope.TASK
+        )
     
     def _evaluate_step_result(self, result: Dict[str, Any]) -> bool:
         """Evaluar si el resultado de un paso indica éxito"""
