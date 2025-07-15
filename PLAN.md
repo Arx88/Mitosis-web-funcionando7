@@ -10,6 +10,22 @@ Este documento define la arquitectura completa para transformar el agente actual
 - Documenta completamente todo el proceso
 - Aprende y mejora continuamente
 
+## 🚨 REGLAS CRÍTICAS DE DESARROLLO
+
+### 📱 REGLA UI/UX INMUTABLE
+**REGLA FUNDAMENTAL**: La UI existente NO debe cambiarse. La funcionalidad debe integrarse en la interfaz actual sin modificaciones visuales.
+
+**PROTOCOLO DE CAMBIOS VISUALES**:
+1. **PROHIBIDO**: Cambiar elementos UI existentes sin autorización
+2. **OBLIGATORIO**: Preguntar al usuario antes de agregar cualquier elemento visual
+3. **PROTOCOLO**: Cuando sea necesario agregar algo visual:
+   - Describir qué existe actualmente
+   - Explicar qué se necesita agregar
+   - Proponer opciones de integración
+   - Solicitar autorización específica del usuario
+
+**IMPLEMENTACIÓN**: Toda nueva funcionalidad debe funcionar con la UI actual o integrarse de manera invisible al usuario.
+
 ## 🔍 ANÁLISIS DEL ESTADO ACTUAL
 
 ### ❌ PROBLEMAS IDENTIFICADOS
