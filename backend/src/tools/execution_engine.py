@@ -12,6 +12,7 @@ from enum import Enum
 from dataclasses import dataclass, asdict
 
 from .task_planner import TaskPlanner, ExecutionPlan, TaskStep
+from .dynamic_task_planner import DynamicTaskPlanner, get_dynamic_task_planner
 from .tool_manager import ToolManager
 from .environment_setup_manager import EnvironmentSetupManager
 from .context_manager import ContextManager, ContextScope, VariableType
