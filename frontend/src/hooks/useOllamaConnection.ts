@@ -81,19 +81,30 @@ export const useOllamaConnection = ({ endpoint, enabled }: UseOllamaConnectionPr
 
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
-      const response = await fetch(`${backendUrl}/api/agent/health`);
+      const response = await fetch(`${backendUrl}/api/agent/ollama/check`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          endpoint: endpoint
+        })
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      const ollamaHealthy = data.services?.ollama || false;
       
-      setIsConnected(ollamaHealthy);
+      if (data.error) {
+        throw new Error(data.error);
+      }
       
-      if (!ollamaHealthy && data.services?.ollama?.error) {
-        setError(data.services.ollama.error);
+      setIsConnected(data.is_connected);
+      
+      if (!data.is_connected) {
+        setError('No se pudo conectar con el endpoint de Ollama');
       }
     } catch (err) {
       console.error('Error checking Ollama connection:', err);
