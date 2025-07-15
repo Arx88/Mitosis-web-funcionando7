@@ -205,7 +205,7 @@ Response: Plan de 4 pasos generado automáticamente
 
 - ✅ Frontend: Funcionando correctamente con todas las correcciones aplicadas
 - ✅ Backend: Servicios corriendo sin problemas
-- ✅ Preview: Disponible en https://126a784e-c6a3-4410-b028-6f7b718118a9.preview.emergentagent.com
+- ✅ Preview: Disponible en https://a2ec56dc-8568-4bee-a627-28d26fd2f5f3.preview.emergentagent.com
 - ✅ Títulos: Espaciado corregido y funcionando
 - ✅ WebSearch: Toggle funcionando correctamente
 - ✅ Iconos: Visibles en pestañas activas
@@ -293,7 +293,7 @@ directory=/app/frontend
 **TESTING REQUEST**: Test the AgentStatusBar functionality in the Mitosis application to verify if the agent status bar appears above the chatbox input during task execution.
 
 **TESTING METHODOLOGY**:
-1. Navigated to https://126a784e-c6a3-4410-b028-6f7b718118a9.preview.emergentagent.com
+1. Navigated to https://a2ec56dc-8568-4bee-a627-28d26fd2f5f3.preview.emergentagent.com
 2. Created tasks to trigger AgentStatusBar functionality
 3. Monitored for different agent states during task execution
 4. Captured screenshots during task processing
@@ -432,7 +432,7 @@ command=serve -s dist -l 3000  # Sirve archivos estáticos de producción
 4. **Ollama Integration**: Verify real responses (not simulated)
 
 **TESTING METHODOLOGY**:
-1. Navigated to https://126a784e-c6a3-4410-b028-6f7b718118a9.preview.emergentagent.com
+1. Navigated to https://a2ec56dc-8568-4bee-a627-28d26fd2f5f3.preview.emergentagent.com
 2. Tested all core functionality systematically
 3. Monitored network requests to verify backend communication
 4. Captured screenshots throughout testing process
@@ -577,7 +577,7 @@ The Mitosis application successfully integrates with Ollama and provides the req
 
 - ✅ Frontend: Funcionando correctamente con todos los cambios aplicados
 - ✅ Backend: Servicios corriendo sin problemas
-- ✅ Preview: Disponible en https://126a784e-c6a3-4410-b028-6f7b718118a9.preview.emergentagent.com
+- ✅ Preview: Disponible en https://a2ec56dc-8568-4bee-a627-28d26fd2f5f3.preview.emergentagent.com
 - ✅ Sidebar: Centrado corregido y funcionando
 - ✅ Animación: Velocidad ajustada correctamente
 - ✅ Placeholder: Formato académico funcionando completamente
@@ -622,7 +622,7 @@ The Mitosis application successfully integrates with Ollama and provides the req
 2. **FILES button (ARCHIVOS) - UI Theme Issue**: The FilesModal should have a DARK/GRAY theme, not white
 
 **TESTING METHODOLOGY**:
-1. Navigated to https://126a784e-c6a3-4410-b028-6f7b718118a9.preview.emergentagent.com
+1. Navigated to https://a2ec56dc-8568-4bee-a627-28d26fd2f5f3.preview.emergentagent.com
 2. Created test task to access task view with the buttons
 3. Tested FAVORITES button star fill functionality
 4. Tested FILES button modal theme consistency
@@ -962,7 +962,7 @@ The app has significant infrastructure and functionality issues that prevent com
 5. **Production Mode Verification**: Verify frontend running in production mode
 
 **TESTING METHODOLOGY**:
-1. Navigated to https://126a784e-c6a3-4410-b028-6f7b718118a9.preview.emergentagent.com
+1. Navigated to https://a2ec56dc-8568-4bee-a627-28d26fd2f5f3.preview.emergentagent.com
 2. Tested each critical issue systematically for 30+ seconds stability monitoring
 3. Verified Ollama configuration with specific endpoint
 4. Tested task creation and processing functionality
@@ -1052,7 +1052,7 @@ The comprehensive testing confirms that the major critical issues reported have 
 6. Test endpoint configuration with "https://78d08925604a.ngrok-free.app"
 
 **TESTING METHODOLOGY**:
-1. Navigated to https://126a784e-c6a3-4410-b028-6f7b718118a9.preview.emergentagent.com
+1. Navigated to https://a2ec56dc-8568-4bee-a627-28d26fd2f5f3.preview.emergentagent.com
 2. Conducted comprehensive debugging of configuration panel functionality
 3. Tested configuration button click behavior and modal rendering
 4. Attempted to access Ollama configuration tab
@@ -1158,7 +1158,7 @@ Once these infrastructure issues are resolved, the Ollama configuration should b
 ### ✅ **TESTING REQUEST FULFILLED - COMPREHENSIVE OLLAMA CONFIGURATION ANALYSIS**
 
 **TESTING REQUEST**: Complete test of Ollama configuration functionality focusing on:
-1. Navigate to https://126a784e-c6a3-4410-b028-6f7b718118a9.preview.emergentagent.com
+1. Navigate to https://a2ec56dc-8568-4bee-a627-28d26fd2f5f3.preview.emergentagent.com
 2. Open configuration panel by clicking "Configuración"
 3. Go to "Ollama" tab
 4. Change endpoint from "http://localhost:11434" to "https://78d08925604a.ngrok-free.app"
