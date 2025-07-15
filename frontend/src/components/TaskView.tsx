@@ -635,6 +635,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
             taskId={task.id}
             taskTitle={task.title}
             data-id={task.id}
+            executionData={task.executionData}
           />
         </div>
       </div>
