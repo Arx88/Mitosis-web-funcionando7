@@ -266,6 +266,13 @@ def chat():
                     environment_manager=environment_setup_manager
                 )
                 
+                # 🔌 Obtener WebSocket manager y crear callbacks
+                from src.websocket.websocket_manager import get_websocket_manager
+                websocket_manager = get_websocket_manager()
+                
+                # Crear callbacks para WebSocket
+                callbacks = websocket_manager.create_execution_callbacks(task_id)
+                
                 # 🎯 EJECUCIÓN AUTÓNOMA: Ejecutar tarea con ExecutionEngine
                 # Ejecutar de manera asíncrona en un thread separado
                 import threading
@@ -275,14 +282,33 @@ def chat():
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
                     try:
+                        # Configurar callbacks del ExecutionEngine
+                        execution_engine.progress_callback = callbacks['progress_callback']
+                        execution_engine.completion_callback = callbacks['completion_callback']
+                        execution_engine.error_callback = callbacks['error_callback']
+                        
+                        # Ejecutar la tarea
                         result = loop.run_until_complete(
                             execution_engine.execute_task(task_id, message, message)
                         )
                         print(f"✅ Autonomous execution completed for task {task_id}")
                         print(f"📊 Status: {result.status.value}, Success rate: {result.success_rate}")
-                        # Aquí se podrían enviar updates via WebSocket al frontend
+                        
+                        # Enviar notificación de finalización via WebSocket
+                        websocket_manager.send_task_completed(
+                            task_id=task_id,
+                            success_rate=result.success_rate,
+                            total_execution_time=result.total_execution_time,
+                            summary=result.to_dict()
+                        )
                     except Exception as e:
                         print(f"❌ Autonomous execution failed for task {task_id}: {str(e)}")
+                        # Enviar notificación de error via WebSocket
+                        websocket_manager.send_task_failed(
+                            task_id=task_id,
+                            error=str(e),
+                            context={'execution_type': 'autonomous'}
+                        )
                     finally:
                         loop.close()
                 
@@ -293,10 +319,11 @@ def chat():
                 
                 # Respuesta inmediata para el frontend
                 return jsonify({
-                    'response': f'🤖 **Ejecución Autónoma Iniciada**\n\n**Tarea:** {message}\n\n🔄 El agente está analizando tu solicitud y ejecutando las acciones necesarias de forma autónoma...\n\n📋 **Proceso:**\n• Análisis de la tarea\n• Generación de plan de ejecución\n• Ejecución automática de pasos\n• Validación de resultados\n\n⏱️ **Estado:** Ejecutando en segundo plano\n\n*Los resultados aparecerán automáticamente cuando se complete la ejecución.*',
+                    'response': f'🤖 **Ejecución Autónoma Iniciada**\n\n**Tarea:** {message}\n\n🔄 El agente está analizando tu solicitud y ejecutando las acciones necesarias de forma autónoma...\n\n📋 **Proceso:**\n• Análisis de la tarea\n• Generación de plan de ejecución\n• Ejecución automática de pasos\n• Validación de resultados\n\n⏱️ **Estado:** Ejecutando en segundo plano\n\n*Los resultados aparecerán automáticamente cuando se complete la ejecución.*\n\n🔔 **Nota:** Los updates en tiempo real se mostrarán automáticamente en la interfaz.',
                     'autonomous_execution': True,
                     'task_id': task_id,
                     'execution_status': 'started',
+                    'websocket_enabled': True,
                     'timestamp': datetime.now().isoformat(),
                     'model': 'autonomous-agent'
                 })
