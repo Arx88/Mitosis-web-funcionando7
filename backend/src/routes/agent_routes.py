@@ -1793,3 +1793,129 @@ if __name__ == "__main__":
             'error': str(e),
             'timestamp': datetime.now().isoformat()
         }), 500
+
+@agent_bp.route('/generate-plan', methods=['POST'])
+def generate_dynamic_plan():
+    """Generar plan dinámico para una tarea usando IA"""
+    try:
+        data = request.get_json()
+        task_title = data.get('task_title', '')
+        
+        if not task_title:
+            return jsonify({'error': 'task_title is required'}), 400
+        
+        # Obtener servicios
+        ollama_service = current_app.ollama_service
+        
+        # Generar plan específico usando IA
+        plan_prompt = f"""
+        Genera un plan de acción específico para la tarea: "{task_title}"
+        
+        Devuelve exactamente 5 pasos específicos para esta tarea, no genéricos.
+        Formato JSON estricto:
+        {{
+            "plan": [
+                {{"id": "step-1", "title": "Paso específico 1", "completed": false, "active": true}},
+                {{"id": "step-2", "title": "Paso específico 2", "completed": false, "active": false}},
+                {{"id": "step-3", "title": "Paso específico 3", "completed": false, "active": false}},
+                {{"id": "step-4", "title": "Paso específico 4", "completed": false, "active": false}},
+                {{"id": "step-5", "title": "Paso específico 5", "completed": false, "active": false}}
+            ]
+        }}
+        """
+        
+        response = ollama_service.generate_response(plan_prompt)
+        
+        # Parsear respuesta JSON
+        import json
+        try:
+            if response and 'response' in response:
+                # Buscar JSON en la respuesta
+                response_text = response['response']
+                start_idx = response_text.find('{')
+                end_idx = response_text.rfind('}') + 1
+                
+                if start_idx != -1 and end_idx != -1:
+                    json_str = response_text[start_idx:end_idx]
+                    plan_data = json.loads(json_str)
+                    
+                    if 'plan' in plan_data:
+                        return jsonify(plan_data)
+        except:
+            pass
+        
+        # Plan de fallback
+        return jsonify({
+            'plan': [
+                {'id': 'step-1', 'title': 'Analizando la tarea', 'completed': False, 'active': True},
+                {'id': 'step-2', 'title': 'Generando plan de acción', 'completed': False, 'active': False},
+                {'id': 'step-3', 'title': 'Ejecutando acciones necesarias', 'completed': False, 'active': False},
+                {'id': 'step-4', 'title': 'Verificando resultados', 'completed': False, 'active': False},
+                {'id': 'step-5', 'title': 'Finalizando tarea', 'completed': False, 'active': False}
+            ]
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'plan': [
+                {'id': 'step-1', 'title': 'Analizando la tarea', 'completed': False, 'active': True},
+                {'id': 'step-2', 'title': 'Generando plan de acción', 'completed': False, 'active': False},
+                {'id': 'step-3', 'title': 'Ejecutando acciones necesarias', 'completed': False, 'active': False},
+                {'id': 'step-4', 'title': 'Verificando resultados', 'completed': False, 'active': False},
+                {'id': 'step-5', 'title': 'Finalizando tarea', 'completed': False, 'active': False}
+            ]
+        }), 200
+
+@agent_bp.route('/generate-suggestions', methods=['POST'])
+def generate_dynamic_suggestions():
+    """Generar sugerencias dinámicas usando IA"""
+    try:
+        # Obtener servicios
+        ollama_service = current_app.ollama_service
+        
+        # Generar sugerencias específicas usando IA
+        suggestions_prompt = """
+        Genera 3 sugerencias de tareas útiles y variadas para un usuario.
+        
+        Devuelve exactamente 3 sugerencias específicas y diferentes.
+        Formato JSON estricto:
+        {
+            "suggestions": [
+                {"title": "Sugerencia específica 1"},
+                {"title": "Sugerencia específica 2"},
+                {"title": "Sugerencia específica 3"}
+            ]
+        }
+        """
+        
+        response = ollama_service.generate_response(suggestions_prompt)
+        
+        # Parsear respuesta JSON
+        import json
+        try:
+            if response and 'response' in response:
+                # Buscar JSON en la respuesta
+                response_text = response['response']
+                start_idx = response_text.find('{')
+                end_idx = response_text.rfind('}') + 1
+                
+                if start_idx != -1 and end_idx != -1:
+                    json_str = response_text[start_idx:end_idx]
+                    suggestions_data = json.loads(json_str)
+                    
+                    if 'suggestions' in suggestions_data:
+                        return jsonify(suggestions_data)
+        except:
+            pass
+        
+        # Sugerencias de fallback (vacías para no mostrar placeholders)
+        return jsonify({
+            'suggestions': []
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'suggestions': []
+        }), 200
