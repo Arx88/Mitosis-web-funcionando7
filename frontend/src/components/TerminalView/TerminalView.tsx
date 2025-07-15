@@ -60,7 +60,8 @@ export const TerminalView = ({
   onInitializationComplete,
   onInitializationLog,
   taskId,
-  taskTitle
+  taskTitle,
+  executionData
 }: TerminalViewProps) => {
   const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
   const [isPlanExpanded, setIsPlanExpanded] = useState(true);
