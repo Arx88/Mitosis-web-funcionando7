@@ -127,7 +127,7 @@ def get_ollama_models():
 
 @agent_bp.route('/generate-plan', methods=['POST'])
 def generate_dynamic_plan():
-    """Generar plan dinámico REAL usando DynamicTaskPlanner"""
+    """Generar plan dinámico REAL usando TaskPlanner"""
     try:
         data = request.get_json()
         task_title = data.get('task_title', '')
@@ -138,51 +138,40 @@ def generate_dynamic_plan():
         # Obtener servicios
         tool_manager = current_app.tool_manager
         
-        # Usar DynamicTaskPlanner REAL para generar plan
-        from src.tools.dynamic_task_planner import get_dynamic_task_planner
-        dynamic_planner = get_dynamic_task_planner()
+        # Usar TaskPlanner estático para generar plan
+        # Esto es más confiable que DynamicTaskPlanner que tiene problemas de compatibilidad
+        from src.tools.task_planner import TaskPlanner
         
-        # Crear plan dinámico real
-        import asyncio
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        task_planner = TaskPlanner()
         
-        try:
-            execution_plan = loop.run_until_complete(
-                dynamic_planner.create_dynamic_plan(
-                    task_id=f"plan_{int(time.time())}",
-                    user_input=task_title,
-                    context={
-                        'available_tools': tool_manager.get_available_tools() if tool_manager else [],
-                        'environment_state': {'initial_tools': tool_manager.get_available_tools() if tool_manager else []}
-                    }
-                )
-            )
-            
-            # Convertir ExecutionPlan a formato frontend
-            plan = []
-            for i, step in enumerate(execution_plan.steps):
-                plan.append({
-                    'id': step.id,
-                    'title': step.title,
-                    'description': step.description,
-                    'completed': False,
-                    'active': i == 0,  # Primer paso activo
-                    'tool': step.tool,
-                    'estimated_duration': step.estimated_duration,
-                    'complexity': step.complexity
-                })
-            
-            return jsonify({
-                'plan': plan,
-                'total_estimated_duration': execution_plan.total_estimated_duration,
-                'complexity_score': execution_plan.complexity_score,
-                'success_probability': execution_plan.success_probability,
-                'generated_dynamically': True
+        # Generar plan usando el TaskPlanner base
+        execution_plan = task_planner.generate_execution_plan(
+            task_id=f"plan_{int(time.time())}",
+            task_title=task_title,
+            task_description=task_title
+        )
+        
+        # Convertir ExecutionPlan a formato frontend
+        plan = []
+        for i, step in enumerate(execution_plan.steps):
+            plan.append({
+                'id': step.id,
+                'title': step.title,
+                'description': step.description,
+                'completed': False,
+                'active': i == 0,  # Primer paso activo
+                'tool': step.tool,
+                'estimated_duration': step.estimated_duration,
+                'complexity': step.complexity
             })
-            
-        finally:
-            loop.close()
+        
+        return jsonify({
+            'plan': plan,
+            'total_estimated_duration': execution_plan.total_estimated_duration,
+            'complexity_score': execution_plan.complexity_score,
+            'success_probability': execution_plan.success_probability,
+            'generated_dynamically': True
+        })
         
     except Exception as e:
         return jsonify({
