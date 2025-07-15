@@ -51,6 +51,7 @@ class ExecutionContext:
     start_time: Optional[datetime] = None
     total_execution_time: float = 0.0
     success_rate: float = 0.0
+    context_session_id: Optional[str] = None  # ID de sesión del context manager
 
 class ExecutionEngine:
     def __init__(self, tool_manager: ToolManager, environment_manager: EnvironmentSetupManager):
