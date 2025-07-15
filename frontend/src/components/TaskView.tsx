@@ -6,8 +6,10 @@ import { ThinkingAnimation } from './ThinkingAnimation';
 import { FilesModal } from './FilesModal';
 import { ShareModal } from './ShareModal';
 import { AdvancedTaskManager } from './AdvancedTaskManager';
+import { AgentStatus } from './AgentStatus';
 import { agentAPI, FileItem } from '../services/api';
 import { useMemoryManager } from '../hooks/useMemoryManager';
+import { useWebSocket } from '../hooks/useWebSocket';
 import { Star, Zap } from 'lucide-react';
 
 interface TaskViewProps {
