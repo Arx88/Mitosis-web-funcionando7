@@ -41,7 +41,7 @@ CORS(app, resources={
         "origins": [
             "http://localhost:3000", 
             "http://localhost:5173",
-            "https://edd819d8-a446-4a57-868e-0c2773ae83d1.preview.emergentagent.com",
+            "https://59ea4fbb-5598-425d-819f-8a51bf5aa595.preview.emergentagent.com",
             "*"  # Allow all origins for now to fix connectivity issues
         ],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
