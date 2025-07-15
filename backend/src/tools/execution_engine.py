@@ -59,6 +59,7 @@ class ExecutionEngine:
         self.tool_manager = tool_manager
         self.environment_manager = environment_manager
         self.task_planner = TaskPlanner()
+        self.dynamic_task_planner = get_dynamic_task_planner()  # 🚀 Agregar planificador dinámico
         self.context_manager = ContextManager()  # Inicializar context manager
         
         # Configuración de ejecución
@@ -70,7 +71,9 @@ class ExecutionEngine:
             'fail_fast': False,
             'auto_recovery': True,
             'auto_checkpoint': True,  # Checkpoints automáticos
-            'checkpoint_frequency': 3  # Cada 3 pasos
+            'checkpoint_frequency': 3,  # Cada 3 pasos
+            'dynamic_planning': True,  # 🚀 Habilitar planificación dinámica
+            'context_monitoring': True  # 🚀 Monitoreo de contexto
         }
         
         # Contextos de ejecución activos
@@ -80,6 +83,12 @@ class ExecutionEngine:
         self.progress_callbacks: List[Callable] = []
         self.completion_callbacks: List[Callable] = []
         self.error_callbacks: List[Callable] = []
+        
+        # 🚀 Configurar callbacks del DynamicTaskPlanner
+        self.dynamic_task_planner.set_callbacks(
+            plan_update_callback=self._on_plan_updated,
+            context_change_callback=self._on_context_changed
+        )
     
     def add_progress_callback(self, callback: Callable):
         """Agregar callback para actualizaciones de progreso"""
