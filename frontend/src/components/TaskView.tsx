@@ -42,6 +42,28 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [showAdvancedManager, setShowAdvancedManager] = useState(false);
   const [advancedTaskData, setAdvancedTaskData] = useState<any>({});
   
+  // 🚀 WebSocket integration para updates en tiempo real
+  const {
+    socket,
+    isConnected,
+    joinTaskRoom,
+    leaveTaskRoom,
+    addEventListeners,
+    removeEventListeners,
+  } = useWebSocket();
+
+  // 🚀 Estado del agente para mostrar progreso en tiempo real
+  const [agentStatus, setAgentStatus] = useState({
+    isExecuting: false,
+    currentStep: '',
+    totalSteps: 0,
+    completedSteps: 0,
+    executionTime: 0,
+    successRate: 0,
+    steps: [] as any[],
+    planUpdates: [] as any[],
+  });
+  
   // Debug effects for modal states
   useEffect(() => {
     console.log('🗂️ FilesModal state changed:', showFilesModal);
