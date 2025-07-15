@@ -37,6 +37,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [showShareModal, setShowShareModal] = useState(false);
   const [taskFiles, setTaskFiles] = useState<FileItem[]>([]);
   const [terminalLogs, setTerminalLogs] = useState<Array<{message: string, type: 'info' | 'success' | 'error', timestamp: Date}>>([]);
+  const [showAdvancedManager, setShowAdvancedManager] = useState(false);
+  const [advancedTaskData, setAdvancedTaskData] = useState<any>({});
   
   // Debug effects for modal states
   useEffect(() => {
