@@ -245,43 +245,46 @@ export function App() {
     }));
   };
 
-  // Función para generar planes específicos según el tipo de tarea
-  const generateTaskPlan = (taskTitle: string) => {
-    if (taskTitle.includes('[WebSearch]')) {
-      return [
-        { id: 'ws-1', title: 'Inicializar búsqueda web', completed: true, active: false },
-        { id: 'ws-2', title: 'Analizar consulta del usuario', completed: true, active: false },
-        { id: 'ws-3', title: 'Realizar búsqueda en fuentes web', completed: true, active: false },
-        { id: 'ws-4', title: 'Procesar resultados encontrados', completed: true, active: false },
-        { id: 'ws-5', title: 'Generar resumen de resultados', completed: true, active: false }
-      ];
-    } else if (taskTitle.includes('[DeepResearch]')) {
-      return [
-        { id: 'dr-1', title: 'Preparar investigación profunda', completed: true, active: false },
-        { id: 'dr-2', title: 'Recopilar fuentes múltiples', completed: false, active: true },
-        { id: 'dr-3', title: 'Analizar contenido de fuentes', completed: false, active: false },
-        { id: 'dr-4', title: 'Sintetizar hallazgos clave', completed: false, active: false },
-        { id: 'dr-5', title: 'Generar reporte académico', completed: false, active: false }
-      ];
-    } else if (taskTitle.includes('Archivos adjuntos')) {
-      return [
-        { id: 'fa-1', title: 'Recibir archivos del usuario', completed: true, active: false },
-        { id: 'fa-2', title: 'Validar formato de archivos', completed: true, active: false },
-        { id: 'fa-3', title: 'Procesar contenido de archivos', completed: true, active: false },
-        { id: 'fa-4', title: 'Organizar archivos en sistema', completed: true, active: false },
-        { id: 'fa-5', title: 'Confirmar disponibilidad', completed: true, active: false }
-      ];
+// Función para generar planes dinámicos usando IA
+const generateDynamicTaskPlan = async (taskTitle: string) => {
+  try {
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+    
+    // Solicitar al backend generar un plan específico para esta tarea
+    const response = await fetch(`${backendUrl}/api/agent/generate-plan`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        task_title: taskTitle,
+        context: { dynamic_planning: true }
+      })
+    });
+
+    if (response.ok) {
+      const planData = await response.json();
+      return planData.plan || getDefaultTaskPlan();
     } else {
-      // Plan genérico para otras tareas
-      return [
-        { id: 'gen-1', title: 'Analizar la tarea', completed: false, active: true },
-        { id: 'gen-2', title: 'Investigar soluciones', completed: false, active: false },
-        { id: 'gen-3', title: 'Implementar solución', completed: false, active: false },
-        { id: 'gen-4', title: 'Verificar resultados', completed: false, active: false },
-        { id: 'gen-5', title: 'Presentar informe', completed: false, active: false }
-      ];
+      console.warn('Failed to generate dynamic plan, using default');
+      return getDefaultTaskPlan();
     }
-  };
+  } catch (error) {
+    console.error('Error generating dynamic plan:', error);
+    return getDefaultTaskPlan();
+  }
+};
+
+// Plan básico de respaldo
+const getDefaultTaskPlan = () => {
+  return [
+    { id: 'step-1', title: 'Analizando la tarea', completed: false, active: true },
+    { id: 'step-2', title: 'Generando plan de acción', completed: false, active: false },
+    { id: 'step-3', title: 'Ejecutando acciones necesarias', completed: false, active: false },
+    { id: 'step-4', title: 'Verificando resultados', completed: false, active: false },
+    { id: 'step-5', title: 'Finalizando tarea', completed: false, active: false }
+  ];
+};
 
   const handleSuggestedIdea = (idea: typeof suggestedIdeas[0]) => {
     createTask(idea.title);
