@@ -319,8 +319,8 @@ class ExecutionEngine:
         step_execution.start_time = datetime.now()
         
         try:
-            # Preparar parámetros del paso
-            parameters = await self._prepare_step_parameters(context, step)
+            # Preparar parámetros del paso usando context manager
+            parameters = await self._prepare_step_parameters_with_context(context, step)
             
             # Ejecutar herramienta
             result = self.tool_manager.execute_tool(
@@ -340,8 +340,28 @@ class ExecutionEngine:
             success = self._evaluate_step_result(result)
             
             if success:
-                # Extraer variables del resultado para pasos posteriores
-                await self._extract_variables_from_result(context, step, result)
+                # Extraer y guardar variables del resultado en context manager
+                await self._extract_and_store_variables(context, step, result)
+                
+                # Crear checkpoint del paso si fue exitoso
+                if self.config.get('auto_checkpoint', True):
+                    self.context_manager.create_checkpoint(
+                        context.context_session_id,
+                        step.id,
+                        f"Step {step.id} completed successfully",
+                        auto_created=True
+                    )
+            else:
+                # Guardar error en contexto
+                if context.context_session_id:
+                    self.context_manager.set_variable(
+                        context.context_session_id,
+                        f"{step.id}_error",
+                        result.get('error', 'Unknown error'),
+                        VariableType.STRING,
+                        ContextScope.STEP,
+                        source_step=step.id
+                    )
             
             return success
             
@@ -352,6 +372,17 @@ class ExecutionEngine:
                 step_execution.execution_time = (
                     step_execution.end_time - step_execution.start_time
                 ).total_seconds()
+            
+            # Guardar error en contexto
+            if context.context_session_id:
+                self.context_manager.set_variable(
+                    context.context_session_id,
+                    f"{step.id}_exception",
+                    str(e),
+                    VariableType.STRING,
+                    ContextScope.STEP,
+                    source_step=step.id
+                )
             
             return False
     
