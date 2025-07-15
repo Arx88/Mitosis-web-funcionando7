@@ -147,7 +147,15 @@ if __name__ == '__main__':
         print(f"   - {tool['name']}: {tool['description']}")
     
     print("🎯 Servidor listo para recibir conexiones")
-    app.run(host=HOST, port=PORT, debug=DEBUG)
+    
+    # 🚀 Ejecutar con SocketIO
+    socketio = websocket_manager.socketio
+    if socketio:
+        print("🔌 Starting server with WebSocket support...")
+        socketio.run(app, host=HOST, port=PORT, debug=DEBUG, allow_unsafe_werkzeug=True)
+    else:
+        print("⚠️  WebSocket not initialized, starting without WebSocket support")
+        app.run(host=HOST, port=PORT, debug=DEBUG)
 
 # Hacer disponible para uvicorn
 app = asgi_app
