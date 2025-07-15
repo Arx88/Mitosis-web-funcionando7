@@ -49,6 +49,9 @@ export const useOllamaConnection = ({ endpoint, enabled }: UseOllamaConnectionPr
 
       setModels(formattedModels);
       setIsConnected(true);
+      
+      // Also check connection when fetching models
+      await checkConnection();
     } catch (err) {
       console.error('Error fetching Ollama models:', err);
       setError(err instanceof Error ? err.message : 'Error desconocido');
