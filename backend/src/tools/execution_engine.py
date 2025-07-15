@@ -90,6 +90,16 @@ class ExecutionEngine:
             context_change_callback=self._on_context_changed
         )
     
+    def _on_plan_updated(self, plan_data: Dict[str, Any]):
+        """Callback para cuando se actualiza el plan de tareas"""
+        print(f"📋 Plan updated: {plan_data}")
+        # Aquí puedes agregar lógica para manejar actualizaciones del plan
+        
+    def _on_context_changed(self, context_data: Dict[str, Any]):
+        """Callback para cuando cambia el contexto de ejecución"""
+        print(f"🔄 Context changed: {context_data}")
+        # Aquí puedes agregar lógica para manejar cambios de contexto
+    
     def add_progress_callback(self, callback: Callable):
         """Agregar callback para actualizaciones de progreso"""
         self.progress_callbacks.append(callback)
