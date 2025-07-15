@@ -100,6 +100,16 @@ class ExecutionEngine:
             self.config.update(config)
         
         try:
+            # Crear sesión de contexto para la tarea
+            context_session_id = self.context_manager.create_session(
+                task_id, 
+                metadata={
+                    'task_title': task_title,
+                    'task_description': task_description,
+                    'created_by': 'execution_engine'
+                }
+            )
+            
             # Generar plan de ejecución
             execution_plan = self.task_planner.generate_execution_plan(
                 task_id, task_title, task_description
@@ -114,15 +124,38 @@ class ExecutionEngine:
                     for step in execution_plan.steps
                 ],
                 variables={},
-                start_time=datetime.now()
+                start_time=datetime.now(),
+                context_session_id=context_session_id
             )
             
             self.execution_contexts[task_id] = context
             
+            # Inicializar variables de contexto
+            await self._initialize_context_variables(context, task_title, task_description)
+            
+            # Crear checkpoint inicial
+            if self.config.get('auto_checkpoint', True):
+                checkpoint_id = self.context_manager.create_checkpoint(
+                    context_session_id,
+                    "initial",
+                    "Initial checkpoint before execution starts",
+                    auto_created=True
+                )
+                
+                # Guardar checkpoint ID en contexto
+                self.context_manager.set_variable(
+                    context_session_id,
+                    "initial_checkpoint_id",
+                    checkpoint_id,
+                    VariableType.STRING,
+                    ContextScope.TASK
+                )
+            
             # Notificar inicio
             await self._notify_progress(context, "execution_started", {
                 'plan': asdict(execution_plan),
-                'estimated_duration': execution_plan.total_estimated_duration
+                'estimated_duration': execution_plan.total_estimated_duration,
+                'context_session_id': context_session_id
             })
             
             # Ejecutar pasos según estrategia
@@ -150,6 +183,18 @@ class ExecutionEngine:
             else:
                 context.status = StepStatus.FAILED
             
+            # Crear checkpoint final
+            if self.config.get('auto_checkpoint', True):
+                self.context_manager.create_checkpoint(
+                    context_session_id,
+                    "final",
+                    f"Final checkpoint - Status: {context.status.value}, Success rate: {context.success_rate}",
+                    auto_created=True
+                )
+            
+            # Guardar métricas finales en contexto
+            await self._save_final_metrics(context)
+            
             # Notificar completación
             await self._notify_completion(context)
             
@@ -160,6 +205,16 @@ class ExecutionEngine:
             if task_id in self.execution_contexts:
                 context = self.execution_contexts[task_id]
                 context.status = StepStatus.FAILED
+                
+                # Crear checkpoint de error si existe sesión
+                if context.context_session_id:
+                    self.context_manager.create_checkpoint(
+                        context.context_session_id,
+                        "error",
+                        f"Error checkpoint: {str(e)}",
+                        auto_created=True
+                    )
+                
                 await self._notify_error(context, str(e))
             
             raise
