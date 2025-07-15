@@ -104,7 +104,7 @@ class ExecutionEngine:
     
     async def execute_task(self, task_id: str, task_title: str, 
                           task_description: str = "", config: Dict[str, Any] = None) -> ExecutionContext:
-        """Ejecutar una tarea completa de manera autónoma"""
+        """Ejecutar una tarea completa de manera autónoma con planificación dinámica"""
         
         if config:
             self.config.update(config)
@@ -120,10 +120,21 @@ class ExecutionEngine:
                 }
             )
             
-            # Generar plan de ejecución
-            execution_plan = self.task_planner.generate_execution_plan(
-                task_id, task_title, task_description
-            )
+            # 🚀 Generar plan de ejecución dinámico
+            if self.config.get('dynamic_planning', True):
+                execution_plan = await self.dynamic_task_planner.create_dynamic_plan(
+                    task_id, 
+                    f"{task_title}: {task_description}",
+                    {
+                        'available_tools': self.tool_manager.get_available_tools() if self.tool_manager else [],
+                        'environment_state': {'initial_tools': self.tool_manager.get_available_tools() if self.tool_manager else []}
+                    }
+                )
+            else:
+                # Fallback al planificador estático
+                execution_plan = self.task_planner.generate_execution_plan(
+                    task_id, task_title, task_description
+                )
             
             # Crear contexto de ejecución
             context = ExecutionContext(
