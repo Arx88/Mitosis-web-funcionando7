@@ -77,7 +77,7 @@ export const useOllamaConnection = ({ endpoint, enabled }: UseOllamaConnectionPr
       }
 
       const data = await response.json();
-      const ollamaHealthy = data.services?.ollama?.healthy || false;
+      const ollamaHealthy = data.services?.ollama || false;
       
       setIsConnected(ollamaHealthy);
       
