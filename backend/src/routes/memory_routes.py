@@ -278,7 +278,7 @@ def memory_analytics():
         return jsonify({'error': f'Failed to get analytics: {str(e)}'}), 500
 
 @memory_bp.route('/compress-memory', methods=['POST'])
-async def compress_memory():
+def compress_memory():
     """
     Comprimir memoria antigua para optimizar rendimiento
     """
@@ -292,7 +292,7 @@ async def compress_memory():
         compression_config = data.get('config', {})
         
         # Realizar compresión
-        result = await memory_manager.compress_old_memory(compression_config)
+        result = asyncio.run(memory_manager.compress_old_memory(compression_config))
         
         return jsonify({
             'success': True,
