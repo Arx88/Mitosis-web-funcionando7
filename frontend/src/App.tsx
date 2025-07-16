@@ -558,13 +558,13 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                                   timestamp: new Date()
                                 };
                                 
-                                // Crear respuesta limpia para el chat (sin información técnica)
-                                let cleanResponse = "He iniciado la ejecución de tu tarea. Puedes ver el progreso en el plan de acción y los detalles técnicos en el terminal.";
+                                // Usar la respuesta real del backend
+                                let cleanResponse = chatResponse.response || "He iniciado la ejecución de tu tarea. Puedes ver el progreso en el plan de acción y los detalles técnicos en el terminal.";
                                 
-                                // Si hay herramientas ejecutadas, proporcionar información de alto nivel
+                                // Si hay herramientas ejecutadas, proporcionar información adicional
                                 if (chatResponse.execution_plan && chatResponse.execution_plan.executed_tools) {
                                   const toolsCount = chatResponse.execution_plan.tools_count || 0;
-                                  cleanResponse = `He completado tu tarea ejecutando ${toolsCount} herramienta${toolsCount !== 1 ? 's' : ''} automáticamente. Los resultados están disponibles en el terminal.`;
+                                  cleanResponse += `\n\n**Herramientas ejecutadas:** ${toolsCount} herramienta${toolsCount !== 1 ? 's' : ''}.`;
                                 }
                                 
                                 const agentMessage = {
