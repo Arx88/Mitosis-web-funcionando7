@@ -753,7 +753,7 @@ Response: Plan de 4 pasos generado automáticamente
 
 - ✅ Frontend: Funcionando correctamente con todas las correcciones aplicadas
 - ✅ Backend: Servicios corriendo sin problemas
-- ✅ Preview: Disponible en https://d2e370a7-aa1d-452d-938e-6cb42088065c.preview.emergentagent.com
+- ✅ Preview: Disponible en https://e00b66eb-b13e-4f64-937b-c6a2a431ac25.preview.emergentagent.com
 - ✅ Títulos: Espaciado corregido y funcionando
 - ✅ WebSearch: Toggle funcionando correctamente
 - ✅ Iconos: Visibles en pestañas activas
@@ -841,7 +841,7 @@ directory=/app/frontend
 **TESTING REQUEST**: Test the AgentStatusBar functionality in the Mitosis application to verify if the agent status bar appears above the chatbox input during task execution.
 
 **TESTING METHODOLOGY**:
-1. Navigated to https://d2e370a7-aa1d-452d-938e-6cb42088065c.preview.emergentagent.com
+1. Navigated to https://e00b66eb-b13e-4f64-937b-c6a2a431ac25.preview.emergentagent.com
 2. Created tasks to trigger AgentStatusBar functionality
 3. Monitored for different agent states during task execution
 4. Captured screenshots during task processing
@@ -980,7 +980,7 @@ command=serve -s dist -l 3000  # Sirve archivos estáticos de producción
 4. **Ollama Integration**: Verify real responses (not simulated)
 
 **TESTING METHODOLOGY**:
-1. Navigated to https://d2e370a7-aa1d-452d-938e-6cb42088065c.preview.emergentagent.com
+1. Navigated to https://e00b66eb-b13e-4f64-937b-c6a2a431ac25.preview.emergentagent.com
 2. Tested all core functionality systematically
 3. Monitored network requests to verify backend communication
 4. Captured screenshots throughout testing process
@@ -1125,7 +1125,7 @@ The Mitosis application successfully integrates with Ollama and provides the req
 
 - ✅ Frontend: Funcionando correctamente con todos los cambios aplicados
 - ✅ Backend: Servicios corriendo sin problemas
-- ✅ Preview: Disponible en https://d2e370a7-aa1d-452d-938e-6cb42088065c.preview.emergentagent.com
+- ✅ Preview: Disponible en https://e00b66eb-b13e-4f64-937b-c6a2a431ac25.preview.emergentagent.com
 - ✅ Sidebar: Centrado corregido y funcionando
 - ✅ Animación: Velocidad ajustada correctamente
 - ✅ Placeholder: Formato académico funcionando completamente
@@ -1173,7 +1173,7 @@ agent_communication:
     - agent: "testing"
       message: "MITOSIS ACTION PLAN SYSTEM TESTING COMPLETED (July 2025) - REVIEW REQUEST FULFILLED: Conducted comprehensive testing of the improved Mitosis Action Plan system as requested in Spanish review. TESTING FOCUS: 1) **Generación de Planes Mejorados**: ✅ PARTIALLY WORKING (3/6 tests passed) - Generate-plan endpoint creates specific 3-6 step user-oriented plans for different task types (research, development, search, WebSearch, DeepSearch, comparison). Plans contain appropriate keywords and proper structure. 2) **Actualización de Progreso**: ✅ EXCELLENT (4/4 tests passed) - New endpoints /update-task-progress and /get-task-progress working perfectly. Agent can mark steps as completed and retrieve progress correctly. 3) **Integración con Chat**: ⚠️ PARTIAL (1/4 tests passed) - Chat endpoint executes tools but progress update integration has issues. Some tasks update progress correctly, others don't. WebSearch has DuckDuckGo errors, DeepSearch not executing tools. 4) **Diferentes Tipos de Tareas**: ✅ EXCELLENT (5/5 tests passed) - All task types generate specific plans: research (5 steps), development (5 steps), search (3 steps), WebSearch (4 steps), DeepSearch (4 steps). 5) **Verificación del Progreso**: ✅ WORKING (1/1 test passed) - Complete flow from plan generation → tool execution → progress update working. OVERALL RESULT: 14/20 tests passed (70% success rate). RECOMMENDATION: Core Action Plan functionality is working but needs improvements in chat integration and tool execution reliability. Progress tracking system is excellent."sation distinction. 3) **WebSearch Test**: ✅ SUCCESS - WebSearch functionality working with proper task creation and search results. 4) **Interface Elements**: ✅ ALL VERIFIED - Welcome message, input field, sidebar, plan panel all working correctly. CONCLUSION: Agent successfully distinguishes between normal conversation and tasks requiring planning/tool usage. Application is FULLY FUNCTIONAL."
     - agent: "testing"
-      message: "MITOSIS AGENT BEHAVIOR TESTING COMPLETED (July 2025) - REVIEW REQUEST FULFILLED: Tested Mitosis application at https://d2e370a7-aa1d-452d-938e-6cb42088065c.preview.emergentagent.com to verify agent behavior between normal conversation and task execution. FINDINGS: 1) **Application Loading**: ✅ FIXED - Initially had missing /generate-suggestions endpoint causing loading issues, fixed by adding endpoint to agent_routes.py. 2) **UI Elements**: ✅ ALL PRESENT - Welcome message 'Bienvenido a Mitosis', input field, sidebar, internal buttons (Adjuntar, Web, Deep, Voz) all visible and functional. 3) **Task Creation**: ✅ WORKING - Both simple greetings ('Hola') and complex tasks ('Desarrolla un sitio web para una tienda online') create tasks successfully. 4) **Agent Classification**: ✅ IMPLEMENTED - Backend has intelligent message classification system that distinguishes between 'discussion' mode (casual conversation) and 'agent' mode (complex tasks requiring tools). 5) **WebSearch Functionality**: ⚠️ PARTIAL - WebSearch button activates but send button becomes disabled, indicating potential input validation issue. CONCLUSION: Core agent behavior distinction is implemented in backend logic, but frontend task flow needs refinement for full demonstration of conversation vs task modes."sation differentiation, 3) **User Interface Test**: ✅ SUCCESS - Application loads properly with 'Bienvenido a Mitosis' and '¿Qué puedo hacer por ti?' titles, input field functional, buttons working, 4) **Backend Integration Test**: ✅ SUCCESS - Frontend communicates correctly with backend, tasks created in sidebar, agent responses generated, no critical errors detected. KEY FINDINGS: Agent successfully distinguishes between casual conversation (friendly response, no tools) and task execution (autonomous planning with tool execution). Application is stable, responsive, and fully functional. RECOMMENDATION: Application is PRODUCTION READY and meets all user requirements for conversation vs task differentiation."
+      message: "MITOSIS AGENT BEHAVIOR TESTING COMPLETED (July 2025) - REVIEW REQUEST FULFILLED: Tested Mitosis application at https://e00b66eb-b13e-4f64-937b-c6a2a431ac25.preview.emergentagent.com to verify agent behavior between normal conversation and task execution. FINDINGS: 1) **Application Loading**: ✅ FIXED - Initially had missing /generate-suggestions endpoint causing loading issues, fixed by adding endpoint to agent_routes.py. 2) **UI Elements**: ✅ ALL PRESENT - Welcome message 'Bienvenido a Mitosis', input field, sidebar, internal buttons (Adjuntar, Web, Deep, Voz) all visible and functional. 3) **Task Creation**: ✅ WORKING - Both simple greetings ('Hola') and complex tasks ('Desarrolla un sitio web para una tienda online') create tasks successfully. 4) **Agent Classification**: ✅ IMPLEMENTED - Backend has intelligent message classification system that distinguishes between 'discussion' mode (casual conversation) and 'agent' mode (complex tasks requiring tools). 5) **WebSearch Functionality**: ⚠️ PARTIAL - WebSearch button activates but send button becomes disabled, indicating potential input validation issue. CONCLUSION: Core agent behavior distinction is implemented in backend logic, but frontend task flow needs refinement for full demonstration of conversation vs task modes."sation differentiation, 3) **User Interface Test**: ✅ SUCCESS - Application loads properly with 'Bienvenido a Mitosis' and '¿Qué puedo hacer por ti?' titles, input field functional, buttons working, 4) **Backend Integration Test**: ✅ SUCCESS - Frontend communicates correctly with backend, tasks created in sidebar, agent responses generated, no critical errors detected. KEY FINDINGS: Agent successfully distinguishes between casual conversation (friendly response, no tools) and task execution (autonomous planning with tool execution). Application is stable, responsive, and fully functional. RECOMMENDATION: Application is PRODUCTION READY and meets all user requirements for conversation vs task differentiation."
 
 ---
 
@@ -1186,7 +1186,7 @@ agent_communication:
 2. **FILES button (ARCHIVOS) - UI Theme Issue**: The FilesModal should have a DARK/GRAY theme, not white
 
 **TESTING METHODOLOGY**:
-1. Navigated to https://d2e370a7-aa1d-452d-938e-6cb42088065c.preview.emergentagent.com
+1. Navigated to https://e00b66eb-b13e-4f64-937b-c6a2a431ac25.preview.emergentagent.com
 2. Created test task to access task view with the buttons
 3. Tested FAVORITES button star fill functionality
 4. Tested FILES button modal theme consistency
@@ -1526,7 +1526,7 @@ The app has significant infrastructure and functionality issues that prevent com
 5. **Production Mode Verification**: Verify frontend running in production mode
 
 **TESTING METHODOLOGY**:
-1. Navigated to https://d2e370a7-aa1d-452d-938e-6cb42088065c.preview.emergentagent.com
+1. Navigated to https://e00b66eb-b13e-4f64-937b-c6a2a431ac25.preview.emergentagent.com
 2. Tested each critical issue systematically for 30+ seconds stability monitoring
 3. Verified Ollama configuration with specific endpoint
 4. Tested task creation and processing functionality
@@ -1616,7 +1616,7 @@ The comprehensive testing confirms that the major critical issues reported have 
 6. Test endpoint configuration with "https://78d08925604a.ngrok-free.app"
 
 **TESTING METHODOLOGY**:
-1. Navigated to https://d2e370a7-aa1d-452d-938e-6cb42088065c.preview.emergentagent.com
+1. Navigated to https://e00b66eb-b13e-4f64-937b-c6a2a431ac25.preview.emergentagent.com
 2. Conducted comprehensive debugging of configuration panel functionality
 3. Tested configuration button click behavior and modal rendering
 4. Attempted to access Ollama configuration tab
@@ -1722,7 +1722,7 @@ Once these infrastructure issues are resolved, the Ollama configuration should b
 ### ✅ **TESTING REQUEST FULFILLED - COMPREHENSIVE OLLAMA CONFIGURATION ANALYSIS**
 
 **TESTING REQUEST**: Complete test of Ollama configuration functionality focusing on:
-1. Navigate to https://d2e370a7-aa1d-452d-938e-6cb42088065c.preview.emergentagent.com
+1. Navigate to https://e00b66eb-b13e-4f64-937b-c6a2a431ac25.preview.emergentagent.com
 2. Open configuration panel by clicking "Configuración"
 3. Go to "Ollama" tab
 4. Change endpoint from "http://localhost:11434" to "https://78d08925604a.ngrok-free.app"
@@ -1834,7 +1834,7 @@ Once these infrastructure issues are resolved, the Ollama configuration should b
 ### ✅ **TESTING REQUEST FULFILLED - AUTONOMOUS AGENT VERIFICATION**
 
 **TESTING REQUEST**: Test the Mitosis application's autonomous functionality by:
-1. **Application Load Test**: Verify the application loads correctly at https://d2e370a7-aa1d-452d-938e-6cb42088065c.preview.emergentagent.com
+1. **Application Load Test**: Verify the application loads correctly at https://e00b66eb-b13e-4f64-937b-c6a2a431ac25.preview.emergentagent.com
 2. **Task Creation Test**: Test creating a new task with the text "GENERA UN SITIO WEB sobre mascotas"
 3. **Agent Autonomy Test**: Verify the agent functions autonomously with real tool execution
 4. **Configuration Test**: Test the Ollama configuration with https://78d08925604a.ngrok-free.app
@@ -1970,7 +1970,7 @@ The Mitosis application successfully demonstrates true autonomous agent function
 - **Tool Execution**: ✅ Executes web_search, shell, and file_manager tools automatically
 
 #### ✅ **FRONTEND APPLICATION - FULLY FUNCTIONAL**:
-- **Application Load**: ✅ Loads successfully at https://d2e370a7-aa1d-452d-938e-6cb42088065c.preview.emergentagent.com
+- **Application Load**: ✅ Loads successfully at https://e00b66eb-b13e-4f64-937b-c6a2a431ac25.preview.emergentagent.com
 - **Task Creation**: ✅ Successfully creates task "GENERA UN SITIO WEB sobre mascotas"
 - **UI Functionality**: ✅ All core UI elements working (sidebar, modals, buttons, input fields)
 - **Configuration Panel**: ✅ Ollama configuration accessible and functional
