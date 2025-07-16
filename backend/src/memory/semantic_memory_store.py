@@ -24,12 +24,19 @@ class SemanticConcept:
     confidence: float = 1.0
     created_at: datetime = None
     updated_at: datetime = None
+    metadata: Dict[str, Any] = None  # Agregado para compatibilidad con rutas
     
     def __post_init__(self):
         if self.created_at is None:
             self.created_at = datetime.now()
         if self.updated_at is None:
             self.updated_at = datetime.now()
+        if self.metadata is None:
+            self.metadata = {}
+        
+        # Auto-generar ID si no se proporciona
+        if not self.id:
+            self.id = f"concept_{datetime.now().timestamp()}"
 
 @dataclass
 class SemanticFact:
