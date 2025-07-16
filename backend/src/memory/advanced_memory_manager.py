@@ -798,7 +798,7 @@ class AdvancedMemoryManager:
             
             # 1. Exportar memoria de trabajo
             working_contexts = []
-            for context_id, context_data in self.working_memory.contexts.items():
+            for context_id, context_data in self.working_memory.store.items():
                 working_contexts.append({
                     'id': context_id,
                     'data': context_data,
