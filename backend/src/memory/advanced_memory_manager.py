@@ -1240,7 +1240,8 @@ class AdvancedMemoryManager:
                     compression_stats['compressed_procedures'] += 1
             
             # 5. Limpiar memoria de trabajo antigua
-            self.working_memory.cleanup_old_contexts(threshold_date)
+            # Use the existing cleanup method
+            self.working_memory._cleanup_expired()
             
             compression_stats['completed_at'] = datetime.now().isoformat()
             compression_stats['total_space_saved_kb'] = compression_stats['space_saved'] / 1024
