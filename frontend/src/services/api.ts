@@ -62,6 +62,11 @@ export interface ChatResponse {
   search_data?: SearchData;
   upload_data?: UploadData;
   created_files?: any[];
+  // Nuevos campos para orquestación
+  orchestration_enabled?: boolean;
+  task_id?: string;
+  execution_status?: 'orchestrating' | 'completed' | 'failed';
+  websocket_enabled?: boolean;
 }
 
 export interface AgentStatus {
