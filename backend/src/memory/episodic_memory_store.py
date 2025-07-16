@@ -12,6 +12,7 @@ from dataclasses import dataclass
 logger = logging.getLogger(__name__)
 
 @dataclass
+@dataclass
 class Episode:
     """Representa un episodio en memoria"""
     id: str
@@ -26,9 +27,78 @@ class Episode:
     tags: List[str] = None
     importance: int = 3  # 1-5 scale
     
+    # Campos adicionales para compatibilidad con rutas
+    user_query: str = None
+    agent_response: str = None
+    tools_used: List[str] = None
+    metadata: Dict[str, Any] = None
+    
     def __post_init__(self):
         if self.tags is None:
             self.tags = []
+        if self.tools_used is None:
+            self.tools_used = []
+        if self.metadata is None:
+            self.metadata = {}
+        
+        # Auto-generar ID si no se proporciona
+        if not self.id:
+            self.id = f"ep_{datetime.now().timestamp()}"
+            
+        # Auto-generar timestamp si no se proporciona
+        if not self.timestamp:
+            self.timestamp = datetime.now()
+    
+    @classmethod
+    def from_chat_interaction(cls, user_query: str, agent_response: str, 
+                             success: bool, context: Dict[str, Any] = None, 
+                             tools_used: List[str] = None, importance: float = 0.5, 
+                             metadata: Dict[str, Any] = None):
+        """
+        Crear Episode desde interacción de chat
+        
+        Args:
+            user_query: Consulta del usuario
+            agent_response: Respuesta del agente
+            success: Si la interacción fue exitosa
+            context: Contexto adicional
+            tools_used: Herramientas utilizadas
+            importance: Importancia (0.0-1.0), se convertirá a escala 1-5
+            metadata: Metadatos adicionales
+        
+        Returns:
+            Episode: Nuevo episodio creado
+        """
+        episode_id = f"ep_{datetime.now().timestamp()}"
+        
+        # Convertir importancia de 0.0-1.0 a escala 1-5
+        importance_scale = max(1, min(5, int(importance * 5)))
+        
+        return cls(
+            id=episode_id,
+            title=f"Chat: {user_query[:50]}..." if len(user_query) > 50 else f"Chat: {user_query}",
+            description=f"Interacción de chat entre usuario y agente",
+            context=context or {},
+            actions=[{
+                'type': 'user_query',
+                'content': user_query,
+                'timestamp': datetime.now().isoformat()
+            }],
+            outcomes=[{
+                'type': 'agent_response',
+                'content': agent_response,
+                'success': success,
+                'timestamp': datetime.now().isoformat()
+            }],
+            timestamp=datetime.now(),
+            success=success,
+            tags=['chat', 'user_interaction'],
+            importance=importance_scale,
+            user_query=user_query,
+            agent_response=agent_response,
+            tools_used=tools_used or [],
+            metadata=metadata or {}
+        )
 
 class EpisodicMemoryStore:
     """Almacén de memoria episódica para experiencias y eventos"""
