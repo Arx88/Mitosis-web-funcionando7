@@ -106,7 +106,7 @@ def store_episode():
         return jsonify({'error': f'Failed to store episode: {str(e)}'}), 500
 
 @memory_bp.route('/store-knowledge', methods=['POST'])
-async def store_knowledge():
+def store_knowledge():
     """
     Almacenar conocimiento en memoria semántica
     """
