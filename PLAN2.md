@@ -67,39 +67,52 @@ El sistema de memoria es el **núcleo cognitivo INTERNO** que permite al agente:
 
 ---
 
-## 🎯 FASE ACTUAL: FASE 2 - OPTIMIZACIÓN Y EXPOSICIÓN DE MEMORIA
+## 🎯 FASE ACTUAL: COMPLETAR INTEGRACIÓN INTERNA DE MEMORIA
 
-### **PRIORIDAD INMEDIATA - PRÓXIMA SEMANA**
+### **PRIORIDAD INMEDIATA - PROBLEMA REAL A RESOLVER**
 
-#### **1. Optimización del Sistema de Memoria** 
-*Estado: REQUERIDO - Duración: 3-4 días*
+#### **1. Integración Automática del Sistema de Memoria con el Agente Principal** 
+*Estado: CRÍTICO - Duración: 2-3 días*
 
-**Tareas Específicas:**
+**PROBLEMA IDENTIFICADO:**
+El sistema de memoria está funcionando (88.9% éxito) pero **NO está integrado con el agente principal**. El agente no usa la memoria automáticamente cuando el usuario hace preguntas.
+
+**SOLUCIÓN REQUERIDA:**
 ```python
-# 1. Crear endpoints de memoria para frontend
-@memory_bp.route('/search', methods=['POST'])
-async def semantic_search():
-    """Búsqueda semántica en memoria"""
-    data = request.get_json()
-    query = data.get('query')
-    results = await memory_manager.semantic_search(query)
-    return jsonify(results)
-
-@memory_bp.route('/stats', methods=['GET'])
-async def memory_stats():
-    """Estadísticas del sistema de memoria"""
-    stats = await memory_manager.get_memory_stats()
-    return jsonify(stats)
+# En /app/backend/src/routes/agent_routes.py - Modificar chat endpoint
+@agent_bp.route('/chat', methods=['POST'])
+async def chat():
+    user_message = request.get_json().get('message')
+    
+    # 1. BUSCAR CONTEXTO RELEVANTE EN MEMORIA AUTOMÁTICAMENTE
+    memory_context = await memory_manager.retrieve_relevant_context(user_message)
+    
+    # 2. ENRIQUECER PROMPT CON CONTEXTO DE MEMORIA
+    enhanced_prompt = f"""
+    Contexto de memoria relevante:
+    {memory_context}
+    
+    Pregunta del usuario: {user_message}
+    """
+    
+    # 3. PROCESAR CON AGENTE ENRIQUECIDO
+    response = await agent_service.process_with_memory(enhanced_prompt)
+    
+    # 4. ALMACENAR NUEVA EXPERIENCIA EN MEMORIA AUTOMÁTICAMENTE
+    await memory_manager.store_episode({
+        'user_query': user_message,
+        'agent_response': response,
+        'success': True,
+        'context': memory_context
+    })
+    
+    return jsonify(response)
 ```
 
-**Archivos a crear/modificar:**
-- `/app/backend/src/routes/memory_routes.py` - Endpoints de memoria
-- `/app/backend/src/memory/advanced_memory_manager.py` - Optimizaciones de rendimiento
-- `/app/frontend/src/components/MemorySearchPanel.tsx` - UI de búsqueda semántica
-- `/app/frontend/src/components/MemoryDashboard.tsx` - Dashboard de memoria
-
-#### **2. Integración Frontend del Sistema de Memoria**
-*Estado: REQUERIDO - Duración: 2-3 días*
+**Archivos a modificar:**
+- `/app/backend/src/routes/agent_routes.py` - Integrar memoria en chat endpoint
+- `/app/backend/src/services/agent_service.py` - Usar contexto de memoria
+- `/app/backend/src/memory/advanced_memory_manager.py` - Completar métodos faltantes
 
 **Componentes a crear:**
 ```typescript
