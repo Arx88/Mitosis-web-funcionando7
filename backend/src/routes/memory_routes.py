@@ -161,7 +161,7 @@ def store_knowledge():
         return jsonify({'error': f'Failed to store knowledge: {str(e)}'}), 500
 
 @memory_bp.route('/store-procedure', methods=['POST'])
-async def store_procedure():
+def store_procedure():
     """
     Almacenar un procedimiento en memoria procedimental
     """
