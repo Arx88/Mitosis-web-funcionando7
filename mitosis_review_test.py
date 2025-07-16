@@ -312,9 +312,12 @@ def test_ollama_integration():
     )
     
     if response and response.status_code == 200:
-        data = response.json()
-        print(f"   Connection Status: {data.get('status', 'unknown')}")
-        print(f"   Endpoint: {data.get('endpoint', 'unknown')}")
+        try:
+            data = response.json()
+            print(f"   Connection Status: {data.get('status', 'unknown')}")
+            print(f"   Endpoint: {data.get('endpoint', 'unknown')}")
+        except:
+            print(f"   Response: {response.text[:200]}")
     
     # Test Ollama models endpoint
     response = run_test(
@@ -325,14 +328,24 @@ def test_ollama_integration():
     )
     
     if response and response.status_code == 200:
-        data = response.json()
-        models = data.get('models', [])
-        print(f"   Available Models: {len(models)}")
-        model_names = [model.get('name', 'unknown') for model in models]
-        expected_model_found = EXPECTED_MODEL in model_names
-        print(f"   Expected Model ({EXPECTED_MODEL}) Found: {expected_model_found}")
-        if models:
-            print(f"   Sample Models: {model_names[:3]}")
+        try:
+            data = response.json()
+            models = data.get('models', [])
+            print(f"   Available Models: {len(models)}")
+            if isinstance(models, list) and len(models) > 0:
+                model_names = []
+                for model in models:
+                    if isinstance(model, dict):
+                        model_names.append(model.get('name', 'unknown'))
+                    elif isinstance(model, str):
+                        model_names.append(model)
+                expected_model_found = EXPECTED_MODEL in model_names
+                print(f"   Expected Model ({EXPECTED_MODEL}) Found: {expected_model_found}")
+                if model_names:
+                    print(f"   Sample Models: {model_names[:3]}")
+        except Exception as e:
+            print(f"   Response parsing error: {e}")
+            print(f"   Response: {response.text[:200]}")
 
 def test_database_connection():
     """Test 6: Database Connection"""
