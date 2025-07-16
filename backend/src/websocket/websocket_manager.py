@@ -226,6 +226,18 @@ class WebSocketManager:
             'context': context or {},
             'message': f'Error: {error_message}'
         })
+    
+    def send_orchestration_progress(self, task_id: str, step_id: str, progress: float, 
+                                   current_step: str, total_steps: int):
+        """Send orchestration progress notification"""
+        self.send_update(task_id, UpdateType.TASK_PROGRESS, {
+            'step_id': step_id,
+            'progress': progress,
+            'current_step': current_step,
+            'total_steps': total_steps,
+            'execution_type': 'orchestration',
+            'message': f'Step {step_id}: {current_step} ({progress:.1f}%)'
+        })
         
     def get_active_connections(self) -> Dict[str, List[str]]:
         """Get active connections for debugging"""
