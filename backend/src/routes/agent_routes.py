@@ -529,7 +529,6 @@ async def chat():
                 # 🧠 ALMACENAR EN MEMORIA EPISÓDICA
                 try:
                     from src.memory.episodic_memory_store import Episode
-                    import uuid
                     
                     episode = Episode(
                         id=str(uuid.uuid4()),
