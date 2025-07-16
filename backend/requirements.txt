@@ -31,7 +31,7 @@ duckduckgo-search==6.1.12
 firecrawl-py==0.0.16
 
 # AI/ML Core Infrastructure
-torch==2.3.1+cpu --index-url https://download.pytorch.org/whl/cpu
+torch==2.3.1
 transformers==4.42.4
 sentence-transformers==3.0.1
 huggingface-hub==0.23.5
