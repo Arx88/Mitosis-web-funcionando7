@@ -213,8 +213,24 @@ class OllamaService:
             'tool_calls': tool_calls
         }
     
-    def _build_system_prompt(self, use_tools: bool) -> str:
+    def _build_system_prompt(self, use_tools: bool, conversation_mode: bool = False) -> str:
         """Construir prompt del sistema"""
+        
+        # Sistema prompt para conversación casual (sin planes ni herramientas)
+        if conversation_mode:
+            return """Eres un asistente de IA general llamado 'Agente General' que puede ayudar con una amplia variedad de tareas. 
+Eres inteligente, útil y amigable.
+
+IMPORTANTE: Estás en modo conversación casual. Responde de manera natural y amigable sin generar planes de acción ni mencionar herramientas.
+
+Para preguntas personales como "¿Cómo te llamas?", "¿Quién eres?", responde de manera simple y directa.
+Para saludos como "Hola", "¿Cómo estás?", responde amigablemente.
+Para agradecimientos como "Gracias", responde cortésmente.
+
+Mantén las respuestas breves, naturales y conversacionales.
+Responde en español de manera clara y amigable."""
+        
+        # Sistema prompt para tareas (con planes y herramientas)
         base_prompt = """Eres un asistente de IA general llamado 'Agente General' que puede ayudar con una amplia variedad de tareas. 
 Eres inteligente, útil y puedes usar herramientas para realizar acciones concretas.
 
