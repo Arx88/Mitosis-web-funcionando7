@@ -306,7 +306,7 @@ def compress_memory():
         return jsonify({'error': f'Failed to compress memory: {str(e)}'}), 500
 
 @memory_bp.route('/export-memory', methods=['GET'])
-async def export_memory():
+def export_memory():
     """
     Exportar datos de memoria para backup
     """
@@ -316,7 +316,7 @@ async def export_memory():
             return jsonify({'error': 'Memory manager not available'}), 503
             
         # Exportar todos los datos de memoria
-        export_data = await memory_manager.export_memory_data()
+        export_data = asyncio.run(memory_manager.export_memory_data())
         
         return jsonify({
             'success': True,
