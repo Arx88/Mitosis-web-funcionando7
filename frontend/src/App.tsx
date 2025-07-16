@@ -874,6 +874,39 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                                 // Generar plan específico para DeepResearch
                                 const deepResearchPlan = await generateDynamicTaskPlan(`[DeepResearch] ${inputText.trim()}`);
                                 
+                                // Marcar pasos como completados para DeepResearch
+                                const completedDeepResearchPlan = deepResearchPlan.map((step, index) => ({
+                                  ...step,
+                                  completed: true,
+                                  active: false
+                                }));
+                                
+                                // Actualizar progreso en el backend
+                                const updateDeepResearchProgress = async () => {
+                                  try {
+                                    const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+                                    for (let i = 0; i < deepResearchPlan.length; i++) {
+                                      const step = deepResearchPlan[i];
+                                      await fetch(`${backendUrl}/api/agent/update-task-progress`, {
+                                        method: 'POST',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                          task_id: newTask.id,
+                                          step_id: step.id,
+                                          completed: true
+                                        })
+                                      });
+                                    }
+                                  } catch (error) {
+                                    console.error('Error updating DeepResearch progress:', error);
+                                  }
+                                };
+                                
+                                // Actualizar progreso
+                                updateDeepResearchProgress();
+                                
                                 const userMessage = {
                                   id: `msg-${Date.now()}`,
                                   content: `[DeepResearch] ${inputText.trim()}`,
