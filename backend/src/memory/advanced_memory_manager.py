@@ -840,8 +840,9 @@ class AdvancedMemoryManager:
                     compression_stats['compressed_facts'] += 1
             
             # 4. Comprimir procedimientos antiguos
-            old_procedures = self.procedural_memory.get_procedures_before_date(threshold_date)
-            for procedure in old_procedures:
+            all_procedures = [proc for proc in self.procedural_memory.procedures.values() 
+                            if hasattr(proc, 'created_at') and proc.created_at < threshold_date]
+            for procedure in all_procedures:
                 if procedure.effectiveness_score < 0.5:  # Solo comprimir procedimientos poco efectivos
                     # Comprimir pasos
                     original_size = len(str(procedure.steps))
