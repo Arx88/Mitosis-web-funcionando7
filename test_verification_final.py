@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 from playwright.async_api import async_playwright
 
-FRONTEND_URL = "https://393dc488-f6c8-4f98-8f5b-703f3cfcbba9.preview.emergentagent.com"
+FRONTEND_URL = "https://99fe9a20-35fc-4d86-9ddc-f5a6c9a87c26.preview.emergentagent.com"
 
 class FileAttachmentVerificationTest:
     def __init__(self):
