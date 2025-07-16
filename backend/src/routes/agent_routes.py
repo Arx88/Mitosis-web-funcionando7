@@ -853,6 +853,80 @@ def search_memory():
             'timestamp': datetime.now().isoformat()
         }), 500
 
+@agent_bp.route('/memory/compress', methods=['POST'])
+def compress_memory():
+    """Comprime memoria antigua para optimizar almacenamiento"""
+    try:
+        data = request.get_json() or {}
+        compression_threshold_days = data.get('compression_threshold_days', 30)
+        compression_ratio = data.get('compression_ratio', 0.5)
+        
+        async def compress():
+            # Inicializar memoria si no está inicializada
+            if not memory_manager.is_initialized:
+                await memory_manager.initialize()
+            
+            # Comprimir memoria
+            result = await memory_manager.compress_old_memory(
+                compression_threshold_days=compression_threshold_days,
+                compression_ratio=compression_ratio
+            )
+            
+            return result
+        
+        # Ejecutar función asíncrona
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        result = loop.run_until_complete(compress())
+        loop.close()
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"Error comprimiendo memoria: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/memory/export', methods=['POST'])
+def export_memory():
+    """Exporta datos de memoria para respaldo o análisis"""
+    try:
+        data = request.get_json() or {}
+        export_format = data.get('export_format', 'json')
+        include_compressed = data.get('include_compressed', False)
+        output_file = data.get('output_file', None)
+        
+        async def export():
+            # Inicializar memoria si no está inicializada
+            if not memory_manager.is_initialized:
+                await memory_manager.initialize()
+            
+            # Exportar memoria
+            result = await memory_manager.export_memory_data(
+                export_format=export_format,
+                include_compressed=include_compressed,
+                output_file=output_file
+            )
+            
+            return result
+        
+        # Ejecutar función asíncrona
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        result = loop.run_until_complete(export())
+        loop.close()
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"Error exportando memoria: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 # Enhanced Agent Endpoints
 @agent_bp.route('/enhanced/status', methods=['GET'])
 def get_enhanced_status():
