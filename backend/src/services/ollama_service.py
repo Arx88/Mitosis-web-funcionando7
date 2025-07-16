@@ -110,7 +110,7 @@ class OllamaService:
         
         try:
             # Construir el prompt completo
-            system_prompt = self._build_system_prompt(use_tools)
+            system_prompt = self._build_system_prompt(use_tools, conversation_mode=False)
             full_prompt = self._build_full_prompt(prompt, context, system_prompt)
             
             # Hacer la llamada a Ollama
