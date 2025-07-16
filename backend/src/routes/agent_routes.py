@@ -35,8 +35,8 @@ task_files = {}
 # Inicializar componentes
 tool_manager = ToolManager()
 task_planner = TaskPlanner()
-execution_engine = ExecutionEngine()
 environment_setup_manager = EnvironmentSetupManager()
+execution_engine = ExecutionEngine(tool_manager, environment_setup_manager)
 
 # Nuevo sistema de orquestación avanzada
 from src.services.ollama_service import OllamaService
