@@ -631,24 +631,46 @@ Desarrolla una solución considerando:
     
     def get_enhanced_status(self) -> Dict[str, Any]:
         """Obtiene el estado mejorado del agente"""
-        base_status = self.get_status()
-        
-        enhanced_status = {
-            **base_status,
-            "cognitive_capabilities": {
-                "current_mode": self.cognitive_mode.value,
-                "learning_enabled": self.learning_enabled,
-                "reflection_threshold": self.reflection_threshold,
-                "prompt_optimization_enabled": self.prompt_optimization_enabled
-            },
-            "learning_metrics": asdict(self.learning_metrics),
-            "cognitive_stats": self.cognitive_stats.copy(),
-            "learned_patterns_count": len(self.learned_patterns),
-            "reflection_history_size": len(self.reflection_history),
-            "prompt_templates_count": len(self.prompt_templates)
-        }
-        
-        return enhanced_status
+        try:
+            base_status = self.get_status()
+            
+            # Convertir sets a lists para serialización JSON
+            def serialize_for_json(obj):
+                if isinstance(obj, set):
+                    return list(obj)
+                elif isinstance(obj, dict):
+                    return {k: serialize_for_json(v) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [serialize_for_json(item) for item in obj]
+                else:
+                    return obj
+            
+            enhanced_status = {
+                **serialize_for_json(base_status),
+                "cognitive_capabilities": {
+                    "current_mode": self.cognitive_mode.value,
+                    "learning_enabled": self.learning_enabled,
+                    "reflection_threshold": self.reflection_threshold,
+                    "prompt_optimization_enabled": self.prompt_optimization_enabled
+                },
+                "learning_metrics": serialize_for_json(asdict(self.learning_metrics)),
+                "cognitive_stats": serialize_for_json(self.cognitive_stats.copy()),
+                "learned_patterns_count": len(self.learned_patterns),
+                "reflection_history_size": len(self.reflection_history),
+                "prompt_templates_count": len(self.prompt_templates)
+            }
+            
+            return enhanced_status
+            
+        except Exception as e:
+            self.logger.error(f"Error en get_enhanced_status: {e}")
+            return {
+                "error": "Error obteniendo estado enhanced",
+                "basic_status": {
+                    "cognitive_mode": self.cognitive_mode.value,
+                    "learning_enabled": self.learning_enabled
+                }
+            }
 
 # Ejemplo de uso
 if __name__ == "__main__":
