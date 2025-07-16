@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List
 
 # Configuration
-BACKEND_URL = "https://cf1d418b-43ef-43f3-9905-14911ae3190a.preview.emergentagent.com"
+BACKEND_URL = "http://localhost:8001"
 API_BASE = f"{BACKEND_URL}/api"
 
 class MemoryManagerTester:
