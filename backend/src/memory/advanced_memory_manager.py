@@ -962,7 +962,7 @@ class AdvancedMemoryManager:
             # 6. Convertir a formato solicitado
             if export_format.lower() == 'json':
                 import json
-                formatted_data = json.dumps(export_data, indent=2, ensure_ascii=False)
+                formatted_data = json.dumps(export_data, indent=2, ensure_ascii=False, default=self._json_serializer)
             elif export_format.lower() == 'csv':
                 formatted_data = self._export_to_csv(export_data)
             elif export_format.lower() == 'xml':
