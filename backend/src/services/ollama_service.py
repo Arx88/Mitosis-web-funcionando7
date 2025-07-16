@@ -314,7 +314,7 @@ Herramientas disponibles:
             return
         
         try:
-            system_prompt = self._build_system_prompt(use_tools)
+            system_prompt = self._build_system_prompt(use_tools, conversation_mode=False)
             full_prompt = self._build_full_prompt(prompt, context, system_prompt)
             
             payload = {
