@@ -808,7 +808,7 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                                 const updatedTask = {
                                   ...newTask,
                                   messages: [userMessage, agentMessage],
-                                  plan: webSearchPlan, // Asignar plan específico
+                                  plan: completedWebSearchPlan, // Usar plan completado
                                   status: 'completed' as const, // WebSearch se completa inmediatamente
                                   progress: 100 // 100% porque todas las etapas del plan están completadas
                                 };
