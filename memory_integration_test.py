@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 """
-Memory System Integration Test Script for Mitosis Chat Endpoint
+Memory Integration Test Script for Mitosis Backend - REVIEW REQUEST FULFILLMENT
 
-This script tests the memory system integration in the Mitosis chat endpoint, focusing on:
-1. Memory Initialization - Check if memory_manager is properly initialized
-2. Context Retrieval - Test if chat endpoint can retrieve relevant context from previous conversations
-3. Episode Storage - Test if conversations are being stored in episodic memory correctly
-4. Memory System Status - Check overall status of memory system components
-5. Chat Integration - Test multiple conversations to see if memory integration is working transparently
+This script tests the updated memory integration in the chat endpoint, focusing on:
+1. Memory Initialization - verify memory_manager initializes correctly
+2. Context Retrieval - test that chat endpoint retrieves relevant context automatically
+3. Memory Storage - test that conversations are stored in episodic memory
+4. Enhanced Agent - test if enhanced agent is enabled and working
+5. Memory Usage Flag - verify memory_used flag is set correctly
+6. Memory Persistence - test multiple conversations for memory persistence
 
-Based on PLAN2.md, we recently fixed the memory initialization issue where memory_manager.is_initialized was always False.
-This test verifies if the fix is working and if the memory system is functioning correctly with the chat endpoint.
+Test endpoints:
+- POST /api/agent/chat (main chat endpoint)
+- POST /api/memory/retrieve_context (memory retrieval)
+- POST /api/memory/store_episode (memory storage)
 """
 
 import requests
@@ -19,29 +22,17 @@ import sys
 import uuid
 import time
 from datetime import datetime
-from pathlib import Path
 
 # Configuration
-# Get the backend URL from the frontend .env file
-try:
-    with open('/app/frontend/.env', 'r') as env_file:
-        for line in env_file:
-            if line.startswith('REACT_APP_BACKEND_URL='):
-                BASE_URL = line.strip().split('=', 1)[1].strip('"\'')
-                break
-        else:
-            BASE_URL = "http://localhost:8001"
-except Exception as e:
-    print(f"Error reading .env file: {e}")
-    BASE_URL = "http://localhost:8001"
+BASE_URL = "http://localhost:8001"
+API_PREFIX = "/api/agent"
+MEMORY_PREFIX = "/api/memory"
 
-API_PREFIX = "/api"
-
-print(f"🧠 MEMORY SYSTEM INTEGRATION TEST - MITOSIS CHAT ENDPOINT")
+print(f"🧠 MEMORY INTEGRATION TESTING - REVIEW REQUEST FULFILLMENT")
 print(f"Using backend URL: {BASE_URL}")
-print(f"Test started at: {datetime.now().isoformat()}")
+print(f"Testing memory integration in chat endpoint as requested in review")
 
-# Test results tracking
+# Test results
 test_results = {
     "timestamp": datetime.now().isoformat(),
     "tests": [],
