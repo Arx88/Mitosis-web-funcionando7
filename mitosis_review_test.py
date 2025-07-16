@@ -235,16 +235,25 @@ def test_chat_functionality():
         )
         
         if response and response.status_code == 200:
-            data = response.json()
-            memory_used = data.get('memory_used', False)
-            response_length = len(data.get('response', ''))
-            print(f"   Memory Used: {memory_used}")
-            print(f"   Response Length: {response_length} characters")
-            chat_results.append({
-                "message": test_msg["message"],
-                "memory_used": memory_used,
-                "response_length": response_length
-            })
+            try:
+                data = response.json()
+                memory_used = data.get('memory_used', False)
+                response_length = len(data.get('response', ''))
+                print(f"   Memory Used: {memory_used}")
+                print(f"   Response Length: {response_length} characters")
+                chat_results.append({
+                    "message": test_msg["message"],
+                    "memory_used": memory_used,
+                    "response_length": response_length
+                })
+            except:
+                print(f"   Response: {response.text[:200]}")
+                chat_results.append({
+                    "message": test_msg["message"],
+                    "memory_used": False,
+                    "response_length": len(response.text),
+                    "raw_response": True
+                })
         else:
             chat_results.append({
                 "message": test_msg["message"],
