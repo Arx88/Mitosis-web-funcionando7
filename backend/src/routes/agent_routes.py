@@ -615,6 +615,47 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                         agent_response = response_data.get('response', 'No se pudo generar respuesta')
                         logger.info(f"✅ Respuesta casual generada: '{agent_response[:100]}...'")
                         
+                        # 🧠 ALMACENAR EN MEMORIA EPISÓDICA - MODO DISCUSIÓN
+                        try:
+                            from src.memory.episodic_memory_store import Episode
+                            
+                            # Asegurar que la memoria está inicializada
+                            if not memory_manager.is_initialized:
+                                await memory_manager.initialize()
+                            
+                            episode = Episode(
+                                id=str(uuid.uuid4()),
+                                title=f"Conversación casual - {message[:50]}...",
+                                description=f"Usuario: {message}\nAgente: {agent_response}",
+                                context={
+                                    'user_message': message,
+                                    'agent_response': agent_response,
+                                    'session_id': session_id,
+                                    'task_id': task_id,
+                                    'mode': 'discussion',
+                                    'memory_context_used': bool(relevant_context),
+                                    'frontend_context': context
+                                },
+                                actions=[{
+                                    'type': 'user_message',
+                                    'content': message,
+                                    'timestamp': datetime.now().isoformat()
+                                }],
+                                outcomes=[{
+                                    'type': 'agent_response',
+                                    'content': agent_response,
+                                    'timestamp': datetime.now().isoformat()
+                                }],
+                                timestamp=datetime.now(),
+                                success=True,
+                                importance=2,  # Menor importancia para conversaciones casuales
+                                tags=['chat', 'conversation', 'discussion', 'casual']
+                            )
+                            await memory_manager.episodic_memory.store_episode(episode)
+                            logger.info(f"🧠 Episodio casual almacenado en memoria")
+                        except Exception as e:
+                            logger.warning(f"Error almacenando episodio casual: {e}")
+                        
                         return jsonify({
                             'response': agent_response,
                             'task_id': task_id,
