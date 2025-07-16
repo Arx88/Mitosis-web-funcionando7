@@ -1,0 +1,122 @@
+{
+  "timestamp": "2025-07-16T18:31:41.891532",
+  "tests": [
+    {
+      "name": "Backend Health Check",
+      "status": "PASSED",
+      "elapsed_time": 9.795493602752686,
+      "response_code": 200,
+      "response_data": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$Refres"
+    },
+    {
+      "name": "Agent Health Check",
+      "status": "FAILED",
+      "elapsed_time": 0.05063056945800781,
+      "response_code": 502,
+      "error": "Expected status 200, got 502",
+      "response_data": ""
+    },
+    {
+      "name": "Agent Status Check",
+      "status": "FAILED",
+      "elapsed_time": 7.512009382247925,
+      "response_code": 502,
+      "error": "Expected status 200, got 502",
+      "response_data": ""
+    },
+    {
+      "name": "Chat - Simple Conversation",
+      "status": "FAILED",
+      "elapsed_time": 6.9230217933654785,
+      "response_code": 502,
+      "error": "Expected status 200, got 502",
+      "response_data": ""
+    },
+    {
+      "name": "Chat - Task Execution",
+      "status": "FAILED",
+      "elapsed_time": 0.03874540328979492,
+      "response_code": 502,
+      "error": "Expected status 200, got 502",
+      "response_data": ""
+    },
+    {
+      "name": "Chat - WebSearch",
+      "status": "FAILED",
+      "elapsed_time": 7.514150381088257,
+      "response_code": 502,
+      "error": "Expected status 200, got 502",
+      "response_data": ""
+    },
+    {
+      "name": "Chat - DeepSearch",
+      "status": "FAILED",
+      "elapsed_time": 0.08765435218811035,
+      "response_code": 502,
+      "error": "Expected status 200, got 502",
+      "response_data": ""
+    },
+    {
+      "name": "Memory Analytics",
+      "status": "FAILED",
+      "elapsed_time": 0.015418767929077148,
+      "response_code": 502,
+      "error": "Expected status 200, got 502",
+      "response_data": ""
+    },
+    {
+      "name": "Memory Context Retrieval",
+      "status": "FAILED",
+      "elapsed_time": 0.039481401443481445,
+      "response_code": 502,
+      "error": "Expected status 200, got 502",
+      "response_data": ""
+    },
+    {
+      "name": "Ollama Connection Check",
+      "status": "FAILED",
+      "elapsed_time": 0.018732547760009766,
+      "response_code": 502,
+      "error": "Expected status 200, got 502",
+      "response_data": ""
+    },
+    {
+      "name": "Ollama Models List",
+      "status": "FAILED",
+      "elapsed_time": 0.02058863639831543,
+      "response_code": 502,
+      "error": "Expected status 200, got 502",
+      "response_data": ""
+    },
+    {
+      "name": "Database Stats",
+      "status": "FAILED",
+      "elapsed_time": 0.016707420349121094,
+      "response_code": 502,
+      "error": "Expected status 200, got 502",
+      "response_data": ""
+    },
+    {
+      "name": "Invalid Endpoint",
+      "status": "FAILED",
+      "elapsed_time": 0.02982807159423828,
+      "response_code": 502,
+      "error": "Expected status 404, got 502",
+      "response_data": ""
+    },
+    {
+      "name": "Invalid Chat Data",
+      "status": "FAILED",
+      "elapsed_time": 0.01675581932067871,
+      "response_code": 502,
+      "error": "Expected status 400, got 502",
+      "response_data": ""
+    }
+  ],
+  "summary": {
+    "total": 14,
+    "passed": 1,
+    "failed": 13,
+    "success_rate": 7.142857142857142
+  }
+}
