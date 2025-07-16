@@ -542,7 +542,7 @@ async def chat():
                         if any(pattern in message_lower for pattern in multi_step_indicators):
                             return 'agent'
                         
-                        # 6. MODO AGENTE - Herramientas avanzadas
+                        # 7. MODO AGENTE - Herramientas avanzadas
                         advanced_tools_patterns = [
                             # Programación y código
                             'código', 'code', 'script', 'programa', 'program', 'función', 'function',
