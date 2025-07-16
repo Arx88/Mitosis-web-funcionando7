@@ -134,7 +134,7 @@ async def store_knowledge():
                 confidence=data.get('confidence', 0.8),
                 metadata=data.get('metadata', {})
             )
-            await memory_manager.semantic_memory.store_concept(concept)
+            memory_manager.semantic_memory.store_concept(concept)
             stored_id = concept.id
             
         else:  # fact
