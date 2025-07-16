@@ -477,7 +477,25 @@ async def chat():
                             if not any(indicator in message_lower for indicator in complex_indicators):
                                 return 'discussion'
                         
-                        # 3. MODO DISCUSIÓN - Preguntas de búsqueda única
+                        # 3. MODO AGENTE - Tareas de listado y consulta de sistema
+                        system_task_patterns = [
+                            # Listado de archivos y directorios
+                            'lista', 'listar', 'mostrar', 'show', 'ver', 'view',
+                            'archivos', 'files', 'directorio', 'directories', 'folders', 'carpetas',
+                            
+                            # Comandos específicos
+                            'ls', 'dir', 'cd', 'pwd', 'find', 'locate', 'which', 'where',
+                            
+                            # Consultas de sistema
+                            'ejecuta', 'execute', 'run', 'comando', 'command',
+                            'procesos', 'processes', 'servicios', 'services', 'estado', 'status'
+                        ]
+                        
+                        # Si es tarea de sistema, usar modo agente
+                        if any(pattern in message_lower for pattern in system_task_patterns):
+                            return 'agent'
+                        
+                        # 4. MODO DISCUSIÓN - Preguntas de búsqueda única
                         single_search_patterns = [
                             # Preguntas directas que requieren una sola búsqueda
                             'quién ganó', 'who won', 'cuál es el', 'what is the', 'cuándo fue', 'when was',
