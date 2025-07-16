@@ -862,6 +862,68 @@ async def chat():
             'error': f'Error interno del servidor: {str(e)}'
         }), 500
 
+@agent_bp.route('/update-task-progress', methods=['POST'])
+def update_task_progress():
+    """Actualiza el progreso de una tarea - permite al agente marcar pasos como completados"""
+    try:
+        data = request.get_json() or {}
+        task_id = data.get('task_id', '')
+        step_id = data.get('step_id', '')
+        completed = data.get('completed', False)
+        
+        if not task_id or not step_id:
+            return jsonify({'error': 'task_id and step_id are required'}), 400
+        
+        # Almacenar progreso de la tarea (aquí podrías usar una base de datos)
+        # Por simplicidad, lo almacenaremos en memoria
+        if not hasattr(update_task_progress, 'task_progress'):
+            update_task_progress.task_progress = {}
+        
+        if task_id not in update_task_progress.task_progress:
+            update_task_progress.task_progress[task_id] = {}
+        
+        update_task_progress.task_progress[task_id][step_id] = {
+            'completed': completed,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        return jsonify({
+            'success': True,
+            'task_id': task_id,
+            'step_id': step_id,
+            'completed': completed,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error actualizando progreso: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/get-task-progress/<task_id>', methods=['GET'])
+def get_task_progress(task_id):
+    """Obtiene el progreso de una tarea específica"""
+    try:
+        if not hasattr(update_task_progress, 'task_progress'):
+            return jsonify({'task_progress': {}})
+        
+        task_progress = update_task_progress.task_progress.get(task_id, {})
+        
+        return jsonify({
+            'task_id': task_id,
+            'task_progress': task_progress,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo progreso: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 @agent_bp.route('/task/status/<task_id>', methods=['GET'])
 def get_task_status(task_id):
     """
