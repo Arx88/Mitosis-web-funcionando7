@@ -504,7 +504,7 @@ async def chat():
                         
                         # Generar respuesta normal usando Ollama (sin contexto previo para evitar confusión)
                         logger.info(f"🎯 Generando respuesta casual simple para: '{message}'")
-                        response_data = ollama_service.generate_response(message)
+                        response_data = ollama_service.generate_casual_response(message)
                         
                         if response_data.get('error'):
                             raise Exception(response_data['error'])
