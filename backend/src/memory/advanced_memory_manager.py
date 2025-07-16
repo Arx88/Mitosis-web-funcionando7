@@ -698,6 +698,65 @@ class AdvancedMemoryManager:
         except Exception as e:
             logger.error(f"Error indexando experiencia: {e}")
     
+    async def index_episode(self, episode):
+        """
+        Indexa un episodio específico para búsqueda semántica
+        
+        Args:
+            episode: Episodio a indexar
+        """
+        try:
+            # Crear contenido indexable del episodio
+            content_parts = []
+            
+            # Añadir título y descripción
+            content_parts.append(f"Título: {episode.title}")
+            content_parts.append(f"Descripción: {episode.description}")
+            
+            # Añadir contexto si existe
+            if episode.context:
+                user_message = episode.context.get('user_message', '')
+                agent_response = episode.context.get('agent_response', '')
+                
+                if user_message:
+                    content_parts.append(f"Usuario: {user_message}")
+                if agent_response:
+                    content_parts.append(f"Agente: {agent_response}")
+            
+            # Añadir acciones
+            for action in episode.actions:
+                if action.get('content'):
+                    content_parts.append(f"Acción: {action['content']}")
+            
+            # Añadir resultados
+            for outcome in episode.outcomes:
+                if outcome.get('content'):
+                    content_parts.append(f"Resultado: {outcome['content']}")
+            
+            # Añadir tags
+            if episode.tags:
+                content_parts.append(f"Tags: {', '.join(episode.tags)}")
+            
+            content = " | ".join(content_parts)
+            
+            # Indexar episodio
+            doc_id = f"episode_{episode.id}"
+            metadata = {
+                'type': 'episode',
+                'episode_id': episode.id,
+                'success': episode.success,
+                'importance': episode.importance,
+                'timestamp': episode.timestamp.isoformat(),
+                'category': 'conversation_episode',
+                'tags': episode.tags
+            }
+            
+            await self.semantic_indexer.add_document(doc_id, content, metadata)
+            logger.debug(f"Episodio {episode.id} indexado semánticamente")
+            
+        except Exception as e:
+            logger.error(f"Error indexando episodio {episode.id}: {e}")
+    
     async def _synthesize_context(self, context: Dict[str, Any]) -> str:
         """
         Sintetiza el contexto recuperado en un resumen útil
