@@ -502,14 +502,15 @@ async def chat():
                         # Es conversación normal - usar respuesta estándar del LLM
                         logger.info(f"💬 Conversación normal detectada - no ejecutar herramientas")
                         
-                        # Generar respuesta normal usando Ollama
-                        enhanced_message = message + relevant_context
-                        response_data = ollama_service.generate_response(enhanced_message)
+                        # Generar respuesta normal usando Ollama (sin contexto previo para evitar confusión)
+                        logger.info(f"🎯 Generando respuesta casual simple para: '{message}'")
+                        response_data = ollama_service.generate_response(message)
                         
                         if response_data.get('error'):
                             raise Exception(response_data['error'])
                         
                         agent_response = response_data.get('response', 'No se pudo generar respuesta')
+                        logger.info(f"✅ Respuesta casual generada: '{agent_response[:100]}...'")
                         
                         return jsonify({
                             'response': agent_response,
