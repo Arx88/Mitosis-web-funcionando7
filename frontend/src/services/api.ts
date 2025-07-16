@@ -177,6 +177,47 @@ export interface ContextCheckpoint {
   variables_count: number;
 }
 
+// Nuevas interfaces para orquestación
+export interface OrchestrationResult {
+  task_id: string;
+  success: boolean;
+  total_execution_time: number;
+  steps_completed: number;
+  steps_failed: number;
+  adaptations_made: number;
+  resource_usage: Record<string, any>;
+  error?: string;
+  execution_plan?: {
+    id: string;
+    title: string;
+    strategy: string;
+    total_steps: number;
+    estimated_duration: number;
+    complexity_score: number;
+    success_probability: number;
+  };
+}
+
+export interface OrchestrationStatus {
+  task_id: string;
+  status: 'planning' | 'executing' | 'completed' | 'failed' | 'cancelled';
+  progress: number;
+  start_time: number;
+  elapsed_time: number;
+  current_step?: string;
+  total_steps?: number;
+  context: Record<string, any>;
+}
+
+export interface OrchestrationMetrics {
+  total_tasks: number;
+  successful_tasks: number;
+  failed_tasks: number;
+  avg_execution_time: number;
+  success_rate: number;
+  active_tasks: number;
+}
+
 class AgentAPI {
   private baseUrl: string;
 
