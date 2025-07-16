@@ -424,7 +424,7 @@ async def chat():
                             'gracias', 'thank you', 'thanks', 'de nada', 'por favor', 'please',
                             'qué tal', 'cómo estás', 'how are you', 'how you doing', 'como estas',
                             'adiós', 'bye', 'goodbye', 'hasta luego', 'see you', 'nos vemos',
-                            'cómo te llamas', 'what is your name', 'what\'s your name', 'quien eres', 'who are you',
+                            'cómo te llamas', 'como te llamas', 'what is your name', 'what\'s your name', 'quien eres', 'who are you',
                             'ok', 'okay', 'bien', 'fine', 'good', 'bueno', 'vale', 'sí', 'yes', 'no',
                             'perfecto', 'perfect', 'excelente', 'excellent', 'genial', 'great'
                         ]
