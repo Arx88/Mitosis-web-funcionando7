@@ -206,3 +206,236 @@ async def get_orchestration_recommendations():
         return jsonify({
             'error': f'Error obteniendo recomendaciones: {str(e)}'
         }), 500
+
+@agent_bp.route('/chat', methods=['POST'])
+async def chat():
+    """
+    Endpoint principal para chat con integración de TaskOrchestrator
+    Mantiene compatibilidad con el frontend existente
+    """
+    try:
+        data = request.get_json()
+        message = data.get('message', '')
+        context = data.get('context', {})
+        search_mode = data.get('search_mode', None)
+        
+        if not message:
+            return jsonify({'error': 'Message is required'}), 400
+        
+        # Obtener task_id del contexto
+        task_id = context.get('task_id', str(uuid.uuid4()))
+        user_id = context.get('user_id', 'default_user')
+        session_id = context.get('session_id', str(uuid.uuid4()))
+        
+        # Detectar modo de búsqueda desde el mensaje
+        original_message = message
+        if message.startswith('[WebSearch]'):
+            search_mode = 'websearch'
+            message = message.replace('[WebSearch]', '').strip()
+        elif message.startswith('[DeepResearch]'):
+            search_mode = 'deepsearch'
+            message = message.replace('[DeepResearch]', '').strip()
+        
+        # 🚀 NUEVO: Usar TaskOrchestrator para tareas que no son WebSearch/DeepSearch específicas
+        if not search_mode:
+            try:
+                # Crear contexto de orquestación
+                orchestration_context = OrchestrationContext(
+                    task_id=task_id,
+                    user_id=user_id,
+                    session_id=session_id,
+                    task_description=message,
+                    priority=1,
+                    constraints=context.get('constraints', {}),
+                    preferences=context.get('preferences', {}),
+                    metadata={
+                        'original_message': original_message,
+                        'frontend_context': context,
+                        'execution_type': 'orchestrated'
+                    }
+                )
+                
+                # Configurar callbacks para WebSocket si está disponible
+                try:
+                    from src.websocket.websocket_manager import get_websocket_manager
+                    websocket_manager = get_websocket_manager()
+                    
+                    # Crear callbacks para notificaciones en tiempo real
+                    async def on_progress(step_id, result, execution_state):
+                        websocket_manager.send_orchestration_progress(
+                            task_id=task_id,
+                            step_id=step_id,
+                            progress=execution_state.get('progress', 0),
+                            current_step=execution_state.get('current_step', 'Processing...'),
+                            total_steps=execution_state.get('total_steps', 1)
+                        )
+                    
+                    async def on_complete(result):
+                        websocket_manager.send_task_completed(
+                            task_id=task_id,
+                            success_rate=result.success_rate if hasattr(result, 'success_rate') else 1.0,
+                            total_execution_time=result.get('execution_time', 0),
+                            summary=result
+                        )
+                    
+                    async def on_error(error_data):
+                        websocket_manager.send_task_failed(
+                            task_id=task_id,
+                            error=str(error_data.get('error', 'Unknown error')),
+                            context={'execution_type': 'orchestrated'}
+                        )
+                    
+                    # Configurar callbacks del orquestador
+                    task_orchestrator.add_callback('on_progress', on_progress)
+                    task_orchestrator.add_callback('on_complete', on_complete)
+                    task_orchestrator.add_callback('on_error', on_error)
+                    
+                except ImportError:
+                    logger.warning("WebSocket manager not available, continuing without real-time updates")
+                
+                # Ejecutar orquestación de manera asíncrona
+                import threading
+                
+                def run_orchestration():
+                    """Ejecutar orquestación en thread separado"""
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        result = loop.run_until_complete(
+                            task_orchestrator.orchestrate_task(orchestration_context)
+                        )
+                        logger.info(f"✅ Orchestration completed for task {task_id}")
+                        logger.info(f"📊 Success: {result.success}, Steps: {result.steps_completed}/{result.steps_completed + result.steps_failed}")
+                        
+                    except Exception as e:
+                        logger.error(f"❌ Orchestration failed for task {task_id}: {str(e)}")
+                    finally:
+                        loop.close()
+                
+                # Iniciar orquestación en background
+                orchestration_thread = threading.Thread(target=run_orchestration)
+                orchestration_thread.daemon = True
+                orchestration_thread.start()
+                
+                # Respuesta inmediata para el frontend
+                return jsonify({
+                    'response': f'🤖 **Orquestación Avanzada Iniciada**\n\n**Tarea:** {message}\n\n🔄 El agente está analizando tu solicitud usando el sistema de orquestación avanzada...\n\n📋 **Proceso:**\n• Análisis jerárquico de la tarea\n• Planificación adaptativa\n• Resolución de dependencias\n• Ejecución con recuperación de errores\n• Gestión de recursos\n\n⏱️ **Estado:** Ejecutando con orquestación\n\n*Los resultados aparecerán automáticamente cuando se complete la ejecución.*\n\n🔔 **Nota:** Updates en tiempo real via WebSocket habilitados.',
+                    'orchestration_enabled': True,
+                    'task_id': task_id,
+                    'execution_status': 'orchestrating',
+                    'websocket_enabled': True,
+                    'timestamp': datetime.now().isoformat(),
+                    'model': 'orchestrated-agent'
+                })
+                
+            except Exception as e:
+                logger.error(f"❌ Error in orchestration: {str(e)}")
+                # Fallback a ejecución regular
+                
+        # 🔄 FALLBACK: Usar sistema anterior para WebSearch/DeepSearch o si falla orquestación
+        
+        # Obtener servicios del contexto de aplicación
+        from flask import current_app
+        ollama_service = current_app.ollama_service
+        tool_manager = current_app.tool_manager
+        database_service = current_app.database_service
+        
+        # Manejo de WebSearch
+        if search_mode == 'websearch':
+            try:
+                # Ejecutar búsqueda web
+                search_result = tool_manager.execute_tool(
+                    'web_search',
+                    {'query': message},
+                    task_id=task_id
+                )
+                
+                # Procesar resultado
+                if search_result.get('error'):
+                    raise Exception(search_result['error'])
+                
+                # Formatear respuesta
+                response = f"🔍 **Resultados de Búsqueda Web**\n\n"
+                response += f"**Consulta:** {message}\n\n"
+                
+                if search_result.get('results'):
+                    response += "📋 **Resultados encontrados:**\n\n"
+                    for i, result in enumerate(search_result['results'][:5], 1):
+                        response += f"**{i}. {result.get('title', 'Sin título')}**\n"
+                        response += f"🔗 {result.get('url', 'Sin URL')}\n"
+                        response += f"📝 {result.get('snippet', 'Sin descripción')}\n\n"
+                
+                return jsonify({
+                    'response': response,
+                    'search_results': search_result.get('results', []),
+                    'task_id': task_id,
+                    'search_mode': 'websearch',
+                    'timestamp': datetime.now().isoformat()
+                })
+                
+            except Exception as e:
+                logger.error(f"Error in web search: {str(e)}")
+                return jsonify({
+                    'error': f'Error en búsqueda web: {str(e)}'
+                }), 500
+        
+        # Manejo de DeepSearch
+        elif search_mode == 'deepsearch':
+            try:
+                # Ejecutar investigación profunda
+                research_result = tool_manager.execute_tool(
+                    'deep_research',
+                    {'query': message},
+                    task_id=task_id
+                )
+                
+                # Procesar resultado
+                if research_result.get('error'):
+                    raise Exception(research_result['error'])
+                
+                # Formatear respuesta
+                response = f"🔬 **Investigación Profunda Completada**\n\n"
+                response += f"**Tema:** {message}\n\n"
+                response += research_result.get('summary', 'No hay resumen disponible')
+                
+                return jsonify({
+                    'response': response,
+                    'research_data': research_result,
+                    'task_id': task_id,
+                    'search_mode': 'deepsearch',
+                    'timestamp': datetime.now().isoformat()
+                })
+                
+            except Exception as e:
+                logger.error(f"Error in deep research: {str(e)}")
+                return jsonify({
+                    'error': f'Error en investigación profunda: {str(e)}'
+                }), 500
+        
+        # Manejo de chat regular (fallback)
+        else:
+            try:
+                # Generar respuesta usando Ollama
+                response_data = ollama_service.generate_response(message)
+                
+                if response_data.get('error'):
+                    raise Exception(response_data['error'])
+                
+                return jsonify({
+                    'response': response_data.get('response', 'No se pudo generar respuesta'),
+                    'task_id': task_id,
+                    'model': response_data.get('model', 'unknown'),
+                    'timestamp': datetime.now().isoformat()
+                })
+                
+            except Exception as e:
+                logger.error(f"Error in regular chat: {str(e)}")
+                return jsonify({
+                    'error': f'Error generando respuesta: {str(e)}'
+                }), 500
+        
+    except Exception as e:
+        logger.error(f"Error general en chat: {str(e)}")
+        return jsonify({
+            'error': f'Error interno del servidor: {str(e)}'
+        }), 500
