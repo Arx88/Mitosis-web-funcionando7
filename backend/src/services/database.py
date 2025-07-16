@@ -32,6 +32,30 @@ class DatabaseService:
             
         except Exception as e:
             print(f"❌ Error connecting to MongoDB: {e}")
+    
+    def check_connection(self) -> Dict[str, Any]:
+        """Verificar conexión con MongoDB y retornar información detallada"""
+        try:
+            # Probar conexión
+            self.client.admin.command('ping')
+            
+            # Obtener información de la base de datos
+            db_stats = self.db.command('dbstats')
+            
+            return {
+                'status': 'connected',
+                'database': self.db.name,
+                'collections': len(self.db.list_collection_names()),
+                'size_mb': round(db_stats.get('dataSize', 0) / (1024 * 1024), 2),
+                'healthy': True
+            }
+            
+        except Exception as e:
+            return {
+                'status': 'error',
+                'error': str(e),
+                'healthy': False
+            }
             
     def create_indexes(self):
         """Crear índices para optimizar consultas"""
