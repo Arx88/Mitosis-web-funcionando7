@@ -810,6 +810,10 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                                         else:
                                             context_parts.append(f"{i}. Error en herramienta {tool_name}: {tool_result.get('error', 'Error desconocido')}")
                                 
+                                # Agregar contexto de memoria si está disponible
+                                if relevant_context:
+                                    context_parts.insert(1, f"CONTEXTO DE MEMORIA RELEVANTE:\n{relevant_context}")
+                                
                                 # Crear prompt para el LLM
                                 llm_prompt = f"""
                                 Eres un asistente inteligente que ayuda a interpretar y presentar resultados de herramientas ejecutadas.
@@ -818,11 +822,12 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                                 
                                 INSTRUCCIONES:
                                 1. Analiza los resultados de las herramientas ejecutadas
-                                2. Proporciona una respuesta clara y útil que responda directamente a la tarea solicitada
-                                3. Si hubo errores, explica qué salió mal y sugiere alternativas
-                                4. Si hubo resultados exitosos, interpreta y presenta la información de manera útil
-                                5. Mantén un tono profesional pero amigable
-                                6. Estructura la respuesta de manera clara y organizada
+                                2. Considera el contexto de memoria relevante si está disponible
+                                3. Proporciona una respuesta clara y útil que responda directamente a la tarea solicitada
+                                4. Si hubo errores, explica qué salió mal y sugiere alternativas
+                                5. Si hubo resultados exitosos, interpreta y presenta la información de manera útil
+                                6. Mantén un tono profesional pero amigable
+                                7. Estructura la respuesta de manera clara y organizada
                                 
                                 Responde directamente a la tarea solicitada basándote en los resultados obtenidos:
                                 """
