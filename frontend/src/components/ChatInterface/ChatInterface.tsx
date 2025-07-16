@@ -110,6 +110,7 @@ export interface Message {
     title?: string;
     description?: string;
   }>;
+  orchestrationResult?: any; // Resultado de orquestación
 }
 
 export interface ChatInterfaceProps {
