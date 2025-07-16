@@ -125,9 +125,12 @@ async def store_knowledge():
         
         if knowledge_type == 'concept':
             concept = SemanticConcept(
+                id=f"concept_{datetime.now().timestamp()}",
                 name=data.get('name', 'Unknown Concept'),
                 description=content,
                 category=data.get('category', 'general'),
+                attributes=data.get('attributes', {}),
+                relations=data.get('relations', {}),
                 confidence=data.get('confidence', 0.8),
                 metadata=data.get('metadata', {})
             )
@@ -136,12 +139,12 @@ async def store_knowledge():
             
         else:  # fact
             fact = SemanticFact(
+                id=f"fact_{datetime.now().timestamp()}",
                 subject=data.get('subject', 'Unknown Subject'),
                 predicate=data.get('predicate', 'relates to'),
                 object=data.get('object', content),
                 confidence=data.get('confidence', 0.8),
                 context=data.get('context', {}),
-                metadata=data.get('metadata', {})
             )
             await memory_manager.semantic_memory.store_fact(fact)
             stored_id = fact.id
