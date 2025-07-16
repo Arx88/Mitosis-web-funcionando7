@@ -65,7 +65,7 @@ def semantic_search():
         return jsonify({'error': f'Search failed: {str(e)}'}), 500
 
 @memory_bp.route('/store-episode', methods=['POST'])
-async def store_episode():
+def store_episode():
     """
     Almacenar un episodio en la memoria episódica
     """
