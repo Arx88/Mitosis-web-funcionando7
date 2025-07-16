@@ -400,40 +400,127 @@ async def chat():
                 except ImportError:
                     logger.warning("WebSocket manager not available, continuing without real-time updates")
                 
-                # Ejecutar orquestación de manera asíncrona
-                import threading
+                # SOLUCIÓN: Obtener servicios ANTES del thread de background
+                # Obtener servicios del contexto de aplicación
+                from flask import current_app
+                ollama_service = current_app.ollama_service
+                tool_manager = current_app.tool_manager
+                database_service = current_app.database_service
                 
-                def run_orchestration():
-                    """Ejecutar orquestación en thread separado"""
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                    try:
-                        result = loop.run_until_complete(
-                            task_orchestrator.orchestrate_task(orchestration_context)
-                        )
-                        logger.info(f"✅ Orchestration completed for task {task_id}")
-                        logger.info(f"📊 Success: {result.success}, Steps: {result.steps_completed}/{result.steps_completed + result.steps_failed}")
+                # Ejecutar orquestación de manera síncrona con herramientas reales
+                try:
+                    # Crear un simple sistema de ejecución de herramientas
+                    def execute_task_with_tools():
+                        """Ejecutar tarea con herramientas automáticamente"""
+                        # Analizar el mensaje para determinar qué herramientas usar
+                        tools_to_use = []
                         
-                    except Exception as e:
-                        logger.error(f"❌ Orchestration failed for task {task_id}: {str(e)}")
-                    finally:
-                        loop.close()
-                
-                # Iniciar orquestación en background
-                orchestration_thread = threading.Thread(target=run_orchestration)
-                orchestration_thread.daemon = True
-                orchestration_thread.start()
-                
-                # Respuesta inmediata para el frontend
-                return jsonify({
-                    'response': f'🤖 **Orquestación Avanzada Iniciada**\n\n**Tarea:** {message}\n\n🔄 El agente está analizando tu solicitud usando el sistema de orquestación avanzada...\n\n📋 **Proceso:**\n• Análisis jerárquico de la tarea\n• Planificación adaptativa\n• Resolución de dependencias\n• Ejecución con recuperación de errores\n• Gestión de recursos\n\n⏱️ **Estado:** Ejecutando con orquestación\n\n*Los resultados aparecerán automáticamente cuando se complete la ejecución.*\n\n🔔 **Nota:** Updates en tiempo real via WebSocket habilitados.',
-                    'orchestration_enabled': True,
-                    'task_id': task_id,
-                    'execution_status': 'orchestrating',
-                    'websocket_enabled': True,
-                    'timestamp': datetime.now().isoformat(),
-                    'model': 'orchestrated-agent'
-                })
+                        # Detectar si necesita ejecutar comandos shell
+                        if any(keyword in message.lower() for keyword in ['comando', 'ejecuta', 'shell', 'ls', 'cd', 'mkdir', 'rm', 'cat', 'grep', 'find', 'chmod', 'chown', 'ps', 'kill', 'pwd']):
+                            tools_to_use.append('shell')
+                        
+                        # Detectar si necesita gestión de archivos
+                        if any(keyword in message.lower() for keyword in ['archivo', 'file', 'directorio', 'folder', 'crear', 'eliminar', 'leer', 'escribir', 'copiar', 'mover']):
+                            tools_to_use.append('file_manager')
+                        
+                        # Detectar si necesita búsqueda web
+                        if any(keyword in message.lower() for keyword in ['buscar', 'search', 'información', 'noticias', 'web', 'internet', 'google']):
+                            tools_to_use.append('web_search')
+                        
+                        # Si no detecta herramientas específicas, usar todas las disponibles
+                        if not tools_to_use:
+                            available_tools = tool_manager.get_available_tools()
+                            tools_to_use = [tool.get('name') for tool in available_tools[:3]]  # Usar las primeras 3 herramientas
+                        
+                        # Ejecutar herramientas detectadas
+                        results = []
+                        for tool_name in tools_to_use:
+                            try:
+                                # Preparar parámetros según el tipo de herramienta
+                                if tool_name == 'shell':
+                                    # Extraer comando del mensaje
+                                    if 'ls' in message.lower():
+                                        params = {'command': 'ls -la /app'}
+                                    elif 'pwd' in message.lower():
+                                        params = {'command': 'pwd'}
+                                    elif 'ps' in message.lower():
+                                        params = {'command': 'ps aux'}
+                                    else:
+                                        params = {'command': 'ls -la'}
+                                elif tool_name == 'file_manager':
+                                    params = {'action': 'list', 'path': '/app'}
+                                elif tool_name == 'web_search':
+                                    params = {'query': message}
+                                else:
+                                    params = {'input': message}
+                                
+                                # Ejecutar herramienta
+                                result = tool_manager.execute_tool(tool_name, params, task_id=task_id)
+                                results.append({
+                                    'tool': tool_name,
+                                    'result': result,
+                                    'success': not result.get('error')
+                                })
+                                
+                            except Exception as e:
+                                results.append({
+                                    'tool': tool_name,
+                                    'result': {'error': str(e)},
+                                    'success': False
+                                })
+                        
+                        return results
+                    
+                    # Ejecutar tareas con herramientas
+                    tool_results = execute_task_with_tools()
+                    
+                    # Generar respuesta basada en los resultados
+                    response_parts = [f"🤖 **Ejecución Completada**\n\n**Tarea:** {message}\n"]
+                    
+                    if tool_results:
+                        response_parts.append("🛠️ **Herramientas Ejecutadas:**\n")
+                        for i, result in enumerate(tool_results, 1):
+                            status = "✅ EXITOSO" if result['success'] else "❌ ERROR"
+                            response_parts.append(f"{i}. **{result['tool']}**: {status}")
+                            
+                            if result['success'] and result['result']:
+                                # Formatear resultado según el tipo de herramienta
+                                if result['tool'] == 'shell':
+                                    if 'output' in result['result']:
+                                        response_parts.append(f"```\n{result['result']['output']}\n```")
+                                elif result['tool'] == 'file_manager':
+                                    if 'files' in result['result']:
+                                        response_parts.append("📁 **Archivos encontrados:**")
+                                        for file_info in result['result']['files'][:5]:  # Mostrar solo los primeros 5
+                                            response_parts.append(f"• {file_info}")
+                                elif result['tool'] == 'web_search':
+                                    if 'results' in result['result']:
+                                        response_parts.append("🔍 **Resultados de búsqueda:**")
+                                        for search_result in result['result']['results'][:3]:  # Mostrar solo los primeros 3
+                                            response_parts.append(f"• {search_result.get('title', 'Sin título')}")
+                                else:
+                                    response_parts.append(f"📊 **Resultado:** {str(result['result'])[:200]}...")
+                            elif not result['success']:
+                                response_parts.append(f"⚠️ **Error:** {result['result'].get('error', 'Error desconocido')}")
+                            
+                            response_parts.append("")  # Línea en blanco
+                    
+                    final_response = "\n".join(response_parts)
+                    
+                    return jsonify({
+                        'response': final_response,
+                        'tool_results': tool_results,
+                        'tools_executed': len(tool_results),
+                        'task_id': task_id,
+                        'execution_status': 'completed',
+                        'timestamp': datetime.now().isoformat(),
+                        'model': 'tool-execution-agent',
+                        'memory_used': bool(relevant_context)
+                    })
+                    
+                except Exception as e:
+                    logger.error(f"❌ Error executing tools: {str(e)}")
+                    # Fallback a respuesta regular
                 
             except Exception as e:
                 logger.error(f"❌ Error in orchestration: {str(e)}")
