@@ -253,17 +253,20 @@ async def chat():
         # 🧠 INTEGRACIÓN AUTOMÁTICA DE MEMORIA - Recuperar contexto relevante
         relevant_context = ""
         try:
-            if memory_manager.is_initialized:
-                # Buscar contexto relevante de conversaciones anteriores
-                context_results = await memory_manager.retrieve_relevant_context(
-                    query=message,
-                    context_type="all",
-                    max_results=5
-                )
-                
-                if context_results and context_results != "No se encontró contexto relevante previo":
-                    relevant_context = f"\n\n[CONTEXTO PREVIO RELEVANTE]:\n{context_results}\n[FIN CONTEXTO]"
-                    logger.info(f"🧠 Contexto relevante encontrado para mejorar respuesta")
+            # Inicializar memoria si no está inicializada
+            if not memory_manager.is_initialized:
+                await memory_manager.initialize()
+            
+            # Buscar contexto relevante de conversaciones anteriores
+            context_results = await memory_manager.retrieve_relevant_context(
+                query=message,
+                context_type="all",
+                max_results=5
+            )
+            
+            if context_results and context_results != "No se encontró contexto relevante previo":
+                relevant_context = f"\n\n[CONTEXTO PREVIO RELEVANTE]:\n{context_results}\n[FIN CONTEXTO]"
+                logger.info(f"🧠 Contexto relevante encontrado para mejorar respuesta")
         except Exception as e:
             logger.warning(f"Error recuperando contexto: {e}")
 
