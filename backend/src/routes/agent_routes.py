@@ -273,10 +273,13 @@ async def chat():
         # 🚀 NUEVO: Usar Enhanced Agent si está disponible
         if not search_mode:
             try:
+                # Obtener servicios del contexto de aplicación
+                from flask import current_app
+                
                 # Verificar si enhanced components están disponibles
-                enhanced_agent = current_app.enhanced_agent
-                enhanced_memory = current_app.enhanced_memory
-                enhanced_task_manager = current_app.enhanced_task_manager
+                enhanced_agent = getattr(current_app, 'enhanced_agent', None)
+                enhanced_memory = getattr(current_app, 'enhanced_memory', None)
+                enhanced_task_manager = getattr(current_app, 'enhanced_task_manager', None)
                 
                 if enhanced_agent and enhanced_memory and enhanced_task_manager:
                     logger.info(f"🧠 Usando Enhanced Agent para procesamiento avanzado")
