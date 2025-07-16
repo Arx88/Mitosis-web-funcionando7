@@ -8,7 +8,10 @@ export type AgentStatus =
   | 'executing_step'
   | 'waiting_user_input'
   | 'task_completed'
-  | 'task_failed';
+  | 'task_failed'
+  | 'orchestrating'
+  | 'planning'
+  | 'executing_plan';
 
 interface AgentStatusBarProps {
   status: AgentStatus;
