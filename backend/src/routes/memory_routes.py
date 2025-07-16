@@ -93,7 +93,7 @@ async def store_episode():
         )
         
         # Almacenar episodio
-        await memory_manager.episodic_memory.store_episode(episode)
+        memory_manager.episodic_memory.store_episode(episode)
         
         return jsonify({
             'success': True,
