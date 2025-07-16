@@ -53,19 +53,24 @@ class TaskOrchestrator:
     
     def __init__(self, tool_manager=None, memory_manager=None, llm_service=None):
         self.tool_manager = tool_manager
-        self.memory_manager = memory_manager
         self.llm_service = llm_service
+        
+        # Inicializar memoria avanzada si no se proporciona
+        if memory_manager is None:
+            self.memory_manager = AdvancedMemoryManager()
+        else:
+            self.memory_manager = memory_manager
         
         # Componentes especializados
         self.planning_engine = HierarchicalPlanningEngine(
             llm_service=llm_service,
             tool_manager=tool_manager,
-            memory_manager=memory_manager
+            memory_manager=self.memory_manager
         )
         
         self.execution_engine = AdaptiveExecutionEngine(
             tool_manager=tool_manager,
-            memory_manager=memory_manager,
+            memory_manager=self.memory_manager,
             llm_service=llm_service
         )
         
@@ -85,7 +90,9 @@ class TaskOrchestrator:
             "enable_progress_tracking": True,
             "default_timeout": 1800,  # 30 minutos
             "retry_failed_steps": True,
-            "max_retries": 3
+            "max_retries": 3,
+            "enable_memory_learning": True,  # Nueva configuración
+            "memory_relevance_threshold": 0.7  # Nueva configuración
         }
         
         # Callbacks
