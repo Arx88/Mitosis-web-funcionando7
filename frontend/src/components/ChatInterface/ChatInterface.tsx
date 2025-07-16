@@ -1885,6 +1885,20 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   );
                 })()}
                 
+                {/* Orchestration Result Display */}
+                {message.orchestrationResult && (
+                  <div className="mt-4">
+                    <TaskSummary
+                      title="Orquestación Completada"
+                      outcome={message.orchestrationResult.message || 'Tarea completada exitosamente'}
+                      completedSteps={message.orchestrationResult.execution_plan?.steps?.map((step: any) => step.title) || []}
+                      executionTime={message.orchestrationResult.total_execution_time ? `${Math.round(message.orchestrationResult.total_execution_time / 1000)}s` : undefined}
+                      toolsUsed={message.orchestrationResult.tools_used || []}
+                      type={message.orchestrationResult.success ? 'success' : 'partial'}
+                    />
+                  </div>
+                )}
+                
                 {/* Regular message content rendering */}
                 {!message.attachments || message.attachments.length === 0 ? (() => {
                   // Priority 1: Check for structured search data
