@@ -619,7 +619,7 @@ async def chat():
                         
                         # Crear un sistema de ejecución de herramientas inteligente
                         def execute_agent_task():
-                            """Ejecutar tarea en modo agente con herramientas automáticamente"""
+                            """Ejecutar tarea en modo agente con herramientas automáticamente y fallback inteligente"""
                             tools_to_use = []
                             
                             # Detectar herramientas necesarias basado en el mensaje
@@ -672,6 +672,42 @@ async def chat():
                                         'result': {'error': str(e)},
                                         'success': False
                                     })
+                            
+                            # 🔄 FALLBACK: Si web_search falla, usar LLM con conocimiento interno
+                            if tools_to_use == ['web_search'] and results and not results[0]['success']:
+                                try:
+                                    logger.info(f"🔄 Web search falló, usando LLM con conocimiento interno como fallback")
+                                    
+                                    # Generar respuesta usando conocimiento interno del LLM
+                                    fallback_prompt = f"""
+                                    No puedo acceder a internet en este momento, pero puedo ayudarte basándome en mi conocimiento interno.
+                                    
+                                    Pregunta: {message}
+                                    
+                                    Proporciona una respuesta útil y completa basada en tu conocimiento interno sobre este tema.
+                                    Si es sobre mejores prácticas, tendencias actuales, o conceptos técnicos, puedes dar información valiosa.
+                                    
+                                    Estructura tu respuesta de manera clara y útil, mencionando que la información se basa en tu conocimiento interno.
+                                    """
+                                    
+                                    fallback_response = ollama_service.generate_response(fallback_prompt)
+                                    
+                                    if fallback_response and not fallback_response.get('error'):
+                                        # Reemplazar el resultado fallido con el fallback
+                                        results[0] = {
+                                            'tool': 'llm_fallback',
+                                            'result': {
+                                                'response': fallback_response.get('response', ''),
+                                                'fallback_mode': True,
+                                                'original_tool': 'web_search',
+                                                'success': True
+                                            },
+                                            'success': True
+                                        }
+                                        logger.info(f"✅ Fallback LLM exitoso para tarea de búsqueda")
+                                    
+                                except Exception as e:
+                                    logger.error(f"Error en fallback LLM: {str(e)}")
                             
                             return results
                         
