@@ -744,6 +744,391 @@ class AdvancedMemoryManager:
             logger.error(f"Error sintetizando contexto: {e}")
             return f"Error en síntesis: {str(e)}"
     
+    async def export_memory_data(self, export_format: str = 'json', 
+                                include_compressed: bool = False, 
+                                output_file: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Exporta datos de memoria para respaldo o análisis
+        
+        Args:
+            export_format: Formato de exportación ('json', 'csv', 'xml')
+            include_compressed: Si incluir datos comprimidos
+            output_file: Archivo de salida (opcional)
+            
+        Returns:
+            Diccionario con datos exportados y estadísticas
+        """
+        if not self.is_initialized:
+            await self.initialize()
+            
+        try:
+            export_stats = {
+                'started_at': datetime.now().isoformat(),
+                'export_format': export_format,
+                'include_compressed': include_compressed,
+                'output_file': output_file,
+                'exported_episodes': 0,
+                'exported_concepts': 0,
+                'exported_facts': 0,
+                'exported_procedures': 0,
+                'export_size': 0,
+                'success': False
+            }
+            
+            # Preparar datos para exportación
+            export_data = {
+                'metadata': {
+                    'export_timestamp': datetime.now().isoformat(),
+                    'system_version': '2.0.0',
+                    'export_format': export_format,
+                    'memory_manager_config': self.config
+                },
+                'working_memory': {},
+                'episodic_memory': [],
+                'semantic_memory': {
+                    'concepts': [],
+                    'facts': []
+                },
+                'procedural_memory': {
+                    'procedures': [],
+                    'tool_strategies': []
+                },
+                'statistics': {}
+            }
+            
+            # 1. Exportar memoria de trabajo
+            working_contexts = []
+            for context_id, context_data in self.working_memory.contexts.items():
+                working_contexts.append({
+                    'id': context_id,
+                    'data': context_data,
+                    'timestamp': context_data.get('timestamp', datetime.now().isoformat())
+                })
+            export_data['working_memory'] = working_contexts
+            
+            # 2. Exportar memoria episódica
+            for episode_id, episode in self.episodic_memory.episodes.items():
+                # Filtrar episodios comprimidos si no se incluyen
+                if not include_compressed and episode.context.get('compressed', False):
+                    continue
+                
+                episode_data = {
+                    'id': episode.id,
+                    'title': episode.title,
+                    'description': episode.description,
+                    'context': episode.context,
+                    'actions': episode.actions,
+                    'outcomes': episode.outcomes,
+                    'timestamp': episode.timestamp.isoformat(),
+                    'duration': episode.duration.total_seconds() if episode.duration else 0,
+                    'success': episode.success,
+                    'importance': episode.importance,
+                    'tags': episode.tags
+                }
+                export_data['episodic_memory'].append(episode_data)
+                export_stats['exported_episodes'] += 1
+            
+            # 3. Exportar memoria semántica
+            for concept_id, concept in self.semantic_memory.concepts.items():
+                # Filtrar conceptos comprimidos si no se incluyen
+                if not include_compressed and concept.attributes.get('compressed', False):
+                    continue
+                
+                concept_data = {
+                    'id': concept.id,
+                    'name': concept.name,
+                    'description': concept.description,
+                    'category': concept.category,
+                    'attributes': concept.attributes,
+                    'relations': concept.relations,
+                    'confidence': concept.confidence,
+                    'created_at': getattr(concept, 'created_at', datetime.now()).isoformat() if hasattr(concept, 'created_at') else datetime.now().isoformat(),
+                    'usage_count': getattr(concept, 'usage_count', 0)
+                }
+                export_data['semantic_memory']['concepts'].append(concept_data)
+                export_stats['exported_concepts'] += 1
+            
+            for fact_id, fact in self.semantic_memory.facts.items():
+                # Filtrar hechos comprimidos si no se incluyen
+                if not include_compressed and fact.context.get('compressed', False):
+                    continue
+                
+                fact_data = {
+                    'id': fact.id,
+                    'subject': fact.subject,
+                    'predicate': fact.predicate,
+                    'object': fact.object,
+                    'context': fact.context,
+                    'confidence': fact.confidence,
+                    'source': fact.source,
+                    'created_at': getattr(fact, 'created_at', datetime.now()).isoformat() if hasattr(fact, 'created_at') else datetime.now().isoformat(),
+                    'validated': getattr(fact, 'validated', False)
+                }
+                export_data['semantic_memory']['facts'].append(fact_data)
+                export_stats['exported_facts'] += 1
+            
+            # 4. Exportar memoria procedimental
+            for procedure_id, procedure in self.procedural_memory.procedures.items():
+                procedure_data = {
+                    'id': procedure.id,
+                    'name': procedure.name,
+                    'description': procedure.description,
+                    'steps': procedure.steps,
+                    'success_rate': procedure.success_rate,
+                    'effectiveness_score': procedure.effectiveness_score,
+                    'usage_count': procedure.usage_count,
+                    'created_at': procedure.created_at.isoformat() if hasattr(procedure, 'created_at') else datetime.now().isoformat(),
+                    'last_used': procedure.last_used.isoformat() if hasattr(procedure, 'last_used') and procedure.last_used else None,
+                    'conditions': procedure.conditions
+                }
+                export_data['procedural_memory']['procedures'].append(procedure_data)
+                export_stats['exported_procedures'] += 1
+            
+            for strategy_id, strategy in self.procedural_memory.tool_strategies.items():
+                strategy_data = {
+                    'id': strategy.id,
+                    'tool_name': strategy.tool_name,
+                    'parameters': strategy.parameters,
+                    'success_rate': strategy.success_rate,
+                    'avg_execution_time': strategy.avg_execution_time,
+                    'usage_count': strategy.usage_count,
+                    'created_at': strategy.created_at.isoformat() if hasattr(strategy, 'created_at') else datetime.now().isoformat(),
+                    'last_used': strategy.last_used.isoformat() if hasattr(strategy, 'last_used') and strategy.last_used else None
+                }
+                export_data['procedural_memory']['tool_strategies'].append(strategy_data)
+            
+            # 5. Agregar estadísticas del sistema
+            export_data['statistics'] = await self.get_memory_stats()
+            
+            # 6. Convertir a formato solicitado
+            if export_format.lower() == 'json':
+                import json
+                formatted_data = json.dumps(export_data, indent=2, ensure_ascii=False)
+            elif export_format.lower() == 'csv':
+                formatted_data = self._export_to_csv(export_data)
+            elif export_format.lower() == 'xml':
+                formatted_data = self._export_to_xml(export_data)
+            else:
+                formatted_data = str(export_data)
+            
+            # 7. Guardar en archivo si se especifica
+            if output_file:
+                try:
+                    with open(output_file, 'w', encoding='utf-8') as f:
+                        f.write(formatted_data)
+                    logger.info(f"Datos de memoria exportados a {output_file}")
+                except Exception as e:
+                    logger.error(f"Error escribiendo archivo de exportación: {e}")
+                    export_stats['file_error'] = str(e)
+            
+            # 8. Calcular tamaño de exportación
+            export_stats['export_size'] = len(formatted_data.encode('utf-8'))
+            export_stats['success'] = True
+            export_stats['completed_at'] = datetime.now().isoformat()
+            
+            logger.info(f"Exportación de memoria completada: {export_stats['exported_episodes']} episodios, {export_stats['exported_concepts']} conceptos, {export_stats['exported_facts']} hechos, {export_stats['exported_procedures']} procedimientos")
+            
+            return {
+                'export_stats': export_stats,
+                'data': export_data if not output_file else None,
+                'formatted_data': formatted_data if not output_file else None,
+                'success': True
+            }
+            
+        except Exception as e:
+            logger.error(f"Error exportando datos de memoria: {e}")
+            export_stats['success'] = False
+            export_stats['error'] = str(e)
+            export_stats['completed_at'] = datetime.now().isoformat()
+            return {
+                'export_stats': export_stats,
+                'error': str(e),
+                'success': False
+            }
+    
+    def _export_to_csv(self, data: Dict[str, Any]) -> str:
+        """
+        Convierte datos de memoria a formato CSV
+        
+        Args:
+            data: Datos a convertir
+            
+        Returns:
+            String en formato CSV
+        """
+        try:
+            import io
+            import csv
+            
+            output = io.StringIO()
+            
+            # Exportar episodios
+            if data['episodic_memory']:
+                output.write("=== EPISODIC MEMORY ===\n")
+                writer = csv.writer(output)
+                writer.writerow(['ID', 'Title', 'Description', 'Success', 'Importance', 'Timestamp', 'Tags'])
+                
+                for episode in data['episodic_memory']:
+                    writer.writerow([
+                        episode['id'],
+                        episode['title'],
+                        episode['description'][:100] + '...' if len(episode['description']) > 100 else episode['description'],
+                        episode['success'],
+                        episode['importance'],
+                        episode['timestamp'],
+                        ', '.join(episode['tags'])
+                    ])
+                output.write("\n")
+            
+            # Exportar conceptos
+            if data['semantic_memory']['concepts']:
+                output.write("=== SEMANTIC CONCEPTS ===\n")
+                writer = csv.writer(output)
+                writer.writerow(['ID', 'Name', 'Description', 'Category', 'Confidence'])
+                
+                for concept in data['semantic_memory']['concepts']:
+                    writer.writerow([
+                        concept['id'],
+                        concept['name'],
+                        concept['description'][:100] + '...' if len(concept['description']) > 100 else concept['description'],
+                        concept['category'],
+                        concept['confidence']
+                    ])
+                output.write("\n")
+            
+            # Exportar hechos
+            if data['semantic_memory']['facts']:
+                output.write("=== SEMANTIC FACTS ===\n")
+                writer = csv.writer(output)
+                writer.writerow(['ID', 'Subject', 'Predicate', 'Object', 'Confidence', 'Source'])
+                
+                for fact in data['semantic_memory']['facts']:
+                    writer.writerow([
+                        fact['id'],
+                        fact['subject'],
+                        fact['predicate'],
+                        fact['object'],
+                        fact['confidence'],
+                        fact['source']
+                    ])
+                output.write("\n")
+            
+            # Exportar procedimientos
+            if data['procedural_memory']['procedures']:
+                output.write("=== PROCEDURAL MEMORY ===\n")
+                writer = csv.writer(output)
+                writer.writerow(['ID', 'Name', 'Description', 'Success Rate', 'Effectiveness', 'Usage Count'])
+                
+                for procedure in data['procedural_memory']['procedures']:
+                    writer.writerow([
+                        procedure['id'],
+                        procedure['name'],
+                        procedure['description'][:100] + '...' if len(procedure['description']) > 100 else procedure['description'],
+                        procedure['success_rate'],
+                        procedure['effectiveness_score'],
+                        procedure['usage_count']
+                    ])
+            
+            return output.getvalue()
+            
+        except Exception as e:
+            logger.error(f"Error converting to CSV: {e}")
+            return f"Error generating CSV: {str(e)}"
+    
+    def _export_to_xml(self, data: Dict[str, Any]) -> str:
+        """
+        Convierte datos de memoria a formato XML
+        
+        Args:
+            data: Datos a convertir
+            
+        Returns:
+            String en formato XML
+        """
+        try:
+            import xml.etree.ElementTree as ET
+            from xml.dom import minidom
+            
+            # Crear elemento raíz
+            root = ET.Element('memory_export')
+            
+            # Agregar metadata
+            metadata = ET.SubElement(root, 'metadata')
+            for key, value in data['metadata'].items():
+                meta_elem = ET.SubElement(metadata, key)
+                meta_elem.text = str(value)
+            
+            # Agregar memoria episódica
+            episodic = ET.SubElement(root, 'episodic_memory')
+            for episode in data['episodic_memory']:
+                ep_elem = ET.SubElement(episodic, 'episode')
+                ep_elem.set('id', episode['id'])
+                
+                for key, value in episode.items():
+                    if key != 'id':
+                        elem = ET.SubElement(ep_elem, key)
+                        if isinstance(value, list):
+                            elem.text = ', '.join(str(v) for v in value)
+                        else:
+                            elem.text = str(value)
+            
+            # Agregar memoria semántica
+            semantic = ET.SubElement(root, 'semantic_memory')
+            
+            # Conceptos
+            concepts = ET.SubElement(semantic, 'concepts')
+            for concept in data['semantic_memory']['concepts']:
+                c_elem = ET.SubElement(concepts, 'concept')
+                c_elem.set('id', concept['id'])
+                
+                for key, value in concept.items():
+                    if key != 'id':
+                        elem = ET.SubElement(c_elem, key)
+                        if isinstance(value, (dict, list)):
+                            elem.text = str(value)
+                        else:
+                            elem.text = str(value)
+            
+            # Hechos
+            facts = ET.SubElement(semantic, 'facts')
+            for fact in data['semantic_memory']['facts']:
+                f_elem = ET.SubElement(facts, 'fact')
+                f_elem.set('id', fact['id'])
+                
+                for key, value in fact.items():
+                    if key != 'id':
+                        elem = ET.SubElement(f_elem, key)
+                        if isinstance(value, (dict, list)):
+                            elem.text = str(value)
+                        else:
+                            elem.text = str(value)
+            
+            # Agregar memoria procedimental
+            procedural = ET.SubElement(root, 'procedural_memory')
+            
+            # Procedimientos
+            procedures = ET.SubElement(procedural, 'procedures')
+            for procedure in data['procedural_memory']['procedures']:
+                p_elem = ET.SubElement(procedures, 'procedure')
+                p_elem.set('id', procedure['id'])
+                
+                for key, value in procedure.items():
+                    if key != 'id':
+                        elem = ET.SubElement(p_elem, key)
+                        if isinstance(value, (dict, list)):
+                            elem.text = str(value)
+                        else:
+                            elem.text = str(value)
+            
+            # Formatear XML
+            rough_string = ET.tostring(root, encoding='unicode')
+            reparsed = minidom.parseString(rough_string)
+            return reparsed.toprettyxml(indent="  ")
+            
+        except Exception as e:
+            logger.error(f"Error converting to XML: {e}")
+            return f"<error>Error generating XML: {str(e)}</error>"
+    
     async def compress_old_memory(self, compression_threshold_days: int = 30, 
                                  compression_ratio: float = 0.5) -> Dict[str, Any]:
         """
