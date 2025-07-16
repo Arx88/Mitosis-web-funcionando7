@@ -500,17 +500,44 @@ async def chat():
         # Manejo de chat regular (fallback)
         else:
             try:
+                # Agregar contexto relevante al mensaje
+                enhanced_message = message + relevant_context
+                
                 # Generar respuesta usando Ollama
-                response_data = ollama_service.generate_response(message)
+                response_data = ollama_service.generate_response(enhanced_message)
                 
                 if response_data.get('error'):
                     raise Exception(response_data['error'])
                 
+                agent_response = response_data.get('response', 'No se pudo generar respuesta')
+                
+                # 🧠 ALMACENAR EN MEMORIA EPISÓDICA
+                try:
+                    from src.memory.episodic_memory_store import Episode
+                    episode = Episode(
+                        user_query=message,
+                        agent_response=agent_response,
+                        success=True,
+                        context=context,
+                        tools_used=[],
+                        importance=0.5,
+                        metadata={
+                            'session_id': session_id,
+                            'task_id': task_id,
+                            'fallback_mode': True
+                        }
+                    )
+                    await memory_manager.episodic_memory.store_episode(episode)
+                    logger.info(f"🧠 Episodio almacenado en memoria (modo fallback)")
+                except Exception as e:
+                    logger.warning(f"Error almacenando episodio: {e}")
+                
                 return jsonify({
-                    'response': response_data.get('response', 'No se pudo generar respuesta'),
+                    'response': agent_response,
                     'task_id': task_id,
                     'model': response_data.get('model', 'unknown'),
-                    'timestamp': datetime.now().isoformat()
+                    'timestamp': datetime.now().isoformat(),
+                    'memory_used': bool(relevant_context)
                 })
                 
             except Exception as e:
