@@ -416,6 +416,21 @@ async def chat():
                     # Función para detectar si es una TAREA específica que requiere herramientas
                     def is_task_requiring_tools(message):
                         """Detectar si el mensaje es una tarea específica que requiere herramientas"""
+                        message_lower = message.lower()
+                        
+                        # Primero: Detectar saludos y conversación casual (retorna False inmediatamente)
+                        casual_only_phrases = [
+                            'hola', 'hello', 'hi', 'buenos días', 'buenas tardes', 'buenas noches',
+                            'gracias', 'thank you', 'thanks', 'de nada', 'por favor',
+                            'qué tal', 'cómo estás', 'how are you', 'adiós', 'bye', 'hasta luego',
+                            'cómo te llamas', 'what is your name', 'quien eres', 'who are you'
+                        ]
+                        
+                        # Si es SOLO una frase casual (sin más contenido), no es tarea
+                        if any(phrase == message_lower.strip() for phrase in casual_only_phrases):
+                            return False
+                        
+                        # Segundo: Detectar indicadores de TAREA (retorna True si encuentra)
                         task_indicators = [
                             # Comandos explícitos
                             'ejecuta', 'ejecutar', 'run', 'comando', 'command',
@@ -423,44 +438,37 @@ async def chat():
                             'analiza', 'analizar', 'analyze', 'procesa', 'procesar',
                             # Búsqueda activa
                             'busca', 'buscar', 'search', 'encuentra', 'encontrar',
-                            # Creación/modificación
-                            'crea', 'crear', 'create', 'genera', 'generar', 'modifica', 'modificar',
+                            # Creación/modificación/generación
+                            'crea', 'crear', 'create', 'genera', 'generar', 'generate', 'modifica', 'modificar',
+                            'haz', 'hacer', 'do', 'make', 'build', 'construye', 'construir',
+                            'desarrolla', 'desarrollar', 'develop', 'programa', 'programar',
                             # Gestión de archivos
-                            'lista', 'listar', 'list', 'mostrar', 'show', 'ver archivos',
-                            # Investigación
+                            'lista', 'listar', 'list', 'mostrar archivos', 'show files',
+                            'descarga', 'descargar', 'download', 'sube', 'subir', 'upload',
+                            # Investigación y reportes
                             'investiga', 'investigar', 'research', 'explora', 'explorar',
-                            # Tareas específicas
-                            'descarga', 'descargar', 'download', 'instala', 'instalar',
+                            'informe', 'report', 'reporte', 'estudio', 'study', 'análisis',
                             # Operaciones de sistema
-                            'verifica', 'verificar', 'check', 'monitorea', 'monitorear'
+                            'verifica', 'verificar', 'check', 'monitorea', 'monitorear', 'instala', 'instalar',
+                            # Palabras clave de resultado
+                            'sobre', 'acerca de', 'about', 'mejores prácticas', 'best practices'
                         ]
                         
                         # Verificar si contiene indicadores de tarea
-                        message_lower = message.lower()
-                        
-                        # Excluir saludos y conversación casual
-                        casual_phrases = [
-                            'hola', 'hello', 'hi', 'buenos días', 'buenas tardes', 'buenas noches',
-                            'gracias', 'thank you', 'thanks', 'de nada', 'por favor',
-                            'qué tal', 'cómo estás', 'how are you', 'adiós', 'bye', 'hasta luego',
-                            'qué es', 'what is', 'explica', 'explain', 'cuéntame', 'tell me',
-                            'puedes', 'can you', 'podrías', 'could you'
-                        ]
-                        
-                        # Si es una frase casual, no es una tarea
-                        if any(phrase in message_lower for phrase in casual_phrases):
-                            # Excepto si también contiene indicadores de tarea explícitos
-                            if not any(indicator in message_lower for indicator in task_indicators):
-                                return False
-                        
-                        # Verificar indicadores de tarea
                         has_task_indicator = any(indicator in message_lower for indicator in task_indicators)
                         
-                        # Verificar comandos específicos
+                        # Verificar comandos específicos de sistema
                         command_patterns = ['ls ', 'cd ', 'pwd', 'ps ', 'mkdir', 'rm ', 'cp ', 'mv ', 'chmod', 'grep']
                         has_command = any(cmd in message_lower for cmd in command_patterns)
                         
-                        return has_task_indicator or has_command
+                        # Verificar patrones de solicitud de trabajo
+                        work_patterns = [
+                            'web sobre', 'sitio web', 'website', 'aplicación', 'app',
+                            'base de datos', 'database', 'sistema', 'system'
+                        ]
+                        has_work_pattern = any(pattern in message_lower for pattern in work_patterns)
+                        
+                        return has_task_indicator or has_command or has_work_pattern
                     
                     # Verificar si es una tarea que requiere herramientas
                     if not is_task_requiring_tools(message):
