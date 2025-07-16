@@ -293,6 +293,10 @@ async def chat():
                     try:
                         from src.memory.episodic_memory_store import Episode
                         
+                        # Asegurar que la memoria está inicializada
+                        if not memory_manager.is_initialized:
+                            await memory_manager.initialize()
+                        
                         episode = Episode(
                             id=str(uuid.uuid4()),
                             title=f"Conversación con usuario",
