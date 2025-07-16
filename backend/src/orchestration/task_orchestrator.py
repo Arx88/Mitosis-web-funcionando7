@@ -727,6 +727,220 @@ class TaskOrchestrator:
         
         return recommendations
     
+    async def _store_learning_experience(self, context: OrchestrationContext, result: OrchestrationResult):
+        """Almacena experiencia para aprendizaje del agente"""
+        
+        if not self.config.get("enable_memory_learning", True):
+            return
+            
+        try:
+            # Preparar contexto de experiencia
+            task_context = {
+                'task_type': 'orchestration',
+                'task_description': context.task_description,
+                'user_id': context.user_id,
+                'session_id': context.session_id,
+                'priority': context.priority,
+                'constraints': context.constraints,
+                'preferences': context.preferences,
+                'complexity': self._calculate_task_complexity(result.execution_plan),
+                'tags': ['orchestration', 'task_execution']
+            }
+            
+            # Preparar pasos de ejecución
+            execution_steps = []
+            if result.execution_plan:
+                for step in result.execution_plan.steps:
+                    execution_result = result.execution_results.get(step.step_id)
+                    
+                    step_info = {
+                        'step_id': step.step_id,
+                        'tool_name': step.tool_name,
+                        'description': step.description,
+                        'parameters': step.parameters,
+                        'success': execution_result.success if execution_result else False,
+                        'execution_time': execution_result.execution_time if execution_result else 0,
+                        'result': execution_result.result if execution_result else None
+                    }
+                    
+                    execution_steps.append(step_info)
+            
+            # Preparar resultados
+            outcomes = [{
+                'type': 'orchestration_result',
+                'success': result.success,
+                'steps_completed': result.steps_completed,
+                'steps_failed': result.steps_failed,
+                'total_time': result.total_execution_time,
+                'adaptations_made': result.adaptations_made,
+                'resource_usage': result.resource_usage,
+                'description': f"Orquestación {'exitosa' if result.success else 'fallida'}"
+            }]
+            
+            # Crear experiencia completa
+            experience = {
+                'context': task_context,
+                'execution_steps': execution_steps,
+                'outcomes': outcomes,
+                'success': result.success,
+                'execution_time': result.total_execution_time,
+                'timestamp': time.time()
+            }
+            
+            # Almacenar en memoria
+            await self.memory_manager.store_experience(experience)
+            
+            logger.debug(f"Experiencia almacenada para tarea {context.task_id}")
+            
+        except Exception as e:
+            logger.error(f"Error almacenando experiencia: {e}")
+    
+    async def _get_memory_recommendations(self, context: OrchestrationContext) -> List[Dict[str, Any]]:
+        """Obtiene recomendaciones basadas en memoria y aprendizaje previo"""
+        
+        if not self.config.get("enable_memory_learning", True):
+            return []
+            
+        try:
+            # Crear contexto de tarea para búsqueda
+            task_context = {
+                'task_type': 'orchestration',
+                'task_description': context.task_description,
+                'user_id': context.user_id,
+                'complexity': 'medium',  # Estimación inicial
+                'priority': context.priority
+            }
+            
+            # Obtener recomendaciones de aprendizaje
+            recommendations = await self.memory_manager.get_learning_recommendations(task_context)
+            
+            # Filtrar recomendaciones por relevancia
+            threshold = self.config.get("memory_relevance_threshold", 0.7)
+            relevant_recommendations = [
+                rec for rec in recommendations 
+                if rec.get('confidence', 0) >= threshold
+            ]
+            
+            return relevant_recommendations
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo recomendaciones de memoria: {e}")
+            return []
+    
+    async def _apply_memory_insights(self, context: OrchestrationContext, plan: ExecutionPlan):
+        """Aplica insights de memoria al plan de ejecución"""
+        
+        if not self.config.get("enable_memory_learning", True):
+            return plan
+            
+        try:
+            # Buscar contexto relevante
+            relevant_context = await self.memory_manager.retrieve_relevant_context(
+                context.task_description,
+                context_type="procedural",
+                max_results=5
+            )
+            
+            # Aplicar procedimientos aprendidos
+            procedural_memory = relevant_context.get('procedural_memory', [])
+            
+            for procedure in procedural_memory:
+                if procedure.get('effectiveness_score', 0) > 0.8:
+                    # Aplicar procedimiento exitoso
+                    await self._apply_learned_procedure(plan, procedure)
+            
+            # Aplicar estrategias de herramientas
+            for step in plan.steps:
+                if step.tool_name:
+                    await self._apply_tool_strategy(step, relevant_context)
+            
+            return plan
+            
+        except Exception as e:
+            logger.error(f"Error aplicando insights de memoria: {e}")
+            return plan
+    
+    async def _apply_learned_procedure(self, plan: ExecutionPlan, procedure: Dict[str, Any]):
+        """Aplica un procedimiento aprendido al plan"""
+        
+        try:
+            # Obtener pasos del procedimiento
+            learned_steps = procedure.get('details', {}).get('steps', [])
+            
+            # Integrar pasos aprendidos en el plan
+            for i, learned_step in enumerate(learned_steps):
+                # Buscar paso similar en el plan actual
+                for plan_step in plan.steps:
+                    if (plan_step.tool_name == learned_step.get('tool_name') and
+                        self._steps_are_similar(plan_step, learned_step)):
+                        
+                        # Aplicar parámetros optimizados
+                        optimized_params = learned_step.get('parameters', {})
+                        plan_step.parameters.update(optimized_params)
+                        
+                        logger.debug(f"Aplicado procedimiento aprendido a paso {plan_step.step_id}")
+                        
+        except Exception as e:
+            logger.error(f"Error aplicando procedimiento aprendido: {e}")
+    
+    async def _apply_tool_strategy(self, step: TaskStep, context: Dict[str, Any]):
+        """Aplica estrategia de herramienta aprendida"""
+        
+        try:
+            # Buscar estrategias para la herramienta
+            procedural_memory = context.get('procedural_memory', [])
+            
+            for procedure in procedural_memory:
+                details = procedure.get('details', {})
+                if details.get('tool_name') == step.tool_name:
+                    # Aplicar estrategia exitosa
+                    strategy_params = details.get('parameters', {})
+                    step.parameters.update(strategy_params)
+                    
+                    logger.debug(f"Aplicada estrategia para herramienta {step.tool_name}")
+                    break
+                    
+        except Exception as e:
+            logger.error(f"Error aplicando estrategia de herramienta: {e}")
+    
+    def _calculate_task_complexity(self, plan: ExecutionPlan) -> str:
+        """Calcula la complejidad de la tarea basada en el plan"""
+        
+        if not plan or not plan.steps:
+            return 'low'
+            
+        step_count = len(plan.steps)
+        tool_diversity = len(set(step.tool_name for step in plan.steps if step.tool_name))
+        
+        if step_count > 10 or tool_diversity > 5:
+            return 'high'
+        elif step_count > 5 or tool_diversity > 3:
+            return 'medium'
+        else:
+            return 'low'
+    
+    def _steps_are_similar(self, step1: TaskStep, step2: Dict[str, Any]) -> bool:
+        """Verifica si dos pasos son similares"""
+        
+        # Comparación básica por nombre de herramienta y descripción
+        if step1.tool_name != step2.get('tool_name'):
+            return False
+            
+        # Comparación por similitud de descripción (simplificada)
+        desc1 = step1.description.lower()
+        desc2 = step2.get('description', '').lower()
+        
+        # Similitud básica por palabras comunes
+        words1 = set(desc1.split())
+        words2 = set(desc2.split())
+        
+        if not words1 or not words2:
+            return False
+            
+        similarity = len(words1.intersection(words2)) / len(words1.union(words2))
+        
+        return similarity > 0.5
+    
     def __del__(self):
         """Destructor para limpiar recursos"""
         
