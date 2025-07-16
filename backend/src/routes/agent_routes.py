@@ -1334,3 +1334,95 @@ def get_learned_patterns():
             'error': str(e),
             'timestamp': datetime.now().isoformat()
         }), 500
+
+@agent_bp.route('/generate-suggestions', methods=['POST'])
+def generate_suggestions():
+    """Genera sugerencias dinámicas para el frontend"""
+    try:
+        data = request.get_json() or {}
+        context = data.get('context', {})
+        
+        # Generar sugerencias dinámicas basadas en herramientas disponibles
+        suggestions = [
+            {
+                'title': 'Analizar tendencias de IA en 2025',
+                'icon': 'search',
+                'category': 'research'
+            },
+            {
+                'title': 'Crear un informe técnico',
+                'icon': 'document',
+                'category': 'creation'
+            },
+            {
+                'title': 'Buscar mejores prácticas de desarrollo',
+                'icon': 'code',
+                'category': 'development'
+            }
+        ]
+        
+        return jsonify({
+            'suggestions': suggestions,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error generando sugerencias: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'suggestions': [],
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/generate-plan', methods=['POST'])
+def generate_plan():
+    """Genera un plan dinámico para una tarea"""
+    try:
+        data = request.get_json() or {}
+        task_title = data.get('task_title', '')
+        context = data.get('context', {})
+        
+        if not task_title:
+            return jsonify({'error': 'task_title is required'}), 400
+        
+        # Generar plan básico basado en el título de la tarea
+        plan_steps = []
+        
+        # Detectar tipo de tarea y generar pasos apropiados
+        task_lower = task_title.lower()
+        
+        if any(keyword in task_lower for keyword in ['buscar', 'investigar', 'analizar', 'informe']):
+            plan_steps = [
+                {'id': 'step-1', 'title': 'Definir objetivos de investigación', 'completed': False, 'active': True},
+                {'id': 'step-2', 'title': 'Recopilar información relevante', 'completed': False, 'active': False},
+                {'id': 'step-3', 'title': 'Analizar y procesar datos', 'completed': False, 'active': False},
+                {'id': 'step-4', 'title': 'Generar conclusiones', 'completed': False, 'active': False}
+            ]
+        elif any(keyword in task_lower for keyword in ['crear', 'desarrollar', 'diseñar']):
+            plan_steps = [
+                {'id': 'step-1', 'title': 'Planificar estructura', 'completed': False, 'active': True},
+                {'id': 'step-2', 'title': 'Desarrollar contenido', 'completed': False, 'active': False},
+                {'id': 'step-3', 'title': 'Revisar y optimizar', 'completed': False, 'active': False},
+                {'id': 'step-4', 'title': 'Finalizar entrega', 'completed': False, 'active': False}
+            ]
+        else:
+            # Plan genérico
+            plan_steps = [
+                {'id': 'step-1', 'title': 'Analizar requerimientos', 'completed': False, 'active': True},
+                {'id': 'step-2', 'title': 'Ejecutar tarea', 'completed': False, 'active': False},
+                {'id': 'step-3', 'title': 'Verificar resultados', 'completed': False, 'active': False}
+            ]
+        
+        return jsonify({
+            'plan': plan_steps,
+            'task_title': task_title,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error generando plan: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'plan': [],
+            'timestamp': datetime.now().isoformat()
+        }), 500
