@@ -76,12 +76,19 @@ def run_test(name, endpoint, method="GET", data=None, expected_status=200, timeo
         # Check status code
         if response.status_code == expected_status:
             print(f"   ✅ PASSED ({elapsed_time:.2f}s)")
+            
+            # Try to parse JSON response
+            try:
+                response_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text[:200]
+            except:
+                response_data = response.text[:200]
+            
             result = {
                 "name": name,
                 "status": "PASSED",
                 "elapsed_time": elapsed_time,
                 "response_code": response.status_code,
-                "response_data": response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text[:200]
+                "response_data": response_data
             }
             test_results["summary"]["passed"] += 1
         else:
