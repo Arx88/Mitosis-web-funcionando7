@@ -167,6 +167,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [pdfViewerContent, setPDFViewerContent] = useState('');
   const [pdfViewerTitle, setPDFViewerTitle] = useState('');
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  // Estados para orquestación
+  const [orchestrationTaskId, setOrchestrationTaskId] = useState<string | null>(null);
+  const [orchestrationStatus, setOrchestrationStatus] = useState<OrchestrationStatus | null>(null);
+  const [isOrchestrating, setIsOrchestrating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
