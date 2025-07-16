@@ -87,7 +87,7 @@ def run_chat_test(test_name, message, expected_mode=None, should_execute_tools=F
     
     try:
         start_time = time.time()
-        response = requests.post(url, json=data, timeout=timeout)
+        response = requests.post(url, json=data, timeout=timeout, headers={'Connection': 'close'})
         response_time = time.time() - start_time
         
         status_code = response.status_code
