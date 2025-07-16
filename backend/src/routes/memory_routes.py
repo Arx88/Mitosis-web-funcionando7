@@ -238,7 +238,7 @@ def retrieve_context():
         return jsonify({'error': f'Failed to retrieve context: {str(e)}'}), 500
 
 @memory_bp.route('/memory-analytics', methods=['GET'])
-async def memory_analytics():
+def memory_analytics():
     """
     Obtener analytics detallados del sistema de memoria
     """
@@ -248,7 +248,7 @@ async def memory_analytics():
             return jsonify({'error': 'Memory manager not available'}), 503
             
         # Obtener estadísticas detalladas
-        stats = await memory_manager.get_memory_stats()
+        stats = asyncio.run(memory_manager.get_memory_stats())
         
         # Análisis adicional
         analytics = {
