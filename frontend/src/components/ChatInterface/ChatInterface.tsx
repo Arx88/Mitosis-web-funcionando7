@@ -224,6 +224,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setShowPlaceholder(false);
     setAgentStatus('idle');
     setCurrentStepName('');
+    // Reset orchestration state
+    setOrchestrationTaskId(null);
+    setOrchestrationStatus(null);
+    setIsOrchestrating(false);
     setIsLoadingMessages(false);
     setShowPDFViewer(false);
     setPDFViewerContent('');
