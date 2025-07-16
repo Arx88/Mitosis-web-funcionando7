@@ -146,7 +146,7 @@ async def store_knowledge():
                 confidence=data.get('confidence', 0.8),
                 context=data.get('context', {}),
             )
-            await memory_manager.semantic_memory.store_fact(fact)
+            memory_manager.semantic_memory.store_fact(fact)
             stored_id = fact.id
         
         return jsonify({
