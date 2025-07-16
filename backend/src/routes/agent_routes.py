@@ -281,8 +281,8 @@ async def chat():
                 enhanced_memory = getattr(current_app, 'enhanced_memory', None)
                 enhanced_task_manager = getattr(current_app, 'enhanced_task_manager', None)
                 
-                # Desactivar enhanced agent por ahora para usar el sistema simple
-                if False and enhanced_agent and enhanced_memory and enhanced_task_manager:
+                # Usar enhanced agent si está disponible
+                if enhanced_agent and enhanced_memory and enhanced_task_manager:
                     logger.info(f"🧠 Usando Enhanced Agent para procesamiento avanzado")
                     
                     # Agregar contexto relevante al mensaje
