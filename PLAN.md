@@ -147,11 +147,194 @@ async def chat():
 - ✅ Chat endpoint funciona sin errores
 - ✅ Tests pasando al 100%
 
-Brechas Identificadas
+## 4. Plan de Desarrollo a Medio Plazo
 
-Orquestación y Planificación de Tareas
+### 4.1 Fase 3: Capacidades Multimodales Básicas (3-4 meses)
 
-La brecha más crítica identificada en MitosisV2 es la falta de capacidades sofisticadas de orquestación y planificación de tareas. Mientras que el sistema actual incluye componentes básicos para la gestión de tareas, carece de la capacidad de descomponer automáticamente tareas complejas en sub-tareas manejables, establecer dependencias entre tareas, y adaptar dinámicamente los planes basados en resultados intermedios o cambios en el contexto.
+**Objetivo**: Expandir las capacidades del agente para procesar y generar contenido multimodal.
+
+**Componentes a Implementar**:
+- **ImageProcessor**: Análisis y procesamiento de imágenes
+- **AudioProcessor**: Transcripción y análisis de audio
+- **VideoProcessor**: Extracción y análisis de video
+- **ContentGenerator**: Generación de contenido multimodal
+
+**Implementación**:
+```python
+class MultimodalProcessor:
+    def __init__(self):
+        self.image_processor = ImageProcessor()
+        self.audio_processor = AudioProcessor()
+        self.video_processor = VideoProcessor()
+        self.content_generator = ContentGenerator()
+    
+    async def process_content(self, content, content_type):
+        if content_type == "image":
+            return await self.image_processor.analyze(content)
+        elif content_type == "audio":
+            return await self.audio_processor.transcribe_and_analyze(content)
+        elif content_type == "video":
+            return await self.video_processor.extract_and_analyze(content)
+        
+    async def generate_content(self, description, content_type, style_params=None):
+        return await self.content_generator.create(
+            description, content_type, style_params
+        )
+```
+
+### 4.2 Fase 4: Entorno Sandbox Avanzado (2-3 meses)
+
+**Objetivo**: Implementar capacidades de ejecución segura y gestión de entornos virtuales.
+
+**Componentes a Implementar**:
+- **SandboxManager**: Gestión de entornos de ejecución aislados
+- **ContainerManager**: Gestión de contenedores Docker
+- **EnvironmentTemplates**: Plantillas de entornos pre-configurados
+- **SecurityManager**: Gestión de permisos y seguridad
+
+**Implementación**:
+```python
+class SandboxManager:
+    def __init__(self):
+        self.container_manager = ContainerManager()
+        self.environment_templates = EnvironmentTemplateManager()
+        self.security_manager = SecurityManager()
+    
+    async def create_environment(self, environment_type, requirements=None):
+        template = await self.environment_templates.get_template(environment_type)
+        container = await self.container_manager.create_container(
+            template,
+            resource_limits=self._calculate_resource_limits(requirements),
+            security_profile=self.security_manager.get_profile(environment_type)
+        )
+        return SandboxEnvironment(container)
+```
+
+### 4.3 Fase 5: Navegación Web Programática (2-3 meses)
+
+**Objetivo**: Implementar capacidades de automatización web y extracción de datos.
+
+**Componentes a Implementar**:
+- **WebAutomationEngine**: Motor de automatización web
+- **BrowserManager**: Gestión de navegadores automatizados
+- **PageAnalyzer**: Análisis de estructura de páginas web
+- **DataExtractor**: Extracción inteligente de datos
+
+**Implementación**:
+```python
+class WebAutomationEngine:
+    def __init__(self):
+        self.browser_manager = BrowserManager()
+        self.page_analyzer = PageAnalyzer()
+        self.data_extractor = DataExtractor()
+    
+    async def navigate_and_extract(self, url, extraction_goals):
+        page = await self.browser_manager.navigate(url)
+        page_structure = await self.page_analyzer.analyze(page)
+        return await self.data_extractor.extract(page, extraction_goals)
+```
+
+## 5. Arquitectura de Referencia y Principios de Diseño
+
+### 5.1 Principios Fundamentales
+
+**Autonomía**: El agente debe operar independientemente sin necesidad de instrucciones explícitas en cada paso.
+
+**Adaptabilidad**: Capacidad de modificar comportamiento basado en nueva información y feedback del entorno.
+
+**Comportamiento Orientado a Objetivos**: Enfoque en lograr objetivos de alto nivel mediante planificación y ejecución estratégica.
+
+**Aprendizaje Continuo**: Mejora constante basada en experiencias pasadas y retroalimentación.
+
+### 5.2 Arquitectura Modular
+
+**Módulo de Percepción**: Procesamiento de información multimodal del entorno.
+
+**Motor de Toma de Decisiones**: Evaluación de opciones y selección de estrategias.
+
+**Módulo de Acción**: Ejecución de decisiones mediante herramientas externas.
+
+**Sistema de Memoria**: Almacenamiento y recuperación de contexto e información.
+
+### 5.3 Patrones de Diseño Agentic
+
+**Patrón de Reflexión**: Evaluación de acciones y resultados para mejora continua.
+
+**Patrón ReAct**: Integración de razonamiento y acción en ciclos iterativos.
+
+**Patrón de Planificación**: Descomposición de tareas complejas en sub-tareas manejables.
+
+## 6. Sistema de Memoria Detallado
+
+### 6.1 Componentes del Sistema de Memoria
+
+**Memoria de Trabajo (WorkingMemoryStore)**:
+- Almacena contexto inmediato y de corto plazo
+- Historial de conversación reciente
+- Resultados intermedios de herramientas
+- Información volátil relevante para decisiones inmediatas
+
+**Memoria Episódica (EpisodicMemoryStore)**:
+- Experiencias completas del agente
+- Contexto de tareas, pasos de ejecución, resultados
+- Fundamental para aprendizaje por experiencia
+- Identificación de patrones de éxito y fracaso
+
+**Memoria Semántica (SemanticMemoryStore)**:
+- Conocimiento general y fáctico
+- Conceptos y relaciones entre entidades
+- Base para razonamiento complejo
+- Búsqueda semántica mediante embeddings
+
+**Memoria Procedimental (ProceduralMemoryStore)**:
+- Procedimientos y estrategias exitosas
+- Secuencias de acciones efectivas
+- Optimización de rendimiento
+- Selección de mejores herramientas
+
+### 6.2 Servicios de Soporte
+
+**EmbeddingService**: Generación de representaciones vectoriales para búsqueda semántica.
+
+**SemanticIndexer**: Indexación de documentos y experiencias para recuperación eficiente.
+
+## 7. Consideraciones de Implementación
+
+### 7.1 Tecnologías y Frameworks
+
+**Backend**: FastAPI con integración de WebSockets
+**Frontend**: React + TypeScript con Tailwind CSS
+**Base de Datos**: MongoDB para persistencia de memoria
+**Contenedores**: Docker para sandboxing
+**Modelos**: Ollama para modelos locales, OpenRouter para modelos remotos
+
+### 7.2 Seguridad y Rendimiento
+
+**Sandboxing**: Ejecución segura de código mediante contenedores aislados
+**Gestión de Recursos**: Límites de CPU, memoria y tiempo de ejecución
+**Concurrencia**: Pool de ejecutores para operaciones paralelas
+**Caching**: Optimización de respuestas y resultados de herramientas
+
+### 7.3 Monitoreo y Observabilidad
+
+**Logging**: Sistema comprehensivo de logs para debugging
+**Métricas**: Tracking de rendimiento y uso de recursos
+**Alertas**: Notificaciones para condiciones anómalas
+**Dashboard**: Visualización de estadísticas del agente
+
+## 8. Conclusión
+
+MITOSIS ha logrado una base sólida con su sistema de memoria avanzado (88.9% funcional) y una interfaz de usuario moderna. El próximo paso crítico es la integración automática del sistema de memoria con el agente principal, seguido por la implementación de capacidades multimodales, sandboxing avanzado y navegación web programática.
+
+Una vez completada la integración de memoria, MITOSIS estará posicionado como un agente general verdaderamente autónomo, capaz de competir con sistemas comerciales líderes mediante:
+
+- **Aprendizaje automático** de cada conversación
+- **Memoria persistente** entre sesiones
+- **Procesamiento multimodal** de contenido
+- **Ejecución segura** de código y herramientas
+- **Automatización web** avanzada
+
+El enfoque incremental propuesto asegura una implementación estable y funcional en cada fase, manteniendo la coherencia con la arquitectura existente mientras se expanden las capacidades del sistema hacia el objetivo final de un agente general avanzado.
 
 Un agente general efectivo debe ser capaz de recibir objetivos de alto nivel y traducirlos automáticamente en secuencias de acciones específicas, considerando las herramientas disponibles, las restricciones del entorno, y las preferencias del usuario. Esta capacidad requiere la implementación de algoritmos de planificación sofisticados que pueden manejar incertidumbre, optimizar para múltiples objetivos, y recuperarse elegantemente de fallos o situaciones imprevistas.
 
