@@ -512,6 +512,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       // Modificar el mensaje basado en el modo de búsqueda
       let processedMessage = message;
       let progressInterval: NodeJS.Timeout | null = null;
+      let useOrchestration = false;
+      
+      // Determinar si usar orquestación (para tareas que no sean WebSearch/DeepSearch específicas)
+      if (!searchMode) {
+        useOrchestration = true;
+        setAgentStatus('orchestrating');
+        setIsOrchestrating(true);
+      }
       
       if (searchMode === 'websearch') {
         processedMessage = `[WebSearch] ${message}`;
