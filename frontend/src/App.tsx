@@ -365,10 +365,43 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
         // Generar plan específico para archivos adjuntos
         const fileAttachmentPlan = await generateDynamicTaskPlan('Archivos adjuntos');
         
+        // Marcar pasos como completados para archivos adjuntos
+        const completedFileAttachmentPlan = fileAttachmentPlan.map((step, index) => ({
+          ...step,
+          completed: true,
+          active: false
+        }));
+        
+        // Actualizar progreso en el backend
+        const updateFileAttachmentProgress = async () => {
+          try {
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+            for (let i = 0; i < fileAttachmentPlan.length; i++) {
+              const step = fileAttachmentPlan[i];
+              await fetch(`${backendUrl}/api/agent/update-task-progress`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  task_id: newTask.id,
+                  step_id: step.id,
+                  completed: true
+                })
+              });
+            }
+          } catch (error) {
+            console.error('Error updating file attachment progress:', error);
+          }
+        };
+        
+        // Actualizar progreso
+        updateFileAttachmentProgress();
+        
         const updatedTask = {
           ...newTask,
           messages: [userMessage, assistantMessage],
-          plan: fileAttachmentPlan, // Asignar plan específico
+          plan: completedFileAttachmentPlan, // Usar plan completado
           status: 'completed' as const, // Mark as completed since files are uploaded
           progress: 100 // Set to 100% when files are uploaded and ready
         };
