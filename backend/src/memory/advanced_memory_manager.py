@@ -822,8 +822,9 @@ class AdvancedMemoryManager:
                     compression_stats['compressed_concepts'] += 1
             
             # 3. Comprimir hechos semánticos antiguos
-            old_facts = self.semantic_memory.get_facts_before_date(threshold_date)
-            for fact in old_facts:
+            all_facts = [fact for fact in self.semantic_memory.facts.values() 
+                        if hasattr(fact, 'created_at') and fact.created_at < threshold_date]
+            for fact in all_facts:
                 if fact.confidence < 0.6:  # Solo comprimir hechos de baja confianza
                     # Comprimir contexto
                     original_size = len(str(fact.context))
