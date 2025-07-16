@@ -743,3 +743,326 @@ class AdvancedMemoryManager:
         except Exception as e:
             logger.error(f"Error sintetizando contexto: {e}")
             return f"Error en síntesis: {str(e)}"
+    
+    async def compress_old_memory(self, compression_threshold_days: int = 30, 
+                                 compression_ratio: float = 0.5) -> Dict[str, Any]:
+        """
+        Comprime memoria antigua para optimizar el almacenamiento
+        
+        Args:
+            compression_threshold_days: Días después de los cuales comprimir memoria
+            compression_ratio: Ratio de compresión (0.0 a 1.0)
+            
+        Returns:
+            Diccionario con estadísticas de compresión
+        """
+        if not self.is_initialized:
+            await self.initialize()
+            
+        try:
+            compression_stats = {
+                'started_at': datetime.now().isoformat(),
+                'threshold_days': compression_threshold_days,
+                'compression_ratio': compression_ratio,
+                'compressed_episodes': 0,
+                'compressed_concepts': 0,
+                'compressed_facts': 0,
+                'compressed_procedures': 0,
+                'space_saved': 0
+            }
+            
+            # Calcular fecha umbral
+            threshold_date = datetime.now() - timedelta(days=compression_threshold_days)
+            
+            # 1. Comprimir episodios antiguos
+            old_episodes = self.episodic_memory.get_episodes_before_date(threshold_date)
+            for episode in old_episodes:
+                if episode.importance < 4:  # Solo comprimir episodios de baja importancia
+                    # Comprimir descripción y contexto
+                    original_size = len(str(episode.description)) + len(str(episode.context))
+                    
+                    # Comprimir manteniendo información esencial
+                    compressed_description = episode.description[:int(len(episode.description) * compression_ratio)]
+                    compressed_context = {
+                        'task_type': episode.context.get('task_type', 'unknown'),
+                        'success': episode.context.get('success', False),
+                        'compressed': True,
+                        'original_timestamp': episode.timestamp.isoformat()
+                    }
+                    
+                    # Actualizar episodio
+                    episode.description = compressed_description
+                    episode.context = compressed_context
+                    
+                    # Reducir número de acciones y outcomes
+                    if len(episode.actions) > 3:
+                        episode.actions = episode.actions[:3]
+                    if len(episode.outcomes) > 3:
+                        episode.outcomes = episode.outcomes[:3]
+                    
+                    compressed_size = len(str(episode.description)) + len(str(episode.context))
+                    compression_stats['space_saved'] += (original_size - compressed_size)
+                    compression_stats['compressed_episodes'] += 1
+            
+            # 2. Comprimir conceptos semánticos antiguos
+            old_concepts = self.semantic_memory.get_concepts_before_date(threshold_date)
+            for concept in old_concepts:
+                if concept.confidence < 0.7:  # Solo comprimir conceptos de baja confianza
+                    # Comprimir descripción y atributos
+                    original_size = len(str(concept.description)) + len(str(concept.attributes))
+                    
+                    concept.description = concept.description[:int(len(concept.description) * compression_ratio)]
+                    # Mantener solo atributos esenciales
+                    essential_attrs = ['type', 'category', 'importance']
+                    concept.attributes = {k: v for k, v in concept.attributes.items() if k in essential_attrs}
+                    
+                    compressed_size = len(str(concept.description)) + len(str(concept.attributes))
+                    compression_stats['space_saved'] += (original_size - compressed_size)
+                    compression_stats['compressed_concepts'] += 1
+            
+            # 3. Comprimir hechos semánticos antiguos
+            old_facts = self.semantic_memory.get_facts_before_date(threshold_date)
+            for fact in old_facts:
+                if fact.confidence < 0.6:  # Solo comprimir hechos de baja confianza
+                    # Comprimir contexto
+                    original_size = len(str(fact.context))
+                    
+                    fact.context = {
+                        'compressed': True,
+                        'original_confidence': fact.confidence,
+                        'compressed_at': datetime.now().isoformat()
+                    }
+                    
+                    compressed_size = len(str(fact.context))
+                    compression_stats['space_saved'] += (original_size - compressed_size)
+                    compression_stats['compressed_facts'] += 1
+            
+            # 4. Comprimir procedimientos antiguos
+            old_procedures = self.procedural_memory.get_procedures_before_date(threshold_date)
+            for procedure in old_procedures:
+                if procedure.effectiveness_score < 0.5:  # Solo comprimir procedimientos poco efectivos
+                    # Comprimir pasos
+                    original_size = len(str(procedure.steps))
+                    
+                    if len(procedure.steps) > 5:
+                        procedure.steps = procedure.steps[:5]  # Mantener solo primeros 5 pasos
+                    
+                    compressed_size = len(str(procedure.steps))
+                    compression_stats['space_saved'] += (original_size - compressed_size)
+                    compression_stats['compressed_procedures'] += 1
+            
+            # 5. Limpiar memoria de trabajo antigua
+            self.working_memory.cleanup_old_contexts(threshold_date)
+            
+            compression_stats['completed_at'] = datetime.now().isoformat()
+            compression_stats['total_space_saved_kb'] = compression_stats['space_saved'] / 1024
+            
+            logger.info(f"Compresión de memoria completada: {compression_stats}")
+            
+            return compression_stats
+            
+        except Exception as e:
+            logger.error(f"Error comprimiendo memoria antigua: {e}")
+            return {
+                'error': str(e),
+                'completed_at': datetime.now().isoformat()
+            }
+    
+    async def export_memory_data(self, export_format: str = 'json', 
+                                include_compressed: bool = False,
+                                output_file: str = None) -> Dict[str, Any]:
+        """
+        Exporta datos de memoria para respaldo o análisis
+        
+        Args:
+            export_format: Formato de exportación ('json', 'csv', 'yaml')
+            include_compressed: Si incluir datos comprimidos
+            output_file: Archivo de salida (opcional)
+            
+        Returns:
+            Diccionario con datos exportados y estadísticas
+        """
+        if not self.is_initialized:
+            await self.initialize()
+            
+        try:
+            export_data = {
+                'metadata': {
+                    'exported_at': datetime.now().isoformat(),
+                    'export_format': export_format,
+                    'include_compressed': include_compressed,
+                    'mitosis_version': '2.0.0-advanced',
+                    'memory_manager_version': '1.0.0'
+                },
+                'memory_data': {}
+            }
+            
+            # 1. Exportar memoria de trabajo
+            working_contexts = self.working_memory.get_all_contexts()
+            export_data['memory_data']['working_memory'] = [
+                {
+                    'id': ctx_id,
+                    'data': ctx_data,
+                    'timestamp': ctx_data.get('timestamp', datetime.now().isoformat())
+                }
+                for ctx_id, ctx_data in working_contexts.items()
+            ]
+            
+            # 2. Exportar memoria episódica
+            all_episodes = self.episodic_memory.get_all_episodes()
+            export_data['memory_data']['episodic_memory'] = []
+            
+            for episode in all_episodes:
+                # Filtrar episodios comprimidos si no se incluyen
+                if not include_compressed and episode.context.get('compressed'):
+                    continue
+                    
+                episode_data = {
+                    'id': episode.id,
+                    'title': episode.title,
+                    'description': episode.description,
+                    'context': episode.context,
+                    'actions': episode.actions,
+                    'outcomes': episode.outcomes,
+                    'timestamp': episode.timestamp.isoformat(),
+                    'duration': episode.duration.total_seconds() if episode.duration else 0,
+                    'success': episode.success,
+                    'importance': episode.importance,
+                    'tags': episode.tags
+                }
+                export_data['memory_data']['episodic_memory'].append(episode_data)
+            
+            # 3. Exportar memoria semántica
+            all_concepts = self.semantic_memory.get_all_concepts()
+            all_facts = self.semantic_memory.get_all_facts()
+            
+            export_data['memory_data']['semantic_memory'] = {
+                'concepts': [
+                    {
+                        'id': concept.id,
+                        'name': concept.name,
+                        'description': concept.description,
+                        'category': concept.category,
+                        'attributes': concept.attributes,
+                        'relations': concept.relations,
+                        'confidence': concept.confidence,
+                        'created_at': concept.created_at.isoformat() if hasattr(concept, 'created_at') else None
+                    }
+                    for concept in all_concepts
+                    if include_compressed or not concept.attributes.get('compressed')
+                ],
+                'facts': [
+                    {
+                        'id': fact.id,
+                        'subject': fact.subject,
+                        'predicate': fact.predicate,
+                        'object': fact.object,
+                        'context': fact.context,
+                        'confidence': fact.confidence,
+                        'source': fact.source,
+                        'created_at': fact.created_at.isoformat() if hasattr(fact, 'created_at') else None
+                    }
+                    for fact in all_facts
+                    if include_compressed or not fact.context.get('compressed')
+                ]
+            }
+            
+            # 4. Exportar memoria procedimental
+            all_procedures = self.procedural_memory.get_all_procedures()
+            all_strategies = self.procedural_memory.get_all_tool_strategies()
+            
+            export_data['memory_data']['procedural_memory'] = {
+                'procedures': [
+                    {
+                        'id': proc.id,
+                        'name': proc.name,
+                        'description': proc.description,
+                        'steps': proc.steps,
+                        'context_patterns': proc.context_patterns,
+                        'success_rate': proc.success_rate,
+                        'effectiveness_score': proc.effectiveness_score,
+                        'usage_count': proc.usage_count,
+                        'created_at': proc.created_at.isoformat() if hasattr(proc, 'created_at') else None
+                    }
+                    for proc in all_procedures
+                ],
+                'tool_strategies': [
+                    {
+                        'id': strategy.id,
+                        'tool_name': strategy.tool_name,
+                        'parameters': strategy.parameters,
+                        'success_rate': strategy.success_rate,
+                        'avg_execution_time': strategy.avg_execution_time,
+                        'usage_count': strategy.usage_count,
+                        'created_at': strategy.created_at.isoformat() if hasattr(strategy, 'created_at') else None
+                    }
+                    for strategy in all_strategies
+                ]
+            }
+            
+            # 5. Exportar estadísticas del sistema
+            export_data['memory_data']['system_stats'] = await self.get_memory_stats()
+            
+            # 6. Calcular estadísticas de exportación
+            export_stats = {
+                'total_working_contexts': len(export_data['memory_data']['working_memory']),
+                'total_episodes': len(export_data['memory_data']['episodic_memory']),
+                'total_concepts': len(export_data['memory_data']['semantic_memory']['concepts']),
+                'total_facts': len(export_data['memory_data']['semantic_memory']['facts']),
+                'total_procedures': len(export_data['memory_data']['procedural_memory']['procedures']),
+                'total_strategies': len(export_data['memory_data']['procedural_memory']['tool_strategies']),
+                'export_size_estimate_kb': len(str(export_data)) / 1024
+            }
+            
+            export_data['export_stats'] = export_stats
+            
+            # 7. Guardar archivo si se especifica
+            if output_file:
+                import json
+                import yaml
+                import csv
+                from pathlib import Path
+                
+                output_path = Path(output_file)
+                
+                if export_format.lower() == 'json':
+                    with open(output_path, 'w', encoding='utf-8') as f:
+                        json.dump(export_data, f, indent=2, ensure_ascii=False)
+                        
+                elif export_format.lower() == 'yaml':
+                    with open(output_path, 'w', encoding='utf-8') as f:
+                        yaml.dump(export_data, f, default_flow_style=False, allow_unicode=True)
+                        
+                elif export_format.lower() == 'csv':
+                    # Exportar cada tipo de memoria a CSV separado
+                    base_path = output_path.parent / output_path.stem
+                    
+                    # Episodios
+                    episodes_df = pd.DataFrame(export_data['memory_data']['episodic_memory'])
+                    episodes_df.to_csv(f"{base_path}_episodes.csv", index=False)
+                    
+                    # Conceptos
+                    concepts_df = pd.DataFrame(export_data['memory_data']['semantic_memory']['concepts'])
+                    concepts_df.to_csv(f"{base_path}_concepts.csv", index=False)
+                    
+                    # Hechos
+                    facts_df = pd.DataFrame(export_data['memory_data']['semantic_memory']['facts'])
+                    facts_df.to_csv(f"{base_path}_facts.csv", index=False)
+                    
+                    # Procedimientos
+                    procedures_df = pd.DataFrame(export_data['memory_data']['procedural_memory']['procedures'])
+                    procedures_df.to_csv(f"{base_path}_procedures.csv", index=False)
+                
+                export_data['output_file'] = str(output_path)
+                export_data['files_created'] = True
+            
+            logger.info(f"Exportación de memoria completada: {export_stats}")
+            
+            return export_data
+            
+        except Exception as e:
+            logger.error(f"Error exportando datos de memoria: {e}")
+            return {
+                'error': str(e),
+                'exported_at': datetime.now().isoformat()
+            }
