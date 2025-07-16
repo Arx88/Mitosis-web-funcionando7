@@ -81,8 +81,8 @@ async def store_episode():
         if not memory_manager:
             return jsonify({'error': 'Memory manager not available'}), 503
             
-        # Crear episodio
-        episode = Episode(
+        # Crear episodio usando el método de factory
+        episode = Episode.from_chat_interaction(
             user_query=data['user_query'],
             agent_response=data['agent_response'],
             success=data['success'],
@@ -98,7 +98,7 @@ async def store_episode():
         return jsonify({
             'success': True,
             'episode_id': episode.id,
-            'stored_at': episode.timestamp
+            'stored_at': episode.timestamp.isoformat()
         })
         
     except Exception as e:
