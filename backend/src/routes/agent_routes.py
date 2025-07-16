@@ -591,10 +591,22 @@ async def chat():
                         # 💬 MODO DISCUSIÓN - Usar respuesta casual
                         logger.info(f"💬 Modo discusión activado - generando respuesta casual")
                         
-                        # Generar respuesta casual usando Ollama
-                        response_data = ollama_service.generate_casual_response(message, {
+                        # Generar respuesta casual usando Ollama con contexto de memoria
+                        enhanced_message = message
+                        if relevant_context:
+                            enhanced_message = f"""
+Contexto previo relevante:
+{relevant_context}
+
+Pregunta actual del usuario: {message}
+
+Responde considerando el contexto previo para dar una respuesta más personalizada y coherente.
+"""
+                        
+                        response_data = ollama_service.generate_casual_response(enhanced_message, {
                             'task_id': task_id,
-                            'previous_messages': relevant_context.get('previous_messages', []) if relevant_context else []
+                            'previous_messages': relevant_context.get('previous_messages', []) if relevant_context else [],
+                            'memory_context': relevant_context if relevant_context else None
                         })
                         
                         if response_data.get('error'):
