@@ -114,57 +114,35 @@ async def chat():
 - `/app/backend/src/services/agent_service.py` - Usar contexto de memoria
 - `/app/backend/src/memory/advanced_memory_manager.py` - Completar métodos faltantes
 
-**Componentes a crear:**
-```typescript
-// MemorySearchPanel.tsx
-interface MemorySearchPanelProps {
-  onSearch: (query: string) => void;
-  searchResults: SearchResult[];
-  memoryStats: MemoryStats;
-}
-
-const MemorySearchPanel: React.FC<MemorySearchPanelProps> = ({
-  onSearch,
-  searchResults,
-  memoryStats
-}) => {
-  return (
-    <div className="memory-search-panel">
-      <SemanticSearchInput onSearch={onSearch} />
-      <MemoryStatsDisplay stats={memoryStats} />
-      <SearchResultsList results={searchResults} />
-    </div>
-  );
-};
-```
-
-**Nuevos archivos a crear:**
-- `/app/frontend/src/components/memory/MemorySearchPanel.tsx`
-- `/app/frontend/src/components/memory/MemoryDashboard.tsx`
-- `/app/frontend/src/components/memory/MemoryStatsDisplay.tsx`
-- `/app/frontend/src/components/memory/SemanticSearchInput.tsx`
-- `/app/frontend/src/components/memory/SearchResultsList.tsx`
-
-#### **3. Integración con ChatInterface**
+#### **2. Completar Métodos Faltantes del Sistema de Memoria**
 *Estado: REQUERIDO - Duración: 1-2 días*
 
-**Modificaciones necesarias:**
-```typescript
-// ChatInterface.tsx - Líneas 695-707
-const handleMessageSend = async (message: string) => {
-  // Buscar contexto semántico relevante
-  const context = await semanticSearch(message);
-  setSemanticContext(context);
-  
-  // Enviar mensaje con contexto enriquecido
-  await sendMessage(message, context);
-};
+**MÉTODOS PENDIENTES:**
+```python
+# En /app/backend/src/memory/advanced_memory_manager.py
+async def compress_old_memory(self, config: dict) -> dict:
+    """Comprime memoria antigua automáticamente para optimizar rendimiento"""
+    # Comprimir episodios antiguos menos importantes
+    # Consolidar conocimiento semántico duplicado
+    # Optimizar índices de memoria
+    
+async def export_memory_data(self) -> dict:
+    """Exporta datos de memoria para backup automático"""
+    # Exportar todos los tipos de memoria
+    # Preservar relaciones semánticas
+    # Formato compatible para restauración
 ```
 
-**Archivos a modificar:**
-- `/app/frontend/src/components/ChatInterface/ChatInterface.tsx`
-- `/app/frontend/src/services/api.ts` - Nuevos endpoints de memoria
-- `/app/frontend/src/components/Sidebar.tsx` - Agregar sección de memoria
+#### **3. Verificar Integración con Chat Endpoint**
+*Estado: CRÍTICO - Duración: 1 día*
+
+**PROBLEMA ACTUAL:**
+El testing mostró error 500 en chat endpoint. Necesario investigar y corregir para que la memoria funcione con el chat.
+
+**VERIFICACIÓN REQUERIDA:**
+- Que memory_manager esté disponible en contexto de aplicación
+- Que el chat endpoint use memoria automáticamente
+- Que no haya conflictos de dependencias
 
 ### **TESTING PROTOCOL - OBLIGATORIO**
 
