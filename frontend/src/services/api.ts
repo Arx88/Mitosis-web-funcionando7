@@ -658,6 +658,181 @@ class AgentAPI {
   }
 
   // ==========================================
+  // ORCHESTRATION API METHODS
+  // ==========================================
+
+  async orchestrateTask(taskDescription: string, userId: string = 'default_user', sessionId?: string, options: any = {}): Promise<OrchestrationResult> {
+    try {
+      const response = await fetch(`${this.baseUrl}/orchestrate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          task_description: taskDescription,
+          user_id: userId,
+          session_id: sessionId || this.generateSessionId(),
+          priority: options.priority || 1,
+          constraints: options.constraints || {},
+          preferences: options.preferences || {},
+          metadata: options.metadata || {}
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error orchestrating task:', error);
+      throw error;
+    }
+  }
+
+  async getOrchestrationStatus(taskId: string): Promise<OrchestrationStatus> {
+    try {
+      const response = await fetch(`${this.baseUrl}/orchestration/status/${taskId}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error getting orchestration status:', error);
+      throw error;
+    }
+  }
+
+  async getOrchestrationMetrics(): Promise<OrchestrationMetrics> {
+    try {
+      const response = await fetch(`${this.baseUrl}/orchestration/metrics`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error getting orchestration metrics:', error);
+      throw error;
+    }
+  }
+
+  async getActiveOrchestrations(): Promise<OrchestrationStatus[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/orchestration/active`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error getting active orchestrations:', error);
+      throw error;
+    }
+  }
+
+  async cancelOrchestration(taskId: string): Promise<{success: boolean, message: string}> {
+    try {
+      const response = await fetch(`${this.baseUrl}/orchestration/cancel/${taskId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error cancelling orchestration:', error);
+      throw error;
+    }
+  }
+
+  async getOrchestrationRecommendations(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/orchestration/recommendations`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error getting orchestration recommendations:', error);
+      throw error;
+    }
+  }
+
+  async getTaskStatus(taskId: string): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/task/status/${taskId}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error getting task status:', error);
+      throw error;
+    }
+  }
+
+  // Helper method to generate session ID
+  private generateSessionId(): string {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  // ==========================================
   // PLAN TEMPLATES API METHODS
   // ==========================================
 
