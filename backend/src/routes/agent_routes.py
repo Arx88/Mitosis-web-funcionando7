@@ -886,6 +886,54 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                             
                             final_response = "\n".join(response_parts)
                         
+                        # 🧠 ALMACENAR EN MEMORIA EPISÓDICA - MODO AGENTE
+                        try:
+                            from src.memory.episodic_memory_store import Episode
+                            
+                            # Asegurar que la memoria está inicializada
+                            if not memory_manager.is_initialized:
+                                await memory_manager.initialize()
+                            
+                            episode = Episode(
+                                id=str(uuid.uuid4()),
+                                title=f"Ejecución de agente - {message[:50]}...",
+                                description=f"Usuario: {message}\nAgente: {final_response[:500]}...",
+                                context={
+                                    'user_message': message,
+                                    'agent_response': final_response,
+                                    'session_id': session_id,
+                                    'task_id': task_id,
+                                    'mode': 'agent',
+                                    'memory_context_used': bool(relevant_context),
+                                    'tools_executed': [r['tool'] for r in tool_results],
+                                    'tools_success': [r['success'] for r in tool_results],
+                                    'frontend_context': context
+                                },
+                                actions=[{
+                                    'type': 'user_message',
+                                    'content': message,
+                                    'timestamp': datetime.now().isoformat()
+                                }] + [{
+                                    'type': 'tool_execution',
+                                    'tool': result['tool'],
+                                    'success': result['success'],
+                                    'timestamp': datetime.now().isoformat()
+                                } for result in tool_results],
+                                outcomes=[{
+                                    'type': 'agent_response',
+                                    'content': final_response,
+                                    'timestamp': datetime.now().isoformat()
+                                }],
+                                timestamp=datetime.now(),
+                                success=any(r['success'] for r in tool_results) if tool_results else True,
+                                importance=4,  # Mayor importancia para ejecuciones de agente
+                                tags=['chat', 'conversation', 'agent', 'tools']
+                            )
+                            await memory_manager.episodic_memory.store_episode(episode)
+                            logger.info(f"🧠 Episodio de agente almacenado en memoria")
+                        except Exception as e:
+                            logger.warning(f"Error almacenando episodio de agente: {e}")
+                        
                         return jsonify({
                             'response': final_response,
                             'tool_results': tool_results,
