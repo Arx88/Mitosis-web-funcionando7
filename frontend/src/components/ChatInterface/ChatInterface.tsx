@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Paperclip, Mic, Send, Terminal, Globe, FileText, Plus, Zap, X, Search, Layers, Bot } from 'lucide-react';
-import { agentAPI, ChatResponse, ToolResult, SearchData, UploadData } from '../../services/api';
+import { agentAPI, ChatResponse, ToolResult, SearchData, UploadData, OrchestrationStatus } from '../../services/api';
 import { VanishInput } from '../VanishInput';
 import { FileUploadModal } from '../FileUploadModal';
 import { FileAttachmentButtons } from '../FileAttachmentButtons';
