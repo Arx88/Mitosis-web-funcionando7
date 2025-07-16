@@ -7,6 +7,7 @@ import asyncio
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime, timedelta
 import logging
+import pandas as pd
 
 from .working_memory_store import WorkingMemoryStore
 from .episodic_memory_store import EpisodicMemoryStore, Episode
