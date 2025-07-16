@@ -528,12 +528,6 @@ async def chat():
                 
         # 🔄 FALLBACK: Usar sistema anterior para WebSearch/DeepSearch o si falla orquestación
         
-        # Obtener servicios del contexto de aplicación
-        from flask import current_app
-        ollama_service = current_app.ollama_service
-        tool_manager = current_app.tool_manager
-        database_service = current_app.database_service
-        
         # Manejo de WebSearch
         if search_mode == 'websearch':
             try:
