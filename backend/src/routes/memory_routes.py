@@ -189,7 +189,7 @@ async def store_procedure():
             metadata=data.get('metadata', {})
         )
         
-        await memory_manager.procedural_memory.store_procedure(procedure)
+        memory_manager.procedural_memory.store_procedure(procedure)
         
         return jsonify({
             'success': True,
