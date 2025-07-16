@@ -176,14 +176,18 @@ except Exception as e:
     logger.warning(f"Error almacenando episodio: {e}")
 ```
 
-#### **PASO 3: Modificar Chat Endpoint** 🔄 **PENDIENTE**
-- **Estado**: ⏳ **PENDIENTE**
-- **Acción**: Implementar integración automática de memoria en chat endpoint
-- **Prioridad**: **ALTA**
+#### **PASO 3: Investigar por qué falla la integración** 🔄 **EN PROGRESO**
+- **Estado**: 🔄 **INICIADO**
+- **Acción**: Investigar por qué el sistema integrado no funciona correctamente
+- **Hipótesis**: 
+  - El `memory_manager.is_initialized` puede estar devolviendo `False`
+  - El `enhanced_agent` puede no estar disponible
+  - Error en la inicialización del sistema
+- **Próximo paso**: Ejecutar tests para verificar estado del sistema
 
-#### **PASO 4: Crear Método process_with_memory** 🔄 **PENDIENTE**
+#### **PASO 4: Testing y Depuración** 🔄 **PENDIENTE**
 - **Estado**: ⏳ **PENDIENTE**
-- **Acción**: Implementar método en `agent_service.py`
+- **Acción**: Usar `deep_testing_backend_v2` para identificar fallas específicas
 - **Prioridad**: **ALTA**
 
 #### **PASO 5: Testing Completo** 🔄 **PENDIENTE**
