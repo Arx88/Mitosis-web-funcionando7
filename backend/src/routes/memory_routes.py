@@ -194,7 +194,7 @@ async def store_procedure():
         return jsonify({
             'success': True,
             'procedure_id': procedure.id,
-            'stored_at': procedure.created_at
+            'stored_at': procedure.created_at.isoformat()
         })
         
     except Exception as e:
