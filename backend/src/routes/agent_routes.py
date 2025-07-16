@@ -530,18 +530,34 @@ async def chat():
                 # 🧠 ALMACENAR EN MEMORIA EPISÓDICA
                 try:
                     from src.memory.episodic_memory_store import Episode
+                    import uuid
+                    
                     episode = Episode(
-                        user_query=message,
-                        agent_response=agent_response,
-                        success=True,
-                        context=context,
-                        tools_used=[],
-                        importance=0.5,
-                        metadata={
+                        id=str(uuid.uuid4()),
+                        title=f"Conversación con usuario",
+                        description=f"Usuario: {message}\nAgente: {agent_response}",
+                        context={
+                            'user_message': message,
+                            'agent_response': agent_response,
                             'session_id': session_id,
                             'task_id': task_id,
-                            'fallback_mode': True
-                        }
+                            'fallback_mode': True,
+                            **context
+                        },
+                        actions=[{
+                            'type': 'user_message',
+                            'content': message,
+                            'timestamp': datetime.now().isoformat()
+                        }],
+                        outcomes=[{
+                            'type': 'agent_response',
+                            'content': agent_response,
+                            'timestamp': datetime.now().isoformat()
+                        }],
+                        timestamp=datetime.now(),
+                        success=True,
+                        importance=2,
+                        tags=['chat', 'conversation', 'fallback']
                     )
                     await memory_manager.episodic_memory.store_episode(episode)
                     logger.info(f"🧠 Episodio almacenado en memoria (modo fallback)")
