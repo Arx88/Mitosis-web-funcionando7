@@ -157,6 +157,31 @@ class SemanticIndexer:
         """
         return await self.search(query, 'hybrid', max_results)
     
+    async def search_similar_documents(self, query: str, max_results: int = 10) -> List[Dict[str, Any]]:
+        """
+        Busca documentos similares usando búsqueda semántica
+        
+        Args:
+            query: Consulta de búsqueda
+            max_results: Número máximo de resultados
+            
+        Returns:
+            Lista de documentos similares con formato específico
+        """
+        results = await self.search(query, 'semantic', max_results)
+        
+        # Convertir formato para compatibilidad con AdvancedMemoryManager
+        formatted_results = []
+        for result in results:
+            formatted_results.append({
+                'id': result['document_id'],
+                'content': result['content'],
+                'metadata': result['metadata'],
+                'similarity': result['score']
+            })
+        
+        return formatted_results
+    
     async def remove_document(self, doc_id: str):
         """
         Elimina un documento del índice
