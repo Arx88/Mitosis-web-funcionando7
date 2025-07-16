@@ -24,7 +24,7 @@ def get_memory_manager():
     return current_app.memory_manager if hasattr(current_app, 'memory_manager') else None
 
 @memory_bp.route('/semantic-search', methods=['POST'])
-async def semantic_search():
+def semantic_search():
     """
     Búsqueda semántica en el sistema de memoria
     """
@@ -44,14 +44,14 @@ async def semantic_search():
             
         # Inicializar si es necesario
         if not memory_manager.is_initialized:
-            await memory_manager.initialize()
+            asyncio.run(memory_manager.initialize())
         
         # Realizar búsqueda semántica
-        results = await memory_manager.semantic_search(
+        results = asyncio.run(memory_manager.semantic_search(
             query=query,
             max_results=max_results,
             memory_types=memory_types
-        )
+        ))
         
         return jsonify({
             'query': query,
