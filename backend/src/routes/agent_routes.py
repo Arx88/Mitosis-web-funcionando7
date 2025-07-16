@@ -743,6 +743,10 @@ async def chat():
                                                         context_parts.append(f"   - {search_result.get('title', 'Sin título')}")
                                                         context_parts.append(f"     URL: {search_result.get('url', 'Sin URL')}")
                                                         context_parts.append(f"     Descripción: {search_result.get('snippet', 'Sin descripción')}")
+                                            elif tool_name == 'llm_fallback':
+                                                if 'response' in tool_result:
+                                                    context_parts.append(f"{i}. Respuesta usando conocimiento interno (web no disponible):")
+                                                    context_parts.append(f"   {tool_result['response']}")
                                             elif tool_name == 'file_manager':
                                                 if 'files' in tool_result:
                                                     context_parts.append(f"{i}. Gestión de archivos ejecutada exitosamente:")
