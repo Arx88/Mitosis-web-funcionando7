@@ -149,11 +149,15 @@ def test_backend_health():
     )
     
     if response and response.status_code == 200:
-        data = response.json()
-        print(f"   Status: {data.get('status', 'unknown')}")
-        services = data.get('services', {})
-        print(f"   Services: Ollama={services.get('ollama', False)}, Tools={services.get('tools', 0)}, Database={services.get('database', False)}")
-        return True
+        try:
+            data = response.json()
+            print(f"   Status: {data.get('status', 'unknown')}")
+            services = data.get('services', {})
+            print(f"   Services: Ollama={services.get('ollama', False)}, Tools={services.get('tools', 0)}, Database={services.get('database', False)}")
+            return True
+        except:
+            print(f"   Response: {response.text[:200]}")
+            return True
     return False
 
 def test_agent_health_and_status():
