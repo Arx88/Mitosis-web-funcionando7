@@ -660,83 +660,115 @@ async def chat():
                         # Ejecutar tareas en modo agente
                         tool_results = execute_agent_task()
                         
-                        # 🎯 ACTUALIZAR PROGRESO DEL PLAN DE ACCIÓN
-                        def update_plan_progress(task_id, step_number, total_steps):
-                            """Actualiza el progreso del plan de acción"""
+                        # 🧠 PROCESAR RESULTADOS CON LLM PARA GENERAR RESPUESTA ÚTIL
+                        def process_tool_results_with_llm(tool_results, original_message):
+                            """Procesa los resultados de las herramientas con el LLM para generar una respuesta coherente"""
                             try:
-                                # Calcular qué pasos marcar como completados
-                                steps_to_complete = []
+                                # Construir contexto con los resultados
+                                context_parts = [f"TAREA SOLICITADA: {original_message}\n"]
                                 
-                                # Marcar pasos como completados basado en el progreso
-                                for i in range(1, step_number + 1):
-                                    step_id = f'step-{i}'
-                                    steps_to_complete.append(step_id)
+                                if tool_results:
+                                    context_parts.append("RESULTADOS DE HERRAMIENTAS EJECUTADAS:")
+                                    for i, result in enumerate(tool_results, 1):
+                                        tool_name = result['tool']
+                                        success = result['success']
+                                        tool_result = result['result']
+                                        
+                                        if success:
+                                            if tool_name == 'shell':
+                                                if 'stdout' in tool_result:
+                                                    context_parts.append(f"{i}. Comando shell ejecutado exitosamente:")
+                                                    context_parts.append(f"   Salida: {tool_result['stdout']}")
+                                                elif 'output' in tool_result:
+                                                    context_parts.append(f"{i}. Comando shell ejecutado exitosamente:")
+                                                    context_parts.append(f"   Salida: {tool_result['output']}")
+                                            elif tool_name == 'web_search':
+                                                if 'results' in tool_result:
+                                                    context_parts.append(f"{i}. Búsqueda web ejecutada exitosamente:")
+                                                    for search_result in tool_result['results'][:3]:
+                                                        context_parts.append(f"   - {search_result.get('title', 'Sin título')}")
+                                                        context_parts.append(f"     URL: {search_result.get('url', 'Sin URL')}")
+                                                        context_parts.append(f"     Descripción: {search_result.get('snippet', 'Sin descripción')}")
+                                            elif tool_name == 'file_manager':
+                                                if 'files' in tool_result:
+                                                    context_parts.append(f"{i}. Gestión de archivos ejecutada exitosamente:")
+                                                    context_parts.append(f"   Archivos encontrados: {tool_result['files'][:10]}")
+                                            else:
+                                                context_parts.append(f"{i}. Herramienta {tool_name} ejecutada exitosamente:")
+                                                context_parts.append(f"   Resultado: {str(tool_result)[:500]}...")
+                                        else:
+                                            context_parts.append(f"{i}. Error en herramienta {tool_name}: {tool_result.get('error', 'Error desconocido')}")
                                 
-                                # Actualizar cada paso completado
-                                for step_id in steps_to_complete:
-                                    if not hasattr(update_task_progress, 'task_progress'):
-                                        update_task_progress.task_progress = {}
-                                    
-                                    if task_id not in update_task_progress.task_progress:
-                                        update_task_progress.task_progress[task_id] = {}
-                                    
-                                    update_task_progress.task_progress[task_id][step_id] = {
-                                        'completed': True,
-                                        'timestamp': datetime.now().isoformat()
-                                    }
+                                # Crear prompt para el LLM
+                                llm_prompt = f"""
+                                Eres un asistente inteligente que ayuda a interpretar y presentar resultados de herramientas ejecutadas.
                                 
-                                logger.info(f"✅ Progreso actualizado para tarea {task_id}: {step_number}/{total_steps} pasos completados")
+                                {chr(10).join(context_parts)}
+                                
+                                INSTRUCCIONES:
+                                1. Analiza los resultados de las herramientas ejecutadas
+                                2. Proporciona una respuesta clara y útil que responda directamente a la tarea solicitada
+                                3. Si hubo errores, explica qué salió mal y sugiere alternativas
+                                4. Si hubo resultados exitosos, interpreta y presenta la información de manera útil
+                                5. Mantén un tono profesional pero amigable
+                                6. Estructura la respuesta de manera clara y organizada
+                                
+                                Responde directamente a la tarea solicitada basándote en los resultados obtenidos:
+                                """
+                                
+                                # Generar respuesta usando Ollama
+                                llm_response = ollama_service.generate_response(llm_prompt)
+                                
+                                if llm_response.get('error'):
+                                    logger.warning(f"Error generando respuesta con LLM: {llm_response['error']}")
+                                    return None
+                                
+                                return llm_response.get('response', '')
                                 
                             except Exception as e:
-                                logger.error(f"Error actualizando progreso del plan: {str(e)}")
+                                logger.error(f"Error procesando resultados con LLM: {str(e)}")
+                                return None
                         
-                        # Actualizar progreso basado en herramientas ejecutadas
-                        if tool_results:
-                            successful_tools = sum(1 for result in tool_results if result['success'])
-                            total_tools = len(tool_results)
+                        # Generar respuesta usando el LLM
+                        llm_response = process_tool_results_with_llm(tool_results, message)
+                        
+                        if llm_response:
+                            # Usar respuesta del LLM como respuesta principal
+                            final_response = llm_response
+                        else:
+                            # Fallback: usar respuesta estructurada simple
+                            response_parts = [f"🤖 **Ejecución en Modo Agente**\n\n**Tarea:** {message}\n"]
                             
-                            # Determinar qué pasos marcar como completados
-                            if successful_tools > 0:
-                                update_plan_progress(task_id, 1, 4)  # Paso 1: Analizar requerimientos
-                                
-                            if successful_tools > 0 and total_tools > 0:
-                                update_plan_progress(task_id, 2, 4)  # Paso 2: Ejecutar tarea principal
-                                
-                            if successful_tools >= total_tools:
-                                update_plan_progress(task_id, 3, 4)  # Paso 3: Verificar resultados
-                                update_plan_progress(task_id, 4, 4)  # Paso 4: Entregar respuesta final
-                        
-                        # Generar respuesta estructurada con plan de acción
-                        response_parts = [f"🤖 **Ejecución en Modo Agente**\n\n**Tarea:** {message}\n"]
-                        
-                        if tool_results:
-                            response_parts.append("🛠️ **Herramientas Ejecutadas:**\n")
-                            for i, result in enumerate(tool_results, 1):
-                                status = "✅ EXITOSO" if result['success'] else "❌ ERROR"
-                                response_parts.append(f"{i}. **{result['tool']}**: {status}")
-                                
-                                if result['success'] and result['result']:
-                                    if result['tool'] == 'shell':
-                                        if 'output' in result['result']:
-                                            response_parts.append(f"```\n{result['result']['output']}\n```")
-                                    elif result['tool'] == 'file_manager':
-                                        if 'files' in result['result']:
-                                            response_parts.append("📁 **Archivos encontrados:**")
-                                            for file_info in result['result']['files'][:5]:
-                                                response_parts.append(f"• {file_info}")
-                                    elif result['tool'] == 'web_search':
-                                        if 'results' in result['result']:
-                                            response_parts.append("🔍 **Resultados de búsqueda:**")
-                                            for search_result in result['result']['results'][:3]:
-                                                response_parts.append(f"• {search_result.get('title', 'Sin título')}")
-                                    else:
-                                        response_parts.append(f"📊 **Resultado:** {str(result['result'])[:200]}...")
-                                elif not result['success']:
-                                    response_parts.append(f"⚠️ **Error:** {result['result'].get('error', 'Error desconocido')}")
-                                
-                                response_parts.append("")
-                        
-                        final_response = "\n".join(response_parts)
+                            if tool_results:
+                                response_parts.append("🛠️ **Herramientas Ejecutadas:**\n")
+                                for i, result in enumerate(tool_results, 1):
+                                    status = "✅ EXITOSO" if result['success'] else "❌ ERROR"
+                                    response_parts.append(f"{i}. **{result['tool']}**: {status}")
+                                    
+                                    if result['success'] and result['result']:
+                                        if result['tool'] == 'shell':
+                                            if 'stdout' in result['result']:
+                                                response_parts.append(f"```\n{result['result']['stdout']}\n```")
+                                            elif 'output' in result['result']:
+                                                response_parts.append(f"```\n{result['result']['output']}\n```")
+                                        elif result['tool'] == 'file_manager':
+                                            if 'files' in result['result']:
+                                                response_parts.append("📁 **Archivos encontrados:**")
+                                                for file_info in result['result']['files'][:5]:
+                                                    response_parts.append(f"• {file_info}")
+                                        elif result['tool'] == 'web_search':
+                                            if 'results' in result['result']:
+                                                response_parts.append("🔍 **Resultados de búsqueda:**")
+                                                for search_result in result['result']['results'][:3]:
+                                                    response_parts.append(f"• {search_result.get('title', 'Sin título')}")
+                                        else:
+                                            response_parts.append(f"📊 **Resultado:** {str(result['result'])[:200]}...")
+                                    elif not result['success']:
+                                        response_parts.append(f"⚠️ **Error:** {result['result'].get('error', 'Error desconocido')}")
+                                    
+                                    response_parts.append("")
+                            
+                            final_response = "\n".join(response_parts)
                         
                         return jsonify({
                             'response': final_response,
