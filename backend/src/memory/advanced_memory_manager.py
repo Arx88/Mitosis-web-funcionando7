@@ -805,8 +805,9 @@ class AdvancedMemoryManager:
                     compression_stats['compressed_episodes'] += 1
             
             # 2. Comprimir conceptos semánticos antiguos
-            old_concepts = self.semantic_memory.get_concepts_before_date(threshold_date)
-            for concept in old_concepts:
+            all_concepts = [concept for concept in self.semantic_memory.concepts.values() 
+                          if hasattr(concept, 'created_at') and concept.created_at < threshold_date]
+            for concept in all_concepts:
                 if concept.confidence < 0.7:  # Solo comprimir conceptos de baja confianza
                     # Comprimir descripción y atributos
                     original_size = len(str(concept.description)) + len(str(concept.attributes))
