@@ -12,7 +12,14 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 import re
 
-from enhanced_prompts import PromptType
+class PromptType(Enum):
+    """Tipos de prompt disponibles"""
+    REFLECTION = "reflection"
+    TASK_PROCESSING = "task_processing"
+    MEMORY_SEARCH = "memory_search"
+    COGNITIVE_ANALYSIS = "cognitive_analysis"
+    LEARNING = "learning"
+    OPTIMIZATION = "optimization"
 
 @dataclass
 class PromptPerformance:
