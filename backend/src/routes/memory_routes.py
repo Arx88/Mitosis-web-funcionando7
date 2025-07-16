@@ -202,7 +202,7 @@ def store_procedure():
         return jsonify({'error': f'Failed to store procedure: {str(e)}'}), 500
 
 @memory_bp.route('/retrieve-context', methods=['POST'])
-async def retrieve_context():
+def retrieve_context():
     """
     Recuperar contexto relevante para una consulta
     """
@@ -221,11 +221,11 @@ async def retrieve_context():
         max_results = data.get('max_results', 10)
         
         # Recuperar contexto relevante
-        context = await memory_manager.retrieve_relevant_context(
+        context = asyncio.run(memory_manager.retrieve_relevant_context(
             query=query,
             context_type=context_type,
             max_results=max_results
-        )
+        ))
         
         return jsonify({
             'query': query,
