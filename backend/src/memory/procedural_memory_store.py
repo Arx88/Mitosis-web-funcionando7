@@ -25,10 +25,27 @@ class Procedure:
     created_at: datetime = None
     last_used: datetime = None
     effectiveness_score: float = 0.5
+    category: str = "general"  # Agregado para compatibilidad con rutas
+    effectiveness: float = None  # Alias para effectiveness_score
+    metadata: Dict[str, Any] = None  # Metadatos adicionales
     
     def __post_init__(self):
         if self.created_at is None:
             self.created_at = datetime.now()
+        if self.metadata is None:
+            self.metadata = {}
+        
+        # Auto-generar ID si no se proporciona
+        if not self.id:
+            self.id = f"proc_{datetime.now().timestamp()}"
+            
+        # Si se proporciona effectiveness, usarlo para effectiveness_score
+        if self.effectiveness is not None:
+            self.effectiveness_score = self.effectiveness
+        
+        # Agregar categoría a context_conditions si no existe
+        if 'category' not in self.context_conditions:
+            self.context_conditions['category'] = self.category
 
 @dataclass
 class ToolStrategy:
