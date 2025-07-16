@@ -549,100 +549,113 @@ grafana-api==1.0.3
 
 ---
 
-## 🎯 PRÓXIMOS PASOS INMEDIATOS
+## 🚀 PRÓXIMOS PASOS INMEDIATOS (FASE 2 - CONTINUACIÓN)
 
-### **Semana 1: Integración de Orquestación**
+### **Semana 1: Optimización del Sistema de Memoria Avanzado**
 
-#### **1.1 Modificar endpoint /chat principal**
+#### **1.1 Verificar funcionalidad completa del sistema de memoria**
+```bash
+# Verificar que todos los componentes de memoria estén funcionando
+curl -X POST http://localhost:8001/api/agent/memory/test \
+  -H "Content-Type: application/json" \
+  -d '{"query": "test semantic search"}'
+```
+
+#### **1.2 Optimizar rendimiento de búsquedas vectoriales**
 ```python
-# /app/backend/src/routes/agent_routes.py
-@agent_bp.route('/chat', methods=['POST'])
-async def chat():
-    """
-    Endpoint principal de chat que usa TaskOrchestrator
-    """
-    try:
-        data = request.get_json()
-        
-        # Crear contexto de orquestación
-        context = OrchestrationContext(
-            task_id=str(uuid.uuid4()),
-            user_id=data.get('user_id', 'default_user'),
-            session_id=data.get('session_id', str(uuid.uuid4())),
-            task_description=data['message'],
-            priority=1,
-            constraints={},
-            preferences={}
-        )
-        
-        # Ejecutar orquestación
-        result = await task_orchestrator.orchestrate_task(context)
-        
-        # Retornar respuesta compatible con frontend existente
-        return jsonify({
-            'response': result.execution_results,
-            'task_id': result.task_id,
-            'execution_plan': result.execution_plan,
-            'metadata': result.metadata
-        })
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# /app/backend/src/memory/embedding_service.py
+# Optimizar batch processing de embeddings
+async def batch_embed_texts(self, texts: List[str], batch_size: int = 32):
+    """Procesar múltiples textos en batches para mejor rendimiento"""
+    results = []
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i:i+batch_size]
+        batch_embeddings = await self.embed_texts(batch)
+        results.extend(batch_embeddings)
+    return results
 ```
 
-#### **1.2 Actualizar Frontend para usar orquestación**
+#### **1.3 Implementar endpoints de memoria en API**
+```python
+# /app/backend/src/routes/memory_routes.py (NUEVO)
+@memory_bp.route('/search', methods=['POST'])
+async def semantic_search():
+    """Búsqueda semántica en memoria"""
+    data = request.get_json()
+    query = data.get('query')
+    results = await memory_manager.semantic_search(query)
+    return jsonify(results)
+
+@memory_bp.route('/stats', methods=['GET'])
+async def memory_stats():
+    """Estadísticas del sistema de memoria"""
+    stats = await memory_manager.get_memory_stats()
+    return jsonify(stats)
+```
+
+#### **1.4 Crear componente frontend para memoria**
 ```typescript
-// /app/frontend/src/services/api.ts
-export const sendChatMessage = async (message: string, sessionId: string) => {
-  const response = await fetch(`${API_BASE_URL}/chat`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      message,
-      session_id: sessionId,
-      user_id: 'user_1'
-    }),
-  });
+// /app/frontend/src/components/memory/MemorySearchPanel.tsx (NUEVO)
+interface MemorySearchPanelProps {
+  onSearch: (query: string) => void;
+  searchResults: SearchResult[];
+  memoryStats: MemoryStats;
+}
+
+const MemorySearchPanel: React.FC<MemorySearchPanelProps> = ({
+  onSearch,
+  searchResults,
+  memoryStats
+}) => {
+  return (
+    <div className="memory-search-panel">
+      <SemanticSearchInput onSearch={onSearch} />
+      <MemoryStatsDisplay stats={memoryStats} />
+      <SearchResultsList results={searchResults} />
+    </div>
+  );
+};
+```
+
+---
+
+### **Semana 2: Integración Frontend del Sistema de Memoria**
+
+#### **2.1 Crear dashboard de memoria**
+```typescript
+// /app/frontend/src/components/memory/MemoryDashboard.tsx (NUEVO)
+const MemoryDashboard: React.FC = () => {
+  const [memoryMetrics, setMemoryMetrics] = useState<MemoryMetrics>();
   
-  return response.json();
-};
-
-// Nuevo endpoint para monitorear orquestación
-export const getOrchestrationStatus = async (taskId: string) => {
-  const response = await fetch(`${API_BASE_URL}/orchestration/status/${taskId}`);
-  return response.json();
+  return (
+    <div className="memory-dashboard">
+      <MemoryMetricsCard metrics={memoryMetrics} />
+      <EpisodicMemoryTimeline />
+      <SemanticKnowledgeGraph />
+      <ProceduralPatternsDisplay />
+    </div>
+  );
 };
 ```
 
-#### **1.3 Mostrar progreso de orquestación en UI**
+#### **2.2 Integrar búsqueda semántica en ChatInterface**
 ```typescript
-// /app/frontend/src/components/ChatInterface/ChatInterface.tsx
+// Actualizar /app/frontend/src/components/ChatInterface/ChatInterface.tsx
 const ChatInterface: React.FC = () => {
-  const [orchestrationStatus, setOrchestrationStatus] = useState<any>(null);
+  const [semanticContext, setSemanticContext] = useState<SemanticContext>();
   
-  const handleSendMessage = async (message: string) => {
-    const result = await sendChatMessage(message, sessionId);
+  const handleMessageSend = async (message: string) => {
+    // Buscar contexto semántico relevante
+    const context = await semanticSearch(message);
+    setSemanticContext(context);
     
-    if (result.task_id) {
-      // Monitorear progreso de orquestación
-      const statusInterval = setInterval(async () => {
-        const status = await getOrchestrationStatus(result.task_id);
-        setOrchestrationStatus(status);
-        
-        if (status.status === 'completed' || status.status === 'failed') {
-          clearInterval(statusInterval);
-        }
-      }, 1000);
-    }
+    // Enviar mensaje con contexto enriquecido
+    await sendMessage(message, context);
   };
   
   return (
     <div className="chat-interface">
-      {orchestrationStatus && (
-        <OrchestrationProgress status={orchestrationStatus} />
-      )}
+      <SemanticContextPanel context={semanticContext} />
       {/* Resto de la interfaz */}
     </div>
   );
