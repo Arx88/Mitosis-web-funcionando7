@@ -292,7 +292,7 @@ async def chat():
                         import uuid as uuid_module
                         
                         episode = Episode(
-                            id=str(uuid.uuid4()),
+                            id=str(uuid_module.uuid4()),
                             title=f"Conversación con usuario",
                             description=f"Usuario: {message}\nAgente: {enhanced_response}",
                             context={
