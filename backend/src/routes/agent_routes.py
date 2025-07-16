@@ -289,18 +289,34 @@ async def chat():
                     # 🧠 ALMACENAR EN MEMORIA EPISÓDICA
                     try:
                         from src.memory.episodic_memory_store import Episode
+                        import uuid
+                        
                         episode = Episode(
-                            user_query=message,
-                            agent_response=enhanced_response,
-                            success=True,
-                            context=context,
-                            tools_used=[],
-                            importance=0.7,
-                            metadata={
+                            id=str(uuid.uuid4()),
+                            title=f"Conversación con usuario",
+                            description=f"Usuario: {message}\nAgente: {enhanced_response}",
+                            context={
+                                'user_message': message,
+                                'agent_response': enhanced_response,
                                 'session_id': session_id,
                                 'task_id': task_id,
-                                'enhanced_processing': True
-                            }
+                                'enhanced_processing': True,
+                                **context
+                            },
+                            actions=[{
+                                'type': 'user_message',
+                                'content': message,
+                                'timestamp': datetime.now().isoformat()
+                            }],
+                            outcomes=[{
+                                'type': 'agent_response',
+                                'content': enhanced_response,
+                                'timestamp': datetime.now().isoformat()
+                            }],
+                            timestamp=datetime.now(),
+                            success=True,
+                            importance=3,
+                            tags=['chat', 'conversation', 'enhanced']
                         )
                         await memory_manager.episodic_memory.store_episode(episode)
                         logger.info(f"🧠 Episodio almacenado en memoria para aprendizaje futuro")
