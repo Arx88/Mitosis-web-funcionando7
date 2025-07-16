@@ -61,29 +61,14 @@ ollama_service = OllamaService(base_url=ollama_base_url)
 tool_manager = ToolManager()
 database_service = DatabaseService()
 
-# Inicializar Enhanced Components
+# Inicializar Enhanced Components - DESACTIVADO para evitar errores
 print("🚀 Inicializando Enhanced Components...")
 try:
-    # Importar desde el directorio raíz del backend
-    import sys
-    import os
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    
-    from enhanced_agent_core import EnhancedMitosisAgent
-    from enhanced_memory_manager import EnhancedMemoryManager
-    from enhanced_task_manager import EnhancedTaskManager
-    
-    # Crear enhanced components
-    enhanced_memory = EnhancedMemoryManager()
-    enhanced_task_manager = EnhancedTaskManager(enhanced_memory)
-    enhanced_agent = EnhancedMitosisAgent()
-    
-    print("✅ Enhanced components inicializados exitosamente")
-except ImportError as e:
-    print(f"⚠️ Error importando enhanced components: {e}")
+    # Componentes desactivados temporalmente para evitar errores de dependencias
     enhanced_agent = None
     enhanced_memory = None
     enhanced_task_manager = None
+    print("⚠️ Enhanced components desactivados temporalmente")
 except Exception as e:
     print(f"⚠️ Error inicializando enhanced components: {e}")
     enhanced_agent = None
