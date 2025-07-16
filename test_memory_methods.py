@@ -59,7 +59,7 @@ async def test_memory_methods():
             tags=['test', 'compression']
         )
         
-        await memory_manager.episodic_memory.store_episode(episode)
+        memory_manager.episodic_memory.store_episode(episode)
         print("✅ Episodio de prueba agregado")
         
         # Crear concepto semántico de prueba
@@ -77,7 +77,7 @@ async def test_memory_methods():
             confidence=0.8
         )
         
-        await memory_manager.semantic_memory.store_concept(concept)
+        memory_manager.semantic_memory.store_concept(concept)
         print("✅ Concepto semántico de prueba agregado")
         
         # Crear fact semántico de prueba
@@ -91,7 +91,7 @@ async def test_memory_methods():
             source="test_source"
         )
         
-        await memory_manager.semantic_memory.store_fact(fact)
+        memory_manager.semantic_memory.store_fact(fact)
         print("✅ Fact semántico de prueba agregado")
         
     except Exception as e:
