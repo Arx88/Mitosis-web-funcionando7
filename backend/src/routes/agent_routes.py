@@ -660,6 +660,52 @@ async def chat():
                         # Ejecutar tareas en modo agente
                         tool_results = execute_agent_task()
                         
+                        # 🎯 ACTUALIZAR PROGRESO DEL PLAN DE ACCIÓN
+                        def update_plan_progress(task_id, step_number, total_steps):
+                            """Actualiza el progreso del plan de acción"""
+                            try:
+                                # Calcular qué pasos marcar como completados
+                                steps_to_complete = []
+                                
+                                # Marcar pasos como completados basado en el progreso
+                                for i in range(1, step_number + 1):
+                                    step_id = f'step-{i}'
+                                    steps_to_complete.append(step_id)
+                                
+                                # Actualizar cada paso completado
+                                for step_id in steps_to_complete:
+                                    if not hasattr(update_task_progress, 'task_progress'):
+                                        update_task_progress.task_progress = {}
+                                    
+                                    if task_id not in update_task_progress.task_progress:
+                                        update_task_progress.task_progress[task_id] = {}
+                                    
+                                    update_task_progress.task_progress[task_id][step_id] = {
+                                        'completed': True,
+                                        'timestamp': datetime.now().isoformat()
+                                    }
+                                
+                                logger.info(f"✅ Progreso actualizado para tarea {task_id}: {step_number}/{total_steps} pasos completados")
+                                
+                            except Exception as e:
+                                logger.error(f"Error actualizando progreso del plan: {str(e)}")
+                        
+                        # Actualizar progreso basado en herramientas ejecutadas
+                        if tool_results:
+                            successful_tools = sum(1 for result in tool_results if result['success'])
+                            total_tools = len(tool_results)
+                            
+                            # Determinar qué pasos marcar como completados
+                            if successful_tools > 0:
+                                update_plan_progress(task_id, 1, 4)  # Paso 1: Analizar requerimientos
+                                
+                            if successful_tools > 0 and total_tools > 0:
+                                update_plan_progress(task_id, 2, 4)  # Paso 2: Ejecutar tarea principal
+                                
+                            if successful_tools >= total_tools:
+                                update_plan_progress(task_id, 3, 4)  # Paso 3: Verificar resultados
+                                update_plan_progress(task_id, 4, 4)  # Paso 4: Entregar respuesta final
+                        
                         # Generar respuesta estructurada con plan de acción
                         response_parts = [f"🤖 **Ejecución en Modo Agente**\n\n**Tarea:** {message}\n"]
                         
