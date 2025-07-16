@@ -143,36 +143,52 @@ class TaskOrchestrator:
             # 4. Notificar inicio
             await self._notify_callbacks("on_start", context)
             
-            # 5. Crear plan de ejecución
+            # 5. Obtener recomendaciones de memoria
+            if self.config.get("enable_memory_learning", True):
+                logger.info(f"Obteniendo recomendaciones de memoria para tarea: {context.task_id}")
+                memory_recommendations = await self._get_memory_recommendations(context)
+                context.metadata['memory_recommendations'] = memory_recommendations
+            
+            # 6. Crear plan de ejecución
             logger.info(f"Creando plan de ejecución para tarea: {context.task_id}")
             execution_plan = await self._create_execution_plan(context)
             
-            # 6. Optimizar dependencias
+            # 7. Aplicar insights de memoria al plan
+            if self.config.get("enable_memory_learning", True):
+                logger.info(f"Aplicando insights de memoria al plan: {context.task_id}")
+                execution_plan = await self._apply_memory_insights(context, execution_plan)
+            
+            # 8. Optimizar dependencias
             if self.config["enable_dependency_optimization"]:
                 execution_plan = await self._optimize_dependencies(execution_plan)
             
-            # 7. Asignar recursos
+            # 9. Asignar recursos
             if self.config["enable_resource_management"]:
                 await self._allocate_resources(execution_plan, context)
             
-            # 8. Ejecutar plan
+            # 10. Ejecutar plan
             logger.info(f"Ejecutando plan para tarea: {context.task_id}")
             execution_results = await self._execute_plan(execution_plan, context)
             
-            # 9. Liberar recursos
+            # 11. Liberar recursos
             if self.config["enable_resource_management"]:
                 await self._release_resources(context.task_id)
             
-            # 10. Generar resultado
+            # 12. Generar resultado
             result = self._generate_result(context, execution_plan, execution_results, start_time)
             
-            # 11. Actualizar métricas
+            # 13. Almacenar experiencia para aprendizaje
+            if self.config.get("enable_memory_learning", True):
+                logger.info(f"Almacenando experiencia de aprendizaje para tarea: {context.task_id}")
+                await self._store_learning_experience(context, result)
+            
+            # 14. Actualizar métricas
             self._update_metrics(result)
             
-            # 12. Notificar finalización
+            # 15. Notificar finalización
             await self._notify_callbacks("on_complete", result)
             
-            # 13. Limpiar estado
+            # 16. Limpiar estado
             self._cleanup_orchestration(context.task_id)
             
             logger.info(f"Orquestación completada para tarea: {context.task_id}, "
