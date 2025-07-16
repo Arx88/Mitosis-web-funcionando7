@@ -243,6 +243,144 @@ class AdvancedMemoryManager:
             logger.error(f"Error recuperando contexto relevante: {e}")
             return {'error': str(e)}
     
+    async def semantic_search(self, query: str, max_results: int = 10, 
+                            memory_types: List[str] = None) -> List[Dict[str, Any]]:
+        """
+        Búsqueda semántica a través de todos los tipos de memoria
+        
+        Args:
+            query: Consulta de búsqueda
+            max_results: Número máximo de resultados
+            memory_types: Tipos de memoria a buscar (default: all)
+        
+        Returns:
+            Lista de resultados de búsqueda ordenados por relevancia
+        """
+        if not self.is_initialized:
+            await self.initialize()
+            
+        try:
+            results = []
+            
+            # Si no se especifican tipos de memoria, buscar en todos
+            if memory_types is None:
+                memory_types = ['working', 'episodic', 'semantic', 'procedural']
+            
+            # Búsqueda en memoria de trabajo
+            if 'working' in memory_types:
+                working_contexts = self.working_memory.search_contexts(query, max_results)
+                for context in working_contexts:
+                    results.append({
+                        'type': 'working_memory',
+                        'content': context,
+                        'relevance_score': 0.8,  # Score base para memoria de trabajo
+                        'source': 'working_memory_context'
+                    })
+            
+            # Búsqueda en memoria episódica
+            if 'episodic' in memory_types:
+                similar_episodes = self.episodic_memory.search_episodes(query, max_results)
+                for episode in similar_episodes:
+                    results.append({
+                        'type': 'episodic_memory',
+                        'content': {
+                            'id': episode.id,
+                            'title': episode.title,
+                            'description': episode.description,
+                            'success': episode.success,
+                            'timestamp': episode.timestamp.isoformat(),
+                            'importance': episode.importance
+                        },
+                        'relevance_score': episode.importance / 5.0,  # Normalizar importancia
+                        'source': 'episodic_memory_episode'
+                    })
+            
+            # Búsqueda en memoria semántica
+            if 'semantic' in memory_types:
+                # Buscar conceptos relevantes
+                relevant_concepts = self.semantic_memory.search_concepts(query, limit=max_results)
+                for concept in relevant_concepts:
+                    results.append({
+                        'type': 'semantic_memory',
+                        'content': {
+                            'id': concept.id,
+                            'name': concept.name,
+                            'description': concept.description,
+                            'category': concept.category,
+                            'confidence': concept.confidence
+                        },
+                        'relevance_score': concept.confidence,
+                        'source': 'semantic_memory_concept'
+                    })
+                
+                # Buscar hechos relevantes
+                relevant_facts = self.semantic_memory.search_facts(subject=query, limit=max_results)
+                for fact in relevant_facts:
+                    results.append({
+                        'type': 'semantic_memory',
+                        'content': {
+                            'id': fact.id,
+                            'subject': fact.subject,
+                            'predicate': fact.predicate,
+                            'object': fact.object,
+                            'confidence': fact.confidence
+                        },
+                        'relevance_score': fact.confidence,
+                        'source': 'semantic_memory_fact'
+                    })
+            
+            # Búsqueda en memoria procedimental
+            if 'procedural' in memory_types:
+                # Crear contexto simulado para búsqueda de procedimientos
+                search_context = {'task_type': query, 'complexity': 'medium'}
+                applicable_procedures = self.procedural_memory.find_applicable_procedures(search_context)
+                
+                for procedure in applicable_procedures:
+                    results.append({
+                        'type': 'procedural_memory',
+                        'content': {
+                            'id': procedure.id,
+                            'name': procedure.name,
+                            'description': procedure.description,
+                            'success_rate': procedure.success_rate,
+                            'effectiveness_score': procedure.effectiveness_score,
+                            'usage_count': procedure.usage_count
+                        },
+                        'relevance_score': procedure.effectiveness_score,
+                        'source': 'procedural_memory_procedure'
+                    })
+            
+            # Búsqueda semántica usando semantic_indexer
+            try:
+                semantic_results = await self.semantic_indexer.search_similar_documents(query, max_results)
+                for doc_result in semantic_results:
+                    results.append({
+                        'type': 'semantic_index',
+                        'content': {
+                            'document_id': doc_result.get('id'),
+                            'content': doc_result.get('content'),
+                            'metadata': doc_result.get('metadata', {})
+                        },
+                        'relevance_score': doc_result.get('similarity', 0.5),
+                        'source': 'semantic_indexer'
+                    })
+            except Exception as e:
+                logger.warning(f"Error en búsqueda semántica indexada: {e}")
+            
+            # Ordenar resultados por relevancia
+            results.sort(key=lambda x: x['relevance_score'], reverse=True)
+            
+            # Limitar resultados
+            results = results[:max_results]
+            
+            logger.debug(f"Búsqueda semántica completada: {len(results)} resultados para query '{query}'")
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error en búsqueda semántica: {e}")
+            return []
+    
     async def get_learning_recommendations(self, current_task: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Obtiene recomendaciones basadas en aprendizaje previo
