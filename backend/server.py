@@ -103,6 +103,13 @@ app.enhanced_task_manager = enhanced_task_manager
 # Registrar blueprints
 app.register_blueprint(agent_bp, url_prefix='/api/agent')
 
+# Importar y registrar rutas de memoria
+from src.routes.memory_routes import memory_bp
+app.register_blueprint(memory_bp, url_prefix='/api/memory')
+
+# Hacer memory_manager disponible globalmente
+app.memory_manager = enhanced_memory
+
 # Servir archivos estáticos del frontend
 @app.route('/')
 def serve_frontend():
