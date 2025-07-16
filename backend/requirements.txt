@@ -72,7 +72,7 @@ bidict==0.23.1
 eventlet==0.36.1
 
 # Development & Quality
-primp==0.6.3
+primp==0.15.0
 
 # =============================================================================
 # COMPATIBILITY FIXES
