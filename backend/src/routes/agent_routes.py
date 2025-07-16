@@ -250,6 +250,23 @@ async def chat():
             search_mode = 'deepsearch'
             message = message.replace('[DeepResearch]', '').strip()
         
+        # 🧠 INTEGRACIÓN AUTOMÁTICA DE MEMORIA - Recuperar contexto relevante
+        relevant_context = ""
+        try:
+            if memory_manager.is_initialized:
+                # Buscar contexto relevante de conversaciones anteriores
+                context_results = await memory_manager.retrieve_relevant_context(
+                    query=message,
+                    context_type="all",
+                    max_results=5
+                )
+                
+                if context_results and context_results != "No se encontró contexto relevante previo":
+                    relevant_context = f"\n\n[CONTEXTO PREVIO RELEVANTE]:\n{context_results}\n[FIN CONTEXTO]"
+                    logger.info(f"🧠 Contexto relevante encontrado para mejorar respuesta")
+        except Exception as e:
+            logger.warning(f"Error recuperando contexto: {e}")
+
         # 🚀 NUEVO: Usar Enhanced Agent si está disponible
         if not search_mode:
             try:
@@ -261,10 +278,34 @@ async def chat():
                 if enhanced_agent and enhanced_memory and enhanced_task_manager:
                     logger.info(f"🧠 Usando Enhanced Agent para procesamiento avanzado")
                     
+                    # Agregar contexto relevante al mensaje
+                    enhanced_message = message + relevant_context
+                    
                     # Usar enhanced agent para procesamiento cognitivo
                     enhanced_response = enhanced_agent.process_user_message_enhanced(
-                        message, context
+                        enhanced_message, context
                     )
+                    
+                    # 🧠 ALMACENAR EN MEMORIA EPISÓDICA
+                    try:
+                        from src.memory.episodic_memory_store import Episode
+                        episode = Episode(
+                            user_query=message,
+                            agent_response=enhanced_response,
+                            success=True,
+                            context=context,
+                            tools_used=[],
+                            importance=0.7,
+                            metadata={
+                                'session_id': session_id,
+                                'task_id': task_id,
+                                'enhanced_processing': True
+                            }
+                        )
+                        await memory_manager.episodic_memory.store_episode(episode)
+                        logger.info(f"🧠 Episodio almacenado en memoria para aprendizaje futuro")
+                    except Exception as e:
+                        logger.warning(f"Error almacenando episodio: {e}")
                     
                     # Obtener estado cognitivo
                     cognitive_status = enhanced_agent.get_enhanced_status()
@@ -273,11 +314,11 @@ async def chat():
                         'response': enhanced_response,
                         'enhanced_processing': True,
                         'cognitive_mode': cognitive_status.get('cognitive_capabilities', {}).get('current_mode', 'adaptive'),
-                        'learning_metrics': cognitive_status.get('learning_metrics', {}),
                         'task_id': task_id,
                         'execution_status': 'enhanced_completed',
                         'timestamp': datetime.now().isoformat(),
-                        'model': 'enhanced-mitosis-agent'
+                        'model': 'enhanced-mitosis-agent',
+                        'memory_used': bool(relevant_context)
                     })
                 else:
                     # Si enhanced components no están disponibles, usar TaskOrchestrator
