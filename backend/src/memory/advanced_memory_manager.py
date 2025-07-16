@@ -879,7 +879,7 @@ class AdvancedMemoryManager:
                     'usage_count': procedure.usage_count,
                     'created_at': procedure.created_at.isoformat() if hasattr(procedure, 'created_at') else datetime.now().isoformat(),
                     'last_used': procedure.last_used.isoformat() if hasattr(procedure, 'last_used') and procedure.last_used else None,
-                    'conditions': procedure.conditions
+                    'conditions': procedure.context_conditions
                 }
                 export_data['procedural_memory']['procedures'].append(procedure_data)
                 export_stats['exported_procedures'] += 1
