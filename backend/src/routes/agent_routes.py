@@ -495,7 +495,10 @@ async def chat():
                         return has_task_indicator or has_command or has_work_pattern or has_about_pattern
                     
                     # Verificar si es una tarea que requiere herramientas
-                    if not is_task_requiring_tools(message):
+                    task_detection_result = is_task_requiring_tools(message)
+                    logger.info(f"🔍 Task detection for '{message}': {task_detection_result}")
+                    
+                    if not task_detection_result:
                         # Es conversación normal - usar respuesta estándar del LLM
                         logger.info(f"💬 Conversación normal detectada - no ejecutar herramientas")
                         
