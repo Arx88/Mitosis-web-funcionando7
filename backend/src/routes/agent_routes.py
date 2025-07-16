@@ -560,7 +560,7 @@ async def chat():
                         if any(pattern in message_lower for pattern in advanced_tools_patterns):
                             return 'agent'
                         
-                        # 7. MODO AGENTE - Ejecución programada
+                        # 8. MODO AGENTE - Ejecución programada
                         scheduled_patterns = [
                             # Tiempo futuro
                             'mañana', 'tomorrow', 'la próxima semana', 'next week',
