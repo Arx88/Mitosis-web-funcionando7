@@ -616,6 +616,70 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         console.log('📋 BASIC DEBUG: Response type:', typeof response);
         console.log('📋 BASIC DEBUG: Response keys:', Object.keys(response || {}));
         
+        // 🚀 NUEVO: Manejo especial para respuestas de orquestación
+        if (response.orchestration_enabled && response.task_id) {
+          console.log('🎯 Orchestration enabled, starting monitoring for task:', response.task_id);
+          setOrchestrationTaskId(response.task_id);
+          setAgentStatus('planning');
+          setCurrentStepName('Planificación de Tarea');
+          
+          // Iniciar polling del estado de orquestación
+          const orchestrationInterval = setInterval(async () => {
+            try {
+              const status = await agentAPI.getOrchestrationStatus(response.task_id!);
+              setOrchestrationStatus(status);
+              
+              // Actualizar estado del agente basado en el estado de orquestación
+              if (status.status === 'planning') {
+                setAgentStatus('planning');
+                setCurrentStepName('Generando Plan');
+              } else if (status.status === 'executing') {
+                setAgentStatus('executing_plan');
+                setCurrentStepName(status.current_step || 'Ejecutando Plan');
+              } else if (status.status === 'completed') {
+                setAgentStatus('task_completed');
+                setCurrentStepName('Completado');
+                setIsOrchestrating(false);
+                clearInterval(orchestrationInterval);
+                
+                // Obtener resultado final y mostrarlo
+                try {
+                  const finalResult = await agentAPI.getTaskStatus(response.task_id!);
+                  console.log('🎯 Final orchestration result:', finalResult);
+                  
+                  // Crear mensaje con el resultado final
+                  const finalMessage: Message = {
+                    id: `msg-${Date.now()}-final`,
+                    content: `✅ **Orquestación Completada**\n\n${finalResult.message || 'Tarea completada exitosamente.'}`,
+                    sender: 'assistant',
+                    timestamp: new Date(),
+                    orchestrationResult: finalResult
+                  };
+                  
+                  setMessages(prev => [...prev, finalMessage]);
+                } catch (err) {
+                  console.error('Error getting final result:', err);
+                }
+              } else if (status.status === 'failed') {
+                setAgentStatus('task_failed');
+                setCurrentStepName('Error');
+                setIsOrchestrating(false);
+                clearInterval(orchestrationInterval);
+              }
+            } catch (err) {
+              console.error('Error polling orchestration status:', err);
+              clearInterval(orchestrationInterval);
+              setIsOrchestrating(false);
+            }
+          }, 2000); // Poll every 2 seconds
+          
+          // Cleanup interval after 5 minutes
+          setTimeout(() => {
+            clearInterval(orchestrationInterval);
+            setIsOrchestrating(false);
+          }, 300000); // 5 minutes
+        }
+        
         // CRITICAL DEBUG - Log everything about created_files
         console.log('Backend response received');
         console.log('Response structure check:', {
