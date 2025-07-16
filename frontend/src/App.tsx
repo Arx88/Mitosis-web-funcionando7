@@ -925,7 +925,7 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                                 const updatedTask = {
                                   ...newTask,
                                   messages: [userMessage, agentMessage],
-                                  plan: deepResearchPlan.map(step => ({ ...step, completed: true, active: false })), // Marcar como completado
+                                  plan: completedDeepResearchPlan, // Usar plan completado
                                   status: 'completed' as const, // DeepSearch se completa inmediatamente
                                   progress: 100 // 100% porque el backend ya devolvió el resultado completo
                                 };
