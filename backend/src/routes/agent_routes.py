@@ -413,6 +413,81 @@ async def chat():
                 
                 # Ejecutar orquestación de manera síncrona con herramientas reales
                 try:
+                    # Función para detectar si es una TAREA específica que requiere herramientas
+                    def is_task_requiring_tools(message):
+                        """Detectar si el mensaje es una tarea específica que requiere herramientas"""
+                        task_indicators = [
+                            # Comandos explícitos
+                            'ejecuta', 'ejecutar', 'run', 'comando', 'command',
+                            # Análisis y procesamiento
+                            'analiza', 'analizar', 'analyze', 'procesa', 'procesar',
+                            # Búsqueda activa
+                            'busca', 'buscar', 'search', 'encuentra', 'encontrar',
+                            # Creación/modificación
+                            'crea', 'crear', 'create', 'genera', 'generar', 'modifica', 'modificar',
+                            # Gestión de archivos
+                            'lista', 'listar', 'list', 'mostrar', 'show', 'ver archivos',
+                            # Investigación
+                            'investiga', 'investigar', 'research', 'explora', 'explorar',
+                            # Tareas específicas
+                            'descarga', 'descargar', 'download', 'instala', 'instalar',
+                            # Operaciones de sistema
+                            'verifica', 'verificar', 'check', 'monitorea', 'monitorear'
+                        ]
+                        
+                        # Verificar si contiene indicadores de tarea
+                        message_lower = message.lower()
+                        
+                        # Excluir saludos y conversación casual
+                        casual_phrases = [
+                            'hola', 'hello', 'hi', 'buenos días', 'buenas tardes', 'buenas noches',
+                            'gracias', 'thank you', 'thanks', 'de nada', 'por favor',
+                            'qué tal', 'cómo estás', 'how are you', 'adiós', 'bye', 'hasta luego',
+                            'qué es', 'what is', 'explica', 'explain', 'cuéntame', 'tell me',
+                            'puedes', 'can you', 'podrías', 'could you'
+                        ]
+                        
+                        # Si es una frase casual, no es una tarea
+                        if any(phrase in message_lower for phrase in casual_phrases):
+                            # Excepto si también contiene indicadores de tarea explícitos
+                            if not any(indicator in message_lower for indicator in task_indicators):
+                                return False
+                        
+                        # Verificar indicadores de tarea
+                        has_task_indicator = any(indicator in message_lower for indicator in task_indicators)
+                        
+                        # Verificar comandos específicos
+                        command_patterns = ['ls ', 'cd ', 'pwd', 'ps ', 'mkdir', 'rm ', 'cp ', 'mv ', 'chmod', 'grep']
+                        has_command = any(cmd in message_lower for cmd in command_patterns)
+                        
+                        return has_task_indicator or has_command
+                    
+                    # Verificar si es una tarea que requiere herramientas
+                    if not is_task_requiring_tools(message):
+                        # Es conversación normal - usar respuesta estándar del LLM
+                        logger.info(f"💬 Conversación normal detectada - no ejecutar herramientas")
+                        
+                        # Generar respuesta normal usando Ollama
+                        enhanced_message = message + relevant_context
+                        response_data = ollama_service.generate_response(enhanced_message)
+                        
+                        if response_data.get('error'):
+                            raise Exception(response_data['error'])
+                        
+                        agent_response = response_data.get('response', 'No se pudo generar respuesta')
+                        
+                        return jsonify({
+                            'response': agent_response,
+                            'task_id': task_id,
+                            'model': response_data.get('model', 'unknown'),
+                            'timestamp': datetime.now().isoformat(),
+                            'memory_used': bool(relevant_context),
+                            'conversation_mode': True
+                        })
+                    
+                    # Es una tarea específica - ejecutar herramientas
+                    logger.info(f"🛠️ Tarea específica detectada - ejecutar herramientas")
+                    
                     # Crear un simple sistema de ejecución de herramientas
                     def execute_task_with_tools():
                         """Ejecutar tarea con herramientas automáticamente"""
@@ -424,17 +499,19 @@ async def chat():
                             tools_to_use.append('shell')
                         
                         # Detectar si necesita gestión de archivos
-                        if any(keyword in message.lower() for keyword in ['archivo', 'file', 'directorio', 'folder', 'crear', 'eliminar', 'leer', 'escribir', 'copiar', 'mover']):
+                        if any(keyword in message.lower() for keyword in ['archivo', 'file', 'directorio', 'folder', 'lista', 'listar', 'mostrar', 'crear', 'eliminar', 'leer', 'escribir', 'copiar', 'mover']):
                             tools_to_use.append('file_manager')
                         
                         # Detectar si necesita búsqueda web
-                        if any(keyword in message.lower() for keyword in ['buscar', 'search', 'información', 'noticias', 'web', 'internet', 'google']):
+                        if any(keyword in message.lower() for keyword in ['buscar', 'busca', 'search', 'información', 'noticias', 'web', 'internet', 'google', 'investiga', 'investigar']):
                             tools_to_use.append('web_search')
                         
-                        # Si no detecta herramientas específicas, usar todas las disponibles
+                        # Si no detecta herramientas específicas, usar herramientas por defecto según el contexto
                         if not tools_to_use:
-                            available_tools = tool_manager.get_available_tools()
-                            tools_to_use = [tool.get('name') for tool in available_tools[:3]]  # Usar las primeras 3 herramientas
+                            if any(keyword in message.lower() for keyword in ['analiza', 'analizar', 'procesa', 'procesar', 'verifica', 'verificar']):
+                                tools_to_use = ['file_manager', 'shell']  # Para análisis general
+                            else:
+                                tools_to_use = ['shell']  # Por defecto para tareas generales
                         
                         # Ejecutar herramientas detectadas
                         results = []
