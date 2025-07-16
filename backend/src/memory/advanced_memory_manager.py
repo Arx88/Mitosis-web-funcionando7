@@ -775,8 +775,8 @@ class AdvancedMemoryManager:
             threshold_date = datetime.now() - timedelta(days=compression_threshold_days)
             
             # 1. Comprimir episodios antiguos
-            old_episodes = self.episodic_memory.get_episodes_before_date(threshold_date)
-            for episode in old_episodes:
+            all_episodes = [ep for ep in self.episodic_memory.episodes.values() if ep.timestamp < threshold_date]
+            for episode in all_episodes:
                 if episode.importance < 4:  # Solo comprimir episodios de baja importancia
                     # Comprimir descripción y contexto
                     original_size = len(str(episode.description)) + len(str(episode.context))
