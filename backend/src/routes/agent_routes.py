@@ -413,92 +413,163 @@ async def chat():
                 
                 # Ejecutar orquestación de manera síncrona con herramientas reales
                 try:
-                    # Función para detectar si es una TAREA específica que requiere herramientas
-                    def is_task_requiring_tools(message):
-                        """Detectar si el mensaje es una tarea específica que requiere herramientas"""
+                    # 🔍 SISTEMA DE CLASIFICACIÓN INTELIGENTE
+                    def classify_message_mode(message: str) -> str:
+                        """
+                        Clasificar el mensaje entre 'discussion' y 'agent' según los criterios especificados
+                        
+                        Modo Discussion (por defecto):
+                        - Conversaciones casuales: Saludos, preguntas sobre mí, charlas generales
+                        - Tareas simples directas: traducciones, resúmenes cortos, conocimiento general
+                        - Preguntas de búsqueda única: "¿Quién ganó el último mundial?"
+                        
+                        Modo Agent:
+                        - Complejidad explícita: "investiga", "analiza", "crea", "planifica", "compara en una tabla"
+                        - Múltiples pasos implícitos: tareas que requieren varias acciones coordinadas
+                        - Herramientas avanzadas: código, APIs, archivos
+                        - Ejecución programada: tareas en el tiempo
+                        """
                         message_lower = message.lower().strip()
                         
-                        # Primero: Detectar saludos y conversación casual EXACTA (retorna False inmediatamente)
-                        casual_exact_phrases = [
-                            'hola', 'hello', 'hi', 'hey', 'buenas', 'buenos días', 'buenas tardes', 'buenas noches',
-                            'gracias', 'thank you', 'thanks', 'de nada', 'por favor', 'please',
-                            'qué tal', 'cómo estás', 'how are you', 'how you doing', 'como estas',
-                            'adiós', 'bye', 'goodbye', 'hasta luego', 'see you', 'nos vemos',
-                            'cómo te llamas', 'como te llamas', 'what is your name', 'what\'s your name', 'quien eres', 'who are you',
-                            'ok', 'okay', 'bien', 'fine', 'good', 'bueno', 'vale', 'sí', 'yes', 'no',
-                            'perfecto', 'perfect', 'excelente', 'excellent', 'genial', 'great'
+                        # 1. MODO DISCUSIÓN - Conversaciones casuales
+                        casual_patterns = [
+                            # Saludos básicos
+                            'hola', 'hi', 'hello', 'buenas', 'buenos días', 'buenas tardes', 'buenas noches',
+                            'hey', 'qué tal', 'how are you', 'cómo estás', 'cómo va', 'how is it going',
+                            
+                            # Cortesías
+                            'gracias', 'thanks', 'thank you', 'de nada', 'por favor', 'please',
+                            'disculpa', 'perdón', 'sorry', 'excuse me',
+                            
+                            # Preguntas sobre el asistente
+                            'quién eres', 'who are you', 'tu nombre', 'your name', 'cómo te llamas',
+                            'qué puedes hacer', 'what can you do', 'cuáles son tus funciones',
+                            
+                            # Despedidas
+                            'adiós', 'bye', 'goodbye', 'hasta luego', 'see you later', 'nos vemos',
+                            
+                            # Expresiones casuales
+                            'está bien', 'ok', 'okay', 'entiendo', 'perfecto', 'genial'
                         ]
                         
-                        # Si es EXACTAMENTE una frase casual (sin más contenido), NO es tarea
-                        if message_lower in casual_exact_phrases:
-                            return False
+                        # Si es claramente casual, usar modo discusión
+                        if any(pattern in message_lower for pattern in casual_patterns):
+                            return 'discussion'
                         
-                        # Segundo: Detectar preguntas casuales simples (retorna False)
-                        casual_question_patterns = [
-                            'cómo', 'how', 'qué', 'what', 'cuál', 'which', 'dónde', 'where', 'cuándo', 'when',
-                            'por qué', 'why', 'para qué', 'what for'
+                        # 2. MODO DISCUSIÓN - Tareas simples directas
+                        simple_task_patterns = [
+                            # Traducciones
+                            'traduce', 'translate', 'en inglés', 'en español', 'en francés',
+                            'how do you say', 'cómo se dice', 'what does', 'qué significa',
+                            
+                            # Resúmenes simples
+                            'resume', 'summarize', 'resumen de', 'summary of',
+                            
+                            # Definiciones y explicaciones directas
+                            'define', 'explica', 'explain', 'qué es', 'what is', 'cuál es la diferencia',
+                            'diferencia entre', 'difference between'
                         ]
                         
-                        # Si es una pregunta casual corta (menos de 50 caracteres), probablemente no es tarea
-                        if len(message) < 50 and any(pattern in message_lower for pattern in casual_question_patterns):
-                            # Verificar si no contiene palabras de acción específicas
-                            action_words = ['crear', 'crea', 'generar', 'genera', 'hacer', 'haz', 'ejecutar', 'ejecuta', 'buscar', 'busca']
-                            if not any(action in message_lower for action in action_words):
-                                return False
+                        # Si es tarea simple Y no tiene indicadores complejos, usar modo discusión
+                        if any(pattern in message_lower for pattern in simple_task_patterns):
+                            # Verificar que no tenga indicadores complejos
+                            complex_indicators = ['investiga', 'analiza', 'compara en una tabla', 'crea un informe']
+                            if not any(indicator in message_lower for indicator in complex_indicators):
+                                return 'discussion'
                         
-                        # Tercero: Detectar indicadores claros de TAREA (retorna True si encuentra)
-                        task_indicators = [
-                            # Comandos explícitos de acción
-                            'ejecuta', 'ejecutar', 'run', 'comando', 'command', 'corre', 'correr',
-                            # Creación y generación
-                            'crea', 'crear', 'create', 'genera', 'generar', 'generate', 'construye', 'construir', 'build',
-                            'haz', 'hacer', 'do', 'make', 'desarrolla', 'desarrollar', 'develop',
-                            # Análisis y procesamiento
-                            'analiza', 'analizar', 'analyze', 'procesa', 'procesar', 'process',
-                            'evalúa', 'evaluar', 'evaluate', 'examina', 'examinar', 'examine',
-                            # Búsqueda activa y investigación
-                            'busca', 'buscar', 'search', 'encuentra', 'encontrar', 'find',
-                            'investiga', 'investigar', 'research', 'explora', 'explorar', 'explore',
-                            # Modificación y manipulación
-                            'modifica', 'modificar', 'modify', 'cambia', 'cambiar', 'change',
-                            'actualiza', 'actualizar', 'update', 'mejora', 'mejorar', 'improve',
-                            # Gestión de archivos y sistema
-                            'lista', 'listar', 'list', 'mostrar archivos', 'show files',
-                            'descarga', 'descargar', 'download', 'sube', 'subir', 'upload',
-                            'instala', 'instalar', 'install', 'configura', 'configurar', 'configure',
-                            # Operaciones específicas
-                            'verifica', 'verificar', 'check', 'monitorea', 'monitorear', 'monitor',
-                            'prueba', 'probar', 'test', 'debuggea', 'debugear', 'debug',
-                            # Palabras clave de resultado/output
+                        # 3. MODO DISCUSIÓN - Preguntas de búsqueda única
+                        single_search_patterns = [
+                            # Preguntas directas que requieren una sola búsqueda
+                            'quién ganó', 'who won', 'cuál es el', 'what is the', 'cuándo fue', 'when was',
+                            'dónde está', 'where is', 'cuánto cuesta', 'how much', 'precio de', 'price of',
+                            'último', 'latest', 'más reciente', 'most recent', 'actual', 'current'
+                        ]
+                        
+                        # Si es pregunta directa simple, usar modo discusión
+                        if any(pattern in message_lower for pattern in single_search_patterns) and len(message.split()) < 15:
+                            return 'discussion'
+                        
+                        # 4. MODO AGENTE - Complejidad explícita
+                        explicit_complexity_patterns = [
+                            # Análisis y planificación
+                            'investiga', 'investigate', 'analiza', 'analyze', 'planifica', 'plan',
+                            'crea', 'create', 'desarrolla', 'develop', 'diseña', 'design',
+                            'compara en una tabla', 'compare in a table', 'haz una comparación',
+                            'elabora', 'elaborate', 'construye', 'build', 'implementa', 'implement',
+                            
+                            # Informes y documentos
                             'informe', 'report', 'reporte', 'documento', 'document',
-                            'resumen', 'summary', 'análisis', 'analysis', 'estudio', 'study'
+                            'presentación', 'presentation', 'estudio', 'study', 'investigación',
+                            
+                            # Operaciones complejas
+                            'busca y filtra', 'find and filter', 'evalúa y compara', 'evaluate and compare',
+                            'procesa y analiza', 'process and analyze'
                         ]
                         
-                        # Verificar si contiene indicadores de tarea
-                        has_task_indicator = any(indicator in message_lower for indicator in task_indicators)
+                        if any(pattern in message_lower for pattern in explicit_complexity_patterns):
+                            return 'agent'
                         
-                        # Verificar comandos específicos de sistema
-                        command_patterns = ['ls ', 'cd ', 'pwd', 'ps ', 'mkdir', 'rm ', 'cp ', 'mv ', 'chmod', 'grep', 'find ', 'cat ', 'nano ', 'vim ']
-                        has_command = any(cmd in message_lower for cmd in command_patterns)
-                        
-                        # Verificar patrones de solicitud de trabajo
-                        work_patterns = [
-                            'web sobre', 'sitio web', 'website', 'aplicación', 'app',
-                            'base de datos', 'database', 'sistema', 'system', 'programa', 'program',
-                            'script', 'código', 'code', 'función', 'function'
+                        # 5. MODO AGENTE - Múltiples pasos implícitos
+                        multi_step_indicators = [
+                            # Palabras que indican múltiples acciones
+                            'luego', 'then', 'después', 'after', 'y luego', 'and then',
+                            'primero', 'first', 'segundo', 'second', 'finalmente', 'finally',
+                            'paso a paso', 'step by step', 'etapa por etapa',
+                            
+                            # Conectores complejos
+                            'y también', 'and also', 'además', 'furthermore', 'por otro lado',
+                            'mientras tanto', 'meanwhile', 'simultáneamente', 'simultaneously'
                         ]
-                        has_work_pattern = any(pattern in message_lower for pattern in work_patterns)
                         
-                        # Verificar si es una solicitud específica con "sobre" o "acerca de"
-                        has_about_pattern = ('sobre ' in message_lower or 'acerca de ' in message_lower or 'about ' in message_lower) and len(message) > 15
+                        if any(pattern in message_lower for pattern in multi_step_indicators):
+                            return 'agent'
                         
-                        return has_task_indicator or has_command or has_work_pattern or has_about_pattern
+                        # 6. MODO AGENTE - Herramientas avanzadas
+                        advanced_tools_patterns = [
+                            # Programación y código
+                            'código', 'code', 'script', 'programa', 'program', 'función', 'function',
+                            'ejecuta', 'execute', 'run', 'comando', 'command', 'terminal',
+                            
+                            # Archivos y sistema
+                            'archivo', 'file', 'directorio', 'directory', 'carpeta', 'folder',
+                            'descarga', 'download', 'sube', 'upload', 'instala', 'install',
+                            
+                            # APIs y servicios
+                            'api', 'servicio', 'service', 'integración', 'integration',
+                            'conecta', 'connect', 'sincroniza', 'synchronize'
+                        ]
+                        
+                        if any(pattern in message_lower for pattern in advanced_tools_patterns):
+                            return 'agent'
+                        
+                        # 7. MODO AGENTE - Ejecución programada
+                        scheduled_patterns = [
+                            # Tiempo futuro
+                            'mañana', 'tomorrow', 'la próxima semana', 'next week',
+                            'todos los días', 'every day', 'cada hora', 'every hour',
+                            'programa', 'schedule', 'automatiza', 'automate',
+                            'recordatorio', 'reminder', 'notificación', 'notification'
+                        ]
+                        
+                        if any(pattern in message_lower for pattern in scheduled_patterns):
+                            return 'agent'
+                        
+                        # 8. ANÁLISIS ADICIONAL - Longitud y complejidad
+                        word_count = len(message.split())
+                        sentence_count = len([s for s in message.split('.') if s.strip()])
+                        
+                        # Si es muy largo o tiene múltiples oraciones, probablemente es complejo
+                        if word_count > 20 or sentence_count > 2:
+                            return 'agent'
+                        
+                        # Por defecto, usar modo discusión
+                        return 'discussion'
                     
-                    # Verificar si es una tarea que requiere herramientas
-                    task_detection_result = is_task_requiring_tools(message)
-                    logger.info(f"🔍 Task detection for '{message}': {task_detection_result}")
+                    # Verificar modo de mensaje
+                    message_mode = classify_message_mode(message)
+                    logger.info(f"🔍 Message mode detection for '{message}': {message_mode}")
                     
-                    if not task_detection_result:
+                    if message_mode == 'discussion':
                         # Es conversación normal - usar respuesta estándar del LLM
                         logger.info(f"💬 Conversación normal detectada - no ejecutar herramientas")
                         
