@@ -40,11 +40,25 @@ execution_engine = ExecutionEngine(tool_manager, environment_setup_manager)
 
 # Nuevo sistema de orquestación avanzada
 from src.services.ollama_service import OllamaService
+from src.memory.advanced_memory_manager import AdvancedMemoryManager
+
 ollama_service = OllamaService()
+
+# Inicializar memoria avanzada
+memory_manager = AdvancedMemoryManager({
+    'working_memory_capacity': 100,
+    'episodic_memory_capacity': 2000,
+    'semantic_concepts_capacity': 20000,
+    'semantic_facts_capacity': 100000,
+    'procedural_capacity': 2000,
+    'tool_strategies_capacity': 10000,
+    'embedding_model': 'all-MiniLM-L6-v2',
+    'embedding_storage': '/app/backend/embeddings'
+})
 
 task_orchestrator = TaskOrchestrator(
     tool_manager=tool_manager,
-    memory_manager=None,  # Se integrará en fase 2
+    memory_manager=memory_manager,
     llm_service=ollama_service
 )
 
