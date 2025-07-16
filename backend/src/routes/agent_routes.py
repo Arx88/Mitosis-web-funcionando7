@@ -266,7 +266,9 @@ async def chat():
             
             if context_results and context_results != "No se encontró contexto relevante previo":
                 relevant_context = f"\n\n[CONTEXTO PREVIO RELEVANTE]:\n{context_results}\n[FIN CONTEXTO]"
-                logger.info(f"🧠 Contexto relevante encontrado para mejorar respuesta")
+                logger.info(f"🧠 Contexto relevante encontrado para mejorar respuesta: {len(str(context_results))} caracteres")
+            else:
+                logger.info(f"🧠 No se encontró contexto relevante previo para la consulta")
         except Exception as e:
             logger.warning(f"Error recuperando contexto: {e}")
 
