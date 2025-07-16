@@ -250,10 +250,40 @@ async def chat():
             search_mode = 'deepsearch'
             message = message.replace('[DeepResearch]', '').strip()
         
-        # 🚀 NUEVO: Usar TaskOrchestrator para tareas que no son WebSearch/DeepSearch específicas
+        # 🚀 NUEVO: Usar Enhanced Agent si está disponible
         if not search_mode:
             try:
-                # Crear contexto de orquestación
+                # Verificar si enhanced components están disponibles
+                enhanced_agent = current_app.enhanced_agent
+                enhanced_memory = current_app.enhanced_memory
+                enhanced_task_manager = current_app.enhanced_task_manager
+                
+                if enhanced_agent and enhanced_memory and enhanced_task_manager:
+                    logger.info(f"🧠 Usando Enhanced Agent para procesamiento avanzado")
+                    
+                    # Usar enhanced agent para procesamiento cognitivo
+                    enhanced_response = enhanced_agent.process_user_message_enhanced(
+                        message, context
+                    )
+                    
+                    # Obtener estado cognitivo
+                    cognitive_status = enhanced_agent.get_enhanced_status()
+                    
+                    return jsonify({
+                        'response': enhanced_response,
+                        'enhanced_processing': True,
+                        'cognitive_mode': cognitive_status.get('cognitive_capabilities', {}).get('current_mode', 'adaptive'),
+                        'learning_metrics': cognitive_status.get('learning_metrics', {}),
+                        'task_id': task_id,
+                        'execution_status': 'enhanced_completed',
+                        'timestamp': datetime.now().isoformat(),
+                        'model': 'enhanced-mitosis-agent'
+                    })
+                else:
+                    # Si enhanced components no están disponibles, usar TaskOrchestrator
+                    logger.info(f"⚠️ Enhanced components no disponibles, usando TaskOrchestrator")
+                    
+                # Crear contexto de orquestación (fallback)
                 orchestration_context = OrchestrationContext(
                     task_id=task_id,
                     user_id=user_id,
