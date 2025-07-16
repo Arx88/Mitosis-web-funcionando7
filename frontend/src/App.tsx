@@ -757,6 +757,39 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                                 // Generar plan específico para WebSearch
                                 const webSearchPlan = await generateDynamicTaskPlan(`[WebSearch] ${inputText.trim()}`);
                                 
+                                // Marcar pasos como completados para WebSearch
+                                const completedWebSearchPlan = webSearchPlan.map((step, index) => ({
+                                  ...step,
+                                  completed: true,
+                                  active: false
+                                }));
+                                
+                                // Actualizar progreso en el backend
+                                const updateWebSearchProgress = async () => {
+                                  try {
+                                    const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+                                    for (let i = 0; i < webSearchPlan.length; i++) {
+                                      const step = webSearchPlan[i];
+                                      await fetch(`${backendUrl}/api/agent/update-task-progress`, {
+                                        method: 'POST',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                          task_id: newTask.id,
+                                          step_id: step.id,
+                                          completed: true
+                                        })
+                                      });
+                                    }
+                                  } catch (error) {
+                                    console.error('Error updating WebSearch progress:', error);
+                                  }
+                                };
+                                
+                                // Actualizar progreso
+                                updateWebSearchProgress();
+                                
                                 const userMessage = {
                                   id: `msg-${Date.now()}`,
                                   content: `[WebSearch] ${inputText.trim()}`,
