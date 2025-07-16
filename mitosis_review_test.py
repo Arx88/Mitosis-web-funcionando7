@@ -278,11 +278,14 @@ def test_memory_system():
     )
     
     if response and response.status_code == 200:
-        data = response.json()
-        print(f"   Memory Components: {len(data.get('components', []))}")
-        print(f"   Overview Available: {'overview' in data}")
-        print(f"   Memory Efficiency: {'memory_efficiency' in data}")
-        print(f"   Learning Insights: {'learning_insights' in data}")
+        try:
+            data = response.json()
+            print(f"   Memory Components: {len(data.get('components', []))}")
+            print(f"   Overview Available: {'overview' in data}")
+            print(f"   Memory Efficiency: {'memory_efficiency' in data}")
+            print(f"   Learning Insights: {'learning_insights' in data}")
+        except:
+            print(f"   Response: {response.text[:200]}")
     
     # Test context retrieval
     response = run_test(
@@ -293,9 +296,12 @@ def test_memory_system():
     )
     
     if response and response.status_code == 200:
-        data = response.json()
-        print(f"   Context Results: {len(data.get('results', []))}")
-        print(f"   Synthesized Context Available: {'synthesized_context' in data}")
+        try:
+            data = response.json()
+            print(f"   Context Results: {len(data.get('results', []))}")
+            print(f"   Synthesized Context Available: {'synthesized_context' in data}")
+        except:
+            print(f"   Response: {response.text[:200]}")
 
 def test_ollama_integration():
     """Test 5: Ollama Integration"""
