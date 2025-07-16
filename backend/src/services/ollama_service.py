@@ -26,6 +26,34 @@ class OllamaService:
         except:
             return False
     
+    def check_connection(self) -> Dict[str, Any]:
+        """Verificar conexión con Ollama y retornar información detallada"""
+        try:
+            response = requests.get(f"{self.base_url}/api/tags", timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                models = [model['name'] for model in data.get('models', [])]
+                return {
+                    'status': 'connected',
+                    'url': self.base_url,
+                    'models_available': len(models),
+                    'current_model': self.current_model or self.default_model,
+                    'healthy': True
+                }
+        except Exception as e:
+            return {
+                'status': 'error',
+                'url': self.base_url,
+                'error': str(e),
+                'healthy': False
+            }
+        
+        return {
+            'status': 'disconnected',
+            'url': self.base_url,
+            'healthy': False
+        }
+    
     def get_available_models(self) -> List[str]:
         """Obtener lista de modelos disponibles desde Ollama"""
         try:
