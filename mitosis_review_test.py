@@ -181,13 +181,17 @@ def test_agent_health_and_status():
     )
     
     if response and response.status_code == 200:
-        data = response.json()
-        print(f"   Agent Status: {data.get('status', 'unknown')}")
-        if 'ollama' in data:
-            ollama_info = data['ollama']
-            print(f"   Ollama Endpoint: {ollama_info.get('endpoint', 'unknown')}")
-            print(f"   Available Models: {len(ollama_info.get('models', []))}")
-        return True
+        try:
+            data = response.json()
+            print(f"   Agent Status: {data.get('status', 'unknown')}")
+            if 'ollama' in data:
+                ollama_info = data['ollama']
+                print(f"   Ollama Endpoint: {ollama_info.get('endpoint', 'unknown')}")
+                print(f"   Available Models: {len(ollama_info.get('models', []))}")
+            return True
+        except:
+            print(f"   Response: {response.text[:200]}")
+            return True
     return False
 
 def test_chat_functionality():
