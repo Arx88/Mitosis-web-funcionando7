@@ -16,6 +16,7 @@ from .adaptive_execution_engine import AdaptiveExecutionEngine, ExecutionContext
 from .dependency_resolver import DependencyResolver
 from .resource_manager import ResourceManager, ResourceRequest, ResourceType
 from .planning_algorithms import ExecutionPlan, TaskStep, PlanningStrategy
+from ..memory.advanced_memory_manager import AdvancedMemoryManager
 
 logger = logging.getLogger(__name__)
 
