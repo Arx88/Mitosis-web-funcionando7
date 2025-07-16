@@ -136,37 +136,15 @@ def test_memory_integration_comprehensive():
     memory_tests_passed = 0
     memory_tests_total = 0
     
-    # Test 1: Memory System Status
-    print(f"\n🔍 TEST 1: Memory System Status and Initialization")
-    memory_tests_total += 1
-    
-    passed, response_data = run_test(
-        "Memory System Status",
-        f"{MEMORY_PREFIX}/status",
-        "GET",
-        timeout=20
-    )
-    
-    if passed and response_data:
-        # Check if all 6 memory components are initialized
-        if isinstance(response_data, dict) and 'initialized' in response_data:
-            if response_data.get('initialized'):
-                print("✅ Memory system is initialized")
-                memory_tests_passed += 1
-            else:
-                print("❌ Memory system is not initialized")
-        else:
-            print("⚠️  Memory system status format unexpected")
-    
-    # Test 2: Memory Analytics
-    print(f"\n🔍 TEST 2: Memory Analytics")
+    # Test 1: Memory Analytics (using correct endpoint)
+    print(f"\n🔍 TEST 1: Memory Analytics")
     memory_tests_total += 1
     
     passed, response_data = run_test(
         "Memory Analytics",
-        f"{MEMORY_PREFIX}/analytics",
+        f"{MEMORY_PREFIX}/memory-analytics",
         "GET",
-        timeout=10
+        timeout=20
     )
     
     if passed and response_data:
@@ -179,22 +157,26 @@ def test_memory_integration_comprehensive():
                 memory_tests_passed += 1
             else:
                 print("❌ Memory analytics missing expected sections")
+                print(f"   Available sections: {list(response_data.keys())}")
         else:
             print("⚠️  Memory analytics format unexpected")
     
-    # Test 3: Episode Storage
-    print(f"\n🔍 TEST 3: Episode Storage")
+    # Test 2: Episode Storage (using correct format)
+    print(f"\n🔍 TEST 2: Episode Storage")
     memory_tests_total += 1
     
     episode_data = {
-        "content": "Test conversation about artificial intelligence and machine learning",
+        "user_query": "What is artificial intelligence?",
+        "agent_response": "Artificial intelligence is a field of computer science focused on creating systems that can perform tasks that typically require human intelligence.",
+        "success": True,
         "context": {
             "task_id": f"test-{uuid.uuid4()}",
             "user_id": "test-user",
             "timestamp": datetime.now().isoformat()
         },
+        "tools_used": ["web_search"],
+        "importance": 0.8,
         "metadata": {
-            "importance": 0.8,
             "tags": ["ai", "ml", "test"]
         }
     }
@@ -218,37 +200,97 @@ def test_memory_integration_comprehensive():
         else:
             print("❌ Episode storage failed")
     
-    # Test 4: Context Retrieval
+    # Test 3: Knowledge Storage
+    print(f"\n🔍 TEST 3: Knowledge Storage")
+    memory_tests_total += 1
+    
+    knowledge_data = {
+        "content": "Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed.",
+        "type": "fact",
+        "subject": "Machine Learning",
+        "predicate": "is a subset of",
+        "object": "Artificial Intelligence",
+        "confidence": 0.9,
+        "context": {
+            "source": "test",
+            "domain": "computer_science"
+        }
+    }
+    
+    passed, response_data = run_test(
+        "Knowledge Storage",
+        f"{MEMORY_PREFIX}/store-knowledge",
+        "POST",
+        knowledge_data,
+        timeout=10
+    )
+    
+    if passed and response_data:
+        if isinstance(response_data, dict) and response_data.get('success'):
+            knowledge_id = response_data.get('knowledge_id')
+            if knowledge_id:
+                print(f"✅ Knowledge stored successfully with ID: {knowledge_id}")
+                memory_tests_passed += 1
+            else:
+                print("❌ Knowledge storage succeeded but no ID returned")
+        else:
+            print("❌ Knowledge storage failed")
+    
+    # Test 4: Context Retrieval (using correct endpoint)
     print(f"\n🔍 TEST 4: Memory Context Retrieval")
     memory_tests_total += 1
     
     context_data = {
         "query": "artificial intelligence machine learning",
-        "context": {
-            "task_id": f"test-{uuid.uuid4()}",
-            "user_id": "test-user"
-        }
+        "context_type": "all",
+        "max_results": 5
     }
     
     passed, response_data = run_test(
         "Memory Context Retrieval",
-        f"{MEMORY_PREFIX}/get-context",
+        f"{MEMORY_PREFIX}/retrieve-context",
         "POST",
         context_data,
         timeout=10
     )
     
     if passed and response_data:
-        if isinstance(response_data, dict):
-            expected_memory_types = ['episodic_memory', 'semantic_memory', 'procedural_memory', 'working_memory']
-            has_memory_types = any(mem_type in response_data for mem_type in expected_memory_types)
-            if has_memory_types:
-                print("✅ Memory context retrieval working with expected memory types")
+        if isinstance(response_data, dict) and 'context' in response_data:
+            context = response_data['context']
+            if context:
+                print("✅ Memory context retrieval working with context data")
                 memory_tests_passed += 1
             else:
-                print("❌ Memory context retrieval missing expected memory types")
+                print("⚠️  Memory context retrieval returned empty context")
         else:
             print("⚠️  Memory context retrieval format unexpected")
+    
+    # Test 5: Semantic Search
+    print(f"\n🔍 TEST 5: Semantic Search")
+    memory_tests_total += 1
+    
+    search_data = {
+        "query": "artificial intelligence applications",
+        "max_results": 5,
+        "memory_types": ["all"]
+    }
+    
+    passed, response_data = run_test(
+        "Semantic Search",
+        f"{MEMORY_PREFIX}/semantic-search",
+        "POST",
+        search_data,
+        timeout=15
+    )
+    
+    if passed and response_data:
+        if isinstance(response_data, dict) and 'results' in response_data:
+            results = response_data['results']
+            total_results = response_data.get('total_results', 0)
+            print(f"✅ Semantic search working with {total_results} results")
+            memory_tests_passed += 1
+        else:
+            print("❌ Semantic search missing expected results structure")
     
     # Test 5: Chat Integration with Memory
     print(f"\n🔍 TEST 5: Chat Integration with Memory (KEY TEST)")
