@@ -178,8 +178,11 @@ async def store_procedure():
             return jsonify({'error': 'Memory manager not available'}), 503
             
         procedure = Procedure(
+            id=f"proc_{datetime.now().timestamp()}",
             name=data['name'],
+            description=data.get('description', f"Procedimiento: {data['name']}"),
             steps=data['steps'],
+            context_conditions=data.get('context_conditions', {}),
             category=data['category'],
             effectiveness=data.get('effectiveness', 0.5),
             usage_count=data.get('usage_count', 0),
