@@ -30,6 +30,12 @@ export const AgentStatusBar: React.FC<AgentStatusBarProps> = ({
         return 'Tarea Recibida';
       case 'analyzing_task':
         return 'Analizando Tarea';
+      case 'orchestrating':
+        return 'Orquestando Tarea';
+      case 'planning':
+        return 'Generando Plan de Ejecución';
+      case 'executing_plan':
+        return 'Ejecutando Plan';
       case 'executing_step':
         return currentStep ? `Ejecutando Paso: ${currentStep}` : 'Ejecutando Paso';
       case 'waiting_user_input':
