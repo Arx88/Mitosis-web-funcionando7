@@ -527,7 +527,7 @@ async def chat():
                         if any(pattern in message_lower for pattern in explicit_complexity_patterns):
                             return 'agent'
                         
-                        # 5. MODO AGENTE - Múltiples pasos implícitos
+                        # 6. MODO AGENTE - Múltiples pasos implícitos
                         multi_step_indicators = [
                             # Palabras que indican múltiples acciones
                             'luego', 'then', 'después', 'after', 'y luego', 'and then',
