@@ -64,6 +64,11 @@ database_service = DatabaseService()
 # Inicializar Enhanced Components
 print("🚀 Inicializando Enhanced Components...")
 try:
+    # Importar desde el directorio raíz del backend
+    import sys
+    import os
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    
     from enhanced_agent_core import EnhancedMitosisAgent
     from enhanced_memory_manager import EnhancedMemoryManager
     from enhanced_task_manager import EnhancedTaskManager
@@ -74,6 +79,11 @@ try:
     enhanced_agent = EnhancedMitosisAgent()
     
     print("✅ Enhanced components inicializados exitosamente")
+except ImportError as e:
+    print(f"⚠️ Error importando enhanced components: {e}")
+    enhanced_agent = None
+    enhanced_memory = None
+    enhanced_task_manager = None
 except Exception as e:
     print(f"⚠️ Error inicializando enhanced components: {e}")
     enhanced_agent = None
