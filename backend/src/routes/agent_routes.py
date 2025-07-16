@@ -572,7 +572,7 @@ async def chat():
                         if any(pattern in message_lower for pattern in scheduled_patterns):
                             return 'agent'
                         
-                        # 8. ANÁLISIS ADICIONAL - Longitud y complejidad
+                        # 9. ANÁLISIS ADICIONAL - Longitud y complejidad
                         word_count = len(message.split())
                         sentence_count = len([s for s in message.split('.') if s.strip()])
                         
