@@ -510,14 +510,14 @@ async def chat():
                         if any(keyword in message.lower() for keyword in ['archivo', 'file', 'directorio', 'folder', 'lista', 'listar', 'mostrar', 'crear', 'eliminar', 'leer', 'escribir', 'copiar', 'mover']):
                             tools_to_use.append('file_manager')
                         
-                        # Detectar si necesita búsqueda web
-                        if any(keyword in message.lower() for keyword in ['buscar', 'busca', 'search', 'información', 'noticias', 'web', 'internet', 'google', 'investiga', 'investigar']):
+                        # Detectar si necesita búsqueda web (mejorado)
+                        if any(keyword in message.lower() for keyword in ['buscar', 'busca', 'search', 'información', 'noticias', 'web', 'internet', 'google', 'investiga', 'investigar', 'informe', 'report', 'reporte', 'sobre', 'acerca de', 'about', 'mejores prácticas', 'best practices']):
                             tools_to_use.append('web_search')
                         
                         # Si no detecta herramientas específicas, usar herramientas por defecto según el contexto
                         if not tools_to_use:
-                            if any(keyword in message.lower() for keyword in ['analiza', 'analizar', 'procesa', 'procesar', 'verifica', 'verificar']):
-                                tools_to_use = ['file_manager', 'shell']  # Para análisis general
+                            if any(keyword in message.lower() for keyword in ['analiza', 'analizar', 'procesa', 'procesar', 'verifica', 'verificar', 'genera', 'generar', 'crea', 'crear', 'haz', 'hacer', 'informe', 'report']):
+                                tools_to_use = ['web_search']  # Para tareas de investigación/generación
                             else:
                                 tools_to_use = ['shell']  # Por defecto para tareas generales
                         
