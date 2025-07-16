@@ -61,10 +61,34 @@ ollama_service = OllamaService(base_url=ollama_base_url)
 tool_manager = ToolManager()
 database_service = DatabaseService()
 
+# Inicializar Enhanced Components
+print("🚀 Inicializando Enhanced Components...")
+try:
+    from enhanced_agent_core import EnhancedMitosisAgent
+    from enhanced_memory_manager import EnhancedMemoryManager
+    from enhanced_task_manager import EnhancedTaskManager
+    
+    # Crear enhanced components
+    enhanced_memory = EnhancedMemoryManager()
+    enhanced_task_manager = EnhancedTaskManager(enhanced_memory)
+    enhanced_agent = EnhancedMitosisAgent()
+    
+    print("✅ Enhanced components inicializados exitosamente")
+except Exception as e:
+    print(f"⚠️ Error inicializando enhanced components: {e}")
+    enhanced_agent = None
+    enhanced_memory = None
+    enhanced_task_manager = None
+
 # Hacer servicios disponibles globalmente
 app.ollama_service = ollama_service
 app.tool_manager = tool_manager
 app.database_service = database_service
+
+# Hacer enhanced components disponibles globalmente
+app.enhanced_agent = enhanced_agent
+app.enhanced_memory = enhanced_memory
+app.enhanced_task_manager = enhanced_task_manager
 
 # Registrar blueprints
 app.register_blueprint(agent_bp, url_prefix='/api/agent')
