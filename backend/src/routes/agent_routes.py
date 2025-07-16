@@ -439,3 +439,90 @@ async def chat():
         return jsonify({
             'error': f'Error interno del servidor: {str(e)}'
         }), 500
+
+@agent_bp.route('/task/status/<task_id>', methods=['GET'])
+def get_task_status(task_id):
+    """
+    Obtiene el estado de una tarea específica
+    Compatible con tanto orquestación como ejecución regular
+    """
+    try:
+        # Verificar si es una orquestación activa
+        orchestration_status = task_orchestrator.get_orchestration_status(task_id)
+        
+        if orchestration_status:
+            return jsonify({
+                'task_id': task_id,
+                'type': 'orchestration',
+                'status': orchestration_status.get('status', 'unknown'),
+                'progress': orchestration_status.get('progress', 0),
+                'start_time': orchestration_status.get('start_time', 0),
+                'elapsed_time': orchestration_status.get('elapsed_time', 0),
+                'context': orchestration_status.get('context', {})
+            })
+        
+        # Si no hay orquestación, buscar en el sistema anterior
+        # TODO: Integrar con el sistema de ejecución anterior si es necesario
+        
+        return jsonify({
+            'task_id': task_id,
+            'type': 'regular',
+            'status': 'not_found',
+            'message': 'Task not found in active orchestrations'
+        }), 404
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo estado de tarea: {str(e)}")
+        return jsonify({
+            'error': f'Error obteniendo estado: {str(e)}'
+        }), 500
+
+@agent_bp.route('/health', methods=['GET'])
+def health_check():
+    """
+    Health check endpoint con información de orquestación
+    """
+    try:
+        # Obtener métricas de orquestación
+        orchestration_metrics = task_orchestrator.get_orchestration_metrics()
+        active_orchestrations = task_orchestrator.get_active_orchestrations()
+        
+        # Obtener información de herramientas
+        tool_manager = current_app.tool_manager
+        available_tools = tool_manager.get_available_tools()
+        
+        # Obtener estado de Ollama
+        ollama_service = current_app.ollama_service
+        ollama_status = ollama_service.check_connection()
+        
+        # Obtener estado de base de datos
+        database_service = current_app.database_service
+        db_status = database_service.check_connection()
+        
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'services': {
+                'orchestration': {
+                    'active_tasks': len(active_orchestrations),
+                    'total_tasks': orchestration_metrics.get('total_tasks', 0),
+                    'success_rate': orchestration_metrics.get('successful_tasks', 0) / max(orchestration_metrics.get('total_tasks', 1), 1),
+                    'avg_execution_time': orchestration_metrics.get('avg_execution_time', 0)
+                },
+                'ollama': ollama_status,
+                'database': db_status,
+                'tools': {
+                    'available': len(available_tools),
+                    'list': [tool.get('name', 'unknown') for tool in available_tools]
+                }
+            },
+            'version': '2.0.0-orchestrated'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error en health check: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
