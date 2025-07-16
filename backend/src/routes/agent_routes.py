@@ -507,7 +507,7 @@ async def chat():
                         if any(pattern in message_lower for pattern in single_search_patterns) and len(message.split()) < 15:
                             return 'discussion'
                         
-                        # 4. MODO AGENTE - Complejidad explícita
+                        # 5. MODO AGENTE - Complejidad explícita
                         explicit_complexity_patterns = [
                             # Análisis y planificación
                             'investiga', 'investigate', 'analiza', 'analyze', 'planifica', 'plan',
