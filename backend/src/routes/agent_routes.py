@@ -747,3 +747,138 @@ def search_memory():
             'error': str(e),
             'timestamp': datetime.now().isoformat()
         }), 500
+
+# Enhanced Agent Endpoints
+@agent_bp.route('/enhanced/status', methods=['GET'])
+def get_enhanced_status():
+    """Obtiene el estado avanzado del enhanced agent"""
+    try:
+        enhanced_agent = current_app.enhanced_agent
+        if not enhanced_agent:
+            return jsonify({'error': 'Enhanced agent not available'}), 503
+        
+        status = enhanced_agent.get_enhanced_status()
+        return jsonify(status)
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo estado enhanced: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/enhanced/cognitive-mode', methods=['GET'])
+def get_cognitive_mode():
+    """Obtiene el modo cognitivo actual del enhanced agent"""
+    try:
+        enhanced_agent = current_app.enhanced_agent
+        if not enhanced_agent:
+            return jsonify({'error': 'Enhanced agent not available'}), 503
+        
+        return jsonify({
+            'cognitive_mode': enhanced_agent.cognitive_mode.value,
+            'learning_enabled': enhanced_agent.learning_enabled,
+            'reflection_threshold': enhanced_agent.reflection_threshold,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo modo cognitivo: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/enhanced/memory/semantic-search', methods=['POST'])
+def enhanced_semantic_search():
+    """Búsqueda semántica usando enhanced memory manager"""
+    try:
+        enhanced_memory = current_app.enhanced_memory
+        if not enhanced_memory:
+            return jsonify({'error': 'Enhanced memory not available'}), 503
+        
+        data = request.get_json()
+        query = data.get('query', '')
+        n_results = data.get('n_results', 10)
+        category = data.get('category', None)
+        min_confidence = data.get('min_confidence', 0.5)
+        
+        if not query:
+            return jsonify({'error': 'query is required'}), 400
+        
+        # Realizar búsqueda semántica
+        results = enhanced_memory.search_knowledge_semantic(
+            query=query,
+            n_results=n_results,
+            category=category,
+            min_confidence=min_confidence
+        )
+        
+        # Convertir resultados a formato JSON serializable
+        serialized_results = []
+        for result in results:
+            serialized_results.append({
+                'id': result.id,
+                'content': result.content,
+                'category': result.category,
+                'source': result.source,
+                'confidence': result.confidence,
+                'created_at': result.created_at,
+                'accessed_count': result.accessed_count,
+                'tags': result.tags
+            })
+        
+        return jsonify({
+            'results': serialized_results,
+            'query': query,
+            'total_results': len(serialized_results),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error en búsqueda semántica: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/enhanced/memory/stats', methods=['GET'])
+def get_enhanced_memory_stats():
+    """Obtiene estadísticas de la memoria mejorada"""
+    try:
+        enhanced_memory = current_app.enhanced_memory
+        if not enhanced_memory:
+            return jsonify({'error': 'Enhanced memory not available'}), 503
+        
+        stats = enhanced_memory.get_enhanced_memory_stats()
+        return jsonify(stats)
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo estadísticas de memoria mejorada: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/enhanced/learning/patterns', methods=['GET'])
+def get_learned_patterns():
+    """Obtiene los patrones aprendidos por el enhanced agent"""
+    try:
+        enhanced_agent = current_app.enhanced_agent
+        if not enhanced_agent:
+            return jsonify({'error': 'Enhanced agent not available'}), 503
+        
+        return jsonify({
+            'learned_patterns': enhanced_agent.learned_patterns,
+            'total_patterns': len(enhanced_agent.learned_patterns),
+            'learning_metrics': enhanced_agent.learning_metrics.__dict__,
+            'cognitive_stats': enhanced_agent.cognitive_stats,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo patrones aprendidos: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
