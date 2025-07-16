@@ -416,59 +416,83 @@ async def chat():
                     # Función para detectar si es una TAREA específica que requiere herramientas
                     def is_task_requiring_tools(message):
                         """Detectar si el mensaje es una tarea específica que requiere herramientas"""
-                        message_lower = message.lower()
+                        message_lower = message.lower().strip()
                         
-                        # Primero: Detectar saludos y conversación casual (retorna False inmediatamente)
-                        casual_only_phrases = [
-                            'hola', 'hello', 'hi', 'buenos días', 'buenas tardes', 'buenas noches',
-                            'gracias', 'thank you', 'thanks', 'de nada', 'por favor',
-                            'qué tal', 'cómo estás', 'how are you', 'adiós', 'bye', 'hasta luego',
-                            'cómo te llamas', 'what is your name', 'quien eres', 'who are you'
+                        # Primero: Detectar saludos y conversación casual EXACTA (retorna False inmediatamente)
+                        casual_exact_phrases = [
+                            'hola', 'hello', 'hi', 'hey', 'buenas', 'buenos días', 'buenas tardes', 'buenas noches',
+                            'gracias', 'thank you', 'thanks', 'de nada', 'por favor', 'please',
+                            'qué tal', 'cómo estás', 'how are you', 'how you doing', 'como estas',
+                            'adiós', 'bye', 'goodbye', 'hasta luego', 'see you', 'nos vemos',
+                            'cómo te llamas', 'what is your name', 'what\'s your name', 'quien eres', 'who are you',
+                            'ok', 'okay', 'bien', 'fine', 'good', 'bueno', 'vale', 'sí', 'yes', 'no',
+                            'perfecto', 'perfect', 'excelente', 'excellent', 'genial', 'great'
                         ]
                         
-                        # Si es SOLO una frase casual (sin más contenido), no es tarea
-                        if any(phrase == message_lower.strip() for phrase in casual_only_phrases):
+                        # Si es EXACTAMENTE una frase casual (sin más contenido), NO es tarea
+                        if message_lower in casual_exact_phrases:
                             return False
                         
-                        # Segundo: Detectar indicadores de TAREA (retorna True si encuentra)
+                        # Segundo: Detectar preguntas casuales simples (retorna False)
+                        casual_question_patterns = [
+                            'cómo', 'how', 'qué', 'what', 'cuál', 'which', 'dónde', 'where', 'cuándo', 'when',
+                            'por qué', 'why', 'para qué', 'what for'
+                        ]
+                        
+                        # Si es una pregunta casual corta (menos de 50 caracteres), probablemente no es tarea
+                        if len(message) < 50 and any(pattern in message_lower for pattern in casual_question_patterns):
+                            # Verificar si no contiene palabras de acción específicas
+                            action_words = ['crear', 'crea', 'generar', 'genera', 'hacer', 'haz', 'ejecutar', 'ejecuta', 'buscar', 'busca']
+                            if not any(action in message_lower for action in action_words):
+                                return False
+                        
+                        # Tercero: Detectar indicadores claros de TAREA (retorna True si encuentra)
                         task_indicators = [
-                            # Comandos explícitos
-                            'ejecuta', 'ejecutar', 'run', 'comando', 'command',
+                            # Comandos explícitos de acción
+                            'ejecuta', 'ejecutar', 'run', 'comando', 'command', 'corre', 'correr',
+                            # Creación y generación
+                            'crea', 'crear', 'create', 'genera', 'generar', 'generate', 'construye', 'construir', 'build',
+                            'haz', 'hacer', 'do', 'make', 'desarrolla', 'desarrollar', 'develop',
                             # Análisis y procesamiento
-                            'analiza', 'analizar', 'analyze', 'procesa', 'procesar',
-                            # Búsqueda activa
-                            'busca', 'buscar', 'search', 'encuentra', 'encontrar',
-                            # Creación/modificación/generación
-                            'crea', 'crear', 'create', 'genera', 'generar', 'generate', 'modifica', 'modificar',
-                            'haz', 'hacer', 'do', 'make', 'build', 'construye', 'construir',
-                            'desarrolla', 'desarrollar', 'develop', 'programa', 'programar',
-                            # Gestión de archivos
+                            'analiza', 'analizar', 'analyze', 'procesa', 'procesar', 'process',
+                            'evalúa', 'evaluar', 'evaluate', 'examina', 'examinar', 'examine',
+                            # Búsqueda activa y investigación
+                            'busca', 'buscar', 'search', 'encuentra', 'encontrar', 'find',
+                            'investiga', 'investigar', 'research', 'explora', 'explorar', 'explore',
+                            # Modificación y manipulación
+                            'modifica', 'modificar', 'modify', 'cambia', 'cambiar', 'change',
+                            'actualiza', 'actualizar', 'update', 'mejora', 'mejorar', 'improve',
+                            # Gestión de archivos y sistema
                             'lista', 'listar', 'list', 'mostrar archivos', 'show files',
                             'descarga', 'descargar', 'download', 'sube', 'subir', 'upload',
-                            # Investigación y reportes
-                            'investiga', 'investigar', 'research', 'explora', 'explorar',
-                            'informe', 'report', 'reporte', 'estudio', 'study', 'análisis',
-                            # Operaciones de sistema
-                            'verifica', 'verificar', 'check', 'monitorea', 'monitorear', 'instala', 'instalar',
-                            # Palabras clave de resultado
-                            'sobre', 'acerca de', 'about', 'mejores prácticas', 'best practices'
+                            'instala', 'instalar', 'install', 'configura', 'configurar', 'configure',
+                            # Operaciones específicas
+                            'verifica', 'verificar', 'check', 'monitorea', 'monitorear', 'monitor',
+                            'prueba', 'probar', 'test', 'debuggea', 'debugear', 'debug',
+                            # Palabras clave de resultado/output
+                            'informe', 'report', 'reporte', 'documento', 'document',
+                            'resumen', 'summary', 'análisis', 'analysis', 'estudio', 'study'
                         ]
                         
                         # Verificar si contiene indicadores de tarea
                         has_task_indicator = any(indicator in message_lower for indicator in task_indicators)
                         
                         # Verificar comandos específicos de sistema
-                        command_patterns = ['ls ', 'cd ', 'pwd', 'ps ', 'mkdir', 'rm ', 'cp ', 'mv ', 'chmod', 'grep']
+                        command_patterns = ['ls ', 'cd ', 'pwd', 'ps ', 'mkdir', 'rm ', 'cp ', 'mv ', 'chmod', 'grep', 'find ', 'cat ', 'nano ', 'vim ']
                         has_command = any(cmd in message_lower for cmd in command_patterns)
                         
                         # Verificar patrones de solicitud de trabajo
                         work_patterns = [
                             'web sobre', 'sitio web', 'website', 'aplicación', 'app',
-                            'base de datos', 'database', 'sistema', 'system'
+                            'base de datos', 'database', 'sistema', 'system', 'programa', 'program',
+                            'script', 'código', 'code', 'función', 'function'
                         ]
                         has_work_pattern = any(pattern in message_lower for pattern in work_patterns)
                         
-                        return has_task_indicator or has_command or has_work_pattern
+                        # Verificar si es una solicitud específica con "sobre" o "acerca de"
+                        has_about_pattern = ('sobre ' in message_lower or 'acerca de ' in message_lower or 'about ' in message_lower) and len(message) > 15
+                        
+                        return has_task_indicator or has_command or has_work_pattern or has_about_pattern
                     
                     # Verificar si es una tarea que requiere herramientas
                     if not is_task_requiring_tools(message):
