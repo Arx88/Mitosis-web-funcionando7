@@ -360,10 +360,13 @@ def test_database_connection():
     )
     
     if response and response.status_code == 200:
-        data = response.json()
-        print(f"   Database Connected: {data.get('connected', False)}")
-        print(f"   Collections: {data.get('collections', 0)}")
-        print(f"   Total Size: {data.get('total_size_mb', 0)} MB")
+        try:
+            data = response.json()
+            print(f"   Database Connected: {data.get('connected', False)}")
+            print(f"   Collections: {data.get('collections', 0)}")
+            print(f"   Total Size: {data.get('total_size_mb', 0)} MB")
+        except:
+            print(f"   Response: {response.text[:200]}")
 
 def test_error_handling():
     """Test 7: Error Handling"""
