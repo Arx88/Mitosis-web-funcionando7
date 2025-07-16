@@ -22,7 +22,19 @@ from datetime import datetime
 from pathlib import Path
 
 # Configuration
-BASE_URL = "http://localhost:8001"
+# Get the backend URL from the frontend .env file
+try:
+    with open('/app/frontend/.env', 'r') as env_file:
+        for line in env_file:
+            if line.startswith('REACT_APP_BACKEND_URL='):
+                BASE_URL = line.strip().split('=', 1)[1].strip('"\'')
+                break
+        else:
+            BASE_URL = "http://localhost:8001"
+except Exception as e:
+    print(f"Error reading .env file: {e}")
+    BASE_URL = "http://localhost:8001"
+
 API_PREFIX = "/api"
 
 print(f"🧠 MEMORY SYSTEM INTEGRATION TEST - MITOSIS CHAT ENDPOINT")
