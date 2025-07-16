@@ -86,6 +86,66 @@ class OllamaService:
         """Obtener el modelo actual"""
         return self.current_model or self.default_model
     
+    def generate_casual_response(self, prompt: str, context: Dict = None) -> Dict[str, Any]:
+        """
+        Generar respuesta casual usando Ollama (sin planes ni herramientas)
+        
+        Args:
+            prompt: Mensaje del usuario
+            context: Contexto adicional (historial, etc.)
+        
+        Returns:
+            Dict con respuesta casual y metadatos
+        """
+        if not self.is_healthy():
+            return {
+                'response': "⚠️ Ollama no está disponible en este momento. Asegúrate de que esté ejecutándose en localhost:11434",
+                'tool_calls': [],
+                'raw_response': "",
+                'model': self.get_current_model(),
+                'timestamp': time.time(),
+                'error': 'Ollama no disponible'
+            }
+        
+        try:
+            # Construir el prompt con system prompt para conversación casual
+            system_prompt = self._build_system_prompt(use_tools=False, conversation_mode=True)
+            full_prompt = self._build_full_prompt(prompt, context, system_prompt)
+            
+            # Hacer la llamada a Ollama
+            response = self._call_ollama_api(full_prompt)
+            
+            if response.get('error'):
+                return {
+                    'response': f"❌ Error al generar respuesta: {response['error']}",
+                    'tool_calls': [],
+                    'raw_response': "",
+                    'model': self.get_current_model(),
+                    'timestamp': time.time(),
+                    'error': response['error']
+                }
+            
+            # Para conversación casual, no parseamos tool calls, solo devolvemos el texto
+            response_text = response.get('response', '').strip()
+            
+            return {
+                'response': response_text,
+                'tool_calls': [],
+                'raw_response': response.get('response', ''),
+                'model': self.get_current_model(),
+                'timestamp': time.time()
+            }
+            
+        except Exception as e:
+            return {
+                'response': f"❌ Error interno: {str(e)}",
+                'tool_calls': [],
+                'raw_response': "",
+                'model': self.get_current_model(),
+                'timestamp': time.time(),
+                'error': str(e)
+            }
+
     def generate_response(self, prompt: str, context: Dict = None, use_tools: bool = True) -> Dict[str, Any]:
         """
         Generar respuesta usando Ollama real
