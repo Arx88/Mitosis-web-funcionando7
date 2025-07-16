@@ -607,3 +607,113 @@ def get_ollama_models():
             'models': [],
             'timestamp': datetime.now().isoformat()
         }), 500
+
+@agent_bp.route('/memory/stats', methods=['GET'])
+def get_memory_stats():
+    """Obtiene estadísticas del sistema de memoria autónoma"""
+    try:
+        async def get_stats():
+            # Inicializar memoria si no está inicializada
+            if not memory_manager.is_initialized:
+                await memory_manager.initialize()
+            
+            # Obtener estadísticas completas
+            stats = await memory_manager.get_memory_stats()
+            
+            # Agregar estadísticas adicionales
+            stats['total_orchestrations'] = len(task_orchestrator.orchestration_history)
+            stats['active_orchestrations'] = len(task_orchestrator.active_orchestrations)
+            
+            return stats
+        
+        # Ejecutar función asíncrona
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        stats = loop.run_until_complete(get_stats())
+        loop.close()
+        
+        return jsonify(stats)
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo estadísticas de memoria: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/memory/learning-insights', methods=['GET'])
+def get_learning_insights():
+    """Obtiene insights de aprendizaje del agente"""
+    try:
+        async def get_insights():
+            # Inicializar memoria si no está inicializada
+            if not memory_manager.is_initialized:
+                await memory_manager.initialize()
+            
+            # Obtener insights de aprendizaje
+            insights = memory_manager.procedural_memory.get_learning_insights()
+            
+            # Agregar métricas de orquestación
+            orchestration_metrics = task_orchestrator.get_orchestration_metrics()
+            
+            return {
+                'learning_insights': insights,
+                'orchestration_metrics': orchestration_metrics,
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        # Ejecutar función asíncrona
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        insights = loop.run_until_complete(get_insights())
+        loop.close()
+        
+        return jsonify(insights)
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo insights de aprendizaje: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/memory/search', methods=['POST'])
+def search_memory():
+    """Busca en la memoria autónoma del agente"""
+    try:
+        data = request.get_json()
+        query = data.get('query', '')
+        context_type = data.get('context_type', 'all')
+        max_results = data.get('max_results', 10)
+        
+        if not query:
+            return jsonify({'error': 'query is required'}), 400
+        
+        async def search():
+            # Inicializar memoria si no está inicializada
+            if not memory_manager.is_initialized:
+                await memory_manager.initialize()
+            
+            # Buscar en memoria
+            results = await memory_manager.retrieve_relevant_context(
+                query, 
+                context_type, 
+                max_results
+            )
+            
+            return results
+        
+        # Ejecutar función asíncrona
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        results = loop.run_until_complete(search())
+        loop.close()
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        logger.error(f"Error buscando en memoria: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
