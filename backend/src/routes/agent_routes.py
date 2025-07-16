@@ -1376,7 +1376,7 @@ def generate_suggestions():
 
 @agent_bp.route('/generate-plan', methods=['POST'])
 def generate_plan():
-    """Genera un plan dinámico para una tarea"""
+    """Genera un plan de acción dinámico para mostrar al usuario (3-6 pasos)"""
     try:
         data = request.get_json() or {}
         task_title = data.get('task_title', '')
@@ -1385,32 +1385,77 @@ def generate_plan():
         if not task_title:
             return jsonify({'error': 'task_title is required'}), 400
         
-        # Generar plan básico basado en el título de la tarea
+        # Generar plan de acción específico para el usuario
         plan_steps = []
         
         # Detectar tipo de tarea y generar pasos apropiados
         task_lower = task_title.lower()
         
-        if any(keyword in task_lower for keyword in ['buscar', 'investigar', 'analizar', 'informe']):
+        # Planes específicos para WebSearch
+        if '[websearch]' in task_lower:
+            clean_task = task_title.replace('[WebSearch]', '').strip()
+            plan_steps = [
+                {'id': 'step-1', 'title': 'Procesar consulta de búsqueda', 'completed': False, 'active': True},
+                {'id': 'step-2', 'title': 'Buscar información en internet', 'completed': False, 'active': False},
+                {'id': 'step-3', 'title': 'Filtrar resultados relevantes', 'completed': False, 'active': False},
+                {'id': 'step-4', 'title': 'Presentar resultados organizados', 'completed': False, 'active': False}
+            ]
+        # Planes específicos para DeepSearch
+        elif '[deepresearch]' in task_lower:
+            clean_task = task_title.replace('[DeepResearch]', '').strip()
+            plan_steps = [
+                {'id': 'step-1', 'title': 'Definir objetivos de investigación', 'completed': False, 'active': True},
+                {'id': 'step-2', 'title': 'Recopilar información de múltiples fuentes', 'completed': False, 'active': False},
+                {'id': 'step-3', 'title': 'Analizar y sintetizar datos', 'completed': False, 'active': False},
+                {'id': 'step-4', 'title': 'Generar informe detallado', 'completed': False, 'active': False}
+            ]
+        # Planes para análisis y investigación
+        elif any(keyword in task_lower for keyword in ['analizar', 'analiza', 'investigar', 'investigación', 'informe', 'reporte', 'estudio']):
             plan_steps = [
                 {'id': 'step-1', 'title': 'Definir objetivos de investigación', 'completed': False, 'active': True},
                 {'id': 'step-2', 'title': 'Recopilar información relevante', 'completed': False, 'active': False},
                 {'id': 'step-3', 'title': 'Analizar y procesar datos', 'completed': False, 'active': False},
-                {'id': 'step-4', 'title': 'Generar conclusiones', 'completed': False, 'active': False}
+                {'id': 'step-4', 'title': 'Generar conclusiones', 'completed': False, 'active': False},
+                {'id': 'step-5', 'title': 'Crear documento final', 'completed': False, 'active': False}
             ]
-        elif any(keyword in task_lower for keyword in ['crear', 'desarrollar', 'diseñar']):
+        # Planes para desarrollo y creación
+        elif any(keyword in task_lower for keyword in ['crear', 'desarrollar', 'diseñar', 'construir', 'implementar', 'programar']):
             plan_steps = [
-                {'id': 'step-1', 'title': 'Planificar estructura', 'completed': False, 'active': True},
-                {'id': 'step-2', 'title': 'Desarrollar contenido', 'completed': False, 'active': False},
-                {'id': 'step-3', 'title': 'Revisar y optimizar', 'completed': False, 'active': False},
-                {'id': 'step-4', 'title': 'Finalizar entrega', 'completed': False, 'active': False}
+                {'id': 'step-1', 'title': 'Planificar estructura y requisitos', 'completed': False, 'active': True},
+                {'id': 'step-2', 'title': 'Desarrollar componentes principales', 'completed': False, 'active': False},
+                {'id': 'step-3', 'title': 'Integrar y probar funcionalidad', 'completed': False, 'active': False},
+                {'id': 'step-4', 'title': 'Revisar y optimizar', 'completed': False, 'active': False},
+                {'id': 'step-5', 'title': 'Finalizar y documentar', 'completed': False, 'active': False}
+            ]
+        # Planes para comparación y evaluación
+        elif any(keyword in task_lower for keyword in ['comparar', 'evaluar', 'revisar', 'mejores prácticas', 'best practices']):
+            plan_steps = [
+                {'id': 'step-1', 'title': 'Identificar criterios de evaluación', 'completed': False, 'active': True},
+                {'id': 'step-2', 'title': 'Recopilar datos comparativos', 'completed': False, 'active': False},
+                {'id': 'step-3', 'title': 'Analizar diferencias y similitudes', 'completed': False, 'active': False},
+                {'id': 'step-4', 'title': 'Generar recomendaciones', 'completed': False, 'active': False}
+            ]
+        # Planes para archivos adjuntos
+        elif 'archivos adjuntos' in task_lower:
+            plan_steps = [
+                {'id': 'step-1', 'title': 'Procesar archivos recibidos', 'completed': False, 'active': True},
+                {'id': 'step-2', 'title': 'Analizar contenido', 'completed': False, 'active': False},
+                {'id': 'step-3', 'title': 'Preparar archivos para uso', 'completed': False, 'active': False}
+            ]
+        # Planes para búsqueda simple
+        elif any(keyword in task_lower for keyword in ['buscar', 'busca', 'información sobre', 'qué es', 'quién es', 'cuál es']):
+            plan_steps = [
+                {'id': 'step-1', 'title': 'Procesar consulta', 'completed': False, 'active': True},
+                {'id': 'step-2', 'title': 'Buscar información', 'completed': False, 'active': False},
+                {'id': 'step-3', 'title': 'Presentar resultados', 'completed': False, 'active': False}
             ]
         else:
-            # Plan genérico
+            # Plan genérico para cualquier tarea
             plan_steps = [
                 {'id': 'step-1', 'title': 'Analizar requerimientos', 'completed': False, 'active': True},
-                {'id': 'step-2', 'title': 'Ejecutar tarea', 'completed': False, 'active': False},
-                {'id': 'step-3', 'title': 'Verificar resultados', 'completed': False, 'active': False}
+                {'id': 'step-2', 'title': 'Ejecutar tarea principal', 'completed': False, 'active': False},
+                {'id': 'step-3', 'title': 'Verificar resultados', 'completed': False, 'active': False},
+                {'id': 'step-4', 'title': 'Entregar respuesta final', 'completed': False, 'active': False}
             ]
         
         return jsonify({
