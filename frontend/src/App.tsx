@@ -577,6 +577,69 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                                 // Usar plan dinámico pero procesarlo con información real del backend
                                 const dynamicPlan = await generateDynamicTaskPlan(message.trim());
                                 
+                                // Configurar polling para actualizar progreso del plan
+                                const pollTaskProgress = () => {
+                                  const pollInterval = setInterval(async () => {
+                                    try {
+                                      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+                                      const response = await fetch(`${backendUrl}/api/agent/get-task-progress/${newTask.id}`);
+                                      
+                                      if (response.ok) {
+                                        const progressData = await response.json();
+                                        const taskProgress = progressData.task_progress || {};
+                                        
+                                        // Actualizar plan con progreso del backend
+                                        const updatedPlan = dynamicPlan.map(step => {
+                                          const stepProgress = taskProgress[step.id];
+                                          if (stepProgress) {
+                                            return { ...step, completed: stepProgress.completed, active: false };
+                                          }
+                                          return step;
+                                        });
+                                        
+                                        // Activar el siguiente paso no completado
+                                        const nextStepIndex = updatedPlan.findIndex(step => !step.completed);
+                                        if (nextStepIndex >= 0) {
+                                          updatedPlan[nextStepIndex].active = true;
+                                        }
+                                        
+                                        // Calcular progreso real
+                                        const completedSteps = updatedPlan.filter(step => step.completed).length;
+                                        const totalSteps = updatedPlan.length;
+                                        const realProgress = Math.round((completedSteps / totalSteps) * 100);
+                                        
+                                        // Actualizar tarea con progreso real
+                                        setTasks(prevTasks => prevTasks.map(task => {
+                                          if (task.id === newTask.id) {
+                                            return {
+                                              ...task,
+                                              plan: updatedPlan,
+                                              progress: realProgress,
+                                              status: realProgress === 100 ? 'completed' as const : 'in-progress' as const
+                                            };
+                                          }
+                                          return task;
+                                        }));
+                                        
+                                        // Detener polling si la tarea está completa
+                                        if (realProgress === 100) {
+                                          clearInterval(pollInterval);
+                                        }
+                                      }
+                                    } catch (error) {
+                                      console.error('Error polling task progress:', error);
+                                    }
+                                  }, 2000); // Verificar cada 2 segundos
+                                  
+                                  // Limpiar interval después de 60 segundos
+                                  setTimeout(() => {
+                                    clearInterval(pollInterval);
+                                  }, 60000);
+                                };
+                                
+                                // Iniciar polling
+                                pollTaskProgress();
+                                
                                 // Actualizar el plan basado en la ejecución real
                                 let updatedPlan = dynamicPlan;
                                 if (chatResponse.execution_plan && chatResponse.execution_plan.executed_tools) {
