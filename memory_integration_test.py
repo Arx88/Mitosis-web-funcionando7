@@ -686,7 +686,7 @@ import os
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://6bcd963a-7626-4d60-882e-07053dc36942.preview.emergentagent.com"
+BACKEND_URL = "https://54cd0a6d-a099-4502-8331-f77192b9169f.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class MemoryIntegrationTester:
