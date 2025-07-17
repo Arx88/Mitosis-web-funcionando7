@@ -96,3 +96,4 @@ pydantic==2.8.2
 # Fix for memory system
 typing-extensions==4.12.2
 packaging==24.1
+fsspec>=2025.7.0
