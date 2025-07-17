@@ -759,16 +759,40 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                           }
                         }}
                         onDeepSearch={async (inputText) => {
-                          console.log('🔬 Deep search clicked with text:', inputText);
+                          console.log('🔬 DeepSearch clicked with text:', inputText);
                           if (inputText && inputText.trim().length > 0) {
-                            // Create task with DeepResearch prefix
-                            const newTask = await createTask(`[DeepResearch] ${inputText.trim()}`);
+                            const searchQuery = `[DeepResearch] ${inputText.trim()}`;
+                            console.log('🔬 Creating DeepSearch task with query:', searchQuery);
                             
-                            // Send the message to the backend API
+                            // PASO 1: Crear la tarea INMEDIATAMENTE con prefijo DeepResearch
+                            const newTask = await createTask(searchQuery);
+                            console.log('✅ DeepSearch task created:', newTask.id);
+                            
+                            // PASO 2: Crear mensaje del usuario INMEDIATAMENTE
+                            const userMessage = {
+                              id: `msg-${Date.now()}`,
+                              content: searchQuery,
+                              sender: 'user' as const,
+                              timestamp: new Date()
+                            };
+                            
+                            // PASO 3: Actualizar la tarea CON el mensaje del usuario INMEDIATAMENTE
+                            const basicTaskUpdate = {
+                              ...newTask,
+                              messages: [userMessage],
+                              status: 'in-progress' as const,
+                              progress: 10
+                            };
+                            
+                            setTasks(prev => prev.map(task => 
+                              task.id === newTask.id ? basicTaskUpdate : task
+                            ));
+                            
+                            console.log('✅ DeepSearch task updated in sidebar');
+                            
+                            // PASO 4: Procesar backend de manera asíncrona
                             try {
                               const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
-                              console.log('🔗 Backend URL for DeepSearch:', backendUrl);
-                              console.log('📤 Sending DeepSearch request to backend');
                               
                               const response = await fetch(`${backendUrl}/api/agent/chat`, {
                                 method: 'POST',
@@ -776,101 +800,60 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                                   'Content-Type': 'application/json',
                                 },
                                 body: JSON.stringify({
-                                  message: `[DeepResearch] ${inputText.trim()}`,
+                                  message: searchQuery,
                                   context: { task_id: newTask.id }
                                 })
                               });
 
-                              console.log('📡 DeepSearch response status:', response.status);
-
                               if (response.ok) {
                                 const chatResponse = await response.json();
-                                console.log('✅ DeepSearch response received:', chatResponse);
+                                console.log('✅ DeepSearch backend response received:', chatResponse);
                                 
-                                // Generar plan específico para DeepResearch
-                                const deepResearchPlan = await generateDynamicTaskPlan(`[DeepResearch] ${inputText.trim()}`);
-                                
-                                // Marcar pasos como completados para DeepResearch
-                                const completedDeepResearchPlan = deepResearchPlan.map((step, index) => ({
-                                  ...step,
-                                  completed: true,
-                                  active: false
-                                }));
-                                
-                                // Actualizar progreso en el backend
-                                const updateDeepResearchProgress = async () => {
-                                  try {
-                                    const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
-                                    for (let i = 0; i < deepResearchPlan.length; i++) {
-                                      const step = deepResearchPlan[i];
-                                      await fetch(`${backendUrl}/api/agent/update-task-progress`, {
-                                        method: 'POST',
-                                        headers: {
-                                          'Content-Type': 'application/json',
-                                        },
-                                        body: JSON.stringify({
-                                          task_id: newTask.id,
-                                          step_id: step.id,
-                                          completed: true
-                                        })
-                                      });
-                                    }
-                                  } catch (error) {
-                                    console.error('Error updating DeepResearch progress:', error);
-                                  }
-                                };
-                                
-                                // Actualizar progreso
-                                updateDeepResearchProgress();
-                                
-                                const userMessage = {
-                                  id: `msg-${Date.now()}`,
-                                  content: `[DeepResearch] ${inputText.trim()}`,
-                                  sender: 'user' as const,
-                                  timestamp: new Date()
-                                };
-                                
+                                // Crear mensaje del agente
                                 const agentMessage = {
                                   id: `msg-${Date.now() + 1}`,
-                                  content: chatResponse.response || 'Iniciando investigación profunda...',
+                                  content: chatResponse.response || "Investigación profunda completada exitosamente.",
                                   sender: 'agent' as const,
                                   timestamp: new Date(),
                                   searchData: chatResponse.search_data
                                 };
                                 
-                                const updatedTask = {
-                                  ...newTask,
+                                // Actualizar tarea con respuesta del agente
+                                const finalTaskUpdate = {
+                                  ...basicTaskUpdate,
                                   messages: [userMessage, agentMessage],
-                                  plan: completedDeepResearchPlan, // Usar plan completado
-                                  status: 'completed' as const, // DeepSearch se completa inmediatamente
-                                  progress: 100 // 100% porque el backend ya devolvió el resultado completo
+                                  status: 'completed' as const,
+                                  progress: 100
                                 };
                                 
                                 setTasks(prev => prev.map(task => 
-                                  task.id === newTask.id ? updatedTask : task
+                                  task.id === newTask.id ? finalTaskUpdate : task
                                 ));
+                                
+                                console.log('✅ DeepSearch task completed and updated in sidebar');
+                                
                               } else {
-                                console.error('❌ DeepSearch error response:', response.status, response.statusText);
+                                console.error('❌ DeepSearch backend error:', response.status);
+                                const errorTaskUpdate = {
+                                  ...basicTaskUpdate,
+                                  status: 'failed' as const,
+                                  progress: 0
+                                };
+                                
+                                setTasks(prev => prev.map(task => 
+                                  task.id === newTask.id ? errorTaskUpdate : task
+                                ));
                               }
                             } catch (error) {
-                              console.error('💥 Error executing deep search:', error);
-                              // Fallback to basic task creation
-                              const userMessage = {
-                                id: `msg-${Date.now()}`,
-                                content: `[DeepResearch] ${inputText.trim()}`,
-                                sender: 'user' as const,
-                                timestamp: new Date()
-                              };
-                              
-                              const updatedTask = {
-                                ...newTask,
-                                messages: [userMessage],
-                                status: 'in-progress' as const,
-                                progress: 10
+                              console.error('💥 Error in DeepSearch:', error);
+                              const errorTaskUpdate = {
+                                ...basicTaskUpdate,
+                                status: 'failed' as const,
+                                progress: 0
                               };
                               
                               setTasks(prev => prev.map(task => 
-                                task.id === newTask.id ? updatedTask : task
+                                task.id === newTask.id ? errorTaskUpdate : task
                               ));
                             }
                           }
