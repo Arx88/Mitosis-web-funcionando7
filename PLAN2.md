@@ -390,10 +390,21 @@ async def chat():
 - **Acción**: Modificar `/app/backend/src/tools/execution_engine.py` para usar ReplanningEngine
 - **Objetivo**: Que cuando falle un paso, se active automáticamente la replanificación
 
-#### **PASO 2: Integrar SelfReflectionEngine con AgentService** ⏳ **PENDIENTE**
-- **Estado**: ⏳ **PENDIENTE**
+#### **PASO 2: Integrar SelfReflectionEngine con AgentService** ✅ **COMPLETADO**
+- **Estado**: ✅ **COMPLETADO**
 - **Acción**: Modificar `/app/backend/src/routes/agent_routes.py` para usar SelfReflectionEngine
 - **Objetivo**: Que el agente evalúe su rendimiento después de cada tarea
+
+**🔧 FUNCIONALIDADES IMPLEMENTADAS**:
+- **Importación y inicialización**: SelfReflectionEngine integrado en el sistema principal
+- **Evaluación post-tarea**: Auto-reflexión después de cada chat (ambos modos)
+- **Métricas comprehensivas**: Tracking de éxito, herramientas usadas, tiempo de ejecución
+- **Contexto completo**: Información de sesión, memoria y frontend context
+- **Manejo de errores**: Graceful error handling con logging apropiado
+- **Respuesta enriquecida**: Indicador `'self_reflection_enabled': True` en respuestas
+- **Dual mode support**: Funciona tanto en modo discussion como agent
+
+**📊 RESULTADO**: El agente ahora evalúa automáticamente su rendimiento después de cada tarea, contribuyendo al aprendizaje y mejora continua.
 
 #### **PASO 3: Integrar DynamicTaskPlanner con TaskOrchestrator** ⏳ **PENDIENTE**
 - **Estado**: ⏳ **PENDIENTE**
