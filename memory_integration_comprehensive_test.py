@@ -242,17 +242,15 @@ print("="*80)
 
 # Test compress_old_memory method
 compress_data = {
-    "days_threshold": 30,
-    "compression_ratio": 0.5
+    "config": {
+        "days_threshold": 30,
+        "compression_ratio": 0.5
+    }
 }
-run_test("Memory Compression", f"{MEMORY_PREFIX}/compress_old_memory", "POST", compress_data)
+run_test("Memory Compression", f"{MEMORY_PREFIX}/compress-memory", "POST", compress_data)
 
 # Test export_memory_data method
-export_data = {
-    "format": "json",
-    "include_metadata": True
-}
-run_test("Memory Export", f"{MEMORY_PREFIX}/export_memory_data", "POST", export_data)
+run_test("Memory Export", f"{MEMORY_PREFIX}/export-memory")
 
 print("\n" + "="*80)
 print("5. CHAT FUNCTIONALITY WITH MEMORY INTEGRATION")
