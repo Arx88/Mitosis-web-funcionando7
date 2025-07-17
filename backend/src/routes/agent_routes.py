@@ -674,6 +674,33 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                         except Exception as e:
                             logger.warning(f"Error almacenando episodio casual: {e}")
                         
+                        # 🔄 INTEGRACIÓN DE SELF-REFLECTION ENGINE - MODO DISCUSSION
+                        try:
+                            # Ejecutar auto-reflexión después de la conversación
+                            await self_reflection_engine.evaluate_task_performance(
+                                task_id=task_id,
+                                task_description=message,
+                                execution_result={
+                                    'success': True,  # Conversaciones casuales generalmente son exitosas
+                                    'tools_used': [],  # No se usan herramientas en modo discussion
+                                    'success_rate': 1.0,  # Asumimos éxito si se generó respuesta
+                                    'response_quality': 'good',  # Podría ser evaluado de manera más sofisticada
+                                    'user_satisfaction': 'unknown',  # Se podría obtener feedback del usuario
+                                    'execution_time': time.time() - start_time,
+                                    'complexity_level': 'low',  # Conversaciones casuales son simples
+                                    'errors': []  # No hay errores en conversaciones exitosas
+                                },
+                                context={
+                                    'session_id': session_id,
+                                    'mode': 'discussion',
+                                    'memory_context_used': bool(relevant_context),
+                                    'frontend_context': context
+                                }
+                            )
+                            logger.info(f"🔄 Auto-reflexión completada para conversación {task_id}")
+                        except Exception as e:
+                            logger.warning(f"Error ejecutando auto-reflexión en modo discussion: {e}")
+                        
                         return jsonify({
                             'response': agent_response,
                             'task_id': task_id,
@@ -681,7 +708,8 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                             'timestamp': datetime.now().isoformat(),
                             'memory_used': bool(relevant_context),
                             'conversation_mode': True,
-                            'mode': 'discussion'
+                            'mode': 'discussion',
+                            'self_reflection_enabled': True
                         })
                     
                     else:  # message_mode == 'agent'
