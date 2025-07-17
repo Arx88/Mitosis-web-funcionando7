@@ -133,75 +133,43 @@ class AutonomousWebNavigation:
             self.current_step = 0
             self.screenshots = []
             
-            # Ejecutar navegación autónoma con subprocess y xvfb-run
-            import subprocess
-            import tempfile
-            import os
+            # Ejecutar navegación autónoma en modo headless
+            import threading
+            import concurrent.futures
             
-            # Configurar variable de entorno para xvfb
-            env = os.environ.copy()
-            env['DISPLAY'] = ':99'
-            
-            # Ejecutar Xvfb en background
-            xvfb_process = None
-            try:
-                # Iniciar Xvfb
-                xvfb_process = subprocess.Popen(
-                    ['Xvfb', ':99', '-screen', '0', '1920x1080x24', '-ac', '+extension', 'GLX', '+render', '-noreset'],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    env=env
-                )
-                
-                # Esperar a que Xvfb se inicie
-                import time
-                time.sleep(3)
-                
-                # Ejecutar navegación autónoma
-                import threading
-                import concurrent.futures
-                
-                def run_autonomous_navigation():
+            def run_autonomous_navigation():
+                try:
+                    # Crear un nuevo event loop en el hilo
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
                     try:
-                        # Crear un nuevo event loop en el hilo
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
-                        try:
-                            self.log_step("🚀 INICIANDO NAVEGACIÓN AUTÓNOMA CON XVFB", "info")
-                            self.log_step(f"🎯 Tarea: {task_description}", "info")
-                            
-                            result = loop.run_until_complete(
-                                self._execute_autonomous_navigation(
-                                    task_description, target_url, user_data, constraints
-                                )
+                        self.log_step("🚀 INICIANDO NAVEGACIÓN WEB AUTÓNOMA", "info")
+                        self.log_step(f"🎯 Tarea: {task_description}", "info")
+                        self.log_step("📱 Modo: Headless con logs detallados", "info")
+                        
+                        result = loop.run_until_complete(
+                            self._execute_autonomous_navigation(
+                                task_description, target_url, user_data, constraints
                             )
-                            return result
-                        finally:
-                            loop.close()
-                    except Exception as e:
-                        self.log_step(f"❌ Error en navegación autónoma: {e}", "error")
-                        return {
-                            'success': False,
-                            'error': str(e),
-                            'execution_logs': self.execution_logs,
-                            'screenshots': self.screenshots,
-                            'timestamp': datetime.now().isoformat()
-                        }
-                
-                # Ejecutar en un hilo separado
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(run_autonomous_navigation)
-                    result = future.result(timeout=300)  # 5 minutos timeout
-                    return result
-                    
-            finally:
-                # Limpiar Xvfb
-                if xvfb_process:
-                    xvfb_process.terminate()
-                    try:
-                        xvfb_process.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        xvfb_process.kill()
+                        )
+                        return result
+                    finally:
+                        loop.close()
+                except Exception as e:
+                    self.log_step(f"❌ Error en navegación autónoma: {e}", "error")
+                    return {
+                        'success': False,
+                        'error': str(e),
+                        'execution_logs': self.execution_logs,
+                        'screenshots': self.screenshots,
+                        'timestamp': datetime.now().isoformat()
+                    }
+            
+            # Ejecutar en un hilo separado
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(run_autonomous_navigation)
+                result = future.result(timeout=300)  # 5 minutos timeout
+                return result
         
         except Exception as e:
             return {
