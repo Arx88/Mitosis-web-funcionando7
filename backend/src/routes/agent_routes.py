@@ -685,6 +685,7 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                     
                     else:  # message_mode == 'agent'
                         # 🤖 MODO AGENTE - Ejecutar herramientas y generar planes
+                        start_time = time.time()  # Registrar tiempo de inicio para auto-reflexión
                         logger.info(f"🤖 Modo agente activado - ejecutando herramientas")
                         
                         # Crear un sistema de ejecución de herramientas inteligente
