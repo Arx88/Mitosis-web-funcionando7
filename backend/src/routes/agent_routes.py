@@ -689,6 +689,20 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                             if any(keyword in message.lower() for keyword in ['buscar', 'busca', 'search', 'información', 'noticias', 'web', 'internet', 'google', 'investiga', 'investigar', 'informe', 'report', 'reporte', 'sobre', 'acerca de', 'about', 'mejores prácticas', 'best practices']):
                                 tools_to_use.append('web_search')
                             
+                            # 🌐 DETECTAR HERRAMIENTAS DE NAVEGACIÓN WEB Y AUTOMATIZACIÓN
+                            if any(keyword in message.lower() for keyword in [
+                                'navega', 'navigate', 'abre', 'open', 'visita', 'visit', 've a', 'go to',
+                                'crea cuenta', 'create account', 'regístrate', 'register', 'sign up',
+                                'inicia sesión', 'log in', 'login', 'accede', 'access',
+                                'llena', 'fill', 'completa', 'complete', 'formulario', 'form',
+                                'haz clic', 'click', 'presiona', 'press', 'selecciona', 'select',
+                                'automatiza', 'automate', 'simula', 'simulate', 'interactúa', 'interact',
+                                'twitter', 'facebook', 'instagram', 'linkedin', 'github', 'google',
+                                'youtube', 'amazon', 'ebay', 'wikipedia', 'stackoverflow',
+                                'web scraping', 'scraping', 'captura', 'capture', 'screenshot'
+                            ]):
+                                tools_to_use.append('playwright')
+                            
                             # Si no detecta herramientas específicas, usar por defecto según el contexto
                             if not tools_to_use:
                                 if any(keyword in message.lower() for keyword in ['analiza', 'analizar', 'procesa', 'procesar', 'verifica', 'verificar', 'genera', 'generar', 'crea', 'crear', 'haz', 'hacer', 'informe', 'report']):
