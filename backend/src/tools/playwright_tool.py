@@ -175,64 +175,37 @@ class PlaywrightTool:
             import subprocess
             
             def run_async_action():
-                # Configurar display para navegación SIEMPRE visible en terminal
-                display_num = 99
+                # Configurar display para que sea VISIBLE en el terminal/monitor
+                # NO usar Xvfb virtual, usar display real del terminal
                 
-                # Iniciar Xvfb con configuración optimizada para visualización
-                xvfb_cmd = f"Xvfb :{display_num} -screen 0 1920x1080x24 -ac +extension GLX +render -noreset"
+                # Verificar si hay display disponible
+                display_var = os.environ.get('DISPLAY', ':0')
+                print(f"🖥️ Usando display del terminal: {display_var}")
                 
-                print(f"🖥️ Iniciando display virtual en :{display_num} para navegación visible")
-                xvfb_process = subprocess.Popen(xvfb_cmd.split(), 
-                                              stdout=subprocess.DEVNULL, 
-                                              stderr=subprocess.DEVNULL)
-                
-                # Esperar a que Xvfb se inicie
-                time.sleep(2)
-                
-                # Configurar variable de entorno DISPLAY
-                os.environ['DISPLAY'] = f":{display_num}"
-                
-                # Iniciar un window manager simple para mejor visualización
-                try:
-                    wm_process = subprocess.Popen(['fluxbox'], 
-                                                 stdout=subprocess.DEVNULL, 
-                                                 stderr=subprocess.DEVNULL)
-                except FileNotFoundError:
-                    print("⚠️  fluxbox no encontrado, continuando sin window manager")
-                    wm_process = None
-                
-                # Configurar xhost para permitir conexiones
-                try:
-                    subprocess.run(['xhost', '+local:'], check=False, 
-                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                except FileNotFoundError:
-                    pass
+                # Si no hay display, crear uno visible en el terminal
+                if not display_var or display_var == ':0':
+                    # Configurar display para el terminal/monitor actual
+                    os.environ['DISPLAY'] = ':0'
+                    print("🖥️ Configurando navegador para ser visible en terminal/monitor")
                 
                 try:
                     # Crear un nuevo event loop en el hilo
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
                     try:
-                        print(f"🎬 Display virtual configurado en :{display_num} - Navegador será visible en terminal")
-                        print(f"🔍 Iniciando navegación visual en tiempo real...")
+                        print(f"🎬 NAVEGADOR SERÁ VISIBLE EN TERMINAL/MONITOR")
+                        print(f"🔍 El agente EJECUTARÁ acciones reales, NO simuladas")
                         result = loop.run_until_complete(self._execute_action(action, url, parameters))
                         return result
                     finally:
                         loop.close()
-                finally:
-                    # Limpiar: terminar procesos
-                    if wm_process:
-                        wm_process.terminate()
-                        try:
-                            wm_process.wait(timeout=2)
-                        except subprocess.TimeoutExpired:
-                            wm_process.kill()
-                    
-                    xvfb_process.terminate()
-                    try:
-                        xvfb_process.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        xvfb_process.kill()
+                except Exception as e:
+                    print(f"❌ Error en navegación real: {e}")
+                    return {
+                        'success': False,
+                        'error': str(e),
+                        'timestamp': datetime.now().isoformat()
+                    }
             
             # Ejecutar en un hilo separado con display virtual
             with concurrent.futures.ThreadPoolExecutor() as executor:
