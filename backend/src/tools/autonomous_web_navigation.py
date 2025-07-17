@@ -32,7 +32,7 @@ class AutonomousWebNavigation:
         # El usuario requiere que la navegación web se muestre en el terminal
         
         self.config = {
-            'headless': False,  # Headless desactivado para navegación visible
+            'headless': True,  # Usar headless por compatibilidad pero con logs detallados
             'timeout': 30000,  # 30 segundos
             'viewport': {'width': 1920, 'height': 1080},
             'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
