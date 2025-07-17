@@ -557,14 +557,37 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                       <VanishInput
                         onSendMessage={async (message) => {
                           if (message.trim()) {
-                            // Crear la tarea con el texto exacto del usuario
-                            const newTask = await createTask(message.trim());
+                            console.log('🚀 Creating task with message:', message.trim());
                             
-                            // Enviar el mensaje al backend API
+                            // PASO 1: Crear la tarea INMEDIATAMENTE y actualizarla en el estado
+                            const newTask = await createTask(message.trim());
+                            console.log('✅ Task created successfully:', newTask.id);
+                            
+                            // PASO 2: Crear mensaje del usuario INMEDIATAMENTE
+                            const userMessage = {
+                              id: `msg-${Date.now()}`,
+                              content: message.trim(),
+                              sender: 'user' as const,
+                              timestamp: new Date()
+                            };
+                            
+                            // PASO 3: Actualizar la tarea CON el mensaje del usuario INMEDIATAMENTE
+                            const basicTaskUpdate = {
+                              ...newTask,
+                              messages: [userMessage],
+                              status: 'in-progress' as const,
+                              progress: 10
+                            };
+                            
+                            setTasks(prev => prev.map(task => 
+                              task.id === newTask.id ? basicTaskUpdate : task
+                            ));
+                            
+                            console.log('✅ Task updated in sidebar with user message');
+                            
+                            // PASO 4: Procesar backend de manera asíncrona (sin bloquear la UI)
                             try {
                               const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
-                              console.log('🔗 Backend URL for regular task:', backendUrl);
-                              console.log('📤 Sending regular task request to backend');
                               
                               const response = await fetch(`${backendUrl}/api/agent/chat`, {
                                 method: 'POST',
@@ -577,179 +600,56 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                                 })
                               });
 
-                              console.log('📡 Regular task response status:', response.status);
-
                               if (response.ok) {
                                 const chatResponse = await response.json();
-                                console.log('✅ Regular task response received:', chatResponse);
+                                console.log('✅ Backend response received:', chatResponse);
                                 
-                                // Procesar respuesta real del backend
-                                const userMessage = {
-                                  id: `msg-${Date.now()}`,
-                                  content: message.trim(),
-                                  sender: 'user' as const,
-                                  timestamp: new Date()
-                                };
-                                
-                                // Usar la respuesta real del backend
-                                let cleanResponse = chatResponse.response || "He iniciado la ejecución de tu tarea. Puedes ver el progreso en el plan de acción y los detalles técnicos en el terminal.";
-                                
-                                // Si hay herramientas ejecutadas, proporcionar información adicional
-                                if (chatResponse.execution_plan && chatResponse.execution_plan.executed_tools) {
-                                  const toolsCount = chatResponse.execution_plan.tools_count || 0;
-                                  cleanResponse += `\n\n**Herramientas ejecutadas:** ${toolsCount} herramienta${toolsCount !== 1 ? 's' : ''}.`;
-                                }
-                                
+                                // Crear mensaje del agente
                                 const agentMessage = {
                                   id: `msg-${Date.now() + 1}`,
-                                  content: cleanResponse,
+                                  content: chatResponse.response || "Tarea completada exitosamente.",
                                   sender: 'agent' as const,
                                   timestamp: new Date()
                                 };
                                 
-                                // Usar plan dinámico pero procesarlo con información real del backend
-                                const dynamicPlan = await generateDynamicTaskPlan(message.trim());
-                                
-                                // Configurar polling para actualizar progreso del plan
-                                const pollTaskProgress = () => {
-                                  const pollInterval = setInterval(async () => {
-                                    try {
-                                      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
-                                      const response = await fetch(`${backendUrl}/api/agent/get-task-progress/${newTask.id}`);
-                                      
-                                      if (response.ok) {
-                                        const progressData = await response.json();
-                                        const taskProgress = progressData.task_progress || {};
-                                        
-                                        // Actualizar plan con progreso del backend
-                                        const updatedPlan = dynamicPlan.map(step => {
-                                          const stepProgress = taskProgress[step.id];
-                                          if (stepProgress) {
-                                            return { ...step, completed: stepProgress.completed, active: false };
-                                          }
-                                          return step;
-                                        });
-                                        
-                                        // Activar el siguiente paso no completado
-                                        const nextStepIndex = updatedPlan.findIndex(step => !step.completed);
-                                        if (nextStepIndex >= 0) {
-                                          updatedPlan[nextStepIndex].active = true;
-                                        }
-                                        
-                                        // Calcular progreso real
-                                        const completedSteps = updatedPlan.filter(step => step.completed).length;
-                                        const totalSteps = updatedPlan.length;
-                                        const realProgress = Math.round((completedSteps / totalSteps) * 100);
-                                        
-                                        // Actualizar tarea con progreso real
-                                        setTasks(prevTasks => prevTasks.map(task => {
-                                          if (task.id === newTask.id) {
-                                            return {
-                                              ...task,
-                                              plan: updatedPlan,
-                                              progress: realProgress,
-                                              status: realProgress === 100 ? 'completed' as const : 'in-progress' as const
-                                            };
-                                          }
-                                          return task;
-                                        }));
-                                        
-                                        // Detener polling si la tarea está completa
-                                        if (realProgress === 100) {
-                                          clearInterval(pollInterval);
-                                        }
-                                      }
-                                    } catch (error) {
-                                      console.error('Error polling task progress:', error);
-                                    }
-                                  }, 2000); // Verificar cada 2 segundos
-                                  
-                                  // Limpiar interval después de 60 segundos
-                                  setTimeout(() => {
-                                    clearInterval(pollInterval);
-                                  }, 60000);
-                                };
-                                
-                                // Iniciar polling
-                                pollTaskProgress();
-                                
-                                // Actualizar el plan basado en la ejecución real
-                                let updatedPlan = dynamicPlan;
-                                if (chatResponse.execution_plan && chatResponse.execution_plan.executed_tools) {
-                                  // Marcar pasos como completados basado en herramientas ejecutadas
-                                  updatedPlan = dynamicPlan.map((step, index) => {
-                                    if (index < chatResponse.execution_plan.tools_count) {
-                                      return { ...step, completed: true, active: false };
-                                    } else if (index === chatResponse.execution_plan.tools_count) {
-                                      return { ...step, completed: false, active: true };
-                                    }
-                                    return { ...step, completed: false, active: false };
-                                  });
-                                }
-                                
-                                // Calcular progreso real
-                                const completedSteps = updatedPlan.filter(step => step.completed).length;
-                                const totalSteps = updatedPlan.length;
-                                const realProgress = Math.round((completedSteps / totalSteps) * 100);
-                                
-                                const updatedTask = {
-                                  ...newTask,
+                                // Actualizar tarea con respuesta del agente
+                                const finalTaskUpdate = {
+                                  ...basicTaskUpdate,
                                   messages: [userMessage, agentMessage],
-                                  plan: updatedPlan,
-                                  status: realProgress === 100 ? 'completed' as const : 'in-progress' as const,
-                                  progress: realProgress,
-                                  executionData: chatResponse.execution_plan // Guardar datos de ejecución para el terminal
+                                  status: 'completed' as const,
+                                  progress: 100
                                 };
                                 
                                 setTasks(prev => prev.map(task => 
-                                  task.id === newTask.id ? updatedTask : task
+                                  task.id === newTask.id ? finalTaskUpdate : task
                                 ));
+                                
+                                console.log('✅ Task completed and updated in sidebar');
+                                
                               } else {
-                                console.error('❌ Regular task error response:', response.status, response.statusText);
-                                // Fallback to local task creation
-                                const userMessage = {
-                                  id: `msg-${Date.now()}`,
-                                  content: message.trim(),
-                                  sender: 'user' as const,
-                                  timestamp: new Date()
-                                };
-                                
-                                const fallbackPlan = await generateDynamicTaskPlan(message.trim());
-                                
-                                const updatedTask = {
-                                  ...newTask,
-                                  messages: [userMessage],
-                                  plan: fallbackPlan,
-                                  status: 'in-progress' as const,
+                                console.error('❌ Backend error response:', response.status);
+                                // Mantener tarea con solo el mensaje del usuario
+                                const errorTaskUpdate = {
+                                  ...basicTaskUpdate,
+                                  status: 'failed' as const,
                                   progress: 0
                                 };
                                 
                                 setTasks(prev => prev.map(task => 
-                                  task.id === newTask.id ? updatedTask : task
+                                  task.id === newTask.id ? errorTaskUpdate : task
                                 ));
                               }
                             } catch (error) {
-                              console.error('💥 Error executing regular task:', error);
-                              // Fallback to local task creation
-                              const userMessage = {
-                                id: `msg-${Date.now()}`,
-                                content: message.trim(),
-                                sender: 'user' as const,
-                                timestamp: new Date()
-                              };
-                              
-                              const fallbackPlan = await generateDynamicTaskPlan(message.trim());
-                              
-                              const updatedTask = {
-                                ...newTask,
-                                messages: [userMessage],
-                                plan: fallbackPlan,
-                                status: 'in-progress' as const,
+                              console.error('💥 Error processing backend:', error);
+                              // Mantener tarea con solo el mensaje del usuario  
+                              const errorTaskUpdate = {
+                                ...basicTaskUpdate,
+                                status: 'failed' as const,
                                 progress: 0
                               };
                               
                               setTasks(prev => prev.map(task => 
-                                task.id === newTask.id ? updatedTask : task
+                                task.id === newTask.id ? errorTaskUpdate : task
                               ));
                             }
                           }
