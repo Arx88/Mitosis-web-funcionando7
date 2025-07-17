@@ -180,50 +180,61 @@ print("\n" + "="*80)
 print("3. MEMORY SYSTEM COMPLETE INTEGRATION TESTING")
 print("="*80)
 
-# Test memory system status
-run_test("Memory System Status", f"{MEMORY_PREFIX}/status")
-
 # Test memory analytics
-run_test("Memory Analytics", f"{MEMORY_PREFIX}/analytics")
+run_test("Memory Analytics", f"{MEMORY_PREFIX}/memory-analytics")
 
 # Test episode storage
 episode_data = {
-    "content": "User asked about artificial intelligence applications in healthcare",
-    "context": "Healthcare AI discussion",
-    "metadata": {"topic": "healthcare", "type": "question"}
+    "user_query": "What are the applications of AI in healthcare?",
+    "agent_response": "AI in healthcare has many applications including diagnostic imaging, drug discovery, and personalized treatment plans.",
+    "success": True,
+    "context": {"topic": "healthcare", "type": "question"},
+    "tools_used": ["web_search"],
+    "importance": 0.8,
+    "metadata": {"source": "user_conversation"}
 }
-run_test("Episode Storage", f"{MEMORY_PREFIX}/store_episode", "POST", episode_data)
+run_test("Episode Storage", f"{MEMORY_PREFIX}/store-episode", "POST", episode_data)
 
 # Test knowledge storage
 knowledge_data = {
     "content": "AI in healthcare can improve diagnosis accuracy by up to 95%",
-    "category": "healthcare",
-    "metadata": {"source": "medical_research", "confidence": 0.9}
+    "type": "fact",
+    "subject": "AI in healthcare",
+    "predicate": "improves",
+    "object": "diagnosis accuracy by up to 95%",
+    "confidence": 0.9,
+    "context": {"domain": "healthcare"},
+    "metadata": {"source": "medical_research"}
 }
-run_test("Knowledge Storage", f"{MEMORY_PREFIX}/store_knowledge", "POST", knowledge_data)
+run_test("Knowledge Storage", f"{MEMORY_PREFIX}/store-knowledge", "POST", knowledge_data)
 
 # Test procedure storage
 procedure_data = {
     "name": "Healthcare AI Analysis",
+    "description": "Process for analyzing healthcare data using AI",
     "steps": ["Analyze patient data", "Apply AI models", "Generate recommendations"],
     "category": "healthcare",
+    "context_conditions": {"domain": "healthcare"},
+    "effectiveness": 0.85,
     "metadata": {"complexity": "medium", "duration": "30min"}
 }
-run_test("Procedure Storage", f"{MEMORY_PREFIX}/store_procedure", "POST", procedure_data)
+run_test("Procedure Storage", f"{MEMORY_PREFIX}/store-procedure", "POST", procedure_data)
 
 # Test semantic search
 search_data = {
     "query": "artificial intelligence healthcare applications",
-    "limit": 5
+    "max_results": 5,
+    "memory_types": ["all"]
 }
-run_test("Semantic Search", f"{MEMORY_PREFIX}/search", "POST", search_data)
+run_test("Semantic Search", f"{MEMORY_PREFIX}/semantic-search", "POST", search_data)
 
 # Test context retrieval
 context_data = {
     "query": "healthcare AI discussion",
-    "limit": 10
+    "context_type": "all",
+    "max_results": 10
 }
-run_test("Memory Context Retrieval", f"{MEMORY_PREFIX}/get_context", "POST", context_data)
+run_test("Memory Context Retrieval", f"{MEMORY_PREFIX}/retrieve-context", "POST", context_data)
 
 print("\n" + "="*80)
 print("4. FIXED METHODS TESTING (compress_old_memory and export_memory_data)")
