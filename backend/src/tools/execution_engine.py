@@ -29,11 +29,6 @@ class StepStatus(Enum):
     SKIPPED = "skipped"
     RETRYING = "retrying"
 
-class ExecutionStrategy(Enum):
-    SEQUENTIAL = "sequential"
-    PARALLEL = "parallel"
-    CONDITIONAL = "conditional"
-
 @dataclass
 class StepExecution:
     step: TaskStep
