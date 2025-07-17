@@ -122,6 +122,111 @@ class ExecutionEngine:
         """Agregar callback para manejo de errores"""
         self.error_callbacks.append(callback)
     
+    def _initialize_replanning_engine(self, memory_manager=None, ollama_service=None):
+        """Inicializar ReplanningEngine con dependencias"""
+        if self.replanning_engine is None and memory_manager and ollama_service:
+            self.replanning_engine = ReplanningEngine(
+                memory_manager=memory_manager,
+                ollama_service=ollama_service,
+                config={
+                    'max_replanning_attempts': self.config['max_replanning_attempts'],
+                    'confidence_threshold': self.config['replanning_confidence_threshold'],
+                    'enable_aggressive_replanning': True,
+                    'enable_llm_analysis': True
+                }
+            )
+            logger.info("🔄 ReplanningEngine inicializado correctamente")
+    
+    async def _handle_step_failure_with_replanning(self, 
+                                                 context: ExecutionContext, 
+                                                 step_execution: StepExecution,
+                                                 error: Exception) -> bool:
+        """
+        Manejar fallo de paso con replanificación dinámica
+        
+        Returns:
+            bool: True si la replanificación fue exitosa, False si no
+        """
+        try:
+            # Verificar si la replanificación está habilitada
+            if not self.config.get('enable_replanning', False):
+                logger.info("🔄 Replanificación deshabilitada, usando recuperación estándar")
+                return await self._attempt_auto_recovery(context, step_execution, error)
+            
+            # Verificar si tenemos ReplanningEngine disponible
+            if self.replanning_engine is None:
+                logger.warning("🔄 ReplanningEngine no disponible, usando recuperación estándar")
+                return await self._attempt_auto_recovery(context, step_execution, error)
+            
+            # Verificar máximo de intentos de replanificación
+            replanning_attempts = context.variables.get('replanning_attempts', 0)
+            if replanning_attempts >= self.config['max_replanning_attempts']:
+                logger.warning(f"🔄 Máximo de intentos de replanificación alcanzado ({replanning_attempts})")
+                return False
+            
+            logger.info(f"🔄 Iniciando replanificación para paso fallido: {step_execution.step.id}")
+            
+            # Crear contexto de replanificación
+            replanning_context = ReplanningContext(
+                original_plan=context.execution_plan,
+                failed_step=step_execution.step,
+                error_info={'error': str(error), 'type': type(error).__name__},
+                execution_context=context,
+                failed_step_execution=step_execution,
+                available_tools=self.tool_manager.get_available_tools() if self.tool_manager else [],
+                constraints={
+                    'max_duration': self.config['timeout_per_step'],
+                    'retry_count': step_execution.retry_count
+                }
+            )
+            
+            # Ejecutar replanificación
+            replanning_result = await self.replanning_engine.analyze_failure_and_replan(replanning_context)
+            
+            # Actualizar contador de intentos
+            context.variables['replanning_attempts'] = replanning_attempts + 1
+            
+            if replanning_result.success and replanning_result.new_plan:
+                logger.info(f"✅ Replanificación exitosa usando estrategia: {replanning_result.strategy_used.value}")
+                
+                # Actualizar plan de ejecución
+                context.execution_plan = replanning_result.new_plan
+                
+                # Actualizar step_executions para reflejar el nuevo plan
+                context.step_executions = [
+                    StepExecution(step=step, status=StepStatus.PENDING)
+                    for step in replanning_result.new_plan.steps
+                ]
+                
+                # Marcar pasos anteriores como completados si corresponde
+                for i, step_exec in enumerate(context.step_executions):
+                    if i < context.current_step_index:
+                        step_exec.status = StepStatus.COMPLETED
+                
+                # Registrar replanificación exitosa
+                await self._notify_progress(context, "replanning_success", {
+                    'strategy': replanning_result.strategy_used.value,
+                    'confidence': replanning_result.confidence_score,
+                    'reasoning': replanning_result.reasoning,
+                    'new_plan_steps': len(replanning_result.new_plan.steps)
+                })
+                
+                return True
+            else:
+                logger.warning(f"❌ Replanificación falló: {replanning_result.reasoning}")
+                
+                # Registrar fallo de replanificación
+                await self._notify_progress(context, "replanning_failed", {
+                    'reason': replanning_result.reasoning,
+                    'fallback_options': replanning_result.fallback_options
+                })
+                
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ Error durante replanificación: {str(e)}")
+            return False
+    
     async def execute_task(self, task_id: str, task_title: str, 
                           task_description: str = "", config: Dict[str, Any] = None) -> ExecutionContext:
         """Ejecutar una tarea completa de manera autónoma con planificación dinámica"""
