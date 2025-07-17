@@ -658,13 +658,12 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                         className="w-full text-lg"
                         showInternalButtons={true}
                         onAttachFiles={handleAttachFiles}
-                        onWebSearch={async (inputText) => {
-                          console.log('🌐 WebSearch clicked with text:', inputText);
-                          if (inputText && inputText.trim().length > 0) {
-                            const searchQuery = `[WebSearch] ${inputText.trim()}`;
+                        onWebSearch={async (searchQuery) => {
+                          console.log('🌐 WebSearch received query:', searchQuery);
+                          if (searchQuery && searchQuery.trim().length > 0) {
                             console.log('🌐 Creating WebSearch task with query:', searchQuery);
                             
-                            // PASO 1: Crear la tarea INMEDIATAMENTE con prefijo WebSearch
+                            // PASO 1: Crear la tarea INMEDIATAMENTE con prefijo WebSearch (ya incluido en searchQuery)
                             const newTask = await createTask(searchQuery);
                             console.log('✅ WebSearch task created:', newTask.id);
                             
