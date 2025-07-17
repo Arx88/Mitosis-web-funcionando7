@@ -320,7 +320,7 @@ run_test("Invalid Chat Data", f"{API_PREFIX}/chat", "POST", invalid_chat_data, e
 
 # Test invalid memory data
 invalid_memory_data = {"invalid": "data"}
-run_test("Invalid Memory Data", f"{MEMORY_PREFIX}/store_episode", "POST", invalid_memory_data, expected_status=400)
+run_test("Invalid Memory Data", f"{MEMORY_PREFIX}/store-episode", "POST", invalid_memory_data, expected_status=400)
 
 print("\n" + "="*80)
 print("COMPREHENSIVE TESTING RESULTS SUMMARY")
