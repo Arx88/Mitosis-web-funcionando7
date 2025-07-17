@@ -272,7 +272,7 @@ class ErrorAnalyzer:
         severity_factors = []
         
         # Factor 1: Impacto en ejecución
-        if error_context.failed_step.status == StepStatus.FAILED:
+        if hasattr(error_context.failed_step, 'status') and str(error_context.failed_step.status) == 'FAILED':
             if error_context.execution_context.success_rate < 0.5:
                 severity_factors.append(4)  # Crítico
             elif error_context.execution_context.success_rate < 0.8:
