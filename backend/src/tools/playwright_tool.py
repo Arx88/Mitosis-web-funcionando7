@@ -316,10 +316,18 @@ class PlaywrightTool:
             print(f"   🎨 Resaltado de elementos: {'Activado' if highlight_elements else 'Desactivado'}")
             print(f"   ⏱️  Ralentización: {slow_motion}ms")
             
-            # Configurar navegador con modo visual
+            # Configurar navegador con modo visual SIEMPRE
             browser = await p.chromium.launch(
-                headless=not visual_mode,  # Si visual_mode=True, entonces headless=False
-                slow_mo=slow_motion if visual_mode else 0
+                headless=False,  # NUNCA headless - siempre visual
+                slow_mo=slow_motion,  # Ralentizar para mejor visibilidad
+                args=[
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-accelerated-2d-canvas',
+                    '--disable-gpu',
+                    '--window-size=1920,1080'
+                ]
             )
             
             try:
