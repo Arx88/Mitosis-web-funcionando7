@@ -188,18 +188,25 @@ def test_ollama_integration():
 def test_memory_system():
     """Test 4: Memory System Integration"""
     try:
-        # Test memory analytics
-        response = requests.get(f"{BASE_URL}{MEMORY_PREFIX}/analytics", timeout=10)
+        # Test memory analytics (correct endpoint)
+        response = requests.get(f"{BASE_URL}{MEMORY_PREFIX}/memory-analytics", timeout=10)
         
         if response.status_code == 200:
             data = response.json()
             print(f"   Memory System Status: Initialized")
             
-            # Check memory components
-            components = data.get('components', {})
+            # Check memory components from overview
+            overview = data.get('overview', {})
+            system_info = overview.get('system_info', {})
+            initialized = system_info.get('initialized', False)
+            
+            print(f"   System Initialized: {initialized}")
             print(f"   Components:")
-            for component, status in components.items():
-                print(f"     - {component}: {status}")
+            for component in ['episodic_memory', 'semantic_memory', 'procedural_memory', 'working_memory']:
+                if component in overview:
+                    print(f"     - {component}: ✅")
+                else:
+                    print(f"     - {component}: ❌")
             
             # Test episode storage
             episode_data = {
@@ -214,14 +221,14 @@ def test_memory_system():
             episode_success = episode_response.status_code == 200
             print(f"   Episode Storage: {'✅' if episode_success else '❌'}")
             
-            # Test context retrieval
-            context_response = requests.post(f"{BASE_URL}{MEMORY_PREFIX}/get-context", 
+            # Test context retrieval (correct endpoint)
+            context_response = requests.post(f"{BASE_URL}{MEMORY_PREFIX}/retrieve-context", 
                                            json={"query": "test"}, timeout=10)
             
             context_success = context_response.status_code == 200
             print(f"   Context Retrieval: {'✅' if context_success else '❌'}")
             
-            return episode_success and context_success, f"Components: {len(components)}, Storage: {episode_success}, Retrieval: {context_success}"
+            return initialized and episode_success and context_success, f"Initialized: {initialized}, Storage: {episode_success}, Retrieval: {context_success}"
         else:
             return False, f"HTTP {response.status_code}"
     
