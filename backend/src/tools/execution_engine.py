@@ -1159,3 +1159,12 @@ class ExecutionEngine:
             }
         except Exception as e:
             return {'error': str(e)}
+
+# Import replanning engine at the end to avoid circular import
+try:
+    from src.agents.replanning_engine import ReplanningEngine, ReplanningContext, ReplanningResult
+except ImportError:
+    # If import fails, replanning will be disabled
+    ReplanningEngine = None
+    ReplanningContext = None
+    ReplanningResult = None
