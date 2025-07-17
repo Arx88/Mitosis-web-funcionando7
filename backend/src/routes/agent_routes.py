@@ -727,38 +727,46 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                                         params = {'action': 'list', 'path': '/app'}
                                     elif tool_name == 'web_search':
                                         params = {'query': message}
-                                    elif tool_name == 'playwright':
-                                        # 🌐 CONFIGURAR PLAYWRIGHT PARA NAVEGACIÓN WEB
-                                        # Detectar tipo de acción web
-                                        if 'twitter' in message.lower():
-                                            if 'cuenta' in message.lower() or 'crea' in message.lower() or 'register' in message.lower():
-                                                params = {
-                                                    'action': 'navigate',
-                                                    'url': 'https://twitter.com/i/flow/signup',
-                                                    'visual_mode': True,
-                                                    'step_screenshots': True,
-                                                    'highlight_elements': True
+                                    elif tool_name == 'autonomous_web_navigation':
+                                        # Usar herramienta de navegación web autónoma
+                                        if 'registro' in message.lower() or 'cuenta' in message.lower():
+                                            params = {
+                                                'task_description': message,
+                                                'constraints': {
+                                                    'max_steps': 10,
+                                                    'timeout_per_step': 30,
+                                                    'screenshot_frequency': 'every_step'
                                                 }
-                                            else:
-                                                params = {
-                                                    'action': 'navigate',
-                                                    'url': 'https://twitter.com',
-                                                    'visual_mode': True,
-                                                    'step_screenshots': True
+                                            }
+                                        elif 'twitter' in message.lower():
+                                            params = {
+                                                'task_description': message,
+                                                'target_url': 'https://twitter.com',
+                                                'constraints': {
+                                                    'max_steps': 8,
+                                                    'timeout_per_step': 30,
+                                                    'screenshot_frequency': 'every_step'
                                                 }
+                                            }
                                         elif 'facebook' in message.lower():
                                             params = {
-                                                'action': 'navigate',
-                                                'url': 'https://facebook.com',
-                                                'visual_mode': True,
-                                                'step_screenshots': True
+                                                'task_description': message,
+                                                'target_url': 'https://facebook.com',
+                                                'constraints': {
+                                                    'max_steps': 8,
+                                                    'timeout_per_step': 30,
+                                                    'screenshot_frequency': 'every_step'
+                                                }
                                             }
                                         elif 'google' in message.lower():
                                             params = {
-                                                'action': 'navigate',
-                                                'url': 'https://google.com',
-                                                'visual_mode': True,
-                                                'step_screenshots': True
+                                                'task_description': message,
+                                                'target_url': 'https://google.com',
+                                                'constraints': {
+                                                    'max_steps': 8,
+                                                    'timeout_per_step': 30,
+                                                    'screenshot_frequency': 'every_step'
+                                                }
                                             }
                                         elif 'screenshot' in message.lower() or 'captura' in message.lower():
                                             # Extraer URL del mensaje o usar por defecto
@@ -766,10 +774,13 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                                             url_match = re.search(r'https?://[^\s]+', message)
                                             url = url_match.group(0) if url_match else 'https://google.com'
                                             params = {
-                                                'action': 'screenshot',
-                                                'url': url,
-                                                'full_page': True,
-                                                'visual_mode': True
+                                                'task_description': f'Navegar a {url} y tomar un screenshot',
+                                                'target_url': url,
+                                                'constraints': {
+                                                    'max_steps': 5,
+                                                    'timeout_per_step': 20,
+                                                    'screenshot_frequency': 'every_step'
+                                                }
                                             }
                                         else:
                                             # Navegación general - extraer URL del mensaje
@@ -791,11 +802,13 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                                                     url = 'https://google.com'
                                             
                                             params = {
-                                                'action': 'navigate',
-                                                'url': url,
-                                                'visual_mode': True,
-                                                'step_screenshots': True,
-                                                'highlight_elements': True
+                                                'task_description': message,
+                                                'target_url': url,
+                                                'constraints': {
+                                                    'max_steps': 10,
+                                                    'timeout_per_step': 30,
+                                                    'screenshot_frequency': 'every_step'
+                                                }
                                             }
                                     else:
                                         params = {'input': message}
