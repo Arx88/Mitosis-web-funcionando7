@@ -495,10 +495,43 @@ async def chat():
                             
                             # APIs y servicios
                             'api', 'servicio', 'service', 'integración', 'integration',
-                            'conecta', 'connect', 'sincroniza', 'synchronize'
+                            'conecta', 'connect', 'sincroniza', 'synchronize',
+                            
+                            # Browser automation - CRÍTICO PARA NAVEGACIÓN Y AUTOMATIZACIÓN
+                            'navega', 'navigate', 'abre', 'open', 'visita', 'visit', 've a', 'go to',
+                            'crea cuenta', 'create account', 'regístrate', 'register', 'sign up',
+                            'inicia sesión', 'log in', 'login', 'accede', 'access',
+                            'llena', 'fill', 'completa', 'complete', 'formulario', 'form',
+                            'haz clic', 'click', 'presiona', 'press', 'selecciona', 'select',
+                            'busca en', 'search in', 'extrae', 'extract', 'obtén', 'get',
+                            'automatiza', 'automate', 'simula', 'simulate', 'interactúa', 'interact',
+                            'twitter', 'facebook', 'instagram', 'linkedin', 'github', 'google',
+                            'youtube', 'amazon', 'ebay', 'wikipedia', 'stackoverflow',
+                            'web scraping', 'scraping', 'captura', 'capture', 'screenshot'
                         ]
                         
                         if any(pattern in message_lower for pattern in advanced_tools_patterns):
+                            return 'agent'
+                        
+                        # 7.1 MODO AGENTE - Patrones específicos de navegación web
+                        web_navigation_patterns = [
+                            # Navegación específica
+                            'navega a', 'navigate to', 'abre la página', 'open page',
+                            've al sitio', 'go to site', 'visita la web', 'visit website',
+                            'entra en', 'enter', 'accede a', 'access to',
+                            
+                            # Acciones web específicas
+                            'crea una cuenta en', 'create account on', 'regístrate en', 'register on',
+                            'inicia sesión en', 'log into', 'busca en google', 'search google',
+                            'compra en', 'buy on', 'descarga de', 'download from',
+                            'sube a', 'upload to', 'publica en', 'post on',
+                            
+                            # Combinaciones comunes
+                            'twitter y crea', 'facebook y registra', 'google y busca',
+                            'youtube y sube', 'instagram y publica', 'linkedin y conecta'
+                        ]
+                        
+                        if any(pattern in message_lower for pattern in web_navigation_patterns):
                             return 'agent'
                         
                         # 8. MODO AGENTE - Ejecución programada
