@@ -187,9 +187,9 @@ class AutonomousWebNavigation:
         Ejecutar navegación autónoma con planificación inteligente
         """
         async with async_playwright() as p:
-            # Lanzar navegador SIEMPRE visible
+            # Lanzar navegador con configuración adaptada para terminal
             browser = await p.chromium.launch(
-                headless=False,  # SIEMPRE visible
+                headless=self.config['headless'],  # Usar configuración
                 slow_mo=self.config['slow_motion'],
                 args=[
                     '--no-sandbox',
