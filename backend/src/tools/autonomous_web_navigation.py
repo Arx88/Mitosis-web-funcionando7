@@ -714,8 +714,7 @@ class AutonomousWebNavigation:
             
             await page.screenshot(
                 path=screenshot_path,
-                full_page=True,
-                quality=self.config['screenshot_quality']
+                full_page=True
             )
             
             with open(screenshot_path, 'rb') as f:
