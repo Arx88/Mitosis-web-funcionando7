@@ -121,10 +121,10 @@ class ToolManager:
                 'viewport_width': 1920,
                 'viewport_height': 1080
             },
-            'x_com_demo': {
+            'autonomous_web_navigation': {
                 'enabled': True,
-                'headless': False,  # Siempre visible
-                'timeout': 45000,
+                'headless': False,  # Navegación visible
+                'timeout': 60000,
                 'slow_motion': 1000,
                 'visual_mode': True
             }
