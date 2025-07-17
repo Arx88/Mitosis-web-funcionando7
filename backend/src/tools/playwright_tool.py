@@ -109,10 +109,28 @@ class PlaywrightTool:
                 "default": 1920
             },
             {
-                "name": "viewport_height",
+                "name": "visual_mode",
+                "type": "boolean",
+                "description": "Activar modo visual (no-headless + screenshots automáticos)",
+                "default": True
+            },
+            {
+                "name": "step_screenshots",
+                "type": "boolean", 
+                "description": "Tomar screenshots automáticos en cada paso",
+                "default": True
+            },
+            {
+                "name": "highlight_elements",
+                "type": "boolean",
+                "description": "Resaltar elementos antes de interactuar",
+                "default": True
+            },
+            {
+                "name": "slow_motion",
                 "type": "integer",
-                "description": "Alto del viewport",
-                "default": 1080
+                "description": "Ralentizar acciones para mejor visualización (milisegundos)",
+                "default": 500
             }
         ]
     
