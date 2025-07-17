@@ -19,6 +19,8 @@ from .environment_setup_manager import EnvironmentSetupManager
 from .context_manager import ContextManager, ContextScope, VariableType
 from src.agents.replanning_engine import ReplanningEngine, ReplanningContext, ReplanningResult
 
+logger = logging.getLogger(__name__)
+
 class StepStatus(Enum):
     PENDING = "pending"
     RUNNING = "running"
