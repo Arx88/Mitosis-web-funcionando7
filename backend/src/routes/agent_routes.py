@@ -952,6 +952,33 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                         except Exception as e:
                             logger.warning(f"Error almacenando episodio de agente: {e}")
                         
+                        # 🔄 INTEGRACIÓN DE SELF-REFLECTION ENGINE
+                        try:
+                            # Ejecutar auto-reflexión después de la tarea
+                            await self_reflection_engine.evaluate_task_performance(
+                                task_id=task_id,
+                                task_description=message,
+                                execution_result={
+                                    'success': any(r['success'] for r in tool_results) if tool_results else True,
+                                    'tools_used': [r['tool'] for r in tool_results],
+                                    'success_rate': sum(r['success'] for r in tool_results) / len(tool_results) if tool_results else 1.0,
+                                    'response_quality': 'good',  # Podría ser evaluado de manera más sofisticada
+                                    'user_satisfaction': 'unknown',  # Se podría obtener feedback del usuario
+                                    'execution_time': time.time() - start_time,
+                                    'complexity_level': 'medium',  # Basado en número de herramientas
+                                    'errors': [r for r in tool_results if not r['success']]
+                                },
+                                context={
+                                    'session_id': session_id,
+                                    'mode': 'agent',
+                                    'memory_context_used': bool(relevant_context),
+                                    'frontend_context': context
+                                }
+                            )
+                            logger.info(f"🔄 Auto-reflexión completada para tarea {task_id}")
+                        except Exception as e:
+                            logger.warning(f"Error ejecutando auto-reflexión: {e}")
+                        
                         return jsonify({
                             'response': final_response,
                             'tool_results': tool_results,
@@ -961,7 +988,8 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                             'timestamp': datetime.now().isoformat(),
                             'model': 'agent-mode',
                             'memory_used': bool(relevant_context),
-                            'mode': 'agent'
+                            'mode': 'agent',
+                            'self_reflection_enabled': True
                         })
                     
                 except Exception as e:
