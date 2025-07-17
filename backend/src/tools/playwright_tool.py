@@ -1,6 +1,6 @@
 """
-Herramienta de Automatización de Navegadores con Playwright
-Para scraping avanzado y automatización web
+Herramienta de Automatización de Navegadores con Playwright VISUAL
+Para scraping avanzado y automatización web con feedback visual en tiempo real
 """
 
 import os
@@ -11,6 +11,7 @@ import json
 import base64
 import tempfile
 from pathlib import Path
+import time
 
 # Playwright será instalado como dependencia
 try:
