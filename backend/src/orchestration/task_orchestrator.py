@@ -225,7 +225,47 @@ class TaskOrchestrator:
             return error_result
     
     async def _create_execution_plan(self, context: OrchestrationContext) -> ExecutionPlan:
-        """Crea un plan de ejecución usando el motor de planificación"""
+        """Crea un plan de ejecución usando DynamicTaskPlanner o fallback a planificación jerárquica"""
+        
+        # 🚀 Intentar usar DynamicTaskPlanner si está habilitado
+        if self.config.get("enable_dynamic_planning", True):
+            logger.info(f"Usando DynamicTaskPlanner para crear plan de ejecución: {context.task_id}")
+            try:
+                # Obtener herramientas disponibles
+                available_tools = []
+                if self.tool_manager:
+                    tools = self.tool_manager.get_available_tools()
+                    available_tools = [tool.get("name", "") for tool in tools]
+                
+                # Crear plan usando DynamicTaskPlanner
+                plan = await self.dynamic_task_planner.create_dynamic_plan(
+                    context.task_id,
+                    context.task_description,
+                    {
+                        'available_tools': available_tools,
+                        'user_id': context.user_id,
+                        'session_id': context.session_id,
+                        'constraints': context.constraints,
+                        'preferences': context.preferences,
+                        'priority': context.priority,
+                        'environment_state': {
+                            'available_resources': self.resource_manager.get_resource_status(),
+                            'active_orchestrations': len(self.active_orchestrations)
+                        }
+                    }
+                )
+                
+                logger.info(f"Plan dinámico creado exitosamente: {plan.id} con {len(plan.steps)} pasos")
+                return plan
+                
+            except Exception as e:
+                logger.warning(f"Error usando DynamicTaskPlanner: {e}")
+                if not self.config.get("fallback_to_hierarchical", True):
+                    raise
+                logger.info("Usando fallback a planificación jerárquica")
+        
+        # 🔄 Fallback: Usar planificación jerárquica
+        logger.info(f"Usando HierarchicalPlanningEngine para crear plan de ejecución: {context.task_id}")
         
         # Crear contexto de planificación
         planning_context = PlanningContext(
