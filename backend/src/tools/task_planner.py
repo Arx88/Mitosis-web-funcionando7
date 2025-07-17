@@ -8,6 +8,16 @@ import json
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 from dataclasses import dataclass
+from enum import Enum
+
+class ExecutionStrategy(Enum):
+    SEQUENTIAL = "sequential"
+    PARALLEL = "parallel"
+    CONDITIONAL = "conditional"
+    COMPREHENSIVE = "comprehensive"
+    EFFICIENT = "efficient"
+    ADAPTIVE = "adaptive"
+    ROBUST = "robust"
 
 @dataclass
 class TaskStep:
