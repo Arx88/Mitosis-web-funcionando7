@@ -57,8 +57,8 @@ class ReplanningContext:
     original_plan: ExecutionPlan
     failed_step: TaskStep
     error_info: Dict[str, Any]
-    execution_context: ExecutionContext
-    failed_step_execution: StepExecution
+    execution_context: 'ExecutionContext'  # Forward reference para evitar importación circular
+    failed_step_execution: 'StepExecution'  # Forward reference para evitar importación circular
     available_tools: List[str]
     previous_attempts: List[Dict[str, Any]] = field(default_factory=list)
     constraints: Dict[str, Any] = field(default_factory=dict)
