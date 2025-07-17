@@ -375,24 +375,50 @@ async def chat():
 
 **🔄 PRÓXIMA FASE**: Integración y testing de los componentes críticos
 
----
+### **TAREA CRÍTICA 5: INTEGRACIÓN DE COMPONENTES CRÍTICOS** 🔄 **INICIANDO**
 
-## 🔄 PRÓXIMAS TAREAS EN COLA
+**📍 REFERENCIA PLAN.md**: Sección "Integración con Arquitectura Actual"
 
-### **TAREA CRÍTICA 2: COMPLETAR MÉTODOS FALTANTES**
-**📍 REFERENCIA PLAN.md**: Sección 3.3 - Tareas Inmediatas (punto 2)
-**📊 ESTADO**: ⏳ **PENDIENTE**
-**🎯 OBJETIVO**: Implementar `compress_old_memory` y `export_memory_data` en `AdvancedMemoryManager`
+**🎯 OBJETIVO**: Integrar los 4 componentes críticos completados en el sistema principal de Mitosis
 
-### **TAREA CRÍTICA 3: TESTING BACKEND COMPLETO**
-**📍 REFERENCIA PLAN.md**: Sección 3.3 - Tareas Inmediatas (punto 4)
-**📊 ESTADO**: ⏳ **PENDIENTE**
-**🎯 OBJETIVO**: Verificar integración completa usando `deep_testing_backend_v2`
+**📊 ESTADO DE COMPLETACIÓN**: 🔄 **INICIANDO** (0%)
 
-### **TAREA FASE 3: CAPACIDADES MULTIMODALES**
-**📍 REFERENCIA PLAN.md**: Sección 4.1 - Fase 3
-**📊 ESTADO**: ⏳ **FUTURO**
-**🎯 OBJETIVO**: Implementar `MultimodalProcessor` para contenido de imágenes, audio, video
+**🔧 TAREAS REQUERIDAS**:
+
+#### **PASO 1: Integrar ReplanningEngine con ExecutionEngine** ⏳ **PENDIENTE**
+- **Estado**: ⏳ **PENDIENTE**
+- **Acción**: Modificar `/app/backend/src/tools/execution_engine.py` para usar ReplanningEngine
+- **Objetivo**: Que cuando falle un paso, se active automáticamente la replanificación
+
+#### **PASO 2: Integrar SelfReflectionEngine con AgentService** ⏳ **PENDIENTE**
+- **Estado**: ⏳ **PENDIENTE**
+- **Acción**: Modificar `/app/backend/src/routes/agent_routes.py` para usar SelfReflectionEngine
+- **Objetivo**: Que el agente evalúe su rendimiento después de cada tarea
+
+#### **PASO 3: Integrar DynamicTaskPlanner con TaskOrchestrator** ⏳ **PENDIENTE**
+- **Estado**: ⏳ **PENDIENTE**
+- **Acción**: Modificar `/app/backend/src/tools/task_planner.py` para usar DynamicTaskPlanner
+- **Objetivo**: Que la planificación use LLM para mayor inteligencia
+
+#### **PASO 4: Integrar ErrorAnalyzer con ReplanningEngine** ⏳ **PENDIENTE**
+- **Estado**: ⏳ **PENDIENTE**
+- **Acción**: Modificar ReplanningEngine para usar ErrorAnalyzer
+- **Objetivo**: Que el análisis de errores sea más profundo y preciso
+
+**📁 ARCHIVOS A MODIFICAR**:
+1. `/app/backend/src/tools/execution_engine.py` - Integrar ReplanningEngine
+2. `/app/backend/src/routes/agent_routes.py` - Integrar SelfReflectionEngine
+3. `/app/backend/src/tools/task_planner.py` - Integrar DynamicTaskPlanner
+4. `/app/backend/src/agents/replanning_engine.py` - Integrar ErrorAnalyzer
+
+**📊 MÉTRICAS DE ÉXITO**:
+- ✅ ReplanningEngine se activa automáticamente cuando falla un paso
+- ✅ SelfReflectionEngine evalúa rendimiento después de cada tarea
+- ✅ DynamicTaskPlanner se usa para planificación inteligente
+- ✅ ErrorAnalyzer proporciona análisis profundo de errores
+- ✅ Todos los componentes funcionan integrados sin conflictos
+
+**🎯 PRÓXIMO PASO INMEDIATO**: Iniciar PASO 1 - Integrar ReplanningEngine con ExecutionEngine
 
 ---
 
