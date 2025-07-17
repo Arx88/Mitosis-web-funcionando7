@@ -233,16 +233,17 @@ export const VanishInput: React.FC<VanishInputProps> = ({
   const handleDeepSearch = async () => {
     console.log('🔬 handleDeepSearch called with inputValue:', inputValue.trim());
     if (inputValue.trim()) {
-      // Procesar investigación profunda con el texto del input
+      // Procesar investigación profunda con el texto del input - APLICAR PREFIJO AQUÍ
+      const searchQuery = `[DeepResearch] ${inputValue.trim()}`;
       console.log('🔬 Setting isDeepSearchProcessing to true');
       setIsDeepSearchProcessing(true);
       setDeepSearchActive(true);
       setWebSearchActive(false);
       
       try {
-        console.log('🔬 Calling onDeepSearch with input:', inputValue.trim());
+        console.log('🔬 Calling onDeepSearch with prefixed query:', searchQuery);
         if (onDeepSearch) {
-          await onDeepSearch(inputValue.trim());
+          await onDeepSearch(searchQuery);
           console.log('🔬 onDeepSearch completed successfully');
         } else {
           console.error('🔬 onDeepSearch prop is undefined!');
