@@ -212,9 +212,11 @@ def test_memory_system():
                 else:
                     print(f"     - {component}: ❌")
             
-            # Test episode storage
+            # Test episode storage with correct parameters
             episode_data = {
-                "content": "Test episode for connectivity verification",
+                "user_query": "Test query for connectivity verification",
+                "agent_response": "Test response for connectivity verification",
+                "success": True,
                 "context": {"test": True},
                 "importance": 0.5
             }
@@ -224,6 +226,12 @@ def test_memory_system():
             
             episode_success = episode_response.status_code == 200
             print(f"   Episode Storage: {'✅' if episode_success else '❌'}")
+            if not episode_success:
+                try:
+                    error_data = episode_response.json()
+                    print(f"     Error: {error_data.get('error', 'Unknown error')}")
+                except:
+                    print(f"     HTTP {episode_response.status_code}")
             
             # Test context retrieval (correct endpoint)
             context_response = requests.post(f"{BASE_URL}{MEMORY_PREFIX}/retrieve-context", 
@@ -231,6 +239,12 @@ def test_memory_system():
             
             context_success = context_response.status_code == 200
             print(f"   Context Retrieval: {'✅' if context_success else '❌'}")
+            if not context_success:
+                try:
+                    error_data = context_response.json()
+                    print(f"     Error: {error_data.get('error', 'Unknown error')}")
+                except:
+                    print(f"     HTTP {context_response.status_code}")
             
             return initialized and episode_success and context_success, f"Initialized: {initialized}, Storage: {episode_success}, Retrieval: {context_success}"
         else:
