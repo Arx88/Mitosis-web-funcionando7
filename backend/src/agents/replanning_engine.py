@@ -270,10 +270,8 @@ class ReplanningEngine:
             return ErrorCategory.TIMEOUT_ERROR
         elif any(pattern in error_message for pattern in ['memory', 'disk', 'space', 'limit']):
             return ErrorCategory.RESOURCE_EXHAUSTED
-        elif context.failed_step_execution.retry_count > 0:
-            return ErrorCategory.DEPENDENCY_FAILED
         else:
-            return ErrorCategory.UNKNOWN_ERROR
+            return ErrorCategory.UNEXPECTED_RESULT
     
     async def _analyze_with_llm(self, 
                               context: ReplanningContext, 
