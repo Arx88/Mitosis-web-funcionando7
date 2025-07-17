@@ -287,85 +287,9 @@ async def chat():
         except Exception as e:
             logger.warning(f"Error recuperando contexto: {e}")
 
-        # 🚀 NUEVO: Usar Enhanced Agent si está disponible
+        # 🚀 USAR CLASIFICACIÓN DIRECTA Y HERRAMIENTAS REALES
         if not search_mode:
             try:
-                # Obtener servicios del contexto de aplicación
-                from flask import current_app
-                
-                # Verificar si enhanced components están disponibles
-                enhanced_agent = getattr(current_app, 'enhanced_agent', None)
-                enhanced_memory = getattr(current_app, 'enhanced_memory', None)
-                enhanced_task_manager = getattr(current_app, 'enhanced_task_manager', None)
-                
-                # Usar enhanced agent si está disponible
-                if enhanced_agent and enhanced_memory and enhanced_task_manager:
-                    logger.info(f"🧠 Usando Enhanced Agent para procesamiento avanzado")
-                    
-                    # Agregar contexto relevante al mensaje
-                    enhanced_message = message + relevant_context
-                    
-                    # Usar enhanced agent para procesamiento cognitivo
-                    enhanced_response = enhanced_agent.process_user_message_enhanced(
-                        enhanced_message, context
-                    )
-                    
-                    # 🧠 ALMACENAR EN MEMORIA EPISÓDICA
-                    try:
-                        from src.memory.episodic_memory_store import Episode
-                        
-                        # Asegurar que la memoria está inicializada
-                        if not memory_manager.is_initialized:
-                            await memory_manager.initialize()
-                        
-                        episode = Episode(
-                            id=str(uuid.uuid4()),
-                            title=f"Conversación con usuario",
-                            description=f"Usuario: {message}\nAgente: {enhanced_response}",
-                            context={
-                                'user_message': message,
-                                'agent_response': enhanced_response,
-                                'session_id': session_id,
-                                'task_id': task_id,
-                                'enhanced_processing': True,
-                                **context
-                            },
-                            actions=[{
-                                'type': 'user_message',
-                                'content': message,
-                                'timestamp': datetime.now().isoformat()
-                            }],
-                            outcomes=[{
-                                'type': 'agent_response',
-                                'content': enhanced_response,
-                                'timestamp': datetime.now().isoformat()
-                            }],
-                            timestamp=datetime.now(),
-                            success=True,
-                            importance=3,
-                            tags=['chat', 'conversation', 'enhanced']
-                        )
-                        await memory_manager.episodic_memory.store_episode(episode)
-                        logger.info(f"🧠 Episodio almacenado en memoria para aprendizaje futuro")
-                    except Exception as e:
-                        logger.warning(f"Error almacenando episodio: {e}")
-                    
-                    # Obtener estado cognitivo
-                    cognitive_status = enhanced_agent.get_enhanced_status()
-                    
-                    return jsonify({
-                        'response': enhanced_response,
-                        'enhanced_processing': True,
-                        'cognitive_mode': cognitive_status.get('cognitive_capabilities', {}).get('current_mode', 'adaptive'),
-                        'task_id': task_id,
-                        'execution_status': 'enhanced_completed',
-                        'timestamp': datetime.now().isoformat(),
-                        'model': 'enhanced-mitosis-agent',
-                        'memory_used': bool(relevant_context)
-                    })
-                else:
-                    # Si enhanced components no están disponibles, usar TaskOrchestrator
-                    logger.info(f"⚠️ Enhanced components no disponibles, usando TaskOrchestrator")
                     
                 # Crear contexto de orquestación (fallback)
                 orchestration_context = OrchestrationContext(
