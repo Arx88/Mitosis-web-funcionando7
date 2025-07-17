@@ -175,30 +175,59 @@ class PlaywrightTool:
             import subprocess
             
             def run_async_action():
-                # Configurar display virtual para navegación SIEMPRE visible
+                # Configurar display para navegación SIEMPRE visible en terminal
                 display_num = 99
-                xvfb_cmd = f"Xvfb :{display_num} -screen 0 1920x1080x24"
                 
-                # Iniciar Xvfb
+                # Iniciar Xvfb con configuración optimizada para visualización
+                xvfb_cmd = f"Xvfb :{display_num} -screen 0 1920x1080x24 -ac +extension GLX +render -noreset"
+                
+                print(f"🖥️ Iniciando display virtual en :{display_num} para navegación visible")
                 xvfb_process = subprocess.Popen(xvfb_cmd.split(), 
                                               stdout=subprocess.DEVNULL, 
                                               stderr=subprocess.DEVNULL)
                 
+                # Esperar a que Xvfb se inicie
+                time.sleep(2)
+                
                 # Configurar variable de entorno DISPLAY
                 os.environ['DISPLAY'] = f":{display_num}"
+                
+                # Iniciar un window manager simple para mejor visualización
+                try:
+                    wm_process = subprocess.Popen(['fluxbox'], 
+                                                 stdout=subprocess.DEVNULL, 
+                                                 stderr=subprocess.DEVNULL)
+                except FileNotFoundError:
+                    print("⚠️  fluxbox no encontrado, continuando sin window manager")
+                    wm_process = None
+                
+                # Configurar xhost para permitir conexiones
+                try:
+                    subprocess.run(['xhost', '+local:'], check=False, 
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                except FileNotFoundError:
+                    pass
                 
                 try:
                     # Crear un nuevo event loop en el hilo
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
                     try:
-                        print(f"🖥️ Display virtual configurado en :{display_num} para navegación visible")
+                        print(f"🎬 Display virtual configurado en :{display_num} - Navegador será visible en terminal")
+                        print(f"🔍 Iniciando navegación visual en tiempo real...")
                         result = loop.run_until_complete(self._execute_action(action, url, parameters))
                         return result
                     finally:
                         loop.close()
                 finally:
-                    # Limpiar: terminar Xvfb
+                    # Limpiar: terminar procesos
+                    if wm_process:
+                        wm_process.terminate()
+                        try:
+                            wm_process.wait(timeout=2)
+                        except subprocess.TimeoutExpired:
+                            wm_process.kill()
+                    
                     xvfb_process.terminate()
                     try:
                         xvfb_process.wait(timeout=5)
