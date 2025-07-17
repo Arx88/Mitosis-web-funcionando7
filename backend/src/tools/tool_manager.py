@@ -40,7 +40,6 @@ class ToolManager:
             'firecrawl': FirecrawlTool(),
             'qstash': QStashTool(),
             'playwright': PlaywrightTool(),
-            'x_com_demo': XComDemoTool(),  # Herramienta de demostración X.com
             'autonomous_web_navigation': AutonomousWebNavigation()  # Navegación web autónoma
         }
         
