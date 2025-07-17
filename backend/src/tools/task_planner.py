@@ -33,6 +33,17 @@ class ExecutionPlan:
     risk_factors: List[str]
     prerequisites: List[str]
 
+@dataclass
+class TaskPlan:
+    id: str
+    title: str
+    strategy: Any  # ExecutionStrategy from execution_engine
+    steps: List[TaskStep]
+    total_estimated_duration: int
+    complexity_score: float
+    success_probability: float
+    created_at: datetime
+
 class TaskPlanner:
     def __init__(self):
         self.name = "task_planner"
