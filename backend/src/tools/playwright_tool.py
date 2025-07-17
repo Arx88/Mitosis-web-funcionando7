@@ -261,11 +261,30 @@ class PlaywrightTool:
             pass
 
     async def _execute_action(self, action: str, url: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Ejecutar acción específica"""
+        """Ejecutar acción específica con modo visual"""
+        
+        # Reiniciar pasos visuales para esta ejecución
+        self.visual_steps = []
+        
+        # Determinar si usar modo visual
+        visual_mode = parameters.get('visual_mode', self.default_config['visual_mode'])
+        step_screenshots = parameters.get('step_screenshots', self.default_config['step_screenshots'])
+        highlight_elements = parameters.get('highlight_elements', self.default_config['highlight_elements'])
+        slow_motion = parameters.get('slow_motion', self.default_config['slow_motion'])
+        
         async with async_playwright() as p:
-            # Configurar navegador
+            print(f"\n🚀 INICIANDO AUTOMATIZACIÓN VISUAL DE PLAYWRIGHT")
+            print(f"   🎯 Acción: {action}")
+            print(f"   🌐 URL: {url}")
+            print(f"   👁️  Modo visual: {'Activado' if visual_mode else 'Desactivado'}")
+            print(f"   📸 Screenshots automáticos: {'Activado' if step_screenshots else 'Desactivado'}")
+            print(f"   🎨 Resaltado de elementos: {'Activado' if highlight_elements else 'Desactivado'}")
+            print(f"   ⏱️  Ralentización: {slow_motion}ms")
+            
+            # Configurar navegador con modo visual
             browser = await p.chromium.launch(
-                headless=parameters.get('headless', self.default_config['headless'])
+                headless=not visual_mode,  # Si visual_mode=True, entonces headless=False
+                slow_mo=slow_motion if visual_mode else 0
             )
             
             try:
@@ -285,38 +304,59 @@ class PlaywrightTool:
                 timeout = parameters.get('timeout', self.default_config['timeout'])
                 page.set_default_timeout(timeout)
                 
+                # Log paso inicial
+                await self._log_visual_step(page, "INICIO", f"Iniciando navegación a {url}", step_screenshots)
+                
                 # Navegar a la URL
+                print(f"\n🌐 Navegando a: {url}")
                 await page.goto(url, wait_until='domcontentloaded')
                 
-                # Ejecutar acción específica
+                # Log paso de navegación
+                await self._log_visual_step(page, "NAVEGACIÓN COMPLETA", f"Página cargada: {await page.title()}", step_screenshots)
+                
+                # Ejecutar acción específica con logging visual
+                result = None
                 if action == 'navigate':
-                    return await self._navigate(page, parameters)
+                    result = await self._navigate(page, parameters)
                 elif action == 'screenshot':
-                    return await self._screenshot(page, parameters)
+                    result = await self._screenshot(page, parameters)
                 elif action == 'extract_text':
-                    return await self._extract_text(page, parameters)
+                    result = await self._extract_text(page, parameters)
                 elif action == 'extract_links':
-                    return await self._extract_links(page, parameters)
+                    result = await self._extract_links(page, parameters)
                 elif action == 'fill_form':
-                    return await self._fill_form(page, parameters)
+                    result = await self._fill_form(page, parameters)
                 elif action == 'click_element':
-                    return await self._click_element(page, parameters)
+                    result = await self._click_element(page, parameters)
                 elif action == 'scroll_page':
-                    return await self._scroll_page(page, parameters)
+                    result = await self._scroll_page(page, parameters)
                 elif action == 'wait_for_element':
-                    return await self._wait_for_element(page, parameters)
+                    result = await self._wait_for_element(page, parameters)
                 elif action == 'execute_script':
-                    return await self._execute_script(page, parameters)
+                    result = await self._execute_script(page, parameters)
                 elif action == 'get_page_info':
-                    return await self._get_page_info(page, parameters)
+                    result = await self._get_page_info(page, parameters)
                 else:
-                    return {
+                    result = {
                         'success': False,
                         'error': f'Invalid action: {action}'
                     }
+                
+                # Agregar pasos visuales al resultado
+                if result and result.get('success'):
+                    result['visual_steps'] = self.visual_steps
+                    result['visual_mode'] = visual_mode
+                    result['total_steps'] = len(self.visual_steps)
+                    
+                    print(f"\n✅ AUTOMATIZACIÓN COMPLETADA EXITOSAMENTE")
+                    print(f"   📊 Total de pasos visuales registrados: {len(self.visual_steps)}")
+                    print(f"   🎬 Modo visual: {'Activado' if visual_mode else 'Desactivado'}")
+                
+                return result
             
             finally:
                 await browser.close()
+                print(f"\n🔚 Navegador cerrado")
     
     async def _navigate(self, page, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Navegar a página"""
