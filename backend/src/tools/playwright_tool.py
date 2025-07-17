@@ -504,10 +504,12 @@ class PlaywrightTool:
             }
     
     async def _fill_form(self, page, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Rellenar formulario"""
+        """Rellenar formulario con visualización"""
         try:
             selector = parameters.get('selector')
             text = parameters.get('text')
+            highlight_elements = parameters.get('highlight_elements', self.default_config['highlight_elements'])
+            step_screenshots = parameters.get('step_screenshots', self.default_config['step_screenshots'])
             
             if not selector or not text:
                 return {
@@ -515,11 +517,29 @@ class PlaywrightTool:
                     'error': 'Both selector and text are required for fill_form'
                 }
             
+            # Log paso: buscar elemento
+            await self._log_visual_step(page, "BUSCANDO CAMPO", f"Buscando campo: {selector}", step_screenshots)
+            
             # Esperar elemento
             await page.wait_for_selector(selector)
             
+            # Resaltar elemento si está habilitado
+            if highlight_elements:
+                await self._log_visual_step(page, "RESALTANDO CAMPO", f"Resaltando campo antes de escribir", step_screenshots)
+                await self._highlight_element(page, selector)
+            
+            # Log paso: rellenar campo
+            await self._log_visual_step(page, "RELLENANDO CAMPO", f"Escribiendo texto: '{text[:50]}...' en {selector}", step_screenshots)
+            
             # Rellenar campo
             await page.fill(selector, text)
+            
+            # Quitar resaltado
+            if highlight_elements:
+                await self._remove_highlight(page, selector)
+            
+            # Log paso final
+            await self._log_visual_step(page, "CAMPO COMPLETADO", f"Campo {selector} rellenado exitosamente", step_screenshots)
             
             return {
                 'success': True,
@@ -530,6 +550,7 @@ class PlaywrightTool:
             }
         
         except Exception as e:
+            await self._log_visual_step(page, "ERROR EN FORMULARIO", f"Error: {str(e)}", step_screenshots)
             return {
                 'success': False,
                 'error': f'Form filling failed: {str(e)}'
