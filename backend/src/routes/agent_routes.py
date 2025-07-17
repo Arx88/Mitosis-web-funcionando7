@@ -77,55 +77,6 @@ task_orchestrator = TaskOrchestrator(
     llm_service=ollama_service
 )
 
-@agent_bp.route('/x-com-demo', methods=['POST'])
-def x_com_demo():
-    """
-    Endpoint para demostración de X.com con navegación visible en tiempo real
-    """
-    try:
-        data = request.get_json()
-        
-        # Parámetros por defecto para la demostración
-        parameters = {
-            'action': data.get('action', 'demo_registration'),
-            'demo_username': data.get('demo_username', f'demo_user_{int(time.time())}'),
-            'demo_email': data.get('demo_email', f'demo{int(time.time())}@example.com'),
-            'slow_motion': data.get('slow_motion', 1000),
-            'visual_mode': True
-        }
-        
-        print(f"🎬 Iniciando demostración X.com con parámetros: {parameters}")
-        
-        # Ejecutar herramienta de demostración
-        result = tool_manager.execute_tool(
-            'x_com_demo', 
-            parameters,
-            config={'timeout': 180}  # 3 minutos timeout
-        )
-        
-        if result.get('success'):
-            return jsonify({
-                'success': True,
-                'message': 'Demostración X.com completada',
-                'result': result,
-                'timestamp': datetime.now().isoformat()
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': result.get('error', 'Error desconocido'),
-                'result': result,
-                'timestamp': datetime.now().isoformat()
-            }), 500
-            
-    except Exception as e:
-        logger.error(f"Error en demostración X.com: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'timestamp': datetime.now().isoformat()
-        }), 500
-
 @agent_bp.route('/orchestrate', methods=['POST'])
 async def orchestrate_task():
     """
