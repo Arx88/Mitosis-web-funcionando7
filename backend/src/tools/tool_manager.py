@@ -39,7 +39,7 @@ class ToolManager:
             'firecrawl': FirecrawlTool(),
             'qstash': QStashTool(),
             'playwright': PlaywrightTool(),
-            'autonomous_web_navigation': AutonomousWebNavigation()  # Navegación web autónoma
+            'autonomous_web_navigation': AutonomousWebNavigation()  # Navegación web autónoma GENERAL
         }
         
         # Inicializar container manager
