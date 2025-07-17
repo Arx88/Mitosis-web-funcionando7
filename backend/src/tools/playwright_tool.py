@@ -183,6 +183,83 @@ class PlaywrightTool:
                 'timestamp': datetime.now().isoformat()
             }
     
+    async def _log_visual_step(self, page, step_name: str, details: str = "", screenshot: bool = True) -> Dict[str, Any]:
+        """Registrar paso visual con screenshot y logs detallados"""
+        timestamp = datetime.now().isoformat()
+        
+        print(f"\n🎬 [{timestamp}] PASO VISUAL: {step_name}")
+        print(f"   📄 URL: {page.url}")
+        print(f"   📝 Detalles: {details}")
+        
+        step_data = {
+            'step': step_name,
+            'details': details,
+            'url': page.url,
+            'timestamp': timestamp
+        }
+        
+        if screenshot:
+            try:
+                # Crear screenshot del paso
+                with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:
+                    screenshot_path = tmp_file.name
+                
+                await page.screenshot(path=screenshot_path, full_page=False)
+                
+                # Convertir a base64
+                with open(screenshot_path, 'rb') as f:
+                    image_data = base64.b64encode(f.read()).decode('utf-8')
+                
+                os.unlink(screenshot_path)
+                
+                step_data['screenshot'] = image_data
+                print(f"   📸 Screenshot capturado")
+                
+            except Exception as e:
+                print(f"   ⚠️  Error capturando screenshot: {e}")
+        
+        self.visual_steps.append(step_data)
+        return step_data
+    
+    async def _highlight_element(self, page, selector: str) -> bool:
+        """Resaltar elemento antes de interactuar con él"""
+        try:
+            await page.evaluate(f'''
+                (selector) => {{
+                    const element = document.querySelector(selector);
+                    if (element) {{
+                        element.style.outline = '3px solid #ff6b6b';
+                        element.style.backgroundColor = 'rgba(255, 107, 107, 0.1)';
+                        element.scrollIntoView({{behavior: 'smooth', block: 'center'}});
+                        return true;
+                    }}
+                    return false;
+                }}
+            ''', selector)
+            
+            # Esperar un poco para que se vea el resaltado
+            await page.wait_for_timeout(800)
+            return True
+            
+        except Exception as e:
+            print(f"   ⚠️  No se pudo resaltar elemento {selector}: {e}")
+            return False
+    
+    async def _remove_highlight(self, page, selector: str):
+        """Quitar resaltado del elemento"""
+        try:
+            await page.evaluate(f'''
+                (selector) => {{
+                    const element = document.querySelector(selector);
+                    if (element) {{
+                        element.style.outline = '';
+                        element.style.backgroundColor = '';
+                    }}
+                }}
+            ''', selector)
+        except:
+            pass
+
     async def _execute_action(self, action: str, url: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Ejecutar acción específica"""
         async with async_playwright() as p:
