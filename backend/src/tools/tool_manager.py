@@ -38,7 +38,8 @@ class ToolManager:
             # Nuevas herramientas
             'firecrawl': FirecrawlTool(),
             'qstash': QStashTool(),
-            'playwright': PlaywrightTool()
+            'playwright': PlaywrightTool(),
+            'x_com_demo': XComDemoTool()  # Herramienta de demostración X.com
         }
         
         # Inicializar container manager
