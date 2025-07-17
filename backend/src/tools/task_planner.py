@@ -47,7 +47,7 @@ class ExecutionPlan:
 class TaskPlan:
     id: str
     title: str
-    strategy: Any  # ExecutionStrategy from execution_engine
+    strategy: ExecutionStrategy
     steps: List[TaskStep]
     total_estimated_duration: int
     complexity_score: float
