@@ -234,6 +234,13 @@ class ExecutionEngine:
         if config:
             self.config.update(config)
         
+        # 🔄 Inicializar ReplanningEngine si tenemos las dependencias
+        if config and 'memory_manager' in config and 'ollama_service' in config:
+            self._initialize_replanning_engine(
+                memory_manager=config['memory_manager'],
+                ollama_service=config['ollama_service']
+            )
+        
         try:
             # Crear sesión de contexto para la tarea
             context_session_id = self.context_manager.create_session(
@@ -301,7 +308,8 @@ class ExecutionEngine:
             await self._notify_progress(context, "execution_started", {
                 'plan': asdict(execution_plan),
                 'estimated_duration': execution_plan.total_estimated_duration,
-                'context_session_id': context_session_id
+                'context_session_id': context_session_id,
+                'replanning_enabled': self.config.get('enable_replanning', False)
             })
             
             # Ejecutar pasos según estrategia
