@@ -169,23 +169,46 @@ class PlaywrightTool:
             if not url.startswith(('http://', 'https://')):
                 url = 'https://' + url
             
-            # Ejecutar acción usando threading para evitar conflictos de event loop
+            # Ejecutar acción usando threading con Xvfb para visibilidad SIEMPRE
             import threading
             import concurrent.futures
+            import subprocess
             
             def run_async_action():
-                # Crear un nuevo event loop en el hilo
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
+                # Configurar display virtual para navegación SIEMPRE visible
+                display_num = 99
+                xvfb_cmd = f"Xvfb :{display_num} -screen 0 1920x1080x24"
+                
+                # Iniciar Xvfb
+                xvfb_process = subprocess.Popen(xvfb_cmd.split(), 
+                                              stdout=subprocess.DEVNULL, 
+                                              stderr=subprocess.DEVNULL)
+                
+                # Configurar variable de entorno DISPLAY
+                os.environ['DISPLAY'] = f":{display_num}"
+                
                 try:
-                    return loop.run_until_complete(self._execute_action(action, url, parameters))
+                    # Crear un nuevo event loop en el hilo
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        print(f"🖥️ Display virtual configurado en :{display_num} para navegación visible")
+                        result = loop.run_until_complete(self._execute_action(action, url, parameters))
+                        return result
+                    finally:
+                        loop.close()
                 finally:
-                    loop.close()
+                    # Limpiar: terminar Xvfb
+                    xvfb_process.terminate()
+                    try:
+                        xvfb_process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        xvfb_process.kill()
             
-            # Ejecutar en un hilo separado
+            # Ejecutar en un hilo separado con display virtual
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future = executor.submit(run_async_action)
-                result = future.result(timeout=60)  # Timeout de 60 segundos
+                result = future.result(timeout=120)  # Timeout de 120 segundos para navegación completa
                 return result
         
         except Exception as e:
