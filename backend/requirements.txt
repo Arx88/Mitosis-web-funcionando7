@@ -100,3 +100,4 @@ fsspec>=2025.7.0
 pyarrow
 multiprocess
 aiohttp
+pyarrow_hotfix
