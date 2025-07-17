@@ -795,24 +795,39 @@ class PlaywrightTool:
         }
     
     def get_tool_info(self) -> Dict[str, Any]:
-        """Información adicional de la herramienta"""
+        """Información adicional de la herramienta con capacidades visuales"""
         return {
-            'category': 'web_automation',
-            'version': '1.0.0',
+            'category': 'web_automation_visual',
+            'version': '2.0.0',
             'capabilities': [
-                'Browser automation',
+                'Browser automation with visual feedback',
+                'Step-by-step screenshot capture',
+                'Element highlighting and interaction',
                 'Dynamic content scraping',
-                'Form filling',
-                'Screenshot capture',
-                'JavaScript execution',
-                'Element interaction'
+                'Form filling with visual confirmation',
+                'Real-time browser observation',
+                'JavaScript execution with logging',
+                'Advanced visual debugging'
+            ],
+            'visual_features': [
+                'Automatic step screenshots',
+                'Element highlighting before interaction',
+                'Detailed step-by-step logging',
+                'Non-headless mode for real-time viewing',
+                'Slow motion automation for better observation',
+                'Visual error reporting',
+                'Interactive element detection'
             ],
             'advantages': [
                 'Handles JavaScript-rendered content',
-                'Real browser environment',
-                'Advanced interaction capabilities',
-                'Screenshot and visual testing',
-                'Modern web standards support'
+                'Real browser environment with visual feedback',
+                'Advanced interaction capabilities with highlighting',
+                'Screenshot and visual testing enhanced',
+                'Modern web standards support',
+                'Educational and debugging-friendly interface',
+                'Step-by-step transparency',
+                'Visual confirmation of all actions'
             ],
-            'playwright_status': 'available' if self.playwright_available else 'not_installed'
+            'playwright_status': 'available' if self.playwright_available else 'not_installed',
+            'visual_mode': 'enabled_by_default'
         }
