@@ -198,7 +198,9 @@ class AutonomousWebNavigation:
                     '--disable-accelerated-2d-canvas',
                     '--disable-gpu',
                     '--window-size=1920,1080',
-                    '--start-maximized'
+                    '--start-maximized',
+                    '--disable-web-security',
+                    '--disable-features=VizDisplayCompositor'
                 ]
             )
             
