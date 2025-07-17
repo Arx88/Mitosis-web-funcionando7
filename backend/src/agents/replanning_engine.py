@@ -198,7 +198,61 @@ class ReplanningEngine:
             )
     
     async def _categorize_error(self, context: ReplanningContext) -> ErrorCategory:
-        """Categorizar el error para determinar estrategia"""
+        """Categorizar el error para determinar estrategia usando ErrorAnalyzer"""
+        
+        try:
+            # 🔍 Usar ErrorAnalyzer para análisis profundo
+            error_analysis = await self.error_analyzer.analyze_error(
+                error_message=str(context.error_info.get('error', '')),
+                context={
+                    'step_id': context.failed_step.id,
+                    'tool_name': context.failed_step.tool,
+                    'parameters': context.failed_step.parameters,
+                    'error_type': context.error_info.get('type', 'unknown'),
+                    'execution_context': context.execution_context,
+                    'step_execution': context.failed_step_execution
+                }
+            )
+            
+            # Mapear categorías de ErrorAnalyzer a ReplanningEngine
+            error_type_mapping = {
+                'tool_error': ErrorCategory.TOOL_UNAVAILABLE,
+                'network_error': ErrorCategory.NETWORK_ERROR,
+                'parameter_error': ErrorCategory.INVALID_PARAMETERS,
+                'permission_error': ErrorCategory.PERMISSION_ERROR,
+                'resource_error': ErrorCategory.RESOURCE_EXHAUSTED,
+                'timeout_error': ErrorCategory.TIMEOUT_ERROR,
+                'system_error': ErrorCategory.UNEXPECTED_RESULT,
+                'unknown_error': ErrorCategory.UNEXPECTED_RESULT
+            }
+            
+            error_category = error_type_mapping.get(
+                error_analysis.error_type, 
+                ErrorCategory.UNEXPECTED_RESULT
+            )
+            
+            # Registrar análisis adicional en contexto
+            context.metadata = context.metadata or {}
+            context.metadata['error_analysis'] = {
+                'severity': error_analysis.severity,
+                'pattern': error_analysis.pattern,
+                'root_cause': error_analysis.root_cause,
+                'prevention_suggestions': error_analysis.prevention_suggestions,
+                'recovery_strategy': error_analysis.recovery_strategy
+            }
+            
+            logger.info(f"🔍 ErrorAnalyzer: {error_analysis.error_type} -> {error_category.value}")
+            logger.info(f"📊 Severidad: {error_analysis.severity}, Patrón: {error_analysis.pattern}")
+            
+            return error_category
+            
+        except Exception as e:
+            logger.warning(f"Error usando ErrorAnalyzer, usando fallback: {e}")
+            # Fallback al análisis básico original
+            return await self._categorize_error_fallback(context)
+    
+    async def _categorize_error_fallback(self, context: ReplanningContext) -> ErrorCategory:
+        """Fallback para categorización básica de errores"""
         
         error_info = context.error_info
         error_message = str(error_info.get('error', '')).lower()
