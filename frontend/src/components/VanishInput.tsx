@@ -192,16 +192,17 @@ export const VanishInput: React.FC<VanishInputProps> = ({
   const handleWebSearch = async () => {
     console.log('🌐 handleWebSearch called with inputValue:', inputValue.trim());
     if (inputValue.trim()) {
-      // Procesar búsqueda web con el texto del input
+      // Procesar búsqueda web con el texto del input - APLICAR PREFIJO AQUÍ
+      const searchQuery = `[WebSearch] ${inputValue.trim()}`;
       console.log('🌐 Setting isWebSearchProcessing to true');
       setIsWebSearchProcessing(true);
       setWebSearchActive(true);
       setDeepSearchActive(false);
       
       try {
-        console.log('🌐 Calling onWebSearch with input:', inputValue.trim());
+        console.log('🌐 Calling onWebSearch with prefixed query:', searchQuery);
         if (onWebSearch) {
-          await onWebSearch(inputValue.trim());
+          await onWebSearch(searchQuery);
           console.log('🌐 onWebSearch completed successfully');
         } else {
           console.error('🌐 onWebSearch prop is undefined!');
