@@ -756,20 +756,27 @@ class AutonomousWebNavigation:
             return False
     
     def log_step(self, message: str, level: str = "info"):
-        """Registrar paso en logs"""
+        """Registrar paso en logs para mostrar en TerminalView"""
         log_entry = {
             'timestamp': datetime.now().isoformat(),
             'level': level,
             'message': message,
             'step': self.current_step,
-            'total_steps': self.total_steps
+            'total_steps': self.total_steps,
+            'type': 'web_navigation'  # Tipo especial para TerminalView
         }
         
         self.execution_logs.append(log_entry)
         
-        # Imprimir en consola para debugging
-        icon = "🔍" if level == "info" else "✅" if level == "success" else "❌"
-        print(f"{icon} [{datetime.now().strftime('%H:%M:%S')}] {message}")
+        # Imprimir en consola para debugging y TerminalView
+        icon = "🌐" if level == "info" else "✅" if level == "success" else "❌"
+        timestamp = datetime.now().strftime('%H:%M:%S')
+        progress = f"[{self.current_step}/{self.total_steps}]" if self.total_steps > 0 else ""
+        print(f"{icon} [{timestamp}] {progress} {message}")
+        
+        # Enviar a TerminalView si está disponible
+        if hasattr(self, 'terminal_callback') and self.terminal_callback:
+            self.terminal_callback(message, level)
     
     def validate_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Validar parámetros de entrada"""
