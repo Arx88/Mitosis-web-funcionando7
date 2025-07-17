@@ -120,6 +120,13 @@ class ToolManager:
                 'timeout': 30000,
                 'viewport_width': 1920,
                 'viewport_height': 1080
+            },
+            'x_com_demo': {
+                'enabled': True,
+                'headless': False,  # Siempre visible
+                'timeout': 45000,
+                'slow_motion': 1000,
+                'visual_mode': True
             }
         }
         
