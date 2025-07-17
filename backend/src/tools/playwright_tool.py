@@ -166,15 +166,24 @@ class PlaywrightTool:
             if not url.startswith(('http://', 'https://')):
                 url = 'https://' + url
             
-            # Ejecutar acción usando asyncio
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+            # Ejecutar acción usando threading para evitar conflictos de event loop
+            import threading
+            import concurrent.futures
             
-            try:
-                result = loop.run_until_complete(self._execute_action(action, url, parameters))
+            def run_async_action():
+                # Crear un nuevo event loop en el hilo
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    return loop.run_until_complete(self._execute_action(action, url, parameters))
+                finally:
+                    loop.close()
+            
+            # Ejecutar en un hilo separado
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(run_async_action)
+                result = future.result(timeout=60)  # Timeout de 60 segundos
                 return result
-            finally:
-                loop.close()
         
         except Exception as e:
             return {
