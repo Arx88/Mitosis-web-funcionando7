@@ -57,6 +57,20 @@ memory_manager = AdvancedMemoryManager({
     'embedding_storage': '/app/backend/embeddings'
 })
 
+# 🔄 Inicializar SelfReflectionEngine
+self_reflection_engine = SelfReflectionEngine(
+    memory_manager=memory_manager,
+    ollama_service=ollama_service,
+    config={
+        'reflection_after_tasks': True,
+        'reflection_after_errors': True,
+        'enable_performance_analysis': True,
+        'enable_llm_reflection': True,
+        'min_reflection_interval': 5,  # minutos
+        'max_reflection_interval': 60  # minutos
+    }
+)
+
 task_orchestrator = TaskOrchestrator(
     tool_manager=tool_manager,
     memory_manager=memory_manager,
