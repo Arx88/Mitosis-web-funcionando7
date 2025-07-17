@@ -75,8 +75,8 @@ class AnalysisDepth(Enum):
 @dataclass
 class ErrorContext:
     """Contexto de error para análisis"""
-    execution_context: ExecutionContext
-    failed_step: StepExecution
+    execution_context: 'ExecutionContext'
+    failed_step: 'StepExecution'
     error_message: str
     error_type: str
     stack_trace: Optional[str] = None
