@@ -27,16 +27,18 @@ class PlaywrightTool:
         self.description = "Herramienta de automatización de navegadores con Playwright VISUAL - Muestra interacciones paso a paso"
         self.playwright_available = PLAYWRIGHT_AVAILABLE
         
-        # Configuración por defecto
+        # Configuración por defecto - detección automática de entorno
+        display_available = os.environ.get('DISPLAY') is not None
+        
         self.default_config = {
-            'headless': False,  # Cambiado a False para ser más visual por defecto
+            'headless': not display_available,  # Automático: headless si no hay display
             'timeout': 30000,  # 30 segundos
             'viewport': {'width': 1920, 'height': 1080},
             'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'visual_mode': True,  # Nuevo: modo visual activado por defecto
-            'step_screenshots': True,  # Nuevo: screenshots automáticos en cada paso
-            'highlight_elements': True,  # Nuevo: resaltar elementos antes de interactuar
-            'slow_motion': 500  # Nuevo: ralentizar acciones para mejor visualización (ms)
+            'visual_mode': display_available,  # Activar modo visual solo si hay display
+            'step_screenshots': True,  # Screenshots automáticos siempre
+            'highlight_elements': True,  # Resaltar elementos antes de interactuar
+            'slow_motion': 500 if display_available else 0  # Ralentizar solo si hay display
         }
         
         # Lista para almacenar todos los pasos visuales
