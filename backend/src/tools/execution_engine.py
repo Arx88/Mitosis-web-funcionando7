@@ -63,6 +63,9 @@ class ExecutionEngine:
         self.dynamic_task_planner = get_dynamic_task_planner()  # 🚀 Agregar planificador dinámico
         self.context_manager = ContextManager()  # Inicializar context manager
         
+        # 🔄 Inicializar ReplanningEngine
+        self.replanning_engine = None  # Se inicializará cuando se necesite
+        
         # Configuración de ejecución
         self.config = {
             'max_retries': 3,
@@ -74,7 +77,10 @@ class ExecutionEngine:
             'auto_checkpoint': True,  # Checkpoints automáticos
             'checkpoint_frequency': 3,  # Cada 3 pasos
             'dynamic_planning': True,  # 🚀 Habilitar planificación dinámica
-            'context_monitoring': True  # 🚀 Monitoreo de contexto
+            'context_monitoring': True,  # 🚀 Monitoreo de contexto
+            'enable_replanning': True,  # 🔄 Habilitar replanificación dinámica
+            'max_replanning_attempts': 3,  # 🔄 Máximo 3 intentos de replanificación
+            'replanning_confidence_threshold': 0.6  # 🔄 Umbral de confianza para replanificación
         }
         
         # Contextos de ejecución activos
