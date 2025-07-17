@@ -21,6 +21,7 @@ from .firecrawl_tool import FirecrawlTool
 from .qstash_tool import QStashTool
 from .playwright_tool import PlaywrightTool
 from .container_manager import ContainerManager
+from .x_com_demo_tool import XComDemoTool
 
 class ToolManager:
     def __init__(self):
