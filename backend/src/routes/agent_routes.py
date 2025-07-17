@@ -41,6 +41,7 @@ execution_engine = ExecutionEngine(tool_manager, environment_setup_manager)
 # Nuevo sistema de orquestación avanzada
 from src.services.ollama_service import OllamaService
 from src.memory.advanced_memory_manager import AdvancedMemoryManager
+from src.agents.self_reflection_engine import SelfReflectionEngine
 
 ollama_service = OllamaService()
 
