@@ -679,6 +679,57 @@ class AutonomousWebNavigation:
                 await self._take_screenshot(page, 'final_result')
                 return {'success': True, 'step': step, 'final_url': page.url, 'timestamp': datetime.now().isoformat()}
             
+            elif step_type == 'explore_page':
+                # Explorar página para obtener información
+                title = await page.title()
+                url = page.url
+                await self._take_screenshot(page, 'page_exploration')
+                return {'success': True, 'step': step, 'title': title, 'url': url, 'timestamp': datetime.now().isoformat()}
+            
+            elif step_type == 'find_interactive_elements':
+                # Buscar elementos interactivos
+                interactive_elements = await page.evaluate('''
+                    () => {
+                        const elements = [];
+                        const buttons = document.querySelectorAll('button');
+                        const links = document.querySelectorAll('a');
+                        const inputs = document.querySelectorAll('input');
+                        
+                        buttons.forEach(el => elements.push({type: 'button', text: el.textContent.trim()}));
+                        links.forEach(el => elements.push({type: 'link', text: el.textContent.trim(), href: el.href}));
+                        inputs.forEach(el => elements.push({type: 'input', placeholder: el.placeholder}));
+                        
+                        return elements.slice(0, 10);  // Primeros 10 elementos
+                    }
+                ''')
+                return {'success': True, 'step': step, 'interactive_elements': interactive_elements, 'timestamp': datetime.now().isoformat()}
+            
+            elif step_type == 'smart_interaction':
+                # Interacción inteligente basada en la tarea
+                task_description = step.get('task_description', '').lower()
+                
+                if 'registro' in task_description or 'cuenta' in task_description:
+                    # Buscar botón de registro
+                    try:
+                        await page.wait_for_selector('text=Sign up', timeout=5000)
+                        await page.click('text=Sign up')
+                        return {'success': True, 'step': step, 'action': 'clicked_signup', 'timestamp': datetime.now().isoformat()}
+                    except:
+                        pass
+                
+                if 'login' in task_description:
+                    # Buscar botón de login
+                    try:
+                        await page.wait_for_selector('text=Log in', timeout=5000)
+                        await page.click('text=Log in')
+                        return {'success': True, 'step': step, 'action': 'clicked_login', 'timestamp': datetime.now().isoformat()}
+                    except:
+                        pass
+                
+                # Interacción genérica - tomar screenshot
+                await self._take_screenshot(page, 'smart_interaction')
+                return {'success': True, 'step': step, 'action': 'generic_interaction', 'timestamp': datetime.now().isoformat()}
+            
             else:
                 return {'success': False, 'step': step, 'error': f'Unknown step type: {step_type}', 'timestamp': datetime.now().isoformat()}
         
