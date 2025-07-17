@@ -557,9 +557,11 @@ class PlaywrightTool:
             }
     
     async def _click_element(self, page, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Hacer clic en elemento"""
+        """Hacer clic en elemento con visualización"""
         try:
             selector = parameters.get('selector')
+            highlight_elements = parameters.get('highlight_elements', self.default_config['highlight_elements'])
+            step_screenshots = parameters.get('step_screenshots', self.default_config['step_screenshots'])
             
             if not selector:
                 return {
@@ -567,11 +569,29 @@ class PlaywrightTool:
                     'error': 'Selector is required for click_element'
                 }
             
+            # Log paso: buscar elemento
+            await self._log_visual_step(page, "BUSCANDO ELEMENTO", f"Buscando elemento: {selector}", step_screenshots)
+            
             # Esperar elemento
             await page.wait_for_selector(selector)
             
+            # Resaltar elemento si está habilitado
+            if highlight_elements:
+                await self._log_visual_step(page, "RESALTANDO ELEMENTO", f"Resaltando elemento antes del clic", step_screenshots)
+                await self._highlight_element(page, selector)
+            
+            # Log paso: hacer clic
+            await self._log_visual_step(page, "HACIENDO CLIC", f"Haciendo clic en: {selector}", step_screenshots)
+            
             # Hacer clic
             await page.click(selector)
+            
+            # Quitar resaltado
+            if highlight_elements:
+                await self._remove_highlight(page, selector)
+            
+            # Log paso final
+            await self._log_visual_step(page, "CLIC COMPLETADO", f"Clic realizado exitosamente en {selector}", step_screenshots)
             
             return {
                 'success': True,
@@ -581,6 +601,7 @@ class PlaywrightTool:
             }
         
         except Exception as e:
+            await self._log_visual_step(page, "ERROR EN CLIC", f"Error: {str(e)}", step_screenshots)
             return {
                 'success': False,
                 'error': f'Click failed: {str(e)}'
