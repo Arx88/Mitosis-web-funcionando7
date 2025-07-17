@@ -117,6 +117,18 @@ class ReplanningEngine:
             'deep_research': ['comprehensive_research', 'web_search', 'enhanced_web_search']
         }
         
+        # 🔍 Inicializar ErrorAnalyzer para análisis profundo de errores
+        self.error_analyzer = ErrorAnalyzer(
+            memory_manager=memory_manager,
+            ollama_service=ollama_service,
+            config={
+                'enable_llm_analysis': self.enable_llm_analysis,
+                'enable_pattern_detection': True,
+                'enable_cause_analysis': True,
+                'severity_threshold': 'medium'
+            }
+        )
+        
         logger.info("🔄 ReplanningEngine inicializado")
     
     async def analyze_failure_and_replan(self, 
