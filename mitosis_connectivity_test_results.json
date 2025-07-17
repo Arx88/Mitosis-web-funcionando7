@@ -1,0 +1,59 @@
+{
+  "timestamp": "2025-07-17T07:58:14.461162",
+  "tests": [
+    {
+      "name": "Backend Health Check",
+      "passed": true,
+      "response_time": 0.44,
+      "details": "Status: healthy, Services: {'database': True, 'ollama': True, 'tools': 11}"
+    },
+    {
+      "name": "Agent Health Check",
+      "passed": false,
+      "response_time": 0.36,
+      "details": "Agent: healthy, Ollama: None"
+    },
+    {
+      "name": "Ollama Integration",
+      "passed": false,
+      "response_time": 0.99,
+      "details": "'str' object has no attribute 'get'"
+    },
+    {
+      "name": "Memory System Integration",
+      "passed": false,
+      "response_time": 0.0,
+      "details": "HTTP 404"
+    },
+    {
+      "name": "Chat Functionality with Memory Integration",
+      "passed": true,
+      "response_time": 3.4,
+      "details": "Memory: True, Response: True"
+    },
+    {
+      "name": "WebSearch Integration",
+      "passed": false,
+      "response_time": 0.23,
+      "details": "HTTP 500"
+    },
+    {
+      "name": "Error Handling",
+      "passed": true,
+      "response_time": 0.01,
+      "details": "404: True, 400: True"
+    },
+    {
+      "name": "Memory Persistence Across Conversations",
+      "passed": true,
+      "response_time": 1.33,
+      "details": "Conv1: True, Conv2: True"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "passed": 4,
+    "failed": 4,
+    "success_rate": 50.0
+  }
+}
