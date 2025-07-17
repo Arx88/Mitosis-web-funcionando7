@@ -383,13 +383,21 @@ class PlaywrightTool:
             }
     
     async def _screenshot(self, page, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Capturar pantalla"""
+        """Capturar pantalla con logging visual"""
         try:
             full_page = parameters.get('full_page', False)
+            step_screenshots = parameters.get('step_screenshots', self.default_config['step_screenshots'])
+            
+            # Log paso: preparar captura
+            await self._log_visual_step(page, "PREPARANDO SCREENSHOT", 
+                                      f"Captura {'completa' if full_page else 'del viewport'} de {page.url}", 
+                                      False)  # No screenshot recursivo
             
             # Crear archivo temporal
             with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:
                 screenshot_path = tmp_file.name
+            
+            print(f"📸 Capturando screenshot...")
             
             # Capturar pantalla
             await page.screenshot(
@@ -404,6 +412,11 @@ class PlaywrightTool:
             # Limpiar archivo temporal
             os.unlink(screenshot_path)
             
+            # Log paso final
+            await self._log_visual_step(page, "SCREENSHOT COMPLETADO", 
+                                      f"Screenshot capturado exitosamente ({'página completa' if full_page else 'viewport'})", 
+                                      False)
+            
             return {
                 'success': True,
                 'action': 'screenshot',
@@ -415,6 +428,7 @@ class PlaywrightTool:
             }
         
         except Exception as e:
+            await self._log_visual_step(page, "ERROR EN SCREENSHOT", f"Error: {str(e)}", False)
             return {
                 'success': False,
                 'error': f'Screenshot failed: {str(e)}'
