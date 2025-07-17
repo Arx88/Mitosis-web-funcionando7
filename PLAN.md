@@ -1,8 +1,14 @@
-# Plan de Implementación: Transformación de MitosisV5 a un Agente General Avanzado
+# PLAN.md - Visión y Arquitectura del Agente Mitosis V5
 
-**Autor:** Manus AI
+## 🎯 Objetivo General
 
-**Fecha:** 16 de julio de 2025
+Desarrollar un agente autónomo avanzado que implemente un ciclo OODA completo (Observar, Orientar, Decidir, Actuar) con capacidades de **Metacognición** y **Aprendizaje Continuo**. El agente debe ser capaz de:
+
+- Percibir y procesar inputs multimodales
+- Planificar dinámicamente usando LLM
+- Ejecutar tareas con replanificación automática ante obstáculos
+- Reflexionar sobre sus propias acciones y aprender de ellas
+- Mejorar continuamente su rendimiento
 
 ## 1. Introducción y Contexto
 
