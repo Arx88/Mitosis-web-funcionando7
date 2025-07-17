@@ -26,7 +26,11 @@ import re
 import statistics
 from collections import defaultdict, Counter
 
-from src.tools.execution_engine import ExecutionContext, StepExecution, StepStatus
+# Forward references to avoid circular imports
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from src.tools.execution_engine import ExecutionContext, StepExecution, StepStatus
+
 from src.memory.advanced_memory_manager import AdvancedMemoryManager
 from src.services.ollama_service import OllamaService
 
