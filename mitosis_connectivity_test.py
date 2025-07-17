@@ -128,20 +128,24 @@ def test_agent_health():
             data = response.json()
             print(f"   Agent Status: {data.get('status')}")
             
-            # Check Ollama configuration
-            ollama_config = data.get('ollama_config', {})
-            print(f"   Ollama Config:")
-            print(f"     - Endpoint: {ollama_config.get('endpoint')}")
-            print(f"     - Model: {ollama_config.get('model')}")
-            print(f"     - Connected: {ollama_config.get('connected')}")
+            # Check Ollama service from services
+            services = data.get('services', {})
+            ollama_service = services.get('ollama', {})
+            
+            print(f"   Ollama Service:")
+            print(f"     - Status: {ollama_service.get('status')}")
+            print(f"     - URL: {ollama_service.get('url')}")
+            print(f"     - Current Model: {ollama_service.get('current_model')}")
+            print(f"     - Models Available: {ollama_service.get('models_available')}")
+            print(f"     - Healthy: {ollama_service.get('healthy')}")
             
             # Check if agent is healthy
             agent_healthy = (
                 data.get('status') == 'healthy' and
-                ollama_config.get('connected') == True
+                ollama_service.get('healthy') == True
             )
             
-            return agent_healthy, f"Agent: {data.get('status')}, Ollama: {ollama_config.get('connected')}"
+            return agent_healthy, f"Agent: {data.get('status')}, Ollama: {ollama_service.get('healthy')}"
         else:
             return False, f"HTTP {response.status_code}"
     
