@@ -96,7 +96,10 @@ class TaskOrchestrator:
             "retry_failed_steps": True,
             "max_retries": 3,
             "enable_memory_learning": True,  # Nueva configuración
-            "memory_relevance_threshold": 0.7  # Nueva configuración
+            "memory_relevance_threshold": 0.7,  # Nueva configuración
+            "enable_dynamic_planning": True,  # 🚀 Habilitar planificación dinámica
+            "dynamic_planning_threshold": 0.8,  # 🚀 Umbral para usar planificación dinámica
+            "fallback_to_hierarchical": True  # 🚀 Fallback al planificador jerárquico
         }
         
         # Callbacks
