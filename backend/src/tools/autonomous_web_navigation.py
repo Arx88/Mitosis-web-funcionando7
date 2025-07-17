@@ -40,7 +40,7 @@ class AutonomousWebNavigation:
             'step_screenshots': True,  # Screenshots automáticos SIEMPRE
             'highlight_elements': True,  # Resaltar elementos SIEMPRE
             'slow_motion': 800,  # Ralentizar para mejor visibilidad
-            'use_xvfb': True,  # Usar display virtual SIEMPRE
+            'use_xvfb': True,  # SIEMPRE usar display virtual para visualización
             'log_to_terminal': True,  # Logs detallados para terminal
             'step_delay': 1000,  # Pausa entre pasos
             'max_retries': 3,  # Reintentos máximos
