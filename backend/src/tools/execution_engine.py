@@ -422,7 +422,7 @@ class ExecutionEngine:
     
     async def _execute_step_with_retries(self, context: ExecutionContext, 
                                        step_execution: StepExecution) -> bool:
-        """Ejecutar un paso con lógica de reintentos"""
+        """Ejecutar un paso con lógica de reintentos y replanificación"""
         
         max_retries = self.config.get('max_retries', 3)
         retry_delay = self.config.get('retry_delay', 2.0)
@@ -444,6 +444,7 @@ class ExecutionEngine:
                     
             except Exception as e:
                 step_execution.error = str(e)
+                logger.warning(f"⚠️ Error en paso {step_execution.step.id}, intento {attempt + 1}: {str(e)}")
                 
                 # Intentar recuperación automática si está habilitada
                 if self.config.get('auto_recovery', True) and attempt < max_retries:
@@ -452,8 +453,25 @@ class ExecutionEngine:
                     )
                     if recovery_success:
                         continue
+                
+                # Si fallaron los reintentos normales, intentar replanificación
+                if attempt == max_retries:
+                    logger.info(f"🔄 Intentos normales agotados para paso {step_execution.step.id}, intentando replanificación")
+                    
+                    # Intentar replanificación como último recurso
+                    replanning_success = await self._handle_step_failure_with_replanning(
+                        context, step_execution, e
+                    )
+                    
+                    if replanning_success:
+                        logger.info(f"✅ Replanificación exitosa para paso {step_execution.step.id}")
+                        # La replanificación actualiza el plan completo, 
+                        # necesitamos reiniciar la ejecución desde el punto actual
+                        return True
+                    else:
+                        logger.error(f"❌ Replanificación falló para paso {step_execution.step.id}")
         
-        # Todos los intentos fallaron
+        # Todos los intentos (incluyendo replanificación) fallaron
         step_execution.status = StepStatus.FAILED
         return False
     
