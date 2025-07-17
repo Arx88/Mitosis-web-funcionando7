@@ -16,7 +16,7 @@ TESTING REQUIREMENTS:
 8. Error Handling: Test error scenarios and proper error responses
 
 CURRENT CONFIGURATION:
-- Backend URL: https://a2248595-0db8-49fd-a203-643cf2fd2d81.preview.emergentagent.com
+- Backend URL: https://77b6a6a2-41fc-42d5-8032-6addf6a0c46d.preview.emergentagent.com
 - Ollama endpoint: https://78d08925604a.ngrok-free.app
 - Model: llama3.1:8b
 - Database: MongoDB local
@@ -30,7 +30,7 @@ import time
 from datetime import datetime
 
 # Configuration from review request
-BASE_URL = "https://a2248595-0db8-49fd-a203-643cf2fd2d81.preview.emergentagent.com"
+BASE_URL = "https://77b6a6a2-41fc-42d5-8032-6addf6a0c46d.preview.emergentagent.com"
 OLLAMA_ENDPOINT = "https://78d08925604a.ngrok-free.app"
 EXPECTED_MODEL = "llama3.1:8b"
 
