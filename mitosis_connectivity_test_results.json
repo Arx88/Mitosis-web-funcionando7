@@ -1,41 +1,41 @@
 {
-  "timestamp": "2025-07-17T07:58:14.461162",
+  "timestamp": "2025-07-17T07:59:54.043238",
   "tests": [
     {
       "name": "Backend Health Check",
       "passed": true,
-      "response_time": 0.44,
+      "response_time": 0.37,
       "details": "Status: healthy, Services: {'database': True, 'ollama': True, 'tools': 11}"
     },
     {
       "name": "Agent Health Check",
-      "passed": false,
-      "response_time": 0.36,
-      "details": "Agent: healthy, Ollama: None"
+      "passed": true,
+      "response_time": 0.31,
+      "details": "Agent: healthy, Ollama: True"
     },
     {
       "name": "Ollama Integration",
       "passed": false,
-      "response_time": 0.99,
+      "response_time": 0.93,
       "details": "'str' object has no attribute 'get'"
     },
     {
       "name": "Memory System Integration",
       "passed": false,
-      "response_time": 0.0,
-      "details": "HTTP 404"
+      "response_time": 0.01,
+      "details": "Initialized: True, Storage: False, Retrieval: True"
     },
     {
       "name": "Chat Functionality with Memory Integration",
       "passed": true,
-      "response_time": 3.4,
+      "response_time": 0.2,
       "details": "Memory: True, Response: True"
     },
     {
       "name": "WebSearch Integration",
-      "passed": false,
-      "response_time": 0.23,
-      "details": "HTTP 500"
+      "passed": true,
+      "response_time": 0.25,
+      "details": "Rate limited but system functional"
     },
     {
       "name": "Error Handling",
@@ -46,14 +46,14 @@
     {
       "name": "Memory Persistence Across Conversations",
       "passed": true,
-      "response_time": 1.33,
+      "response_time": 1.36,
       "details": "Conv1: True, Conv2: True"
     }
   ],
   "summary": {
     "total": 8,
-    "passed": 4,
-    "failed": 4,
-    "success_rate": 50.0
+    "passed": 6,
+    "failed": 2,
+    "success_rate": 75.0
   }
 }
