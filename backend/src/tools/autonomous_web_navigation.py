@@ -139,7 +139,7 @@ class AutonomousWebNavigation:
             
             def run_autonomous_navigation():
                 # Configurar display para que sea visible
-                os.environ['DISPLAY'] = ':0'
+                os.environ['DISPLAY'] = ':99'
                 
                 try:
                     # Crear un nuevo event loop en el hilo
