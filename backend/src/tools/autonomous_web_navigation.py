@@ -822,6 +822,34 @@ class AutonomousWebNavigation:
         progress = f"[{self.current_step}/{self.total_steps}]" if self.total_steps > 0 else ""
         print(f"{icon} [{timestamp}] {progress} {message}")
         
+        # 🚀 ENVIAR A WEBSOCKET PARA TERMINAL EN TIEMPO REAL
+        try:
+            from src.websocket.websocket_manager import get_websocket_manager
+            websocket_manager = get_websocket_manager()
+            
+            if websocket_manager and hasattr(self, 'task_id'):
+                # Enviar log paso a paso al frontend
+                websocket_manager.send_step_log(
+                    task_id=self.task_id,
+                    step_id=f"web_nav_{self.current_step}",
+                    message=message,
+                    level=level,
+                    progress=self.current_step,
+                    total_steps=self.total_steps,
+                    extra_data={'type': 'web_navigation'}
+                )
+                
+                # Enviar progreso de la tarea
+                websocket_manager.send_task_progress(
+                    task_id=self.task_id,
+                    progress=self.current_step,
+                    total_steps=self.total_steps,
+                    current_step=message
+                )
+        except Exception as e:
+            # Si falla el WebSocket, continuar sin problemas
+            print(f"⚠️ Error enviando log a WebSocket: {e}")
+        
         # Enviar a TerminalView si está disponible
         if hasattr(self, 'terminal_callback') and self.terminal_callback:
             self.terminal_callback(message, level)
