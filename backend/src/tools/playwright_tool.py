@@ -219,27 +219,40 @@ class PlaywrightTool:
             }
     
     async def _log_visual_step(self, page, step_name: str, details: str = "", screenshot: bool = True) -> Dict[str, Any]:
-        """Registrar paso visual con screenshot y logs detallados"""
+        """Registrar paso visual con screenshot de alta calidad y logs detallados"""
         timestamp = datetime.now().isoformat()
         
+        # Logs más detallados y visibles
         print(f"\n🎬 [{timestamp}] PASO VISUAL: {step_name}")
-        print(f"   📄 URL: {page.url}")
+        print(f"   🌐 URL: {page.url}")
         print(f"   📝 Detalles: {details}")
+        print(f"   📏 Viewport: {await page.evaluate('() => ({width: window.innerWidth, height: window.innerHeight})')}")
+        print(f"   📄 Título: {await page.title()}")
         
         step_data = {
             'step': step_name,
             'details': details,
             'url': page.url,
-            'timestamp': timestamp
+            'timestamp': timestamp,
+            'page_title': await page.title()
         }
         
         if screenshot:
             try:
-                # Crear screenshot del paso
+                # Esperar un poco para asegurar que la página se renderice
+                await page.wait_for_timeout(500)
+                
+                # Crear screenshot de alta calidad
                 with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:
                     screenshot_path = tmp_file.name
                 
-                await page.screenshot(path=screenshot_path, full_page=False)
+                # Screenshot de pantalla completa con mejor calidad
+                await page.screenshot(
+                    path=screenshot_path, 
+                    full_page=True,  # Capturar página completa
+                    quality=90,      # Alta calidad
+                    type='png'       # Formato PNG para mejor calidad
+                )
                 
                 # Convertir a base64
                 with open(screenshot_path, 'rb') as f:
@@ -248,7 +261,7 @@ class PlaywrightTool:
                 os.unlink(screenshot_path)
                 
                 step_data['screenshot'] = image_data
-                print(f"   📸 Screenshot capturado")
+                print(f"   📸 Screenshot de alta calidad capturado ({len(image_data)} bytes)")
                 
             except Exception as e:
                 print(f"   ⚠️  Error capturando screenshot: {e}")
