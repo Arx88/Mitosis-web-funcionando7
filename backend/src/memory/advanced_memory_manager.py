@@ -1316,3 +1316,21 @@ class AdvancedMemoryManager:
                 'completed_at': datetime.now().isoformat()
             }
     
+    def _json_serializer(self, obj):
+        """
+        JSON serializer para objetos no serializables por defecto
+        
+        Args:
+            obj: Objeto a serializar
+            
+        Returns:
+            String serializable o None
+        """
+        if hasattr(obj, 'isoformat'):
+            return obj.isoformat()
+        elif hasattr(obj, '__dict__'):
+            return obj.__dict__
+        elif hasattr(obj, '__str__'):
+            return str(obj)
+        return None
+    
