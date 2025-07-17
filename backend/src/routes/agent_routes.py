@@ -727,6 +727,76 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                                         params = {'action': 'list', 'path': '/app'}
                                     elif tool_name == 'web_search':
                                         params = {'query': message}
+                                    elif tool_name == 'playwright':
+                                        # 🌐 CONFIGURAR PLAYWRIGHT PARA NAVEGACIÓN WEB
+                                        # Detectar tipo de acción web
+                                        if 'twitter' in message.lower():
+                                            if 'cuenta' in message.lower() or 'crea' in message.lower() or 'register' in message.lower():
+                                                params = {
+                                                    'action': 'navigate',
+                                                    'url': 'https://twitter.com/i/flow/signup',
+                                                    'visual_mode': True,
+                                                    'step_screenshots': True,
+                                                    'highlight_elements': True
+                                                }
+                                            else:
+                                                params = {
+                                                    'action': 'navigate',
+                                                    'url': 'https://twitter.com',
+                                                    'visual_mode': True,
+                                                    'step_screenshots': True
+                                                }
+                                        elif 'facebook' in message.lower():
+                                            params = {
+                                                'action': 'navigate',
+                                                'url': 'https://facebook.com',
+                                                'visual_mode': True,
+                                                'step_screenshots': True
+                                            }
+                                        elif 'google' in message.lower():
+                                            params = {
+                                                'action': 'navigate',
+                                                'url': 'https://google.com',
+                                                'visual_mode': True,
+                                                'step_screenshots': True
+                                            }
+                                        elif 'screenshot' in message.lower() or 'captura' in message.lower():
+                                            # Extraer URL del mensaje o usar por defecto
+                                            import re
+                                            url_match = re.search(r'https?://[^\s]+', message)
+                                            url = url_match.group(0) if url_match else 'https://google.com'
+                                            params = {
+                                                'action': 'screenshot',
+                                                'url': url,
+                                                'full_page': True,
+                                                'visual_mode': True
+                                            }
+                                        else:
+                                            # Navegación general - extraer URL del mensaje
+                                            import re
+                                            url_match = re.search(r'https?://[^\s]+', message)
+                                            if url_match:
+                                                url = url_match.group(0)
+                                            else:
+                                                # Detectar sitio web mencionado
+                                                if 'youtube' in message.lower():
+                                                    url = 'https://youtube.com'
+                                                elif 'github' in message.lower():
+                                                    url = 'https://github.com'
+                                                elif 'linkedin' in message.lower():
+                                                    url = 'https://linkedin.com'
+                                                elif 'instagram' in message.lower():
+                                                    url = 'https://instagram.com'
+                                                else:
+                                                    url = 'https://google.com'
+                                            
+                                            params = {
+                                                'action': 'navigate',
+                                                'url': url,
+                                                'visual_mode': True,
+                                                'step_screenshots': True,
+                                                'highlight_elements': True
+                                            }
                                     else:
                                         params = {'input': message}
                                     
