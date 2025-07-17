@@ -606,6 +606,7 @@ async def chat():
                     
                     if message_mode == 'discussion':
                         # 💬 MODO DISCUSIÓN - Usar respuesta casual
+                        start_time = time.time()  # Registrar tiempo de inicio para auto-reflexión
                         logger.info(f"💬 Modo discusión activado - generando respuesta casual")
                         
                         # Generar respuesta casual usando Ollama con contexto de memoria
