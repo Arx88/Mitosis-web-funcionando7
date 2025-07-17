@@ -368,7 +368,25 @@ Responde en formato JSON con las siguientes claves:
                                 context: ReplanningContext, 
                                 error_category: ErrorCategory,
                                 llm_analysis: Dict[str, Any]) -> ReplanningStrategy:
-        """Determinar estrategia de replanificación"""
+        """Determinar estrategia de replanificación usando ErrorAnalyzer"""
+        
+        # 🔍 Usar información del ErrorAnalyzer si está disponible
+        error_analysis = context.metadata.get('error_analysis', {})
+        
+        if error_analysis.get('recovery_strategy'):
+            strategy_mapping = {
+                'retry': ReplanningStrategy.ROLLBACK_AND_RETRY,
+                'alternative_tool': ReplanningStrategy.TOOL_SUBSTITUTION,
+                'parameter_adjustment': ReplanningStrategy.PARAMETER_ADJUSTMENT,
+                'decompose_task': ReplanningStrategy.STEP_DECOMPOSITION,
+                'skip_step': ReplanningStrategy.SKIP_AND_CONTINUE,
+                'manual_intervention': ReplanningStrategy.HUMAN_INTERVENTION
+            }
+            
+            recovery_strategy = error_analysis['recovery_strategy']
+            if recovery_strategy in strategy_mapping:
+                logger.info(f"🔍 Usando estrategia de ErrorAnalyzer: {recovery_strategy}")
+                return strategy_mapping[recovery_strategy]
         
         # Estrategia basada en análisis LLM si está disponible
         if llm_analysis.get('recommended_strategies'):
@@ -378,6 +396,13 @@ Responde en formato JSON con las siguientes claves:
             except ValueError:
                 pass
         
+        # Estrategia basada en severidad del error
+        error_severity = error_analysis.get('severity', 'medium')
+        if error_severity == 'critical':
+            return ReplanningStrategy.HUMAN_INTERVENTION
+        elif error_severity == 'high':
+            return ReplanningStrategy.ALTERNATIVE_APPROACH
+        
         # Estrategia basada en categoría de error
         strategy_map = {
             ErrorCategory.TOOL_UNAVAILABLE: ReplanningStrategy.TOOL_SUBSTITUTION,
@@ -386,8 +411,7 @@ Responde en formato JSON con las siguientes claves:
             ErrorCategory.PERMISSION_ERROR: ReplanningStrategy.PARAMETER_ADJUSTMENT,
             ErrorCategory.TIMEOUT_ERROR: ReplanningStrategy.PARAMETER_ADJUSTMENT,
             ErrorCategory.RESOURCE_EXHAUSTED: ReplanningStrategy.STEP_DECOMPOSITION,
-            ErrorCategory.DEPENDENCY_FAILED: ReplanningStrategy.ALTERNATIVE_APPROACH,
-            ErrorCategory.UNKNOWN_ERROR: ReplanningStrategy.TOOL_SUBSTITUTION
+            ErrorCategory.UNEXPECTED_RESULT: ReplanningStrategy.ALTERNATIVE_APPROACH
         }
         
         return strategy_map.get(error_category, ReplanningStrategy.ALTERNATIVE_APPROACH)
