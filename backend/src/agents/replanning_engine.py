@@ -22,7 +22,8 @@ from enum import Enum
 import json
 import uuid
 
-from src.tools.task_planner import TaskPlan, TaskStep, ExecutionStrategy
+from src.tools.task_planner import ExecutionPlan, TaskStep
+from src.tools.execution_engine import ExecutionStrategy
 from src.tools.execution_engine import ExecutionContext, StepExecution, StepStatus
 from src.memory.advanced_memory_manager import AdvancedMemoryManager
 from src.services.ollama_service import OllamaService
@@ -54,7 +55,7 @@ class ErrorCategory(Enum):
 @dataclass
 class ReplanningContext:
     """Contexto para replanificación"""
-    original_plan: TaskPlan
+    original_plan: ExecutionPlan
     failed_step: TaskStep
     error_info: Dict[str, Any]
     execution_context: ExecutionContext
@@ -67,7 +68,7 @@ class ReplanningContext:
 class ReplanningResult:
     """Resultado de replanificación"""
     success: bool
-    new_plan: Optional[TaskPlan] = None
+    new_plan: Optional[ExecutionPlan] = None
     strategy_used: Optional[ReplanningStrategy] = None
     modifications: List[Dict[str, Any]] = field(default_factory=list)
     confidence_score: float = 0.0
@@ -330,7 +331,7 @@ Responde en formato JSON con las siguientes claves:
     async def _generate_new_plan(self, 
                                context: ReplanningContext, 
                                strategy: ReplanningStrategy,
-                               llm_analysis: Dict[str, Any]) -> Optional[TaskPlan]:
+                               llm_analysis: Dict[str, Any]) -> Optional[ExecutionPlan]:
         """Generar nuevo plan según estrategia"""
         
         try:
@@ -354,7 +355,7 @@ Responde en formato JSON con las siguientes claves:
             logger.error(f"Error generando plan para estrategia {strategy.value}: {str(e)}")
             return None
     
-    async def _apply_tool_substitution(self, context: ReplanningContext) -> Optional[TaskPlan]:
+    async def _apply_tool_substitution(self, context: ReplanningContext) -> Optional[ExecutionPlan]:
         """Aplicar sustitución de herramienta"""
         
         failed_tool = context.failed_step.tool
@@ -400,7 +401,7 @@ Responde en formato JSON con las siguientes claves:
     
     async def _apply_parameter_adjustment(self, 
                                         context: ReplanningContext,
-                                        llm_analysis: Dict[str, Any]) -> Optional[TaskPlan]:
+                                        llm_analysis: Dict[str, Any]) -> Optional[ExecutionPlan]:
         """Aplicar ajuste de parámetros"""
         
         # Obtener modificaciones sugeridas por LLM
@@ -454,7 +455,7 @@ Responde en formato JSON con las siguientes claves:
         new_plan.steps = new_steps
         return new_plan
     
-    async def _apply_step_decomposition(self, context: ReplanningContext) -> Optional[TaskPlan]:
+    async def _apply_step_decomposition(self, context: ReplanningContext) -> Optional[ExecutionPlan]:
         """Aplicar descomposición de paso"""
         
         failed_step = context.failed_step
@@ -496,7 +497,7 @@ Responde en formato JSON con las siguientes claves:
         # Fallback: usar enfoque alternativo
         return await self._apply_alternative_approach(context)
     
-    async def _apply_alternative_approach(self, context: ReplanningContext) -> Optional[TaskPlan]:
+    async def _apply_alternative_approach(self, context: ReplanningContext) -> Optional[ExecutionPlan]:
         """Aplicar enfoque alternativo"""
         
         failed_step = context.failed_step
@@ -559,7 +560,7 @@ Responde en formato JSON con las siguientes claves:
         new_plan.steps = new_steps
         return new_plan
     
-    async def _apply_rollback_and_retry(self, context: ReplanningContext) -> Optional[TaskPlan]:
+    async def _apply_rollback_and_retry(self, context: ReplanningContext) -> Optional[ExecutionPlan]:
         """Aplicar rollback y reintentar"""
         
         # Crear plan que incluya rollback
@@ -600,7 +601,7 @@ Responde en formato JSON con las siguientes claves:
         new_plan.total_estimated_duration = sum(step.estimated_duration for step in new_steps)
         return new_plan
     
-    async def _apply_skip_and_continue(self, context: ReplanningContext) -> Optional[TaskPlan]:
+    async def _apply_skip_and_continue(self, context: ReplanningContext) -> Optional[ExecutionPlan]:
         """Aplicar saltar y continuar"""
         
         # Crear paso de skip
@@ -686,7 +687,7 @@ Responde en formato JSON con las siguientes claves:
     
     async def _evaluate_confidence(self, 
                                  context: ReplanningContext, 
-                                 new_plan: Optional[TaskPlan], 
+                                 new_plan: Optional[ExecutionPlan], 
                                  strategy: ReplanningStrategy) -> float:
         """Evaluar confianza en el nuevo plan"""
         
@@ -720,7 +721,7 @@ Responde en formato JSON con las siguientes claves:
     
     async def _estimate_success_probability(self, 
                                           context: ReplanningContext, 
-                                          new_plan: Optional[TaskPlan]) -> float:
+                                          new_plan: Optional[ExecutionPlan]) -> float:
         """Estimar probabilidad de éxito del nuevo plan"""
         
         if not new_plan:
