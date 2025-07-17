@@ -98,3 +98,4 @@ typing-extensions==4.12.2
 packaging==24.1
 fsspec>=2025.7.0
 pyarrow
+multiprocess
