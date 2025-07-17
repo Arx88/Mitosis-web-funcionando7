@@ -16,6 +16,7 @@ from .dynamic_task_planner import DynamicTaskPlanner, get_dynamic_task_planner
 from .tool_manager import ToolManager
 from .environment_setup_manager import EnvironmentSetupManager
 from .context_manager import ContextManager, ContextScope, VariableType
+from src.agents.replanning_engine import ReplanningEngine, ReplanningContext, ReplanningResult
 
 class StepStatus(Enum):
     PENDING = "pending"
