@@ -162,9 +162,8 @@ def test_ollama_integration():
         
         if response.status_code == 200:
             data = response.json()
-            print(f"   Connection Status: {data.get('status')}")
+            print(f"   Connection Status: {data.get('is_connected')}")
             print(f"   Endpoint: {data.get('endpoint')}")
-            print(f"   Connected: {data.get('connected')}")
             
             # Test models endpoint
             models_response = requests.post(f"{BASE_URL}{API_PREFIX}/ollama/models", 
@@ -180,7 +179,7 @@ def test_ollama_integration():
                 llama_available = any(model.get('name') == 'llama3.1:8b' for model in models)
                 print(f"   llama3.1:8b Available: {llama_available}")
                 
-                return data.get('connected') and llama_available, f"Connected: {data.get('connected')}, Models: {len(models)}"
+                return data.get('is_connected') and llama_available, f"Connected: {data.get('is_connected')}, Models: {len(models)}"
             else:
                 return False, f"Models endpoint failed: HTTP {models_response.status_code}"
         else:
