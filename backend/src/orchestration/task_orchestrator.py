@@ -69,6 +69,9 @@ class TaskOrchestrator:
             memory_manager=self.memory_manager
         )
         
+        # 🚀 Integrar DynamicTaskPlanner para planificación inteligente
+        self.dynamic_task_planner = get_dynamic_task_planner()
+        
         self.execution_engine = AdaptiveExecutionEngine(
             tool_manager=tool_manager,
             memory_manager=self.memory_manager,
