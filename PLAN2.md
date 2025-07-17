@@ -406,10 +406,21 @@ async def chat():
 
 **📊 RESULTADO**: El agente ahora evalúa automáticamente su rendimiento después de cada tarea, contribuyendo al aprendizaje y mejora continua.
 
-#### **PASO 3: Integrar DynamicTaskPlanner con TaskOrchestrator** ⏳ **PENDIENTE**
-- **Estado**: ⏳ **PENDIENTE**
-- **Acción**: Modificar `/app/backend/src/tools/task_planner.py` para usar DynamicTaskPlanner
+#### **PASO 3: Integrar DynamicTaskPlanner con TaskOrchestrator** ✅ **COMPLETADO**
+- **Estado**: ✅ **COMPLETADO**
+- **Acción**: Modificar `/app/backend/src/orchestration/task_orchestrator.py` para usar DynamicTaskPlanner
 - **Objetivo**: Que la planificación use LLM para mayor inteligencia
+
+**🔧 FUNCIONALIDADES IMPLEMENTADAS**:
+- **Importación e inicialización**: DynamicTaskPlanner integrado en TaskOrchestrator
+- **Planificación inteligente**: Uso de LLM para crear planes más sofisticados
+- **Configuración flexible**: Habilitación/deshabilitación de planificación dinámica
+- **Fallback robusto**: Respaldo automático a planificación jerárquica si falla
+- **Contexto enriquecido**: Información de herramientas, recursos, y estado del sistema
+- **Threshold configurable**: Umbral para decidir cuándo usar planificación dinámica
+- **Logging detallado**: Tracking de qué planificador se está usando
+
+**📊 RESULTADO**: TaskOrchestrator ahora usa planificación inteligente con LLM como primera opción, mejorando significativamente la calidad de los planes de ejecución.
 
 #### **PASO 4: Integrar ErrorAnalyzer con ReplanningEngine** ⏳ **PENDIENTE**
 - **Estado**: ⏳ **PENDIENTE**
