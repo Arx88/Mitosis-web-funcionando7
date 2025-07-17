@@ -133,47 +133,86 @@ class AutonomousWebNavigation:
             self.current_step = 0
             self.screenshots = []
             
-            # Ejecutar navegación autónoma
-            import threading
-            import concurrent.futures
+            # Ejecutar navegación autónoma con xvfb-run
+            import subprocess
+            import tempfile
+            import json
             
-            def run_autonomous_navigation():
-                # Configurar display para que sea visible
-                os.environ['DISPLAY'] = ':99'
+            # Crear script temporal para ejecutar con xvfb-run
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_script:
+                script_content = f"""
+import asyncio
+import sys
+import os
+sys.path.append('/app/backend/src')
+from tools.autonomous_web_navigation import AutonomousWebNavigation
+import json
+
+async def main():
+    nav = AutonomousWebNavigation()
+    result = await nav._execute_autonomous_navigation(
+        "{task_description}", 
+        "{target_url}", 
+        {user_data}, 
+        {constraints}
+    )
+    print(json.dumps(result))
+
+if __name__ == "__main__":
+    asyncio.run(main())
+"""
+                temp_script.write(script_content)
+                temp_script.flush()
+                
+                # Ejecutar con xvfb-run
+                xvfb_cmd = [
+                    'xvfb-run', '--auto-servernum', '--server-args=-screen 0, 1920x1080x24',
+                    'python', temp_script.name
+                ]
+                
+                self.log_step("🚀 INICIANDO NAVEGACIÓN AUTÓNOMA CON XVFB", "info")
+                self.log_step(f"🎯 Tarea: {task_description}", "info")
                 
                 try:
-                    # Crear un nuevo event loop en el hilo
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                    try:
-                        self.log_step("🚀 INICIANDO NAVEGACIÓN AUTÓNOMA", "info")
-                        self.log_step(f"🎯 Tarea: {task_description}", "info")
+                    result = subprocess.run(
+                        xvfb_cmd,
+                        capture_output=True,
+                        text=True,
+                        timeout=300,  # 5 minutos
+                        cwd='/app/backend'
+                    )
+                    
+                    if result.returncode == 0:
+                        # Parsear resultado JSON
+                        try:
+                            nav_result = json.loads(result.stdout.strip())
+                            self.log_step("✅ NAVEGACIÓN COMPLETADA EXITOSAMENTE", "success")
+                            return nav_result
+                        except json.JSONDecodeError:
+                            self.log_step("❌ Error parseando resultado JSON", "error")
+                            return {
+                                'success': False,
+                                'error': 'Failed to parse navigation result',
+                                'stdout': result.stdout,
+                                'stderr': result.stderr,
+                                'execution_logs': self.execution_logs,
+                                'timestamp': datetime.now().isoformat()
+                            }
+                    else:
+                        self.log_step(f"❌ Error ejecutando navegación: {result.stderr}", "error")
+                        return {
+                            'success': False,
+                            'error': f'Navigation failed: {result.stderr}',
+                            'execution_logs': self.execution_logs,
+                            'timestamp': datetime.now().isoformat()
+                        }
                         
-                        result = loop.run_until_complete(
-                            self._execute_autonomous_navigation(
-                                task_description, target_url, user_data, constraints
-                            )
-                        )
-                        return result
-                    finally:
-                        loop.close()
-                except Exception as e:
-                    self.log_step(f"❌ Error en navegación autónoma: {e}", "error")
-                    return {
-                        'success': False,
-                        'error': str(e),
-                        'execution_logs': self.execution_logs,
-                        'screenshots': self.screenshots,
-                        'timestamp': datetime.now().isoformat()
-                    }
-            
-            # Ejecutar en un hilo separado
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(run_autonomous_navigation)
-                result = future.result(timeout=300)  # 5 minutos timeout
-                return result
+                finally:
+                    # Limpiar script temporal
+                    os.unlink(temp_script.name)
         
         except Exception as e:
+            self.log_step(f"❌ Error general: {str(e)}", "error")
             return {
                 'success': False,
                 'error': str(e),
