@@ -122,6 +122,9 @@ class AutonomousWebNavigation:
             user_data = parameters.get('user_data', {})
             constraints = parameters.get('constraints', {})
             
+            # 🚀 OBTENER TASK_ID PARA WEBSOCKET
+            self.task_id = parameters.get('task_id', config.get('task_id') if config else None)
+            
             if not task_description:
                 return {
                     'success': False,
