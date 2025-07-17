@@ -1,0 +1,510 @@
+{
+  "timestamp": "2025-07-17T05:53:01.811980",
+  "tests": [
+    {
+      "name": "Backend Health Check",
+      "endpoint": "/health",
+      "method": "GET",
+      "status_code": 200,
+      "expected_status": 200,
+      "duration": 0.48,
+      "passed": true,
+      "response": {
+        "raw_response": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/vite.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n    <link href=\"https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap\" rel=\"stylesheet\">\n    <title>Mitosis</title>\n    <style>\n      @keyframes fadeInUp {\n        from {\n          opacity: 0;\n          transform: translateY(20px);\n        }\n        to {\n          opacity: 1;\n          transform: translateY(0);\n        }\n      }\n      \n      @keyframes fadeOutUp {\n        from {\n          opacity: 1;\n          transform: translateY(0);\n        }\n        to {\n          opacity: 0;\n          transform: translateY(-20px);\n        }\n      }\n      \n      .animate-fadeInUp {\n        animation: fadeInUp 0.8s ease-out;\n      }\n      \n      .animate-fadeOutUp {\n        animation: fadeOutUp 0.8s ease-out;\n      }\n      \n      .animate-scroll-up {\n        animation: fadeInUp 0.8s ease-out, fadeOutUp 0.8s ease-out 3s;\n      }\n      \n      .custom-scrollbar {\n        scrollbar-width: thin;\n        scrollbar-color: #4a4a4c #2a2a2a;\n      }\n      \n      .custom-scrollbar::-webkit-scrollbar {\n        width: 8px;\n        height: 8px;\n      }\n      \n      .custom-scrollbar::-webkit-scrollbar-track {\n        background: #2a2a2a;\n        border-radius: 4px;\n      }\n      \n      .custom-scrollbar::-webkit-scrollbar-thumb {\n        background: #4a4a4c;\n        border-radius: 4px;\n      }\n      \n      .custom-scrollbar::-webkit-scrollbar-thumb:hover {\n        background: #5a5a5c;\n      }\n      \n      .terminal-pager {\n        position: relative;\n        background: #1a1a1a;\n        border: 1px solid #333;\n        border-radius: 8px;\n        padding: 16px;\n        font-family: 'Courier New', monospace;\n        color: #e0e0e0;\n        line-height: 1.6;\n        overflow-y: auto;\n        max-height: 80vh;\n      }\n      \n      .terminal-pager h1, .terminal-pager h2, .terminal-pager h3 {\n        color: #4a9eff;\n        font-weight: bold;\n        margin: 20px 0 10px 0;\n      }\n      \n      .terminal-pager h1 {\n        font-size: 1.5em;\n        text-align: center;\n        border-bottom: 2px solid #4a9eff;\n        padding-bottom: 10px;\n      }\n      \n      .terminal-pager h2 {\n        font-size: 1.2em;\n        color: #6eb5ff;\n      }\n      \n      .terminal-pager h3 {\n        font-size: 1.1em;\n        color: #8cc8ff;\n      }\n      \n      .terminal-pager p {\n        margin: 10px 0;\n        text-align: justify;\n      }\n      \n      .terminal-pager strong {\n        color: #ffd700;\n        font-weight: bold;\n      }\n      \n      .terminal-pager ul, .terminal-pager ol {\n        margin: 10px 0;\n        padding-left: 20px;\n      }\n      \n      .terminal-pager li {\n        margin: 5px 0;\n      }\n      \n      .terminal-pager blockquote {\n        border-left: 4px solid #4a9eff;\n        padding-left: 16px;\n        margin: 10px 0;\n        color: #a0a0a0;\n        font-style: italic;\n      }\n      \n      .terminal-pager code {\n        background: #2a2a2a;\n        padding: 2px 6px;\n        border-radius: 4px;\n        color: #ff6b6b;\n        font-family: 'Courier New', monospace;\n      }\n      \n      .terminal-pager pre {\n        background: #2a2a2a;\n        padding: 12px;\n        border-radius: 6px;\n        overflow-x: auto;\n        margin: 10px 0;\n        border: 1px solid #444;\n      }\n      \n      .terminal-pager pre code {\n        background: none;\n        padding: 0;\n        color: #e0e0e0;\n      }\n      \n      .terminal-pager .academic-title {\n        text-align: center;\n        font-size: 1.8em;\n        color: #4a9eff;\n        font-weight: bold;\n        margin: 30px 0;\n        text-transform: uppercase;\n        letter-spacing: 2px;\n      }\n      \n      .terminal-pager .academic-section {\n        margin: 25px 0;\n      }\n      \n      .terminal-pager .academic-section h2 {\n        color: #6eb5ff;\n        font-size: 1.3em;\n        margin-bottom: 15px;\n        text-transform: uppercase;\n        letter-spacing: 1px;\n      }\n      \n      .terminal-pager .academic-meta {\n        text-align: center;\n        color: #888;\n        font-size: 0.9em;\n        margin: 20px 0;\n        padding: 10px;\n        border-top: 1px solid #333;\n        border-bottom: 1px solid #333;\n      }\n      \n      .pager-controls {\n        display: flex;\n        align-items: center;\n        gap: 12px;\n        padding: 8px 16px;\n        background: #2a2a2a;\n        border-radius: 6px;\n        border: 1px solid #444;\n        margin-top: 12px;\n      }\n      \n      .pager-controls button {\n        background: #3a3a3a;\n        border: 1px solid #555;\n        border-radius: 4px;\n        padding: 6px 12px;\n        color: #e0e0e0;\n        cursor: pointer;\n        transition: all 0.2s;\n        display: flex;\n        align-items: center;\n        gap: 6px;\n        font-size: 12px;\n      }\n      \n      .pager-controls button:hover {\n        background: #4a4a4a;\n        border-color: #666;\n      }\n      \n      .pager-controls button:disabled {\n        background: #2a2a2a;\n        border-color: #333;\n        color: #666;\n        cursor: not-allowed;\n      }\n      \n      .pager-controls .file-indicator {\n        flex: 1;\n        text-align: center;\n        color: #888;\n        font-size: 12px;\n      }\n      \n      .pager-controls .progress-bar {\n        flex: 1;\n        height: 4px;\n        background: #333;\n        border-radius: 2px;\n        overflow: hidden;\n        margin: 0 16px;\n      }\n      \n      .pager-controls .progress-fill {\n        height: 100%;\n        background: linear-gradient(90deg, #4a9eff 0%, #6eb5ff 100%);\n        transition: width 0.3s ease;\n        border-radius: 2px;\n      }\n    </style>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/index.tsx\"></script>\n  </body>\n</html>"
+      },
+      "data_sent": null
+    },
+    {
+      "name": "Agent Health Check",
+      "endpoint": "/api/agent/health",
+      "method": "GET",
+      "status_code": 200,
+      "expected_status": 200,
+      "duration": 0.57,
+      "passed": true,
+      "response": {
+        "services": {
+          "database": {
+            "collections": 4,
+            "database": "task_manager",
+            "healthy": true,
+            "size_mb": 0.0,
+            "status": "connected"
+          },
+          "ollama": {
+            "current_model": "llama3.1:8b",
+            "healthy": true,
+            "models_available": 9,
+            "status": "connected",
+            "url": "https://78d08925604a.ngrok-free.app"
+          },
+          "orchestration": {
+            "active_tasks": 0,
+            "avg_execution_time": 0.0,
+            "success_rate": 0.0,
+            "total_tasks": 0
+          },
+          "tools": {
+            "available": 11,
+            "list": [
+              "shell",
+              "web_search",
+              "file_manager",
+              "tavily_search",
+              "deep_research",
+              "comprehensive_research",
+              "enhanced_web_search",
+              "deep_research",
+              "firecrawl",
+              "qstash",
+              "playwright"
+            ]
+          }
+        },
+        "status": "healthy",
+        "timestamp": "2025-07-17T05:53:02.861641",
+        "version": "2.0.0-orchestrated"
+      },
+      "data_sent": null
+    },
+    {
+      "name": "Agent Status Check",
+      "endpoint": "/api/agent/status",
+      "method": "GET",
+      "status_code": 404,
+      "expected_status": 200,
+      "duration": 0.02,
+      "passed": false,
+      "response": {
+        "error": "Endpoint not found"
+      },
+      "data_sent": null
+    },
+    {
+      "name": "Ollama Connection Check",
+      "endpoint": "/api/agent/ollama/check",
+      "method": "POST",
+      "status_code": 200,
+      "expected_status": 200,
+      "duration": 0.48,
+      "passed": true,
+      "response": {
+        "endpoint": "https://78d08925604a.ngrok-free.app",
+        "is_connected": true,
+        "timestamp": "2025-07-17T05:53:03.361865"
+      },
+      "data_sent": {
+        "endpoint": "https://78d08925604a.ngrok-free.app",
+        "model": "llama3.1:8b"
+      }
+    },
+    {
+      "name": "Ollama Models List",
+      "endpoint": "/api/agent/ollama/models",
+      "method": "POST",
+      "status_code": 200,
+      "expected_status": 200,
+      "duration": 0.8,
+      "passed": true,
+      "response": {
+        "endpoint": "https://78d08925604a.ngrok-free.app",
+        "models": [
+          "llava:latest",
+          "tinyllama:latest",
+          "llama3.1:8b",
+          "magistral:24b",
+          "qwen3:32b",
+          "deepseek-r1:32b",
+          "MFDoom/deepseek-r1-tool-calling:32b",
+          "deepseek-r1:8b",
+          "llama3:latest"
+        ],
+        "timestamp": "2025-07-17T05:53:04.158868"
+      },
+      "data_sent": {
+        "endpoint": "https://78d08925604a.ngrok-free.app",
+        "model": "llama3.1:8b"
+      }
+    },
+    {
+      "name": "Memory System Status",
+      "endpoint": "/api/memory/status",
+      "method": "GET",
+      "status_code": 404,
+      "expected_status": 200,
+      "duration": 0.02,
+      "passed": false,
+      "response": {
+        "error": "Endpoint not found"
+      },
+      "data_sent": null
+    },
+    {
+      "name": "Memory Analytics",
+      "endpoint": "/api/memory/analytics",
+      "method": "GET",
+      "status_code": 404,
+      "expected_status": 200,
+      "duration": 0.08,
+      "passed": false,
+      "response": {
+        "error": "Endpoint not found"
+      },
+      "data_sent": null
+    },
+    {
+      "name": "Episode Storage",
+      "endpoint": "/api/memory/store_episode",
+      "method": "POST",
+      "status_code": 405,
+      "expected_status": 200,
+      "duration": 0.02,
+      "passed": false,
+      "response": {
+        "raw_response": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n"
+      },
+      "data_sent": {
+        "content": "User asked about artificial intelligence applications in healthcare",
+        "context": "Healthcare AI discussion",
+        "metadata": {
+          "topic": "healthcare",
+          "type": "question"
+        }
+      }
+    },
+    {
+      "name": "Knowledge Storage",
+      "endpoint": "/api/memory/store_knowledge",
+      "method": "POST",
+      "status_code": 405,
+      "expected_status": 200,
+      "duration": 0.08,
+      "passed": false,
+      "response": {
+        "raw_response": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n"
+      },
+      "data_sent": {
+        "content": "AI in healthcare can improve diagnosis accuracy by up to 95%",
+        "category": "healthcare",
+        "metadata": {
+          "source": "medical_research",
+          "confidence": 0.9
+        }
+      }
+    },
+    {
+      "name": "Procedure Storage",
+      "endpoint": "/api/memory/store_procedure",
+      "method": "POST",
+      "status_code": 405,
+      "expected_status": 200,
+      "duration": 0.02,
+      "passed": false,
+      "response": {
+        "raw_response": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n"
+      },
+      "data_sent": {
+        "name": "Healthcare AI Analysis",
+        "steps": [
+          "Analyze patient data",
+          "Apply AI models",
+          "Generate recommendations"
+        ],
+        "category": "healthcare",
+        "metadata": {
+          "complexity": "medium",
+          "duration": "30min"
+        }
+      }
+    },
+    {
+      "name": "Semantic Search",
+      "endpoint": "/api/memory/search",
+      "method": "POST",
+      "status_code": 405,
+      "expected_status": 200,
+      "duration": 0.08,
+      "passed": false,
+      "response": {
+        "raw_response": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n"
+      },
+      "data_sent": {
+        "query": "artificial intelligence healthcare applications",
+        "limit": 5
+      }
+    },
+    {
+      "name": "Memory Context Retrieval",
+      "endpoint": "/api/memory/get_context",
+      "method": "POST",
+      "status_code": 405,
+      "expected_status": 200,
+      "duration": 0.02,
+      "passed": false,
+      "response": {
+        "raw_response": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n"
+      },
+      "data_sent": {
+        "query": "healthcare AI discussion",
+        "limit": 10
+      }
+    },
+    {
+      "name": "Memory Compression",
+      "endpoint": "/api/memory/compress_old_memory",
+      "method": "POST",
+      "status_code": 405,
+      "expected_status": 200,
+      "duration": 0.08,
+      "passed": false,
+      "response": {
+        "raw_response": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n"
+      },
+      "data_sent": {
+        "days_threshold": 30,
+        "compression_ratio": 0.5
+      }
+    },
+    {
+      "name": "Memory Export",
+      "endpoint": "/api/memory/export_memory_data",
+      "method": "POST",
+      "status_code": 405,
+      "expected_status": 200,
+      "duration": 0.02,
+      "passed": false,
+      "response": {
+        "raw_response": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n"
+      },
+      "data_sent": {
+        "format": "json",
+        "include_metadata": true
+      }
+    },
+    {
+      "name": "Chat Integration with Memory - Healthcare Query",
+      "endpoint": "/api/agent/chat",
+      "method": "POST",
+      "status_code": 200,
+      "expected_status": 200,
+      "duration": 0.28,
+      "passed": true,
+      "response": {
+        "cognitive_mode": "adaptive",
+        "enhanced_processing": true,
+        "execution_status": "enhanced_completed",
+        "memory_used": true,
+        "model": "enhanced-mitosis-agent",
+        "response": "Error: No hay modelos disponibles para procesar la solicitud.",
+        "task_id": "57142395-8ae6-45c6-a24c-94c29365ec3a",
+        "timestamp": "2025-07-17T05:53:04.871403"
+      },
+      "data_sent": {
+        "message": "What are the latest applications of AI in healthcare?",
+        "task_id": "95a9a71d-646e-47cf-b74a-d79e50b6753e"
+      }
+    },
+    {
+      "name": "Chat Integration with Memory - Follow-up Question",
+      "endpoint": "/api/agent/chat",
+      "method": "POST",
+      "status_code": 200,
+      "expected_status": 200,
+      "duration": 0.2,
+      "passed": true,
+      "response": {
+        "cognitive_mode": "adaptive",
+        "enhanced_processing": true,
+        "execution_status": "enhanced_completed",
+        "memory_used": true,
+        "model": "enhanced-mitosis-agent",
+        "response": "Error: No hay modelos disponibles para procesar la solicitud.",
+        "task_id": "9f30f505-6c35-4eab-9a9e-17485b386d12",
+        "timestamp": "2025-07-17T05:53:05.073237"
+      },
+      "data_sent": {
+        "message": "Can you elaborate on the diagnostic accuracy improvements?",
+        "task_id": "20040b56-8b47-457a-9405-2ff815c3a2cc"
+      }
+    },
+    {
+      "name": "Chat Integration with Memory - Technical Question",
+      "endpoint": "/api/agent/chat",
+      "method": "POST",
+      "status_code": 200,
+      "expected_status": 200,
+      "duration": 0.22,
+      "passed": true,
+      "response": {
+        "cognitive_mode": "adaptive",
+        "enhanced_processing": true,
+        "execution_status": "enhanced_completed",
+        "memory_used": true,
+        "model": "enhanced-mitosis-agent",
+        "response": "Error: No hay modelos disponibles para procesar la solicitud.",
+        "task_id": "7d38bcfe-2a07-45b3-87de-9c0c3ea0dced",
+        "timestamp": "2025-07-17T05:53:05.290481"
+      },
+      "data_sent": {
+        "message": "How do machine learning algorithms improve medical imaging?",
+        "task_id": "5949e852-813b-4bc0-8b3a-a1b3ce59676e"
+      }
+    },
+    {
+      "name": "Memory Persistence Test 1/4",
+      "endpoint": "/api/agent/chat",
+      "method": "POST",
+      "status_code": 200,
+      "expected_status": 200,
+      "duration": 0.3,
+      "passed": true,
+      "response": {
+        "cognitive_mode": "adaptive",
+        "enhanced_processing": true,
+        "execution_status": "enhanced_completed",
+        "memory_used": true,
+        "model": "enhanced-mitosis-agent",
+        "response": "Error: No hay modelos disponibles para procesar la solicitud.",
+        "task_id": "5f8dfe59-6262-4308-ba46-58d3058a79b7",
+        "timestamp": "2025-07-17T05:53:05.590730"
+      },
+      "data_sent": {
+        "message": "I'm interested in learning about renewable energy technologies",
+        "task_id": "b3a06c77-15f2-4442-89b3-dd27f180d382"
+      }
+    },
+    {
+      "name": "Memory Persistence Test 2/4",
+      "endpoint": "/api/agent/chat",
+      "method": "POST",
+      "status_code": 200,
+      "expected_status": 200,
+      "duration": 0.26,
+      "passed": true,
+      "response": {
+        "cognitive_mode": "adaptive",
+        "enhanced_processing": true,
+        "execution_status": "enhanced_completed",
+        "memory_used": true,
+        "model": "enhanced-mitosis-agent",
+        "response": "Error: No hay modelos disponibles para procesar la solicitud.",
+        "task_id": "08e506b9-4678-488e-aeec-8728a5c5a0de",
+        "timestamp": "2025-07-17T05:53:07.848668"
+      },
+      "data_sent": {
+        "message": "What are the most promising solar energy innovations?",
+        "task_id": "47c2d462-32fe-457f-b1a2-1896a9635289"
+      }
+    },
+    {
+      "name": "Memory Persistence Test 3/4",
+      "endpoint": "/api/agent/chat",
+      "method": "POST",
+      "status_code": 200,
+      "expected_status": 200,
+      "duration": 0.25,
+      "passed": true,
+      "response": {
+        "cognitive_mode": "adaptive",
+        "enhanced_processing": true,
+        "execution_status": "enhanced_completed",
+        "memory_used": true,
+        "model": "enhanced-mitosis-agent",
+        "response": "Error: No hay modelos disponibles para procesar la solicitud.",
+        "task_id": "0ff4c5c0-3053-4edd-abd1-40cf20a2daa5",
+        "timestamp": "2025-07-17T05:53:10.099501"
+      },
+      "data_sent": {
+        "message": "How do wind turbines compare to solar panels in efficiency?",
+        "task_id": "234fd8bd-7b1d-4f8f-9b8e-ed04028ab456"
+      }
+    },
+    {
+      "name": "Memory Persistence Test 4/4",
+      "endpoint": "/api/agent/chat",
+      "method": "POST",
+      "status_code": 200,
+      "expected_status": 200,
+      "duration": 0.18,
+      "passed": true,
+      "response": {
+        "cognitive_mode": "adaptive",
+        "enhanced_processing": true,
+        "execution_status": "enhanced_completed",
+        "memory_used": true,
+        "model": "enhanced-mitosis-agent",
+        "response": "Error: No hay modelos disponibles para procesar la solicitud.",
+        "task_id": "ecb251d8-c171-4d10-b403-8b639fb9388b",
+        "timestamp": "2025-07-17T05:53:12.284239"
+      },
+      "data_sent": {
+        "message": "What role does energy storage play in renewable systems?",
+        "task_id": "823521d0-e4e2-40af-b1dc-298b6f7a40a2"
+      }
+    },
+    {
+      "name": "WebSearch Integration",
+      "endpoint": "/api/agent/chat",
+      "method": "POST",
+      "status_code": 500,
+      "expected_status": 200,
+      "duration": 0.3,
+      "passed": false,
+      "response": {
+        "error": "Error en b\u00fasqueda web: https://duckduckgo.com/ 202 Ratelimit"
+      },
+      "data_sent": {
+        "message": "[WebSearch] Latest developments in quantum computing 2025",
+        "task_id": "ee6ba9c9-2a96-4433-9011-84a2c969f76b"
+      }
+    },
+    {
+      "name": "Invalid Endpoint",
+      "endpoint": "/api/invalid/endpoint",
+      "method": "GET",
+      "status_code": 404,
+      "expected_status": 404,
+      "duration": 0.02,
+      "passed": true,
+      "response": {
+        "error": "Endpoint not found"
+      },
+      "data_sent": null
+    },
+    {
+      "name": "Invalid Chat Data",
+      "endpoint": "/api/agent/chat",
+      "method": "POST",
+      "status_code": 400,
+      "expected_status": 400,
+      "duration": 0.02,
+      "passed": true,
+      "response": {
+        "error": "Message is required"
+      },
+      "data_sent": {
+        "invalid_field": "test"
+      }
+    },
+    {
+      "name": "Invalid Memory Data",
+      "endpoint": "/api/memory/store_episode",
+      "method": "POST",
+      "status_code": 405,
+      "expected_status": 400,
+      "duration": 0.03,
+      "passed": false,
+      "response": {
+        "raw_response": "<!doctype html>\n<html lang=en>\n<title>405 Method Not Allowed</title>\n<h1>Method Not Allowed</h1>\n<p>The method is not allowed for the requested URL.</p>\n"
+      },
+      "data_sent": {
+        "invalid": "data"
+      }
+    }
+  ],
+  "summary": {
+    "total": 25,
+    "passed": 13,
+    "failed": 12
+  }
+}
