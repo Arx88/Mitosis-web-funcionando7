@@ -750,7 +750,7 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                                 'youtube', 'amazon', 'ebay', 'wikipedia', 'stackoverflow',
                                 'web scraping', 'scraping', 'captura', 'capture', 'screenshot'
                             ]):
-                                tools_to_use.append('playwright')
+                                tools_to_use.append('autonomous_web_navigation')
                             
                             # Si no detecta herramientas específicas, usar por defecto según el contexto
                             if not tools_to_use:
