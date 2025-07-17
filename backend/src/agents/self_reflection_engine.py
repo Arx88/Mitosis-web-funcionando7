@@ -24,7 +24,7 @@ import uuid
 import statistics
 from collections import defaultdict
 
-from src.tools.task_planner import ExecutionPlan, TaskStep
+from src.tools.task_planner import ExecutionPlan, TaskStep, ExecutionStrategy
 from src.tools.execution_engine import ExecutionStrategy
 from src.tools.execution_engine import ExecutionContext, StepExecution, StepStatus
 from src.memory.advanced_memory_manager import AdvancedMemoryManager
