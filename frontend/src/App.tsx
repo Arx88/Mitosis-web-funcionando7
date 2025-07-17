@@ -757,13 +757,12 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                             }
                           }
                         }}
-                        onDeepSearch={async (inputText) => {
-                          console.log('🔬 DeepSearch clicked with text:', inputText);
-                          if (inputText && inputText.trim().length > 0) {
-                            const searchQuery = `[DeepResearch] ${inputText.trim()}`;
+                        onDeepSearch={async (searchQuery) => {
+                          console.log('🔬 DeepSearch received query:', searchQuery);
+                          if (searchQuery && searchQuery.trim().length > 0) {
                             console.log('🔬 Creating DeepSearch task with query:', searchQuery);
                             
-                            // PASO 1: Crear la tarea INMEDIATAMENTE con prefijo DeepResearch
+                            // PASO 1: Crear la tarea INMEDIATAMENTE con prefijo DeepResearch (ya incluido en searchQuery)
                             const newTask = await createTask(searchQuery);
                             console.log('✅ DeepSearch task created:', newTask.id);
                             
