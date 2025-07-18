@@ -1779,13 +1779,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               if (!isDuplicate) {
                 uniqueMessages.push(message);
               } else {
-                console.log('🐛 DEBUG: Duplicate message detected:', message);
+                console.log('🐛 DEBUG: Duplicate message detected and removed:', message.content.substring(0, 50) + '...');
               }
               
               return uniqueMessages;
             }, [] as Message[]);
             
-            console.log('🐛 DEBUG: Unique messages after deduplication:', uniqueMessages);
+            console.log('🐛 DEBUG: Unique messages after deduplication:', uniqueMessages.length, 'out of', messages.length);
             
             return uniqueMessages;
           })().map(message => (
