@@ -804,6 +804,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             
             onUpdateMessages(updatedMessages);
           }
+        } else {
+          // Handle regular messages without files
+          if (onUpdateMessages) {
+            const updatedMessages = [...messages, agentMessage];
+            onUpdateMessages(updatedMessages);
+          }
         }
 
         // Handle DeepResearch completion
