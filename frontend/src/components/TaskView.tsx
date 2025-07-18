@@ -277,12 +277,14 @@ export const TaskView: React.FC<TaskViewProps> = ({
     }
   }, [showFilesModal]);
 
-  // Nuevo: Polling del progreso del plan
+  // Nuevo: Polling del progreso del plan Y actualización de tiempo
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
+    let timeUpdateInterval: NodeJS.Timeout;
     
     // Solo hacer polling si la tarea tiene un plan y no está completada
     if (task.plan && task.plan.length > 0 && task.status !== 'completed') {
+      // Polling del progreso del plan cada 3 segundos
       intervalId = setInterval(async () => {
         try {
           const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
@@ -309,6 +311,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
             // Parar polling si está completado
             if (planData.status === 'completed') {
               clearInterval(intervalId);
+              clearInterval(timeUpdateInterval);
               logToTerminal('✅ Plan completado exitosamente', 'success');
             }
           }
@@ -316,6 +319,32 @@ export const TaskView: React.FC<TaskViewProps> = ({
           console.error('Error fetching plan progress:', error);
         }
       }, 3000); // Polling cada 3 segundos
+      
+      // Actualización del tiempo en tiempo real cada segundo
+      timeUpdateInterval = setInterval(async () => {
+        try {
+          const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+          const response = await fetch(`${backendUrl}/api/agent/update-task-time/${task.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          
+          if (response.ok) {
+            const timeData = await response.json();
+            
+            // Actualizar tarea con tiempo actualizado
+            const updatedTask = {
+              ...task,
+              plan: timeData.plan
+            };
+            
+            onUpdateTask(updatedTask);
+          }
+        } catch (error) {
+          console.error('Error updating task time:', error);
+        }
+      }, 1000); // Actualizar tiempo cada segundo
+    }
     }
     
     return () => {
