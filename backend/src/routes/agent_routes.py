@@ -569,12 +569,7 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
             'task_type': 'simple_execution'
         }
 
-# Keep the old function temporarily for compatibility
-def generate_structured_plan(message: str, task_id: str) -> dict:
-    """
-    Temporary wrapper - calls the new function
-    """
-    return generate_dynamic_plan_with_ai(message, task_id)
+
 
 def generate_clean_response(ollama_response: str, tool_results: list) -> str:
     """
