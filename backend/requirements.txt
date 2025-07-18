@@ -105,3 +105,5 @@ pyarrow_hotfix
 multidict>=6.0.0
 attrs>=25.0.0
 yarl>=1.20.0
+propcache
+overrides
