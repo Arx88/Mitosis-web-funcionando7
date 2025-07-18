@@ -598,7 +598,7 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                           if (searchQuery && searchQuery.trim().length > 0) {
                             console.log('🌐 Creating WebSearch task with query:', searchQuery);
                             
-                            // PASO 1: Crear la tarea INMEDIATAMENTE con prefijo WebSearch (ya incluido en searchQuery)
+                            // PASO 1: Crear la tarea INMEDIATAMENTE
                             const newTask = await createTask(searchQuery);
                             console.log('✅ WebSearch task created:', newTask.id);
                             
@@ -610,7 +610,7 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                               timestamp: new Date()
                             };
                             
-                            // PASO 3: Actualizar la tarea CON el mensaje del usuario INMEDIATAMENTE
+                            // PASO 3: Actualizar la tarea CON el mensaje del usuario
                             const basicTaskUpdate = {
                               ...newTask,
                               messages: [userMessage],
@@ -624,72 +624,8 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                             
                             console.log('✅ WebSearch task updated in sidebar');
                             
-                            // PASO 4: Procesar backend de manera asíncrona
-                            try {
-                              const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
-                              
-                              const response = await fetch(`${backendUrl}/api/agent/chat`, {
-                                method: 'POST',
-                                headers: {
-                                  'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                  message: searchQuery,
-                                  context: { task_id: newTask.id }
-                                })
-                              });
-
-                              if (response.ok) {
-                                const chatResponse = await response.json();
-                                console.log('✅ WebSearch backend response received:', chatResponse);
-                                
-                                // Crear mensaje del agente
-                                const agentMessage = {
-                                  id: `msg-${Date.now() + 1}`,
-                                  content: chatResponse.response || "Búsqueda web completada exitosamente.",
-                                  sender: 'agent' as const,
-                                  timestamp: new Date(),
-                                  searchData: chatResponse.search_data
-                                };
-                                
-                                // Actualizar tarea con respuesta del agente
-                                const finalTaskUpdate = {
-                                  ...basicTaskUpdate,
-                                  messages: [userMessage, agentMessage],
-                                  status: 'completed' as const,
-                                  progress: 100
-                                };
-                                
-                                setTasks(prev => prev.map(task => 
-                                  task.id === newTask.id ? finalTaskUpdate : task
-                                ));
-                                
-                                console.log('✅ WebSearch task completed and updated in sidebar');
-                                
-                              } else {
-                                console.error('❌ WebSearch backend error:', response.status);
-                                const errorTaskUpdate = {
-                                  ...basicTaskUpdate,
-                                  status: 'failed' as const,
-                                  progress: 0
-                                };
-                                
-                                setTasks(prev => prev.map(task => 
-                                  task.id === newTask.id ? errorTaskUpdate : task
-                                ));
-                              }
-                            } catch (error) {
-                              console.error('💥 Error in WebSearch:', error);
-                              const errorTaskUpdate = {
-                                ...basicTaskUpdate,
-                                status: 'failed' as const,
-                                progress: 0
-                              };
-                              
-                              setTasks(prev => prev.map(task => 
-                                task.id === newTask.id ? errorTaskUpdate : task
-                              ));
-                            }
+                            // NOTA: El backend será llamado desde ChatInterface.tsx
+                            // NO duplicar la llamada aquí
                           }
                         }}
                         onDeepSearch={async (searchQuery) => {
