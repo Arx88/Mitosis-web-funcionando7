@@ -676,7 +676,7 @@ def chat():
             # MODO AGENTE CON PLANIFICACIÓN ESTRUCTURADA
             logger.info(f"🤖 Detected task mode - generating structured plan")
             
-            # PASO 2: Generar plan estructurado PRIMERO
+            # PASO 2: Generar plan dinámico PRIMERO usando IA
             structured_plan = generate_dynamic_plan_with_ai(message, task_id)
             
             # PASO 3: Generar respuesta usando Ollama con contexto de herramientas
