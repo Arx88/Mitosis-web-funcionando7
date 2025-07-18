@@ -235,35 +235,34 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     console.log('✅ CHAT STATE RESET COMPLETE - Terminal cleared');
   };
 
-  // Effect to reset state when new task is created 
+  // Effect to reset state when new task is created (optimized)
   useEffect(() => {
     if (isNewTask) {
+      console.log('🔄 NEW TASK DETECTED - Resetting chat state');
       resetChatState();
-      // Call the task reset function to reset terminal/computer state for new tasks
       if (onTaskReset) {
         onTaskReset();
       }
     }
-  }, [isNewTask]); // Removed onTaskReset from dependencies to prevent infinite loop
+  }, [isNewTask]); // Only dependency is isNewTask
 
-  // Effect to reset state when task ID changes (switching between tasks) or when no task is active
+  // Effect to reset state when task ID changes (optimized)
   useEffect(() => {
     console.log('🔄 CHAT: dataId changed to:', dataId);
     resetChatState();
-    // Call the task reset function to reset terminal/computer state
     if (onTaskReset) {
       onTaskReset();
     }
-  }, [dataId]); // Removed onTaskReset from dependencies to prevent infinite loop
+  }, [dataId]); // Only dependency is dataId
 
-  // Optimized scroll effect
+  // Optimized scroll effect with debounce
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       scrollToBottom();
     }, 100);
     
     return () => clearTimeout(timeoutId);
-  }, [messages.length]); // Solo depender de la longitud de mensajes
+  }, [messages.length]); // Only depends on messages length
 
   // Función para obtener progreso real del backend
   const pollDeepResearchProgress = async (taskId: string) => {
