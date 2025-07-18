@@ -270,6 +270,13 @@ export const TaskView: React.FC<TaskViewProps> = ({
     }
   };
 
+  // Cargar archivos cuando se abre el modal
+  React.useEffect(() => {
+    if (showFilesModal) {
+      getTaskFiles();
+    }
+  }, [showFilesModal]);
+
   // Nuevo: Polling del progreso del plan
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
