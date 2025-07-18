@@ -101,9 +101,11 @@ def is_casual_conversation(message: str) -> bool:
 def get_ollama_service():
     """Obtener servicio de Ollama"""
     try:
-        return current_app.ollama_service
+        service = current_app.ollama_service
+        logger.info(f"✅ Ollama service found: {service}")
+        return service
     except AttributeError:
-        logger.error("Ollama service not available")
+        logger.error("❌ Ollama service not available")
         return None
 
 def get_tool_manager():
