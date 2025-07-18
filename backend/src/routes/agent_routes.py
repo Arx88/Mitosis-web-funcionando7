@@ -1101,6 +1101,7 @@ def get_task_plan(task_id):
                 'completed_steps': completed_steps,
                 'total_steps': total_steps,
                 'message': plan_data.get('message', ''),
+                'final_result': plan_data.get('final_result'),  # Incluir resultado final
                 'updated_at': datetime.now().isoformat()
             })
         else:
@@ -1112,6 +1113,42 @@ def get_task_plan(task_id):
         logger.error(f"Error getting task plan: {str(e)}")
         return jsonify({
             'error': f'Error obteniendo plan: {str(e)}'
+        }), 500
+
+@agent_bp.route('/get-final-result/<task_id>', methods=['GET'])
+def get_final_result(task_id):
+    """Obtiene el resultado final de una tarea completada"""
+    try:
+        if task_id in active_task_plans:
+            plan_data = active_task_plans[task_id]
+            
+            if plan_data['status'] == 'completed' and 'final_result' in plan_data:
+                return jsonify({
+                    'task_id': task_id,
+                    'status': 'completed',
+                    'final_result': plan_data['final_result'],
+                    'plan_summary': {
+                        'total_steps': len(plan_data['plan']),
+                        'completed_steps': sum(1 for step in plan_data['plan'] if step['completed']),
+                        'task_type': plan_data.get('task_type', 'general'),
+                        'complexity': plan_data.get('complexity', 'media')
+                    }
+                })
+            else:
+                return jsonify({
+                    'task_id': task_id,
+                    'status': plan_data['status'],
+                    'message': 'Tarea aún no completada o sin resultado final'
+                })
+        else:
+            return jsonify({
+                'error': 'Task not found'
+            }), 404
+    
+    except Exception as e:
+        logger.error(f"Error getting final result: {str(e)}")
+        return jsonify({
+            'error': f'Error obteniendo resultado final: {str(e)}'
         }), 500
 
 @agent_bp.route('/health', methods=['GET'])
