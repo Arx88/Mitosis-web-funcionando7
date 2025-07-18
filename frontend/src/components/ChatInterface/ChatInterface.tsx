@@ -47,6 +47,7 @@ export interface ChatInterfaceProps {
   'data-id'?: string;
   onUpdateMessages?: (messages: Message[]) => void;
   onLogToTerminal?: (message: string, type?: 'info' | 'success' | 'error') => void;
+  onTaskPlanGenerated?: (plan: any) => void;
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({
