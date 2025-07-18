@@ -475,7 +475,11 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 sender: msg.sender === 'agent' ? 'assistant' : msg.sender,
                 timestamp: msg.timestamp
               }))} 
-              onSendMessage={undefined} // Let ChatInterface handle this with its own API-calling function 
+              onSendMessage={(message) => {
+                console.log('🚀 TaskView: Sending message:', message);
+                // ChatInterface.tsx manejará toda la comunicación con el backend
+                // Solo necesitamos una función placeholder que no interfiera
+              }}
               isTyping={isTyping} 
               assistantName="Agente" 
               placeholder="Describe tu tarea..." 
