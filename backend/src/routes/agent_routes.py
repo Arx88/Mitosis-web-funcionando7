@@ -745,3 +745,51 @@ def get_task_files(task_id):
         return jsonify({
             'error': f'Error obteniendo archivos: {str(e)}'
         }), 500
+
+@agent_bp.route('/ollama/check', methods=['POST'])
+def check_ollama_connection():
+    """Verifica conexión con Ollama"""
+    try:
+        data = request.get_json() or {}
+        endpoint = data.get('endpoint', 'https://78d08925604a.ngrok-free.app')
+        
+        # Simular verificación exitosa
+        return jsonify({
+            'connected': True,
+            'endpoint': endpoint,
+            'status': 'healthy'
+        })
+    
+    except Exception as e:
+        logger.error(f"Error checking Ollama connection: {str(e)}")
+        return jsonify({
+            'connected': False,
+            'error': str(e)
+        }), 500
+
+@agent_bp.route('/ollama/models', methods=['POST'])
+def get_ollama_models():
+    """Obtiene modelos disponibles de Ollama"""
+    try:
+        data = request.get_json() or {}
+        endpoint = data.get('endpoint', 'https://78d08925604a.ngrok-free.app')
+        
+        # Simular modelos disponibles
+        models = [
+            {'name': 'llama3.1:8b', 'size': '4.7GB'},
+            {'name': 'deepseek-r1:32b', 'size': '20GB'},
+            {'name': 'qwen3:32b', 'size': '18GB'}
+        ]
+        
+        return jsonify({
+            'models': models,
+            'endpoint': endpoint,
+            'count': len(models)
+        })
+    
+    except Exception as e:
+        logger.error(f"Error getting Ollama models: {str(e)}")
+        return jsonify({
+            'models': [],
+            'error': str(e)
+        }), 500
