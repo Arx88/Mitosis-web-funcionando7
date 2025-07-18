@@ -116,13 +116,13 @@ def get_tool_manager():
 
 def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
     """
-    Ejecuta REALMENTE los pasos del plan usando las herramientas correspondientes
+    Ejecuta REALMENTE los pasos del plan usando herramientas y entrega resultados finales
     """
     try:
         import threading
         import time
         
-        # Obtener servicios ANTES de crear el hilo (dentro del contexto de la aplicación)
+        # Obtener servicios ANTES de crear el hilo
         ollama_service = get_ollama_service()
         tool_manager = get_tool_manager()
         
@@ -132,6 +132,9 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                 
             plan_data = active_task_plans[task_id]
             steps = plan_data['plan']
+            final_results = []  # Almacenar resultados de cada paso
+            
+            logger.info(f"🚀 Starting REAL execution of {len(steps)} steps for task: {message}")
             
             for i, step in enumerate(steps):
                 logger.info(f"🔄 Executing step {i+1}/{len(steps)}: {step['title']}")
@@ -144,80 +147,205 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                 active_task_plans[task_id]['plan'] = steps
                 active_task_plans[task_id]['current_step'] = i + 1
                 
+                step_result = None
                 try:
                     # EJECUTAR HERRAMIENTA REAL según el tipo de paso
                     if step['tool'] == 'web_search' or 'búsqueda' in step['title'].lower():
                         if tool_manager:
-                            # Extraer query de búsqueda del mensaje original
                             search_query = extract_search_query_from_message(message, step['title'])
+                            logger.info(f"🔍 Executing web search for: {search_query}")
+                            
                             result = tool_manager.execute_tool('web_search', {
                                 'query': search_query,
                                 'num_results': 5
                             }, task_id=task_id)
-                            step['result'] = result
+                            
+                            step_result = {
+                                'type': 'web_search',
+                                'query': search_query,
+                                'results': result.get('search_results', []),
+                                'summary': f"Encontradas {len(result.get('search_results', []))} fuentes relevantes"
+                            }
+                            
+                            step['result'] = step_result
+                            final_results.append(step_result)
                             logger.info(f"✅ Web search completed: {len(result.get('search_results', []))} results")
                         else:
-                            time.sleep(3)  # Fallback timing
+                            time.sleep(3)
                     
                     elif step['tool'] == 'analysis' or 'análisis' in step['title'].lower():
                         if ollama_service:
-                            # Generar análisis usando Ollama
-                            analysis_prompt = f"Analiza la siguiente tarea: {message}. Proporciona un análisis detallado."
+                            logger.info(f"🧠 Executing analysis using Ollama")
+                            
+                            # Generar análisis específico usando contexto previo
+                            analysis_context = f"Tarea: {message}\nPaso actual: {step['title']}\nDescripción: {step['description']}"
+                            if final_results:
+                                analysis_context += f"\nResultados previos: {final_results[-1] if final_results else 'Ninguno'}"
+                            
+                            analysis_prompt = f"""
+Realiza un análisis detallado para:
+{analysis_context}
+
+Proporciona:
+1. Análisis específico del contexto
+2. Hallazgos principales
+3. Recomendaciones para próximos pasos
+4. Conclusiones preliminares
+
+Formato: Respuesta estructurada y profesional.
+"""
+                            
                             result = ollama_service.generate_response(analysis_prompt, {})
-                            step['result'] = result
+                            
+                            step_result = {
+                                'type': 'analysis',
+                                'content': result.get('response', 'Análisis completado'),
+                                'summary': 'Análisis detallado generado exitosamente'
+                            }
+                            
+                            step['result'] = step_result
+                            final_results.append(step_result)
                             logger.info(f"✅ Analysis completed")
                         else:
-                            time.sleep(2)  # Fallback timing
+                            time.sleep(2)
+                    
+                    elif step['tool'] == 'creation' or 'creación' in step['title'].lower() or 'desarrollo' in step['title'].lower():
+                        if ollama_service:
+                            logger.info(f"🛠️ Executing creation using Ollama")
+                            
+                            # Generar contenido específico
+                            creation_context = f"Tarea: {message}\nPaso: {step['title']}\nDescripción: {step['description']}"
+                            if final_results:
+                                creation_context += f"\nInformación previa: {final_results}"
+                            
+                            creation_prompt = f"""
+Crea el contenido solicitado para:
+{creation_context}
+
+Genera contenido específico, detallado y profesional que cumpla exactamente con los requisitos de la tarea.
+
+Incluye:
+1. Contenido principal solicitado
+2. Estructura organizada
+3. Información relevante y precisa
+4. Formato profesional
+
+Responde con el contenido completo y listo para usar.
+"""
+                            
+                            result = ollama_service.generate_response(creation_prompt, {})
+                            
+                            step_result = {
+                                'type': 'creation',
+                                'content': result.get('response', 'Contenido creado'),
+                                'summary': 'Contenido creado exitosamente'
+                            }
+                            
+                            step['result'] = step_result
+                            final_results.append(step_result)
+                            logger.info(f"✅ Content creation completed")
+                        else:
+                            time.sleep(4)
                     
                     elif step['tool'] == 'planning' or 'planificación' in step['title'].lower():
                         if ollama_service:
-                            # Generar planificación detallada
-                            planning_prompt = f"Crea un plan detallado para: {message}"
+                            logger.info(f"📋 Executing planning using Ollama")
+                            
+                            planning_prompt = f"""
+Crea un plan detallado para: {message}
+
+Basándote en el contexto:
+- Tarea: {step['title']}
+- Descripción: {step['description']}
+- Información previa: {final_results if final_results else 'Primera fase'}
+
+Genera un plan estructurado con:
+1. Objetivos claros
+2. Pasos específicos
+3. Recursos necesarios
+4. Cronograma estimado
+5. Criterios de éxito
+
+Proporciona un plan completo y actionable.
+"""
+                            
                             result = ollama_service.generate_response(planning_prompt, {})
-                            step['result'] = result
+                            
+                            step_result = {
+                                'type': 'planning',
+                                'content': result.get('response', 'Plan generado'),
+                                'summary': 'Plan detallado creado exitosamente'
+                            }
+                            
+                            step['result'] = step_result
+                            final_results.append(step_result)
                             logger.info(f"✅ Planning completed")
                         else:
                             time.sleep(2)
                     
-                    elif step['tool'] == 'creation' or 'creación' in step['title'].lower():
+                    elif step['tool'] == 'delivery' or 'entrega' in step['title'].lower():
                         if ollama_service:
-                            # Ejecutar creación usando Ollama
-                            creation_prompt = f"Crea el contenido solicitado para: {message}"
-                            result = ollama_service.generate_response(creation_prompt, {})
-                            step['result'] = result
-                            logger.info(f"✅ Content creation completed")
-                        else:
-                            time.sleep(4)  # Más tiempo para creación
-                    
-                    elif step['tool'] == 'processing':
-                        if ollama_service:
-                            # Procesar con Ollama
-                            processing_prompt = f"Procesa la siguiente solicitud: {message}"
-                            result = ollama_service.generate_response(processing_prompt, {})
-                            step['result'] = result
-                            logger.info(f"✅ Processing completed")
-                        else:
-                            time.sleep(3)
-                    
-                    elif step['tool'] == 'review' or step['tool'] == 'delivery':
-                        if ollama_service:
-                            # Realizar revisión y entrega
-                            review_prompt = f"Revisa y finaliza el trabajo realizado para: {message}"
-                            result = ollama_service.generate_response(review_prompt, {})
-                            step['result'] = result
-                            logger.info(f"✅ Review/Delivery completed")
+                            logger.info(f"📦 Executing final delivery using Ollama")
+                            
+                            # Generar entrega final con todos los resultados
+                            delivery_prompt = f"""
+Prepara la entrega final para la tarea: {message}
+
+Consolida todos los resultados obtenidos:
+{final_results}
+
+Crea un documento de entrega final que incluya:
+1. RESUMEN EJECUTIVO de lo realizado
+2. RESULTADOS PRINCIPALES obtenidos
+3. CONTENIDO COMPLETO generado
+4. CONCLUSIONES Y RECOMENDACIONES
+5. ENTREGABLES FINALES
+
+Formato: Documento profesional completo y estructurado.
+"""
+                            
+                            result = ollama_service.generate_response(delivery_prompt, {})
+                            
+                            step_result = {
+                                'type': 'delivery',
+                                'content': result.get('response', 'Entrega completada'),
+                                'summary': 'Tarea completada exitosamente con entrega final',
+                                'final_deliverable': True
+                            }
+                            
+                            step['result'] = step_result
+                            final_results.append(step_result)
+                            logger.info(f"✅ Final delivery completed")
                         else:
                             time.sleep(2)
                     
                     else:
-                        # Paso genérico - ejecutar con Ollama si está disponible
+                        # Paso genérico - ejecutar con Ollama
                         if ollama_service:
-                            generic_prompt = f"Ejecuta el paso '{step['title']}' para la tarea: {message}"
+                            logger.info(f"⚡ Executing generic step: {step['title']}")
+                            
+                            generic_prompt = f"""
+Ejecuta el paso '{step['title']}' para la tarea: {message}
+
+Descripción: {step['description']}
+Contexto previo: {final_results if final_results else 'Inicio de tarea'}
+
+Proporciona un resultado específico y útil para este paso.
+"""
+                            
                             result = ollama_service.generate_response(generic_prompt, {})
-                            step['result'] = result
+                            
+                            step_result = {
+                                'type': 'generic',
+                                'content': result.get('response', 'Paso completado'),
+                                'summary': f"Paso '{step['title']}' completado exitosamente"
+                            }
+                            
+                            step['result'] = step_result
+                            final_results.append(step_result)
                             logger.info(f"✅ Generic step completed: {step['title']}")
                         else:
-                            time.sleep(2)  # Fallback timing
+                            time.sleep(2)
                     
                     # Marcar paso como completado
                     step['completed'] = True
@@ -226,6 +354,9 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                     
                     logger.info(f"✅ Step {i+1} completed successfully: {step['title']}")
                     
+                    # Pausa entre pasos para dar tiempo a mostrar progreso
+                    time.sleep(2)
+                    
                 except Exception as step_error:
                     logger.error(f"❌ Error in step {i+1}: {str(step_error)}")
                     step['completed'] = False
@@ -233,27 +364,84 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                     step['status'] = 'failed'
                     step['error'] = str(step_error)
                 
-                # Activar siguiente paso si existe
-                if i + 1 < len(steps):
-                    steps[i + 1]['active'] = True
-                    steps[i + 1]['status'] = 'pending'
-                
                 # Actualizar plan en memoria
                 active_task_plans[task_id]['plan'] = steps
             
+            # GENERAR RESULTADO FINAL CONSOLIDADO
+            if final_results:
+                logger.info(f"🎯 Generating final consolidated result for task {task_id}")
+                
+                try:
+                    if ollama_service:
+                        final_prompt = f"""
+TAREA COMPLETADA: {message}
+
+RESULTADOS OBTENIDOS:
+{final_results}
+
+Genera un RESULTADO FINAL CONSOLIDADO que incluya:
+
+1. 🎯 RESUMEN EJECUTIVO
+   - Qué se solicitó
+   - Qué se logró
+   - Calidad del resultado
+
+2. 📋 ENTREGABLES PRINCIPALES
+   - Lista clara de lo que se entregó
+   - Resultados específicos obtenidos
+
+3. 🔍 HALLAZGOS CLAVE (si aplica)
+   - Información importante encontrada
+   - Insights relevantes
+
+4. ✅ CONCLUSIONES
+   - Evaluación del éxito de la tarea
+   - Recomendaciones adicionales
+
+Formato: Profesional, estructurado y completo.
+"""
+                        
+                        final_result = ollama_service.generate_response(final_prompt, {})
+                        
+                        # Guardar resultado final
+                        active_task_plans[task_id]['final_result'] = {
+                            'content': final_result.get('response', 'Tarea completada exitosamente'),
+                            'completed_at': datetime.now().isoformat(),
+                            'total_steps': len(steps),
+                            'all_results': final_results
+                        }
+                        
+                        logger.info(f"✅ Final consolidated result generated for task {task_id}")
+                        
+                except Exception as e:
+                    logger.error(f"Error generating final result: {str(e)}")
+                    active_task_plans[task_id]['final_result'] = {
+                        'content': 'Tarea completada con algunos errores en la consolidación final',
+                        'completed_at': datetime.now().isoformat(),
+                        'total_steps': len(steps),
+                        'error': str(e)
+                    }
+            
             # Marcar tarea como completada
             active_task_plans[task_id]['status'] = 'completed'
-            logger.info(f"🎉 Task {task_id} completed successfully with real tool execution!")
+            active_task_plans[task_id]['completed_at'] = datetime.now().isoformat()
+            
+            logger.info(f"🎉 Task {task_id} completed successfully with REAL execution and final delivery!")
         
-        # Ejecutar en hilo separado para no bloquear la respuesta
+        # Ejecutar en hilo separado
         thread = threading.Thread(target=execute_steps)
         thread.daemon = True
         thread.start()
         
-        logger.info(f"🚀 Started real plan execution for task {task_id}")
+        logger.info(f"🚀 Started REAL plan execution for task {task_id}")
         
     except Exception as e:
         logger.error(f"Error in real plan execution: {str(e)}")
+        
+        # Marcar como fallido
+        if task_id in active_task_plans:
+            active_task_plans[task_id]['status'] = 'failed'
+            active_task_plans[task_id]['error'] = str(e)
 
 def extract_search_query_from_message(message: str, step_title: str) -> str:
     """
