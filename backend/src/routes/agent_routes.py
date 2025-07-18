@@ -278,21 +278,133 @@ def extract_search_query_from_message(message: str, step_title: str) -> str:
     except Exception:
         return message[:50]  # Fallback seguro
 
-def generate_structured_plan(message: str, task_id: str) -> dict:
+def generate_dynamic_plan_with_ai(message: str, task_id: str) -> dict:
     """
-    Genera un plan estructurado para mostrar en el frontend
+    Genera un plan dinámico y específico usando IA para analizar la tarea
+    """
+    try:
+        # Obtener servicio de Ollama para generar plan dinámico
+        ollama_service = get_ollama_service()
+        
+        if not ollama_service:
+            # Fallback a plan genérico si no hay Ollama
+            return generate_fallback_plan(message, task_id)
+        
+        # Prompt para generar plan específico
+        plan_prompt = f"""
+Analiza la siguiente tarea y crea un plan de acción específico y detallado:
+
+TAREA: "{message}"
+
+Genera un plan con 3-5 pasos específicos para completar esta tarea. Para cada paso, incluye:
+1. Título específico y descriptivo
+2. Descripción clara de lo que se hará
+3. Herramienta/método a usar
+4. Tiempo estimado realista
+
+Responde en formato JSON con esta estructura:
+{{
+  "task_type": "tipo_de_tarea",
+  "complexity": "alta/media/baja",
+  "estimated_total_time": "tiempo_total_estimado",
+  "steps": [
+    {{
+      "id": "step_1",
+      "title": "Título específico del paso",
+      "description": "Descripción detallada de lo que se hará",
+      "tool": "herramienta_a_usar",
+      "estimated_time": "tiempo_estimado",
+      "priority": "alta/media/baja"
+    }}
+  ]
+}}
+
+Asegúrate de que cada paso sea específico a la tarea "{message}" y no genérico.
+"""
+        
+        # Generar plan usando Ollama
+        response = ollama_service.generate_response(plan_prompt, {})
+        
+        if response.get('error'):
+            logger.warning(f"Error generating AI plan: {response['error']}")
+            return generate_fallback_plan(message, task_id)
+        
+        try:
+            import json
+            import re
+            
+            # Extraer JSON del response
+            response_text = response['response']
+            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            
+            if json_match:
+                plan_data = json.loads(json_match.group())
+                
+                # Convertir a formato frontend
+                plan_steps = []
+                for i, step in enumerate(plan_data.get('steps', [])):
+                    plan_steps.append({
+                        'id': f"step_{i+1}",
+                        'title': step.get('title', f'Paso {i+1}'),
+                        'description': step.get('description', 'Procesando...'),
+                        'tool': step.get('tool', 'processing'),
+                        'status': 'pending',
+                        'estimated_time': step.get('estimated_time', '1 minuto'),
+                        'completed': False,
+                        'active': i == 0,  # Solo el primer paso activo
+                        'priority': step.get('priority', 'media')
+                    })
+                
+                # Guardar plan en memoria global
+                active_task_plans[task_id] = {
+                    'plan': plan_steps,
+                    'current_step': 0,
+                    'status': 'executing',
+                    'created_at': datetime.now().isoformat(),
+                    'start_time': datetime.now(),
+                    'message': message,
+                    'task_type': plan_data.get('task_type', 'general'),
+                    'complexity': plan_data.get('complexity', 'media')
+                }
+                
+                logger.info(f"✅ Generated AI-powered plan for task {task_id} with {len(plan_steps)} steps")
+                
+                return {
+                    'steps': plan_steps,
+                    'total_steps': len(plan_steps),
+                    'estimated_total_time': plan_data.get('estimated_total_time', '2-5 minutos'),
+                    'task_type': plan_data.get('task_type', 'dynamic_ai_generated'),
+                    'complexity': plan_data.get('complexity', 'media')
+                }
+                
+            else:
+                logger.warning("No JSON found in AI response, using fallback")
+                return generate_fallback_plan(message, task_id)
+                
+        except (json.JSONDecodeError, KeyError) as e:
+            logger.warning(f"Error parsing AI plan response: {e}")
+            return generate_fallback_plan(message, task_id)
+            
+    except Exception as e:
+        logger.error(f"Error generating AI plan: {str(e)}")
+        return generate_fallback_plan(message, task_id)
+
+def generate_fallback_plan(message: str, task_id: str) -> dict:
+    """
+    Genera un plan de fallback cuando la IA no está disponible
     """
     try:
         # Analizar el mensaje para determinar el tipo de tarea
         message_lower = message.lower()
         
-        # Determinar pasos basados en el tipo de tarea
-        if any(word in message_lower for word in ['crear', 'generar', 'escribir', 'desarrollar']):
+        # Determinar pasos basados en el tipo de tarea - MÁS ESPECÍFICO
+        if any(word in message_lower for word in ['crear', 'generar', 'escribir', 'desarrollar', 'diseñar', 'construir']):
+            task_subject = message.replace('crear', '').replace('generar', '').replace('escribir', '').replace('desarrollar', '').strip()
             plan_steps = [
                 {
                     'id': 'step_1',
-                    'title': 'Análisis de requisitos',
-                    'description': 'Analizar los requisitos y especificaciones de la tarea',
+                    'title': f'Análisis de requisitos para: {task_subject}',
+                    'description': f'Analizar requisitos específicos para {task_subject}',
                     'tool': 'analysis',
                     'status': 'pending',
                     'estimated_time': '30 segundos',
@@ -301,8 +413,8 @@ def generate_structured_plan(message: str, task_id: str) -> dict:
                 },
                 {
                     'id': 'step_2',
-                    'title': 'Planificación',
-                    'description': 'Crear estructura y planificar el desarrollo',
+                    'title': f'Planificación detallada',
+                    'description': f'Crear estructura y planificar desarrollo de {task_subject}',
                     'tool': 'planning',
                     'status': 'pending',
                     'estimated_time': '45 segundos',
@@ -311,8 +423,8 @@ def generate_structured_plan(message: str, task_id: str) -> dict:
                 },
                 {
                     'id': 'step_3',
-                    'title': 'Desarrollo/Creación',
-                    'description': 'Ejecutar la creación del contenido solicitado',
+                    'title': f'Desarrollo/Creación',
+                    'description': f'Ejecutar creación de {task_subject}',
                     'tool': 'creation',
                     'status': 'pending',
                     'estimated_time': '2-3 minutos',
@@ -321,21 +433,22 @@ def generate_structured_plan(message: str, task_id: str) -> dict:
                 },
                 {
                     'id': 'step_4',
-                    'title': 'Revisión y entrega',
-                    'description': 'Revisar y entregar el resultado final',
-                    'tool': 'review',
+                    'title': 'Revisión y entrega final',
+                    'description': f'Revisar y entregar {task_subject} completado',
+                    'tool': 'delivery',
                     'status': 'pending',
                     'estimated_time': '30 segundos',
                     'completed': False,
                     'active': False
                 }
             ]
-        elif any(word in message_lower for word in ['buscar', 'investigar', 'analizar']):
+        elif any(word in message_lower for word in ['buscar', 'investigar', 'analizar', 'estudiar', 'revisar']):
+            research_topic = message.replace('buscar', '').replace('investigar', '').replace('analizar', '').replace('información sobre', '').strip()
             plan_steps = [
                 {
                     'id': 'step_1',
-                    'title': 'Definición de búsqueda',
-                    'description': 'Definir parámetros y alcance de la investigación',
+                    'title': f'Definición de búsqueda sobre: {research_topic}',
+                    'description': f'Definir parámetros de investigación para {research_topic}',
                     'tool': 'search_definition',
                     'status': 'pending',
                     'estimated_time': '20 segundos',
@@ -344,8 +457,8 @@ def generate_structured_plan(message: str, task_id: str) -> dict:
                 },
                 {
                     'id': 'step_2',
-                    'title': 'Búsqueda de información',
-                    'description': 'Buscar y recopilar información relevante',
+                    'title': f'Búsqueda de información',
+                    'description': f'Buscar información relevante sobre {research_topic}',
                     'tool': 'web_search',
                     'status': 'pending',
                     'estimated_time': '1-2 minutos',
@@ -354,8 +467,8 @@ def generate_structured_plan(message: str, task_id: str) -> dict:
                 },
                 {
                     'id': 'step_3',
-                    'title': 'Análisis de datos',
-                    'description': 'Analizar y procesar la información encontrada',
+                    'title': f'Análisis de datos encontrados',
+                    'description': f'Analizar información sobre {research_topic}',
                     'tool': 'data_analysis',
                     'status': 'pending',
                     'estimated_time': '1 minuto',
@@ -364,8 +477,8 @@ def generate_structured_plan(message: str, task_id: str) -> dict:
                 },
                 {
                     'id': 'step_4',
-                    'title': 'Síntesis y presentación',
-                    'description': 'Sintetizar resultados y presentar conclusiones',
+                    'title': f'Síntesis y presentación',
+                    'description': f'Sintetizar resultados sobre {research_topic}',
                     'tool': 'synthesis',
                     'status': 'pending',
                     'estimated_time': '45 segundos',
@@ -374,43 +487,37 @@ def generate_structured_plan(message: str, task_id: str) -> dict:
                 }
             ]
         else:
-            # Plan genérico para otras tareas
+            # Plan más específico para otras tareas
             plan_steps = [
                 {
                     'id': 'step_1',
-                    'title': 'Análisis de tarea',
-                    'description': None,  # No mostrar descripción
+                    'title': f'Análisis de: "{message}"',
+                    'description': f'Analizar y comprender la tarea: {message}',
                     'tool': 'analysis',
                     'status': 'pending',
-                    'estimated_time': None,  # No mostrar tiempo estimado
-                    'elapsed_time': '0:01 Pensando',  # Mostrar tiempo transcurrido
+                    'estimated_time': '30 segundos',
                     'completed': False,
-                    'active': True,
-                    'start_time': None  # Para tracking del tiempo real
+                    'active': True
                 },
                 {
                     'id': 'step_2',
-                    'title': 'Procesamiento',
-                    'description': None,
+                    'title': f'Procesamiento de la solicitud',
+                    'description': f'Procesar y ejecutar: {message}',
                     'tool': 'processing',
                     'status': 'pending',
-                    'estimated_time': None,
-                    'elapsed_time': '0:00 Esperando',
+                    'estimated_time': '1-2 minutos',
                     'completed': False,
-                    'active': False,
-                    'start_time': None
+                    'active': False
                 },
                 {
                     'id': 'step_3',
-                    'title': 'Entrega de resultados',
-                    'description': None,
+                    'title': f'Entrega de resultados',
+                    'description': f'Entregar resultados finales para: {message}',
                     'tool': 'delivery',
                     'status': 'pending',
-                    'estimated_time': None,
-                    'elapsed_time': '0:00 Esperando',
+                    'estimated_time': '30 segundos',
                     'completed': False,
-                    'active': False,
-                    'start_time': None
+                    'active': False
                 }
             ]
         
@@ -461,6 +568,13 @@ def generate_structured_plan(message: str, task_id: str) -> dict:
             'estimated_total_time': '1 minuto',
             'task_type': 'simple_execution'
         }
+
+# Keep the old function temporarily for compatibility
+def generate_structured_plan(message: str, task_id: str) -> dict:
+    """
+    Temporary wrapper - calls the new function
+    """
+    return generate_dynamic_plan_with_ai(message, task_id)
 
 def generate_clean_response(ollama_response: str, tool_results: list) -> str:
     """
