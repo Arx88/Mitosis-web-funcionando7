@@ -235,6 +235,36 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           } : undefined
         };
 
+        // Si hay un plan estructurado, notificar al TaskView para que lo actualice
+        if (response.plan && response.plan.steps && onUpdateMessages) {
+          console.log('📋 Structured plan received:', response.plan);
+          
+          // Crear mensaje especial para indicar que se generó un plan
+          const planNotificationMessage: Message = {
+            id: `plan-${Date.now()}`,
+            content: `📋 **Plan generado y ejecutándose**\n\nHe creado un plan de ${response.plan.total_steps} pasos para tu tarea. Puedes ver el progreso en la sección "Plan de Acción".`,
+            sender: 'assistant',
+            timestamp: new Date(response.timestamp),
+            status: {
+              type: 'success',
+              message: `Plan de ${response.plan.total_steps} pasos generado`
+            }
+          };
+
+          // Actualizar mensajes con plan
+          const messagesWithPlan = [...messages, userMessage, planNotificationMessage, agentMessage];
+          onUpdateMessages(messagesWithPlan);
+          
+          // Notificar al TaskView sobre el plan generado
+          if (onTaskPlanGenerated) {
+            onTaskPlanGenerated(response.plan);
+          }
+        } else {
+          // Update messages normalmente si no hay plan
+          const updatedMessages = [...messages, userMessage, agentMessage];
+          onUpdateMessages(updatedMessages);
+        }
+
         // Update messages if callback provided
         if (onUpdateMessages) {
           const currentMessages = [...messages, userMessage];
