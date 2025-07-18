@@ -112,3 +112,6 @@ tenacity
 aiosignal
 opentelemetry-api
 opentelemetry-sdk
+frozenlist==1.7.0
+importlib_metadata==8.7.0
+zipp==3.23.0
