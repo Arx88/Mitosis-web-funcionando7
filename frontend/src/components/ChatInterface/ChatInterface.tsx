@@ -271,88 +271,61 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   // Effect to automatically send initial message to backend when new task is created
   useEffect(() => {
+    // Early return if conditions aren't met
+    if (!dataId || messages.length !== 1 || messages[0].sender !== 'user' || isLoading) {
+      return;
+    }
+
+    // Check if already processed
+    if (processedTasksRef.current.has(dataId)) {
+      return;
+    }
+
+    // Mark as processed immediately
+    processedTasksRef.current.add(dataId);
+    
     const sendInitialMessage = async () => {
-      // Only proceed if we have a dataId, exactly one message, it's from user, and haven't processed this task yet
-      if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading && !processedTasksRef.current.has(dataId) && onUpdateMessages) {
-        console.log('🚀 CHAT: Sending initial message to backend for task:', dataId, 'Message:', messages[0].content);
-        console.log('🚀 CHAT: Current messages array:', messages);
+      console.log('🚀 CHAT: Sending initial message to backend for task:', dataId);
+      
+      try {
+        setIsLoading(true);
         
-        // Mark this task as processed IMMEDIATELY to prevent duplicate calls
-        processedTasksRef.current.add(dataId);
+        // Send the user's message to the backend
+        const response = await agentAPI.sendMessage(messages[0].content, { task_id: dataId });
         
-        try {
-          setIsLoading(true);
+        if (response && response.response) {
+          console.log('✅ CHAT: Received response from backend');
           
-          // Send the user's message to the backend
-          const response = await agentAPI.sendMessage(messages[0].content, { task_id: dataId });
-          
-          if (response && response.response) {
-            console.log('✅ CHAT: Received response from backend:', response.response);
-            
-            // Create assistant response message
-            const assistantMessage: Message = {
-              id: `msg-${Date.now()}`,
-              content: response.response,
-              sender: 'assistant',
-              timestamp: new Date()
-            };
-            
-            console.log('🔄 CHAT: Current messages before adding response:', messages);
-            
-            // Check if this response already exists to prevent duplicates
-            const responseExists = messages.some(msg => 
-              msg.content === response.response && msg.sender === 'assistant'
-            );
-            
-            if (!responseExists) {
-              console.log('✅ CHAT: Adding new response to messages');
-              const newMessages = [...messages, assistantMessage];
-              console.log('🔄 CHAT: New messages array will be:', newMessages);
-              onUpdateMessages(newMessages);
-            } else {
-              console.log('⚠️ CHAT: Response already exists, skipping duplicate');
-            }
-            
-            console.log('✅ CHAT: Initial message processed successfully for task:', dataId);
-          } else {
-            console.warn('⚠️ CHAT: No response received from backend for task:', dataId);
-          }
-        } catch (error) {
-          console.error('❌ CHAT: Error sending initial message for task:', dataId, error);
-          
-          // Create error message
-          const errorMessage: Message = {
+          // Create assistant response message
+          const assistantMessage: Message = {
             id: `msg-${Date.now()}`,
-            content: 'Hubo un error al procesar tu mensaje. Por favor, intenta de nuevo.',
+            content: response.response,
             sender: 'assistant',
             timestamp: new Date()
           };
           
-          // Check if this error already exists to prevent duplicates
-          const errorExists = messages.some(msg => 
-            msg.content === errorMessage.content && msg.sender === 'assistant'
-          );
-          
-          if (!errorExists) {
-            console.log('✅ CHAT: Adding error message to messages');
-            onUpdateMessages([...messages, errorMessage]);
-          } else {
-            console.log('⚠️ CHAT: Error message already exists, skipping duplicate');
-          }
-        } finally {
-          setIsLoading(false);
+          // Add the response (no duplicate check needed since we already marked as processed)
+          onUpdateMessages([...messages, assistantMessage]);
         }
+      } catch (error) {
+        console.error('❌ CHAT: Error sending initial message:', error);
+        
+        const errorMessage: Message = {
+          id: `msg-${Date.now()}`,
+          content: 'Hubo un error al procesar tu mensaje. Por favor, intenta de nuevo.',
+          sender: 'assistant',
+          timestamp: new Date()
+        };
+        
+        onUpdateMessages([...messages, errorMessage]);
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    // Only run when we have exactly 1 message (user message), a dataId, and haven't processed this task
-    if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading && !processedTasksRef.current.has(dataId)) {
-      console.log('🎯 CHAT: useEffect triggered for task:', dataId, 'messages.length:', messages.length);
-      sendInitialMessage();
-    } else {
-      console.log('🚫 CHAT: useEffect skipped. dataId:', dataId, 'messages.length:', messages.length, 'isLoading:', isLoading, 'processed:', processedTasksRef.current.has(dataId));
-    }
-  }, [dataId, messages.length, isLoading]); // Simplified dependencies
+    // Call the function
+    sendInitialMessage();
+  }, [dataId, messages.length]); // Minimal dependencies
 
   // Función para obtener progreso real del backend
   const pollDeepResearchProgress = async (taskId: string) => {
