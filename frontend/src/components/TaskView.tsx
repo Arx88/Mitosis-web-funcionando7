@@ -503,6 +503,37 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 };
                 onUpdateTask(updatedTask);
               }}
+              onTaskPlanGenerated={(plan) => {
+                console.log('📋 TaskView: Plan received from ChatInterface:', plan);
+                
+                // Convertir el plan del backend al formato del frontend
+                const frontendPlan = plan.steps.map((step: any) => ({
+                  id: step.id,
+                  title: step.title,
+                  description: step.description,
+                  tool: step.tool,
+                  status: step.status,
+                  estimated_time: step.estimated_time,
+                  completed: step.completed,
+                  active: step.active
+                }));
+                
+                // Actualizar la tarea con el plan generado
+                const updatedTask = {
+                  ...task,
+                  plan: frontendPlan,
+                  status: 'in-progress' as const,
+                  progress: 0 // Iniciar con 0% ya que los pasos no están completados
+                };
+                
+                console.log('📋 TaskView: Updating task with plan:', updatedTask);
+                onUpdateTask(updatedTask);
+                
+                // Opcional: Log al terminal
+                if (logToTerminal) {
+                  logToTerminal(`📋 Plan generado: ${plan.total_steps} pasos definidos`, 'success');
+                }
+              }}
               onTaskReset={() => {
                 // Reset task-specific state when switching tasks - MORE COMPREHENSIVE RESET
                 console.log('🔄 Task reset triggered for task:', task.id);
