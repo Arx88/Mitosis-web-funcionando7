@@ -122,16 +122,16 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
         import threading
         import time
         
+        # Obtener servicios ANTES de crear el hilo (dentro del contexto de la aplicación)
+        ollama_service = get_ollama_service()
+        tool_manager = get_tool_manager()
+        
         def execute_steps():
             if task_id not in active_task_plans:
                 return
                 
             plan_data = active_task_plans[task_id]
             steps = plan_data['plan']
-            
-            # Obtener servicios necesarios
-            ollama_service = get_ollama_service()
-            tool_manager = get_tool_manager()
             
             for i, step in enumerate(steps):
                 logger.info(f"🔄 Executing step {i+1}/{len(steps)}: {step['title']}")
