@@ -309,7 +309,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           // Add the response - this should only happen once per task
           if (onUpdateMessages) {
             console.log('📤 CHAT: Updating messages with assistant response');
-            onUpdateMessages([...messages, assistantMessage]);
+            console.log('📤 CHAT: Current messages:', messages);
+            console.log('📤 CHAT: New assistant message:', assistantMessage);
+            const updatedMessages = [...messages, assistantMessage];
+            console.log('📤 CHAT: Updated messages array:', updatedMessages);
+            onUpdateMessages(updatedMessages);
           }
         }
       } catch (error) {
