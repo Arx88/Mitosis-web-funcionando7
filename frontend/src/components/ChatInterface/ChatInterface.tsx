@@ -696,6 +696,21 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       console.log('🔄 DEBUG: Calling onSendMessage with:', processedMessage);
       onSendMessage(processedMessage);
 
+      // Create and add user message to the conversation
+      const userMessage: Message = {
+        id: `msg-${Date.now()}-user`,
+        content: message,
+        sender: 'user',
+        timestamp: new Date()
+      };
+
+      // Add user message to the conversation immediately
+      if (onUpdateMessages) {
+        console.log('📤 DEBUG: Adding user message to conversation');
+        const updatedWithUser = [...messages, userMessage];
+        onUpdateMessages(updatedWithUser);
+      }
+
       // Include memory context if there's active memory
       const context = {
         task_id: dataId,
