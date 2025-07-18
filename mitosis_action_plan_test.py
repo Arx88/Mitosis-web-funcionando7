@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime
 
 # Configuración
-BACKEND_URL = "https://d8909b4a-f8d2-4728-929e-dc6026a958b7.preview.emergentagent.com/api/agent"
+BACKEND_URL = "https://7b222c40-94e7-474d-87ce-a6a7f586e048.preview.emergentagent.com/api/agent"
 
 class MitosisActionPlanTester:
     def __init__(self):
