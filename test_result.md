@@ -1181,6 +1181,112 @@ The backend infrastructure is solid, but the agent functionality is entirely non
 
 ---
 
+## 🚨 **CRITICAL MITOSIS AGENT ISSUES IDENTIFIED** (January 2025) - USER COMPLAINTS CONFIRMED
+
+### ❌ **TESTING REQUEST FULFILLED - CRITICAL DUPLICATION AND INTERACTION PROBLEMS CONFIRMED**
+
+**USER COMPLAINTS TESTED**:
+1. **Duplicated responses**: When starting a conversation with the agent, responses appear duplicated ✅ **CONFIRMED**
+2. **Single interaction only**: After the first interaction, the agent doesn't respond anymore ✅ **CONFIRMED**
+
+**TESTING METHODOLOGY**:
+1. Comprehensive browser automation testing with network monitoring
+2. Console log analysis to identify root causes
+3. Screenshot documentation of duplication issues
+4. API request tracking to confirm interaction problems
+
+**CRITICAL ISSUES IDENTIFIED**:
+
+#### 🚨 **ISSUE 1: MASSIVE RESPONSE DUPLICATION**
+- **Evidence**: Screenshots show identical agent responses appearing twice: "¡Hola! Me alegra verte aquí..." appears duplicated
+- **Root Cause**: Frontend rendering the same response multiple times
+- **Impact**: User sees confusing duplicate responses for every interaction
+
+#### 🚨 **ISSUE 2: SINGLE INTERACTION LIMITATION**
+- **Evidence**: Only 1 API request captured to `/api/agent/chat` despite sending 2 messages
+- **Root Cause**: Second message "¿Cómo estás?" did not trigger backend communication
+- **Impact**: Agent becomes unresponsive after first interaction
+
+#### 🚨 **ISSUE 3: INFINITE RENDER LOOP CATASTROPHE**
+- **Evidence**: Console shows thousands of repeated log entries:
+  - "🚀 TERMINAL: Starting environment initialization" - hundreds of times
+  - "🎯 RENDERING FileUploadModal" - thousands of times  
+  - "🔍 FILE UPLOAD DEBUG" - endless spam
+- **Root Cause**: useEffect dependency issues causing infinite re-renders
+- **Impact**: Application becomes unstable and consumes excessive resources
+
+#### 🚨 **ISSUE 4: COMPONENT LIFECYCLE BREAKDOWN**
+- **Evidence**: Components re-rendering infinitely without proper cleanup
+- **Root Cause**: State management problems causing cascading updates
+- **Impact**: Poor performance, memory leaks, application instability
+
+### 📊 **TESTING RESULTS SUMMARY**:
+
+**NETWORK ANALYSIS**:
+- ✅ 1 API request captured (POST /api/agent/chat)
+- ❌ Second message failed to trigger API call
+- ✅ Backend responded correctly to first request
+- ❌ No subsequent communication possible
+
+**CONSOLE LOG ANALYSIS**:
+- 🚨 **CRITICAL**: Thousands of duplicate log entries detected
+- 🚨 **CRITICAL**: Infinite initialization loops identified
+- 🚨 **CRITICAL**: Component render spam confirmed
+- 🚨 **CRITICAL**: Memory leak patterns observed
+
+**VISUAL EVIDENCE**:
+- 📸 **Screenshot 1**: Shows duplicated "Hola" responses in chat
+- 📸 **Screenshot 2**: Confirms second message input but no response
+- 📸 **Screenshot 3**: Application state after failed second interaction
+
+### 🎯 **ROOT CAUSE ANALYSIS**:
+
+**PRIMARY CAUSES**:
+1. **useEffect Dependency Issues**: Causing infinite re-render loops
+2. **State Management Problems**: Cascading state updates
+3. **Component Lifecycle Mismanagement**: Improper cleanup and initialization
+4. **Event Handler Duplication**: Multiple event listeners causing duplicate responses
+
+**TECHNICAL DEBT**:
+- Frontend architecture needs complete overhaul
+- State management requires refactoring
+- Component lifecycle needs proper implementation
+- Memory leak prevention required
+
+### 🔧 **URGENT FIXES REQUIRED**:
+
+**HIGHEST PRIORITY**:
+1. **Fix Infinite Render Loops**: Review and fix all useEffect dependencies
+2. **Eliminate Response Duplication**: Fix component rendering logic
+3. **Restore Multi-Interaction Capability**: Fix event handling for subsequent messages
+4. **Implement Proper Cleanup**: Add component unmounting and cleanup logic
+
+**MEDIUM PRIORITY**:
+5. **Optimize State Management**: Reduce unnecessary re-renders
+6. **Add Error Boundaries**: Prevent cascading failures
+7. **Implement Debouncing**: Prevent rapid-fire state updates
+
+### 📋 **FINAL VERDICT**:
+
+**STATUS**: ❌ **CRITICAL FAILURE - APPLICATION UNUSABLE**
+
+**USER COMPLAINTS**: ✅ **100% VALIDATED**
+- Duplicated responses: **CONFIRMED**
+- Single interaction limitation: **CONFIRMED**
+- Application instability: **CONFIRMED**
+
+**RECOMMENDATION**: 🚨 **IMMEDIATE FRONTEND REFACTORING REQUIRED**
+
+The Mitosis agent frontend has critical architectural issues that make it completely unusable. The infinite render loops, response duplication, and interaction limitations require immediate attention before the application can be considered functional.
+
+**EVIDENCE COLLECTED**:
+- 7 Screenshots documenting the issues
+- Console logs showing thousands of duplicate entries
+- Network analysis confirming API communication problems
+- Detailed technical analysis of root causes
+
+---
+
 ## 🧪 **PRUEBA RÁPIDA DE COMUNICACIÓN FRONTEND-BACKEND COMPLETADA** (Enero 2025)
 
 ### ✅ **TESTING REQUEST FULFILLED - COMUNICACIÓN VERIFICADA COMO FUNCIONAL**
