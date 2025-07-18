@@ -41,6 +41,10 @@ export interface TaskStep {
   title: string;
   completed: boolean;
   active: boolean;
+  description?: string;
+  estimated_time?: string;
+  tool?: string;
+  status?: string;
 }
 
 export interface AgentConfig {
