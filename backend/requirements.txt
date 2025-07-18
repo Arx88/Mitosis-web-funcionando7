@@ -109,3 +109,6 @@ propcache
 overrides
 aiohappyeyeballs
 tenacity
+aiosignal
+opentelemetry-api
+opentelemetry-sdk
