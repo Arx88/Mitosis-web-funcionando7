@@ -125,11 +125,17 @@
 
 ## 🛠️ PRÓXIMOS PASOS
 
-### **INMEDIATO - PROBLEMA IDENTIFICADO**
-1. ✅ **INVESTIGACIÓN COMPLETADA**: El problema está confirmado en el frontend (ChatInterface.tsx)
-2. 🔍 **ANALIZAR CHATINTERFACE.TSX**: Revisar la lógica de renderizado de mensajes
-3. 🔍 **IDENTIFICAR DUPLICACIÓN**: Encontrar dónde se agrega el mensaje dos veces al array
-4. 🔧 **CORREGIR LÓGICA**: Implementar fix para evitar duplicación en el renderizado
+### **INMEDIATO - CRISIS CRÍTICA**
+1. ❌ **REVERTIR CAMBIOS PROBLEMÁTICOS**: Mi intento de solución rompió el sistema
+2. 🚨 **CORREGIR ERROR JAVASCRIPT**: "TypeError: $.map is not a function" en onUpdateMessages
+3. 🔧 **IMPLEMENTAR SOLUCIÓN SIMPLE**: Enfoque más directo sin functional updates complejos
+4. 📊 **REDUCIR API CALLS**: De 3 llamadas a 1 llamada por mensaje
+
+### **LECCIONES APRENDIDAS DEL INTENTO FALLIDO**
+- ❌ **NO usar functional updates** en onUpdateMessages - causa TypeError
+- ❌ **NO agregar lógica compleja** sin entender el tipo de callback esperado
+- ❌ **NO hacer cambios múltiples** a la vez - dificulta debugging
+- ✅ **SÍ usar enfoque incremental** - un cambio a la vez, probar cada cambio
 
 ### **MEDIANO PLAZO**
 1. **Refactor del sistema de mensajes**: Centralizar toda la lógica de manejo de mensajes
