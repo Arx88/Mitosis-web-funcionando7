@@ -270,12 +270,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Effect to automatically send initial message to backend when new task is created
   useEffect(() => {
     const sendInitialMessage = async () => {
-      // Only proceed if we have a dataId, exactly one message, it's from user, and haven't sent initial message yet
-      if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading && !hasInitialMessageSent && onUpdateMessages) {
-        console.log('🚀 CHAT: Sending initial message to backend:', messages[0].content);
+      // Only proceed if we have a dataId, exactly one message, it's from user, and haven't processed this task yet
+      if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading && !processedTasksRef.current.has(dataId) && onUpdateMessages) {
+        console.log('🚀 CHAT: Sending initial message to backend for task:', dataId, 'Message:', messages[0].content);
         
-        // Set the flag IMMEDIATELY to prevent duplicate calls
-        setHasInitialMessageSent(true);
+        // Mark this task as processed IMMEDIATELY to prevent duplicate calls
+        processedTasksRef.current.add(dataId);
         
         try {
           setIsLoading(true);
@@ -297,12 +297,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             // Update messages with the response
             onUpdateMessages([...messages, assistantMessage]);
             
-            console.log('✅ CHAT: Initial message processed successfully');
+            console.log('✅ CHAT: Initial message processed successfully for task:', dataId);
           } else {
-            console.warn('⚠️ CHAT: No response received from backend');
+            console.warn('⚠️ CHAT: No response received from backend for task:', dataId);
           }
         } catch (error) {
-          console.error('❌ CHAT: Error sending initial message:', error);
+          console.error('❌ CHAT: Error sending initial message for task:', dataId, error);
           
           // Create error message
           const errorMessage: Message = {
@@ -319,11 +319,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }
     };
     
-    // Only run when we have exactly 1 message (user message) and a dataId and haven't sent initial message
-    if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading && !hasInitialMessageSent) {
+    // Only run when we have exactly 1 message (user message), a dataId, and haven't processed this task
+    if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading && !processedTasksRef.current.has(dataId)) {
       sendInitialMessage();
     }
-  }, [dataId, messages.length, hasInitialMessageSent]); // Add hasInitialMessageSent to dependencies
+  }, [dataId, messages.length, isLoading]); // Simplified dependencies
 
   // Función para obtener progreso real del backend
   const pollDeepResearchProgress = async (taskId: string) => {
