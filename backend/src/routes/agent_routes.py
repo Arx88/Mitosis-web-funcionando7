@@ -331,18 +331,36 @@ def generate_clean_response(ollama_response: str, tool_results: list) -> str:
         # Limpiar la respuesta de Ollama de cualquier referencia a pasos internos
         clean_response = ollama_response
         
-        # Remover patrones comunes de pasos internos si existen
+        # Remover patrones comunes de pasos internos y planes
         patterns_to_remove = [
             r'Paso \d+:.*?\n',
             r'Step \d+:.*?\n',
             r'\*\*Paso \d+\*\*.*?\n',
             r'\*\*Step \d+\*\*.*?\n',
             r'## Paso \d+.*?\n',
-            r'## Step \d+.*?\n'
+            r'## Step \d+.*?\n',
+            r'\*\*PLAN DE ACCIÓN:\*\*[\s\S]*?(?=\n\*\*[^P]|\n\n\*\*[^P]|$)',
+            r'PLAN DE ACCIÓN:[\s\S]*?(?=\n\*\*[^P]|\n\n\*\*[^P]|$)',
+            r'\*\*Explicación:\*\*[\s\S]*?(?=\n\*\*[^E]|\n\n\*\*[^E]|$)',
+            r'Explicación:[\s\S]*?(?=\n\*\*[^E]|\n\n\*\*[^E]|$)',
+            r'\*\*Herramientas a utilizar:\*\*[\s\S]*?(?=\n\*\*[^H]|\n\n\*\*[^H]|$)',
+            r'Herramientas a utilizar:[\s\S]*?(?=\n\*\*[^H]|\n\n\*\*[^H]|$)',
+            r'\d+\.\s+[^.\n]*?\*\*[^*]*?\*\*[^.\n]*?\.\n',
+            r'^\d+\.\s+.*?\n',
+            r'^\*\s+\*\*.*?\*\*\s*\n',
+            r'^\*\s+.*?\n'
         ]
         
         for pattern in patterns_to_remove:
-            clean_response = re.sub(pattern, '', clean_response, flags=re.IGNORECASE)
+            clean_response = re.sub(pattern, '', clean_response, flags=re.IGNORECASE | re.MULTILINE)
+        
+        # Si después de limpiar queda muy poco contenido, generar una respuesta profesional
+        if len(clean_response.strip()) < 50:
+            clean_response = """Perfecto, he recibido tu solicitud y ya estoy trabajando en ella. 
+
+He generado un plan de acción detallado que puedes ver en la sección "Plan de Acción" del panel lateral. El plan incluye varios pasos que ejecutaré automáticamente para completar tu tarea.
+
+Mientras trabajo en tu solicitud, puedes seguir el progreso en tiempo real a través del panel de monitoreo."""
         
         # Si hay resultados de herramientas, agregar un resumen limpio
         if tool_results:
@@ -379,8 +397,10 @@ def generate_clean_response(ollama_response: str, tool_results: list) -> str:
         
     except Exception as e:
         logger.error(f"Error generating clean response: {str(e)}")
-        # Fallback: devolver respuesta original
-        return ollama_response
+        # Fallback: respuesta estándar
+        return """He recibido tu solicitud y estoy trabajando en ella. 
+
+Puedes ver el progreso del plan de acción en el panel lateral derecho. El plan se ejecutará automáticamente paso a paso."""
 
 @agent_bp.route('/chat', methods=['POST'])
 def chat():
