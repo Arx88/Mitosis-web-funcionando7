@@ -354,25 +354,75 @@ async def chat():
                 
                 # Ejecutar orquestación de manera síncrona con herramientas reales
                 try:
-                    # 🔍 SISTEMA DE CLASIFICACIÓN INTELIGENTE
+                    # 🔍 SISTEMA DE CLASIFICACIÓN INTELIGENTE CORREGIDO
                     def classify_message_mode(message: str) -> str:
                         """
                         Clasificar el mensaje entre 'discussion' y 'agent' según los criterios especificados
                         
-                        Modo Discussion (por defecto):
-                        - Conversaciones casuales: Saludos, preguntas sobre mí, charlas generales
-                        - Tareas simples directas: traducciones, resúmenes cortos, conocimiento general
-                        - Preguntas de búsqueda única: "¿Quién ganó el último mundial?"
-                        
-                        Modo Agent:
-                        - Complejidad explícita: "investiga", "analiza", "crea", "planifica", "compara en una tabla"
-                        - Múltiples pasos implícitos: tareas que requieren varias acciones coordinadas
-                        - Herramientas avanzadas: código, APIs, archivos
-                        - Ejecución programada: tareas en el tiempo
+                        CAMBIO CRÍTICO: Priorizar modo 'agent' para tareas complejas que requieren herramientas
                         """
                         message_lower = message.lower().strip()
                         
-                        # 1. MODO DISCUSIÓN - Conversaciones casuales
+                        # 1. MODO AGENTE - PRIORIDAD ALTA - Tareas que requieren investigación/informes
+                        research_task_patterns = [
+                            # Patrones de investigación y análisis
+                            'informe', 'report', 'reporte', 'investigación', 'research',
+                            'dame un informe', 'give me a report', 'hazme un informe',
+                            'investiga', 'investigate', 'analiza', 'analyze', 'estudia', 'study',
+                            'busca información', 'search information', 'encuentra información',
+                            'corrientes psicológicas', 'psychological currents', 'tendencias',
+                            'todas las', 'all the', 'todos los', 'todas', 'todos',
+                            'completo', 'complete', 'detallado', 'detailed', 'exhaustivo',
+                            'sobre', 'about', 'acerca de', 'regarding', 'en relación a',
+                            'mejores prácticas', 'best practices', 'estado del arte',
+                            'revisión bibliográfica', 'literature review', 'estado actual'
+                        ]
+                        
+                        # Si solicita investigación o informe, SIEMPRE usar modo agente
+                        if any(pattern in message_lower for pattern in research_task_patterns):
+                            return 'agent'
+                        
+                        # 2. MODO AGENTE - PRIORIDAD ALTA - Complejidad explícita
+                        explicit_complexity_patterns = [
+                            'crea', 'create', 'desarrolla', 'develop', 'diseña', 'design',
+                            'compara en una tabla', 'compare in a table', 'haz una comparación',
+                            'elabora', 'elaborate', 'construye', 'build', 'implementa', 'implement',
+                            'presentación', 'presentation', 'documento', 'document',
+                            'busca y filtra', 'find and filter', 'evalúa y compara', 'evaluate and compare',
+                            'procesa y analiza', 'process and analyze', 'recopila', 'collect'
+                        ]
+                        
+                        if any(pattern in message_lower for pattern in explicit_complexity_patterns):
+                            return 'agent'
+                        
+                        # 3. MODO AGENTE - Palabras que indican necesidad de herramientas
+                        tool_indicating_patterns = [
+                            # Búsqueda web necesaria
+                            'busca', 'search', 'encuentra', 'find', 'obtén', 'get',
+                            'descarga', 'download', 'consulta', 'query', 'revisa', 'review',
+                            'verifica', 'verify', 'chequea', 'check', 'valida', 'validate',
+                            
+                            # Operaciones complejas
+                            'lista', 'list', 'listar', 'mostrar', 'show', 'ver', 'view',
+                            'genera', 'generate', 'produce', 'crea', 'create', 'haz', 'make',
+                            
+                            # Navegación web
+                            'navega', 'navigate', 'abre', 'open', 'visita', 'visit',
+                            'accede', 'access', 'entra', 'enter', 'conecta', 'connect'
+                        ]
+                        
+                        if any(pattern in message_lower for pattern in tool_indicating_patterns):
+                            return 'agent'
+                        
+                        # 4. MODO AGENTE - Análisis por longitud y complejidad
+                        word_count = len(message.split())
+                        sentence_count = len([s for s in message.split('.') if s.strip()])
+                        
+                        # Si es muy largo o tiene múltiples oraciones, probablemente necesita herramientas
+                        if word_count > 15 or sentence_count > 1:
+                            return 'agent'
+                        
+                        # 5. MODO DISCUSIÓN - Solo para conversaciones claramente casuales
                         casual_patterns = [
                             # Saludos básicos
                             'hola', 'hi', 'hello', 'buenas', 'buenos días', 'buenas tardes', 'buenas noches',
@@ -393,169 +443,22 @@ async def chat():
                             'está bien', 'ok', 'okay', 'entiendo', 'perfecto', 'genial'
                         ]
                         
-                        # Si es claramente casual, usar modo discusión
-                        if any(pattern in message_lower for pattern in casual_patterns):
+                        # Solo usar modo discusión si es CLARAMENTE casual Y corto
+                        if any(pattern in message_lower for pattern in casual_patterns) and word_count <= 10:
                             return 'discussion'
                         
-                        # 2. MODO DISCUSIÓN - Tareas simples directas
-                        simple_task_patterns = [
-                            # Traducciones
-                            'traduce', 'translate', 'en inglés', 'en español', 'en francés',
-                            'how do you say', 'cómo se dice', 'what does', 'qué significa',
-                            
-                            # Resúmenes simples
-                            'resume', 'summarize', 'resumen de', 'summary of',
-                            
-                            # Definiciones y explicaciones directas
-                            'define', 'explica', 'explain', 'qué es', 'what is', 'cuál es la diferencia',
-                            'diferencia entre', 'difference between'
+                        # 6. MODO DISCUSIÓN - Definiciones muy simples
+                        simple_definition_patterns = [
+                            'qué es', 'what is', 'define', 'explica brevemente', 'explain briefly'
                         ]
                         
-                        # Si es tarea simple Y no tiene indicadores complejos, usar modo discusión
-                        if any(pattern in message_lower for pattern in simple_task_patterns):
-                            # Verificar que no tenga indicadores complejos
-                            complex_indicators = ['investiga', 'analiza', 'compara en una tabla', 'crea un informe']
-                            if not any(indicator in message_lower for indicator in complex_indicators):
-                                return 'discussion'
-                        
-                        # 3. MODO AGENTE - Tareas de listado y consulta de sistema
-                        system_task_patterns = [
-                            # Listado de archivos y directorios
-                            'lista', 'listar', 'mostrar', 'show', 'ver', 'view',
-                            'archivos', 'files', 'directorio', 'directories', 'folders', 'carpetas',
-                            
-                            # Comandos específicos
-                            'ls', 'dir', 'cd', 'pwd', 'find', 'locate', 'which', 'where',
-                            
-                            # Consultas de sistema
-                            'ejecuta', 'execute', 'run', 'comando', 'command',
-                            'procesos', 'processes', 'servicios', 'services', 'estado', 'status'
-                        ]
-                        
-                        # Si es tarea de sistema, usar modo agente
-                        if any(pattern in message_lower for pattern in system_task_patterns):
-                            return 'agent'
-                        
-                        # 4. MODO DISCUSIÓN - Preguntas de búsqueda única
-                        single_search_patterns = [
-                            # Preguntas directas que requieren una sola búsqueda
-                            'quién ganó', 'who won', 'cuál es el', 'what is the', 'cuándo fue', 'when was',
-                            'dónde está', 'where is', 'cuánto cuesta', 'how much', 'precio de', 'price of',
-                            'último', 'latest', 'más reciente', 'most recent', 'actual', 'current'
-                        ]
-                        
-                        # Si es pregunta directa simple, usar modo discusión
-                        if any(pattern in message_lower for pattern in single_search_patterns) and len(message.split()) < 15:
+                        # Solo si es definición simple Y muy corta
+                        if any(pattern in message_lower for pattern in simple_definition_patterns) and word_count <= 8:
                             return 'discussion'
                         
-                        # 5. MODO AGENTE - Complejidad explícita
-                        explicit_complexity_patterns = [
-                            # Análisis y planificación
-                            'investiga', 'investigate', 'analiza', 'analyze', 'planifica', 'plan',
-                            'crea', 'create', 'desarrolla', 'develop', 'diseña', 'design',
-                            'compara en una tabla', 'compare in a table', 'haz una comparación',
-                            'elabora', 'elaborate', 'construye', 'build', 'implementa', 'implement',
-                            
-                            # Informes y documentos
-                            'informe', 'report', 'reporte', 'documento', 'document',
-                            'presentación', 'presentation', 'estudio', 'study', 'investigación',
-                            
-                            # Operaciones complejas
-                            'busca y filtra', 'find and filter', 'evalúa y compara', 'evaluate and compare',
-                            'procesa y analiza', 'process and analyze'
-                        ]
-                        
-                        if any(pattern in message_lower for pattern in explicit_complexity_patterns):
-                            return 'agent'
-                        
-                        # 6. MODO AGENTE - Múltiples pasos implícitos
-                        multi_step_indicators = [
-                            # Palabras que indican múltiples acciones
-                            'luego', 'then', 'después', 'after', 'y luego', 'and then',
-                            'primero', 'first', 'segundo', 'second', 'finalmente', 'finally',
-                            'paso a paso', 'step by step', 'etapa por etapa',
-                            
-                            # Conectores complejos
-                            'y también', 'and also', 'además', 'furthermore', 'por otro lado',
-                            'mientras tanto', 'meanwhile', 'simultáneamente', 'simultaneously'
-                        ]
-                        
-                        if any(pattern in message_lower for pattern in multi_step_indicators):
-                            return 'agent'
-                        
-                        # 7. MODO AGENTE - Herramientas avanzadas
-                        advanced_tools_patterns = [
-                            # Programación y código
-                            'código', 'code', 'script', 'programa', 'program', 'función', 'function',
-                            'ejecuta', 'execute', 'run', 'comando', 'command', 'terminal',
-                            
-                            # Archivos y sistema
-                            'archivo', 'file', 'directorio', 'directory', 'carpeta', 'folder',
-                            'descarga', 'download', 'sube', 'upload', 'instala', 'install',
-                            
-                            # APIs y servicios
-                            'api', 'servicio', 'service', 'integración', 'integration',
-                            'conecta', 'connect', 'sincroniza', 'synchronize',
-                            
-                            # Browser automation - CRÍTICO PARA NAVEGACIÓN Y AUTOMATIZACIÓN
-                            'navega', 'navigate', 'abre', 'open', 'visita', 'visit', 've a', 'go to',
-                            'crea cuenta', 'create account', 'regístrate', 'register', 'sign up',
-                            'inicia sesión', 'log in', 'login', 'accede', 'access',
-                            'llena', 'fill', 'completa', 'complete', 'formulario', 'form',
-                            'haz clic', 'click', 'presiona', 'press', 'selecciona', 'select',
-                            'busca en', 'search in', 'extrae', 'extract', 'obtén', 'get',
-                            'automatiza', 'automate', 'simula', 'simulate', 'interactúa', 'interact',
-                            'twitter', 'facebook', 'instagram', 'linkedin', 'github', 'google',
-                            'youtube', 'amazon', 'ebay', 'wikipedia', 'stackoverflow',
-                            'web scraping', 'scraping', 'captura', 'capture', 'screenshot'
-                        ]
-                        
-                        if any(pattern in message_lower for pattern in advanced_tools_patterns):
-                            return 'agent'
-                        
-                        # 7.1 MODO AGENTE - Patrones específicos de navegación web
-                        web_navigation_patterns = [
-                            # Navegación específica
-                            'navega a', 'navigate to', 'abre la página', 'open page',
-                            've al sitio', 'go to site', 'visita la web', 'visit website',
-                            'entra en', 'enter', 'accede a', 'access to',
-                            
-                            # Acciones web específicas
-                            'crea una cuenta en', 'create account on', 'regístrate en', 'register on',
-                            'inicia sesión en', 'log into', 'busca en google', 'search google',
-                            'compra en', 'buy on', 'descarga de', 'download from',
-                            'sube a', 'upload to', 'publica en', 'post on',
-                            
-                            # Combinaciones comunes
-                            'twitter y crea', 'facebook y registra', 'google y busca',
-                            'youtube y sube', 'instagram y publica', 'linkedin y conecta'
-                        ]
-                        
-                        if any(pattern in message_lower for pattern in web_navigation_patterns):
-                            return 'agent'
-                        
-                        # 8. MODO AGENTE - Ejecución programada
-                        scheduled_patterns = [
-                            # Tiempo futuro
-                            'mañana', 'tomorrow', 'la próxima semana', 'next week',
-                            'todos los días', 'every day', 'cada hora', 'every hour',
-                            'programa', 'schedule', 'automatiza', 'automate',
-                            'recordatorio', 'reminder', 'notificación', 'notification'
-                        ]
-                        
-                        if any(pattern in message_lower for pattern in scheduled_patterns):
-                            return 'agent'
-                        
-                        # 9. ANÁLISIS ADICIONAL - Longitud y complejidad
-                        word_count = len(message.split())
-                        sentence_count = len([s for s in message.split('.') if s.strip()])
-                        
-                        # Si es muy largo o tiene múltiples oraciones, probablemente es complejo
-                        if word_count > 20 or sentence_count > 2:
-                            return 'agent'
-                        
-                        # Por defecto, usar modo discusión
-                        return 'discussion'
+                        # 7. DEFAULT: Usar modo agente para todo lo demás
+                        # CAMBIO CRÍTICO: Ante la duda, usar modo agente para asegurar funcionalidad
+                        return 'agent'
                     
                     # Clasificar el mensaje para determinar el modo
                     message_mode = classify_message_mode(message)
