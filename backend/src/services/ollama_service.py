@@ -16,7 +16,8 @@ class OllamaService:
         self.default_model = "llama3.1:8b"
         self.current_model = None
         self.conversation_history = []
-        self.request_timeout = 30  # Timeout para requests a Ollama
+        self.request_timeout = 90  # Timeout aumentado para planes dinámicos complejos
+        
         
     def is_healthy(self) -> bool:
         """Verificar si Ollama está disponible"""
