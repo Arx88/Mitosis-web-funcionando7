@@ -712,15 +712,88 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         onUpdateMessages(updatedWithUser);
       }
 
-      // Include memory context if there's active memory
-      const context = {
-        task_id: dataId,
-        memory_context: hasActiveMemory ? getActiveMemoryContext() : undefined,
-        previous_messages: messages.slice(-5), // Enviar últimos 5 mensajes como contexto
-        search_mode: searchMode // Enviar modo de búsqueda al backend
-      };
+      // For subsequent messages (not the initial one), we need to handle backend communication
+      // but only if this is NOT the initial message being processed by the effect
+      if (messages.length > 1) {
+        // Include memory context if there's active memory
+        const context = {
+          task_id: dataId,
+          memory_context: hasActiveMemory ? getActiveMemoryContext() : undefined,
+          previous_messages: messages.slice(-5), // Enviar últimos 5 mensajes como contexto
+          search_mode: searchMode // Enviar modo de búsqueda al backend
+        };
 
-      try {
+        try {
+          console.log('🔄 BASIC DEBUG: Sending subsequent message to backend');
+          console.log('🔄 DEBUG: API URL:', `${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/agent/chat`);
+          console.log('🔄 DEBUG: Message:', processedMessage);
+          console.log('🔄 DEBUG: Context:', context);
+          
+          const response: ChatResponse = await agentAPI.sendMessage(processedMessage, context);
+          
+          console.log('✅ BASIC DEBUG: Backend response received');
+          console.log('📋 BASIC DEBUG: Response type:', typeof response);
+          console.log('📋 BASIC DEBUG: Response keys:', Object.keys(response || {}));
+          
+          // Continue with the rest of the response processing logic...
+          // (This is the same logic that was in the original handleSendMessage)
+          
+          // Parse links from response
+          const responseLinks = parseLinksFromText(response.response);
+          const structuredLinks = parseStructuredLinks(response.response);
+          const allLinks = [...responseLinks, ...structuredLinks];
+          
+          // Remove duplicates
+          const uniqueLinks = allLinks.filter((link, index, self) => 
+            index === self.findIndex(l => l.url === link.url)
+          );
+
+          // Create agent message with enhanced data
+          const agentMessage: Message = {
+            id: `msg-${Date.now()}`,
+            content: response.response,
+            sender: 'assistant',
+            timestamp: new Date(response.timestamp),
+            toolResults: response.tool_results,
+            searchData: response.search_data,
+            uploadData: response.upload_data,
+            links: uniqueLinks.length > 0 ? uniqueLinks : undefined,
+            status: response.tool_results.length > 0 ? {
+              type: 'success',
+              message: `Ejecuté ${response.tool_results.length} herramienta(s)`
+            } : undefined
+          };
+
+          // Add agent response to conversation
+          if (onUpdateMessages) {
+            const currentMessages = [...messages, userMessage];
+            const updatedMessages = [...currentMessages, agentMessage];
+            onUpdateMessages(updatedMessages);
+          }
+          
+        } catch (error) {
+          console.error('❌ CHAT: Error sending subsequent message:', error);
+          
+          const errorMessage: Message = {
+            id: `msg-${Date.now()}`,
+            content: 'Hubo un error al procesar tu mensaje. Por favor, intenta de nuevo.',
+            sender: 'assistant',
+            timestamp: new Date()
+          };
+          
+          if (onUpdateMessages) {
+            const currentMessages = [...messages, userMessage];
+            const updatedMessages = [...currentMessages, errorMessage];
+            onUpdateMessages(updatedMessages);
+          }
+        }
+      }
+      
+      // Reset loading state
+      setIsLoading(false);
+      setIsLoadingMessages(false);
+    }
+  };
         console.log('🔄 BASIC DEBUG: Sending message to backend');
         console.log('🔄 DEBUG: API URL:', `${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/agent/chat`);
         console.log('🔄 DEBUG: Message:', processedMessage);
