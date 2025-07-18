@@ -268,16 +268,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   useEffect(() => {
     const sendInitialMessage = async () => {
       // Only proceed if we have a dataId, exactly one message, and it's from user
-      if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading) {
+      if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading && onUpdateMessages) {
         console.log('🚀 CHAT: Sending initial message to backend:', messages[0].content);
         
         try {
           setIsLoading(true);
           
           // Send the user's message to the backend
-          const response = await agentAPI.sendMessage(messages[0].content, dataId);
+          const response = await agentAPI.sendMessage(messages[0].content, { task_id: dataId });
           
           if (response && response.response) {
+            console.log('✅ CHAT: Received response from backend:', response.response);
+            
             // Create assistant response message
             const assistantMessage: Message = {
               id: `msg-${Date.now()}`,
@@ -287,11 +289,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             };
             
             // Update messages with the response
-            if (onUpdateMessages) {
-              onUpdateMessages([...messages, assistantMessage]);
-            }
+            onUpdateMessages([...messages, assistantMessage]);
             
             console.log('✅ CHAT: Initial message processed successfully');
+          } else {
+            console.warn('⚠️ CHAT: No response received from backend');
           }
         } catch (error) {
           console.error('❌ CHAT: Error sending initial message:', error);
@@ -304,9 +306,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             timestamp: new Date()
           };
           
-          if (onUpdateMessages) {
-            onUpdateMessages([...messages, errorMessage]);
-          }
+          onUpdateMessages([...messages, errorMessage]);
         } finally {
           setIsLoading(false);
         }
@@ -314,7 +314,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     };
     
     sendInitialMessage();
-  }, [dataId, messages.length, isLoading, onUpdateMessages]); // Dependencies: dataId, messages length, loading state, and onUpdateMessages
+  }, [dataId, messages.length, isLoading]); // Removed onUpdateMessages from dependencies to avoid re-execution
 
   // Función para obtener progreso real del backend
   const pollDeepResearchProgress = async (taskId: string) => {
