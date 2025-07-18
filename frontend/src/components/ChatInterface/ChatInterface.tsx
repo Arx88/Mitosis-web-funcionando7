@@ -492,7 +492,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const handleSendMessage = async (message: string) => {
+    console.log('🔄 DEBUG: handleSendMessage called with:', message);
+    
     if (message.trim() && !isLoading) {
+      console.log('✅ DEBUG: Conditions met, starting message processing');
       setIsLoading(true);
       setIsLoadingMessages(true);
       
