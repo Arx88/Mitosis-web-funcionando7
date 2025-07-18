@@ -60,7 +60,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   className = '',
   'data-id': dataId,
   onUpdateMessages,
-  onLogToTerminal
+  onLogToTerminal,
+  onTaskPlanGenerated
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
