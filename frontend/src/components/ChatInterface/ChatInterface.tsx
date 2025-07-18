@@ -282,8 +282,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       return;
     }
 
+    // Check if this is the initial message for a new task (not a user-typed message)
+    if (hasInitialMessageSent) {
+      console.log('⚠️ CHAT: Initial message already sent for this session, skipping');
+      return;
+    }
+
     // Mark as processed immediately to prevent duplicate calls
     processedTasksRef.current.add(dataId);
+    setHasInitialMessageSent(true);
     console.log('✅ CHAT: Task marked as processed:', dataId);
     
     const sendInitialMessage = async () => {
