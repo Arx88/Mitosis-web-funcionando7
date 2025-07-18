@@ -936,7 +936,7 @@ def chat():
 @agent_bp.route('/generate-plan', methods=['POST'])
 def generate_plan():
     """
-    Endpoint para generar planes de acción sin ejecutar - SIMPLIFICADO
+    Endpoint para generar planes de acción dinámicos usando IA
     """
     try:
         data = request.get_json()
@@ -948,57 +948,26 @@ def generate_plan():
         # Generar task_id temporal
         task_id = str(uuid.uuid4())
         
-        # Generar plan simple basado en el título
-        simple_plan = [
-            {
-                'id': 'step_1',
-                'title': 'Análisis de la tarea',
-                'description': f'Analizar: "{task_title}"',
-                'tool': 'analysis',
-                'status': 'pending',
-                'estimated_time': '30 segundos',
-                'completed': False,
-                'active': True
-            },
-            {
-                'id': 'step_2',
-                'title': 'Ejecución de la tarea',
-                'description': 'Ejecutar la tarea solicitada',
-                'tool': 'execution',
-                'status': 'pending',
-                'estimated_time': '1-2 minutos',
-                'completed': False,
-                'active': False
-            },
-            {
-                'id': 'step_3',
-                'title': 'Entrega de resultados',
-                'description': 'Entregar los resultados finales',
-                'tool': 'delivery',
-                'status': 'pending',
-                'estimated_time': '30 segundos',
-                'completed': False,
-                'active': False
-            }
-        ]
+        logger.info(f"🚀 Generating dynamic plan for: {task_title}")
         
-        # Guardar plan en memoria
-        active_task_plans[task_id] = {
-            'plan': simple_plan,
-            'current_step': 0,
-            'status': 'ready',
-            'created_at': datetime.now().isoformat()
-        }
+        # Usar la nueva función de generación dinámica con IA
+        dynamic_plan = generate_dynamic_plan_with_ai(task_title, task_id)
+        
+        logger.info(f"✅ Dynamic plan generated with {len(dynamic_plan['steps'])} steps")
         
         return jsonify({
-            'plan': simple_plan,
+            'plan': dynamic_plan['steps'],
             'task_id': task_id,
+            'total_steps': dynamic_plan['total_steps'],
+            'estimated_total_time': dynamic_plan['estimated_total_time'],
+            'task_type': dynamic_plan['task_type'],
+            'complexity': dynamic_plan.get('complexity', 'media'),
             'timestamp': datetime.now().isoformat(),
             'status': 'plan_generated'
         })
     
     except Exception as e:
-        logger.error(f"Error generating plan: {str(e)}")
+        logger.error(f"Error generating dynamic plan: {str(e)}")
         return jsonify({
             'error': f'Error generando plan: {str(e)}'
         }), 500
