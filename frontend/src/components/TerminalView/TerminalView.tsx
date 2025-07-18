@@ -711,6 +711,12 @@ export const TerminalView = ({
       {/* Plan de Acción o Tarea Completada */}
       {plan && plan.length > 0 && (
         <>
+          {/* Debug log */}
+          {console.log('🔍 DEBUG: Plan found with length:', plan.length)}
+          {console.log('🔍 DEBUG: Plan data:', plan)}
+          {console.log('🔍 DEBUG: Completed steps:', plan.filter(s => s.completed).length)}
+          {console.log('🔍 DEBUG: Total steps:', plan.length)}
+          
           {/* Mostrar TaskCompletedUI si todas las tareas están completadas */}
           {plan.filter(s => s.completed).length === plan.length ? (
             <TaskCompletedUI />
