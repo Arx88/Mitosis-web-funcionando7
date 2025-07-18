@@ -323,19 +323,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             timestamp: new Date()
           };
           
-          onUpdateMessages(prevMessages => {
-            // Check if this error already exists to prevent duplicates
-            const errorExists = prevMessages.some(msg => 
-              msg.content === errorMessage.content && msg.sender === 'assistant'
-            );
-            
-            if (errorExists) {
-              console.log('⚠️ CHAT: Error message already exists, skipping duplicate');
-              return prevMessages;
-            }
-            
-            return [...prevMessages, errorMessage];
-          });
+          // Check if this error already exists to prevent duplicates
+          const errorExists = messages.some(msg => 
+            msg.content === errorMessage.content && msg.sender === 'assistant'
+          );
+          
+          if (!errorExists) {
+            console.log('✅ CHAT: Adding error message to messages');
+            onUpdateMessages([...messages, errorMessage]);
+          } else {
+            console.log('⚠️ CHAT: Error message already exists, skipping duplicate');
+          }
         } finally {
           setIsLoading(false);
         }
