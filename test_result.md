@@ -971,6 +971,87 @@ Response: Plan de 4 pasos generado automáticamente
 
 ---
 
+## 🧪 **TESTING ESPECÍFICO DE MEJORAS DEL AGENTE COMPLETADO** (Enero 2025)
+
+### ✅ **TESTING REQUEST FULFILLED - EVALUACIÓN CRÍTICA DE MEJORAS**
+
+**TESTING REQUEST**: Validar que los cambios hechos al agente funcionan correctamente probando exactamente los mismos escenarios que fallaron antes:
+
+1. **Conversación Normal**: "Hola, ¿cómo estás?" - debe seguir funcionando en modo discussion
+2. **Tarea Compleja de Investigación**: "Dame un informe completo sobre todas las corrientes psicológicas principales" - DEBE ACTIVAR EL MODO AGENTE Y USAR WEB_SEARCH
+3. **Validar Herramientas**: Verificar que cuando se solicita investigación, efectivamente se ejecute web_search y se proporcione contenido real
+
+**METODOLOGÍA DE TESTING**:
+1. **Reparación Crítica**: Identificado y solucionado problema crítico de dependencias backend (propcache, aiohappyeyeballs, aiosignal)
+2. **Testing Sistemático**: Pruebas específicas de conversación normal vs tareas complejas
+3. **Monitoreo de Red**: Verificación de comunicación frontend-backend con captura de requests
+4. **Análisis de Contenido**: Evaluación de respuestas genéricas vs contenido específico
+
+**RESULTADOS DE TESTING**:
+
+#### ❌ **PROBLEMA CRÍTICO IDENTIFICADO - COMUNICACIÓN FRONTEND-BACKEND ROTA**:
+- **Backend Status**: ✅ FUNCIONANDO (health endpoint responde correctamente)
+- **Frontend Status**: ✅ FUNCIONANDO (interfaz carga correctamente)
+- **Comunicación**: ❌ **CRÍTICO** - NO se realizan requests API al enviar mensajes
+- **Task Creation**: ❌ **CRÍTICO** - Los mensajes no se procesan como tareas
+- **Network Monitoring**: ❌ **CRÍTICO** - 0 requests capturados durante testing
+
+#### ✅ **INFRAESTRUCTURA BÁSICA - FUNCIONANDO**:
+- **Page Loading**: ✅ PASSED - Página carga con títulos "Bienvenido a Mitosis"
+- **Input Field**: ✅ PASSED - Campo de entrada funcional
+- **UI Elements**: ✅ PASSED - Botones Web, Deep, Adjuntar, Voz disponibles
+- **Backend Health**: ✅ PASSED - `/api/health` responde: `{"status":"healthy","services":{"database":true,"ollama":true,"tools":12}}`
+
+#### ❌ **TESTING DE MEJORAS - FALLIDO POR PROBLEMA TÉCNICO**:
+- **Conversación Normal**: ❌ NO TESTEABLE - Sin comunicación backend
+- **Tarea Compleja**: ❌ NO TESTEABLE - Sin comunicación backend  
+- **WebSearch Usage**: ❌ NO TESTEABLE - Sin comunicación backend
+- **Contenido Específico**: ❌ NO TESTEABLE - Sin comunicación backend
+
+#### 🔧 **REPARACIONES REALIZADAS DURANTE TESTING**:
+- **Dependencias Backend**: ✅ FIXED - Instalado propcache, aiohappyeyeballs, aiosignal
+- **Backend Service**: ✅ FIXED - Backend ahora inicia correctamente
+- **Health Endpoint**: ✅ FIXED - Responde correctamente con status healthy
+
+### 📊 **VEREDICTO FINAL DE TESTING**:
+
+**ESTADO GENERAL**: ❌ **TESTING INCOMPLETO - PROBLEMA TÉCNICO CRÍTICO**
+
+|| Aspecto | Estado | Detalles |
+||---------|--------|----------|
+|| Infraestructura Backend | ✅ FUNCIONANDO | Health endpoint responde, 12 tools disponibles |
+|| Infraestructura Frontend | ✅ FUNCIONANDO | UI carga correctamente, elementos interactivos |
+|| Comunicación Frontend-Backend | ❌ **CRÍTICO** | 0 API requests realizados al enviar mensajes |
+|| Task Processing | ❌ **CRÍTICO** | Mensajes no se procesan como tareas |
+|| Agent Improvements | ❌ NO TESTEABLE | Imposible evaluar sin comunicación backend |
+
+### 🎯 **PROBLEMAS CRÍTICOS IDENTIFICADOS**:
+
+1. **COMUNICACIÓN ROTA**: Frontend no envía requests a `/api/agent/chat` al enviar mensajes
+2. **TASK CREATION FALLIDA**: Los mensajes aparecen en sidebar search pero no se crean tareas reales
+3. **NO PROCESSING**: Sin comunicación backend, imposible evaluar mejoras del agente
+4. **INTEGRATION ISSUE**: Desconexión entre UI y lógica de procesamiento
+
+### 🔧 **RECOMENDACIONES URGENTES PARA MAIN AGENT**:
+
+1. **ALTA PRIORIDAD**: Reparar comunicación frontend-backend en envío de mensajes
+2. **ALTA PRIORIDAD**: Verificar que `onSendMessage` en VanishInput ejecute requests a `/api/agent/chat`
+3. **ALTA PRIORIDAD**: Debuggear por qué no se capturan network requests durante envío
+4. **MEDIA PRIORIDAD**: Una vez reparado, re-ejecutar testing de mejoras del agente
+5. **MEDIA PRIORIDAD**: Verificar configuración de CORS y URLs de backend
+
+### 📸 **EVIDENCIA VISUAL**:
+- **8 Screenshots capturados** mostrando flujo completo de testing
+- **Sidebar search** muestra queries pero sin tareas procesadas
+- **Network monitoring** confirma 0 API requests durante envío de mensajes
+- **Backend health** confirma servicios funcionando correctamente
+
+**CONCLUSIÓN**: Las mejoras del agente NO PUEDEN SER EVALUADAS debido a un problema técnico crítico en la comunicación frontend-backend. El backend está funcionando correctamente, pero el frontend no está enviando los mensajes para procesamiento. Se requiere reparación urgente de la integración antes de poder validar las mejoras del agente.
+
+**TESTING STATUS**: ❌ **INCOMPLETO - REQUIERE REPARACIÓN TÉCNICA**
+
+---
+
 ## 🎯 **CRITICAL CRASH ISSUE RESOLVED** (Julio 2025)
 
 ### ✅ **ROOT CAUSE IDENTIFIED AND FIXED**
