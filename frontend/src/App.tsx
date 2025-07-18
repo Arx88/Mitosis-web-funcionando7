@@ -151,7 +151,7 @@ export function App() {
   };
 
   // Función para manejar logs de inicialización
-  const handleInitializationLog = (message: string, type: 'info' | 'success' | 'error') => {
+  const handleInitializationLog = useCallback((message: string, type: 'info' | 'success' | 'error') => {
     const logEntry = {
       message,
       type,
@@ -160,10 +160,10 @@ export function App() {
     
     setInitializationLogs(prev => [...prev, logEntry]);
     console.log(`📝 Initialization log (${type}):`, message);
-  };
+  }, []);
 
   // Función para completar la inicialización
-  const handleInitializationComplete = () => {
+  const handleInitializationComplete = useCallback(() => {
     console.log('✅ Task initialization completed');
     setInitializingTaskId(null);
     
@@ -174,7 +174,7 @@ export function App() {
     setTimeout(() => {
       setInitializationLogs([]);
     }, 10000); // Limpiar logs después de 10 segundos
-  };
+  }, [handleInitializationLog]);
 
   const deleteTask = (taskId: string) => {
     setTasks(prev => prev.filter(task => task.id !== taskId));
