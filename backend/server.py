@@ -107,9 +107,13 @@ app.register_blueprint(agent_bp, url_prefix='/api/agent')
 from src.routes.memory_routes import memory_bp
 app.register_blueprint(memory_bp, url_prefix='/api/memory')
 
-# Hacer memory_manager disponible globalmente (usar el de agent_routes)
-from src.routes.agent_routes import memory_manager
-app.memory_manager = memory_manager
+# Memory manager will be initialized if available
+try:
+    from src.routes.agent_routes import memory_manager
+    app.memory_manager = memory_manager
+except ImportError:
+    print("⚠️ Memory manager not available in agent_routes")
+    app.memory_manager = None
 
 # Servir archivos estáticos del frontend
 @app.route('/')
