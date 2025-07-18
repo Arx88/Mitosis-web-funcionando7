@@ -835,7 +835,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           } : undefined
         };
 
-        // ENHANCED FILE HANDLING - Fix the DeepResearch file display issue
+        // Enhanced file handling starting...
         console.log('Enhanced file handling starting...');
         console.log('🎯 Created files detected:', response.created_files);
         console.log('🔍 File details:', {
@@ -866,6 +866,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         console.log('File creation decision:', { shouldCreateFileMessage, filesCount: filesToShow.length });
         
         console.log('File creation logic processing...');
+        
+        // Get current messages (now includes user message)
+        const currentMessages = [...messages, userMessage];
         
         if (shouldCreateFileMessage && filesToShow.length > 0) {
           console.log('Creating file upload message...');
@@ -903,7 +906,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
           // Update messages with both agent response and file upload message
           if (onUpdateMessages) {
-            const updatedMessages = [...messages];
+            const updatedMessages = [...currentMessages];
             
             // Add agent response
             updatedMessages.push(agentMessage);
@@ -918,7 +921,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         } else {
           // Handle regular messages without files
           if (onUpdateMessages) {
-            const updatedMessages = [...messages, agentMessage];
+            const updatedMessages = [...currentMessages, agentMessage];
             onUpdateMessages(updatedMessages);
           }
         }
