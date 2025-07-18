@@ -804,6 +804,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             
             onUpdateMessages(updatedMessages);
           }
+        }
 
         // Handle DeepResearch completion
         if (searchMode === 'deepsearch' && response.tool_results && response.tool_results.length > 0) {
