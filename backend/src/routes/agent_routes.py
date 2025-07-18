@@ -246,33 +246,39 @@ def generate_structured_plan(message: str, task_id: str) -> dict:
             plan_steps = [
                 {
                     'id': 'step_1',
-                    'title': 'Análisis de la tarea',
-                    'description': 'Comprender y analizar la solicitud',
+                    'title': 'Análisis de tarea',
+                    'description': None,  # No mostrar descripción
                     'tool': 'analysis',
                     'status': 'pending',
-                    'estimated_time': '30 segundos',
+                    'estimated_time': None,  # No mostrar tiempo estimado
+                    'elapsed_time': '0:01 Pensando',  # Mostrar tiempo transcurrido
                     'completed': False,
-                    'active': True
+                    'active': True,
+                    'start_time': None  # Para tracking del tiempo real
                 },
                 {
                     'id': 'step_2',
                     'title': 'Procesamiento',
-                    'description': 'Procesar y ejecutar la tarea solicitada',
+                    'description': None,
                     'tool': 'processing',
                     'status': 'pending',
-                    'estimated_time': '1-2 minutos',
+                    'estimated_time': None,
+                    'elapsed_time': '0:00 Esperando',
                     'completed': False,
-                    'active': False
+                    'active': False,
+                    'start_time': None
                 },
                 {
                     'id': 'step_3',
                     'title': 'Entrega de resultados',
-                    'description': 'Entregar los resultados finales',
+                    'description': None,
                     'tool': 'delivery',
                     'status': 'pending',
-                    'estimated_time': '30 segundos',
+                    'estimated_time': None,
+                    'elapsed_time': '0:00 Esperando',
                     'completed': False,
-                    'active': False
+                    'active': False,
+                    'start_time': None
                 }
             ]
         
