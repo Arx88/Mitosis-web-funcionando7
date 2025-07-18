@@ -62,7 +62,7 @@ def serve_static(path):
     return send_from_directory('static', path)
 
 # Endpoint de salud
-@app.route('/health')
+@app.route('/api/health')
 def health_check():
     return jsonify({
         'status': 'healthy',
