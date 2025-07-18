@@ -278,11 +278,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     // Check if already processed
     if (processedTasksRef.current.has(dataId)) {
+      console.log('⚠️ CHAT: Task already processed, skipping:', dataId);
       return;
     }
 
-    // Mark as processed immediately
+    // Mark as processed immediately to prevent duplicate calls
     processedTasksRef.current.add(dataId);
+    console.log('✅ CHAT: Task marked as processed:', dataId);
     
     const sendInitialMessage = async () => {
       console.log('🚀 CHAT: Sending initial message to backend for task:', dataId);
@@ -304,8 +306,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             timestamp: new Date()
           };
           
-          // Add the response (no duplicate check needed since we already marked as processed)
-          onUpdateMessages([...messages, assistantMessage]);
+          // Add the response - this should only happen once per task
+          if (onUpdateMessages) {
+            console.log('📤 CHAT: Updating messages with assistant response');
+            onUpdateMessages([...messages, assistantMessage]);
+          }
         }
       } catch (error) {
         console.error('❌ CHAT: Error sending initial message:', error);
@@ -317,7 +322,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           timestamp: new Date()
         };
         
-        onUpdateMessages([...messages, errorMessage]);
+        if (onUpdateMessages) {
+          console.log('📤 CHAT: Updating messages with error response');
+          onUpdateMessages([...messages, errorMessage]);
+        }
       } finally {
         setIsLoading(false);
       }
