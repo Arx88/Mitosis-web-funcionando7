@@ -305,21 +305,36 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         if (response && response.response) {
           console.log('✅ CHAT: Received response from backend');
           
-          // Create assistant response message
+          // Parse links from response
+          const responseLinks = parseLinksFromText(response.response);
+          const structuredLinks = parseStructuredLinks(response.response);
+          const allLinks = [...responseLinks, ...structuredLinks];
+          
+          // Remove duplicates
+          const uniqueLinks = allLinks.filter((link, index, self) => 
+            index === self.findIndex(l => l.url === link.url)
+          );
+          
+          // Create assistant response message with complete data
           const assistantMessage: Message = {
             id: `msg-${Date.now()}`,
             content: response.response,
             sender: 'assistant',
-            timestamp: new Date()
+            timestamp: new Date(response.timestamp || Date.now()),
+            toolResults: response.tool_results || [],
+            searchData: response.search_data,
+            uploadData: response.upload_data,
+            links: uniqueLinks.length > 0 ? uniqueLinks : undefined,
+            status: response.tool_results && response.tool_results.length > 0 ? {
+              type: 'success',
+              message: `Ejecuté ${response.tool_results.length} herramienta(s)`
+            } : undefined
           };
           
           // Add the response - this should only happen once per task
           if (onUpdateMessages) {
             console.log('📤 CHAT: Updating messages with assistant response');
-            console.log('📤 CHAT: Current messages:', messages);
-            console.log('📤 CHAT: New assistant message:', assistantMessage);
             const updatedMessages = [...messages, assistantMessage];
-            console.log('📤 CHAT: Updated messages array:', updatedMessages);
             onUpdateMessages(updatedMessages);
           }
         }
