@@ -790,17 +790,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
           // Update messages with both agent response and file upload message
           if (onUpdateMessages) {
-            const updatedMessages = [...messages, agentMessage, fileUploadMessage];
+            const updatedMessages = [...messages];
+            
+            // Add agent response
+            updatedMessages.push(agentMessage);
+            
+            // Add file upload message if needed
+            if (shouldCreateFileMessage && filesToShow.length > 0) {
+              updatedMessages.push(fileUploadMessage);
+            }
+            
             onUpdateMessages(updatedMessages);
           }
-        } else {
-          console.log('No file message created');
-          // Update messages with just agent response
-          if (onUpdateMessages) {
-            const updatedMessages = [...messages, agentMessage];
-            onUpdateMessages(updatedMessages);
-          }
-        }
 
         // Handle DeepResearch completion
         if (searchMode === 'deepsearch' && response.tool_results && response.tool_results.length > 0) {
