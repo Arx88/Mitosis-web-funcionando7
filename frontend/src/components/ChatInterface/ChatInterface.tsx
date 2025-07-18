@@ -918,7 +918,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           }));
         }, 3000);
         
-        // Crear mensaje de error
+        // Crear mensaje de error - with duplicate prevention
         const errorMessage: Message = {
           id: `msg-${Date.now()}`,
           content: 'Lo siento, hubo un error al procesar tu mensaje. Asegúrate de que Ollama esté ejecutándose.',
@@ -931,8 +931,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         };
 
         if (onUpdateMessages) {
-          const updatedMessages = [...messages, errorMessage];
-          onUpdateMessages(updatedMessages);
+          // Prevent duplicate error messages by checking if last message is already an error
+          const lastMessage = messages[messages.length - 1];
+          const isDuplicateError = lastMessage && 
+            lastMessage.sender === 'assistant' && 
+            lastMessage.status?.type === 'error' &&
+            lastMessage.content === errorMessage.content;
+          
+          if (!isDuplicateError) {
+            const updatedMessages = [...messages, errorMessage];
+            onUpdateMessages(updatedMessages);
+          }
         }
       } finally {
         setIsLoading(false);
