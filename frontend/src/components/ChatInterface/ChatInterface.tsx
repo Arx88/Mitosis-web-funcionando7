@@ -1747,7 +1747,21 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         }}>
           {/* Loading placeholder while waiting for response */}
 
-          {messages.map(message => (
+          {/* Deduplicate messages by content and timestamp before rendering */}
+          {messages.reduce((uniqueMessages, message) => {
+            // Check if this message is a duplicate
+            const isDuplicate = uniqueMessages.some(existingMessage => 
+              existingMessage.content === message.content && 
+              existingMessage.sender === message.sender &&
+              Math.abs(existingMessage.timestamp.getTime() - message.timestamp.getTime()) < 2000 // Within 2 seconds
+            );
+            
+            if (!isDuplicate) {
+              uniqueMessages.push(message);
+            }
+            
+            return uniqueMessages;
+          }, [] as Message[]).map(message => (
             <div key={message.id} className={`${message.sender === 'user' ? 'flex justify-end' : ''} group mb-4`}>
               {message.sender === 'user' ? (
                 <div className="flex items-start gap-3 max-w-[90%] min-w-0">
