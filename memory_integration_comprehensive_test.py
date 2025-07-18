@@ -25,7 +25,7 @@ import time
 from datetime import datetime
 
 # Configuration - Use the frontend URL from .env
-BASE_URL = "https://88f31668-c877-459c-a841-efeca9f08521.preview.emergentagent.com"
+BASE_URL = "https://39ced980-48cb-4210-adfd-3ae72e35731e.preview.emergentagent.com"
 API_PREFIX = "/api/agent"
 MEMORY_PREFIX = "/api/memory"
 
