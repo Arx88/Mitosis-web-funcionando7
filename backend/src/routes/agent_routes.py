@@ -617,14 +617,26 @@ def update_task_progress():
 
 @agent_bp.route('/get-task-plan/<task_id>', methods=['GET'])
 def get_task_plan(task_id):
-    """Obtiene el plan de una tarea específica"""
+    """Obtiene el plan de una tarea específica con progreso actualizado"""
     try:
         if task_id in active_task_plans:
+            plan_data = active_task_plans[task_id]
+            
+            # Calcular progreso
+            completed_steps = sum(1 for step in plan_data['plan'] if step['completed'])
+            total_steps = len(plan_data['plan'])
+            progress_percentage = (completed_steps / total_steps) * 100 if total_steps > 0 else 0
+            
             return jsonify({
-                'plan': active_task_plans[task_id]['plan'],
-                'current_step': active_task_plans[task_id]['current_step'],
-                'status': active_task_plans[task_id]['status'],
-                'created_at': active_task_plans[task_id]['created_at']
+                'plan': plan_data['plan'],
+                'current_step': plan_data['current_step'],
+                'status': plan_data['status'],
+                'created_at': plan_data['created_at'],
+                'progress': progress_percentage,
+                'completed_steps': completed_steps,
+                'total_steps': total_steps,
+                'message': plan_data.get('message', ''),
+                'updated_at': datetime.now().isoformat()
             })
         else:
             return jsonify({
