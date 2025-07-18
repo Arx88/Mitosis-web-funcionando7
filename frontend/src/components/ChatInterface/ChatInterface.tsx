@@ -275,6 +275,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       // Only proceed if we have a dataId, exactly one message, it's from user, and haven't processed this task yet
       if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading && !processedTasksRef.current.has(dataId) && onUpdateMessages) {
         console.log('🚀 CHAT: Sending initial message to backend for task:', dataId, 'Message:', messages[0].content);
+        console.log('🚀 CHAT: Current messages array:', messages);
         
         // Mark this task as processed IMMEDIATELY to prevent duplicate calls
         processedTasksRef.current.add(dataId);
@@ -296,6 +297,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               timestamp: new Date()
             };
             
+            console.log('🔄 CHAT: Current messages before adding response:', messages);
+            
             // Check if this response already exists to prevent duplicates
             const responseExists = messages.some(msg => 
               msg.content === response.response && msg.sender === 'assistant'
@@ -303,7 +306,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             
             if (!responseExists) {
               console.log('✅ CHAT: Adding new response to messages');
-              onUpdateMessages([...messages, assistantMessage]);
+              const newMessages = [...messages, assistantMessage];
+              console.log('🔄 CHAT: New messages array will be:', newMessages);
+              onUpdateMessages(newMessages);
             } else {
               console.log('⚠️ CHAT: Response already exists, skipping duplicate');
             }
@@ -342,7 +347,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     
     // Only run when we have exactly 1 message (user message), a dataId, and haven't processed this task
     if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading && !processedTasksRef.current.has(dataId)) {
+      console.log('🎯 CHAT: useEffect triggered for task:', dataId, 'messages.length:', messages.length);
       sendInitialMessage();
+    } else {
+      console.log('🚫 CHAT: useEffect skipped. dataId:', dataId, 'messages.length:', messages.length, 'isLoading:', isLoading, 'processed:', processedTasksRef.current.has(dataId));
     }
   }, [dataId, messages.length, isLoading]); // Simplified dependencies
 
