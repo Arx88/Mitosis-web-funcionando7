@@ -235,6 +235,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setPDFViewerContent('');
     setPDFViewerTitle('');
     setHasInitialMessageSent(false); // Reset the initial message flag
+    // Clear processed tasks when switching tasks
+    processedTasksRef.current.clear();
     console.log('✅ CHAT STATE RESET COMPLETE - Terminal cleared');
   };
 
