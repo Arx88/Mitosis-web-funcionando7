@@ -626,6 +626,46 @@ def update_task_progress():
             'error': f'Error actualizando progreso: {str(e)}'
         }), 500
 
+@agent_bp.route('/update-task-time/<task_id>', methods=['POST'])
+def update_task_time(task_id):
+    """Actualiza el tiempo transcurrido de una tarea en tiempo real"""
+    try:
+        if task_id in active_task_plans:
+            plan_data = active_task_plans[task_id]
+            start_time = plan_data.get('start_time')
+            
+            if start_time:
+                # Calcular tiempo transcurrido
+                elapsed = datetime.now() - start_time
+                elapsed_seconds = int(elapsed.total_seconds())
+                
+                # Formatear tiempo como MM:SS
+                minutes = elapsed_seconds // 60
+                seconds = elapsed_seconds % 60
+                elapsed_str = f"{minutes}:{seconds:02d}"
+                
+                # Actualizar el paso activo
+                plan = plan_data['plan']
+                for step in plan:
+                    if step.get('active', False):
+                        step['elapsed_time'] = f"{elapsed_str} Pensando"
+                        break
+                
+                # Actualizar en memoria
+                active_task_plans[task_id]['plan'] = plan
+                
+                return jsonify({
+                    'success': True,
+                    'elapsed_time': elapsed_str,
+                    'plan': plan
+                })
+            
+        return jsonify({'error': 'Task not found'}), 404
+        
+    except Exception as e:
+        logger.error(f"Error updating task time: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 @agent_bp.route('/get-task-plan/<task_id>', methods=['GET'])
 def get_task_plan(task_id):
     """Obtiene el plan de una tarea específica con progreso actualizado"""
