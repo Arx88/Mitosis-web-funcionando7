@@ -233,6 +233,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setShowPDFViewer(false);
     setPDFViewerContent('');
     setPDFViewerTitle('');
+    setHasInitialMessageSent(false); // Reset the initial message flag
     console.log('✅ CHAT STATE RESET COMPLETE - Terminal cleared');
   };
 
