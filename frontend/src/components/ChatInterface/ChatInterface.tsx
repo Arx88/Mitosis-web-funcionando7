@@ -1105,6 +1105,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             onUpdateMessages(updatedMessages);
           }
         }
+      }
       } finally {
         setIsLoading(false);
       }
