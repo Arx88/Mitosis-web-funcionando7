@@ -790,12 +790,30 @@ export const TerminalView = ({
                       
                       <div className="flex-1 min-w-0">
                         <span className={`block text-sm transition-all duration-200 leading-tight ${
-                          step.completed ? 'line-through text-[#8f8f8f] font-normal' : 
+                          step.completed ? 'line-through text-[#8f8f8f] font-medium' : 
                           step.active ? 'text-blue-400 font-semibold' : 
-                          'text-[#DADADA] group-hover:text-white font-normal'
+                          'text-[#DADADA] group-hover:text-white font-medium'
                         }`}>
                           {step.title}
                         </span>
+                        {step.description && (
+                          <span className={`block text-xs mt-1 transition-all duration-200 ${
+                            step.completed ? 'line-through text-[#6f6f6f]' : 
+                            step.active ? 'text-blue-300' : 
+                            'text-[#ACACAC] group-hover:text-[#DADADA]'
+                          }`}>
+                            {step.description}
+                          </span>
+                        )}
+                        {step.estimated_time && (
+                          <span className={`block text-xs mt-0.5 transition-all duration-200 ${
+                            step.completed ? 'line-through text-[#5f5f5f]' : 
+                            step.active ? 'text-blue-200' : 
+                            'text-[#7f7f7f] group-hover:text-[#ACACAC]'
+                          }`}>
+                            ⏱️ {step.estimated_time}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
