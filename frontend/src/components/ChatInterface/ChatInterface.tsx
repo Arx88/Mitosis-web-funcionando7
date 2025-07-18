@@ -569,6 +569,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const handleSendMessage = async (message: string) => {
     console.log('🔄 DEBUG: handleSendMessage called with:', message);
     
+    // Check if this message is already being processed by the initial message effect
+    if (dataId && processedTasksRef.current.has(dataId) && messages.length === 1) {
+      console.log('⚠️ DEBUG: Message already being processed by initial message effect, skipping handleSendMessage');
+      return;
+    }
+    
     if (message.trim() && !isLoading) {
       console.log('✅ DEBUG: Conditions met, starting message processing');
       setIsLoading(true);
