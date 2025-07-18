@@ -162,6 +162,20 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         processedMessage = `[DeepResearch] ${message}`;
       }
 
+      // Crear mensaje del usuario INMEDIATAMENTE
+      const userMessage: Message = {
+        id: `msg-${Date.now()}-user`,
+        content: message,
+        sender: 'user',
+        timestamp: new Date()
+      };
+
+      // Agregar mensaje del usuario inmediatamente
+      if (onUpdateMessages) {
+        const updatedMessages = [...messages, userMessage];
+        onUpdateMessages(updatedMessages);
+      }
+
       // Llamar al callback original para mantener compatibilidad
       onSendMessage(processedMessage);
 
@@ -172,6 +186,28 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           previous_messages: messages.slice(-5), // Enviar últimos 5 mensajes como contexto
           search_mode: searchMode // Enviar modo de búsqueda al backend
         });
+
+        // Parse links from response (definición simple)
+        const parseLinksFromText = (text: string) => {
+          const urlRegex = /https?:\/\/[^\s\)]+/g;
+          const matches = text.match(urlRegex) || [];
+          return matches.map(url => ({
+            url,
+            title: url,
+            description: ''
+          }));
+        };
+
+        const parseStructuredLinks = (text: string) => {
+          // Buscar patrones como [title](url)
+          const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+          const matches = [...text.matchAll(linkRegex)];
+          return matches.map(match => ({
+            url: match[2],
+            title: match[1],
+            description: ''
+          }));
+        };
 
         // Parse links from response
         const responseLinks = parseLinksFromText(response.response);
@@ -189,11 +225,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           content: response.response,
           sender: 'assistant',
           timestamp: new Date(response.timestamp),
-          toolResults: response.tool_results,
+          toolResults: response.tool_results || [],
           searchData: response.search_data,
           uploadData: response.upload_data,
           links: uniqueLinks.length > 0 ? uniqueLinks : undefined,
-          status: response.tool_results.length > 0 ? {
+          status: response.tool_results && response.tool_results.length > 0 ? {
             type: 'success',
             message: `Ejecuté ${response.tool_results.length} herramienta(s)`
           } : undefined
@@ -201,7 +237,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
         // Update messages if callback provided
         if (onUpdateMessages) {
-          const updatedMessages = [...messages, agentMessage];
+          const currentMessages = [...messages, userMessage];
+          const updatedMessages = [...currentMessages, agentMessage];
           onUpdateMessages(updatedMessages);
         }
 
@@ -239,7 +276,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         };
 
         if (onUpdateMessages) {
-          const updatedMessages = [...messages, errorMessage];
+          const currentMessages = [...messages, userMessage];
+          const updatedMessages = [...currentMessages, errorMessage];
           onUpdateMessages(updatedMessages);
         }
       } finally {
