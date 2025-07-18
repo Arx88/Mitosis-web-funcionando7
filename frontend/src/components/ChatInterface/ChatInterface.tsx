@@ -264,6 +264,59 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     return () => clearTimeout(timeoutId);
   }, [messages.length]); // Only depends on messages length
 
+  // Effect to automatically send initial message to backend when new task is created
+  useEffect(() => {
+    const sendInitialMessage = async () => {
+      // Only proceed if we have a dataId, exactly one message, and it's from user
+      if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading) {
+        console.log('🚀 CHAT: Sending initial message to backend:', messages[0].content);
+        
+        try {
+          setIsLoading(true);
+          
+          // Send the user's message to the backend
+          const response = await agentAPI.sendMessage(messages[0].content, dataId);
+          
+          if (response && response.response) {
+            // Create assistant response message
+            const assistantMessage: Message = {
+              id: `msg-${Date.now()}`,
+              content: response.response,
+              sender: 'assistant',
+              timestamp: new Date()
+            };
+            
+            // Update messages with the response
+            onUpdateMessages([...messages, assistantMessage]);
+            
+            // Update task status if callback provided
+            if (onTaskUpdate) {
+              onTaskUpdate(dataId, 'completed', 100);
+            }
+            
+            console.log('✅ CHAT: Initial message processed successfully');
+          }
+        } catch (error) {
+          console.error('❌ CHAT: Error sending initial message:', error);
+          
+          // Create error message
+          const errorMessage: Message = {
+            id: `msg-${Date.now()}`,
+            content: 'Hubo un error al procesar tu mensaje. Por favor, intenta de nuevo.',
+            sender: 'assistant',
+            timestamp: new Date()
+          };
+          
+          onUpdateMessages([...messages, errorMessage]);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    sendInitialMessage();
+  }, [dataId, messages.length, isLoading]); // Dependencies: dataId, messages length, and loading state
+
   // Función para obtener progreso real del backend
   const pollDeepResearchProgress = async (taskId: string) => {
     try {
