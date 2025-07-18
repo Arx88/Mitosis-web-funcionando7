@@ -345,7 +345,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
         }
       }, 1000); // Actualizar tiempo cada segundo
     }
-    }
     
     return () => {
       if (intervalId) {
