@@ -563,7 +563,7 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                             const newTask = await createTask(message.trim());
                             console.log('✅ Task created successfully:', newTask.id);
                             
-                            // PASO 2: Crear solo el mensaje del usuario - SIN LLAMAR AL BACKEND
+                            // PASO 2: Crear solo el mensaje del usuario
                             const userMessage = {
                               id: `msg-${Date.now()}`,
                               content: message.trim(),
@@ -585,8 +585,53 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                             
                             console.log('✅ Task updated in sidebar with user message');
                             
-                            // NOTA: El backend será llamado desde ChatInterface.tsx
-                            // NO duplicar la llamada aquí
+                            // PASO 4: Llamar al backend para obtener respuesta del agente
+                            try {
+                              const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+                              console.log('🔄 Calling backend API:', `${backendUrl}/api/agent/chat`);
+                              
+                              const response = await fetch(`${backendUrl}/api/agent/chat`, {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                  message: message.trim(),
+                                  context: { task_id: newTask.id }
+                                })
+                              });
+                              
+                              if (response.ok) {
+                                const data = await response.json();
+                                console.log('✅ Backend response received:', data);
+                                
+                                // PASO 5: Crear mensaje del asistente con la respuesta
+                                const assistantMessage = {
+                                  id: `msg-${Date.now() + 1}`,
+                                  content: data.response,
+                                  sender: 'assistant' as const,
+                                  timestamp: new Date()
+                                };
+                                
+                                // PASO 6: Actualizar la tarea con la respuesta del asistente
+                                const finalTaskUpdate = {
+                                  ...basicTaskUpdate,
+                                  messages: [userMessage, assistantMessage],
+                                  status: 'completed' as const,
+                                  progress: 100
+                                };
+                                
+                                setTasks(prev => prev.map(task => 
+                                  task.id === newTask.id ? finalTaskUpdate : task
+                                ));
+                                
+                                console.log('✅ Task updated with assistant response');
+                              } else {
+                                console.error('❌ Backend API error:', response.status, response.statusText);
+                              }
+                            } catch (error) {
+                              console.error('❌ Error calling backend:', error);
+                            }
                           }
                         }}
                         placeholder="Escribe tu tarea aquí..."
