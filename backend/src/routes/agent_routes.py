@@ -555,8 +555,8 @@ task_executor = UltraSimpleTaskExecutor()
 @agent_bp.route('/chat', methods=['POST'])
 def chat():
     """
-    Endpoint principal del chat - VERSIÓN ULTRA SIMPLE Y EFECTIVA
-    Genera planes de acción REALES y los ejecuta paso a paso
+    Endpoint principal del chat - VERSIÓN REAL CON OLLAMA
+    Distingue entre conversaciones casuales y tareas complejas
     """
     try:
         data = request.get_json()
@@ -569,44 +569,118 @@ def chat():
         # Obtener task_id del contexto
         task_id = context.get('task_id', str(uuid.uuid4()))
         
-        logger.info(f"🚀 Processing task: {message[:50]}... (ID: {task_id})")
+        logger.info(f"🚀 Processing message: {message[:50]}... (ID: {task_id})")
         
-        # PASO 1: Generar plan de acción REAL
-        action_plan = action_planner.generate_action_plan(message, task_id)
+        # Obtener servicio de Ollama
+        ollama_service = get_ollama_service()
+        if not ollama_service:
+            return jsonify({
+                'error': 'Ollama service not available',
+                'response': 'Lo siento, el servicio de IA no está disponible en este momento.'
+            }), 503
         
-        logger.info(f"📋 Generated action plan with {len(action_plan)} steps")
+        # PASO 1: Detectar si es conversación casual o tarea compleja
+        is_casual = is_casual_conversation(message)
         
-        # PASO 2: Ejecutar la tarea siguiendo el plan
-        execution_result = task_executor.execute_task_with_plan(message, task_id, action_plan)
+        if is_casual:
+            # MODO CONVERSACIÓN CASUAL
+            logger.info(f"🗣️ Detected casual conversation mode")
+            
+            # Usar solo Ollama para respuesta casual
+            ollama_response = ollama_service.generate_casual_response(message, context)
+            
+            if ollama_response.get('error'):
+                return jsonify({
+                    'error': ollama_response['error'],
+                    'response': ollama_response['response']
+                }), 500
+            
+            return jsonify({
+                'response': ollama_response['response'],
+                'task_id': task_id,
+                'timestamp': datetime.now().isoformat(),
+                'execution_status': 'completed',
+                'mode': 'casual_conversation',
+                'memory_used': True
+            })
         
-        if execution_result.get('success'):
+        else:
+            # MODO AGENTE CON PLANIFICACIÓN
+            logger.info(f"🤖 Detected task mode - generating plan and executing")
+            
+            # PASO 2: Generar respuesta usando Ollama con contexto de herramientas
+            ollama_response = ollama_service.generate_response(message, context, use_tools=True)
+            
+            if ollama_response.get('error'):
+                return jsonify({
+                    'error': ollama_response['error'],
+                    'response': ollama_response['response']
+                }), 500
+            
+            # PASO 3: Procesar tool_calls si existen
+            tool_results = []
+            if ollama_response.get('tool_calls'):
+                logger.info(f"🔧 Processing {len(ollama_response['tool_calls'])} tool calls")
+                tool_manager = get_tool_manager()
+                
+                if tool_manager:
+                    for tool_call in ollama_response['tool_calls']:
+                        try:
+                            tool_name = tool_call.get('tool')
+                            parameters = tool_call.get('parameters', {})
+                            
+                            logger.info(f"🔧 Executing tool: {tool_name}")
+                            
+                            # Ejecutar herramienta real
+                            tool_result = tool_manager.execute_tool(tool_name, parameters)
+                            tool_results.append({
+                                'tool': tool_name,
+                                'parameters': parameters,
+                                'result': tool_result
+                            })
+                            
+                        except Exception as e:
+                            logger.error(f"Error executing tool {tool_name}: {str(e)}")
+                            tool_results.append({
+                                'tool': tool_name,
+                                'parameters': parameters,
+                                'error': str(e)
+                            })
+            
+            # PASO 4: Generar respuesta final incorporando resultados de herramientas
+            final_response = ollama_response['response']
+            
+            if tool_results:
+                # Agregar resultados de herramientas a la respuesta
+                final_response += "\n\n**🔧 Herramientas ejecutadas:**\n"
+                for result in tool_results:
+                    if result.get('error'):
+                        final_response += f"❌ {result['tool']}: {result['error']}\n"
+                    else:
+                        final_response += f"✅ {result['tool']}: Ejecutado correctamente\n"
+                        # Agregar algunos datos del resultado si están disponibles
+                        if isinstance(result.get('result'), dict):
+                            if 'output' in result['result']:
+                                final_response += f"   📋 {result['result']['output'][:100]}...\n"
+            
             logger.info(f"✅ Task completed successfully")
             
             return jsonify({
-                'response': execution_result['response'],
+                'response': final_response,
                 'task_id': task_id,
-                'plan': execution_result['plan'],
-                'step_results': execution_result['step_results'],
+                'tool_calls': ollama_response.get('tool_calls', []),
+                'tool_results': tool_results,
                 'timestamp': datetime.now().isoformat(),
                 'execution_status': 'completed',
-                'mode': 'agent_with_plan',
+                'mode': 'agent_with_tools',
                 'memory_used': True
-            })
-        else:
-            logger.error(f"❌ Task execution failed: {execution_result.get('error')}")
-            
-            return jsonify({
-                'response': execution_result.get('response', 'Error ejecutando la tarea'),
-                'task_id': task_id,
-                'error': execution_result.get('error'),
-                'timestamp': datetime.now().isoformat(),
-                'execution_status': 'failed'
             })
     
     except Exception as e:
         logger.error(f"Error general en chat: {str(e)}")
         return jsonify({
-            'error': f'Error interno del servidor: {str(e)}'
+            'error': f'Error interno del servidor: {str(e)}',
+            'response': 'Lo siento, hubo un error procesando tu solicitud.'
         }), 500
 
 @agent_bp.route('/generate-plan', methods=['POST'])
