@@ -805,13 +805,13 @@ export const TerminalView = ({
                             {step.description}
                           </span>
                         )}
-                        {step.estimated_time && (
+                        {step.elapsed_time && (
                           <span className={`block text-xs mt-0.5 transition-all duration-200 ${
                             step.completed ? 'line-through text-[#5f5f5f]' : 
                             step.active ? 'text-blue-200' : 
                             'text-[#7f7f7f] group-hover:text-[#ACACAC]'
                           }`}>
-                            ⏱️ {step.estimated_time}
+                            {step.elapsed_time}
                           </span>
                         )}
                       </div>
