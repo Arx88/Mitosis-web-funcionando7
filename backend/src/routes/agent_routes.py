@@ -1,10 +1,10 @@
 """
-Rutas API del agente - Versión ULTRA SIMPLE Y EFECTIVA
-Sistema de agente que genera planes de acción REALES paso a paso
-SIN DEPENDENCIAS COMPLEJAS
+Rutas API del agente - Versión REAL CON OLLAMA
+Sistema de agente que usa Ollama real para generar respuestas inteligentes
+Y distingue entre conversaciones casuales y tareas complejas
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime
 import logging
 import time
@@ -12,6 +12,7 @@ import uuid
 import json
 import os
 import requests
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,80 @@ shared_conversations = {}
 task_files = {}
 # Almacenamiento global para planes de tareas
 active_task_plans = {}
+
+# Patrones para detectar tipo de mensaje
+CASUAL_PATTERNS = [
+    r'^hola\b',
+    r'^¿?cómo estás\??$',
+    r'^¿?qué tal\??$',
+    r'^buenos días\b',
+    r'^buenas tardes\b',
+    r'^buenas noches\b',
+    r'^¿?cómo te llamas\??$',
+    r'^¿?quién eres\??$',
+    r'^gracias\b',
+    r'^de nada\b',
+    r'^adiós\b',
+    r'^hasta luego\b',
+    r'^ok\b',
+    r'^vale\b',
+    r'^perfecto\b',
+    r'^entiendo\b'
+]
+
+TASK_PATTERNS = [
+    r'crear\b.*\b(informe|reporte|documento|análisis|plan|estrategia)',
+    r'analizar\b.*\b(datos|información|tendencias|mercado)',
+    r'buscar\b.*\b(información|datos|sobre)',
+    r'investigar\b.*\b(sobre|tendencias|mercado)',
+    r'generar\b.*\b(contenido|texto|código|script)',
+    r'desarrollar\b.*\b(aplicación|web|software)',
+    r'escribir\b.*\b(código|script|programa)',
+    r'hacer\b.*\b(análisis|investigación|estudio)',
+    r'realizar\b.*\b(estudio|investigación|análisis)',
+    r'dame\b.*\b(información|datos|informe|reporte)',
+    r'necesito\b.*\b(información|datos|ayuda con)',
+    r'quiero\b.*\b(crear|generar|desarrollar|hacer)',
+    r'puedes\b.*\b(crear|generar|buscar|investigar)',
+    r'ayúdame\b.*\b(con|a crear|a generar|a desarrollar)'
+]
+
+def is_casual_conversation(message: str) -> bool:
+    """Detecta si un mensaje es una conversación casual"""
+    message_lower = message.lower().strip()
+    
+    # Mensajes muy cortos (menos de 3 palabras) probablemente son casuales
+    if len(message_lower.split()) <= 3:
+        for pattern in CASUAL_PATTERNS:
+            if re.search(pattern, message_lower):
+                return True
+    
+    # Verificar patrones de tareas
+    for pattern in TASK_PATTERNS:
+        if re.search(pattern, message_lower):
+            return False
+    
+    # Si no hay patrones de tareas y es corto, probablemente es casual
+    if len(message_lower.split()) <= 5:
+        return True
+    
+    return False
+
+def get_ollama_service():
+    """Obtener servicio de Ollama"""
+    try:
+        return current_app.ollama_service
+    except AttributeError:
+        logger.error("Ollama service not available")
+        return None
+
+def get_tool_manager():
+    """Obtener tool manager"""
+    try:
+        return current_app.tool_manager
+    except AttributeError:
+        logger.error("Tool manager not available")
+        return None
 
 class UltraSimpleActionPlanner:
     """Planificador de acciones ultra simple y efectivo"""
