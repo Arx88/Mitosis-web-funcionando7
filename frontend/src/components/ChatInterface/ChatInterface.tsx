@@ -651,7 +651,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   const finalResult = await agentAPI.getTaskStatus(response.task_id!);
                   console.log('🎯 Final orchestration result:', finalResult);
                   
-                  // Crear mensaje con el resultado final
+                  // Crear mensaje con el resultado final y actualizar mediante onUpdateMessages
                   const finalMessage: Message = {
                     id: `msg-${Date.now()}-final`,
                     content: `✅ **Orquestación Completada**\n\n${finalResult.message || 'Tarea completada exitosamente.'}`,
@@ -660,7 +660,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     orchestrationResult: finalResult
                   };
                   
-                  setMessages(prev => [...prev, finalMessage]);
+                  if (onUpdateMessages) {
+                    const updatedMessages = [...messages, finalMessage];
+                    onUpdateMessages(updatedMessages);
+                  }
                 } catch (err) {
                   console.error('Error getting final result:', err);
                 }
