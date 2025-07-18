@@ -287,11 +287,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             };
             
             // Update messages with the response
-            onUpdateMessages([...messages, assistantMessage]);
-            
-            // Update task status if callback provided
-            if (onTaskUpdate) {
-              onTaskUpdate(dataId, 'completed', 100);
+            if (onUpdateMessages) {
+              onUpdateMessages([...messages, assistantMessage]);
             }
             
             console.log('✅ CHAT: Initial message processed successfully');
@@ -307,7 +304,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             timestamp: new Date()
           };
           
-          onUpdateMessages([...messages, errorMessage]);
+          if (onUpdateMessages) {
+            onUpdateMessages([...messages, errorMessage]);
+          }
         } finally {
           setIsLoading(false);
         }
@@ -315,7 +314,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     };
     
     sendInitialMessage();
-  }, [dataId, messages.length, isLoading]); // Dependencies: dataId, messages length, and loading state
+  }, [dataId, messages.length, isLoading, onUpdateMessages]); // Dependencies: dataId, messages length, loading state, and onUpdateMessages
 
   // Función para obtener progreso real del backend
   const pollDeepResearchProgress = async (taskId: string) => {
