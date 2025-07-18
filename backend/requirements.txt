@@ -103,3 +103,4 @@ multiprocess
 aiohttp
 pyarrow_hotfix
 multidict>=6.0.0
+attrs>=25.0.0
