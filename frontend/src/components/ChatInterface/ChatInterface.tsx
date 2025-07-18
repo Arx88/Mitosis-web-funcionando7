@@ -605,6 +605,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }
 
       // Llamar al callback original para mantener compatibilidad
+      console.log('🔄 DEBUG: Calling onSendMessage with:', processedMessage);
       onSendMessage(processedMessage);
 
       // Include memory context if there's active memory
@@ -617,6 +618,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       try {
         console.log('🔄 BASIC DEBUG: Sending message to backend');
+        console.log('🔄 DEBUG: API URL:', `${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/agent/chat`);
+        console.log('🔄 DEBUG: Message:', processedMessage);
+        console.log('🔄 DEBUG: Context:', context);
+        
         const response: ChatResponse = await agentAPI.sendMessage(processedMessage, context);
         
         console.log('✅ BASIC DEBUG: Backend response received');
