@@ -340,6 +340,7 @@ def chat():
     """
     Endpoint principal del chat - VERSIÓN REAL CON OLLAMA
     Distingue entre conversaciones casuales y tareas complejas
+    GENERA PLAN ESTRUCTURADO PARA MOSTRAR EN PLAN DE ACCIÓN
     """
     try:
         data = request.get_json()
@@ -388,10 +389,13 @@ def chat():
             })
         
         else:
-            # MODO AGENTE CON PLANIFICACIÓN
-            logger.info(f"🤖 Detected task mode - generating plan and executing")
+            # MODO AGENTE CON PLANIFICACIÓN ESTRUCTURADA
+            logger.info(f"🤖 Detected task mode - generating structured plan")
             
-            # PASO 2: Generar respuesta usando Ollama con contexto de herramientas
+            # PASO 2: Generar plan estructurado PRIMERO
+            structured_plan = generate_structured_plan(message, task_id)
+            
+            # PASO 3: Generar respuesta usando Ollama con contexto de herramientas
             ollama_response = ollama_service.generate_response(message, context, use_tools=True)
             
             if ollama_response.get('error'):
@@ -400,7 +404,7 @@ def chat():
                     'response': ollama_response['response']
                 }), 500
             
-            # PASO 3: Procesar tool_calls si existen
+            # PASO 4: Procesar tool_calls si existen
             tool_results = []
             if ollama_response.get('tool_calls'):
                 logger.info(f"🔧 Processing {len(ollama_response['tool_calls'])} tool calls")
@@ -430,32 +434,20 @@ def chat():
                                 'error': str(e)
                             })
             
-            # PASO 4: Generar respuesta final incorporando resultados de herramientas
-            final_response = ollama_response['response']
+            # PASO 5: Generar respuesta LIMPIA sin mostrar pasos del plan
+            final_response = generate_clean_response(ollama_response['response'], tool_results)
             
-            if tool_results:
-                # Agregar resultados de herramientas a la respuesta
-                final_response += "\n\n**🔧 Herramientas ejecutadas:**\n"
-                for result in tool_results:
-                    if result.get('error'):
-                        final_response += f"❌ {result['tool']}: {result['error']}\n"
-                    else:
-                        final_response += f"✅ {result['tool']}: Ejecutado correctamente\n"
-                        # Agregar algunos datos del resultado si están disponibles
-                        if isinstance(result.get('result'), dict):
-                            if 'output' in result['result']:
-                                final_response += f"   📋 {result['result']['output'][:100]}...\n"
-            
-            logger.info(f"✅ Task completed successfully")
+            logger.info(f"✅ Task completed successfully with structured plan")
             
             return jsonify({
                 'response': final_response,
                 'task_id': task_id,
+                'plan': structured_plan,  # PLAN ESTRUCTURADO PARA FRONTEND
                 'tool_calls': ollama_response.get('tool_calls', []),
                 'tool_results': tool_results,
                 'timestamp': datetime.now().isoformat(),
                 'execution_status': 'completed',
-                'mode': 'agent_with_tools',
+                'mode': 'agent_with_structured_plan',
                 'memory_used': True
             })
     
