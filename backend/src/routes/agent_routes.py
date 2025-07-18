@@ -328,35 +328,8 @@ def generate_clean_response(ollama_response: str, tool_results: list) -> str:
     Genera una respuesta limpia sin mostrar los pasos internos del plan
     """
     try:
-        # Limpiar la respuesta de Ollama de cualquier referencia a pasos internos
-        clean_response = ollama_response
-        
-        # Remover patrones comunes de pasos internos y planes
-        patterns_to_remove = [
-            r'Paso \d+:.*?\n',
-            r'Step \d+:.*?\n',
-            r'\*\*Paso \d+\*\*.*?\n',
-            r'\*\*Step \d+\*\*.*?\n',
-            r'## Paso \d+.*?\n',
-            r'## Step \d+.*?\n',
-            r'\*\*PLAN DE ACCIÓN:\*\*[\s\S]*?(?=\n\*\*[^P]|\n\n\*\*[^P]|$)',
-            r'PLAN DE ACCIÓN:[\s\S]*?(?=\n\*\*[^P]|\n\n\*\*[^P]|$)',
-            r'\*\*Explicación:\*\*[\s\S]*?(?=\n\*\*[^E]|\n\n\*\*[^E]|$)',
-            r'Explicación:[\s\S]*?(?=\n\*\*[^E]|\n\n\*\*[^E]|$)',
-            r'\*\*Herramientas a utilizar:\*\*[\s\S]*?(?=\n\*\*[^H]|\n\n\*\*[^H]|$)',
-            r'Herramientas a utilizar:[\s\S]*?(?=\n\*\*[^H]|\n\n\*\*[^H]|$)',
-            r'\d+\.\s+[^.\n]*?\*\*[^*]*?\*\*[^.\n]*?\.\n',
-            r'^\d+\.\s+.*?\n',
-            r'^\*\s+\*\*.*?\*\*\s*\n',
-            r'^\*\s+.*?\n'
-        ]
-        
-        for pattern in patterns_to_remove:
-            clean_response = re.sub(pattern, '', clean_response, flags=re.IGNORECASE | re.MULTILINE)
-        
-        # Si después de limpiar queda muy poco contenido, generar una respuesta profesional
-        if len(clean_response.strip()) < 50:
-            clean_response = """Perfecto, he recibido tu solicitud y ya estoy trabajando en ella. 
+        # Para tareas complejas, siempre generar una respuesta profesional estándar
+        clean_response = """Perfecto, he recibido tu solicitud y ya estoy trabajando en ella. 
 
 He generado un plan de acción detallado que puedes ver en la sección "Plan de Acción" del panel lateral. El plan incluye varios pasos que ejecutaré automáticamente para completar tu tarea.
 
@@ -388,10 +361,6 @@ Mientras trabajo en tu solicitud, puedes seguir el progreso en tiempo real a tra
                 # Agregar detalles de herramientas exitosas
                 for summary in tools_summary[:3]:  # Máximo 3 para no saturar
                     clean_response += f"{summary}\n"
-        
-        # Limpiar espacios extra y líneas vacías múltiples
-        clean_response = re.sub(r'\n\s*\n\s*\n', '\n\n', clean_response)
-        clean_response = clean_response.strip()
         
         return clean_response
         
