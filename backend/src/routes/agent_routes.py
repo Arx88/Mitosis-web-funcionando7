@@ -99,6 +99,242 @@ def get_tool_manager():
         logger.error("Tool manager not available")
         return None
 
+def generate_structured_plan(message: str, task_id: str) -> dict:
+    """
+    Genera un plan estructurado para mostrar en el frontend
+    """
+    try:
+        # Analizar el mensaje para determinar el tipo de tarea
+        message_lower = message.lower()
+        
+        # Determinar pasos basados en el tipo de tarea
+        if any(word in message_lower for word in ['crear', 'generar', 'escribir', 'desarrollar']):
+            plan_steps = [
+                {
+                    'id': 'step_1',
+                    'title': 'Análisis de requisitos',
+                    'description': 'Analizar los requisitos y especificaciones de la tarea',
+                    'tool': 'analysis',
+                    'status': 'pending',
+                    'estimated_time': '30 segundos',
+                    'completed': False,
+                    'active': True
+                },
+                {
+                    'id': 'step_2',
+                    'title': 'Planificación',
+                    'description': 'Crear estructura y planificar el desarrollo',
+                    'tool': 'planning',
+                    'status': 'pending',
+                    'estimated_time': '45 segundos',
+                    'completed': False,
+                    'active': False
+                },
+                {
+                    'id': 'step_3',
+                    'title': 'Desarrollo/Creación',
+                    'description': 'Ejecutar la creación del contenido solicitado',
+                    'tool': 'creation',
+                    'status': 'pending',
+                    'estimated_time': '2-3 minutos',
+                    'completed': False,
+                    'active': False
+                },
+                {
+                    'id': 'step_4',
+                    'title': 'Revisión y entrega',
+                    'description': 'Revisar y entregar el resultado final',
+                    'tool': 'review',
+                    'status': 'pending',
+                    'estimated_time': '30 segundos',
+                    'completed': False,
+                    'active': False
+                }
+            ]
+        elif any(word in message_lower for word in ['buscar', 'investigar', 'analizar']):
+            plan_steps = [
+                {
+                    'id': 'step_1',
+                    'title': 'Definición de búsqueda',
+                    'description': 'Definir parámetros y alcance de la investigación',
+                    'tool': 'search_definition',
+                    'status': 'pending',
+                    'estimated_time': '20 segundos',
+                    'completed': False,
+                    'active': True
+                },
+                {
+                    'id': 'step_2',
+                    'title': 'Búsqueda de información',
+                    'description': 'Buscar y recopilar información relevante',
+                    'tool': 'web_search',
+                    'status': 'pending',
+                    'estimated_time': '1-2 minutos',
+                    'completed': False,
+                    'active': False
+                },
+                {
+                    'id': 'step_3',
+                    'title': 'Análisis de datos',
+                    'description': 'Analizar y procesar la información encontrada',
+                    'tool': 'data_analysis',
+                    'status': 'pending',
+                    'estimated_time': '1 minuto',
+                    'completed': False,
+                    'active': False
+                },
+                {
+                    'id': 'step_4',
+                    'title': 'Síntesis y presentación',
+                    'description': 'Sintetizar resultados y presentar conclusiones',
+                    'tool': 'synthesis',
+                    'status': 'pending',
+                    'estimated_time': '45 segundos',
+                    'completed': False,
+                    'active': False
+                }
+            ]
+        else:
+            # Plan genérico para otras tareas
+            plan_steps = [
+                {
+                    'id': 'step_1',
+                    'title': 'Análisis de la tarea',
+                    'description': 'Comprender y analizar la solicitud',
+                    'tool': 'analysis',
+                    'status': 'pending',
+                    'estimated_time': '30 segundos',
+                    'completed': False,
+                    'active': True
+                },
+                {
+                    'id': 'step_2',
+                    'title': 'Procesamiento',
+                    'description': 'Procesar y ejecutar la tarea solicitada',
+                    'tool': 'processing',
+                    'status': 'pending',
+                    'estimated_time': '1-2 minutos',
+                    'completed': False,
+                    'active': False
+                },
+                {
+                    'id': 'step_3',
+                    'title': 'Entrega de resultados',
+                    'description': 'Entregar los resultados finales',
+                    'tool': 'delivery',
+                    'status': 'pending',
+                    'estimated_time': '30 segundos',
+                    'completed': False,
+                    'active': False
+                }
+            ]
+        
+        # Guardar plan en memoria global
+        active_task_plans[task_id] = {
+            'plan': plan_steps,
+            'current_step': 0,
+            'status': 'executing',
+            'created_at': datetime.now().isoformat(),
+            'message': message
+        }
+        
+        return {
+            'steps': plan_steps,
+            'total_steps': len(plan_steps),
+            'estimated_total_time': '2-4 minutos',
+            'task_type': 'structured_execution'
+        }
+        
+    except Exception as e:
+        logger.error(f"Error generating structured plan: {str(e)}")
+        # Plan de fallback simple
+        fallback_plan = [
+            {
+                'id': 'step_1',
+                'title': 'Procesando solicitud',
+                'description': 'Procesando tu solicitud...',
+                'tool': 'processing',
+                'status': 'pending',
+                'estimated_time': '1 minuto',
+                'completed': False,
+                'active': True
+            }
+        ]
+        
+        active_task_plans[task_id] = {
+            'plan': fallback_plan,
+            'current_step': 0,
+            'status': 'executing',
+            'created_at': datetime.now().isoformat(),
+            'message': message
+        }
+        
+        return {
+            'steps': fallback_plan,
+            'total_steps': 1,
+            'estimated_total_time': '1 minuto',
+            'task_type': 'simple_execution'
+        }
+
+def generate_clean_response(ollama_response: str, tool_results: list) -> str:
+    """
+    Genera una respuesta limpia sin mostrar los pasos internos del plan
+    """
+    try:
+        # Limpiar la respuesta de Ollama de cualquier referencia a pasos internos
+        clean_response = ollama_response
+        
+        # Remover patrones comunes de pasos internos si existen
+        patterns_to_remove = [
+            r'Paso \d+:.*?\n',
+            r'Step \d+:.*?\n',
+            r'\*\*Paso \d+\*\*.*?\n',
+            r'\*\*Step \d+\*\*.*?\n',
+            r'## Paso \d+.*?\n',
+            r'## Step \d+.*?\n'
+        ]
+        
+        for pattern in patterns_to_remove:
+            clean_response = re.sub(pattern, '', clean_response, flags=re.IGNORECASE)
+        
+        # Si hay resultados de herramientas, agregar un resumen limpio
+        if tool_results:
+            tools_summary = []
+            successful_tools = 0
+            failed_tools = 0
+            
+            for result in tool_results:
+                if result.get('error'):
+                    failed_tools += 1
+                else:
+                    successful_tools += 1
+                    # Agregar información útil del resultado si está disponible
+                    if isinstance(result.get('result'), dict):
+                        if 'output' in result['result']:
+                            tools_summary.append(f"✅ {result['tool']}: Completado exitosamente")
+            
+            # Agregar resumen al final de la respuesta
+            if successful_tools > 0 or failed_tools > 0:
+                clean_response += f"\n\n---\n**🔧 Herramientas utilizadas:** {successful_tools} exitosas"
+                if failed_tools > 0:
+                    clean_response += f", {failed_tools} con errores"
+                clean_response += "\n"
+                
+                # Agregar detalles de herramientas exitosas
+                for summary in tools_summary[:3]:  # Máximo 3 para no saturar
+                    clean_response += f"{summary}\n"
+        
+        # Limpiar espacios extra y líneas vacías múltiples
+        clean_response = re.sub(r'\n\s*\n\s*\n', '\n\n', clean_response)
+        clean_response = clean_response.strip()
+        
+        return clean_response
+        
+    except Exception as e:
+        logger.error(f"Error generating clean response: {str(e)}")
+        # Fallback: devolver respuesta original
+        return ollama_response
+
 @agent_bp.route('/chat', methods=['POST'])
 def chat():
     """
