@@ -682,7 +682,7 @@ def chat():
             logger.info(f"🤖 Detected task mode - generating structured plan")
             
             # PASO 2: Generar plan estructurado PRIMERO
-            structured_plan = generate_structured_plan(message, task_id)
+            structured_plan = generate_dynamic_plan_with_ai(message, task_id)
             
             # PASO 3: Generar respuesta usando Ollama con contexto de herramientas
             ollama_response = ollama_service.generate_response(message, context, use_tools=True)
