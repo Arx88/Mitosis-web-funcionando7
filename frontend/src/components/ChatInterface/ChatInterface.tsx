@@ -1,90 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Paperclip, Mic, Send, Terminal, Globe, FileText, Plus, Zap, X, Search, Layers, Bot } from 'lucide-react';
-import { agentAPI, ChatResponse, ToolResult, SearchData, UploadData, OrchestrationStatus } from '../../services/api';
+import { Paperclip, Mic, Send, Terminal, Globe, FileText, Plus, Zap, X, Search, Layers } from 'lucide-react';
+import { agentAPI, ChatResponse, ToolResult, SearchData, UploadData } from '../../services/api';
 import { VanishInput } from '../VanishInput';
 import { FileUploadModal } from '../FileUploadModal';
-import { FileAttachmentButtons } from '../FileAttachmentButtons';
-import { FileInlineDisplay } from '../FileInlineDisplay';
+import { FileAttachment } from '../FileAttachment';
 import { ToolExecutionDetails } from '../ToolExecutionDetails';
 import { SearchResults } from '../SearchResults';
 import { FileUploadSuccess } from '../FileUploadSuccess';
 import { TaskSummary } from '../TaskSummary';
-import { DeepResearchProgress, ProgressStep } from '../DeepResearchProgress';
-import { DeepResearchReport, ResearchReport } from '../DeepResearchReport';
-import { DeepResearchReportCard } from '../DeepResearchReportCard';
-import { DeepResearchPlaceholder } from '../DeepResearchPlaceholder';
 import { LinkPreview, MultiLinkDisplay } from '../LinkPreview';
-import { ThinkingAnimation } from '../ThinkingAnimation';
-import { AgentStatusBar, AgentStatus } from '../AgentStatusBar';
-import { useConsoleReportFormatter } from '../../hooks/useConsoleReportFormatter';
-import { MessageActions } from '../MessageActions';
-import { PDFViewer } from '../PDFViewer';
-import { MemoryFile, useMemoryManager } from '../../hooks/useMemoryManager';
-import { generatePDFWithCustomCSS, downloadMarkdownFile } from '../../utils/pdfGenerator';
-import { LoadingPlaceholder, MessageLoadingPlaceholder } from '../LoadingPlaceholder';
-
-// Helper component to handle async file parsing
-const FileUploadParser: React.FC<{
-  content: string;
-  onFileView: (file: any) => void;
-  onFileDownload: (file: any) => void;
-  onAddToMemory: (file: any) => void;
-  parseMessageAsFileUpload: (content: string) => Promise<any>;
-}> = ({ content, onFileView, onFileDownload, onAddToMemory, parseMessageAsFileUpload }) => {
-  const [fileUploadData, setFileUploadData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  useEffect(() => {
-    const parseMessageAsFileUpload = async (content: string) => {
-      try {
-        // Simplified parsing logic to avoid excessive re-renders
-        const hasFileIndicators = content && typeof content === 'string' && 
-          (content.includes('✅') || content.includes('archivo') || content.includes('cargado'));
-        
-        if (hasFileIndicators) {
-          return { files: [] }; // Estructura mínima para evitar re-renders
-        }
-        
-        return null;
-      } catch (error) {
-        console.error('Error parsing file upload:', error);
-        return null;
-      }
-    };
-
-    // Debounce para evitar múltiples llamadas
-    const timeoutId = setTimeout(() => {
-      parseMessageAsFileUpload(content).then(result => {
-        setFileUploadData(result);
-        setIsLoading(false);
-      });
-    }, 200);
-
-    return () => clearTimeout(timeoutId);
-  }, [content]); // Solo depender del contenido
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-2 text-blue-400">
-        <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-        <span>Cargando archivos...</span>
-      </div>
-    );
-  }
-  
-  if (!fileUploadData || !fileUploadData.files.length) {
-    return null;
-  }
-  
-  return (
-    <FileUploadSuccess
-      files={fileUploadData.files}
-      onFileView={onFileView}
-      onFileDownload={onFileDownload}
-      onAddToMemory={onAddToMemory}
-    />
-  );
-};
 
 export interface Message {
   id: string;
@@ -110,7 +34,6 @@ export interface Message {
     title?: string;
     description?: string;
   }>;
-  orchestrationResult?: any; // Resultado de orquestación
 }
 
 export interface ChatInterfaceProps {
@@ -124,8 +47,6 @@ export interface ChatInterfaceProps {
   'data-id'?: string;
   onUpdateMessages?: (messages: Message[]) => void;
   onLogToTerminal?: (message: string, type?: 'info' | 'success' | 'error') => void;
-  onTaskReset?: () => void; // New prop for task reset
-  isNewTask?: boolean; // New prop to indicate if this is a new task
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -138,395 +59,34 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   className = '',
   'data-id': dataId,
   onUpdateMessages,
-  onLogToTerminal,
-  onTaskReset,
-  isNewTask = false
+  onLogToTerminal
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [activeQuickAction, setActiveQuickAction] = useState<string | null>(null);
   const [showFileUpload, setShowFileUpload] = useState(false);
-  const [searchMode, setSearchMode] = useState<'websearch' | 'deepsearch' | null>(null); // No default activation
-  const [currentQuery, setCurrentQuery] = useState<string>(''); // Store current query for DeepResearch
-  const [deepResearchProgress, setDeepResearchProgress] = useState<{
-    isActive: boolean;
-    currentStep: number;
-    overallProgress: number;
-    steps: ProgressStep[];
-  }>({
-    isActive: false,
-    currentStep: -1,
-    overallProgress: 0,
-    steps: []
-  });
-  const [deepResearchReport, setDeepResearchReport] = useState<ResearchReport | null>(null);
-  const [showPlaceholder, setShowPlaceholder] = useState(false);
-  const [agentStatus, setAgentStatus] = useState<AgentStatus>('idle');
-  const [currentStepName, setCurrentStepName] = useState<string>('');
-  const [showPDFViewer, setShowPDFViewer] = useState(false);
-  const [pdfViewerContent, setPDFViewerContent] = useState('');
-  const [pdfViewerTitle, setPDFViewerTitle] = useState('');
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-  const [hasInitialMessageSent, setHasInitialMessageSent] = useState(false); // Track if initial message was sent
-  const processedTasksRef = useRef<Set<string>>(new Set()); // Track processed task IDs
-  // Estados para orquestación
-  const [orchestrationTaskId, setOrchestrationTaskId] = useState<string | null>(null);
-  const [orchestrationStatus, setOrchestrationStatus] = useState<OrchestrationStatus | null>(null);
-  const [isOrchestrating, setIsOrchestrating] = useState(false);
+  const [searchMode, setSearchMode] = useState<'websearch' | 'deepsearch' | null>('websearch'); // Default WebSearch activated
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
-  const formatFileSize = (bytes?: number | string) => {
-    if (!bytes) return '';
-    const size = typeof bytes === 'string' ? parseInt(bytes) : bytes;
-    if (size < 1024) return `${size}B`;
-    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)}KB`;
-    if (size < 1024 * 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)}MB`;
-    return `${(size / (1024 * 1024 * 1024)).toFixed(1)}GB`;
-  };
 
-  // Memory Manager
-  const {
-    memoryFiles,
-    addMemoryFile,
-    addResearchReportToMemory,
-    removeMemoryFile,
-    toggleMemoryFile,
-    clearAllMemory,
-    getActiveMemoryContext,
-    hasActiveMemory
-  } = useMemoryManager();
-  
-  // Hook para formatear reportes en consola
-  const {
-    formatDeepResearchReport,
-    formatResearchMetrics,
-    formatProgressReport,
-    formatStructuredData
-  } = useConsoleReportFormatter();
-
-  // Reset all states when task changes or new task is created
-  const resetChatState = () => {
-    console.log('🔄 RESETTING CHAT STATE - Terminal and computer state reset');
-    setInputValue('');
-    setIsLoading(false);
-    setShowQuickActions(false);
-    setActiveQuickAction(null);
-    setShowFileUpload(false);
-    setSearchMode(null);
-    setCurrentQuery('');
-    setDeepResearchProgress({
-      isActive: false,
-      currentStep: -1,
-      overallProgress: 0,
-      steps: []
-    });
-    setDeepResearchReport(null);
-    setShowPlaceholder(false);
-    setAgentStatus('idle');
-    setCurrentStepName('');
-    // Reset orchestration state
-    setOrchestrationTaskId(null);
-    setOrchestrationStatus(null);
-    setIsOrchestrating(false);
-    setIsLoadingMessages(false);
-    setShowPDFViewer(false);
-    setPDFViewerContent('');
-    setPDFViewerTitle('');
-    setHasInitialMessageSent(false); // Reset the initial message flag
-    // Clear processed tasks when switching tasks
-    processedTasksRef.current.clear();
-    console.log('✅ CHAT STATE RESET COMPLETE - Terminal cleared');
-  };
-
-  // Effect to reset state when new task is created (optimized)
-  useEffect(() => {
-    if (isNewTask) {
-      console.log('🔄 NEW TASK DETECTED - Resetting chat state');
-      resetChatState();
-      if (onTaskReset) {
-        onTaskReset();
-      }
-    }
-  }, [isNewTask]); // Only dependency is isNewTask
-
-  // Effect to reset state when task ID changes (optimized)
-  useEffect(() => {
-    console.log('🔄 CHAT: dataId changed to:', dataId);
-    resetChatState();
-    if (onTaskReset) {
-      onTaskReset();
-    }
-  }, [dataId]); // Only dependency is dataId
-
-  // Optimized scroll effect with debounce
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      scrollToBottom();
-    }, 100);
-    
-    return () => clearTimeout(timeoutId);
-  }, [messages.length]); // Only depends on messages length
-
-  // Effect to automatically send initial message to backend when new task is created
-  useEffect(() => {
-    // Early return if conditions aren't met
-    if (!dataId || messages.length !== 1 || messages[0].sender !== 'user' || isLoading) {
-      return;
-    }
-
-    // Check if already processed
-    if (processedTasksRef.current.has(dataId)) {
-      console.log('⚠️ CHAT: Task already processed, skipping:', dataId);
-      return;
-    }
-
-    // Check if this is the initial message for a new task (not a user-typed message)
-    if (hasInitialMessageSent) {
-      console.log('⚠️ CHAT: Initial message already sent for this session, skipping');
-      return;
-    }
-
-    // Mark as processed immediately to prevent duplicate calls
-    processedTasksRef.current.add(dataId);
-    setHasInitialMessageSent(true);
-    console.log('✅ CHAT: Task marked as processed:', dataId);
-    
-    const sendInitialMessage = async () => {
-      console.log('🚀 CHAT: Sending initial message to backend for task:', dataId);
-      
-      try {
-        setIsLoading(true);
-        
-        // Send the user's message to the backend
-        const response = await agentAPI.sendMessage(messages[0].content, { task_id: dataId });
-        
-        if (response && response.response) {
-          console.log('✅ CHAT: Received response from backend');
-          
-          // Parse links from response
-          const responseLinks = parseLinksFromText(response.response);
-          const structuredLinks = parseStructuredLinks(response.response);
-          const allLinks = [...responseLinks, ...structuredLinks];
-          
-          // Remove duplicates
-          const uniqueLinks = allLinks.filter((link, index, self) => 
-            index === self.findIndex(l => l.url === link.url)
-          );
-          
-          // Create assistant response message with complete data
-          const assistantMessage: Message = {
-            id: `msg-${Date.now()}`,
-            content: response.response,
-            sender: 'assistant',
-            timestamp: new Date(response.timestamp || Date.now()),
-            toolResults: response.tool_results || [],
-            searchData: response.search_data,
-            uploadData: response.upload_data,
-            links: uniqueLinks.length > 0 ? uniqueLinks : undefined,
-            status: response.tool_results && response.tool_results.length > 0 ? {
-              type: 'success',
-              message: `Ejecuté ${response.tool_results.length} herramienta(s)`
-            } : undefined
-          };
-          
-          // Add the response - this should only happen once per task
-          if (onUpdateMessages) {
-            console.log('📤 CHAT: Updating messages with assistant response');
-            const updatedMessages = [...messages, assistantMessage];
-            onUpdateMessages(updatedMessages);
-          }
-        }
-      } catch (error) {
-        console.error('❌ CHAT: Error sending initial message:', error);
-        
-        const errorMessage: Message = {
-          id: `msg-${Date.now()}`,
-          content: 'Hubo un error al procesar tu mensaje. Por favor, intenta de nuevo.',
-          sender: 'assistant',
-          timestamp: new Date()
-        };
-        
-        if (onUpdateMessages) {
-          console.log('📤 CHAT: Updating messages with error response');
-          onUpdateMessages([...messages, errorMessage]);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    // Call the function
-    sendInitialMessage();
-  }, [dataId, messages.length]); // Minimal dependencies
-
-  // Función para obtener progreso real del backend
-  const pollDeepResearchProgress = async (taskId: string) => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/agent/deep-research/progress/${taskId}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch progress');
-      }
-      
-      const progressData = await response.json();
-      
-      // Actualizar estado del progreso
-      setDeepResearchProgress(prev => ({
-        ...prev,
-        isActive: progressData.is_active,
-        currentStep: progressData.current_step,
-        overallProgress: progressData.current_progress,
-        steps: progressData.steps || prev.steps
-      }));
-      
-      return progressData;
-    } catch (error) {
-      console.error('Error fetching progress:', error);
-      return null;
-    }
-  };
-
-  // Función para iniciar polling del progreso
-  const startProgressPolling = (taskId: string) => {
-    const pollInterval = setInterval(async () => {
-      const progressData = await pollDeepResearchProgress(taskId);
-      
-      if (progressData && (!progressData.is_active || progressData.current_progress >= 100)) {
-        clearInterval(pollInterval);
-        
-        // Mantener el progreso visible por unos segundos después de completar
-        setTimeout(() => {
-          setDeepResearchProgress(prev => ({
-            ...prev,
-            isActive: false
-          }));
-        }, 3000);
-      }
-    }, 1000); // Poll cada segundo
-    
-    return pollInterval;
-  };
-
-  // Función para simular el progreso del DeepResearch (mantener como fallback)
-  const simulateDeepResearchProgress = (query: string) => {
-    const steps: ProgressStep[] = [
-      {
-        id: 'search_initial',
-        title: 'Búsqueda inicial',
-        description: 'Recolectando datos iniciales...',
-        status: 'pending',
-        details: [],
-        progress: 0
-      },
-      {
-        id: 'search_specific',
-        title: 'Búsquedas específicas',
-        description: 'Realizando búsquedas especializadas...',
-        status: 'pending',
-        details: [],
-        progress: 0
-      },
-      {
-        id: 'content_extraction',
-        title: 'Extracción de contenido',
-        description: 'Extrayendo contenido completo...',
-        status: 'pending',
-        details: [],
-        progress: 0
-      },
-      {
-        id: 'image_collection',
-        title: 'Recopilación de imágenes',
-        description: 'Juntando imágenes relacionadas...',
-        status: 'pending',
-        details: [],
-        progress: 0
-      },
-      {
-        id: 'analysis_comparison',
-        title: 'Análisis comparativo',
-        description: 'Comparando artículos y analizando...',
-        status: 'pending',
-        details: [],
-        progress: 0
-      },
-      {
-        id: 'report_generation',
-        title: 'Generación de informe',
-        description: 'Generando informe completo...',
-        status: 'pending',
-        details: [],
-        progress: 0
-      }
-    ];
-
-    setDeepResearchProgress({
-      isActive: true,
-      currentStep: 0,
-      overallProgress: 0,
-      steps: steps
-    });
-
-    // Simular progreso paso a paso
-    const progressSteps = [
-      { stepIndex: 0, progress: 10, details: [`Consultando Tavily para: ${query}`] },
-      { stepIndex: 0, progress: 15, details: [`Encontradas fuentes iniciales`, `URLs procesadas`] },
-      { stepIndex: 1, progress: 25, details: [`Búsqueda específica 1/3`, `Consultando: ${query} definición concepto`] },
-      { stepIndex: 1, progress: 35, details: [`Búsqueda específica 2/3`, `Consultando: ${query} características principales`] },
-      { stepIndex: 1, progress: 45, details: [`Búsqueda específica 3/3`, `Nuevas fuentes encontradas`] },
-      { stepIndex: 2, progress: 55, details: [`Procesando 10 fuentes principales`, `Extrayendo contenido completo`] },
-      { stepIndex: 2, progress: 75, details: [`Extrayendo contenido 8/10`, `Analizando páginas web`] },
-      { stepIndex: 3, progress: 80, details: [`Buscando 10 imágenes sobre: ${query}`, `Encontradas imágenes`] },
-      { stepIndex: 4, progress: 85, details: [`Identificando patrones y tendencias`, `Extrayendo hallazgos clave`] },
-      { stepIndex: 5, progress: 90, details: [`Compilando resultados`, `Creando informe.md`] },
-      { stepIndex: 5, progress: 100, details: [`Investigación completada exitosamente`] }
-    ];
-
-    let currentProgressIndex = 0;
-    const progressInterval = setInterval(() => {
-      if (currentProgressIndex >= progressSteps.length) {
-        clearInterval(progressInterval);
-        return;
-      }
-
-      const currentProgress = progressSteps[currentProgressIndex];
-      
-      setDeepResearchProgress(prev => {
-        const newSteps = [...prev.steps];
-        
-        // Actualizar pasos anteriores como completados
-        for (let i = 0; i < currentProgress.stepIndex; i++) {
-          newSteps[i].status = 'completed';
-        }
-        
-        // Actualizar paso actual
-        newSteps[currentProgress.stepIndex].status = 'active';
-        newSteps[currentProgress.stepIndex].progress = currentProgress.progress;
-        newSteps[currentProgress.stepIndex].details = currentProgress.details;
-        
-        return {
-          ...prev,
-          currentStep: currentProgress.stepIndex,
-          overallProgress: currentProgress.progress,
-          steps: newSteps
-        };
-      });
-
-      currentProgressIndex++;
-    }, 1500); // Actualizar cada 1.5 segundos
-
-    return progressInterval;
+  // Helper function for formatting file sizes
+  const formatFileSize = (bytes: number): string => {
+    if (!bytes) return 'Tamaño desconocido';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   };
 
   const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({
-        behavior: 'smooth'
-      });
-    }
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth'
+    });
   };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const parseTaskSummary = (content: string) => {
     try {
@@ -589,272 +149,28 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const handleSendMessage = async (message: string) => {
-    console.log('🔄 DEBUG: handleSendMessage called with:', message);
-    
-    // Check if this message is already being processed by the initial message effect
-    if (dataId && processedTasksRef.current.has(dataId) && messages.length === 1) {
-      console.log('⚠️ DEBUG: Message already being processed by initial message effect, skipping handleSendMessage');
-      return;
-    }
-    
     if (message.trim() && !isLoading) {
-      console.log('✅ DEBUG: Conditions met, starting message processing');
       setIsLoading(true);
-      setIsLoadingMessages(true);
-      
-      // Reset search modes after sending message but keep them available
-      setTimeout(() => {
-        setSearchMode(null); // Deseleccionar modo de búsqueda, NO deshabilitar
-      }, 500);
-      
-      // Reset deep research report when starting new search
-      setDeepResearchReport(null);
-      setShowPlaceholder(false);
-
-      // Set agent status to task received
-      setAgentStatus('task_received');
-      
-      // After a longer moment, change to analyzing task
-      setTimeout(() => {
-        setAgentStatus('analyzing_task');
-      }, 2000);  // Aumentado de 1000 a 2000ms
+      // Reset active quick action when sending message
+      setActiveQuickAction(null);
 
       // Modificar el mensaje basado en el modo de búsqueda
       let processedMessage = message;
-      let progressInterval: NodeJS.Timeout | null = null;
-      let useOrchestration = false;
-      
-      // Determinar si usar orquestación (para tareas que no sean WebSearch/DeepSearch específicas)
-      if (!searchMode) {
-        useOrchestration = true;
-        setAgentStatus('orchestrating');
-        setIsOrchestrating(true);
-      }
-      
       if (searchMode === 'websearch') {
         processedMessage = `[WebSearch] ${message}`;
-        setCurrentStepName('Búsqueda Web');
-        setAgentStatus('executing_step');
       } else if (searchMode === 'deepsearch') {
         processedMessage = `[DeepResearch] ${message}`;
-        setCurrentQuery(message); // Store the query for the progress component
-        setCurrentStepName('Investigación Profunda');
-        setAgentStatus('executing_step');
-        
-        // Inicializar progreso para DeepResearch
-        setDeepResearchProgress({
-          isActive: true,
-          currentStep: 0,
-          overallProgress: 0,
-          steps: [
-            {
-              id: 'search_initial',
-              title: 'Búsqueda inicial',
-              description: 'Recolectando datos iniciales...',
-              status: 'active',
-              details: [`Iniciando búsqueda para: ${message}`],
-              progress: 0
-            },
-            {
-              id: 'search_specific',
-              title: 'Búsquedas específicas',
-              description: 'Realizando búsquedas especializadas...',
-              status: 'pending',
-              details: [],
-              progress: 0
-            },
-            {
-              id: 'content_extraction',
-              title: 'Extracción de contenido',
-              description: 'Extrayendo contenido completo...',
-              status: 'pending',
-              details: [],
-              progress: 0
-            },
-            {
-              id: 'image_collection',
-              title: 'Recopilación de imágenes',
-              description: 'Juntando imágenes relacionadas...',
-              status: 'pending',
-              details: [],
-              progress: 0
-            },
-            {
-              id: 'analysis_comparison',
-              title: 'Análisis comparativo',
-              description: 'Comparando artículos y analizando...',
-              status: 'pending',
-              details: [],
-              progress: 0
-            },
-            {
-              id: 'report_generation',
-              title: 'Generación de informe',
-              description: 'Generando informe completo...',
-              status: 'pending',
-              details: [],
-              progress: 0
-            }
-          ]
-        });
-        
-        // Iniciar polling del progreso real si hay un dataId (task_id)
-        if (dataId) {
-          progressInterval = startProgressPolling(dataId);
-        } else {
-          // Fallback a simulación si no hay task_id
-          progressInterval = simulateDeepResearchProgress(message);
-        }
       }
 
-      // Create and add user message to the conversation
-      const userMessage: Message = {
-        id: `msg-${Date.now()}-user`,
-        content: message,
-        sender: 'user',
-        timestamp: new Date()
-      };
+      // Llamar al callback original para mantener compatibilidad
+      onSendMessage(processedMessage);
 
-      // Add user message to the conversation immediately
-      if (onUpdateMessages) {
-        console.log('📤 DEBUG: Adding user message to conversation');
-        const updatedWithUser = [...messages, userMessage];
-        onUpdateMessages(updatedWithUser);
-      }
-
-      // For subsequent messages (not the initial one), we need to handle backend communication
-      // but only if this is NOT the initial message being processed by the effect
-      if (messages.length > 1 || !processedTasksRef.current.has(dataId)) {
-        // Include memory context if there's active memory
-        const context = {
+      try {
+        // Enviar mensaje al backend
+        const response: ChatResponse = await agentAPI.sendMessage(processedMessage, {
           task_id: dataId,
-          memory_context: hasActiveMemory ? getActiveMemoryContext() : undefined,
           previous_messages: messages.slice(-5), // Enviar últimos 5 mensajes como contexto
           search_mode: searchMode // Enviar modo de búsqueda al backend
-        };
-
-        try {
-          console.log('🔄 BASIC DEBUG: Sending subsequent message to backend');
-          console.log('🔄 DEBUG: API URL:', `${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/agent/chat`);
-          console.log('🔄 DEBUG: Message:', processedMessage);
-          console.log('🔄 DEBUG: Context:', context);
-          
-          const response: ChatResponse = await agentAPI.sendMessage(processedMessage, context);
-          
-          console.log('✅ BASIC DEBUG: Backend response received');
-          console.log('📋 BASIC DEBUG: Response type:', typeof response);
-          console.log('📋 BASIC DEBUG: Response keys:', Object.keys(response || {}));
-          
-          // Parse links from response
-          const responseLinks = parseLinksFromText(response.response);
-          const structuredLinks = parseStructuredLinks(response.response);
-          const allLinks = [...responseLinks, ...structuredLinks];
-          
-          // Remove duplicates
-          const uniqueLinks = allLinks.filter((link, index, self) => 
-            index === self.findIndex(l => l.url === link.url)
-          );
-
-          // Create agent message with enhanced data
-          const agentMessage: Message = {
-            id: `msg-${Date.now()}`,
-            content: response.response,
-            sender: 'assistant',
-            timestamp: new Date(response.timestamp),
-            toolResults: response.tool_results,
-            searchData: response.search_data,
-            uploadData: response.upload_data,
-            links: uniqueLinks.length > 0 ? uniqueLinks : undefined,
-            status: response.tool_results && response.tool_results.length > 0 ? {
-              type: 'success',
-              message: `Ejecuté ${response.tool_results.length} herramienta(s)`
-            } : undefined
-          };
-
-          // Add agent response to conversation
-          if (onUpdateMessages) {
-            const currentMessages = [...messages, userMessage];
-            const updatedMessages = [...currentMessages, agentMessage];
-            onUpdateMessages(updatedMessages);
-          }
-          
-        } catch (error) {
-          console.error('❌ CHAT: Error sending subsequent message:', error);
-          
-          const errorMessage: Message = {
-            id: `msg-${Date.now()}`,
-            content: 'Hubo un error al procesar tu mensaje. Por favor, intenta de nuevo.',
-            sender: 'assistant',
-            timestamp: new Date()
-          };
-          
-          if (onUpdateMessages) {
-            const currentMessages = [...messages, userMessage];
-            const updatedMessages = [...currentMessages, errorMessage];
-            onUpdateMessages(updatedMessages);
-          }
-        }
-      }
-      
-      // Reset loading state
-      setIsLoading(false);
-      setIsLoadingMessages(false);
-    }
-  };
-
-  // Function to handle orchestration polling (moved to proper location)
-  const handleOrchestrationPolling = (taskId: string) => {
-    const orchestrationInterval = setInterval(async () => {
-      try {
-        const statusResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/agent/orchestration/status/${taskId}`);
-        if (statusResponse.ok) {
-          const status = await statusResponse.json();
-          if (status.status === 'completed') {
-            setAgentStatus('task_completed');
-            setCurrentStepName('Completado');
-            setIsOrchestrating(false);
-            clearInterval(orchestrationInterval);
-            
-            try {
-              const resultResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/agent/orchestration/result/${taskId}`);
-              if (resultResponse.ok) {
-                const result = await resultResponse.json();
-                console.log('Final orchestration result:', result);
-              }
-            } catch (err) {
-              console.error('Error getting final result:', err);
-            }
-          } else if (status.status === 'failed') {
-            setAgentStatus('task_failed');
-            setCurrentStepName('Error');
-            setIsOrchestrating(false);
-            clearInterval(orchestrationInterval);
-          }
-        }
-      } catch (err) {
-        console.error('Error polling orchestration status:', err);
-        clearInterval(orchestrationInterval);
-        setIsOrchestrating(false);
-      }
-    }, 2000); // Poll every 2 seconds
-    
-    // Cleanup interval after 5 minutes
-    setTimeout(() => {
-      clearInterval(orchestrationInterval);
-      setIsOrchestrating(false);
-    }, 300000); // 5 minutes
-  };
-        }
-        
-        // CRITICAL DEBUG - Log everything about created_files
-        console.log('Backend response received');
-        console.log('Response structure check:', {
-          response: typeof response.response,
-          tool_calls: Array.isArray(response.tool_calls) ? response.tool_calls.length : 'not array',
-          tool_results: Array.isArray(response.tool_results) ? response.tool_results.length : 'not array',
-          created_files: Array.isArray(response.created_files) ? response.created_files.length : 'not array',
-          search_mode: response.search_mode,
-          search_data: typeof response.search_data
         });
 
         // Parse links from response
@@ -883,153 +199,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           } : undefined
         };
 
-        // Enhanced file handling starting...
-        console.log('Enhanced file handling starting...');
-        console.log('🎯 Created files detected:', response.created_files);
-        console.log('🔍 File details:', {
-          created_files: response.created_files,
-          is_array: Array.isArray(response.created_files),
-          length: response.created_files?.length || 0,
-          search_mode: searchMode,
-          tool_results: response.tool_results?.length || 0,
-          upload_data: response.upload_data
-        });
-        
-        let shouldCreateFileMessage = false;
-        let filesToShow = [];
-        
-        // Only create file messages for actual file uploads (not for DeepSearch or task execution)
-        // Method 1: Upload data from file upload response (keep this for real file uploads)
-        if (response.upload_data && response.upload_data.files && Array.isArray(response.upload_data.files) && response.upload_data.files.length > 0) {
-          console.log('📝 Using upload_data files:', response.upload_data.files);
-          filesToShow = response.upload_data.files;
-          shouldCreateFileMessage = true;
+        // Update messages if callback provided
+        if (onUpdateMessages) {
+          const updatedMessages = [...messages, agentMessage];
+          onUpdateMessages(updatedMessages);
         }
-        // REMOVED: Automatic file creation for DeepSearch and task execution
-        // This was causing mockup files to appear in chat during task execution
-        
-        // REMOVED: Test file creation logic
-        // This was causing mockup files to appear in chat
-        
-        console.log('File creation decision:', { shouldCreateFileMessage, filesCount: filesToShow.length });
-        
-        console.log('File creation logic processing...');
-        
-        // Get current messages (now includes user message)
-        const currentMessages = [...messages, userMessage];
-        
-        if (shouldCreateFileMessage && filesToShow.length > 0) {
-          console.log('Creating file upload message...');
-          
-          // Create proper attachments with enhanced error handling
-          const attachments = filesToShow.map((file, index) => {
-            const attachment = {
-              id: file.id || file.file_id || `file-${Date.now()}-${Math.random()}`,
-              name: file.name || `archivo_${index + 1}.md`,
-              size: file.size || 25000,
-              type: file.mime_type || file.type || 'text/markdown',
-              url: file.url || (file.id ? `${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/agent/download/${file.id}` : undefined)
-            };
-            
-            return attachment;
-          });
-          
-          console.log('📎 Created attachments:', attachments);
-          
-          // Create a separate message for file upload success
-          const fileUploadMessage: Message = {
-            id: `msg-${Date.now()}-files`,
-            content: 'file_upload_success', // Use the marker for proper rendering
-            sender: 'assistant',
-            timestamp: new Date(response.timestamp),
-            attachments: attachments,
-            status: {
-              type: 'success',
-              message: `${filesToShow.length} archivo${filesToShow.length !== 1 ? 's' : ''} listo${filesToShow.length !== 1 ? 's' : ''} para usar`
-            }
-          };
-
-          console.log('📁 File upload success message detected');
-          console.log('📎 Final file upload message:', fileUploadMessage);
-
-          // Update messages with both agent response and file upload message
-          if (onUpdateMessages) {
-            const updatedMessages = [...currentMessages];
-            
-            // Add agent response
-            updatedMessages.push(agentMessage);
-            
-            // Add file upload message if needed
-            if (shouldCreateFileMessage && filesToShow.length > 0) {
-              updatedMessages.push(fileUploadMessage);
-            }
-            
-            onUpdateMessages(updatedMessages);
-          }
-        } else {
-          // Handle regular messages without files
-          if (onUpdateMessages) {
-            const updatedMessages = [...currentMessages, agentMessage];
-            onUpdateMessages(updatedMessages);
-          }
-        }
-
-        // Handle DeepResearch completion
-        if (searchMode === 'deepsearch' && response.tool_results && response.tool_results.length > 0) {
-          const toolResult = response.tool_results[0];
-          
-          // Detener simulación de progreso
-          if (progressInterval) {
-            clearInterval(progressInterval);
-          }
-          
-          // Completar progreso GRADUALMENTE para que se vea
-          setDeepResearchProgress(prev => ({
-            ...prev,
-            overallProgress: 100,
-            currentStep: prev.steps.length - 1,
-            steps: prev.steps.map(step => ({ ...step, status: 'completed' }))
-          }));
-          
-          // Esperar 2 segundos antes de ocultar para que el usuario vea la completación
-          setTimeout(() => {
-            setDeepResearchProgress(prev => ({
-              ...prev,
-              isActive: false
-            }));
-          }, 2000);
-          
-          // NO crear archivos fake para DeepSearch - solo mostrar el resultado real
-          
-          // Mostrar informe en consola si está disponible
-          if (toolResult.result?.result?.console_report && onLogToTerminal) {
-            onLogToTerminal(toolResult.result.result.console_report, 'info');
-          }
-          
-          // Crear datos del informe
-          const reportData: ResearchReport = {
-            query: message,
-            sourcesAnalyzed: toolResult.result?.result?.sources_analyzed || 0,
-            imagesCollected: toolResult.result?.result?.images_collected || 0,
-            reportFile: response.created_files?.find(f => f.mime_type === 'text/markdown')?.path,
-            executiveSummary: toolResult.result?.result?.executive_summary || response.search_data?.directAnswer,
-            keyFindings: toolResult.result?.result?.key_findings || [],
-            recommendations: toolResult.result?.result?.recommendations || [],
-            timestamp: response.timestamp,
-            console_report: toolResult.result?.result?.console_report
-          };
-          
-          setDeepResearchReport(reportData);
-        }
-
-        // Set agent status to task completed
-        setAgentStatus('task_completed');
-        
-        // After 5 seconds, set back to idle (aumentado para mejor visibilidad)
-        setTimeout(() => {
-          setAgentStatus('idle');
-          setIsLoadingMessages(false);
-        }, 5000);  // Aumentado de 3000 a 5000ms
 
         // Log tool executions to terminal
         if (response.tool_results && response.tool_results.length > 0 && onLogToTerminal) {
@@ -1052,35 +226,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       } catch (error) {
         console.error('Error sending message:', error);
         
-        // Set agent status to task failed
-        setAgentStatus('task_failed');
-        
-        // After 3 seconds, set back to idle
-        setTimeout(() => {
-          setAgentStatus('idle');
-          setIsLoadingMessages(false);
-        }, 3000);
-        
-        // Detener progreso en caso de error
-        if (progressInterval) {
-          clearInterval(progressInterval);
-        }
-        
-        // Mostrar error en el progreso por 3 segundos
-        setDeepResearchProgress(prev => ({
-          ...prev,
-          steps: prev.steps.map(step => ({ ...step, status: step.status === 'active' ? 'error' : step.status }))
-        }));
-        
-        // Ocultar después de 3 segundos
-        setTimeout(() => {
-          setDeepResearchProgress(prev => ({
-            ...prev,
-            isActive: false
-          }));
-        }, 3000);
-        
-        // Crear mensaje de error - with duplicate prevention
+        // Crear mensaje de error
         const errorMessage: Message = {
           id: `msg-${Date.now()}`,
           content: 'Lo siento, hubo un error al procesar tu mensaje. Asegúrate de que Ollama esté ejecutándose.',
@@ -1093,19 +239,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         };
 
         if (onUpdateMessages) {
-          // Prevent duplicate error messages by checking if last message is already an error
-          const lastMessage = messages[messages.length - 1];
-          const isDuplicateError = lastMessage && 
-            lastMessage.sender === 'assistant' && 
-            lastMessage.status?.type === 'error' &&
-            lastMessage.content === errorMessage.content;
-          
-          if (!isDuplicateError) {
-            const updatedMessages = [...messages, errorMessage];
-            onUpdateMessages(updatedMessages);
-          }
+          const updatedMessages = [...messages, errorMessage];
+          onUpdateMessages(updatedMessages);
         }
-      }
       } finally {
         setIsLoading(false);
       }
@@ -1130,7 +266,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL || 
                      import.meta.env.REACT_APP_BACKEND_URL || 
-                     process.env.REACT_APP_BACKEND_URL;
+                     process.env.REACT_APP_BACKEND_URL || 
+                     'http://localhost:8001';
       
       const formData = new FormData();
       formData.append('task_id', dataId);
@@ -1155,37 +292,25 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         const uploadedFiles = result.files.map((f: any, index: number) => ({
           id: f.id || `file-${Date.now()}-${index}`,
           name: f.name,
-          size: String(f.size || 0), // Convert to string as expected by Message interface
-          type: f.type || f.mime_type || 'application/octet-stream',
-          url: `${backendUrl}/api/agent/download/${f.id}`
-        }));
-
-        console.log('🔍 CREATING UPLOAD MESSAGE WITH FILES:', uploadedFiles);
-        console.log('🔍 FILES STRUCTURE:', uploadedFiles.map(f => ({
-          id: f.id,
-          name: f.name,
           size: f.size,
-          type: f.type,
-          url: f.url
-        })));
+          type: f.mime_type || f.type || 'application/octet-stream',
+          url: `${backendUrl}/api/agent/download/${f.id}`,
+          uploadedAt: new Date(),
+          preview: f.preview || undefined
+        }));
 
         // Crear mensaje informativo mejorado con archivos subidos
         const uploadMessage: Message = {
           id: `msg-${Date.now()}`,
-          content: 'file_upload_success', // Special marker to trigger file display
+          content: 'file_upload_success', // Special marker for file upload success
           sender: 'assistant',
           timestamp: new Date(),
           attachments: uploadedFiles,
           status: {
             type: 'success',
-            message: `${result.files.length} archivo${result.files.length !== 1 ? 's' : ''} listo${result.files.length !== 1 ? 's' : ''} para usar`
+            message: `${result.files.length} archivo${result.files.length !== 1 ? 's' : ''} cargado${result.files.length !== 1 ? 's' : ''} y listo${result.files.length !== 1 ? 's' : ''} para usar`
           }
         };
-
-        console.log('🚨 UPLOAD MESSAGE CREATED:', uploadMessage);
-        console.log('📎 ATTACHMENTS IN MESSAGE:', uploadMessage.attachments);
-        console.log('📎 MESSAGE CONTENT:', uploadMessage.content);
-        console.log('📎 MESSAGE SENDER:', uploadMessage.sender);
 
         if (onUpdateMessages) {
           const updatedMessages = [...messages, uploadMessage];
@@ -1220,9 +345,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const handleAttachFiles = () => {
-    console.log('🎯 ATTACH FILES CLICKED - Setting showFileUpload to true');
     setShowFileUpload(true);
-    console.log('✅ showFileUpload state set to true');
   };
 
   const adjustTextareaHeight = () => {
@@ -1282,15 +405,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         setActiveQuickAction('problem');
         setShowQuickActions(false);
         textareaRef.current?.focus();
-      }
-    },
-    { 
-      id: 'demo-report',
-      icon: FileText, 
-      label: 'Ver Demo Report', 
-      action: () => {
-        setShowPlaceholder(true);
-        setShowQuickActions(false);
       }
     }
   ];
@@ -1507,7 +621,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         
         return {
           query: query || 'Búsqueda realizada',
-          directAnswer: directAnswer,
+          directAnswer: directAnswer || 'Información encontrada en las fuentes listadas',
           sources,
           type: content.includes('🔍') || content.includes('Búsqueda Web') ? 'websearch' : 'deepsearch'
         };
@@ -1518,96 +632,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     return null;
   };
 
-  // Deep Research Action Handlers
-  const handleDownloadPDF = async (reportData: ResearchReport) => {
-    if (!reportData.console_report && !reportData.executiveSummary) {
-      console.error('No content available for PDF generation');
-      return;
-    }
-
-    const content = reportData.console_report || reportData.executiveSummary || '';
-    
-    try {
-      await generatePDFWithCustomCSS({
-        title: `Investigación: ${reportData.query}`,
-        content: content,
-        filename: `investigacion_${reportData.query.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`
-      });
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-    }
-  };
-
-  const handleDownloadMarkdown = (reportData: ResearchReport) => {
-    if (!reportData.console_report && !reportData.executiveSummary) {
-      console.error('No content available for Markdown download');
-      return;
-    }
-
-    const content = reportData.console_report || reportData.executiveSummary || '';
-    downloadMarkdownFile(content, `Investigación: ${reportData.query}`);
-  };
-
-  const handleViewInConsole = (reportData: ResearchReport) => {
-    const content = reportData.console_report || reportData.executiveSummary || '';
-    setPDFViewerContent(content);
-    setPDFViewerTitle(`Investigación: ${reportData.query}`);
-    setShowPDFViewer(true);
-  };
-
-  const handleUseAsMemory = (reportData: ResearchReport) => {
-    const content = reportData.console_report || reportData.executiveSummary || '';
-    const memoryFile: MemoryFile = {
-      id: `research-${Date.now()}`,
-      name: `Investigación: ${reportData.query}`,
-      type: 'markdown',
-      size: content.length,
-      content: content,
-      summary: reportData.executiveSummary?.substring(0, 200) + '...' || 'Investigación profunda completada',
-      addedAt: new Date(),
-      source: 'deep_research',
-      isActive: true
-    };
-
-    addMemoryFile(memoryFile);
-    
-    // Show confirmation
-    if (onLogToTerminal) {
-      onLogToTerminal(`✅ Archivo agregado a memoria RAG: ${memoryFile.name}`, 'success');
-    }
-  };
-
-  const handleAddFileToMemory = async (file: any) => {
-    try {
-      // Download file content to add to memory
-      const blob = await agentAPI.downloadFile(file.id);
-      const content = await blob.text();
-      
-      const memoryFile: MemoryFile = {
-        id: file.id,
-        name: file.name,
-        type: file.mime_type?.includes('markdown') ? 'markdown' : 'text',
-        size: file.size,
-        content: content,
-        summary: `Archivo: ${file.name}`,
-        addedAt: new Date(),
-        source: file.source === 'uploaded' ? 'uploaded' : 'agent',
-        isActive: true
-      };
-
-      addMemoryFile(memoryFile);
-      
-      // Show confirmation
-      if (onLogToTerminal) {
-        onLogToTerminal(`✅ Archivo agregado a memoria RAG: ${file.name}`, 'success');
-      }
-    } catch (error) {
-      console.error('Error adding file to memory:', error);
-      if (onLogToTerminal) {
-        onLogToTerminal(`❌ Error agregando archivo a memoria: ${file.name}`, 'error');
-      }
-    }
-  };
+  // Helper function to get file type from extension
   const getFileTypeFromExtension = (filename: string): string => {
     const extension = filename.split('.').pop()?.toLowerCase() || '';
     
@@ -1637,44 +662,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     return typeMap[extension] || 'application/octet-stream';
   };
 
-  const parseMessageAsFileUpload = async (content: string) => {
+  const parseMessageAsFileUpload = (content: string) => {
     try {
       // Check if it's a file upload success message with different patterns
-      if (content.includes('✅') && 
-          (content.includes('archivo') || content.includes('archivos')) &&
-          (content.includes('cargado') || content.includes('subido') || content.includes('disponible'))) {
+      if (content.includes('📎 **Archivos cargados exitosamente**') || 
+          content.includes('Archivos cargados exitosamente') ||
+          content.includes('archivos** que ahora están disponibles')) {
         
-        // If we have a task ID, get the real files from backend
-        if (dataId) {
-          try {
-            const backendFiles = await getTaskFiles();
-            
-            // Filter for recently uploaded files (within last 5 minutes)
-            const recentFiles = backendFiles.filter(file => {
-              const fileTime = new Date(file.created_at || file.uploadedAt || Date.now());
-              const timeDiff = Date.now() - fileTime.getTime();
-              return timeDiff < 5 * 60 * 1000; // 5 minutes
-            });
-            
-            if (recentFiles.length > 0) {
-              return {
-                files: recentFiles.map(file => ({
-                  id: file.id || file.file_id,
-                  name: file.name,
-                  size: file.size,
-                  type: file.mime_type || file.type,
-                  url: file.url || `${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/agent/download/${file.id || file.file_id}`,
-                  needsRealData: false // Already has real data
-                }))
-              };
-            }
-          } catch (error) {
-            console.error('Error getting real files from backend:', error);
-            // Fall back to parsing from message content
-          }
-        }
-        
-        // Fallback: parse from message content
         const files: any[] = [];
         
         // Pattern 1: "• **filename.ext** (size)"
@@ -1688,8 +682,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   match[2].includes('MB') ? parseInt(match[2]) * 1024 * 1024 : 
                   parseInt(match[2]) || 0,
             type: getFileTypeFromExtension(match[1]),
-            url: undefined,
-            needsRealData: true // Flag to indicate we need to fetch real file data
+            url: undefined
           });
         }
         
@@ -1708,8 +701,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             name: match[1],
             size: sizeBytes,
             type: getFileTypeFromExtension(match[1]),
-            url: undefined,
-            needsRealData: true // Flag to indicate we need to fetch real file data
+            url: undefined
           });
         }
         
@@ -1722,391 +714,73 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
     return null;
   };
-
-  // New function to get real file data from backend
-  const getRealFileData = async (fileName: string) => {
-    if (!dataId) return null;
-    
-    try {
-      const taskFiles = await agentAPI.getTaskFiles(dataId);
-      return taskFiles.find(file => file.name === fileName);
-    } catch (error) {
-      console.error('Error getting real file data:', error);
-      return null;
-    }
-  };
-
-  // Enhanced function to get all task files from backend
-  const getTaskFiles = async () => {
-    if (!dataId) return [];
-    
-    try {
-      const taskFiles = await agentAPI.getTaskFiles(dataId);
-      return taskFiles;
-    } catch (error) {
-      console.error('Error getting task files:', error);
-      return [];
-    }
-  };
-
-  // Enhanced download function that can handle both real files and parsed files
-  const handleFileDownload = async (file: any) => {
-    if (onLogToTerminal) {
-      onLogToTerminal(`⬇️ Descargando archivo: ${file.name}`, 'success');
-    }
-
-    try {
-      // If file has real ID, use it directly
-      if (file.id && !file.needsRealData) {
-        const blob = await agentAPI.downloadFile(file.id);
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = file.name;
-        link.click();
-        window.URL.revokeObjectURL(url);
-        return;
-      }
-
-      // If file needs real data, try to get it from backend
-      if (file.needsRealData && dataId) {
-        const realFile = await getRealFileData(file.name);
-        if (realFile && realFile.id) {
-          const blob = await agentAPI.downloadFile(realFile.id);
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = file.name;
-          link.click();
-          window.URL.revokeObjectURL(url);
-          return;
-        }
-      }
-
-      // Fallback: if file has URL, use it
-      if (file.url) {
-        const link = document.createElement('a');
-        link.href = file.url;
-        link.download = file.name;
-        link.click();
-        return;
-      }
-
-      // If all else fails, show error
-      if (onLogToTerminal) {
-        onLogToTerminal(`❌ No se pudo descargar el archivo: ${file.name}`, 'error');
-      }
-    } catch (error) {
-      console.error('Error downloading file:', error);
-      if (onLogToTerminal) {
-        onLogToTerminal(`❌ Error descargando archivo: ${file.name}`, 'error');
-      }
-    }
-  };
   
   // Component's main return statement
   return (
     <div className="flex flex-col h-full bg-[#272728] text-[#DADADA] w-full" data-id={dataId}>
-      {/* DeepResearch Progress Indicator - Fixed Position */}
-      {deepResearchProgress.isActive && (
-        <div className="sticky top-0 z-20 bg-[#272728] p-4 border-b border-[rgba(255,255,255,0.08)] shadow-lg">
-          <DeepResearchProgress
-            steps={deepResearchProgress.steps}
-            currentStep={deepResearchProgress.currentStep}
-            overallProgress={deepResearchProgress.overallProgress}
-            isActive={deepResearchProgress.isActive}
-            onCancel={() => {
-              setDeepResearchProgress(prev => ({ ...prev, isActive: false }));
-            }}
-            query={currentQuery}
-          />
+      {/* Sticky Processing Activity Indicator */}
+      {(isTyping || isLoading) && (
+        <div className="sticky top-0 z-10 bg-[#272728] border-b border-[rgba(255,255,255,0.08)] px-4 py-2 flex-shrink-0">
+          <div className="flex items-center gap-2 text-sm text-[#ACACAC]">
+            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+            {assistantName} está {isLoading ? 'procesando' : 'escribiendo'}...
+          </div>
         </div>
       )}
 
       {/* Messages Container - Fixed height with proper scrolling */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        <div className="h-full overflow-y-auto overflow-x-hidden p-4 space-y-4 custom-scrollbar" style={{
+        <div className="h-full overflow-y-auto p-4 space-y-4 custom-scrollbar" style={{
           scrollbarWidth: 'thin',
           scrollbarColor: '#7f7f7f #383739'
         }}>
-          {/* Loading placeholder while waiting for response */}
-
-          {/* Deduplicate messages by content and timestamp before rendering */}
-          {(() => {
-            console.log('🐛 DEBUG: Raw messages array:', messages);
-            
-            const uniqueMessages = messages.reduce((uniqueMessages, message) => {
-              // Check if this message is a duplicate
-              const isDuplicate = uniqueMessages.some(existingMessage => 
-                existingMessage.content === message.content && 
-                existingMessage.sender === message.sender &&
-                Math.abs(existingMessage.timestamp.getTime() - message.timestamp.getTime()) < 2000 // Within 2 seconds
-              );
-              
-              if (!isDuplicate) {
-                uniqueMessages.push(message);
-              } else {
-                console.log('🐛 DEBUG: Duplicate message detected and removed:', message.content.substring(0, 50) + '...');
-              }
-              
-              return uniqueMessages;
-            }, [] as Message[]);
-            
-            console.log('🐛 DEBUG: Unique messages after deduplication:', uniqueMessages.length, 'out of', messages.length);
-            
-            return uniqueMessages;
-          })().map(message => (
-            <div key={message.id} className={`${message.sender === 'user' ? 'flex justify-end' : ''} group mb-4`}>
-              {message.sender === 'user' ? (
-                <div className="flex items-start gap-3 max-w-[90%] min-w-0">
-                  <div className="bg-[rgba(255,255,255,0.06)] rounded-xl p-4 flex-1 min-w-0 overflow-hidden chat-text-selection">
-                    {/* Contenido del mensaje del usuario */}
-                    <div className="text-base whitespace-pre-wrap break-words text-[#DADADA]">
-                      {message.content}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* Mensaje del asistente - SIN GLOBO CONTENEDOR */
-                <div className="max-w-[90%] min-w-0 chat-text-selection">
-                  {/* Contenido del mensaje del asistente */}
-                {/* Regular message content first */}
-                <div className="text-base whitespace-pre-wrap break-words text-[#DADADA] mb-4">
-                  {message.content}
-                </div>
-                
-                {/* ENHANCED FILE UPLOAD SUCCESS DETECTION */}
-                {(() => {
-                  const isAssistantMessage = message.sender === 'assistant';
-                  if (!isAssistantMessage) return null;
-                  
-                  // Check multiple conditions for file upload success
-                  const isFileUploadSuccess = message.content === 'file_upload_success';
-                  const hasAttachments = message.attachments && message.attachments.length > 0;
-                  
-                  // Enhanced pattern matching for success messages
-                  const hasSuccessPattern = message.content && 
-                    typeof message.content === 'string' && (
-                      message.content.includes('✅') || 
-                      message.content.includes('archivo') || 
-                      message.content.includes('archivos') ||
-                      message.content.includes('cargado') || 
-                      message.content.includes('subido') || 
-                      message.content.includes('disponible') || 
-                      message.content.includes('exitosamente') ||
-                      message.content.includes('listo') ||
-                      message.content.includes('completado') ||
-                      message.content.includes('generado') ||
-                      message.content.includes('creado')
-                    );
-                  
-                  // Show file upload success if conditions are met
-                  // Enhanced file detection with better logging
-                  console.log('🔍 FILE UPLOAD DEBUG:', {
-                    messageId: message.id,
-                    isAssistantMessage,
-                    isFileUploadSuccess,
-                    hasAttachments,
-                    hasSuccessPattern,
-                    content: message.content?.substring(0, 100) + '...',
-                    attachments: message.attachments,
-                    attachmentsLength: message.attachments?.length || 0
-                  });
-                  
-                  const shouldShowFileUpload = isFileUploadSuccess || hasAttachments || hasSuccessPattern;
-                  
-                  // Enhanced debug logging
-                  if (isFileUploadSuccess || hasAttachments || hasSuccessPattern) {
-                    console.log('🔍 FILE UPLOAD DEBUG:', {
-                      messageId: message.id,
-                      isAssistantMessage,
-                      isFileUploadSuccess,
-                      hasAttachments,
-                      hasSuccessPattern,
-                      shouldShowFileUpload,
-                      content: message.content?.substring(0, 100) + '...',
-                      attachments: message.attachments,
-                      attachmentsLength: message.attachments?.length || 0
-                    });
-                  }
-                  
-                  if (shouldShowFileUpload) {
-                    console.log('🎯 FILE UPLOAD SUCCESS DETECTED - RENDERING COMPONENT');
-                    
-                    // Use real attachments if available, otherwise create fake files for demonstration
-                    let filesToShow = [];
-                    
-                    if (hasAttachments && message.attachments && message.attachments.length > 0) {
-                      filesToShow = message.attachments.map(att => ({
-                        id: att.id || `file-${Date.now()}-${Math.random()}`,
-                        name: att.name,
-                        size: typeof att.size === 'string' ? parseInt(att.size) : att.size,
-                        type: att.type,
-                        url: att.url
-                      }));
-                    } else if (hasSuccessPattern) {
-                      // Solo mostrar si hay información útil, no crear archivos fake
-                      return null;
-                    }
-                    
-                    console.log('📁 FILES TO SHOW:', filesToShow, 'Length:', filesToShow.length);
-                    
-                    // Show component only if we have real files to display
-                    if (filesToShow.length > 0) {
-                      console.log('🚀 RENDERING FileUploadSuccess COMPONENT');
-                      
-                      return (
-                        <div className="mt-4">
-                          <FileUploadSuccess
-                            files={filesToShow}
-                            onFileView={(file) => {
-                              console.log('File view clicked:', file);
-                              if (onLogToTerminal) {
-                                onLogToTerminal(`📄 Vista del archivo: ${file.name}`, 'info');
-                              }
-                            }}
-                            onFileDownload={(file) => {
-                              console.log('File download clicked:', file);
-                              handleFileDownload(file);
-                            }}
-                            onAddToMemory={(file) => {
-                              console.log('Add to memory clicked:', file);
-                              handleAddFileToMemory(file);
-                            }}
-                          />
-                        </div>
-                      );
-                    } else {
-                      console.log('❌ NO FILES TO SHOW - filesToShow is empty');
-                    }
-                  }
-                  
-                  return null;
-                })()}
-                
+          {messages.map(message => (
+            <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[90%] ${message.sender === 'user' ? 'bg-[rgba(255,255,255,0.06)]' : 'bg-[#383739]'} rounded-xl p-4`}>
                 {/* Special handling for file upload success */}
-                {message.content === 'file_upload_success' && message.attachments && message.attachments.length > 0 ? (
-                  <div className="mt-4">
-                    <FileUploadSuccess
-                      files={message.attachments.map(att => ({
-                        id: att.id,
-                        name: att.name,
-                        size: typeof att.size === 'string' ? parseInt(att.size) : att.size,
-                        type: att.type,
-                        url: att.url
-                      }))}
-                      onFileView={(file) => {
-                        console.log('File view clicked:', file);
-                        if (onLogToTerminal) {
-                          onLogToTerminal(`📄 Vista del archivo: ${file.name}`, 'info');
-                        }
-                      }}
-                      onFileDownload={(file) => {
-                        console.log('File download clicked:', file);
-                        handleFileDownload(file);
-                      }}
-                      onAddToMemory={(file) => {
-                        console.log('Add to memory clicked:', file);
-                        handleAddFileToMemory(file);
-                      }}
-                    />
-                  </div>
-                ) : null}
-                
-                {/* ENHANCED FILE UPLOAD SUCCESS DETECTION */}
-                {(() => {
-                  const isAssistantMessage = message.sender === 'assistant';
-                  if (!isAssistantMessage) return null;
-                  
-                  // Check multiple conditions for file upload success
-                  const isFileUploadSuccess = message.content === 'file_upload_success';
-                  const hasAttachments = message.attachments && message.attachments.length > 0;
-                  const hasSuccessPattern = message.content && 
-                    typeof message.content === 'string' && 
-                    message.content.includes('✅') && 
-                    (message.content.includes('archivo') || message.content.includes('archivos')) &&
-                    (message.content.includes('cargado') || message.content.includes('subido') || 
-                     message.content.includes('disponible') || message.content.includes('exitosamente'));
-                  
-                  // Show file upload success if any condition is met
-                  // Enhanced file detection with better logging
-                  console.log('🔍 FILE UPLOAD DEBUG:', {
-                    messageId: message.id,
-                    isAssistantMessage,
-                    isFileUploadSuccess,
-                    hasAttachments,
-                    hasSuccessPattern,
-                    content: message.content?.substring(0, 100) + '...',
-                    attachments: message.attachments,
-                    attachmentsLength: message.attachments?.length || 0
-                  });
-                  
-                  const shouldShowFileUpload = isFileUploadSuccess || hasAttachments || hasSuccessPattern;
-                  
-                  if (!shouldShowFileUpload) return null;
-                  
-                  console.log('🎯 FILE UPLOAD SUCCESS DETECTED:', {
-                    isFileUploadSuccess,
-                    hasAttachments,
-                    hasSuccessPattern,
-                    attachments: message.attachments,
-                    content: message.content
-                  });
-                  
-                  // Use attachments if available, otherwise create test files
-                  const filesToShow = hasAttachments ? message.attachments.map(att => ({
-                    id: att.id,
-                    name: att.name,
-                    size: typeof att.size === 'string' ? parseInt(att.size) : att.size,
-                    type: att.type,
-                    url: att.url
-                  })) : [{
-                    id: `file-${Date.now()}`,
-                    name: 'archivo_adjunto.md',
-                    size: 1024,
-                    type: 'text/markdown',
-                    url: dataId ? `${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/agent/download/test-file` : undefined
-                  }];
-                  
-                  return (
-                    <div className="mt-4">
-                      <FileUploadSuccess
-                        files={filesToShow}
-                        onFileView={(file) => {
-                          console.log('File view clicked:', file);
-                          if (onLogToTerminal) {
-                            onLogToTerminal(`📄 Vista del archivo: ${file.name}`, 'info');
-                          }
-                        }}
-                        onFileDownload={(file) => {
-                          console.log('File download clicked:', file);
-                          handleFileDownload(file);
-                        }}
-                        onAddToMemory={(file) => {
-                          console.log('Add to memory clicked:', file);
-                          handleAddFileToMemory(file);
-                        }}
-                      />
-                    </div>
-                  );
-                })()}
-                
-                {/* Orchestration Result Display */}
-                {message.orchestrationResult && (
-                  <div className="mt-4">
-                    <TaskSummary
-                      title="Orquestación Completada"
-                      outcome={message.orchestrationResult.message || 'Tarea completada exitosamente'}
-                      completedSteps={message.orchestrationResult.execution_plan?.steps?.map((step: any) => step.title) || []}
-                      executionTime={message.orchestrationResult.total_execution_time ? `${Math.round(message.orchestrationResult.total_execution_time / 1000)}s` : undefined}
-                      toolsUsed={message.orchestrationResult.tools_used || []}
-                      type={message.orchestrationResult.success ? 'success' : 'partial'}
-                    />
-                  </div>
-                )}
-                
-                {/* Regular message content rendering */}
-                {!message.attachments || message.attachments.length === 0 ? (() => {
+                {message.content === 'file_upload_success' && message.attachments ? (
+                  <FileUploadSuccess
+                    files={message.attachments.map(att => ({
+                      id: att.id || `file-${Date.now()}`,
+                      name: att.name,
+                      size: att.size ? parseInt(att.size) : 0,
+                      type: att.type,
+                      url: att.url
+                    }))}
+                    onFileView={(file) => {
+                      // Mostrar información del archivo en el terminal
+                      const fileInfo = `📄 VISTA PREVIA DEL ARCHIVO
+────────────────────────────────────────
+📝 Nombre: ${file.name}
+📊 Tamaño: ${formatFileSize(file.size)}
+🏷️  Tipo: ${file.type || 'Desconocido'}
+🆔 ID: ${file.id}
+🔗 URL: ${file.url || 'No disponible'}
+────────────────────────────────────────`;
+                      
+                      if (onLogToTerminal) {
+                        onLogToTerminal(fileInfo, 'info');
+                      }
+                      
+                      // También abrir el archivo si tiene URL
+                      if (file.url) {
+                        window.open(file.url, '_blank');
+                      }
+                    }}
+                    onFileDownload={(file) => {
+                      if (onLogToTerminal) {
+                        onLogToTerminal(`⬇️ Descargando archivo: ${file.name}`, 'success');
+                      }
+                      
+                      if (file.url) {
+                        const link = document.createElement('a');
+                        link.href = file.url;
+                        link.download = file.name;
+                        link.click();
+                      }
+                    }}
+                  />
+                ) : (() => {
                   // Priority 1: Check for structured search data
                   if (message.searchData) {
                     return (
@@ -2142,35 +816,27 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                             window.open(file.url, '_blank');
                           }
                         }}
-                        onFileDownload={handleFileDownload}
-                        onAddToMemory={(file) => {
-                          const memoryFile = {
-                            name: file.name,
-                            type: 'uploaded_file' as const,
-                            content: `Archivo: ${file.name}\nTipo: ${file.type}\nTamaño: ${file.size} bytes`,
-                            metadata: {
-                              size: file.size,
-                              createdAt: new Date(),
-                              source: 'uploaded',
-                              summary: `Archivo ${file.name} (${file.type})`,
-                              tags: [file.type?.split('/')[0] || 'unknown']
-                            }
-                          };
-                          
-                          addMemoryFile(memoryFile);
+                        onFileDownload={(file) => {
                           if (onLogToTerminal) {
-                            onLogToTerminal(`🧠 Archivo "${file.name}" agregado a la memoria`, 'success');
+                            onLogToTerminal(`⬇️ Descargando archivo: ${file.name}`, 'success');
+                          }
+                          
+                          if (file.url) {
+                            const link = document.createElement('a');
+                            link.href = file.url;
+                            link.download = file.name;
+                            link.click();
                           }
                         }}
                       />
                     );
                   }
                   
-                  // Priority 3: Check if message content contains search results (fallback) - SOLO si no hay searchData estructurada
-                  if (!message.searchData && (message.content.includes('🔍') || 
+                  // Priority 3: Check if message content contains search results (fallback)
+                  if (message.content.includes('🔍') || 
                       message.content.includes('🔬') || 
                       message.content.includes('Búsqueda Web con Tavily') || 
-                      message.content.includes('Investigación Profunda'))) {
+                      message.content.includes('Investigación Profunda')) {
                     // Parse search results from message content
                     const searchResults = parseMessageAsSearchResults(message.content);
                     if (searchResults) {
@@ -2185,54 +851,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     }
                   }
                   
-                  // Priority 4: Check for attachments first - ALWAYS show file buttons if attachments exist
-                  if (message.attachments && message.attachments.length > 0) {
-                    console.log('🔗 Attachments detected in message:', message.attachments);
-                    return (
-                      <div className="space-y-3">
-                        {/* Show regular message content if exists */}
-                        {message.content && message.content !== 'file_upload_success' && (
-                          <div className="text-base whitespace-pre-wrap break-words" style={{ fontFamily: "'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, sans-serif", fontWeight: 400 }}>
-                            {message.content.split('\n').map((line, lineIndex) => {
-                              // Format markdown-like text
-                              if (line.startsWith('**') && line.endsWith('**')) {
-                                return (
-                                  <div key={lineIndex} className="font-bold text-blue-400 mb-2">
-                                    {line.replace(/\*\*/g, '')}
-                                  </div>
-                                );
-                              }
-                              
-                              // Format bullet points
-                              if (line.trim().startsWith('•') || line.trim().startsWith('-')) {
-                                return (
-                                  <div key={lineIndex} className="ml-4 mb-1 text-[#DADADA]">
-                                    {line}
-                                  </div>
-                                );
-                              }
-                              
-                              // Default line
-                              return line.trim() ? (
-                                <div key={lineIndex} className="mb-1">
-                                  {line}
-                                </div>
-                              ) : (
-                                <div key={lineIndex} className="mb-2"></div>
-                              );
-                            })}
-                          </div>
-                        )}
-                        
-                        {/* Always show file buttons */}
+                  // Priority 4: Check if message content contains file upload success (fallback)
+                  if (message.content.includes('📎') || 
+                      message.content.includes('Archivos cargados') || 
+                      message.content.includes('archivos** que ahora están disponibles')) {
+                    // Parse file upload results from message content
+                    const fileUploadResults = parseMessageAsFileUpload(message.content);
+                    if (fileUploadResults && fileUploadResults.files.length > 0) {
+                      return (
                         <FileUploadSuccess
-                          files={message.attachments.map(att => ({
-                            id: att.id || `file-${Date.now()}`,
-                            name: att.name,
-                            size: typeof att.size === 'string' ? parseInt(att.size) || 0 : att.size || 0,
-                            type: att.type,
-                            url: att.url
-                          }))}
+                          files={fileUploadResults.files}
                           onFileView={(file) => {
                             const fileInfo = `📄 VISTA PREVIA DEL ARCHIVO
 ────────────────────────────────────────
@@ -2251,105 +879,28 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                               window.open(file.url, '_blank');
                             }
                           }}
-                          onFileDownload={handleFileDownload}
-                          onAddToMemory={(file) => {
-                            const memoryFile = {
-                              name: file.name,
-                              type: 'uploaded_file' as const,
-                              content: `Archivo: ${file.name}\nTipo: ${file.type}\nTamaño: ${file.size} bytes`,
-                              metadata: {
-                                size: file.size,
-                                createdAt: new Date(),
-                                source: 'uploaded',
-                                summary: `Archivo ${file.name} (${file.type})`,
-                                tags: [file.type?.split('/')[0] || 'unknown']
-                              }
-                            };
-                            
-                            addMemoryFile(memoryFile);
+                          onFileDownload={(file) => {
                             if (onLogToTerminal) {
-                              onLogToTerminal(`🧠 Archivo "${file.name}" agregado a la memoria`, 'success');
-                            }
-                          }}
-                        />
-                      </div>
-                    );
-                  }
-                  
-                  // Priority 5: Check for file upload success in message content (async parsing)
-                  if (message.content.includes('✅') && 
-                      (message.content.includes('archivo') || message.content.includes('archivos')) &&
-                      (message.content.includes('cargado') || message.content.includes('subido') || message.content.includes('disponible'))) {
-                    console.log('📁 File upload success message detected, triggering FileUploadParser');
-                    console.log('🔍 Message content:', message.content);
-                    return (
-                      <div className="space-y-3">
-                        {/* Show regular message content */}
-                        <div className="text-base whitespace-pre-wrap break-words" style={{ fontFamily: "'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, sans-serif", fontWeight: 400 }}>
-                          {message.content.split('\n').map((line, lineIndex) => {
-                            // Format markdown-like text
-                            if (line.startsWith('**') && line.endsWith('**')) {
-                              return (
-                                <div key={lineIndex} className="font-bold text-blue-400 mb-2">
-                                  {line.replace(/\*\*/g, '')}
-                                </div>
-                              );
-                            }
-                            
-                            // Format bullet points
-                            if (line.trim().startsWith('•') || line.trim().startsWith('-')) {
-                              return (
-                                <div key={lineIndex} className="ml-4 mb-1 text-[#DADADA]">
-                                  {line}
-                                </div>
-                              );
-                            }
-                            
-                            // Default line
-                            return line.trim() ? (
-                              <div key={lineIndex} className="mb-1">
-                                {line}
-                              </div>
-                            ) : (
-                              <div key={lineIndex} className="mb-2"></div>
-                            );
-                          })}
-                        </div>
-                        
-                        {/* Parse and display file upload with proper buttons */}
-                        <FileUploadParser
-                          content={message.content}
-                          onFileView={(file) => {
-                            const fileInfo = `📄 VISTA PREVIA DEL ARCHIVO
-────────────────────────────────────────
-📝 Nombre: ${file.name}
-📊 Tamaño: ${formatFileSize(file.size)}
-🏷️  Tipo: ${file.type || 'Desconocido'}
-🆔 ID: ${file.id}
-🔗 URL: ${file.url || 'No disponible'}
-────────────────────────────────────────`;
-                            
-                            if (onLogToTerminal) {
-                              onLogToTerminal(fileInfo, 'info');
+                              onLogToTerminal(`⬇️ Descargando archivo: ${file.name}`, 'success');
                             }
                             
                             if (file.url) {
-                              window.open(file.url, '_blank');
+                              const link = document.createElement('a');
+                              link.href = file.url;
+                              link.download = file.name;
+                              link.click();
                             }
                           }}
-                          onFileDownload={handleFileDownload}
-                          onAddToMemory={handleAddFileToMemory}
-                          parseMessageAsFileUpload={parseMessageAsFileUpload}
                         />
-                      </div>
-                    );
+                      );
+                    }
                   }
                   
-                  // Priority 6: Render message content with enhanced formatting
+                  // Priority 5: Render message content with enhanced formatting
                   return (
                     <div className="space-y-3">
-                      {/* Main message content with Segoe UI font */}
-                      <div className="text-base whitespace-pre-wrap break-words" style={{ fontFamily: "'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, sans-serif", fontWeight: 400 }}>
+                      {/* Main message content */}
+                      <div className="text-base whitespace-pre-wrap break-words">
                         {message.content.split('\n').map((line, lineIndex) => {
                           // Format markdown-like text
                           if (line.startsWith('**') && line.endsWith('**')) {
@@ -2409,64 +960,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       {message.links && message.links.length > 0 && (
                         <MultiLinkDisplay links={message.links} className="mt-4" />
                       )}
-                      
-                      {/* Show attachments for regular messages - ALWAYS show if attachments exist and has buttons */}
-                      {message.attachments && message.attachments.length > 0 && (
-                        <div className="mt-3">
-                          <div className="bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-blue-500/10 rounded-lg p-3 mb-3">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Paperclip className="w-4 h-4 text-blue-400" />
-                              <span className="text-sm font-medium text-blue-400">
-                                {message.attachments.length} archivo{message.attachments.length !== 1 ? 's' : ''} adjunto{message.attachments.length !== 1 ? 's' : ''}
-                              </span>
-                            </div>
-                            <FileAttachmentButtons
-                            files={message.attachments.map(att => ({
-                              id: att.id || `file-${Date.now()}`,
-                              name: att.name,
-                              size: typeof att.size === 'string' ? parseInt(att.size) || 0 : att.size || 0,
-                              type: att.type,
-                              url: att.url
-                            }))}
-                            onFileView={(file) => {
-                              const fileInfo = `📄 VISTA PREVIA DEL ARCHIVO
-────────────────────────────────────────
-📝 Nombre: ${file.name}
-📊 Tamaño: ${formatFileSize(file.size)}
-🏷️  Tipo: ${file.type || 'Desconocido'}
-🆔 ID: ${file.id}
-🔗 URL: ${file.url || 'No disponible'}
-────────────────────────────────────────`;
-                                
-                              if (onLogToTerminal) {
-                                onLogToTerminal(fileInfo, 'info');
-                              }
-                                
-                              if (file.url) {
-                                window.open(file.url, '_blank');
-                              }
-                            }}
-                            onFileDownload={(file) => {
-                              if (onLogToTerminal) {
-                                onLogToTerminal(`⬇️ Descargando archivo: ${file.name}`, 'success');
-                              }
-                                
-                              if (file.url) {
-                                const link = document.createElement('a');
-                                link.href = file.url;
-                                link.download = file.name;
-                                link.click();
-                              }
-                            }}
-                            showActions={true}
-                            className="mt-2"
-                            />
-                          </div>
-                        </div>
-                      )}
                     </div>
                   );
-                })() : null}
+                })()}
+                
                 
                 {/* Enhanced tool execution results with better design */}
                 {message.toolResults && message.toolResults.length > 0 && (
@@ -2524,49 +1021,132 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 )}
 
                 {/* Enhanced file attachments display with improved professional layout - only for non-file-upload messages */}
-                {message.attachments && message.content !== "file_upload_success" && (
-                  <div className="mt-3">
-                    <FileAttachmentButtons
-                      files={message.attachments.map(att => ({
-                        id: att.id || `att-${Date.now()}`,
-                        name: att.name,
-                        size: att.size,
-                        type: att.type,
-                        url: att.url
-                      }))}
-                      onFileView={(file) => {
-                        // Mostrar información del archivo en el terminal
-                        const fileInfo = `📄 VISTA PREVIA DEL ARCHIVO
+                {message.attachments && message.content !== 'file_upload_success' && (
+                  <div className="mt-4">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="text-base text-[#DADADA] font-semibold">
+                          Archivos adjuntos
+                        </h4>
+                        <p className="text-sm text-[#ACACAC]">
+                          {message.attachments.length} archivo{message.attachments.length !== 1 ? 's' : ''} disponible{message.attachments.length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Professional file grid with enhanced design */}
+                    <div className="grid grid-cols-1 gap-3">
+                      {message.attachments.map((attachment, index) => (
+                        <div
+                          key={index}
+                          className="group relative"
+                        >
+                          <FileAttachment
+                            file={{
+                              id: attachment.id || `att-${index}`,
+                              name: attachment.name,
+                              size: attachment.size ? parseInt(attachment.size) : undefined,
+                              type: attachment.type,
+                              preview: attachment.preview,
+                              url: attachment.url
+                            }}
+                            onView={(file) => {
+                              // Mostrar información del archivo en el terminal
+                              const fileInfo = `📄 VISTA PREVIA DEL ARCHIVO
 ────────────────────────────────────────
 📝 Nombre: ${file.name}
-📊 Tamaño: ${file.size ? formatFileSize(typeof file.size === "string" ? parseInt(file.size) : file.size) : "Desconocido"}
-🏷️  Tipo: ${file.type || "Desconocido"}
+📊 Tamaño: ${file.size ? formatFileSize(file.size) : 'Desconocido'}
+🏷️  Tipo: ${file.type || 'Desconocido'}
 🆔 ID: ${file.id}
-🔗 URL: ${file.url || "No disponible"}
+🔗 URL: ${file.url || 'No disponible'}
+📅 Cargado: ${attachment.uploadedAt ? new Date(attachment.uploadedAt).toLocaleString() : 'Desconocido'}
 ────────────────────────────────────────`;
-                        
-                        if (onLogToTerminal) {
-                          onLogToTerminal(fileInfo, "info");
-                        }
-                        
-                        // También abrir el archivo si tiene URL
-                        if (file.url) {
-                          window.open(file.url, "_blank");
-                        }
-                      }}
-                      onFileDownload={(file) => {
-                        if (onLogToTerminal) {
-                          onLogToTerminal(`⬇️ Descargando archivo: ${file.name}`, "success");
-                        }
-                        
-                        if (file.url) {
-                          const link = document.createElement("a");
-                          link.href = file.url;
-                          link.download = file.name;
-                          link.click();
-                        }
-                      }}
-                    />
+                              
+                              if (onLogToTerminal) {
+                                onLogToTerminal(fileInfo, 'info');
+                              }
+                              
+                              // También abrir el archivo si tiene URL
+                              if (file.url) {
+                                window.open(file.url, '_blank');
+                              }
+                            }}
+                            onDownload={(file) => {
+                              if (onLogToTerminal) {
+                                onLogToTerminal(`⬇️ Descargando archivo: ${file.name}`, 'success');
+                              }
+                              
+                              if (file.url) {
+                                const link = document.createElement('a');
+                                link.href = file.url;
+                                link.download = file.name;
+                                link.click();
+                              }
+                            }}
+                            size="medium"
+                            showActions={true}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Enhanced summary and bulk actions */}
+                    <div className="mt-4 p-4 bg-gradient-to-r from-[#1E1E1F] to-[#252526] rounded-xl border border-[rgba(255,255,255,0.08)]">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span className="text-sm text-green-400 font-medium">
+                              {message.attachments.length} archivo{message.attachments.length !== 1 ? 's' : ''} listo{message.attachments.length !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => {
+                              // Mostrar todos los archivos en el terminal
+                              const allFilesInfo = message.attachments?.map(att => `📄 ${att.name} (${att.size ? formatFileSize(parseInt(att.size)) : 'Tamaño desconocido'})`).join('\n');
+                              if (onLogToTerminal && allFilesInfo) {
+                                onLogToTerminal(`📋 ARCHIVOS DISPONIBLES:\n${allFilesInfo}`, 'info');
+                              }
+                            }}
+                            className="px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            Ver todos
+                          </button>
+                          <button 
+                            onClick={() => {
+                              message.attachments?.forEach(attachment => {
+                                if (attachment.url) {
+                                  const link = document.createElement('a');
+                                  link.href = attachment.url;
+                                  link.download = attachment.name;
+                                  link.click();
+                                }
+                              });
+                              if (onLogToTerminal) {
+                                onLogToTerminal(`⬇️ Descargando ${message.attachments?.length} archivo${message.attachments?.length !== 1 ? 's' : ''}`, 'success');
+                              }
+                            }}
+                            className="px-3 py-1.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 text-purple-400 rounded-lg text-xs font-medium transition-all duration-200 flex items-center gap-1.5"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Descargar todos
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -2578,247 +1158,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     {message.status.message}
                   </div>
                 )}
-                </div>
-              )}
-              
-              {/* Message Actions - Solo para mensajes del asistente - Ahora FUERA del globo completamente */}
-              {message.sender === 'assistant' && (
-                <div className="flex justify-end mt-2 mr-4">
-                  <MessageActions
-                    messageContent={message.content}
-                    onRegenerate={() => {
-                      // TODO: Implementar regeneración de respuesta
-                      if (onLogToTerminal) {
-                        onLogToTerminal('🔄 Regenerando respuesta...', 'info');
-                      }
-                    }}
-                    className=""
-                  />
-                </div>
-              )}
-              
-              {/* FILE UPLOAD SUCCESS DETECTION - Added as separate component */}
-              {message.sender === 'assistant' && message.content && typeof message.content === 'string' && 
-               (message.content.includes('artificial intelligence') || 
-                (message.content.includes('✅') && 
-                 (message.content.includes('archivo') || message.content.includes('archivos')) &&
-                 (message.content.includes('cargado') || message.content.includes('subido') || 
-                  message.content.includes('disponible') || message.content.includes('exitosamente')))) && (
-                <div className="mt-4 max-w-[90%]">
-                  <FileUploadSuccess
-                    files={[{
-                      id: `file-${Date.now()}`,
-                      name: 'informe_investigacion.md',
-                      size: 25000,
-                      type: 'text/markdown',
-                      url: dataId ? `${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/agent/download/test-file` : undefined
-                    }]}
-                    onFileView={(file) => {
-                      console.log('File view clicked:', file);
-                      if (onLogToTerminal) {
-                        onLogToTerminal(`📄 Vista del archivo: ${file.name}`, 'info');
-                      }
-                    }}
-                    onFileDownload={(file) => {
-                      console.log('File download clicked:', file);
-                      if (onLogToTerminal) {
-                        onLogToTerminal(`⬇️ Descarga del archivo: ${file.name}`, 'success');
-                      }
-                      // For test: just show success message
-                      alert(`Descargando archivo: ${file.name}`);
-                    }}
-                    onAddToMemory={(file) => {
-                      console.log('Add to memory clicked:', file);
-                      if (onLogToTerminal) {
-                        onLogToTerminal(`🧠 Archivo ${file.name} agregado a memoria`, 'success');
-                      }
-                    }}
-                  />
-                </div>
-              )}
+              </div>
             </div>
           ))}
 
-          {/* Loading placeholder for messages - positioned correctly at the end */}
-          {isLoadingMessages && <MessageLoadingPlaceholder />}
-
-          {/* DeepResearch Report at the end of messages */}
-          {deepResearchReport && (
-            <div className="w-full mb-4">
-              <DeepResearchReportCard
-                query={deepResearchReport.query}
-                executiveSummary={deepResearchReport.executiveSummary || 'Resumen no disponible'}
-                sourcesAnalyzed={deepResearchReport.sourcesAnalyzed}
-                imagesCollected={deepResearchReport.imagesCollected}
-                reportFile={deepResearchReport.reportFile}
-                duration={deepResearchReport.processingTime || 0}
-                readingTime={Math.ceil((deepResearchReport.wordCount || 0) / 200)}
-                timestamp={deepResearchReport.timestamp}
-                keyFindings={deepResearchReport.keyFindings || []}
-                recommendations={deepResearchReport.recommendations || []}
-                onDownloadPDF={(e?: React.MouseEvent) => {
-                  if (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
-                  
-                  if (deepResearchReport) {
-                    const content = `# ${deepResearchReport.query}
-
-## Resumen Ejecutivo
-${deepResearchReport.executiveSummary || 'No disponible'}
-
-## Hallazgos Clave
-${(deepResearchReport.keyFindings || []).map((finding, index) => `${index + 1}. ${finding}`).join('\n')}
-
-## Recomendaciones
-${(deepResearchReport.recommendations || []).map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
-
-## Metadatos
-- Fuentes analizadas: ${deepResearchReport.sourcesAnalyzed}
-- Imágenes recopiladas: ${deepResearchReport.imagesCollected}
-- Fecha: ${new Date(deepResearchReport.timestamp).toLocaleString()}`;
-                    
-                    generatePDFWithCustomCSS({
-                      title: `Investigación: ${deepResearchReport.query}`,
-                      content: content,
-                      filename: `investigacion_${deepResearchReport.query.replace(/\s+/g, '_')}.pdf`
-                    });
-                    
-                    if (onLogToTerminal) {
-                      onLogToTerminal('📄 Generando PDF con formato académico...', 'success');
-                    }
-                  }
-                }}
-                onDownloadMarkdown={(e?: React.MouseEvent) => {
-                  if (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
-                  
-                  const reportFile = messages
-                    .flatMap(msg => msg.attachments || [])
-                    .find(att => att.type === 'text/markdown' || att.name.endsWith('.md'));
-                  
-                  if (reportFile && reportFile.url) {
-                    const link = document.createElement('a');
-                    link.href = reportFile.url;
-                    link.download = reportFile.name;
-                    link.click();
-                  } else {
-                    const markdownContent = `# ${deepResearchReport.query}
-
-## Resumen Ejecutivo
-${deepResearchReport.executiveSummary || 'No disponible'}
-
-## Hallazgos Clave
-${(deepResearchReport.keyFindings || []).map((finding, index) => `${index + 1}. ${finding}`).join('\n')}
-
-## Recomendaciones
-${(deepResearchReport.recommendations || []).map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
-
-## Metadatos
-- Fuentes analizadas: ${deepResearchReport.sourcesAnalyzed}
-- Imágenes recopiladas: ${deepResearchReport.imagesCollected}  
-- Fecha: ${new Date(deepResearchReport.timestamp).toLocaleString()}`;
-                    
-                    downloadMarkdownFile(
-                      markdownContent,
-                      `investigacion_${deepResearchReport.query.replace(/\s+/g, '_')}`
-                    );
-                  }
-                  
-                  if (onLogToTerminal) {
-                    onLogToTerminal('⬇️ Descargando archivo Markdown...', 'success');
-                  }
-                }}
-                onViewInConsole={(e?: React.MouseEvent) => {
-                  if (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
-                  
-                  if (deepResearchReport) {
-                    const viewerContent = `# ${deepResearchReport.query}
-
-## Resumen Ejecutivo
-${deepResearchReport.executiveSummary || 'No disponible'}
-
-## Hallazgos Clave
-${(deepResearchReport.keyFindings || []).map((finding, index) => `${index + 1}. ${finding}`).join('\n')}
-
-## Recomendaciones
-${(deepResearchReport.recommendations || []).map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
-
-## Metadatos
-- Fuentes analizadas: ${deepResearchReport.sourcesAnalyzed}
-- Imágenes recopiladas: ${deepResearchReport.imagesCollected}
-- Fecha: ${new Date(deepResearchReport.timestamp).toLocaleString()}`;
-                    
-                    // Mostrar en PDF viewer sin agregar al terminal log
-                    setPDFViewerContent(viewerContent);
-                    setPDFViewerTitle(`Investigación: ${deepResearchReport.query}`);
-                    setShowPDFViewer(true);
-                  }
-                }}
-                onUseAsMemory={(e?: React.MouseEvent) => {
-                  if (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
-                  
-                  if (deepResearchReport) {
-                    const memoryFile = addResearchReportToMemory({
-                      query: deepResearchReport.query,
-                      executiveSummary: deepResearchReport.executiveSummary || '',
-                      keyFindings: deepResearchReport.keyFindings || [],
-                      recommendations: deepResearchReport.recommendations || [],
-                      sourcesAnalyzed: deepResearchReport.sourcesAnalyzed,
-                      wordCount: deepResearchReport.wordCount
-                    });
-                    
-                    // Solo mostrar confirmación simple
-                    console.log('Informe agregado a la memoria RAG');
-                  }
-                }}
-                onClose={(e?: React.MouseEvent) => {
-                  if (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
-                  
-                  setDeepResearchReport(null);
-                  console.log('Informe de investigación cerrado');
-                }}
-              />
-            </div>
-          )}
-
           <div ref={messagesEndRef} />
-          
-          {/* Deep Research Placeholder - Show when placeholder is requested */}
-          {showPlaceholder && (
-            <div className="mx-4 mb-4">
-              <DeepResearchPlaceholder 
-                onGenerateReport={() => {
-                  // Opcional: callback cuando se genera el reporte
-                  console.log('Reporte placeholder generado');
-                }}
-                className=""
-              />
-            </div>
-          )}
-
-          {/* Loading indicator removed - user reported it as problematic */}
         </div>
       </div>
-
-      {/* Agent Status Bar - Positioned above the separator line, full width */}
-      <AgentStatusBar 
-        status={agentStatus}
-        currentStep={currentStepName}
-        className="flex-shrink-0"
-      />
 
       {/* Input Section - Fixed at bottom */}
       <div className="border-t border-[rgba(255,255,255,0.08)] p-4 bg-[#272728] flex-shrink-0">
@@ -2864,11 +1210,6 @@ ${(deepResearchReport.recommendations || []).map((rec, index) => `${index + 1}. 
             placeholder={placeholder}
             disabled={isLoading}
             className="w-full"
-            showInternalButtons={true}
-            onAttachFiles={handleAttachFiles}
-            onWebSearch={() => setSearchMode(searchMode === 'websearch' ? null : 'websearch')}
-            onDeepSearch={() => setSearchMode(searchMode === 'deepsearch' ? null : 'deepsearch')}
-            onVoiceInput={() => console.log('Voice input clicked')}
           />
         </div>
           
@@ -2914,10 +1255,7 @@ ${(deepResearchReport.recommendations || []).map((rec, index) => `${index + 1}. 
               <div className="flex items-center bg-[rgba(255,255,255,0.08)] rounded-lg overflow-hidden">
                 <button 
                   type="button" 
-                  onClick={() => {
-                    console.log('🔍 WEB SEARCH CLICKED');
-                    setSearchMode(searchMode === 'websearch' ? null : 'websearch')
-                  }}
+                  onClick={() => setSearchMode(searchMode === 'websearch' ? null : 'websearch')}
                   disabled={isLoading} 
                   className={`p-2 transition-all duration-200 ${
                     searchMode === 'websearch' 
@@ -2995,12 +1333,8 @@ ${(deepResearchReport.recommendations || []).map((rec, index) => `${index + 1}. 
       {/* File Upload Modal */}
       <FileUploadModal
         isOpen={showFileUpload}
-        onClose={() => {
-          console.log('🎯 CLOSING FileUploadModal');
-          setShowFileUpload(false);
-        }}
+        onClose={() => setShowFileUpload(false)}
         onFilesUploaded={handleFilesUploaded}
-        taskId={dataId}
         maxFiles={10}
         maxFileSize={50}
         acceptedTypes={['.txt', '.pdf', '.doc', '.docx', '.json', '.csv', '.py', '.js', '.html', '.css', '.md', '.png', '.jpg', '.jpeg', '.gif']}
