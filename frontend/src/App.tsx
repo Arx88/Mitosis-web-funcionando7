@@ -585,8 +585,69 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                             
                             console.log('✅ Task updated in sidebar with user message');
                             
-                            // NOTA: NO llamar al backend aquí - ChatInterface.tsx se encargará de esto
-                            // para evitar duplicación de respuestas
+                            // PASO 4: Llamar al backend para procesar la tarea y generar el plan
+                            try {
+                              const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+                              const response = await fetch(`${backendUrl}/api/agent/chat`, {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                  message: message.trim(),
+                                  context: {
+                                    task_id: newTask.id,
+                                    previous_messages: [],
+                                    search_mode: null
+                                  }
+                                })
+                              });
+                              
+                              if (response.ok) {
+                                const chatResponse = await response.json();
+                                console.log('✅ Backend response received:', chatResponse);
+                                
+                                // Crear mensaje del agente
+                                const agentMessage = {
+                                  id: `msg-${Date.now() + 1}`,
+                                  content: chatResponse.response,
+                                  sender: 'agent' as const,
+                                  timestamp: new Date(chatResponse.timestamp),
+                                  toolResults: chatResponse.tool_results || [],
+                                  searchData: chatResponse.search_data,
+                                  uploadData: chatResponse.upload_data,
+                                  links: chatResponse.links
+                                };
+                                
+                                // Actualizar la tarea con el mensaje del agente y el plan
+                                const fullTaskUpdate = {
+                                  ...basicTaskUpdate,
+                                  messages: [userMessage, agentMessage],
+                                  plan: chatResponse.plan ? chatResponse.plan.steps.map((step: any) => ({
+                                    id: step.id,
+                                    title: step.title,
+                                    description: step.description,
+                                    tool: step.tool,
+                                    status: step.status,
+                                    estimated_time: step.estimated_time,
+                                    completed: step.completed,
+                                    active: step.active
+                                  })) : undefined,
+                                  status: 'in-progress' as const,
+                                  progress: 20
+                                };
+                                
+                                setTasks(prev => prev.map(task => 
+                                  task.id === newTask.id ? fullTaskUpdate : task
+                                ));
+                                
+                                console.log('✅ Task updated with backend response and plan');
+                              } else {
+                                console.error('❌ Backend request failed:', response.status);
+                              }
+                            } catch (error) {
+                              console.error('❌ Error calling backend:', error);
+                            }
                           }
                         }}
                         placeholder="Escribe tu tarea aquí..."
