@@ -296,20 +296,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               timestamp: new Date()
             };
             
-            // Update messages with the response - Use functional update to prevent duplicates
-            onUpdateMessages(prevMessages => {
-              // Check if this response already exists to prevent duplicates
-              const responseExists = prevMessages.some(msg => 
-                msg.content === response.response && msg.sender === 'assistant'
-              );
-              
-              if (responseExists) {
-                console.log('⚠️ CHAT: Response already exists, skipping duplicate');
-                return prevMessages;
-              }
-              
-              return [...prevMessages, assistantMessage];
-            });
+            // Check if this response already exists to prevent duplicates
+            const responseExists = messages.some(msg => 
+              msg.content === response.response && msg.sender === 'assistant'
+            );
+            
+            if (!responseExists) {
+              console.log('✅ CHAT: Adding new response to messages');
+              onUpdateMessages([...messages, assistantMessage]);
+            } else {
+              console.log('⚠️ CHAT: Response already exists, skipping duplicate');
+            }
             
             console.log('✅ CHAT: Initial message processed successfully for task:', dataId);
           } else {
