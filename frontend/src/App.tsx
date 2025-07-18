@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { VanishInput } from './components/VanishInput';
 import { TaskView } from './components/TaskView';
