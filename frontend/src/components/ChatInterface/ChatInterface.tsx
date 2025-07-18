@@ -273,9 +273,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading && !hasInitialMessageSent && onUpdateMessages) {
         console.log('🚀 CHAT: Sending initial message to backend:', messages[0].content);
         
+        // Set the flag IMMEDIATELY to prevent duplicate calls
+        setHasInitialMessageSent(true);
+        
         try {
           setIsLoading(true);
-          setHasInitialMessageSent(true); // Mark that we've sent the initial message
           
           // Send the user's message to the backend
           const response = await agentAPI.sendMessage(messages[0].content, { task_id: dataId });
