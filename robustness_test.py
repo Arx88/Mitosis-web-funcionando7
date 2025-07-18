@@ -147,7 +147,8 @@ class BackendRobustnessTest:
             total_requests = 5
             
             for i in range(total_requests):
-                response = requests.get(f"{BACKEND_URL}/health", timeout=TEST_TIMEOUT)
+                # Use agent status endpoint for stability testing
+                response = requests.get(f"{BACKEND_URL}/api/agent/status", timeout=TEST_TIMEOUT)
                 if response.status_code == 200:
                     successful_requests += 1
                 time.sleep(0.5)  # Small delay between requests
