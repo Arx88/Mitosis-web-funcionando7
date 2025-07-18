@@ -495,8 +495,8 @@ def chat():
             # PASO 5: Generar respuesta LIMPIA sin mostrar pasos del plan
             final_response = generate_clean_response(ollama_response['response'], tool_results)
             
-            # PASO 6: COMENTADO - No simular ejecución automática del plan
-            # simulate_plan_execution(task_id, structured_plan['steps'])
+            # PASO 6: Ejecutar plan automáticamente
+            simulate_plan_execution(task_id, structured_plan['steps'])
             
             logger.info(f"✅ Task completed successfully with structured plan")
             
