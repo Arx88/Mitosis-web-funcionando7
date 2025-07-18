@@ -267,7 +267,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Effect to automatically send initial message to backend when new task is created
   useEffect(() => {
     const sendInitialMessage = async () => {
-      // Only proceed if we have a dataId, exactly one message, and it's from user
+      // Only proceed if we have a dataId, exactly one message, it's from user, and no assistant response yet
       if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading && onUpdateMessages) {
         console.log('🚀 CHAT: Sending initial message to backend:', messages[0].content);
         
@@ -313,8 +313,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }
     };
     
-    sendInitialMessage();
-  }, [dataId, messages.length, isLoading]); // Removed onUpdateMessages from dependencies to avoid re-execution
+    // Only run when we have exactly 1 message (user message) and a dataId
+    if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading) {
+      sendInitialMessage();
+    }
+  }, [dataId, messages.length]); // Simplified dependencies to prevent duplicate calls
 
   // Función para obtener progreso real del backend
   const pollDeepResearchProgress = async (taskId: string) => {
