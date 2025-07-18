@@ -112,6 +112,17 @@
 - **Evidencia**: "DUPLICATION ISSUE CONFIRMED - FRONTEND RENDERING PROBLEM"
 - **Hallazgo**: El problema NO está en backend ni network, está en el renderizado frontend
 
+### **Intento 5: Solución Compleja de Duplicación (Enero 2025)**
+- **Problema**: Implementar controles de duplicación en ChatInterface.tsx
+- **Solución**: Functional updates, verificaciones de duplicación, IDs únicos
+- **Resultado**: ❌ **FALLÓ COMPLETAMENTE** - Situación empeorada
+- **Evidencia**: "DUPLICATION FIX FAILED - SITUATION WORSENED"
+- **Problemas introducidos**: 
+  - JavaScript Error: "TypeError: $.map is not a function"
+  - 3 API calls en lugar de 1-2
+  - 0 respuestas en UI en lugar de 2 duplicadas
+  - Mecanismo de actualización de mensajes roto
+
 ## 🛠️ PRÓXIMOS PASOS
 
 ### **INMEDIATO - PROBLEMA IDENTIFICADO**
