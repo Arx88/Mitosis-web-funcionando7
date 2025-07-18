@@ -794,60 +794,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       setIsLoadingMessages(false);
     }
   };
-        console.log('🔄 BASIC DEBUG: Sending message to backend');
-        console.log('🔄 DEBUG: API URL:', `${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/agent/chat`);
-        console.log('🔄 DEBUG: Message:', processedMessage);
-        console.log('🔄 DEBUG: Context:', context);
-        
-        const response: ChatResponse = await agentAPI.sendMessage(processedMessage, context);
-        
-        console.log('✅ BASIC DEBUG: Backend response received');
-        console.log('📋 BASIC DEBUG: Response type:', typeof response);
-        console.log('📋 BASIC DEBUG: Response keys:', Object.keys(response || {}));
-        
-        // 🚀 NUEVO: Manejo especial para respuestas de orquestación
-        if (response.orchestration_enabled && response.task_id) {
-          console.log('🎯 Orchestration enabled, starting monitoring for task:', response.task_id);
-          setOrchestrationTaskId(response.task_id);
-          setAgentStatus('planning');
-          setCurrentStepName('Planificación de Tarea');
-          
-          // Iniciar polling del estado de orquestación
-          const orchestrationInterval = setInterval(async () => {
-            try {
-              const status = await agentAPI.getOrchestrationStatus(response.task_id!);
-              setOrchestrationStatus(status);
-              
-              // Actualizar estado del agente basado en el estado de orquestación
-              if (status.status === 'planning') {
-                setAgentStatus('planning');
-                setCurrentStepName('Generando Plan');
-              } else if (status.status === 'executing') {
-                setAgentStatus('executing_plan');
-                setCurrentStepName(status.current_step || 'Ejecutando Plan');
-              } else if (status.status === 'completed') {
-                setAgentStatus('task_completed');
-                setCurrentStepName('Completado');
-                setIsOrchestrating(false);
-                clearInterval(orchestrationInterval);
-                
-                // Obtener resultado final y mostrarlo
-                try {
-                  const finalResult = await agentAPI.getTaskStatus(response.task_id!);
-                  console.log('🎯 Final orchestration result:', finalResult);
-                  
-                  // Crear mensaje con el resultado final y actualizar mediante onUpdateMessages
-                  const finalMessage: Message = {
-                    id: `msg-${Date.now()}-final`,
-                    content: `✅ **Orquestación Completada**\n\n${finalResult.message || 'Tarea completada exitosamente.'}`,
-                    sender: 'assistant',
-                    timestamp: new Date(),
-                    orchestrationResult: finalResult
-                  };
-                  
-                  if (onUpdateMessages) {
-                    const updatedMessages = [...messages, finalMessage];
-                    onUpdateMessages(updatedMessages);
+
+  // Función para obtener progreso real del backend
                   }
                 } catch (err) {
                   console.error('Error getting final result:', err);
