@@ -795,29 +795,48 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
-  // Función para obtener progreso real del backend
-                  }
-                } catch (err) {
-                  console.error('Error getting final result:', err);
-                }
-              } else if (status.status === 'failed') {
-                setAgentStatus('task_failed');
-                setCurrentStepName('Error');
-                setIsOrchestrating(false);
-                clearInterval(orchestrationInterval);
+  // Function to handle orchestration polling (moved to proper location)
+  const handleOrchestrationPolling = (taskId: string) => {
+    const orchestrationInterval = setInterval(async () => {
+      try {
+        const statusResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/agent/orchestration/status/${taskId}`);
+        if (statusResponse.ok) {
+          const status = await statusResponse.json();
+          if (status.status === 'completed') {
+            setAgentStatus('task_completed');
+            setCurrentStepName('Completado');
+            setIsOrchestrating(false);
+            clearInterval(orchestrationInterval);
+            
+            try {
+              const resultResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/agent/orchestration/result/${taskId}`);
+              if (resultResponse.ok) {
+                const result = await resultResponse.json();
+                console.log('Final orchestration result:', result);
               }
             } catch (err) {
-              console.error('Error polling orchestration status:', err);
-              clearInterval(orchestrationInterval);
-              setIsOrchestrating(false);
+              console.error('Error getting final result:', err);
             }
-          }, 2000); // Poll every 2 seconds
-          
-          // Cleanup interval after 5 minutes
-          setTimeout(() => {
-            clearInterval(orchestrationInterval);
+          } else if (status.status === 'failed') {
+            setAgentStatus('task_failed');
+            setCurrentStepName('Error');
             setIsOrchestrating(false);
-          }, 300000); // 5 minutes
+            clearInterval(orchestrationInterval);
+          }
+        }
+      } catch (err) {
+        console.error('Error polling orchestration status:', err);
+        clearInterval(orchestrationInterval);
+        setIsOrchestrating(false);
+      }
+    }, 2000); // Poll every 2 seconds
+    
+    // Cleanup interval after 5 minutes
+    setTimeout(() => {
+      clearInterval(orchestrationInterval);
+      setIsOrchestrating(false);
+    }, 300000); // 5 minutes
+  };
         }
         
         // CRITICAL DEBUG - Log everything about created_files
