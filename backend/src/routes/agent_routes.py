@@ -582,17 +582,36 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                             """Ejecutar tarea en modo agente con herramientas automáticamente y fallback inteligente"""
                             tools_to_use = []
                             
-                            # Detectar herramientas necesarias basado en el mensaje
+                            # 🎯 DETECCIÓN INTELIGENTE DE HERRAMIENTAS NECESARIAS
+                            
+                            # 1. PRIORIDAD ALTA - Detección de investigación y búsqueda
+                            research_keywords = [
+                                'informe', 'report', 'reporte', 'investigación', 'research',
+                                'analiza', 'analyze', 'investiga', 'investigate', 'busca información',
+                                'corrientes psicológicas', 'psychological currents', 'sobre', 'about',
+                                'acerca de', 'regarding', 'tendencias', 'trends', 'estado del arte',
+                                'todas las', 'all the', 'todos los', 'mejores prácticas',
+                                'revisión bibliográfica', 'literature review', 'estado actual',
+                                'información sobre', 'information about', 'datos sobre', 'data about',
+                                'qué', 'what', 'cuál', 'which', 'cómo', 'how', 'cuándo', 'when',
+                                'dónde', 'where', 'por qué', 'why', 'para qué', 'what for'
+                            ]
+                            
+                            if any(keyword in message.lower() for keyword in research_keywords):
+                                tools_to_use.append('web_search')
+                                logger.info(f"🔍 Detectada tarea de investigación - activando web_search")
+                            
+                            # 2. Detección de comandos de sistema
                             if any(keyword in message.lower() for keyword in ['comando', 'ejecuta', 'shell', 'ls', 'cd', 'mkdir', 'rm', 'cat', 'grep', 'find', 'chmod', 'chown', 'ps', 'kill', 'pwd']):
                                 tools_to_use.append('shell')
+                                logger.info(f"🖥️ Detectado comando de sistema - activando shell")
                             
+                            # 3. Detección de gestión de archivos
                             if any(keyword in message.lower() for keyword in ['archivo', 'file', 'directorio', 'folder', 'lista', 'listar', 'mostrar', 'crear', 'eliminar', 'leer', 'escribir', 'copiar', 'mover']):
                                 tools_to_use.append('file_manager')
+                                logger.info(f"📁 Detectada gestión de archivos - activando file_manager")
                             
-                            if any(keyword in message.lower() for keyword in ['buscar', 'busca', 'search', 'información', 'noticias', 'web', 'internet', 'google', 'investiga', 'investigar', 'informe', 'report', 'reporte', 'sobre', 'acerca de', 'about', 'mejores prácticas', 'best practices']):
-                                tools_to_use.append('web_search')
-                            
-                            # 🌐 DETECTAR HERRAMIENTAS DE NAVEGACIÓN WEB Y AUTOMATIZACIÓN
+                            # 4. Detección de navegación web automática
                             if any(keyword in message.lower() for keyword in [
                                 'navega', 'navigate', 'abre', 'open', 'visita', 'visit', 've a', 'go to',
                                 'crea cuenta', 'create account', 'regístrate', 'register', 'sign up',
@@ -605,18 +624,29 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                                 'web scraping', 'scraping', 'captura', 'capture', 'screenshot'
                             ]):
                                 tools_to_use.append('autonomous_web_navigation')
+                                logger.info(f"🌐 Detectada navegación web - activando autonomous_web_navigation")
                             
-                            # Si no detecta herramientas específicas, usar por defecto según el contexto
+                            # 5. DEFAULT: Si no detecta herramientas específicas, usar web_search para investigación
                             if not tools_to_use:
-                                if any(keyword in message.lower() for keyword in ['analiza', 'analizar', 'procesa', 'procesar', 'verifica', 'verificar', 'genera', 'generar', 'crea', 'crear', 'haz', 'hacer', 'informe', 'report']):
+                                # Para tareas que parecen requerir información externa
+                                if any(keyword in message.lower() for keyword in [
+                                    'qué', 'what', 'cuál', 'which', 'cómo', 'how', 'cuándo', 'when',
+                                    'dónde', 'where', 'por qué', 'why', 'para qué', 'what for',
+                                    'explica', 'explain', 'describe', 'define', 'dame', 'give me',
+                                    'muestra', 'show me', 'enumera', 'list', 'cuenta', 'tell me'
+                                ]):
                                     tools_to_use = ['web_search']
+                                    logger.info(f"🔍 Tarea requiere información - usando web_search por defecto")
                                 else:
                                     tools_to_use = ['shell']
+                                    logger.info(f"🖥️ Tarea general - usando shell por defecto")
                             
-                            # Ejecutar herramientas detectadas
+                            # 🚀 EJECUTAR HERRAMIENTAS DETECTADAS
                             results = []
                             for tool_name in tools_to_use:
                                 try:
+                                    logger.info(f"🔧 Ejecutando herramienta: {tool_name}")
+                                    
                                     if tool_name == 'shell':
                                         if 'ls' in message.lower():
                                             params = {'command': 'ls -la /app'}
@@ -629,7 +659,9 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                                     elif tool_name == 'file_manager':
                                         params = {'action': 'list', 'path': '/app'}
                                     elif tool_name == 'web_search':
-                                        params = {'query': message}
+                                        # Usar el mensaje completo como query para web search
+                                        params = {'query': message, 'max_results': 5}
+                                        logger.info(f"🔍 Búsqueda web con query: '{message}'")
                                     elif tool_name == 'autonomous_web_navigation':
                                         # Usar herramienta de navegación web autónoma
                                         if 'registro' in message.lower() or 'cuenta' in message.lower():
@@ -716,6 +748,7 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                                     else:
                                         params = {'input': message}
                                     
+                                    # Ejecutar herramienta
                                     result = tool_manager.execute_tool(tool_name, params, task_id=task_id)
                                     results.append({
                                         'tool': tool_name,
@@ -723,48 +756,15 @@ Responde considerando el contexto previo para dar una respuesta más personaliza
                                         'success': not result.get('error')
                                     })
                                     
+                                    logger.info(f"✅ Herramienta {tool_name} ejecutada - éxito: {not result.get('error')}")
+                                    
                                 except Exception as e:
+                                    logger.error(f"❌ Error ejecutando {tool_name}: {str(e)}")
                                     results.append({
                                         'tool': tool_name,
                                         'result': {'error': str(e)},
                                         'success': False
                                     })
-                            
-                            # 🔄 FALLBACK: Si web_search falla, usar LLM con conocimiento interno
-                            if tools_to_use == ['web_search'] and results and not results[0]['success']:
-                                try:
-                                    logger.info(f"🔄 Web search falló, usando LLM con conocimiento interno como fallback")
-                                    
-                                    # Generar respuesta usando conocimiento interno del LLM
-                                    fallback_prompt = f"""
-                                    No puedo acceder a internet en este momento, pero puedo ayudarte basándome en mi conocimiento interno.
-                                    
-                                    Pregunta: {message}
-                                    
-                                    Proporciona una respuesta útil y completa basada en tu conocimiento interno sobre este tema.
-                                    Si es sobre mejores prácticas, tendencias actuales, o conceptos técnicos, puedes dar información valiosa.
-                                    
-                                    Estructura tu respuesta de manera clara y útil, mencionando que la información se basa en tu conocimiento interno.
-                                    """
-                                    
-                                    fallback_response = ollama_service.generate_response(fallback_prompt)
-                                    
-                                    if fallback_response and not fallback_response.get('error'):
-                                        # Reemplazar el resultado fallido con el fallback
-                                        results[0] = {
-                                            'tool': 'llm_fallback',
-                                            'result': {
-                                                'response': fallback_response.get('response', ''),
-                                                'fallback_mode': True,
-                                                'original_tool': 'web_search',
-                                                'success': True
-                                            },
-                                            'success': True
-                                        }
-                                        logger.info(f"✅ Fallback LLM exitoso para tarea de búsqueda")
-                                    
-                                except Exception as e:
-                                    logger.error(f"Error en fallback LLM: {str(e)}")
                             
                             return results
                         
