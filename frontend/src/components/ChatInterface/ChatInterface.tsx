@@ -268,51 +268,28 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   useEffect(() => {
     const sendInitialMessage = async () => {
       // Only proceed if we have a dataId, exactly one message, and it's from user
-      // Add additional checks to prevent duplicate processing
       if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading && onUpdateMessages) {
-        // Check if we already have a response from this user message (prevent duplication)
-        const userMessage = messages[0];
-        const hasResponse = messages.some(msg => msg.sender === 'assistant' && msg.id !== userMessage.id);
-        
-        if (hasResponse) {
-          console.log('🚫 CHAT: Message already has response, skipping duplicate processing');
-          return;
-        }
-        
-        console.log('🚀 CHAT: Sending initial message to backend:', userMessage.content);
+        console.log('🚀 CHAT: Sending initial message to backend:', messages[0].content);
         
         try {
           setIsLoading(true);
           
           // Send the user's message to the backend
-          const response = await agentAPI.sendMessage(userMessage.content, { task_id: dataId });
+          const response = await agentAPI.sendMessage(messages[0].content, { task_id: dataId });
           
           if (response && response.response) {
             console.log('✅ CHAT: Received response from backend:', response.response);
             
-            // Create assistant response message with unique ID
+            // Create assistant response message
             const assistantMessage: Message = {
-              id: `msg-assistant-${Date.now()}-${Math.random()}`,
+              id: `msg-${Date.now()}`,
               content: response.response,
               sender: 'assistant',
               timestamp: new Date()
             };
             
-            // Update messages with the response - use functional update to avoid stale closure
-            onUpdateMessages((prevMessages) => {
-              // Double-check we're not adding duplicate assistant responses
-              const hasExistingResponse = prevMessages.some(msg => 
-                msg.sender === 'assistant' && msg.content === response.response
-              );
-              
-              if (hasExistingResponse) {
-                console.log('🚫 CHAT: Duplicate assistant response detected, skipping');
-                return prevMessages;
-              }
-              
-              console.log('✅ CHAT: Adding assistant response to messages');
-              return [...prevMessages, assistantMessage];
-            });
+            // Update messages with the response
+            onUpdateMessages([...messages, assistantMessage]);
             
             console.log('✅ CHAT: Initial message processed successfully');
           } else {
@@ -323,13 +300,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           
           // Create error message
           const errorMessage: Message = {
-            id: `msg-error-${Date.now()}-${Math.random()}`,
+            id: `msg-${Date.now()}`,
             content: 'Hubo un error al procesar tu mensaje. Por favor, intenta de nuevo.',
             sender: 'assistant',
             timestamp: new Date()
           };
           
-          onUpdateMessages((prevMessages) => [...prevMessages, errorMessage]);
+          onUpdateMessages([...messages, errorMessage]);
         } finally {
           setIsLoading(false);
         }
