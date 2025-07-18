@@ -612,7 +612,7 @@ def chat():
 @agent_bp.route('/generate-plan', methods=['POST'])
 def generate_plan():
     """
-    Endpoint para generar planes de acción sin ejecutar
+    Endpoint para generar planes de acción sin ejecutar - SIMPLIFICADO
     """
     try:
         data = request.get_json()
@@ -624,11 +624,50 @@ def generate_plan():
         # Generar task_id temporal
         task_id = str(uuid.uuid4())
         
-        # Generar plan de acción
-        action_plan = action_planner.generate_action_plan(task_title, task_id)
+        # Generar plan simple basado en el título
+        simple_plan = [
+            {
+                'id': 'step_1',
+                'title': 'Análisis de la tarea',
+                'description': f'Analizar: "{task_title}"',
+                'tool': 'analysis',
+                'status': 'pending',
+                'estimated_time': '30 segundos',
+                'completed': False,
+                'active': True
+            },
+            {
+                'id': 'step_2',
+                'title': 'Ejecución de la tarea',
+                'description': 'Ejecutar la tarea solicitada',
+                'tool': 'execution',
+                'status': 'pending',
+                'estimated_time': '1-2 minutos',
+                'completed': False,
+                'active': False
+            },
+            {
+                'id': 'step_3',
+                'title': 'Entrega de resultados',
+                'description': 'Entregar los resultados finales',
+                'tool': 'delivery',
+                'status': 'pending',
+                'estimated_time': '30 segundos',
+                'completed': False,
+                'active': False
+            }
+        ]
+        
+        # Guardar plan en memoria
+        active_task_plans[task_id] = {
+            'plan': simple_plan,
+            'current_step': 0,
+            'status': 'ready',
+            'created_at': datetime.now().isoformat()
+        }
         
         return jsonify({
-            'plan': action_plan,
+            'plan': simple_plan,
             'task_id': task_id,
             'timestamp': datetime.now().isoformat(),
             'status': 'plan_generated'
