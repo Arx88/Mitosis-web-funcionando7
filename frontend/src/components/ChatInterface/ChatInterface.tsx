@@ -692,9 +692,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         }
       }
 
-      // Llamar al callback original para mantener compatibilidad
-      console.log('🔄 DEBUG: Calling onSendMessage with:', processedMessage);
-      onSendMessage(processedMessage);
+      // Remove the onSendMessage callback call to prevent duplicate messages
+      // The initial message effect will handle backend communication and response addition
+      // console.log('🔄 DEBUG: Calling onSendMessage with:', processedMessage);
+      // onSendMessage(processedMessage);
 
       // Create and add user message to the conversation
       const userMessage: Message = {
