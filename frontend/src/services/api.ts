@@ -62,6 +62,22 @@ export interface ChatResponse {
   search_data?: SearchData;
   upload_data?: UploadData;
   created_files?: any[];
+  // Plan structure from backend
+  plan?: {
+    steps: Array<{
+      id: string;
+      title: string;
+      description: string;
+      tool: string;
+      status: string;
+      estimated_time: string;
+      completed: boolean;
+      active: boolean;
+    }>;
+    total_steps: number;
+    estimated_total_time: string;
+    task_type: string;
+  };
   // Nuevos campos para orquestación
   orchestration_enabled?: boolean;
   task_id?: string;
