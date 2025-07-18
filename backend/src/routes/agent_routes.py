@@ -297,12 +297,13 @@ def generate_structured_plan(message: str, task_id: str) -> dict:
                 }
             ]
         
-        # Guardar plan en memoria global
+        # Guardar plan en memoria global con timestamp
         active_task_plans[task_id] = {
             'plan': plan_steps,
             'current_step': 0,
             'status': 'executing',
             'created_at': datetime.now().isoformat(),
+            'start_time': datetime.now(),  # Para tracking del tiempo real
             'message': message
         }
         
