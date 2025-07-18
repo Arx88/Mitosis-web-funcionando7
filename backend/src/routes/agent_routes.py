@@ -72,15 +72,30 @@ def is_casual_conversation(message: str) -> bool:
             if re.search(pattern, message_lower):
                 return True
     
-    # Verificar patrones de tareas
+    # Verificar patrones de tareas PRIMERO
     for pattern in TASK_PATTERNS:
         if re.search(pattern, message_lower):
             return False
     
-    # Si no hay patrones de tareas y es corto, probablemente es casual
+    # Verificar palabras clave que indican tarea (más amplio)
+    task_keywords = [
+        'buscar', 'busca', 'investigar', 'investiga', 'analizar', 'analiza',
+        'crear', 'crea', 'generar', 'genera', 'desarrollar', 'desarrolla',
+        'hacer', 'haz', 'escribir', 'escribe', 'dame', 'dime', 'necesito',
+        'quiero', 'puedes', 'ayúdame', 'planificar', 'planifica', 'realizar',
+        'informe', 'reporte', 'análisis', 'estudio', 'investigación'
+    ]
+    
+    # Si contiene palabras clave de tareas, NO es casual
+    for keyword in task_keywords:
+        if keyword in message_lower:
+            return False
+    
+    # Si no hay patrones de tareas y es muy corto, probablemente es casual
     if len(message_lower.split()) <= 5:
         return True
     
+    # Si tiene más de 5 palabras y no es claramente casual, tratarlo como tarea
     return False
 
 def get_ollama_service():
