@@ -174,7 +174,7 @@ export function App() {
     setTimeout(() => {
       setInitializationLogs([]);
     }, 10000); // Limpiar logs después de 10 segundos
-  }, [handleInitializationLog]);
+  }, []);
 
   const deleteTask = (taskId: string) => {
     setTasks(prev => prev.filter(task => task.id !== taskId));
