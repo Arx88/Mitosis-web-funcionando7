@@ -99,6 +99,53 @@ def get_tool_manager():
         logger.error("Tool manager not available")
         return None
 
+def simulate_plan_execution(task_id: str, plan_steps: list):
+    """
+    Simula la ejecución progresiva de los pasos del plan
+    """
+    try:
+        import threading
+        import time
+        
+        def execute_steps():
+            if task_id not in active_task_plans:
+                return
+                
+            plan_data = active_task_plans[task_id]
+            steps = plan_data['plan']
+            
+            for i, step in enumerate(steps):
+                # Simular tiempo de ejecución
+                time.sleep(2)  # 2 segundos por paso
+                
+                # Marcar paso actual como completado
+                step['completed'] = True
+                step['active'] = False
+                step['status'] = 'completed'
+                
+                # Activar siguiente paso si existe
+                if i + 1 < len(steps):
+                    steps[i + 1]['active'] = True
+                    steps[i + 1]['status'] = 'in-progress'
+                
+                # Actualizar plan en memoria
+                active_task_plans[task_id]['plan'] = steps
+                active_task_plans[task_id]['current_step'] = i + 1
+                
+                logger.info(f"🔄 Step {i+1} completed for task {task_id}")
+            
+            # Marcar tarea como completada
+            active_task_plans[task_id]['status'] = 'completed'
+            logger.info(f"✅ All steps completed for task {task_id}")
+        
+        # Ejecutar en hilo separado para no bloquear la respuesta
+        thread = threading.Thread(target=execute_steps)
+        thread.daemon = True
+        thread.start()
+        
+    except Exception as e:
+        logger.error(f"Error in plan execution simulation: {str(e)}")
+
 def generate_structured_plan(message: str, task_id: str) -> dict:
     """
     Genera un plan estructurado para mostrar en el frontend
