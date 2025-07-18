@@ -707,11 +707,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         }
       }
 
-      // Remove the onSendMessage callback call to prevent duplicate messages
-      // The initial message effect will handle backend communication and response addition
-      // console.log('🔄 DEBUG: Calling onSendMessage with:', processedMessage);
-      // onSendMessage(processedMessage);
-
       // Create and add user message to the conversation
       const userMessage: Message = {
         id: `msg-${Date.now()}-user`,
@@ -729,7 +724,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       // For subsequent messages (not the initial one), we need to handle backend communication
       // but only if this is NOT the initial message being processed by the effect
-      if (messages.length > 1) {
+      if (messages.length > 1 || !processedTasksRef.current.has(dataId)) {
         // Include memory context if there's active memory
         const context = {
           task_id: dataId,
@@ -749,9 +744,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           console.log('✅ BASIC DEBUG: Backend response received');
           console.log('📋 BASIC DEBUG: Response type:', typeof response);
           console.log('📋 BASIC DEBUG: Response keys:', Object.keys(response || {}));
-          
-          // Continue with the rest of the response processing logic...
-          // (This is the same logic that was in the original handleSendMessage)
           
           // Parse links from response
           const responseLinks = parseLinksFromText(response.response);
@@ -773,7 +765,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             searchData: response.search_data,
             uploadData: response.upload_data,
             links: uniqueLinks.length > 0 ? uniqueLinks : undefined,
-            status: response.tool_results.length > 0 ? {
+            status: response.tool_results && response.tool_results.length > 0 ? {
               type: 'success',
               message: `Ejecuté ${response.tool_results.length} herramienta(s)`
             } : undefined
