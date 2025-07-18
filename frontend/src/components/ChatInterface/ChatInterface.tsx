@@ -269,12 +269,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Effect to automatically send initial message to backend when new task is created
   useEffect(() => {
     const sendInitialMessage = async () => {
-      // Only proceed if we have a dataId, exactly one message, it's from user, and no assistant response yet
-      if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading && onUpdateMessages) {
+      // Only proceed if we have a dataId, exactly one message, it's from user, and haven't sent initial message yet
+      if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading && !hasInitialMessageSent && onUpdateMessages) {
         console.log('🚀 CHAT: Sending initial message to backend:', messages[0].content);
         
         try {
           setIsLoading(true);
+          setHasInitialMessageSent(true); // Mark that we've sent the initial message
           
           // Send the user's message to the backend
           const response = await agentAPI.sendMessage(messages[0].content, { task_id: dataId });
@@ -315,11 +316,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }
     };
     
-    // Only run when we have exactly 1 message (user message) and a dataId
-    if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading) {
+    // Only run when we have exactly 1 message (user message) and a dataId and haven't sent initial message
+    if (dataId && messages.length === 1 && messages[0].sender === 'user' && !isLoading && !hasInitialMessageSent) {
       sendInitialMessage();
     }
-  }, [dataId, messages.length]); // Simplified dependencies to prevent duplicate calls
+  }, [dataId, messages.length, hasInitialMessageSent]); // Add hasInitialMessageSent to dependencies
 
   // Función para obtener progreso real del backend
   const pollDeepResearchProgress = async (taskId: string) => {
