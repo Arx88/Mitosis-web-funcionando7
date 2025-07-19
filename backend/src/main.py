@@ -49,6 +49,29 @@ ollama_service = OllamaService()
 tool_manager = ToolManager()
 database_service = DatabaseService()
 
+# Inicializar sistema de memoria avanzado
+try:
+    from memory.advanced_memory_manager import AdvancedMemoryManager
+    memory_manager = AdvancedMemoryManager()
+    logger.info("✅ Advanced Memory Manager initialized")
+except Exception as e:
+    logger.warning(f"⚠️ Could not initialize Advanced Memory Manager: {e}")
+    memory_manager = None
+
+# Inicializar gestor de contexto inteligente
+# Mejora implementada según UPGRADE.md Sección 1: Sistema de Contexto Dinámico Avanzado
+try:
+    from context.intelligent_context_manager import IntelligentContextManager
+    intelligent_context_manager = IntelligentContextManager(
+        memory_manager=memory_manager,
+        task_manager=None,  # TODO: Implementar task_manager cuando esté disponible
+        model_manager=ollama_service  # Usar ollama_service como model_manager
+    )
+    logger.info("✅ Intelligent Context Manager initialized")
+except Exception as e:
+    logger.warning(f"⚠️ Could not initialize Intelligent Context Manager: {e}")
+    intelligent_context_manager = None
+
 # Inicializar WebSocket manager para comunicación en tiempo real
 # Mejora implementada según UPGRADE.md Sección 3: WebSockets para Comunicación en Tiempo Real
 from websocket.websocket_manager import initialize_websocket
