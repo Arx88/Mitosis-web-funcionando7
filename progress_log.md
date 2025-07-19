@@ -49,14 +49,49 @@ Implementar las mejoras detalladas en UPGRADE.md para transformar el agente Mito
 - [x] Crear progress_log.md para documentación
 - [x] Verificar estado actual de servicios
 
-### Fase 2: Robustecimiento de la Generación de Plan (UPGRADE.md Sección 2)
+### Fase 2: Robustecimiento de la Generación de Plan (UPGRADE.md Sección 2) ✅
 **Prioridad**: ALTA
+**Estado**: COMPLETADO
+**Fecha**: 2025-01-15 19:45:00
 **Archivos Afectados**: `agent_routes.py`, `ollama_service.py`
 **Tareas**:
-- [ ] Implementar validación de esquemas JSON usando `jsonschema`
-- [ ] Mejorar bucle de reintento con retroalimentación específica a Ollama
-- [ ] Corregir comunicación de estado inicial (cambiar 'completed' por 'plan_generated')
-- [ ] Implementar notificación de fallback al frontend
+- [x] Implementar validación de esquemas JSON usando `jsonschema` - COMPLETADO
+- [x] Mejorar bucle de reintento con retroalimentación específica a Ollama - COMPLETADO
+- [x] Corregir comunicación de estado inicial (cambiar 'completed' por 'plan_generated') - COMPLETADO
+- [x] Implementar notificación de fallback al frontend - COMPLETADO
+
+**Cambios Implementados**:
+1. **Validación de esquemas JSON robusta**: 
+   - Creado `PLAN_SCHEMA` constante con validación completa
+   - Función `validate_plan_schema()` con manejo de errores detallado
+   - Validación de tipos, longitudes mínimas/máximas y campos requeridos
+
+2. **Bucle de reintento mejorado**:
+   - Estrategia de 3 intentos con prompts progresivos
+   - Reintento 1: Prompt normal
+   - Reintento 2: Prompt con corrección específica del error
+   - Reintento 3: Prompt simplificado garantizado
+   - Tracking de errores específicos con `last_error`
+
+3. **Parseo JSON robusto**:
+   - 3 estrategias de parseo con logging detallado
+   - Corrección automática de formatos (comillas simples → dobles)
+   - Extracción de JSON de texto con regex avanzado
+
+4. **Comunicación de estado corregida**:
+   - Cambio de `'execution_status': 'completed'` a `'plan_generated'`
+   - Estado más preciso del progreso real de la tarea
+   - Mejor experiencia de usuario sin expectativas incorrectas
+
+5. **Notificaciones de fallback**:
+   - Función `generate_fallback_plan_with_notification()` mejorada
+   - Campos `plan_source`, `fallback_reason`, `warning` agregados
+   - Comunicación explícita al frontend cuando se usa plan de contingencia
+
+**Testing**: Funciones probadas exitosamente con diferentes tipos de mensajes
+**Estado de Servicios**: ✅ Backend y Frontend funcionando correctamente
+
+---
 
 ### Fase 3: WebSockets para Comunicación en Tiempo Real (UPGRADE.md Sección 3)  
 **Prioridad**: ALTA
