@@ -487,55 +487,52 @@ def generate_dynamic_plan_with_ai(message: str, task_id: str) -> dict:
 
         logger.info(f"🤖 Generating AI-powered plan for task {task_id}: '{message[:50]}...'")
         
-        # Prompt altamente optimizado para generar planes específicos y personalizados
+        # Prompt ultra-específico y restrictivo para generación JSON
         plan_prompt = f"""
-Eres un planificador experto de tareas. Crea un plan de acción 100% personalizado y específico.
+Eres un planificador de tareas experto. Debes responder SOLO con JSON válido, sin texto adicional.
 
-TAREA EXACTA A PLANIFICAR: "{message}"
+TAREA: "{message}"
 
-REGLAS OBLIGATORIAS:
-1. NUNCA uses frases genéricas como "Búsqueda de información", "Procesando datos", etc.
-2. Cada paso debe mencionar ESPECÍFICAMENTE qué vas a hacer con esta tarea
-3. Los títulos deben ser únicos y descriptivos para ESTA tarea particular
-4. Incluir 3-5 pasos realistas y necesarios
-5. Tiempos estimados deben ser precisos para cada acción
+INSTRUCCIONES OBLIGATORIAS:
+1. Responde ÚNICAMENTE con el JSON
+2. No agregues explicaciones, texto adicional, ni comentarios
+3. Cada paso debe ser específico para esta tarea exacta
+4. Usa herramientas: web_search, analysis, planning, creation, delivery, synthesis, data_analysis, processing
 
-HERRAMIENTAS: web_search, analysis, planning, creation, delivery, synthesis, data_analysis, processing
-
-RESPUESTA OBLIGATORIA EN JSON:
+FORMATO JSON OBLIGATORIO:
 {{
-  "task_type": "[tipo específico basado en la tarea]",
-  "complexity": "baja|media|alta",
-  "estimated_total_time": "[tiempo total estimado]",
+  "task_type": "investigación",
+  "complexity": "media",
+  "estimated_total_time": "3-5 minutos",
   "steps": [
     {{
       "id": "step_1",
-      "title": "[Acción específica para '{message}']",
-      "description": "[Detalles exactos de lo que se ejecutará]",
-      "tool": "[herramienta apropiada]",
-      "estimated_time": "[tiempo específico]",
-      "priority": "alta|media|baja"
+      "title": "Paso específico para '{message}'",
+      "description": "Descripción detallada específica",
+      "tool": "web_search",
+      "estimated_time": "1 minuto",
+      "priority": "alta"
     }},
     {{
       "id": "step_2",
-      "title": "[Siguiente acción específica]",
-      "description": "[Detalles exactos del siguiente paso]", 
-      "tool": "[herramienta apropiada]",
-      "estimated_time": "[tiempo específico]",
-      "priority": "alta|media|baja"
+      "title": "Segundo paso específico",
+      "description": "Segunda acción detallada específica",
+      "tool": "analysis", 
+      "estimated_time": "1.5 minutos",
+      "priority": "alta"
+    }},
+    {{
+      "id": "step_3",
+      "title": "Tercer paso específico",
+      "description": "Tercera acción detallada específica",
+      "tool": "creation",
+      "estimated_time": "2 minutos", 
+      "priority": "media"
     }}
   ]
 }}
 
-EJEMPLO CORRECTO para "Crear guía de Python para principiantes":
-- Título: "Estructuración de conceptos básicos de Python (variables, funciones, loops)"
-- Descripción: "Definir secuencia pedagógica: sintaxis básica → variables → operadores → estructuras de control → funciones"
-
-EJEMPLO INCORRECTO (no hacer):
-- Título: "Planificación" ❌
-- Descripción: "Planificar el contenido" ❌
-
-RESPONDE SOLO CON JSON VÁLIDO:"""
+RESPONDE SOLO JSON:"""
         
         # Generar plan usando Ollama con mejor prompt
         logger.info(f"📤 Sending plan generation request to Ollama for task {task_id}")
