@@ -908,23 +908,114 @@ Formato: Profesional, estructurado y completo.
 
 def extract_search_query_from_message(message: str, step_title: str) -> str:
     """
-    Extrae una query de búsqueda relevante del mensaje original
+    Extrae una query de búsqueda optimizada usando LLM para mayor relevancia
+    Mejora implementada según UPGRADE.md Sección 4: Extracción de Query Mejorada (LLM-driven)
     """
     try:
-        # Remover palabras comunes y conectores
-        stop_words = ['el', 'la', 'los', 'las', 'un', 'una', 'de', 'del', 'en', 'con', 'por', 'para', 'sobre', 'crear', 'buscar', 'dame', 'necesito']
+        # Obtener servicio de Ollama para generación inteligente de queries
+        ollama_service = get_ollama_service()
+        
+        if not ollama_service or not ollama_service.is_healthy():
+            logger.warning("⚠️ Ollama no disponible para extracción LLM de query, usando método heurístico")
+            return _fallback_query_extraction(message, step_title)
+        
+        # Prompt específico para generar consultas de búsqueda optimizadas
+        search_query_prompt = f"""Genera 3-5 palabras clave de búsqueda optimizadas para obtener información relevante y actualizada sobre esta tarea.
+
+Mensaje original: "{message}"
+Contexto del paso: "{step_title}"
+
+INSTRUCCIONES:
+- Extrae las palabras más importantes y específicas
+- Enfócate en términos técnicos, nombres propios, conceptos clave
+- Evita palabras genéricas como "buscar", "información", "datos"  
+- Incluye términos que ayuden a encontrar contenido actualizado
+- Responde SOLO con las palabras clave separadas por comas
+- Máximo 5 palabras clave relevantes
+
+EJEMPLOS:
+- "Analizar tendencias de IA en 2025" → "inteligencia artificial, tendencias 2025, IA avances, machine learning"
+- "Crear informe mercado criptomonedas" → "criptomonedas, mercado crypto, bitcoin ethereum, análisis 2025"
+
+Palabras clave de búsqueda:"""
+
+        logger.info(f"🔍 Generating LLM-driven search query for: '{message[:30]}...'")
+        
+        # Llamar a Ollama con parámetros optimizados para extracción de keywords
+        response = ollama_service.generate_response(search_query_prompt, {
+            'temperature': 0.3,  # Creatividad moderada
+            'max_tokens': 100,   # Respuesta corta
+            'response_format': 'text'
+        })
+        
+        if response.get('error'):
+            logger.warning(f"⚠️ Error en extracción LLM de query: {response['error']}")
+            return _fallback_query_extraction(message, step_title)
+        
+        # Procesar respuesta de Ollama
+        generated_keywords = response.get('response', '').strip()
+        
+        if generated_keywords and len(generated_keywords) > 5:
+            # Limpiar la respuesta
+            cleaned_query = generated_keywords.replace('\n', ' ').replace('"', '').strip()
+            
+            # Validar que las palabras clave no sean demasiado genéricas
+            generic_terms = ['información', 'datos', 'buscar', 'análisis', 'crear', 'generar']
+            keywords = [kw.strip() for kw in cleaned_query.split(',')]
+            
+            # Filtrar términos genéricos y tomar los mejores
+            relevant_keywords = [
+                kw for kw in keywords 
+                if len(kw) > 2 and not any(generic in kw.lower() for generic in generic_terms)
+            ][:4]  # Máximo 4 keywords
+            
+            if relevant_keywords:
+                final_query = ', '.join(relevant_keywords)
+                logger.info(f"✅ LLM-generated search query: '{final_query}'")
+                return final_query
+        
+        logger.warning(f"⚠️ LLM query no válida, usando fallback para: {message[:30]}...")
+        return _fallback_query_extraction(message, step_title)
+        
+    except Exception as e:
+        logger.error(f"❌ Error en extracción LLM de query: {str(e)}")
+        return _fallback_query_extraction(message, step_title)
+
+def _fallback_query_extraction(message: str, step_title: str) -> str:
+    """
+    Método de respaldo heurístico para extracción de query cuando LLM no está disponible
+    """
+    try:
+        # Remover palabras comunes y conectores  
+        stop_words = ['el', 'la', 'los', 'las', 'un', 'una', 'de', 'del', 'en', 'con', 'por', 'para', 'sobre', 'crear', 'buscar', 'dame', 'necesito', 'quiero', 'hacer']
         
         # Usar el mensaje original como base
         words = [word for word in message.lower().split() if word not in stop_words and len(word) > 2]
         
-        # Tomar las primeras 3-4 palabras más relevantes
+        # Agregar año actual para búsquedas más actualizadas
+        current_year = "2025"
+        if current_year not in ' '.join(words):
+            words.append(current_year)
+        
+        # Tomar las primeras 4 palabras más relevantes
         query = ' '.join(words[:4])
         
         # Si la query está vacía, usar el título del paso
         if not query.strip():
             query = step_title.replace('Búsqueda de', '').replace('información', '').strip()
+            
+        # Fallback final
+        if not query.strip():
+            # Extraer sustantivos y términos técnicos del mensaje original
+            import re
+            technical_terms = re.findall(r'\b[A-Za-z]{4,}\b', message)
+            if technical_terms:
+                query = ' '.join(technical_terms[:3])
+            else:
+                query = message[:30]  # Último recurso
         
-        return query or message[:50]  # Fallback al mensaje original truncado
+        logger.info(f"🔄 Fallback search query: '{query}'")
+        return query
         
     except Exception:
         return message[:50]  # Fallback seguro
