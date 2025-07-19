@@ -63,8 +63,108 @@ TASK_PATTERNS = [
 ]
 
 def is_casual_conversation(message: str) -> bool:
-    """Detecta si un mensaje es una conversación casual"""
+    """
+    Detecta si un mensaje es una conversación casual usando clasificación LLM
+    Mejora implementada según UPGRADE.md Sección 1: Detección de Intención Basada en LLM
+    """
+    try:
+        # Obtener servicio de Ollama para clasificación inteligente
+        ollama_service = get_ollama_service()
+        
+        # Fallback a lógica heurística si Ollama no está disponible
+        if not ollama_service or not ollama_service.is_healthy():
+            logger.warning("⚠️ Ollama no disponible, usando detección heurística de respaldo")
+            return _fallback_casual_detection(message)
+        
+        # Prompt específico para clasificación de intención con Ollama
+        intent_prompt = f"""Clasifica la siguiente frase del usuario en una de estas categorías exactas: 'casual', 'tarea_investigacion', 'tarea_creacion', 'tarea_analisis', 'otro'.
+
+Responde ÚNICAMENTE con un objeto JSON con la clave 'intent'. No agregues explicaciones adicionales.
+
+EJEMPLOS:
+- "hola" -> {{"intent": "casual"}}
+- "¿cómo estás?" -> {{"intent": "casual"}}
+- "gracias" -> {{"intent": "casual"}}
+- "buscar información sobre IA" -> {{"intent": "tarea_investigacion"}}
+- "crear un informe" -> {{"intent": "tarea_creacion"}}
+- "analizar datos" -> {{"intent": "tarea_analisis"}}
+
+Frase a clasificar: "{message}"
+
+Respuesta JSON:"""
+        
+        logger.info(f"🤖 Clasificando intención con LLM para: '{message[:50]}...'")
+        
+        # Llamar a Ollama con parámetros optimizados para JSON
+        response = ollama_service.generate_response(intent_prompt, {
+            'temperature': 0.2,  # Más bajo para respuestas consistentes
+            'response_format': 'json'
+        })
+        
+        if response.get('error'):
+            logger.warning(f"⚠️ Error en clasificación LLM: {response['error']}, usando fallback")
+            return _fallback_casual_detection(message)
+        
+        # Parsear respuesta JSON con estrategias robustas
+        response_text = response.get('response', '').strip()
+        logger.info(f"📥 Respuesta LLM clasificación: {response_text[:100]}...")
+        
+        # Intentar parseo JSON con múltiples estrategias
+        intent_data = None
+        
+        # Estrategia 1: JSON directo
+        try:
+            # Limpiar respuesta
+            cleaned_response = response_text.replace('```json', '').replace('```', '').strip()
+            if cleaned_response.startswith('{') and cleaned_response.endswith('}'):
+                intent_data = json.loads(cleaned_response)
+        except json.JSONDecodeError:
+            pass
+        
+        # Estrategia 2: Buscar JSON en el texto
+        if not intent_data:
+            try:
+                json_match = re.search(r'\{[^{}]*"intent"[^{}]*\}', response_text)
+                if json_match:
+                    intent_data = json.loads(json_match.group())
+            except json.JSONDecodeError:
+                pass
+        
+        # Estrategia 3: Extracción por regex
+        if not intent_data:
+            try:
+                intent_match = re.search(r'"intent"\s*:\s*"([^"]+)"', response_text)
+                if intent_match:
+                    intent_data = {"intent": intent_match.group(1)}
+            except:
+                pass
+        
+        # Validar resultado
+        if intent_data and 'intent' in intent_data:
+            intent = intent_data['intent'].lower().strip()
+            
+            # Clasificar como casual o tarea
+            is_casual = intent == 'casual'
+            
+            logger.info(f"✅ Clasificación LLM exitosa: '{message[:30]}...' -> {intent} -> {'CASUAL' if is_casual else 'TAREA'}")
+            
+            return is_casual
+        else:
+            logger.warning(f"⚠️ No se pudo parsear intención LLM, usando fallback para: {message[:30]}...")
+            return _fallback_casual_detection(message)
+            
+    except Exception as e:
+        logger.error(f"❌ Error en clasificación de intención LLM: {str(e)}")
+        return _fallback_casual_detection(message)
+
+def _fallback_casual_detection(message: str) -> bool:
+    """
+    Lógica de respaldo heurística para detección de conversación casual
+    Se usa cuando Ollama no está disponible
+    """
     message_lower = message.lower().strip()
+    
+    logger.info(f"🔄 Usando detección heurística de respaldo para: '{message[:30]}...'")
     
     # Mensajes muy cortos (menos de 3 palabras) probablemente son casuales
     if len(message_lower.split()) <= 3:
