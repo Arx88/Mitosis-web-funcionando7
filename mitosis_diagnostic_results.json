@@ -1,0 +1,165 @@
+{
+  "timestamp": "2025-07-19T19:27:37.546703",
+  "backend_url": "https://ab502ce1-0dbd-49a3-bc93-cc8d249abadf.preview.emergentagent.com",
+  "sections": {
+    "general_backend": {
+      "tests": [
+        {
+          "name": "Main Health Endpoint",
+          "passed": false,
+          "details": "Status: 502, Response: ",
+          "critical": true,
+          "timestamp": "2025-07-19T19:27:37.611766"
+        },
+        {
+          "name": "Agent Health Endpoint",
+          "passed": false,
+          "details": "Status: 502, Response: ",
+          "critical": true,
+          "timestamp": "2025-07-19T19:27:37.638232"
+        },
+        {
+          "name": "Agent Status Endpoint",
+          "passed": false,
+          "details": "Status: 502, Response: ",
+          "critical": false,
+          "timestamp": "2025-07-19T19:27:37.656416"
+        }
+      ],
+      "passed": 0,
+      "failed": 3
+    },
+    "main_agent": {
+      "tests": [
+        {
+          "name": "Chat - Simple Greeting",
+          "passed": false,
+          "details": "Status: 502, Response: ",
+          "critical": true,
+          "timestamp": "2025-07-19T19:27:37.673953"
+        },
+        {
+          "name": "Chat - Task Request",
+          "passed": false,
+          "details": "Status: 502, Response: ",
+          "critical": true,
+          "timestamp": "2025-07-19T19:27:38.691309"
+        },
+        {
+          "name": "Chat - Information Request",
+          "passed": false,
+          "details": "Status: 502, Response: ",
+          "critical": true,
+          "timestamp": "2025-07-19T19:27:39.709940"
+        }
+      ],
+      "passed": 0,
+      "failed": 3
+    },
+    "memory_system": {
+      "tests": [
+        {
+          "name": "Memory Analytics Endpoint",
+          "passed": false,
+          "details": "Status: 502, Response: ",
+          "critical": false,
+          "timestamp": "2025-07-19T19:27:40.729863"
+        },
+        {
+          "name": "Episode Storage",
+          "passed": false,
+          "details": "Status: 502, Response: ",
+          "critical": false,
+          "timestamp": "2025-07-19T19:27:40.750151"
+        },
+        {
+          "name": "Memory Integration with Chat",
+          "passed": false,
+          "details": "Status: 502, Response: ",
+          "critical": false,
+          "timestamp": "2025-07-19T19:27:40.770541"
+        }
+      ],
+      "passed": 0,
+      "failed": 3
+    },
+    "tools_system": {
+      "tests": [
+        {
+          "name": "Tools Endpoint",
+          "passed": false,
+          "details": "Status: 502, Response: ",
+          "critical": true,
+          "timestamp": "2025-07-19T19:27:40.791551"
+        },
+        {
+          "name": "Web Search Functionality",
+          "passed": false,
+          "details": "Status: 502, Response: ",
+          "critical": false,
+          "timestamp": "2025-07-19T19:27:40.812017"
+        },
+        {
+          "name": "Deep Research Functionality",
+          "passed": false,
+          "details": "Status: 502, Response: ",
+          "critical": false,
+          "timestamp": "2025-07-19T19:27:40.826081"
+        }
+      ],
+      "passed": 0,
+      "failed": 3
+    },
+    "problem_diagnosis": {
+      "tests": [
+        {
+          "name": "Server Implementation Check",
+          "passed": false,
+          "details": "Could not determine server implementation",
+          "critical": false,
+          "timestamp": "2025-07-19T19:27:40.840234"
+        }
+      ],
+      "passed": 0,
+      "failed": 1
+    }
+  },
+  "summary": {
+    "total_tests": 13,
+    "passed_tests": 0,
+    "failed_tests": 13,
+    "critical_issues": [
+      {
+        "section": "general_backend",
+        "test": "Main Health Endpoint",
+        "details": "Status: 502, Response: "
+      },
+      {
+        "section": "general_backend",
+        "test": "Agent Health Endpoint",
+        "details": "Status: 502, Response: "
+      },
+      {
+        "section": "main_agent",
+        "test": "Chat - Simple Greeting",
+        "details": "Status: 502, Response: "
+      },
+      {
+        "section": "main_agent",
+        "test": "Chat - Task Request",
+        "details": "Status: 502, Response: "
+      },
+      {
+        "section": "main_agent",
+        "test": "Chat - Information Request",
+        "details": "Status: 502, Response: "
+      },
+      {
+        "section": "tools_system",
+        "test": "Tools Endpoint",
+        "details": "Status: 502, Response: "
+      }
+    ],
+    "recommendations": []
+  }
+}
