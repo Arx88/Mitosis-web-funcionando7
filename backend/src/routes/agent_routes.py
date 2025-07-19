@@ -655,40 +655,54 @@ GENERA SOLO JSON VÁLIDO, sin texto adicional:
 
 def generate_fallback_plan(message: str, task_id: str) -> dict:
     """
-    Genera un plan de fallback cuando la IA no está disponible
+    Genera un plan de fallback más específico cuando la IA no está disponible
     """
     try:
-        # Analizar el mensaje para determinar el tipo de tarea
-        message_lower = message.lower()
+        logger.warning(f"🔄 Generating fallback plan for task {task_id} (AI not available)")
         
-        # Determinar pasos basados en el tipo de tarea - MÁS ESPECÍFICO
-        if any(word in message_lower for word in ['crear', 'generar', 'escribir', 'desarrollar', 'diseñar', 'construir']):
-            task_subject = message.replace('crear', '').replace('generar', '').replace('escribir', '').replace('desarrollar', '').strip()
+        # Analizar el mensaje para determinar el tipo de tarea con más detalle
+        message_lower = message.lower()
+        original_message = message.strip()
+        
+        # Extraer palabras clave específicas para personalización
+        keywords = [word for word in message_lower.split() if len(word) > 3]
+        
+        # Patrones más específicos para diferentes tipos de tareas
+        if any(word in message_lower for word in ['crear', 'generar', 'escribir', 'desarrollar', 'diseñar', 'construir', 'hacer', 'elaborar']):
+            # Extraer el objeto de la creación de forma más inteligente
+            task_subject = original_message
+            for word in ['crear', 'generar', 'escribir', 'desarrollar', 'diseñar', 'construir', 'hacer', 'elaborar', 'un', 'una', 'el', 'la']:
+                task_subject = task_subject.replace(word, '').replace(word.capitalize(), '')
+            task_subject = task_subject.strip()
+            
+            if not task_subject:
+                task_subject = "contenido solicitado"
+            
             plan_steps = [
                 {
                     'id': 'step_1',
-                    'title': f'Análisis de requisitos para: {task_subject}',
-                    'description': f'Analizar requisitos específicos para {task_subject}',
+                    'title': f'Análisis detallado: {task_subject}',
+                    'description': f'Analizar requisitos específicos, contexto y objetivos para {task_subject}',
                     'tool': 'analysis',
                     'status': 'pending',
-                    'estimated_time': '30 segundos',
+                    'estimated_time': '45 segundos',
                     'completed': False,
                     'active': True
                 },
                 {
                     'id': 'step_2',
-                    'title': f'Planificación detallada',
-                    'description': f'Crear estructura y planificar desarrollo de {task_subject}',
+                    'title': f'Estructuración y diseño',
+                    'description': f'Definir estructura, formato y metodología para {task_subject}',
                     'tool': 'planning',
                     'status': 'pending',
-                    'estimated_time': '45 segundos',
+                    'estimated_time': '1 minuto',
                     'completed': False,
                     'active': False
                 },
                 {
                     'id': 'step_3',
-                    'title': f'Desarrollo/Creación',
-                    'description': f'Ejecutar creación de {task_subject}',
+                    'title': f'Desarrollo y creación',
+                    'description': f'Ejecutar la creación completa de {task_subject} siguiendo los requisitos identificados',
                     'tool': 'creation',
                     'status': 'pending',
                     'estimated_time': '2-3 minutos',
@@ -697,8 +711,8 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
                 },
                 {
                     'id': 'step_4',
-                    'title': 'Revisión y entrega final',
-                    'description': f'Revisar y entregar {task_subject} completado',
+                    'title': f'Revisión y optimización final',
+                    'description': f'Revisar calidad, completitud y entregar {task_subject} finalizado',
                     'tool': 'delivery',
                     'status': 'pending',
                     'estimated_time': '30 segundos',
@@ -706,23 +720,32 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
                     'active': False
                 }
             ]
-        elif any(word in message_lower for word in ['buscar', 'investigar', 'analizar', 'estudiar', 'revisar']):
-            research_topic = message.replace('buscar', '').replace('investigar', '').replace('analizar', '').replace('información sobre', '').strip()
+            
+        elif any(word in message_lower for word in ['buscar', 'investigar', 'analizar', 'estudiar', 'revisar', 'información', 'datos', 'investigación']):
+            # Extraer tema de investigación de forma más inteligente
+            research_topic = original_message
+            for word in ['buscar', 'investigar', 'analizar', 'estudiar', 'revisar', 'información', 'sobre', 'acerca', 'de', 'datos', 'dame', 'necesito']:
+                research_topic = research_topic.replace(word, '').replace(word.capitalize(), '')
+            research_topic = research_topic.strip()
+            
+            if not research_topic:
+                research_topic = "tema solicitado"
+                
             plan_steps = [
                 {
                     'id': 'step_1',
-                    'title': f'Definición de búsqueda sobre: {research_topic}',
-                    'description': f'Definir parámetros de investigación para {research_topic}',
+                    'title': f'Estrategia de investigación: {research_topic}',
+                    'description': f'Definir metodología, fuentes y alcance de investigación para {research_topic}',
                     'tool': 'search_definition',
                     'status': 'pending',
-                    'estimated_time': '20 segundos',
+                    'estimated_time': '30 segundos',
                     'completed': False,
                     'active': True
                 },
                 {
                     'id': 'step_2',
-                    'title': f'Búsqueda de información',
-                    'description': f'Buscar información relevante sobre {research_topic}',
+                    'title': f'Recopilación de información especializada',
+                    'description': f'Buscar información actualizada y relevante sobre {research_topic} en múltiples fuentes',
                     'tool': 'web_search',
                     'status': 'pending',
                     'estimated_time': '1-2 minutos',
@@ -731,8 +754,8 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
                 },
                 {
                     'id': 'step_3',
-                    'title': f'Análisis de datos encontrados',
-                    'description': f'Analizar información sobre {research_topic}',
+                    'title': f'Análisis y procesamiento de datos',
+                    'description': f'Analizar, filtrar y procesar la información recopilada sobre {research_topic}',
                     'tool': 'data_analysis',
                     'status': 'pending',
                     'estimated_time': '1 minuto',
@@ -741,8 +764,8 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
                 },
                 {
                     'id': 'step_4',
-                    'title': f'Síntesis y presentación',
-                    'description': f'Sintetizar resultados sobre {research_topic}',
+                    'title': f'Síntesis y presentación de hallazgos',
+                    'description': f'Sintetizar resultados y presentar conclusiones sobre {research_topic}',
                     'tool': 'synthesis',
                     'status': 'pending',
                     'estimated_time': '45 segundos',
@@ -750,13 +773,51 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
                     'active': False
                 }
             ]
-        else:
-            # Plan más específico para otras tareas
+            
+        elif any(word in message_lower for word in ['explica', 'define', 'qué es', 'cómo', 'por qué', 'cuál']):
+            # Preguntas explicativas
+            topic = original_message.replace('?', '').strip()
+            
             plan_steps = [
                 {
                     'id': 'step_1',
-                    'title': f'Análisis de: "{message}"',
-                    'description': f'Analizar y comprender la tarea: {message}',
+                    'title': f'Investigación conceptual: {topic}',
+                    'description': f'Buscar definiciones, conceptos clave y contexto para responder: {topic}',
+                    'tool': 'web_search',
+                    'status': 'pending',
+                    'estimated_time': '1 minuto',
+                    'completed': False,
+                    'active': True
+                },
+                {
+                    'id': 'step_2',
+                    'title': f'Análisis y estructuración',
+                    'description': f'Analizar información encontrada y estructurar respuesta comprensible',
+                    'tool': 'analysis',
+                    'status': 'pending',
+                    'estimated_time': '45 segundos',
+                    'completed': False,
+                    'active': False
+                },
+                {
+                    'id': 'step_3',
+                    'title': f'Formulación de respuesta completa',
+                    'description': f'Crear respuesta detallada y educativa para: {topic}',
+                    'tool': 'synthesis',
+                    'status': 'pending',
+                    'estimated_time': '30 segundos',
+                    'completed': False,
+                    'active': False
+                }
+            ]
+            
+        else:
+            # Plan adaptativo para tareas no clasificadas
+            plan_steps = [
+                {
+                    'id': 'step_1',
+                    'title': f'Interpretación de solicitud: "{original_message[:30]}..."',
+                    'description': f'Analizar y comprender los requisitos específicos de: {original_message}',
                     'tool': 'analysis',
                     'status': 'pending',
                     'estimated_time': '30 segundos',
@@ -765,8 +826,18 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
                 },
                 {
                     'id': 'step_2',
-                    'title': f'Procesamiento de la solicitud',
-                    'description': f'Procesar y ejecutar: {message}',
+                    'title': f'Planificación de ejecución',
+                    'description': f'Definir metodología y pasos para cumplir con: {original_message}',
+                    'tool': 'planning',
+                    'status': 'pending',
+                    'estimated_time': '45 segundos',
+                    'completed': False,
+                    'active': False
+                },
+                {
+                    'id': 'step_3',
+                    'title': f'Procesamiento y ejecución',
+                    'description': f'Ejecutar y procesar según los requisitos identificados',
                     'tool': 'processing',
                     'status': 'pending',
                     'estimated_time': '1-2 minutos',
@@ -774,9 +845,9 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
                     'active': False
                 },
                 {
-                    'id': 'step_3',
-                    'title': f'Entrega de resultados',
-                    'description': f'Entregar resultados finales para: {message}',
+                    'id': 'step_4',
+                    'title': f'Entrega de resultados finales',
+                    'description': f'Entregar resultado completo que satisfaga: {original_message}',
                     'tool': 'delivery',
                     'status': 'pending',
                     'estimated_time': '30 segundos',
@@ -791,15 +862,19 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
             'current_step': 0,
             'status': 'executing',
             'created_at': datetime.now().isoformat(),
-            'start_time': datetime.now(),  # Para tracking del tiempo real
-            'message': message
+            'start_time': datetime.now(),
+            'message': message,
+            'ai_generated': False  # Marcar como plan de fallback
         }
+        
+        logger.info(f"📋 Generated fallback plan for task {task_id} with {len(plan_steps)} customized steps")
         
         return {
             'steps': plan_steps,
             'total_steps': len(plan_steps),
             'estimated_total_time': '2-4 minutos',
-            'task_type': 'structured_execution'
+            'task_type': 'adaptive_fallback_plan',
+            'ai_generated': False
         }
         
     except Exception as e:
