@@ -556,40 +556,55 @@ RESPONDE SOLO JSON:"""
             import json
             import re
             
-            # Extraer JSON del response con múltiples estrategias
+            # Extraer JSON del response con estrategias múltiples y robustas
             response_text = response['response'].strip()
-            logger.info(f"🔍 Raw Ollama response for task {task_id}: {response_text[:200]}...")
+            logger.info(f"🔍 Raw Ollama response for task {task_id}: {response_text[:300]}...")
             
-            # Estrategia 1: Buscar JSON completo
-            json_match = re.search(r'\{(?:[^{}]|{[^{}]*})*\}', response_text, re.DOTALL)
+            # Limpiar response de texto adicional común
+            response_text = response_text.replace('```json', '').replace('```', '').strip()
+            response_text = re.sub(r'^[^{]*', '', response_text)  # Remover texto antes del {
+            response_text = re.sub(r'}[^}]*$', '}', response_text)  # Remover texto después del }
             
-            if not json_match:
-                # Estrategia 2: Buscar entre marcadores comunes
-                json_match = re.search(r'```json\s*(\{.*?\})\s*```', response_text, re.DOTALL)
-                if json_match:
-                    response_text = json_match.group(1)
-                else:
-                    # Estrategia 3: Todo el texto si parece JSON
-                    if response_text.startswith('{') and response_text.endswith('}'):
-                        json_match = type('obj', (object,), {'group': lambda x=0: response_text})()
+            # Estrategias de extracción JSON
+            plan_data = None
             
-            if json_match:
-                json_text = json_match.group() if hasattr(json_match, 'group') else json_match.group(0)
-                logger.info(f"🎯 Extracted JSON for task {task_id}: {json_text[:150]}...")
-                
+            # Estrategia 1: JSON directo
+            if response_text.startswith('{') and response_text.endswith('}'):
                 try:
-                    plan_data = json.loads(json_text)
-                    logger.info(f"✅ Successfully parsed JSON for task {task_id}: {plan_data.keys()}")
-                except json.JSONDecodeError as json_err:
-                    logger.error(f"❌ JSON decode error for task {task_id}: {json_err}")
-                    # Intentar limpiar JSON común
-                    cleaned_json = json_text.replace('```json', '').replace('```', '').strip()
+                    plan_data = json.loads(response_text)
+                    logger.info(f"✅ Strategy 1: Direct JSON parsing successful for task {task_id}")
+                except json.JSONDecodeError as e:
+                    logger.warning(f"⚠️ Strategy 1 failed for task {task_id}: {e}")
+            
+            # Estrategia 2: Buscar primer JSON válido
+            if not plan_data:
+                json_matches = re.finditer(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', response_text)
+                for match in json_matches:
                     try:
-                        plan_data = json.loads(cleaned_json)
-                        logger.info(f"✅ Successfully parsed cleaned JSON for task {task_id}")
+                        plan_data = json.loads(match.group())
+                        if isinstance(plan_data.get('steps'), list):
+                            logger.info(f"✅ Strategy 2: Pattern matching successful for task {task_id}")
+                            break
                     except:
-                        logger.error(f"❌ Failed to parse cleaned JSON for task {task_id}, using fallback")
-                        return generate_fallback_plan(message, task_id)
+                        continue
+            
+            # Estrategia 3: Buscar JSON entre llaves más profundo
+            if not plan_data:
+                try:
+                    # Buscar el JSON más grande posible
+                    start_idx = response_text.find('{')
+                    end_idx = response_text.rfind('}')
+                    if start_idx != -1 and end_idx != -1:
+                        json_candidate = response_text[start_idx:end_idx+1]
+                        plan_data = json.loads(json_candidate)
+                        logger.info(f"✅ Strategy 3: Deep extraction successful for task {task_id}")
+                except:
+                    pass
+            
+            if not plan_data:
+                logger.error(f"❌ All JSON extraction strategies failed for task {task_id}")
+                logger.error(f"📝 Full response: {response_text}")
+                return generate_fallback_plan(message, task_id)
                 
                 # Validar que el plan tenga la estructura esperada
                 if not isinstance(plan_data.get('steps'), list) or len(plan_data.get('steps', [])) == 0:
