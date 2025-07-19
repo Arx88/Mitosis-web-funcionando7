@@ -707,8 +707,16 @@ Proporciona un resultado específico y útil para este paso.
                         'timestamp': datetime.now().isoformat()
                     })
                 
-                # Actualizar plan en memoria
-                active_task_plans[task_id]['plan'] = steps
+                # Actualizar plan en memoria y persistencia
+                task_manager = get_task_manager()
+                task_manager.update_task_step_status(
+                    task_id,
+                    step['id'],
+                    'completed' if step['status'] == 'completed' else 'failed',
+                    step_result.get('summary') if step_result else None,
+                    step.get('error') if step['status'] == 'failed' else None
+                )
+                update_task_data(task_id, {'plan': steps})
             
             # GENERAR RESULTADO FINAL CONSOLIDADO
             if final_results:
