@@ -534,9 +534,17 @@ FORMATO JSON OBLIGATORIO:
 
 RESPONDE SOLO JSON:"""
         
-        # Generar plan usando Ollama con mejor prompt
-        logger.info(f"📤 Sending plan generation request to Ollama for task {task_id}")
-        response = ollama_service.generate_response(plan_prompt, {})
+        # Generar plan usando Ollama con parámetros optimizados para JSON
+        logger.info(f"📤 Sending JSON plan generation request to Ollama for task {task_id}")
+        
+        # Usar parámetros específicos para generación JSON estructurada
+        ollama_context = {
+            'system_prompt': 'You are a JSON task planner. Respond ONLY with valid JSON. No additional text.',
+            'temperature': 0.3,  # Más bajo para respuestas más consistentes
+            'response_format': 'json'
+        }
+        
+        response = ollama_service.generate_response(plan_prompt, ollama_context)
         
         if response.get('error'):
             logger.error(f"❌ Ollama error generating AI plan for task {task_id}: {response['error']}")
