@@ -254,28 +254,113 @@ class OllamaService:
             }
     
     def _parse_response(self, response_text: str) -> Dict[str, Any]:
-        """Parsear respuesta para extraer texto y tool calls"""
+        """
+        Parsear respuesta para extraer texto y tool calls con estrategias robustas
+        Mejora implementada según UPGRADE.md Sección 4: Servicio Ollama y Extracción de Query
+        """
         import re
+        import json
+        import logging
         
-        # Buscar bloques JSON en la respuesta
-        json_pattern = r'```json\s*(\{.*?\})\s*```'
-        matches = re.findall(json_pattern, response_text, re.DOTALL)
+        logger = logging.getLogger(__name__)
+        
+        if not response_text or not isinstance(response_text, str):
+            return {'text': '', 'tool_calls': []}
         
         tool_calls = []
         clean_text = response_text
         
-        for match in matches:
+        # Estrategia 1: Buscar bloques JSON clásicos con ``` 
+        json_pattern_1 = r'```json\s*(\{.*?\})\s*```'
+        matches_1 = re.findall(json_pattern_1, response_text, re.DOTALL)
+        
+        for match in matches_1:
             try:
                 data = json.loads(match)
                 if 'tool_call' in data:
                     tool_calls.append(data['tool_call'])
                     # Remover el bloque JSON del texto
                     clean_text = clean_text.replace(f'```json\n{match}\n```', '')
-            except json.JSONDecodeError:
+                    logger.debug(f"✅ JSON parsing strategy 1 successful: {match[:50]}...")
+            except json.JSONDecodeError as e:
+                logger.debug(f"⚠️ JSON parsing strategy 1 failed for match: {str(e)}")
                 continue
         
+        # Estrategia 2: Buscar JSON sin marcadores de bloque
+        if not tool_calls:
+            json_pattern_2 = r'\{[^{}]*"tool_call"[^{}]*\{[^{}]*\}[^{}]*\}'
+            matches_2 = re.findall(json_pattern_2, response_text)
+            
+            for match in matches_2:
+                try:
+                    data = json.loads(match)
+                    if 'tool_call' in data:
+                        tool_calls.append(data['tool_call'])
+                        clean_text = clean_text.replace(match, '')
+                        logger.debug(f"✅ JSON parsing strategy 2 successful: {match[:50]}...")
+                except json.JSONDecodeError as e:
+                    logger.debug(f"⚠️ JSON parsing strategy 2 failed: {str(e)}")
+                    continue
+        
+        # Estrategia 3: Buscar cualquier JSON válido y verificar si contiene tool_call
+        if not tool_calls:
+            json_pattern_3 = r'\{[^}]*\}'
+            potential_jsons = re.findall(json_pattern_3, response_text)
+            
+            for potential_json in potential_jsons:
+                try:
+                    # Intentar corregir JSON mal formateado
+                    corrected_json = potential_json.replace("'", '"')  # Comillas simples por dobles
+                    data = json.loads(corrected_json)
+                    
+                    if isinstance(data, dict) and 'tool_call' in data:
+                        tool_calls.append(data['tool_call'])
+                        clean_text = clean_text.replace(potential_json, '')
+                        logger.debug(f"✅ JSON parsing strategy 3 successful: {potential_json[:50]}...")
+                        break
+                except (json.JSONDecodeError, ValueError) as e:
+                    logger.debug(f"⚠️ JSON parsing strategy 3 failed for '{potential_json[:30]}...': {str(e)}")
+                    continue
+        
+        # Estrategia 4: Extracción por regex específico de tool_call
+        if not tool_calls:
+            try:
+                tool_pattern = r'"tool_call"\s*:\s*\{[^}]*"tool"\s*:\s*"([^"]+)"[^}]*"parameters"\s*:\s*\{[^}]*\}'
+                tool_matches = re.finditer(tool_pattern, response_text)
+                
+                for tool_match in tool_matches:
+                    try:
+                        # Intentar construir tool_call básico desde regex
+                        full_match = tool_match.group()
+                        tool_name_match = re.search(r'"tool"\s*:\s*"([^"]+)"', full_match)
+                        params_match = re.search(r'"parameters"\s*:\s*(\{[^}]*\})', full_match)
+                        
+                        if tool_name_match:
+                            tool_call = {
+                                "tool": tool_name_match.group(1),
+                                "parameters": json.loads(params_match.group(1)) if params_match else {}
+                            }
+                            tool_calls.append(tool_call)
+                            clean_text = clean_text.replace(tool_match.group(), '')
+                            logger.debug(f"✅ JSON parsing strategy 4 successful for tool: {tool_call['tool']}")
+                            
+                    except (json.JSONDecodeError, AttributeError) as e:
+                        logger.debug(f"⚠️ JSON parsing strategy 4 failed for tool extraction: {str(e)}")
+                        continue
+                        
+            except Exception as e:
+                logger.debug(f"⚠️ JSON parsing strategy 4 overall failed: {str(e)}")
+        
+        # Limpiar texto final
+        clean_text = re.sub(r'```\w*\n?', '', clean_text)  # Remover marcadores de código
+        clean_text = re.sub(r'\n\s*\n', '\n', clean_text)  # Remover líneas vacías múltiples
+        clean_text = clean_text.strip()
+        
+        if tool_calls:
+            logger.info(f"🔧 Successfully extracted {len(tool_calls)} tool calls from Ollama response")
+        
         return {
-            'text': clean_text.strip(),
+            'text': clean_text,
             'tool_calls': tool_calls
         }
     
