@@ -796,7 +796,7 @@ Proporciona un plan completo y actionable.
                     
                     elif step['tool'] == 'delivery' or 'entrega' in step['title'].lower():
                         if ollama_service:
-                            logger.info(f"📦 Executing final delivery using Ollama")
+                            logger.info(f"📦 Executing final delivery with TANGIBLE results")
                             
                             # Generar entrega final con todos los resultados
                             delivery_prompt = f"""
@@ -809,24 +809,106 @@ Crea un documento de entrega final que incluya:
 1. RESUMEN EJECUTIVO de lo realizado
 2. RESULTADOS PRINCIPALES obtenidos
 3. CONTENIDO COMPLETO generado
-4. CONCLUSIONES Y RECOMENDACIONES
-5. ENTREGABLES FINALES
+4. ARCHIVOS Y ENTREGABLES creados
+5. CONCLUSIONES Y RECOMENDACIONES
+6. ENTREGABLES FINALES disponibles
 
 Formato: Documento profesional completo y estructurado.
 """
                             
                             result = ollama_service.generate_response(delivery_prompt, {})
+                            content = result.get('response', 'Entrega completada')
                             
-                            step_result = {
-                                'type': 'delivery',
-                                'content': result.get('response', 'Entrega completada'),
-                                'summary': 'Tarea completada exitosamente con entrega final',
-                                'final_deliverable': True
-                            }
+                            # 🆕 CREAR RESUMEN EJECUTIVO COMO ARCHIVO
+                            try:
+                                # Crear resumen ejecutivo como archivo tangible
+                                import re
+                                safe_message = re.sub(r'[^a-zA-Z0-9\-_]', '_', message[:30])
+                                filename = f"Resumen_Ejecutivo_{safe_message}_{int(time.time())}.md"
+                                file_path = f"/app/backend/static/generated_files/{filename}"
+                                
+                                # Crear directorio si no existe
+                                os.makedirs("/app/backend/static/generated_files", exist_ok=True)
+                                
+                                # Preparar contenido del resumen ejecutivo
+                                executive_summary = f"""# RESUMEN EJECUTIVO
+## Tarea: {message}
+## Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+
+{content}
+
+## ARCHIVOS GENERADOS
+"""
+                                
+                                # Agregar lista de archivos creados
+                                files_created = []
+                                for result_item in final_results:
+                                    if isinstance(result_item, dict) and result_item.get('file_created'):
+                                        files_created.append(f"- {result_item['file_name']} ({result_item['file_size']} bytes)")
+                                        executive_summary += f"- {result_item['file_name']} ({result_item['file_size']} bytes)\n"
+                                
+                                if not files_created:
+                                    executive_summary += "- No se crearon archivos adicionales en este proceso\n"
+                                
+                                executive_summary += f"""
+## ESTADÍSTICAS
+- Pasos ejecutados: {len(steps)}
+- Resultados generados: {len(final_results)}
+- Archivos creados: {len(files_created)}
+- Estado: ✅ Completado exitosamente
+"""
+                                
+                                # Escribir archivo de resumen
+                                with open(file_path, 'w', encoding='utf-8') as f:
+                                    f.write(executive_summary)
+                                
+                                # Verificar creación
+                                if os.path.exists(file_path):
+                                    file_size = os.path.getsize(file_path)
+                                    logger.info(f"✅ RESUMEN EJECUTIVO CREADO: {filename} ({file_size} bytes)")
+                                    
+                                    step_result = {
+                                        'type': 'delivery',
+                                        'content': content,
+                                        'summary': f'✅ Tarea completada con entrega final: {filename}',
+                                        'final_deliverable': True,
+                                        'file_created': True,
+                                        'file_path': file_path,
+                                        'file_name': filename,
+                                        'file_size': file_size,
+                                        'download_url': f'/api/download/{filename}',
+                                        'executive_summary': True,
+                                        'total_files_created': len(files_created) + 1  # +1 por el propio resumen
+                                    }
+                                    
+                                    # Enviar notificación de entrega final
+                                    send_websocket_update('tool_execution_detail', {
+                                        'type': 'tool_execution_detail',
+                                        'tool_name': 'delivery',
+                                        'output_summary': f'✅ Entrega final completada: {filename}',
+                                        'file_created': filename,
+                                        'download_url': f'/api/download/{filename}',
+                                        'total_files': len(files_created) + 1,
+                                        'message': f'🎉 Entrega final completada con {len(files_created) + 1} archivo(s) generado(s)',
+                                        'timestamp': datetime.now().isoformat()
+                                    })
+                                    
+                                else:
+                                    raise Exception("No se pudo crear el resumen ejecutivo")
+                                    
+                            except Exception as file_error:
+                                logger.error(f"❌ Error creando resumen ejecutivo: {str(file_error)}")
+                                step_result = {
+                                    'type': 'delivery',
+                                    'content': content,
+                                    'summary': 'Tarea completada exitosamente con entrega final',
+                                    'final_deliverable': True,
+                                    'file_error': str(file_error)
+                                }
                             
                             step['result'] = step_result
                             final_results.append(step_result)
-                            logger.info(f"✅ Final delivery completed")
+                            logger.info(f"✅ Final delivery with tangible results completed")
                         else:
                             time.sleep(2)
                     
