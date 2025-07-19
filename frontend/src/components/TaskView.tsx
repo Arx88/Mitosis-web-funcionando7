@@ -277,14 +277,14 @@ export const TaskView: React.FC<TaskViewProps> = ({
     }
   }, [showFilesModal]);
 
-  // Nuevo: Polling del progreso del plan Y actualización de tiempo
+  // Optimized: Moderate polling only when needed - FIXED browser saturation issue
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
-    let timeUpdateInterval: NodeJS.Timeout;
     
     // Solo hacer polling si la tarea tiene un plan y no está completada
+    // Reducido la frecuencia del polling para evitar saturar el navegador
     if (task.plan && task.plan.length > 0 && task.status !== 'completed') {
-      // Polling del progreso del plan cada 3 segundos
+      // Polling menos agresivo - cada 10 segundos en lugar de 1-3 segundos
       intervalId = setInterval(async () => {
         try {
           const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
@@ -303,47 +303,23 @@ export const TaskView: React.FC<TaskViewProps> = ({
             
             onUpdateTask(updatedTask);
             
-            // Log progreso al terminal
-            if (logToTerminal) {
-              logToTerminal(`📊 Progreso del plan: ${planData.completed_steps}/${planData.total_steps} pasos completados (${Math.round(planData.progress)}%)`, 'info');
+            // Log progreso al terminal solo si hay cambios
+            if (logToTerminal && planData.progress !== task.progress) {
+              logToTerminal(`📊 Progreso: ${planData.completed_steps}/${planData.total_steps} pasos (${Math.round(planData.progress)}%)`, 'info');
             }
             
             // Parar polling si está completado
             if (planData.status === 'completed') {
               clearInterval(intervalId);
-              clearInterval(timeUpdateInterval);
               logToTerminal('✅ Plan completado exitosamente', 'success');
             }
           }
         } catch (error) {
           console.error('Error fetching plan progress:', error);
+          // Stop polling on persistent errors to avoid spamming
+          clearInterval(intervalId);
         }
-      }, 3000); // Polling cada 3 segundos
-      
-      // Actualización del tiempo en tiempo real cada segundo
-      timeUpdateInterval = setInterval(async () => {
-        try {
-          const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
-          const response = await fetch(`${backendUrl}/api/agent/update-task-time/${task.id}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-          });
-          
-          if (response.ok) {
-            const timeData = await response.json();
-            
-            // Actualizar tarea con tiempo actualizado
-            const updatedTask = {
-              ...task,
-              plan: timeData.plan
-            };
-            
-            onUpdateTask(updatedTask);
-          }
-        } catch (error) {
-          console.error('Error updating task time:', error);
-        }
-      }, 1000); // Actualizar tiempo cada segundo
+      }, 10000); // Polling cada 10 segundos - menos agresivo
     }
     
     return () => {
@@ -351,7 +327,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
         clearInterval(intervalId);
       }
     };
-  }, [task.id, task.plan, task.status, onUpdateTask, logToTerminal]);
+  }, [task.id, task.plan, task.status, task.progress, onUpdateTask, logToTerminal]);
 
   // Let ChatInterface handle messages and API calls directly
   // Remove the TaskView's custom handleSendMessage that blocks API calls
