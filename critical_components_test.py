@@ -34,7 +34,7 @@ sys.path.append('/app/backend')
 sys.path.append('/app/backend/src')
 
 # Test configuration
-BACKEND_URL = "https://0ba11ef8-4e1c-4150-98b1-6951106c139a.preview.emergentagent.com"
+BACKEND_URL = "https://743df957-58db-43ff-a59b-172381538356.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class CriticalComponentsTester:
