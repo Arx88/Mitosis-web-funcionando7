@@ -115,6 +115,21 @@ except ImportError:
     print("⚠️ Memory manager not available in agent_routes")
     app.memory_manager = None
 
+# Inicializar gestor de contexto inteligente
+# Mejora implementada según UPGRADE.md Sección 1: Sistema de Contexto Dinámico Avanzado
+try:
+    from src.context.intelligent_context_manager import IntelligentContextManager
+    intelligent_context_manager = IntelligentContextManager(
+        memory_manager=app.memory_manager,
+        task_manager=None,  # TODO: Implementar task_manager cuando esté disponible
+        model_manager=ollama_service  # Usar ollama_service como model_manager
+    )
+    app.intelligent_context_manager = intelligent_context_manager
+    print("✅ Intelligent Context Manager initialized")
+except Exception as e:
+    print(f"⚠️ Could not initialize Intelligent Context Manager: {e}")
+    app.intelligent_context_manager = None
+
 # Servir archivos estáticos del frontend
 @app.route('/')
 def serve_frontend():
