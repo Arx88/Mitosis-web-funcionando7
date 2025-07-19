@@ -487,57 +487,55 @@ def generate_dynamic_plan_with_ai(message: str, task_id: str) -> dict:
 
         logger.info(f"🤖 Generating AI-powered plan for task {task_id}: '{message[:50]}...'")
         
-        # Prompt mejorado para generar plan específico y personalizado
+        # Prompt altamente optimizado para generar planes específicos y personalizados
         plan_prompt = f"""
-Eres un planificador de tareas especializado. Tu trabajo es crear planes de acción 100% personalizados y específicos.
+Eres un planificador experto de tareas. Crea un plan de acción 100% personalizado y específico.
 
-TAREA A PLANIFICAR: "{message}"
+TAREA EXACTA A PLANIFICAR: "{message}"
 
-INSTRUCCIONES CRÍTICAS:
-1. Analiza profundamente la tarea específica, NO uses plantillas genéricas
-2. Cada paso debe ser ÚNICO y ESPECÍFICO para esta tarea exacta
-3. Los títulos deben reflejar exactamente lo que se va a hacer, no frases genéricas
-4. Las descripciones deben ser detalladas y actionables
-5. Los tiempos estimados deben ser realistas para cada acción específica
+REGLAS OBLIGATORIAS:
+1. NUNCA uses frases genéricas como "Búsqueda de información", "Procesando datos", etc.
+2. Cada paso debe mencionar ESPECÍFICAMENTE qué vas a hacer con esta tarea
+3. Los títulos deben ser únicos y descriptivos para ESTA tarea particular
+4. Incluir 3-5 pasos realistas y necesarios
+5. Tiempos estimados deben ser precisos para cada acción
 
-Herramientas disponibles: web_search, analysis, planning, creation, delivery, synthesis, data_analysis, processing
+HERRAMIENTAS: web_search, analysis, planning, creation, delivery, synthesis, data_analysis, processing
 
-FORMATO DE RESPUESTA (JSON válido solamente):
+RESPUESTA OBLIGATORIA EN JSON:
 {{
-  "task_type": "[investigación/creación/análisis/desarrollo/etc]",
-  "complexity": "[baja/media/alta]",
-  "estimated_total_time": "[tiempo total realista]",
+  "task_type": "[tipo específico basado en la tarea]",
+  "complexity": "baja|media|alta",
+  "estimated_total_time": "[tiempo total estimado]",
   "steps": [
     {{
       "id": "step_1",
-      "title": "[Título específico y único para esta tarea]",
-      "description": "[Descripción detallada de la acción específica a realizar]",
-      "tool": "[herramienta específica a usar]",
-      "estimated_time": "[tiempo realista para esta acción específica]",
-      "priority": "[alta/media/baja]"
+      "title": "[Acción específica para '{message}']",
+      "description": "[Detalles exactos de lo que se ejecutará]",
+      "tool": "[herramienta apropiada]",
+      "estimated_time": "[tiempo específico]",
+      "priority": "alta|media|baja"
     }},
     {{
-      "id": "step_2", 
-      "title": "[Siguiente paso específico basado en la tarea]",
-      "description": "[Qué se hará exactamente en este paso]",
-      "tool": "[herramienta específica]",
-      "estimated_time": "[tiempo para este paso]",
-      "priority": "[alta/media/baja]"
+      "id": "step_2",
+      "title": "[Siguiente acción específica]",
+      "description": "[Detalles exactos del siguiente paso]", 
+      "tool": "[herramienta apropiada]",
+      "estimated_time": "[tiempo específico]",
+      "priority": "alta|media|baja"
     }}
   ]
 }}
 
-EJEMPLO de cómo SÍ hacer un plan específico:
-Si la tarea es "Crear un informe sobre inteligencia artificial en medicina":
-- Título: "Investigación de aplicaciones de IA en diagnósticos médicos actuales"
-- Descripción: "Buscar estudios y casos de uso específicos de IA en radiología, patología y diagnósticos automatizados publicados en 2023-2024"
+EJEMPLO CORRECTO para "Crear guía de Python para principiantes":
+- Título: "Estructuración de conceptos básicos de Python (variables, funciones, loops)"
+- Descripción: "Definir secuencia pedagógica: sintaxis básica → variables → operadores → estructuras de control → funciones"
 
-EJEMPLO de cómo NO hacer (genérico):
-- Título: "Búsqueda de información" ❌
-- Descripción: "Buscar información sobre el tema" ❌
+EJEMPLO INCORRECTO (no hacer):
+- Título: "Planificación" ❌
+- Descripción: "Planificar el contenido" ❌
 
-GENERA SOLO JSON VÁLIDO, sin texto adicional:
-"""
+RESPONDE SOLO CON JSON VÁLIDO:"""
         
         # Generar plan usando Ollama con mejor prompt
         logger.info(f"📤 Sending plan generation request to Ollama for task {task_id}")
