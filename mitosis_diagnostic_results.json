@@ -1,56 +1,77 @@
 {
-  "timestamp": "2025-07-19T19:27:37.546703",
-  "backend_url": "https://ab502ce1-0dbd-49a3-bc93-cc8d249abadf.preview.emergentagent.com",
+  "timestamp": "2025-07-19T19:34:44.930193",
+  "backend_url": "http://localhost:8001",
   "sections": {
     "general_backend": {
       "tests": [
         {
           "name": "Main Health Endpoint",
-          "passed": false,
-          "details": "Status: 502, Response: ",
-          "critical": true,
-          "timestamp": "2025-07-19T19:27:37.611766"
+          "passed": true,
+          "details": "Ollama: True, Tools: 12, Database: True",
+          "critical": false,
+          "timestamp": "2025-07-19T19:34:45.276335"
+        },
+        {
+          "name": "Ollama Connection",
+          "passed": true,
+          "details": "Ollama service healthy: True",
+          "critical": false,
+          "timestamp": "2025-07-19T19:34:45.276381"
+        },
+        {
+          "name": "Database Connection",
+          "passed": true,
+          "details": "MongoDB connected: True",
+          "critical": false,
+          "timestamp": "2025-07-19T19:34:45.276390"
+        },
+        {
+          "name": "Tools Availability",
+          "passed": true,
+          "details": "Tools available: 12",
+          "critical": false,
+          "timestamp": "2025-07-19T19:34:45.276398"
         },
         {
           "name": "Agent Health Endpoint",
-          "passed": false,
-          "details": "Status: 502, Response: ",
-          "critical": true,
-          "timestamp": "2025-07-19T19:27:37.638232"
+          "passed": true,
+          "details": "Agent health endpoint responding correctly",
+          "critical": false,
+          "timestamp": "2025-07-19T19:34:45.279548"
         },
         {
           "name": "Agent Status Endpoint",
-          "passed": false,
-          "details": "Status: 502, Response: ",
+          "passed": true,
+          "details": "Agent status endpoint responding",
           "critical": false,
-          "timestamp": "2025-07-19T19:27:37.656416"
+          "timestamp": "2025-07-19T19:34:45.282206"
         }
       ],
-      "passed": 0,
-      "failed": 3
+      "passed": 6,
+      "failed": 0
     },
     "main_agent": {
       "tests": [
         {
           "name": "Chat - Simple Greeting",
           "passed": false,
-          "details": "Status: 502, Response: ",
+          "details": "Missing fields: ['status']",
           "critical": true,
-          "timestamp": "2025-07-19T19:27:37.673953"
+          "timestamp": "2025-07-19T19:34:49.424189"
         },
         {
           "name": "Chat - Task Request",
           "passed": false,
-          "details": "Status: 502, Response: ",
+          "details": "Status: None, Response: HTTPConnectionPool(host='localhost', port=8001): Read timed out. (read timeout=45)",
           "critical": true,
-          "timestamp": "2025-07-19T19:27:38.691309"
+          "timestamp": "2025-07-19T19:35:35.470792"
         },
         {
           "name": "Chat - Information Request",
           "passed": false,
-          "details": "Status: 502, Response: ",
+          "details": "Status: None, Response: HTTPConnectionPool(host='localhost', port=8001): Read timed out. (read timeout=45)",
           "critical": true,
-          "timestamp": "2025-07-19T19:27:39.709940"
+          "timestamp": "2025-07-19T19:36:21.512451"
         }
       ],
       "passed": 0,
@@ -61,23 +82,23 @@
         {
           "name": "Memory Analytics Endpoint",
           "passed": false,
-          "details": "Status: 502, Response: ",
+          "details": "Status: None, Response: HTTPConnectionPool(host='localhost', port=8001): Read timed out. (read timeout=30)",
           "critical": false,
-          "timestamp": "2025-07-19T19:27:40.729863"
+          "timestamp": "2025-07-19T19:36:52.540209"
         },
         {
           "name": "Episode Storage",
           "passed": false,
-          "details": "Status: 502, Response: ",
+          "details": "Status: None, Response: HTTPConnectionPool(host='localhost', port=8001): Read timed out. (read timeout=30)",
           "critical": false,
-          "timestamp": "2025-07-19T19:27:40.750151"
+          "timestamp": "2025-07-19T19:37:22.571791"
         },
         {
           "name": "Memory Integration with Chat",
           "passed": false,
-          "details": "Status: 502, Response: ",
+          "details": "Status: None, Response: HTTPConnectionPool(host='localhost', port=8001): Read timed out. (read timeout=30)",
           "critical": false,
-          "timestamp": "2025-07-19T19:27:40.770541"
+          "timestamp": "2025-07-19T19:37:52.602770"
         }
       ],
       "passed": 0,
@@ -88,23 +109,23 @@
         {
           "name": "Tools Endpoint",
           "passed": false,
-          "details": "Status: 502, Response: ",
+          "details": "Status: 404, Response: {'error': 'Endpoint not found'}",
           "critical": true,
-          "timestamp": "2025-07-19T19:27:40.791551"
+          "timestamp": "2025-07-19T19:38:03.458436"
         },
         {
           "name": "Web Search Functionality",
           "passed": false,
-          "details": "Status: 502, Response: ",
+          "details": "Search mode: None, Has search data: False",
           "critical": false,
-          "timestamp": "2025-07-19T19:27:40.812017"
+          "timestamp": "2025-07-19T19:38:21.732264"
         },
         {
           "name": "Deep Research Functionality",
           "passed": false,
-          "details": "Status: 502, Response: ",
+          "details": "Search mode: None, Created files: 0",
           "critical": false,
-          "timestamp": "2025-07-19T19:27:40.826081"
+          "timestamp": "2025-07-19T19:38:59.380972"
         }
       ],
       "passed": 0,
@@ -113,51 +134,55 @@
     "problem_diagnosis": {
       "tests": [
         {
-          "name": "Server Implementation Check",
+          "name": "Advanced System Active",
           "passed": false,
-          "details": "Could not determine server implementation",
+          "details": "Advanced features detected: WebSocket=False, TaskManager=False, AdvancedMemory=False",
           "critical": false,
-          "timestamp": "2025-07-19T19:27:40.840234"
+          "timestamp": "2025-07-19T19:38:59.386685"
+        },
+        {
+          "name": "Response Quality vs Claims",
+          "passed": true,
+          "details": "Claims completion: False, Actually delivered: False, Files created: 0",
+          "critical": false,
+          "timestamp": "2025-07-19T19:39:34.204727"
+        },
+        {
+          "name": "System Consistency",
+          "passed": true,
+          "details": "Memory consistent: True, Task ID consistent: True",
+          "critical": false,
+          "timestamp": "2025-07-19T19:40:31.712669"
         }
       ],
-      "passed": 0,
+      "passed": 2,
       "failed": 1
     }
   },
   "summary": {
-    "total_tests": 13,
-    "passed_tests": 0,
-    "failed_tests": 13,
+    "total_tests": 18,
+    "passed_tests": 8,
+    "failed_tests": 10,
     "critical_issues": [
-      {
-        "section": "general_backend",
-        "test": "Main Health Endpoint",
-        "details": "Status: 502, Response: "
-      },
-      {
-        "section": "general_backend",
-        "test": "Agent Health Endpoint",
-        "details": "Status: 502, Response: "
-      },
       {
         "section": "main_agent",
         "test": "Chat - Simple Greeting",
-        "details": "Status: 502, Response: "
+        "details": "Missing fields: ['status']"
       },
       {
         "section": "main_agent",
         "test": "Chat - Task Request",
-        "details": "Status: 502, Response: "
+        "details": "Status: None, Response: HTTPConnectionPool(host='localhost', port=8001): Read timed out. (read timeout=45)"
       },
       {
         "section": "main_agent",
         "test": "Chat - Information Request",
-        "details": "Status: 502, Response: "
+        "details": "Status: None, Response: HTTPConnectionPool(host='localhost', port=8001): Read timed out. (read timeout=45)"
       },
       {
         "section": "tools_system",
         "test": "Tools Endpoint",
-        "details": "Status: 502, Response: "
+        "details": "Status: 404, Response: {'error': 'Endpoint not found'}"
       }
     ],
     "recommendations": []
