@@ -209,16 +209,21 @@ class OllamaService:
             }
     
     def _call_ollama_api(self, prompt: str) -> Dict[str, Any]:
-        """Hacer llamada real a la API de Ollama"""
+        """Hacer llamada real a la API de Ollama con parámetros optimizados"""
         try:
+            # Detectar si es una solicitud de JSON estructurado
+            is_json_request = 'JSON' in prompt or 'json' in prompt or '"steps"' in prompt
+            
             payload = {
                 "model": self.get_current_model(),
                 "prompt": prompt,
                 "stream": False,
                 "options": {
-                    "temperature": 0.7,
-                    "top_p": 0.9,
-                    "top_k": 40
+                    "temperature": 0.2 if is_json_request else 0.7,  # Más bajo para JSON
+                    "top_p": 0.8 if is_json_request else 0.9,
+                    "top_k": 20 if is_json_request else 40,
+                    "repeat_penalty": 1.1,
+                    "stop": ["```", "---"] if is_json_request else []  # Parar en marcadores comunes
                 }
             }
             
