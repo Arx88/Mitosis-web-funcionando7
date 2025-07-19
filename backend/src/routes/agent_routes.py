@@ -389,9 +389,17 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                     'timestamp': datetime.now().isoformat()
                 })
                 
-                # Actualizar plan en memoria
-                active_task_plans[task_id]['plan'] = steps
-                active_task_plans[task_id]['current_step'] = i + 1
+                # Actualizar plan en memoria y persistencia
+                task_manager = get_task_manager()
+                task_manager.update_task_step_status(
+                    task_id, 
+                    step['id'], 
+                    'in-progress'
+                )
+                update_task_data(task_id, {
+                    'plan': steps,
+                    'current_step': i + 1
+                })
                 
                 step_start_time = time.time()
                 step_result = None
