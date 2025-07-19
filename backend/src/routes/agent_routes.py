@@ -1784,8 +1784,11 @@ def chat():
                                 'error': str(e)
                             })
             
-            # PASO 5: Generar respuesta LIMPIA sin mostrar pasos del plan
-            final_response = generate_clean_response(ollama_response['response'], tool_results)
+            # PASO 5: Generar respuesta LIMPIA basada en estado inicial (tarea comenzando)
+            final_response = generate_clean_response(ollama_response['response'], tool_results, 
+                                                    task_status="starting", 
+                                                    failed_step_title=None, 
+                                                    error_message=None)
             
             # PASO 6: Ejecutar plan automáticamente
             execute_plan_with_real_tools(task_id, structured_plan['steps'], message)
