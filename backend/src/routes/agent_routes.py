@@ -1463,17 +1463,24 @@ def check_ollama_connection():
         data = request.get_json() or {}
         endpoint = data.get('endpoint', 'https://78d08925604a.ngrok-free.app')
         
-        # Simular verificación exitosa
+        # Verificar conexión real con Ollama
+        try:
+            import requests
+            response = requests.get(f"{endpoint}/api/tags", timeout=10)
+            is_connected = response.status_code == 200
+        except:
+            is_connected = False
+        
         return jsonify({
-            'connected': True,
+            'is_connected': is_connected,
             'endpoint': endpoint,
-            'status': 'healthy'
+            'status': 'healthy' if is_connected else 'disconnected'
         })
     
     except Exception as e:
         logger.error(f"Error checking Ollama connection: {str(e)}")
         return jsonify({
-            'connected': False,
+            'is_connected': False,
             'error': str(e)
         }), 500
 
