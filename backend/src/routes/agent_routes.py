@@ -1585,20 +1585,61 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
 
 
 
-def generate_clean_response(ollama_response: str, tool_results: list) -> str:
+def generate_clean_response(ollama_response: str, tool_results: list, task_status: str = "success", 
+                          failed_step_title: str = None, error_message: str = None) -> str:
     """
-    Genera una respuesta limpia sin mostrar los pasos internos del plan
+    Genera una respuesta final condicional y dinámica basada en el estado real de la tarea
+    Mejora implementada según UPGRADE.md Sección 6: Respuesta Final Condicional y Dinámica
+    
+    Args:
+        ollama_response: Respuesta original de Ollama
+        tool_results: Resultados de herramientas ejecutadas
+        task_status: Estado final de la tarea ('success', 'completed_with_warnings', 'failed')
+        failed_step_title: Título del paso que falló (si aplica)
+        error_message: Mensaje de error específico (si aplica)
+    
+    Returns:
+        str: Respuesta final apropiada para el estado de la tarea
     """
     try:
-        # Para tareas complejas, siempre generar una respuesta profesional estándar
-        clean_response = """Perfecto, he recibido tu solicitud y ya estoy trabajando en ella. 
+        # Respuesta basada en el estado real de la tarea
+        if task_status == "completed_success":
+            # Tarea completada exitosamente
+            clean_response = """¡Excelente! He completado tu solicitud con éxito. 
+
+He ejecutado todos los pasos del plan de acción que puedes ver en el panel lateral. La tarea se ha finalizado correctamente y todos los objetivos han sido alcanzados.
+
+Puedes revisar los detalles completos de la ejecución en el monitor de progreso."""
+
+        elif task_status == "completed_with_warnings":
+            # Tarea completada con algunas advertencias
+            clean_response = """He completado tu solicitud, aunque con algunas advertencias menores.
+
+El plan de acción se ejecutó correctamente en general, pero algunos pasos secundarios tuvieron limitaciones. El resultado principal fue alcanzado exitosamente.
+
+Puedes revisar los detalles y advertencias específicas en el monitor de ejecución para más información."""
+
+        elif task_status == "failed":
+            # Tarea falló
+            failed_step_info = f" en el paso '{failed_step_title}'" if failed_step_title else ""
+            error_info = f": {error_message}" if error_message else ""
+            
+            clean_response = f"""Lo siento, no pude completar tu solicitud debido a un error{failed_step_info}{error_info}.
+
+He intentado ejecutar el plan de acción que puedes ver en el panel lateral, pero encontré dificultades técnicas que impidieron la finalización.
+
+Por favor, revisa el monitor de ejecución para más detalles sobre el problema, o intenta reformular tu solicitud de manera diferente."""
+
+        else:
+            # Estado por defecto (en progreso o desconocido)
+            clean_response = """Perfecto, he recibido tu solicitud y ya estoy trabajando en ella. 
 
 He generado un plan de acción detallado que puedes ver en la sección "Plan de Acción" del panel lateral. El plan incluye varios pasos que ejecutaré automáticamente para completar tu tarea.
 
 Mientras trabajo en tu solicitud, puedes seguir el progreso en tiempo real a través del panel de monitoreo."""
-        
-        # Si hay resultados de herramientas, agregar un resumen limpio
-        if tool_results:
+
+        # Agregar información sobre herramientas si están disponibles
+        if tool_results and task_status in ["completed_success", "completed_with_warnings"]:
             tools_summary = []
             successful_tools = 0
             failed_tools = 0
@@ -1613,25 +1654,36 @@ Mientras trabajo en tu solicitud, puedes seguir el progreso en tiempo real a tra
                         if 'output' in result['result']:
                             tools_summary.append(f"✅ {result['tool']}: Completado exitosamente")
             
-            # Agregar resumen al final de la respuesta
+            # Agregar resumen de herramientas al final
             if successful_tools > 0 or failed_tools > 0:
-                clean_response += f"\n\n---\n**🔧 Herramientas utilizadas:** {successful_tools} exitosas"
+                clean_response += f"\n\n---\n**🔧 Resumen de Ejecución:** {successful_tools} herramientas exitosas"
                 if failed_tools > 0:
                     clean_response += f", {failed_tools} con errores"
                 clean_response += "\n"
                 
-                # Agregar detalles de herramientas exitosas
-                for summary in tools_summary[:3]:  # Máximo 3 para no saturar
+                # Agregar detalles de herramientas exitosas (máximo 3)
+                for summary in tools_summary[:3]:
                     clean_response += f"{summary}\n"
+        
+        elif tool_results and task_status == "failed":
+            # Para tareas fallidas, mostrar qué herramientas se intentaron
+            attempted_tools = [result.get('tool', 'Desconocida') for result in tool_results]
+            if attempted_tools:
+                clean_response += f"\n\n**🔧 Herramientas intentadas:** {', '.join(attempted_tools[:3])}"
         
         return clean_response
         
     except Exception as e:
-        logger.error(f"Error generating clean response: {str(e)}")
-        # Fallback: respuesta estándar
-        return """He recibido tu solicitud y estoy trabajando en ella. 
+        logger.error(f"❌ Error generating conditional clean response: {str(e)}")
+        # Fallback seguro con información del error
+        fallback_response = """He recibido tu solicitud y estoy trabajando en ella. 
 
 Puedes ver el progreso del plan de acción en el panel lateral derecho. El plan se ejecutará automáticamente paso a paso."""
+        
+        if task_status == "failed" and error_message:
+            fallback_response += f"\n\n⚠️ Nota: Se encontró un problema técnico - {error_message}"
+        
+        return fallback_response
 
 @agent_bp.route('/chat', methods=['POST'])
 def chat():
