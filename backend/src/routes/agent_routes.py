@@ -965,6 +965,15 @@ Formato: Profesional, estructurado y completo.
     except Exception as e:
         logger.error(f"Error in real plan execution: {str(e)}")
         
+        # Generar respuesta final de error dinámica
+        error_response = generate_clean_response(
+            ollama_response="",
+            tool_results=[],
+            task_status="failed",
+            failed_step_title="Ejecución general",
+            error_message=str(e)
+        )
+        
         # Enviar notificación de fallo de tarea si WebSocket está disponible
         try:
             from websocket.websocket_manager import get_websocket_manager
@@ -975,16 +984,18 @@ Formato: Profesional, estructurado y completo.
                     'task_id': task_id,
                     'status': 'failed',
                     'overall_error': str(e),
+                    'final_result': error_response,  # Incluir respuesta dinámica de error
                     'message': f'❌ Tarea falló: {str(e)}',
                     'timestamp': datetime.now().isoformat()
                 })
         except Exception:
             pass
         
-        # Marcar como fallido
+        # Marcar como fallido con respuesta dinámica
         if task_id in active_task_plans:
             active_task_plans[task_id]['status'] = 'failed'
             active_task_plans[task_id]['error'] = str(e)
+            active_task_plans[task_id]['final_result'] = error_response
 
 def extract_search_query_from_message(message: str, step_title: str) -> str:
     """
