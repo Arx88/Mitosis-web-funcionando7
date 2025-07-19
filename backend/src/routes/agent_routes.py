@@ -219,14 +219,44 @@ def get_tool_manager():
 def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
     """
     Ejecuta REALMENTE los pasos del plan usando herramientas y entrega resultados finales
+    Mejora implementada según UPGRADE.md Sección 3: WebSockets para Comunicación en Tiempo Real
     """
     try:
         import threading
         import time
+        from datetime import datetime
         
         # Obtener servicios ANTES de crear el hilo
         ollama_service = get_ollama_service()
         tool_manager = get_tool_manager()
+        
+        # Obtener WebSocket manager para actualizaciones en tiempo real
+        websocket_manager = None
+        try:
+            from src.websocket.websocket_manager import get_websocket_manager
+            websocket_manager = get_websocket_manager()
+            logger.info(f"✅ WebSocket manager available for task {task_id}")
+        except Exception as ws_error:
+            logger.warning(f"⚠️ WebSocket manager not available: {ws_error}")
+        
+        def send_websocket_update(update_type: str, data: dict):
+            """Enviar actualización por WebSocket si está disponible"""
+            if websocket_manager and websocket_manager.is_initialized:
+                try:
+                    if update_type == 'step_update':
+                        websocket_manager.send_update(task_id, websocket_manager.UpdateType.STEP_STARTED if data.get('status') == 'in-progress' else websocket_manager.UpdateType.STEP_COMPLETED, data)
+                    elif update_type == 'log_message':
+                        websocket_manager.send_update(task_id, websocket_manager.UpdateType.TASK_PROGRESS, data)
+                    elif update_type == 'tool_execution_detail':
+                        websocket_manager.send_update(task_id, websocket_manager.UpdateType.TASK_PROGRESS, data)
+                    elif update_type == 'task_completed':
+                        websocket_manager.send_update(task_id, websocket_manager.UpdateType.TASK_COMPLETED, data)
+                    elif update_type == 'task_failed':
+                        websocket_manager.send_update(task_id, websocket_manager.UpdateType.TASK_FAILED, data)
+                        
+                    logger.info(f"📡 WebSocket update sent: {update_type} for task {task_id}")
+                except Exception as e:
+                    logger.warning(f"⚠️ WebSocket update failed: {e}")
         
         def execute_steps():
             if task_id not in active_task_plans:
@@ -238,6 +268,14 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
             
             logger.info(f"🚀 Starting REAL execution of {len(steps)} steps for task: {message}")
             
+            # Enviar notificación de inicio de tarea
+            send_websocket_update('log_message', {
+                'type': 'log_message',
+                'level': 'info',
+                'message': f'🚀 Iniciando ejecución de {len(steps)} pasos para: {message[:50]}...',
+                'timestamp': datetime.now().isoformat()
+            })
+            
             for i, step in enumerate(steps):
                 logger.info(f"🔄 Executing step {i+1}/{len(steps)}: {step['title']}")
                 
@@ -245,10 +283,31 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                 step['active'] = True
                 step['status'] = 'in-progress'
                 
+                # Enviar actualización de estado del paso en tiempo real
+                send_websocket_update('step_update', {
+                    'type': 'step_update',
+                    'step_id': step['id'],
+                    'status': 'in-progress',
+                    'title': step['title'],
+                    'description': step['description'],
+                    'progress': (i / len(steps)) * 100,
+                    'current_step': i + 1,
+                    'total_steps': len(steps)
+                })
+                
+                # Enviar log detallado al monitor
+                send_websocket_update('log_message', {
+                    'type': 'log_message',
+                    'level': 'info',
+                    'message': f'🔄 Ejecutando paso {i+1}/{len(steps)}: {step["title"]}',
+                    'timestamp': datetime.now().isoformat()
+                })
+                
                 # Actualizar plan en memoria
                 active_task_plans[task_id]['plan'] = steps
                 active_task_plans[task_id]['current_step'] = i + 1
                 
+                step_start_time = time.time()
                 step_result = None
                 try:
                     # EJECUTAR HERRAMIENTA REAL según el tipo de paso
@@ -256,6 +315,15 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                         if tool_manager:
                             search_query = extract_search_query_from_message(message, step['title'])
                             logger.info(f"🔍 Executing web search for: {search_query}")
+                            
+                            # Enviar detalle de ejecución de herramienta
+                            send_websocket_update('tool_execution_detail', {
+                                'type': 'tool_execution_detail',
+                                'tool_name': 'web_search',
+                                'input_params': {'query': search_query, 'num_results': 5},
+                                'message': f'🔍 Buscando información: {search_query}',
+                                'timestamp': datetime.now().isoformat()
+                            })
                             
                             result = tool_manager.execute_tool('web_search', {
                                 'query': search_query,
@@ -271,6 +339,16 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                             
                             step['result'] = step_result
                             final_results.append(step_result)
+                            
+                            # Enviar resultado de herramienta
+                            send_websocket_update('tool_execution_detail', {
+                                'type': 'tool_execution_detail',
+                                'tool_name': 'web_search',
+                                'output_summary': step_result['summary'],
+                                'message': f'✅ Búsqueda completada: {step_result["summary"]}',
+                                'timestamp': datetime.now().isoformat()
+                            })
+                            
                             logger.info(f"✅ Web search completed: {len(result.get('search_results', []))} results")
                         else:
                             time.sleep(3)
