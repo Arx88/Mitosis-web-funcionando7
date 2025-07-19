@@ -556,21 +556,62 @@ Proporciona un resultado específico y útil para este paso.
                             time.sleep(2)
                     
                     # Marcar paso como completado
+                    step_execution_time = time.time() - step_start_time
                     step['completed'] = True
                     step['active'] = False
                     step['status'] = 'completed'
                     
-                    logger.info(f"✅ Step {i+1} completed successfully: {step['title']}")
+                    # Enviar actualización de paso completado en tiempo real
+                    send_websocket_update('step_update', {
+                        'type': 'step_update',
+                        'step_id': step['id'],
+                        'status': 'completed',
+                        'title': step['title'],
+                        'description': step['description'],
+                        'result_summary': step_result.get('summary', 'Paso completado') if step_result else 'Paso completado',
+                        'execution_time': step_execution_time,
+                        'progress': ((i + 1) / len(steps)) * 100
+                    })
+                    
+                    # Enviar log de completado
+                    send_websocket_update('log_message', {
+                        'type': 'log_message',
+                        'level': 'info',
+                        'message': f'✅ Paso {i+1}/{len(steps)} completado: {step["title"]} ({step_execution_time:.1f}s)',
+                        'timestamp': datetime.now().isoformat()
+                    })
+                    
+                    logger.info(f"✅ Step {i+1} completed successfully: {step['title']} in {step_execution_time:.1f}s")
                     
                     # Pausa entre pasos para dar tiempo a mostrar progreso
                     time.sleep(2)
                     
                 except Exception as step_error:
+                    step_execution_time = time.time() - step_start_time
                     logger.error(f"❌ Error in step {i+1}: {str(step_error)}")
                     step['completed'] = False
                     step['active'] = False
                     step['status'] = 'failed'
                     step['error'] = str(step_error)
+                    
+                    # Enviar actualización de paso fallido en tiempo real
+                    send_websocket_update('step_update', {
+                        'type': 'step_update',
+                        'step_id': step['id'],
+                        'status': 'failed',
+                        'title': step['title'],
+                        'description': step['description'],
+                        'error': str(step_error),
+                        'execution_time': step_execution_time
+                    })
+                    
+                    # Enviar log de error
+                    send_websocket_update('log_message', {
+                        'type': 'log_message',
+                        'level': 'error',
+                        'message': f'❌ Error en paso {i+1}/{len(steps)}: {step["title"]} - {str(step_error)}',
+                        'timestamp': datetime.now().isoformat()
+                    })
                 
                 # Actualizar plan en memoria
                 active_task_plans[task_id]['plan'] = steps
