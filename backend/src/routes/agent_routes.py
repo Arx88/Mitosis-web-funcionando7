@@ -30,6 +30,85 @@ task_files = {}
 # Mantenido temporalmente para migración gradual
 active_task_plans = {}
 
+def get_task_data(task_id: str) -> dict:
+    """
+    Obtener datos de tarea usando TaskManager (con fallback a memoria legacy)
+    Mejora implementada según UPGRADE.md Sección 5: Persistencia del Estado de Tareas
+    """
+    try:
+        task_manager = get_task_manager()
+        task_data = task_manager.get_task(task_id)
+        
+        if task_data:
+            logger.debug(f"📥 Task {task_id} retrieved from persistent storage")
+            return task_data
+        elif task_id in active_task_plans:
+            # Fallback a memoria legacy
+            logger.warning(f"⚠️ Task {task_id} found only in legacy memory, migrating...")
+            legacy_data = active_task_plans[task_id]
+            # Migrar a persistencia
+            task_manager.create_task(task_id, legacy_data)
+            return legacy_data
+        else:
+            logger.warning(f"⚠️ Task {task_id} not found in persistent or legacy storage")
+            return None
+            
+    except Exception as e:
+        logger.error(f"❌ Error getting task data {task_id}: {str(e)}")
+        # Fallback a memoria legacy
+        return active_task_plans.get(task_id)
+
+def save_task_data(task_id: str, task_data: dict) -> bool:
+    """
+    Guardar datos de tarea usando TaskManager (con fallback a memoria legacy)
+    """
+    try:
+        task_manager = get_task_manager()
+        success = task_manager.create_task(task_id, task_data)
+        
+        if success:
+            logger.debug(f"💾 Task {task_id} saved to persistent storage")
+            # Mantener en memoria legacy por compatibilidad
+            active_task_plans[task_id] = task_data
+            return True
+        else:
+            logger.warning(f"⚠️ Failed to save task {task_id} to persistent storage, using legacy")
+            active_task_plans[task_id] = task_data
+            return False
+            
+    except Exception as e:
+        logger.error(f"❌ Error saving task data {task_id}: {str(e)}")
+        # Fallback a memoria legacy
+        active_task_plans[task_id] = task_data
+        return False
+
+def update_task_data(task_id: str, updates: dict) -> bool:
+    """
+    Actualizar datos de tarea usando TaskManager (con fallback a memoria legacy)
+    """
+    try:
+        task_manager = get_task_manager()
+        success = task_manager.update_task(task_id, updates)
+        
+        if success:
+            logger.debug(f"✅ Task {task_id} updated in persistent storage")
+            # Actualizar memoria legacy por compatibilidad
+            if task_id in active_task_plans:
+                active_task_plans[task_id].update(updates)
+            return True
+        else:
+            logger.warning(f"⚠️ Failed to update task {task_id} in persistent storage, using legacy")
+            if task_id in active_task_plans:
+                active_task_plans[task_id].update(updates)
+            return False
+            
+    except Exception as e:
+        logger.error(f"❌ Error updating task data {task_id}: {str(e)}")
+        # Fallback a memoria legacy
+        if task_id in active_task_plans:
+            active_task_plans[task_id].update(updates)
+        return False
+
 # Patrones para detectar tipo de mensaje
 CASUAL_PATTERNS = [
     r'^hola\b',
