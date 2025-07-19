@@ -40,7 +40,7 @@ except Exception as e:
     print(f"Error reading .env file: {e}")
     backend_url = "http://localhost:8001"
 
-BASE_URL = backend_url
+BASE_URL = "http://localhost:8001"  # Use local URL since external URL has issues
 print(f"🔍 MITOSIS COMPREHENSIVE DIAGNOSTIC")
 print(f"🌐 Using backend URL: {BASE_URL}")
 print(f"📅 Diagnostic started at: {datetime.now().isoformat()}")
