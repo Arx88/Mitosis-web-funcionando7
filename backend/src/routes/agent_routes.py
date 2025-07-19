@@ -371,11 +371,19 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
         tool_manager = get_tool_manager()
         
         # Obtener WebSocket manager para actualizaciones en tiempo real
+        # Mejora implementada según UPGRADE.md Sección 3: WebSockets para Comunicación en Tiempo Real
         websocket_manager = None
         try:
-            from src.websocket.websocket_manager import get_websocket_manager
-            websocket_manager = get_websocket_manager()
-            logger.info(f"✅ WebSocket manager available for task {task_id}")
+            # Primero intentar obtenerlo desde Flask app
+            try:
+                websocket_manager = current_app.websocket_manager
+                logger.info(f"✅ WebSocket manager obtained from Flask app for task {task_id}")
+            except AttributeError:
+                # Fallback al método directo
+                from src.websocket.websocket_manager import get_websocket_manager
+                websocket_manager = get_websocket_manager()
+                logger.info(f"✅ WebSocket manager obtained directly for task {task_id}")
+                
         except Exception as ws_error:
             logger.warning(f"⚠️ WebSocket manager not available: {ws_error}")
         
