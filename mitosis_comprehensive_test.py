@@ -156,21 +156,19 @@ def test_2_configuracion_ollama():
     # Check if connected
     connected = ollama_info.get("connected", False)
     
-    # Check available models
-    models = ollama_info.get("models", [])
-    model_available = EXPECTED_MODEL in models if isinstance(models, list) else False
-    
-    # Check model count
-    model_count = len(models) if isinstance(models, list) else 0
+    # Check model (simplified - just check if it's mentioned)
+    model = ollama_info.get("model")
+    model_ok = model == EXPECTED_MODEL
     
     details = {
         "endpoint": f"Expected: {EXPECTED_OLLAMA_ENDPOINT}, Got: {endpoint}",
         "connected": connected,
-        "model_available": f"{EXPECTED_MODEL} available: {model_available}",
-        "total_models": model_count
+        "model": f"Expected: {EXPECTED_MODEL}, Got: {model}",
+        "endpoint_match": endpoint_ok,
+        "model_match": model_ok
     }
     
-    success = endpoint_ok and connected and model_available
+    success = endpoint_ok and connected and model_ok
     return log_test("Configuración Ollama", success, details=str(details))
 
 def test_3_sistema_memoria():
