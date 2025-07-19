@@ -2077,6 +2077,91 @@ def test_plan_generation():
             'test_failed': True
         }), 500
 
+@agent_bp.route('/download/<filename>', methods=['GET'])
+def download_file(filename):
+    """
+    Endpoint para descargar archivos generados por el agente
+    """
+    try:
+        import os
+        from flask import send_file, abort
+        
+        # Validar nombre de archivo para seguridad
+        if not filename or '..' in filename or '/' in filename:
+            abort(400, "Invalid filename")
+        
+        file_path = f"/app/backend/static/generated_files/{filename}"
+        
+        # Verificar que el archivo existe
+        if not os.path.exists(file_path):
+            abort(404, "File not found")
+        
+        logger.info(f"📥 Downloading file: {filename}")
+        
+        # Determinar tipo MIME
+        import mimetypes
+        mimetype = mimetypes.guess_type(filename)[0]
+        if not mimetype:
+            if filename.endswith('.md'):
+                mimetype = 'text/markdown'
+            elif filename.endswith('.txt'):
+                mimetype = 'text/plain'
+            elif filename.endswith('.py'):
+                mimetype = 'text/x-python'
+            else:
+                mimetype = 'application/octet-stream'
+        
+        return send_file(
+            file_path, 
+            as_attachment=True, 
+            download_name=filename,
+            mimetype=mimetype
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Error downloading file {filename}: {str(e)}")
+        return jsonify({'error': f'Error downloading file: {str(e)}'}), 500
+
+@agent_bp.route('/list-files', methods=['GET'])
+def list_generated_files():
+    """
+    Endpoint para listar archivos generados por el agente
+    """
+    try:
+        import os
+        from datetime import datetime
+        
+        files_dir = "/app/backend/static/generated_files"
+        
+        if not os.path.exists(files_dir):
+            return jsonify({'files': []})
+        
+        files = []
+        for filename in os.listdir(files_dir):
+            file_path = os.path.join(files_dir, filename)
+            if os.path.isfile(file_path):
+                stat = os.stat(file_path)
+                files.append({
+                    'name': filename,
+                    'size': stat.st_size,
+                    'created': datetime.fromtimestamp(stat.st_ctime).isoformat(),
+                    'modified': datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                    'download_url': f'/api/agent/download/{filename}'
+                })
+        
+        # Ordenar por fecha de creación (más reciente primero)
+        files.sort(key=lambda x: x['created'], reverse=True)
+        
+        return jsonify({
+            'files': files,
+            'total_files': len(files),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error listing files: {str(e)}")
+        return jsonify({'error': f'Error listing files: {str(e)}'}), 500
+
 @agent_bp.route('/generate-plan', methods=['POST'])
 def generate_plan():
     """
