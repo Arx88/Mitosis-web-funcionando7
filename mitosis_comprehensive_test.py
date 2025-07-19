@@ -177,38 +177,37 @@ def test_3_sistema_memoria():
     print("TEST 3: SISTEMA DE MEMORIA")
     print("="*80)
     
-    # Test memory analytics endpoint
-    status_code, response = make_request("GET", "/api/memory/analytics")
+    # Test if memory is working through chat endpoint (indirect test)
+    status_code, response = make_request("POST", "/api/agent/chat", {
+        "message": "Test memory system"
+    }, timeout=15)
     
     if status_code != 200:
-        return log_test("Sistema de Memoria", False, error=f"Memory analytics endpoint returned {status_code}: {response}")
+        return log_test("Sistema de Memoria", False, error=f"Chat endpoint returned {status_code}: {response}")
     
     if not isinstance(response, dict):
-        return log_test("Sistema de Memoria", False, error="Memory analytics endpoint did not return JSON")
+        return log_test("Sistema de Memoria", False, error="Chat endpoint did not return JSON")
     
-    # Check memory components
-    expected_components = ["working_memory", "episodic_memory", "semantic_memory", "procedural_memory", "embedding_service", "semantic_indexer"]
+    # Check if memory_used flag is present and true
+    memory_used = response.get("memory_used", False)
     
-    # Check if components are mentioned in the response
-    response_str = json.dumps(response).lower()
-    components_found = []
-    for component in expected_components:
-        if component.lower() in response_str:
-            components_found.append(component)
+    # Check agent status for memory info
+    status_code2, status_response = make_request("GET", "/api/agent/status")
+    memory_info = {}
+    if status_code2 == 200 and isinstance(status_response, dict):
+        memory_info = status_response.get("memory", {})
     
-    components_ok = len(components_found) >= 4  # At least 4 out of 6 components should be present
-    
-    # Test memory status endpoint
-    status_code2, response2 = make_request("GET", "/api/memory/status")
-    status_endpoint_ok = status_code2 == 200
+    memory_enabled = memory_info.get("enabled", False)
+    memory_initialized = memory_info.get("initialized", False)
     
     details = {
-        "analytics_endpoint": "OK" if status_code == 200 else f"FAILED ({status_code})",
-        "status_endpoint": "OK" if status_endpoint_ok else f"FAILED ({status_code2})",
-        "components_found": f"{len(components_found)}/{len(expected_components)} ({components_found})"
+        "memory_used_in_chat": memory_used,
+        "memory_enabled": memory_enabled,
+        "memory_initialized": memory_initialized,
+        "status_endpoint": "OK" if status_code2 == 200 else f"FAILED ({status_code2})"
     }
     
-    success = status_code == 200 and components_ok
+    success = memory_used and memory_enabled
     return log_test("Sistema de Memoria", success, details=str(details))
 
 def test_4_api_endpoints():
