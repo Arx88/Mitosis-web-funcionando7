@@ -1803,7 +1803,7 @@ def generate_clean_response(ollama_response: str, tool_results: list, task_statu
                           failed_step_title: str = None, error_message: str = None) -> str:
     """
     Genera una respuesta final condicional y dinámica basada en el estado real de la tarea
-    Mejora implementada según UPGRADE.md Sección 6: Respuesta Final Condicional y Dinámica
+    Incluye información sobre archivos tangibles generados.
     
     Args:
         ollama_response: Respuesta original de Ollama
@@ -1813,13 +1813,48 @@ def generate_clean_response(ollama_response: str, tool_results: list, task_statu
         error_message: Mensaje de error específico (si aplica)
     
     Returns:
-        str: Respuesta final apropiada para el estado de la tarea
+        str: Respuesta final apropiada para el estado de la tarea con información de archivos
     """
     try:
+        # Detectar archivos creados en los resultados
+        files_created = []
+        deliverables_info = []
+        
+        for result in tool_results or []:
+            if isinstance(result, dict):
+                if result.get('file_created') and result.get('file_name'):
+                    files_created.append({
+                        'name': result['file_name'],
+                        'size': result.get('file_size', 0),
+                        'download_url': result.get('download_url', ''),
+                        'type': result.get('type', 'unknown')
+                    })
+                    
+                if result.get('tangible_result') or result.get('final_deliverable'):
+                    deliverables_info.append(result)
+        
         # Respuesta basada en el estado real de la tarea
         if task_status == "completed_success":
             # Tarea completada exitosamente
-            clean_response = """¡Excelente! He completado tu solicitud con éxito. 
+            if files_created:
+                clean_response = f"""🎉 ¡Excelente! He completado tu solicitud con éxito y he generado {len(files_created)} archivo(s) tangible(s).
+
+📁 **ARCHIVOS GENERADOS:**
+"""
+                for file_info in files_created:
+                    clean_response += f"• **{file_info['name']}** ({file_info['size']} bytes) - Listo para descargar\n"
+                
+                clean_response += """
+✅ He ejecutado todos los pasos del plan de acción que puedes ver en el panel lateral. La tarea se ha finalizado correctamente y todos los objetivos han sido alcanzados.
+
+🔄 **Cómo acceder a tus archivos:**
+- Revisa el panel de progreso para enlaces de descarga
+- Los archivos están disponibles inmediatamente
+- Puedes descargar cada archivo individualmente
+
+📊 Puedes revisar los detalles completos de la ejecución en el monitor de progreso."""
+            else:
+                clean_response = """¡Excelente! He completado tu solicitud con éxito. 
 
 He ejecutado todos los pasos del plan de acción que puedes ver en el panel lateral. La tarea se ha finalizado correctamente y todos los objetivos han sido alcanzados.
 
@@ -1827,7 +1862,20 @@ Puedes revisar los detalles completos de la ejecución en el monitor de progreso
 
         elif task_status == "completed_with_warnings":
             # Tarea completada con algunas advertencias
-            clean_response = """He completado tu solicitud, aunque con algunas advertencias menores.
+            if files_created:
+                clean_response = f"""✅ He completado tu solicitud con {len(files_created)} archivo(s) generado(s), aunque con algunas advertencias menores.
+
+📁 **ARCHIVOS GENERADOS:**
+"""
+                for file_info in files_created:
+                    clean_response += f"• **{file_info['name']}** ({file_info['size']} bytes)\n"
+                
+                clean_response += """
+⚠️ El plan de acción se ejecutó correctamente en general, pero algunos pasos secundarios tuvieron limitaciones. El resultado principal fue alcanzado exitosamente.
+
+Puedes revisar los detalles y advertencias específicas en el monitor de ejecución para más información."""
+            else:
+                clean_response = """He completado tu solicitud, aunque con algunas advertencias menores.
 
 El plan de acción se ejecutó correctamente en general, pero algunos pasos secundarios tuvieron limitaciones. El resultado principal fue alcanzado exitosamente.
 
@@ -1838,7 +1886,22 @@ Puedes revisar los detalles y advertencias específicas en el monitor de ejecuci
             failed_step_info = f" en el paso '{failed_step_title}'" if failed_step_title else ""
             error_info = f": {error_message}" if error_message else ""
             
-            clean_response = f"""Lo siento, no pude completar tu solicitud debido a un error{failed_step_info}{error_info}.
+            if files_created:
+                clean_response = f"""❌ Lo siento, no pude completar totalmente tu solicitud debido a un error{failed_step_info}{error_info}.
+
+Sin embargo, logré generar {len(files_created)} archivo(s) parcial(es):
+
+📁 **ARCHIVOS PARCIALES GENERADOS:**
+"""
+                for file_info in files_created:
+                    clean_response += f"• **{file_info['name']}** ({file_info['size']} bytes)\n"
+                
+                clean_response += """
+🔄 He intentado ejecutar el plan de acción completo, pero encontré dificultades técnicas. Los archivos parciales pueden contener información útil.
+
+Por favor, revisa el monitor de ejecución para más detalles sobre el problema, o intenta reformular tu solicitud de manera diferente."""
+            else:
+                clean_response = f"""Lo siento, no pude completar tu solicitud debido a un error{failed_step_info}{error_info}.
 
 He intentado ejecutar el plan de acción que puedes ver en el panel lateral, pero encontré dificultades técnicas que impidieron la finalización.
 
@@ -1850,7 +1913,13 @@ Por favor, revisa el monitor de ejecución para más detalles sobre el problema,
 
 He generado un plan de acción detallado que puedes ver en la sección "Plan de Acción" del panel lateral. El plan incluye varios pasos que ejecutaré automáticamente para completar tu tarea.
 
-Mientras trabajo en tu solicitud, puedes seguir el progreso en tiempo real a través del panel de monitoreo."""
+📋 **Mi proceso incluirá:**
+- Análisis de tu solicitud
+- Generación de contenido específico
+- Creación de archivos tangibles (cuando aplique)
+- Entrega de resultados finales
+
+🔄 Mientras trabajo en tu solicitud, puedes seguir el progreso en tiempo real a través del panel de monitoreo. Los archivos generados aparecerán automáticamente cuando estén listos."""
 
         # Agregar información sobre herramientas si están disponibles
         if tool_results and task_status in ["completed_success", "completed_with_warnings"]:
@@ -1873,6 +1942,8 @@ Mientras trabajo en tu solicitud, puedes seguir el progreso en tiempo real a tra
                 clean_response += f"\n\n---\n**🔧 Resumen de Ejecución:** {successful_tools} herramientas exitosas"
                 if failed_tools > 0:
                     clean_response += f", {failed_tools} con errores"
+                if files_created:
+                    clean_response += f", {len(files_created)} archivo(s) generado(s)"
                 clean_response += "\n"
                 
                 # Agregar detalles de herramientas exitosas (máximo 3)
