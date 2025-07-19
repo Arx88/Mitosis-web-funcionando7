@@ -551,10 +551,70 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 sender: msg.sender === 'agent' ? 'assistant' : msg.sender,
                 timestamp: msg.timestamp
               }))} 
-              onSendMessage={(message) => {
-                console.log('🚀 TaskView: Sending message:', message);
-                // ChatInterface.tsx manejará toda la comunicación con el backend
-                // Solo necesitamos una función placeholder que no interfiera
+              onSendMessage={async (message) => {
+                console.log('🚀 TaskView: Processing message:', message);
+                
+                try {
+                  // Llamar al backend para procesar el mensaje y generar el plan
+                  const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+                  const response = await fetch(`${backendUrl}/api/agent/chat`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      message: message.trim(),
+                      context: {
+                        task_id: task.id,
+                        previous_messages: task.messages.slice(-5)
+                      }
+                    })
+                  });
+                  
+                  if (response.ok) {
+                    const chatResponse = await response.json();
+                    console.log('✅ Backend response received:', chatResponse);
+                    
+                    // Crear mensaje del agente
+                    const agentMessage = {
+                      id: `msg-${Date.now() + 1}`,
+                      content: chatResponse.response,
+                      sender: 'agent' as const,
+                      timestamp: new Date(chatResponse.timestamp),
+                      toolResults: chatResponse.tool_results || [],
+                      searchData: chatResponse.search_data,
+                      uploadData: chatResponse.upload_data
+                    };
+                    
+                    // Actualizar la tarea con el plan si existe
+                    const updatedTask = {
+                      ...task,
+                      messages: [...task.messages, agentMessage],
+                      plan: chatResponse.plan ? chatResponse.plan.steps.map((step: any) => ({
+                        id: step.id,
+                        title: step.title,
+                        description: step.description,
+                        tool: step.tool,
+                        status: step.status,
+                        estimated_time: step.estimated_time,
+                        completed: step.completed,
+                        active: step.active
+                      })) : task.plan, // Mantener plan existente si no hay nuevo plan
+                      status: 'in-progress' as const
+                    };
+                    
+                    // Actualizar la tarea via callback
+                    onUpdateTask(updatedTask);
+                    
+                    console.log('✅ Task updated with backend response and plan');
+                    
+                  } else {
+                    console.error('❌ Backend request failed:', response.status);
+                  }
+                  
+                } catch (error) {
+                  console.error('❌ Error calling backend:', error);
+                }
               }}
               isTyping={isTyping} 
               assistantName="Agente" 
