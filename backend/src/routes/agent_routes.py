@@ -18,6 +18,60 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 
 logger = logging.getLogger(__name__)
 
+# JSON Schema para validación de planes generados por Ollama
+# Mejora implementada según UPGRADE.md Sección 2: Validación de Esquemas JSON
+PLAN_SCHEMA = {
+    "type": "object",
+    "required": ["steps", "task_type", "complexity"],
+    "properties": {
+        "steps": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 10,
+            "items": {
+                "type": "object",
+                "required": ["title", "description", "tool"],
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "minLength": 5,
+                        "maxLength": 100
+                    },
+                    "description": {
+                        "type": "string", 
+                        "minLength": 10,
+                        "maxLength": 300
+                    },
+                    "tool": {
+                        "type": "string",
+                        "enum": ["web_search", "analysis", "creation", "planning", "delivery", "processing", "synthesis", "search_definition", "data_analysis"]
+                    },
+                    "estimated_time": {
+                        "type": "string"
+                    },
+                    "priority": {
+                        "type": "string",
+                        "enum": ["alta", "media", "baja"]
+                    }
+                },
+                "additionalProperties": False
+            }
+        },
+        "task_type": {
+            "type": "string",
+            "minLength": 3
+        },
+        "complexity": {
+            "type": ["string", "number"],
+            "pattern": "^(baja|media|alta)$|^[0-9]+(\\.[0-9]+)?$"
+        },
+        "estimated_total_time": {
+            "type": "string"
+        }
+    },
+    "additionalProperties": False
+}
+
 agent_bp = Blueprint('agent', __name__)
 
 # Importar nuevo TaskManager para persistencia
