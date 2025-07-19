@@ -837,9 +837,19 @@ Formato: Profesional, estructurado y completo.
                         'error': str(e)
                     }
             
-            # Marcar tarea como completada
-            active_task_plans[task_id]['status'] = 'completed'
-            active_task_plans[task_id]['completed_at'] = datetime.now().isoformat()
+            # Marcar tarea como completada en persistencia y memoria
+            task_completion_updates = {
+                'status': 'completed',
+                'completed_at': datetime.now().isoformat(),
+                'final_result': active_task_plans[task_id].get('final_result', {}).get('content', 'Tarea completada exitosamente')
+            }
+            
+            # Actualizar con TaskManager (persistencia)
+            update_task_data(task_id, task_completion_updates)
+            
+            # También actualizar memoria legacy por compatibilidad
+            if task_id in active_task_plans:
+                active_task_plans[task_id].update(task_completion_updates)
             
             # Enviar notificación de finalización del plan
             final_result_content = active_task_plans[task_id].get('final_result', {}).get('content', 'Tarea completada exitosamente')
