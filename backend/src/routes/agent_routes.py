@@ -605,34 +605,35 @@ RESPONDE SOLO JSON:"""
                 logger.error(f"❌ All JSON extraction strategies failed for task {task_id}")
                 logger.error(f"📝 Full response: {response_text}")
                 return generate_fallback_plan(message, task_id)
-                
-                # Validar que el plan tenga la estructura esperada
-                if not isinstance(plan_data.get('steps'), list) or len(plan_data.get('steps', [])) == 0:
-                    logger.error(f"❌ Invalid plan structure for task {task_id}: no valid steps found")
-                    return generate_fallback_plan(message, task_id)
-                
-                # Convertir a formato frontend
-                plan_steps = []
-                for i, step in enumerate(plan_data.get('steps', [])):
-                    if not isinstance(step, dict):
-                        logger.warning(f"⚠️ Invalid step format for task {task_id}, step {i}: {step}")
-                        continue
-                        
-                    plan_steps.append({
-                        'id': f"step_{i+1}",
-                        'title': step.get('title', f'Paso {i+1}').strip(),
-                        'description': step.get('description', 'Procesando...').strip(),
-                        'tool': step.get('tool', 'processing'),
-                        'status': 'pending',
-                        'estimated_time': step.get('estimated_time', '1 minuto'),
-                        'completed': False,
-                        'active': i == 0,  # Solo el primer paso activo
-                        'priority': step.get('priority', 'media')
-                    })
-                
-                if len(plan_steps) == 0:
-                    logger.error(f"❌ No valid steps created for task {task_id}")
-                    return generate_fallback_plan(message, task_id)
+            
+            # Validar que el plan tenga la estructura esperada
+            if not isinstance(plan_data.get('steps'), list) or len(plan_data.get('steps', [])) == 0:
+                logger.error(f"❌ Invalid plan structure for task {task_id}: no valid steps found")
+                logger.error(f"📊 Plan data keys: {list(plan_data.keys())}")
+                return generate_fallback_plan(message, task_id)
+            
+            # Convertir a formato frontend
+            plan_steps = []
+            for i, step in enumerate(plan_data.get('steps', [])):
+                if not isinstance(step, dict):
+                    logger.warning(f"⚠️ Invalid step format for task {task_id}, step {i}: {step}")
+                    continue
+                    
+                plan_steps.append({
+                    'id': f"step_{i+1}",
+                    'title': step.get('title', f'Paso {i+1}').strip(),
+                    'description': step.get('description', 'Procesando...').strip(),
+                    'tool': step.get('tool', 'processing'),
+                    'status': 'pending',
+                    'estimated_time': step.get('estimated_time', '1 minuto'),
+                    'completed': False,
+                    'active': i == 0,  # Solo el primer paso activo
+                    'priority': step.get('priority', 'media')
+                })
+            
+            if len(plan_steps) == 0:
+                logger.error(f"❌ No valid steps created for task {task_id}")
+                return generate_fallback_plan(message, task_id)
                 
                 # Guardar plan en memoria global
                 active_task_plans[task_id] = {
