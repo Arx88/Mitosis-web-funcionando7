@@ -477,66 +477,133 @@ def generate_dynamic_plan_with_ai(message: str, task_id: str) -> dict:
         ollama_service = get_ollama_service()
         
         if not ollama_service:
-            # Fallback a plan genérico si no hay Ollama
+            logger.warning(f"⚠️ Ollama service not available for task {task_id}, using fallback plan")
             return generate_fallback_plan(message, task_id)
         
-        # Prompt para generar plan específico
+        # Verificar si Ollama está funcionando
+        if not ollama_service.is_healthy():
+            logger.warning(f"⚠️ Ollama not healthy for task {task_id}, using fallback plan")
+            return generate_fallback_plan(message, task_id)
+
+        logger.info(f"🤖 Generating AI-powered plan for task {task_id}: '{message[:50]}...'")
+        
+        # Prompt mejorado para generar plan específico y personalizado
         plan_prompt = f"""
-Analiza la siguiente tarea y crea un plan de acción específico y detallado:
+Eres un planificador de tareas especializado. Tu trabajo es crear planes de acción 100% personalizados y específicos.
 
-TAREA: "{message}"
+TAREA A PLANIFICAR: "{message}"
 
-Genera un plan con 3-5 pasos específicos para completar esta tarea. Para cada paso, incluye:
-1. Título específico y descriptivo
-2. Descripción clara de lo que se hará
-3. Herramienta/método a usar
-4. Tiempo estimado realista
+INSTRUCCIONES CRÍTICAS:
+1. Analiza profundamente la tarea específica, NO uses plantillas genéricas
+2. Cada paso debe ser ÚNICO y ESPECÍFICO para esta tarea exacta
+3. Los títulos deben reflejar exactamente lo que se va a hacer, no frases genéricas
+4. Las descripciones deben ser detalladas y actionables
+5. Los tiempos estimados deben ser realistas para cada acción específica
 
-Responde en formato JSON con esta estructura:
+Herramientas disponibles: web_search, analysis, planning, creation, delivery, synthesis, data_analysis, processing
+
+FORMATO DE RESPUESTA (JSON válido solamente):
 {{
-  "task_type": "tipo_de_tarea",
-  "complexity": "alta/media/baja",
-  "estimated_total_time": "tiempo_total_estimado",
+  "task_type": "[investigación/creación/análisis/desarrollo/etc]",
+  "complexity": "[baja/media/alta]",
+  "estimated_total_time": "[tiempo total realista]",
   "steps": [
     {{
       "id": "step_1",
-      "title": "Título específico del paso",
-      "description": "Descripción detallada de lo que se hará",
-      "tool": "herramienta_a_usar",
-      "estimated_time": "tiempo_estimado",
-      "priority": "alta/media/baja"
+      "title": "[Título específico y único para esta tarea]",
+      "description": "[Descripción detallada de la acción específica a realizar]",
+      "tool": "[herramienta específica a usar]",
+      "estimated_time": "[tiempo realista para esta acción específica]",
+      "priority": "[alta/media/baja]"
+    }},
+    {{
+      "id": "step_2", 
+      "title": "[Siguiente paso específico basado en la tarea]",
+      "description": "[Qué se hará exactamente en este paso]",
+      "tool": "[herramienta específica]",
+      "estimated_time": "[tiempo para este paso]",
+      "priority": "[alta/media/baja]"
     }}
   ]
 }}
 
-Asegúrate de que cada paso sea específico a la tarea "{message}" y no genérico.
+EJEMPLO de cómo SÍ hacer un plan específico:
+Si la tarea es "Crear un informe sobre inteligencia artificial en medicina":
+- Título: "Investigación de aplicaciones de IA en diagnósticos médicos actuales"
+- Descripción: "Buscar estudios y casos de uso específicos de IA en radiología, patología y diagnósticos automatizados publicados en 2023-2024"
+
+EJEMPLO de cómo NO hacer (genérico):
+- Título: "Búsqueda de información" ❌
+- Descripción: "Buscar información sobre el tema" ❌
+
+GENERA SOLO JSON VÁLIDO, sin texto adicional:
 """
         
-        # Generar plan usando Ollama
+        # Generar plan usando Ollama con mejor prompt
+        logger.info(f"📤 Sending plan generation request to Ollama for task {task_id}")
         response = ollama_service.generate_response(plan_prompt, {})
         
         if response.get('error'):
-            logger.warning(f"Error generating AI plan: {response['error']}")
+            logger.error(f"❌ Ollama error generating AI plan for task {task_id}: {response['error']}")
             return generate_fallback_plan(message, task_id)
+        
+        logger.info(f"📥 Received response from Ollama for task {task_id}: {len(response.get('response', ''))} characters")
         
         try:
             import json
             import re
             
-            # Extraer JSON del response
-            response_text = response['response']
-            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            # Extraer JSON del response con múltiples estrategias
+            response_text = response['response'].strip()
+            logger.info(f"🔍 Raw Ollama response for task {task_id}: {response_text[:200]}...")
+            
+            # Estrategia 1: Buscar JSON completo
+            json_match = re.search(r'\{(?:[^{}]|{[^{}]*})*\}', response_text, re.DOTALL)
+            
+            if not json_match:
+                # Estrategia 2: Buscar entre marcadores comunes
+                json_match = re.search(r'```json\s*(\{.*?\})\s*```', response_text, re.DOTALL)
+                if json_match:
+                    response_text = json_match.group(1)
+                else:
+                    # Estrategia 3: Todo el texto si parece JSON
+                    if response_text.startswith('{') and response_text.endswith('}'):
+                        json_match = type('obj', (object,), {'group': lambda x=0: response_text})()
             
             if json_match:
-                plan_data = json.loads(json_match.group())
+                json_text = json_match.group() if hasattr(json_match, 'group') else json_match.group(0)
+                logger.info(f"🎯 Extracted JSON for task {task_id}: {json_text[:150]}...")
+                
+                try:
+                    plan_data = json.loads(json_text)
+                    logger.info(f"✅ Successfully parsed JSON for task {task_id}: {plan_data.keys()}")
+                except json.JSONDecodeError as json_err:
+                    logger.error(f"❌ JSON decode error for task {task_id}: {json_err}")
+                    # Intentar limpiar JSON común
+                    cleaned_json = json_text.replace('```json', '').replace('```', '').strip()
+                    try:
+                        plan_data = json.loads(cleaned_json)
+                        logger.info(f"✅ Successfully parsed cleaned JSON for task {task_id}")
+                    except:
+                        logger.error(f"❌ Failed to parse cleaned JSON for task {task_id}, using fallback")
+                        return generate_fallback_plan(message, task_id)
+                
+                # Validar que el plan tenga la estructura esperada
+                if not isinstance(plan_data.get('steps'), list) or len(plan_data.get('steps', [])) == 0:
+                    logger.error(f"❌ Invalid plan structure for task {task_id}: no valid steps found")
+                    return generate_fallback_plan(message, task_id)
                 
                 # Convertir a formato frontend
                 plan_steps = []
                 for i, step in enumerate(plan_data.get('steps', [])):
+                    if not isinstance(step, dict):
+                        logger.warning(f"⚠️ Invalid step format for task {task_id}, step {i}: {step}")
+                        continue
+                        
                     plan_steps.append({
                         'id': f"step_{i+1}",
-                        'title': step.get('title', f'Paso {i+1}'),
-                        'description': step.get('description', 'Procesando...'),
+                        'title': step.get('title', f'Paso {i+1}').strip(),
+                        'description': step.get('description', 'Procesando...').strip(),
                         'tool': step.get('tool', 'processing'),
                         'status': 'pending',
                         'estimated_time': step.get('estimated_time', '1 minuto'),
@@ -544,6 +611,10 @@ Asegúrate de que cada paso sea específico a la tarea "{message}" y no genéric
                         'active': i == 0,  # Solo el primer paso activo
                         'priority': step.get('priority', 'media')
                     })
+                
+                if len(plan_steps) == 0:
+                    logger.error(f"❌ No valid steps created for task {task_id}")
+                    return generate_fallback_plan(message, task_id)
                 
                 # Guardar plan en memoria global
                 active_task_plans[task_id] = {
@@ -554,29 +625,32 @@ Asegúrate de que cada paso sea específico a la tarea "{message}" y no genéric
                     'start_time': datetime.now(),
                     'message': message,
                     'task_type': plan_data.get('task_type', 'general'),
-                    'complexity': plan_data.get('complexity', 'media')
+                    'complexity': plan_data.get('complexity', 'media'),
+                    'ai_generated': True  # Marcar como generado por IA
                 }
                 
-                logger.info(f"✅ Generated AI-powered plan for task {task_id} with {len(plan_steps)} steps")
+                logger.info(f"🎉 Generated AI-powered plan for task {task_id} with {len(plan_steps)} specific steps")
+                logger.info(f"📋 Plan steps for task {task_id}: {[step['title'] for step in plan_steps]}")
                 
                 return {
                     'steps': plan_steps,
                     'total_steps': len(plan_steps),
                     'estimated_total_time': plan_data.get('estimated_total_time', '2-5 minutos'),
-                    'task_type': plan_data.get('task_type', 'dynamic_ai_generated'),
-                    'complexity': plan_data.get('complexity', 'media')
+                    'task_type': plan_data.get('task_type', 'ai_generated_dynamic'),
+                    'complexity': plan_data.get('complexity', 'media'),
+                    'ai_generated': True
                 }
                 
             else:
-                logger.warning("No JSON found in AI response, using fallback")
+                logger.error(f"❌ No JSON found in AI response for task {task_id}, using fallback")
                 return generate_fallback_plan(message, task_id)
                 
         except (json.JSONDecodeError, KeyError) as e:
-            logger.warning(f"Error parsing AI plan response: {e}")
+            logger.error(f"❌ Error parsing AI plan response for task {task_id}: {e}")
             return generate_fallback_plan(message, task_id)
             
     except Exception as e:
-        logger.error(f"Error generating AI plan: {str(e)}")
+        logger.error(f"❌ Unexpected error generating AI plan for task {task_id}: {str(e)}")
         return generate_fallback_plan(message, task_id)
 
 def generate_fallback_plan(message: str, task_id: str) -> dict:
