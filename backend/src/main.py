@@ -44,10 +44,16 @@ ollama_service = OllamaService()
 tool_manager = ToolManager()
 database_service = DatabaseService()
 
+# Inicializar WebSocket manager para comunicación en tiempo real
+# Mejora implementada según UPGRADE.md Sección 3: WebSockets para Comunicación en Tiempo Real
+from websocket.websocket_manager import initialize_websocket
+websocket_manager = initialize_websocket(app)
+
 # Hacer servicios disponibles globalmente
 app.ollama_service = ollama_service
 app.tool_manager = tool_manager
 app.database_service = database_service
+app.websocket_manager = websocket_manager
 
 # Registrar blueprints
 app.register_blueprint(agent_bp, url_prefix='/api/agent')
