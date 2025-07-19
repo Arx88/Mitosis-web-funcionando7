@@ -635,34 +635,30 @@ RESPONDE SOLO JSON:"""
                 logger.error(f"❌ No valid steps created for task {task_id}")
                 return generate_fallback_plan(message, task_id)
                 
-                # Guardar plan en memoria global
-                active_task_plans[task_id] = {
-                    'plan': plan_steps,
-                    'current_step': 0,
-                    'status': 'executing',
-                    'created_at': datetime.now().isoformat(),
-                    'start_time': datetime.now(),
-                    'message': message,
-                    'task_type': plan_data.get('task_type', 'general'),
-                    'complexity': plan_data.get('complexity', 'media'),
-                    'ai_generated': True  # Marcar como generado por IA
-                }
-                
-                logger.info(f"🎉 Generated AI-powered plan for task {task_id} with {len(plan_steps)} specific steps")
-                logger.info(f"📋 Plan steps for task {task_id}: {[step['title'] for step in plan_steps]}")
-                
-                return {
-                    'steps': plan_steps,
-                    'total_steps': len(plan_steps),
-                    'estimated_total_time': plan_data.get('estimated_total_time', '2-5 minutos'),
-                    'task_type': plan_data.get('task_type', 'ai_generated_dynamic'),
-                    'complexity': plan_data.get('complexity', 'media'),
-                    'ai_generated': True
-                }
-                
-            else:
-                logger.error(f"❌ No JSON found in AI response for task {task_id}, using fallback")
-                return generate_fallback_plan(message, task_id)
+            # Guardar plan en memoria global
+            active_task_plans[task_id] = {
+                'plan': plan_steps,
+                'current_step': 0,
+                'status': 'executing',
+                'created_at': datetime.now().isoformat(),
+                'start_time': datetime.now(),
+                'message': message,
+                'task_type': plan_data.get('task_type', 'general'),
+                'complexity': plan_data.get('complexity', 'media'),
+                'ai_generated': True  # Marcar como generado por IA
+            }
+            
+            logger.info(f"🎉 Generated AI-powered plan for task {task_id} with {len(plan_steps)} specific steps")
+            logger.info(f"📋 Plan steps for task {task_id}: {[step['title'] for step in plan_steps]}")
+            
+            return {
+                'steps': plan_steps,
+                'total_steps': len(plan_steps),
+                'estimated_total_time': plan_data.get('estimated_total_time', '2-5 minutos'),
+                'task_type': plan_data.get('task_type', 'ai_generated_dynamic'),
+                'complexity': plan_data.get('complexity', 'media'),
+                'ai_generated': True
+            }
                 
         except (json.JSONDecodeError, KeyError) as e:
             logger.error(f"❌ Error parsing AI plan response for task {task_id}: {e}")
