@@ -1179,6 +1179,146 @@ The main agent needs to focus on the ChatInterface.tsx component's message rende
 
 ---
 
+## 🧪 **CRITICAL ACTION PLAN DISPLAY ISSUE CONFIRMED** (January 2025) - FRONTEND BUG IDENTIFIED
+
+### ❌ **TESTING REQUEST FULFILLED - ACTION PLAN NOT DISPLAYING IN FRONTEND**
+
+**TESTING REQUEST**: Test the complete flow from frontend to verify the Action Plan functionality works correctly:
+
+1. **Access Application**: ✅ PASSED - Application loads correctly at https://2f8ea3cf-ac1c-4142-923e-f4a9ba366602.preview.emergentagent.com
+2. **Test Complex Task**: ✅ PASSED - Successfully sent "Crear un análisis detallado sobre blockchain" 
+3. **Task Creation**: ✅ PASSED - Task appears in sidebar and can be clicked
+4. **Backend Plan Generation**: ✅ PASSED - Backend correctly generates 3-5 step action plans
+5. **Frontend Plan Display**: ❌ **CRITICAL FAILURE** - Action Plan NOT showing in TerminalView
+
+**TESTING METHODOLOGY**:
+1. **Comprehensive Browser Testing**: Used Playwright automation to test the live application systematically
+2. **Backend API Verification**: Direct API testing confirmed backend generates plans correctly
+3. **Frontend UI Analysis**: Detailed examination of TerminalView component behavior
+4. **Network Communication**: Verified frontend-backend communication is working
+
+**TESTING RESULTS**:
+
+#### ✅ **BACKEND FUNCTIONALITY - WORKING PERFECTLY**:
+- **Plan Generation**: ✅ PASSED - Backend generates detailed 3-step plans for complex tasks
+- **API Response**: ✅ PASSED - `/api/agent/chat` returns structured plan with steps, descriptions, tools
+- **Plan Structure**: ✅ PASSED - Plans include step IDs, titles, descriptions, estimated times, priorities
+- **Task Processing**: ✅ PASSED - Backend correctly identifies complex tasks and generates appropriate plans
+
+**Example Backend Response**:
+```json
+{
+  "plan": {
+    "steps": [
+      {
+        "id": "step_1",
+        "title": "Buscar información sobre blockchain en línea",
+        "description": "Realizar una búsqueda web para recopilar información básica sobre blockchain",
+        "estimated_time": "1 minuto",
+        "tool": "web_search",
+        "active": true,
+        "completed": false
+      },
+      // ... 2 more steps
+    ],
+    "total_steps": 3,
+    "complexity": "media"
+  }
+}
+```
+
+#### ❌ **FRONTEND DISPLAY - CRITICAL ISSUE CONFIRMED**:
+- **TerminalView Loading**: ✅ PASSED - Right column loads with "Monitor Mitosis" and "Ejecución de comandos"
+- **Plan Section**: ❌ **CRITICAL FAILURE** - "Plan de Acción" section NOT appearing in TerminalView
+- **Plan Steps**: ❌ **CRITICAL FAILURE** - No step indicators (1., 2., 3.) visible in UI
+- **Plan Content**: ❌ **CRITICAL FAILURE** - No plan-related content displayed despite backend generating it
+
+#### ✅ **APPLICATION INFRASTRUCTURE - WORKING**:
+- **Page Loading**: ✅ PASSED - Application loads correctly with welcome screen
+- **Task Creation**: ✅ PASSED - Tasks appear in sidebar when messages are sent
+- **Two-Column Layout**: ✅ PASSED - Left column (chat) and right column (terminal) both visible
+- **Backend Communication**: ✅ PASSED - Frontend successfully communicates with backend API
+
+### 📊 **ROOT CAUSE ANALYSIS**:
+
+**THE ISSUE IS IN THE FRONTEND PLAN RENDERING LOGIC**:
+
+1. **Backend Works**: API returns complete plan data with all required fields
+2. **Frontend Receives Data**: Network communication is successful
+3. **Plan Not Rendered**: TerminalView shows "Esperando datos del agente..." instead of plan
+4. **Missing Plan Section**: The "Plan de Acción" section (lines 712-820 in TerminalView.tsx) is not appearing
+
+**TECHNICAL ANALYSIS**:
+- **Data Flow Issue**: Plan data from backend not reaching TerminalView component properly
+- **Props Passing**: Plan prop may not be passed correctly from TaskView to TerminalView
+- **Rendering Logic**: TerminalView plan rendering logic may have conditional issues
+- **State Management**: Task state may not be updating with plan data from backend response
+
+### 🎯 **CRITICAL FINDINGS SUMMARY**:
+
+**USER COMPLAINT CONFIRMED**: ✅ The reported issue is accurate:
+- ❌ **Action Plan not displaying** - Confirmed through comprehensive testing
+- ✅ **Backend generates plans correctly** - Verified through direct API testing
+- ❌ **Frontend not showing plans** - TerminalView shows empty state instead of plan
+
+**EVIDENCE**:
+- **Backend API Test**: Returns complete 3-step plan for "blockchain analysis" task
+- **Frontend Screenshots**: Show TerminalView with "Sistema de monitoreo listo" instead of plan
+- **Network Analysis**: Confirms successful API communication
+- **UI Analysis**: Two-column layout working, but right column missing plan content
+
+### 🔧 **URGENT RECOMMENDATIONS FOR MAIN AGENT**:
+
+**HIGHEST PRIORITY - FRONTEND PLAN DISPLAY FIX REQUIRED**:
+
+1. **Investigate TaskView → TerminalView Data Flow**:
+   - Verify plan prop is passed correctly from TaskView to TerminalView
+   - Check if plan data from backend response is properly stored in task state
+   - Ensure onTaskPlanGenerated callback is working correctly
+
+2. **Debug TerminalView Plan Rendering**:
+   - Check lines 712-820 in TerminalView.tsx for plan rendering logic
+   - Verify conditional rendering logic for plan section
+   - Ensure plan array is not empty when rendering
+
+3. **Fix State Management**:
+   - Verify task.plan is populated with backend response data
+   - Check if plan data structure matches frontend expectations
+   - Ensure plan state updates trigger re-renders
+
+4. **Test Plan Prop Passing**:
+   - Add console.log in TerminalView to verify plan prop is received
+   - Check if plan.length > 0 condition is met
+   - Verify plan steps have required fields (id, title, description, etc.)
+
+**TECHNICAL AREAS TO INVESTIGATE**:
+- TaskView.tsx: onTaskPlanGenerated callback implementation (lines 582-612)
+- TerminalView.tsx: Plan rendering section (lines 712-820)
+- App.tsx: Task state management and plan data storage (lines 623-644)
+- Plan data structure mapping between backend and frontend
+
+### 📸 **TEST EVIDENCE**:
+- **3 Screenshots captured** showing the issue clearly
+- **Backend API response** confirming plan generation works
+- **Frontend UI analysis** showing missing plan display
+- **Network communication** verified as working
+
+**CONCLUSION**: ❌ **THE ACTION PLAN DISPLAY IS BROKEN IN FRONTEND**
+
+The backend correctly generates detailed action plans with 3-5 steps as expected, but the frontend TerminalView component is not displaying them. This is a critical frontend rendering issue that needs immediate attention.
+
+**RECOMMENDATION**: ✅ **URGENT FRONTEND PLAN DISPLAY FIX REQUIRED**
+
+The main agent needs to focus on the data flow from backend response → task state → TerminalView props → plan rendering to fix the Action Plan display issue.
+
+**TEST EVIDENCE**:
+- **Backend API**: ✅ Working (generates 3-step plans correctly)
+- **Frontend Communication**: ✅ Working (API calls successful)
+- **Plan Display**: ❌ **BROKEN** (TerminalView not showing plans)
+- **User Experience**: ❌ **BROKEN** (Users cannot see action plans despite backend generating them)
+
+---
+
 ## 🧪 **COMPREHENSIVE ACTION PLAN FUNCTIONALITY TESTING COMPLETED** (January 2025) - CRITICAL VALIDATION
 
 ### ✅ **TESTING REQUEST FULFILLED - MITOSIS ACTION PLAN LOGIC VERIFIED**
