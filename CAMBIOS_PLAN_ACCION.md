@@ -157,7 +157,7 @@ El tiempo aumenta dinámicamente: `0:01 Pensando` → `0:02 Pensando` → `0:03 
 ## 🌐 VERIFICACIÓN VISUAL
 
 Para verificar los cambios:
-1. Acceder a: https://19ea89cc-164d-4bfc-ba4b-48b0a5105f4c.preview.emergentagent.com
+1. Acceder a: https://970edbda-ff60-4d24-ab0f-bcec20699da4.preview.emergentagent.com
 2. Escribir: "Busca los mejores bares de España 2025"
 3. Presionar Enter
 4. Observar el plan en el sidebar:
