@@ -371,6 +371,16 @@ def get_ollama_service():
         logger.error("❌ Ollama service not available")
         return None
 
+def get_intelligent_context_manager():
+    """Obtener gestor de contexto inteligente"""
+    try:
+        context_manager = current_app.intelligent_context_manager
+        logger.debug(f"✅ Intelligent Context Manager found: {context_manager}")
+        return context_manager
+    except AttributeError:
+        logger.warning("⚠️ Intelligent Context Manager not available")
+        return None
+
 def get_tool_manager():
     """Obtener tool manager"""
     try:
