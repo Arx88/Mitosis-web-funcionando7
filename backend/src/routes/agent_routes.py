@@ -496,25 +496,26 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                             raise Exception(f"No handler available for tool: {tool_name}")
                 
                 try:
-                    # EJECUTAR HERRAMIENTA REAL según el tipo de paso
+                    # EJECUTAR HERRAMIENTA REAL según el tipo de paso con reintentos automáticos
                     if step['tool'] == 'web_search' or 'búsqueda' in step['title'].lower():
-                        if tool_manager:
-                            search_query = extract_search_query_from_message(message, step['title'])
-                            logger.info(f"🔍 Executing web search for: {search_query}")
-                            
-                            # Enviar detalle de ejecución de herramienta
-                            send_websocket_update('tool_execution_detail', {
-                                'type': 'tool_execution_detail',
-                                'tool_name': 'web_search',
-                                'input_params': {'query': search_query, 'num_results': 5},
-                                'message': f'🔍 Buscando información: {search_query}',
-                                'timestamp': datetime.now().isoformat()
-                            })
-                            
-                            result = tool_manager.execute_tool('web_search', {
+                        search_query = extract_search_query_from_message(message, step['title'])
+                        logger.info(f"🔍 Executing web search with retries for: {search_query}")
+                        
+                        # Enviar detalle de ejecución de herramienta
+                        send_websocket_update('tool_execution_detail', {
+                            'type': 'tool_execution_detail',
+                            'tool_name': 'web_search',
+                            'input_params': {'query': search_query, 'num_results': 5},
+                            'message': f'🔍 Buscando información: {search_query}',
+                            'timestamp': datetime.now().isoformat()
+                        })
+                        
+                        try:
+                            # Usar ejecución con reintentos automáticos
+                            result = execute_tool_with_retries('web_search', {
                                 'query': search_query,
                                 'num_results': 5
-                            }, task_id=task_id)
+                            }, step['title'])
                             
                             step_result = {
                                 'type': 'web_search',
@@ -536,8 +537,31 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                             })
                             
                             logger.info(f"✅ Web search completed: {len(result.get('search_results', []))} results")
-                        else:
-                            time.sleep(3)
+                            
+                        except Exception as search_error:
+                            logger.error(f"❌ Web search failed after retries: {str(search_error)}")
+                            
+                            # Enviar error detallado
+                            send_websocket_update('tool_execution_detail', {
+                                'type': 'tool_execution_detail',
+                                'tool_name': 'web_search',
+                                'error': str(search_error),
+                                'message': f'❌ Error en búsqueda después de reintentos: {str(search_error)}',
+                                'timestamp': datetime.now().isoformat()
+                            })
+                            
+                            # Estrategia de fallback para herramientas críticas
+                            logger.info(f"🔄 Attempting fallback search strategy for: {search_query}")
+                            step_result = {
+                                'type': 'web_search_fallback',
+                                'query': search_query,
+                                'results': [],
+                                'summary': f"Búsqueda no completada. Continúo con información disponible.",
+                                'error': str(search_error),
+                                'fallback_used': True
+                            }
+                            step['result'] = step_result
+                            final_results.append(step_result)
                     
                     elif step['tool'] == 'analysis' or 'análisis' in step['title'].lower():
                         if ollama_service:
