@@ -675,6 +675,28 @@ Formato: Profesional, estructurado y completo.
             active_task_plans[task_id]['status'] = 'completed'
             active_task_plans[task_id]['completed_at'] = datetime.now().isoformat()
             
+            # Enviar notificación de finalización del plan
+            final_result_content = active_task_plans[task_id].get('final_result', {}).get('content', 'Tarea completada exitosamente')
+            send_websocket_update('task_completed', {
+                'type': 'task_completed',
+                'task_id': task_id,
+                'status': 'success',
+                'final_result': final_result_content,
+                'total_steps': len(steps),
+                'completed_steps': sum(1 for step in steps if step.get('completed', False)),
+                'execution_time': (datetime.now() - active_task_plans[task_id]['start_time']).total_seconds(),
+                'message': f'🎉 Tarea completada exitosamente: {len(final_results)} resultados generados',
+                'timestamp': datetime.now().isoformat()
+            })
+            
+            # Enviar log final
+            send_websocket_update('log_message', {
+                'type': 'log_message',
+                'level': 'info',
+                'message': f'🎉 Tarea {task_id} completada con éxito - {len(steps)} pasos ejecutados',
+                'timestamp': datetime.now().isoformat()
+            })
+            
             logger.info(f"🎉 Task {task_id} completed successfully with REAL execution and final delivery!")
         
         # Ejecutar en hilo separado
@@ -686,6 +708,22 @@ Formato: Profesional, estructurado y completo.
         
     except Exception as e:
         logger.error(f"Error in real plan execution: {str(e)}")
+        
+        # Enviar notificación de fallo de tarea si WebSocket está disponible
+        try:
+            from src.websocket.websocket_manager import get_websocket_manager
+            websocket_manager = get_websocket_manager()
+            if websocket_manager and websocket_manager.is_initialized:
+                websocket_manager.send_update(task_id, websocket_manager.UpdateType.TASK_FAILED, {
+                    'type': 'task_failed',
+                    'task_id': task_id,
+                    'status': 'failed',
+                    'overall_error': str(e),
+                    'message': f'❌ Tarea falló: {str(e)}',
+                    'timestamp': datetime.now().isoformat()
+                })
+        except Exception:
+            pass
         
         # Marcar como fallido
         if task_id in active_task_plans:
