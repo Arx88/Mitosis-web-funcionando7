@@ -913,172 +913,175 @@ def extract_search_query_from_message(message: str, step_title: str) -> str:
 
 def generate_dynamic_plan_with_ai(message: str, task_id: str) -> dict:
     """
-    Genera un plan dinámico y específico usando IA para analizar la tarea
-    Mejora implementada según UPGRADE.md Sección 2: Robustez en Generación de Plan
+    Genera un plan dinámico usando Ollama con robustecimiento y validación de esquemas
+    Mejora implementada según UPGRADE.md Sección 2: Generación de Plan y Robustez
     """
-    from jsonschema import validate, ValidationError
-    from tenacity import retry, stop_after_attempt, wait_exponential
+    logger.info(f"🧠 Generating AI-powered dynamic plan for task {task_id} - Message: {message[:50]}...")
     
-    # Esquema JSON para validación de plan
-    plan_schema = {
-        "type": "object",
-        "properties": {
-            "task_type": {"type": "string"},
-            "complexity": {"type": "string"},
-            "estimated_total_time": {"type": "string"},
-            "steps": {
-                "type": "array",
-                "minItems": 1,
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "id": {"type": "string"},
-                        "title": {"type": "string"},
-                        "description": {"type": "string"},
-                        "tool": {"type": "string"},
-                        "estimated_time": {"type": "string"},
-                        "priority": {"type": "string"}
-                    },
-                    "required": ["id", "title", "description", "tool"]
-                }
-            }
-        },
-        "required": ["task_type", "steps"]
-    }
+    ollama_service = get_ollama_service()
+    if not ollama_service or not ollama_service.is_healthy():
+        logger.warning(f"⚠️ Ollama not available for task {task_id}, using fallback plan")
+        return generate_fallback_plan_with_notification(message, task_id, "Ollama no disponible")
     
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
-    def generate_plan_with_retries():
-        """Función interna con reintentos para generación de plan"""
-        # Obtener servicio de Ollama para generar plan dinámico
-        ollama_service = get_ollama_service()
+    def validate_plan_schema(plan_data: dict) -> bool:
+        """Validar que el plan cumple con el esquema esperado"""
+        try:
+            jsonschema.validate(plan_data, PLAN_SCHEMA)
+            logger.info(f"✅ Plan schema validation successful for task {task_id}")
+            return True
+        except jsonschema.ValidationError as e:
+            logger.warning(f"❌ Plan schema validation failed for task {task_id}: {e.message}")
+            return False
+    
+    def generate_plan_with_retries() -> dict:
+        """Generar plan con reintentos y retroalimentación específica a Ollama"""
+        max_attempts = 3
+        last_error = None
         
-        if not ollama_service or not ollama_service.is_healthy():
-            raise Exception("Ollama service not available or not healthy")
+        for attempt in range(1, max_attempts + 1):
+            try:
+                logger.info(f"🔄 Plan generation attempt {attempt}/{max_attempts} for task {task_id}")
+                
+                # Construir prompt específico para generación de JSON estructurado
+                if attempt == 1:
+                    # Primera tentativa: prompt normal
+                    prompt = f"""
+GENERA UN PLAN DE ACCIÓN ESTRUCTURADO para esta tarea: "{message}"
 
-        logger.info(f"🤖 Generating AI-powered plan for task {task_id}: '{message[:50]}...' (attempt)")
-        
-        # Prompt ultra-específico y restrictivo para generación JSON
-        plan_prompt = f"""
-Eres un planificador de tareas experto. Debes responder SOLO con JSON válido, sin texto adicional.
+Responde ÚNICAMENTE con un objeto JSON válido siguiendo EXACTAMENTE este formato:
 
-TAREA: "{message}"
-
-INSTRUCCIONES OBLIGATORIAS:
-1. Responde ÚNICAMENTE con el JSON
-2. No agregues explicaciones, texto adicional, ni comentarios  
-3. Cada paso debe ser específico para esta tarea exacta
-4. Usa herramientas: web_search, analysis, planning, creation, delivery, synthesis, data_analysis, processing
-
-FORMATO JSON OBLIGATORIO:
 {{
-  "task_type": "investigación",
-  "complexity": "media", 
-  "estimated_total_time": "3-5 minutos",
   "steps": [
     {{
-      "id": "step_1",
-      "title": "Paso específico para '{message}'",
-      "description": "Descripción detallada específica",
-      "tool": "web_search",
-      "estimated_time": "1 minuto",
-      "priority": "alta"
-    }},
-    {{
-      "id": "step_2", 
-      "title": "Segundo paso específico",
-      "description": "Segunda acción detallada específica",
-      "tool": "analysis",
-      "estimated_time": "1.5 minutos",
-      "priority": "alta"
-    }},
-    {{
-      "id": "step_3",
-      "title": "Tercer paso específico", 
-      "description": "Tercera acción detallada específica",
-      "tool": "creation",
-      "estimated_time": "2 minutos",
-      "priority": "media"
+      "title": "Título específico del paso (5-100 caracteres)",
+      "description": "Descripción detallada del paso (10-300 caracteres)",
+      "tool": "web_search|analysis|creation|planning|delivery|processing|synthesis|search_definition|data_analysis",
+      "estimated_time": "Tiempo estimado como string",
+      "priority": "alta|media|baja"
     }}
-  ]
+  ],
+  "task_type": "Tipo de tarea específico (mínimo 3 caracteres)",
+  "complexity": "baja|media|alta",
+  "estimated_total_time": "Tiempo total estimado"
 }}
 
-RESPONDE SOLO JSON:"""
-        
-        # Usar parámetros específicos para generación JSON estructurada
-        ollama_context = {
-            'system_prompt': 'You are a JSON task planner. Respond ONLY with valid JSON. No additional text.',
-            'temperature': 0.2,  # Más bajo para respuestas más consistentes
-            'response_format': 'json'
-        }
-        
-        response = ollama_service.generate_response(plan_prompt, ollama_context)
-        
-        if response.get('error'):
-            raise Exception(f"Ollama error: {response['error']}")
-        
-        logger.info(f"📥 Received response from Ollama for task {task_id}: {len(response.get('response', ''))} characters")
-        
-        # Extraer JSON del response con estrategias múltiples y robustas
-        response_text = response['response'].strip()
-        logger.info(f"🔍 Raw Ollama response for task {task_id}: {response_text[:200]}...")
-        
-        # Limpiar response de texto adicional común
-        response_text = response_text.replace('```json', '').replace('```', '').strip()
-        response_text = re.sub(r'^[^{]*', '', response_text)  # Remover texto antes del {
-        response_text = re.sub(r'}[^}]*$', '}', response_text)  # Remover texto después del }
-        
-        # Estrategias de extracción JSON
-        plan_data = None
-        
-        # Estrategia 1: JSON directo
-        if response_text.startswith('{') and response_text.endswith('}'):
-            try:
-                plan_data = json.loads(response_text)
-                logger.info(f"✅ Strategy 1: Direct JSON parsing successful for task {task_id}")
-            except json.JSONDecodeError as e:
-                logger.warning(f"⚠️ Strategy 1 failed for task {task_id}: {e}")
-        
-        # Estrategia 2: Buscar primer JSON válido
-        if not plan_data:
-            json_matches = re.finditer(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', response_text)
-            for match in json_matches:
-                try:
-                    plan_data = json.loads(match.group())
-                    if isinstance(plan_data.get('steps'), list):
-                        logger.info(f"✅ Strategy 2: Pattern matching successful for task {task_id}")
-                        break
-                except:
+IMPORTANTE:
+- Mínimo 1 paso, máximo 10 pasos
+- Usar solo las herramientas listadas en "tool"
+- Títulos y descripciones específicas para la tarea, NO genéricas
+- NO agregues texto adicional, solo el JSON
+- Asegúrate de que sea JSON válido
+"""
+                elif attempt == 2:
+                    # Segunda tentativa: prompt con corrección específica
+                    prompt = f"""
+El JSON anterior tuvo errores. CORRIGE y genera un plan válido para: "{message}"
+
+ERROR PREVIO: {last_error}
+
+Responde SOLO con JSON válido:
+{{
+  "steps": [
+    {{
+      "title": "string de 5-100 caracteres",
+      "description": "string de 10-300 caracteres", 
+      "tool": "web_search",
+      "estimated_time": "string",
+      "priority": "media"
+    }}
+  ],
+  "task_type": "string de mínimo 3 caracteres",
+  "complexity": "media",
+  "estimated_total_time": "string"
+}}
+
+SOLO JSON, sin explicaciones adicionales.
+"""
+                else:
+                    # Tercera tentativa: prompt simplificado
+                    prompt = f"""
+Genera SOLO este JSON válido para: "{message}"
+
+{{"steps":[{{"title":"Completar solicitud","description":"Procesar y completar la solicitud del usuario","tool":"processing","estimated_time":"2 minutos","priority":"media"}}],"task_type":"procesamiento_general","complexity":"media","estimated_total_time":"2 minutos"}}
+
+Pero personalízalo para la tarea específica. SOLO JSON.
+"""
+                
+                # Llamar a Ollama con parámetros optimizados para JSON
+                response = ollama_service.generate_response(prompt, {
+                    'temperature': 0.2,  # Baja para mayor consistencia
+                    'max_tokens': 1000,
+                    'response_format': 'json'
+                })
+                
+                if response.get('error'):
+                    last_error = response['error']
+                    logger.warning(f"⚠️ Ollama error attempt {attempt}: {response['error']}")
                     continue
+                
+                # Parsear respuesta JSON con múltiples estrategias
+                response_text = response.get('response', '').strip()
+                logger.info(f"📥 Ollama response attempt {attempt} for task {task_id}: {response_text[:200]}...")
+                
+                plan_data = None
+                
+                # Estrategia 1: JSON limpio directo
+                try:
+                    cleaned_response = response_text.replace('```json', '').replace('```', '').strip()
+                    if cleaned_response.startswith('{') and cleaned_response.endswith('}'):
+                        plan_data = json.loads(cleaned_response)
+                except json.JSONDecodeError as e:
+                    logger.debug(f"📝 JSON parsing strategy 1 failed: {str(e)}")
+                
+                # Estrategia 2: Buscar JSON en el texto
+                if not plan_data:
+                    try:
+                        json_match = re.search(r'\{[^}]*"steps"[^}]*\[.*?\][^}]*\}', response_text, re.DOTALL)
+                        if json_match:
+                            plan_data = json.loads(json_match.group())
+                    except json.JSONDecodeError as e:
+                        logger.debug(f"📝 JSON parsing strategy 2 failed: {str(e)}")
+                
+                # Estrategia 3: JSON con corrección de formato común
+                if not plan_data:
+                    try:
+                        # Corregir comillas simples por dobles
+                        corrected_text = response_text.replace("'", '"')
+                        # Remover caracteres no JSON
+                        corrected_text = re.sub(r'^[^{]*', '', corrected_text)
+                        corrected_text = re.sub(r'[^}]*$', '', corrected_text)
+                        plan_data = json.loads(corrected_text)
+                    except (json.JSONDecodeError, Exception) as e:
+                        logger.debug(f"📝 JSON parsing strategy 3 failed: {str(e)}")
+                
+                if not plan_data:
+                    last_error = f"No se pudo parsear JSON válido. Respuesta: {response_text[:100]}..."
+                    logger.warning(f"❌ Failed to parse JSON on attempt {attempt}: {last_error}")
+                    continue
+                
+                # Validar esquema
+                if not validate_plan_schema(plan_data):
+                    last_error = "El JSON no cumple con el esquema requerido"
+                    logger.warning(f"❌ Schema validation failed on attempt {attempt}")
+                    continue
+                
+                # Validar que el plan tenga la estructura esperada
+                if not isinstance(plan_data.get('steps'), list) or len(plan_data.get('steps', [])) == 0:
+                    last_error = "El plan no contiene pasos válidos"
+                    logger.warning(f"❌ Invalid plan structure on attempt {attempt}")
+                    continue
+                
+                logger.info(f"✅ Successfully generated and validated plan for task {task_id} on attempt {attempt}")
+                return plan_data
+                
+            except Exception as e:
+                last_error = f"Error inesperado: {str(e)}"
+                logger.error(f"❌ Unexpected error on attempt {attempt} for task {task_id}: {str(e)}")
+                continue
         
-        # Estrategia 3: Buscar JSON entre llaves más profundo
-        if not plan_data:
-            try:
-                # Buscar el JSON más grande posible
-                start_idx = response_text.find('{')
-                end_idx = response_text.rfind('}')
-                if start_idx != -1 and end_idx != -1:
-                    json_candidate = response_text[start_idx:end_idx+1]
-                    plan_data = json.loads(json_candidate)
-                    logger.info(f"✅ Strategy 3: Deep extraction successful for task {task_id}")
-            except:
-                pass
-        
-        if not plan_data:
-            raise Exception("No valid JSON could be extracted from response")
-        
-        # Validar esquema JSON
-        try:
-            validate(instance=plan_data, schema=plan_schema)
-            logger.info(f"✅ JSON schema validation successful for task {task_id}")
-        except ValidationError as e:
-            logger.error(f"❌ JSON schema validation failed for task {task_id}: {e.message}")
-            raise Exception(f"Invalid plan schema: {e.message}")
-        
-        # Validar que el plan tenga la estructura esperada
-        if not isinstance(plan_data.get('steps'), list) or len(plan_data.get('steps', [])) == 0:
-            raise Exception("Invalid plan structure: no valid steps found")
-        
-        return plan_data
+        # Si llegamos aquí, todos los reintentos fallaron
+        logger.error(f"❌ All {max_attempts} plan generation attempts failed for task {task_id}")
+        raise Exception(f"Failed to generate valid plan after {max_attempts} attempts. Last error: {last_error}")
     
     try:
         # Intentar generar plan con reintentos
@@ -1107,19 +1110,22 @@ RESPONDE SOLO JSON:"""
             logger.error(f"❌ No valid steps created for task {task_id}")
             return generate_fallback_plan_with_notification(message, task_id, "No se pudieron crear pasos válidos")
             
-        # Guardar plan en memoria global
-        active_task_plans[task_id] = {
+        # Guardar plan con TaskManager (persistencia MongoDB)
+        task_data = {
             'plan': plan_steps,
             'current_step': 0,
-            'status': 'executing',
+            'status': 'plan_generated',  # ✅ MEJORA: Estado inicial correcto
             'created_at': datetime.now().isoformat(),
             'start_time': datetime.now(),
             'message': message,
             'task_type': plan_data.get('task_type', 'general'),
             'complexity': plan_data.get('complexity', 'media'),
-            'ai_generated': True,  # Marcar como generado por IA
-            'plan_source': 'ai_generated'  # Estado del origen del plan
+            'ai_generated': True,
+            'plan_source': 'ai_generated'  # Indicar fuente del plan
         }
+        
+        # Guardar en persistencia y memoria legacy
+        save_task_data(task_id, task_data)
         
         logger.info(f"🎉 Generated AI-powered plan for task {task_id} with {len(plan_steps)} specific steps")
         logger.info(f"📋 Plan steps for task {task_id}: {[step['title'] for step in plan_steps]}")
@@ -1131,7 +1137,8 @@ RESPONDE SOLO JSON:"""
             'task_type': plan_data.get('task_type', 'ai_generated_dynamic'),
             'complexity': plan_data.get('complexity', 'media'),
             'ai_generated': True,
-            'plan_source': 'ai_generated'  # Indicar fuente del plan
+            'plan_source': 'ai_generated',  # ✅ MEJORA: Indicar fuente del plan
+            'schema_validated': True  # ✅ MEJORA: Indicar que pasó validación
         }
             
     except Exception as e:
