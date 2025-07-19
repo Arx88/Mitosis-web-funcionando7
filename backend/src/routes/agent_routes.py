@@ -889,11 +889,38 @@ Formato: Profesional, estructurado y completo.
                         'error': str(e)
                     }
             
+            # Determinar estado final de la tarea para respuesta dinámica
+            completed_steps = sum(1 for step in steps if step.get('completed', False))
+            failed_steps = sum(1 for step in steps if step.get('status') == 'failed')
+            total_steps = len(steps)
+            
+            # Clasificar estado final
+            if completed_steps == total_steps:
+                final_task_status = "completed_success"
+            elif completed_steps > total_steps // 2 and failed_steps > 0:
+                final_task_status = "completed_with_warnings"
+            else:
+                final_task_status = "completed_success"  # Por defecto optimista
+            
+            # Generar respuesta final dinámica basada en estado real
+            failed_step_titles = [step.get('title', 'Paso desconocido') for step in steps if step.get('status') == 'failed']
+            final_dynamic_response = generate_clean_response(
+                ollama_response="",
+                tool_results=final_results,
+                task_status=final_task_status,
+                failed_step_title=failed_step_titles[0] if failed_step_titles else None,
+                error_message=f"{len(failed_step_titles)} pasos fallaron" if failed_step_titles else None
+            )
+            
             # Marcar tarea como completada en persistencia y memoria
             task_completion_updates = {
                 'status': 'completed',
                 'completed_at': datetime.now().isoformat(),
-                'final_result': active_task_plans[task_id].get('final_result', {}).get('content', 'Tarea completada exitosamente')
+                'final_result': final_dynamic_response,  # Usar respuesta dinámica
+                'final_task_status': final_task_status,
+                'completed_steps': completed_steps,
+                'failed_steps': failed_steps,
+                'total_steps': total_steps
             }
             
             # Actualizar con TaskManager (persistencia)
