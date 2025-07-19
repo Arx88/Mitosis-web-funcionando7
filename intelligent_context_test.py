@@ -22,7 +22,7 @@ import os
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://c9d7ec55-c6f2-484b-a23c-ac8914c6abc9.preview.emergentagent.com"
+BACKEND_URL = "http://localhost:8001"
 API_BASE = f"{BACKEND_URL}/api"
 
 class IntelligentContextSystemTester:
