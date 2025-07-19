@@ -653,14 +653,14 @@ Formato: Respuesta estructurada y profesional.
                     
                     elif step['tool'] == 'creation' or 'creación' in step['title'].lower() or 'desarrollo' in step['title'].lower():
                         if ollama_service:
-                            logger.info(f"🛠️ Executing creation using Ollama")
+                            logger.info(f"🛠️ Executing creation with REAL file generation")
                             
                             # Enviar detalle de ejecución de herramienta
                             send_websocket_update('tool_execution_detail', {
                                 'type': 'tool_execution_detail',
                                 'tool_name': 'creation',
                                 'input_params': {'task': step['title']},
-                                'message': f'🛠️ Creando contenido: {step["title"]}',
+                                'message': f'🛠️ Creando contenido y archivo: {step["title"]}',
                                 'timestamp': datetime.now().isoformat()
                             })
                             
@@ -685,16 +685,76 @@ Responde con el contenido completo y listo para usar.
 """
                             
                             result = ollama_service.generate_response(creation_prompt, {})
+                            content = result.get('response', 'Contenido creado')
                             
-                            step_result = {
-                                'type': 'creation',
-                                'content': result.get('response', 'Contenido creado'),
-                                'summary': 'Contenido creado exitosamente'
-                            }
+                            # 🆕 CREAR ARCHIVO REAL TANGIBLE
+                            try:
+                                # Determinar tipo de archivo basado en la tarea
+                                file_extension = '.md'  # Por defecto markdown
+                                if 'documento' in message.lower() or 'informe' in message.lower():
+                                    file_extension = '.md'
+                                elif 'código' in message.lower() or 'script' in message.lower():
+                                    file_extension = '.py'
+                                elif 'plan' in message.lower():
+                                    file_extension = '.txt'
+                                
+                                # Crear nombre de archivo único
+                                import re
+                                safe_title = re.sub(r'[^a-zA-Z0-9\-_]', '_', step['title'][:30])
+                                filename = f"{safe_title}_{int(time.time())}{file_extension}"
+                                file_path = f"/app/backend/static/generated_files/{filename}"
+                                
+                                # Crear directorio si no existe
+                                os.makedirs("/app/backend/static/generated_files", exist_ok=True)
+                                
+                                # Escribir archivo real
+                                with open(file_path, 'w', encoding='utf-8') as f:
+                                    f.write(content)
+                                
+                                # Verificar que el archivo se creó
+                                if os.path.exists(file_path):
+                                    file_size = os.path.getsize(file_path)
+                                    logger.info(f"✅ ARCHIVO REAL CREADO: {filename} ({file_size} bytes)")
+                                    
+                                    step_result = {
+                                        'type': 'creation',
+                                        'content': content,
+                                        'summary': f'✅ Archivo creado exitosamente: {filename}',
+                                        'file_created': True,
+                                        'file_path': file_path,
+                                        'file_name': filename,
+                                        'file_size': file_size,
+                                        'download_url': f'/api/download/{filename}',
+                                        'tangible_result': True
+                                    }
+                                    
+                                    # Enviar notificación de archivo creado
+                                    send_websocket_update('tool_execution_detail', {
+                                        'type': 'tool_execution_detail',
+                                        'tool_name': 'creation',
+                                        'output_summary': f'✅ Archivo creado: {filename} ({file_size} bytes)',
+                                        'file_created': filename,
+                                        'download_url': f'/api/download/{filename}',
+                                        'message': f'✅ Archivo generado y listo para descargar: {filename}',
+                                        'timestamp': datetime.now().isoformat()
+                                    })
+                                    
+                                else:
+                                    raise Exception("El archivo no se pudo crear correctamente")
+                                
+                            except Exception as file_error:
+                                logger.error(f"❌ Error creando archivo real: {str(file_error)}")
+                                step_result = {
+                                    'type': 'creation',
+                                    'content': content,
+                                    'summary': f'Contenido generado (error creando archivo: {str(file_error)})',
+                                    'file_created': False,
+                                    'file_error': str(file_error)
+                                }
                             
                             step['result'] = step_result
                             final_results.append(step_result)
-                            logger.info(f"✅ Content creation completed")
+                            logger.info(f"✅ Content creation with file generation completed")
                         else:
                             time.sleep(4)
                     
