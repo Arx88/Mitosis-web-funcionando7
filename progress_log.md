@@ -39,198 +39,163 @@
 
 ---
 
-## FASE 1: ANÁLISIS Y VERIFICACIÓN DE MEJORAS IMPLEMENTADAS
+## 🚀 PLAN DE IMPLEMENTACIÓN DETALLADO (UPGRADE.md v2.0)
 
-### ✅ SECCIÓN 1: DETECCIÓN DE INTENCIÓN Y GESTIÓN DE FLUJOS
-**Estado**: 🔍 VERIFICANDO
-**Archivo Principal**: `/app/backend/src/routes/agent_routes.py` líneas 205-340
+### FASE 1: FUNDAMENTOS (Semana 1-2) - 🎯 PRIORIDAD ALTA
+**Objetivo**: Establecer sistemas base para inteligencia avanzada
 
-**Implementación Encontrada**:
-- ✅ Función `is_casual_conversation()` con clasificación LLM
-- ✅ Función `_fallback_casual_detection()` para respaldo heurístico  
-- ✅ Prompt específico para Ollama con clasificación de intenciones
-- ✅ Manejo robusto de respuestas JSON con múltiples estrategias de parseo
-- ✅ Transición condicional entre flujos casuales y de tareas
+#### 1.1 Sistema de Contexto Inteligente
+**Archivos a Crear**:
+- [ ] `/app/backend/src/context/intelligent_context_manager.py`
+- [ ] `/app/backend/src/context/strategies/task_execution_strategy.py`
+- [ ] `/app/backend/src/context/strategies/task_planning_strategy.py`  
+- [ ] `/app/backend/src/context/strategies/casual_context_strategy.py`
+- [ ] `/app/backend/src/context/strategies/reflection_strategy.py`
 
-**Detalles Técnicos**:
-```python
-def is_casual_conversation(message: str) -> bool:
-    """Detecta si un mensaje es una conversación casual usando clasificación LLM"""
-    # Implementación con Ollama para clasificación inteligente
-    # Fallback a lógica heurística si Ollama no está disponible
-    # Múltiples estrategias de parseo JSON
-```
+**Archivos a Modificar**:
+- [ ] `/app/backend/src/routes/agent_routes.py` (línea ~200, función is_casual_conversation)
 
-**Verificación Requerida**: 
-- [ ] Probar clasificación con mensajes casuales
-- [ ] Probar clasificación con mensajes de tarea
-- [ ] Verificar funcionamiento del fallback heurístico
-- [ ] Validar transición correcta entre flujos
+**Criterios de Éxito**:
+- Relevancia de contexto: >85% (vs 60% actual)
+- Tiempo de construcción: <2s (vs 5s actual)
+- Integración con memoria: >70% (vs 30% actual)
 
----
+#### 1.2 Motor de Ejecución Mejorado con Verificación
+**Archivos a Crear**:
+- [ ] `/app/backend/src/execution/enhanced_tool_execution_engine.py`
+- [ ] `/app/backend/src/execution/verifiers.py`
+- [ ] `/app/backend/src/execution/completion_check.py`
+- [ ] `/app/backend/src/execution/execution_record.py`
 
-### ✅ SECCIÓN 2: GENERACIÓN DE PLAN Y ROBUSTEZ  
-**Estado**: 🔍 VERIFICANDO
-**Archivo Principal**: `/app/backend/src/routes/agent_routes.py` líneas 1114-1369
+**Archivos a Modificar**:
+- [ ] `/app/backend/src/routes/agent_routes.py` (líneas ~470-600, execute_plan_with_real_tools)
 
-**Implementación Encontrada**:
-- ✅ Schema JSON definido (`PLAN_SCHEMA` líneas 22-73)
-- ✅ Función `generate_dynamic_plan_with_ai()` con reintentos
-- ✅ Validación con `jsonschema.validate()`
-- ✅ Función `generate_fallback_plan_with_notification()` con información explícita
-- ✅ Múltiples estrategias de parseo JSON robustas
-- ✅ Estado inicial correcto ('plan_generated' en lugar de 'completed')
+**Criterios de Éxito**:
+- Tasa de completitud verificada: >90% (vs 70% actual)
+- Detección de tareas incompletas: >85% (vs 40% actual)
+- Tiempo de ejecución optimizado: -25%
 
-**Detalles Técnicos**:
-```python
-def generate_plan_with_retries() -> dict:
-    """Generar plan con reintentos y retroalimentación específica a Ollama"""
-    max_attempts = 3
-    # Implementa 3 intentos con prompts progresivamente más específicos
-    # Validación de esquema JSON en cada intento
-    # Manejo de errores específicos con retroalimentación a Ollama
-```
+### FASE 2: RAZONAMIENTO PROACTIVO (Semana 3-4) - 🎯 PRIORIDAD ALTA  
+**Objetivo**: Implementar capacidades de razonamiento autónomo
 
-**Verificación Requerida**:
-- [ ] Probar generación exitosa de planes válidos
-- [ ] Probar manejo de errores JSON de Ollama
-- [ ] Verificar funcionamiento de reintentos
-- [ ] Validar notificación de planes fallback
+#### 2.1 Bucle de Razonamiento Proactivo
+**Archivos a Crear**:
+- [ ] `/app/backend/src/reasoning/proactive_reasoning_engine.py`
+- [ ] `/app/backend/src/reasoning/system_state.py`
+- [ ] `/app/backend/src/reasoning/improvement_opportunity.py`
 
----
+**Archivos a Modificar**:
+- [ ] `/app/backend/src/main.py` (integrar bucle al arrancar)
 
-### ✅ SECCIÓN 3: WEBSOCKETS PARA COMUNICACIÓN EN TIEMPO REAL
-**Estado**: 🔍 VERIFICANDO  
-**Archivo Principal**: `/app/backend/src/websocket/websocket_manager.py`
+**Criterios de Éxito**:
+- Acciones proactivas exitosas/día: >3 (vs 0 actual)
+- Problemas prevenidos: >60% (vs 0% actual)
+- Mejoras identificadas/semana: >5 (vs 0 actual)
 
-**Implementación Encontrada**:
-- ✅ Clase `WebSocketManager` completamente implementada
-- ✅ Tipos de actualización definidos (`UpdateType` enum)
-- ✅ Gestión de salas por task_id
-- ✅ Callbacks para ExecutionEngine
-- ✅ Integración en `agent_routes.py` función `execute_plan_with_real_tools()`
+#### 2.2 Sistema de Decisiones Autónomas
+**Archivos a Crear**:
+- [ ] `/app/backend/src/reasoning/autonomous_decision_maker.py`
+- [ ] `/app/backend/src/reasoning/goal_manager.py`
+- [ ] `/app/backend/src/reasoning/risk_assessor.py`
+- [ ] `/app/backend/src/reasoning/decision_context.py`
 
-**Funcionalidades WebSocket Implementadas**:
-```python
-class UpdateType(Enum):
-    TASK_STARTED = "task_started"
-    TASK_PROGRESS = "task_progress"  
-    TASK_COMPLETED = "task_completed"
-    STEP_STARTED = "step_started"
-    STEP_COMPLETED = "step_completed"
-    # ... más tipos
-```
+**Criterios de Éxito**:
+- Decisiones autónomas/día: >8 (vs 0 actual)
+- Confianza promedio: >0.81
+- Tasa de éxito: >89%
 
-**Integración en Ejecución**:
-```python
-# En execute_plan_with_real_tools():
-send_websocket_update('step_update', {
-    'step_id': step['id'],
-    'status': 'in-progress',
-    'progress': (i / len(steps)) * 100
-})
-```
+### FASE 3: APRENDIZAJE AVANZADO (Semana 5-6) - 🎯 PRIORIDAD MEDIA
+**Objetivo**: Implementar aprendizaje y mejora continua
 
-**Verificación Requerida**:
-- [ ] Probar conexión WebSocket desde frontend
-- [ ] Verificar actualizaciones en tiempo real durante ejecución
-- [ ] Probar notificaciones de progreso de pasos
-- [ ] Validar logs detallados en tiempo real
+#### 3.1 Sistema de Prompts Adaptativos  
+**Archivos a Crear**:
+- [ ] `/app/backend/src/prompts/adaptive_prompt_generator.py`
+- [ ] `/app/backend/src/prompts/performance_tracker.py`
+- [ ] `/app/backend/src/prompts/prompt_optimization.py`
 
----
+**Archivos a Modificar**:
+- [ ] `/app/backend/src/routes/agent_routes.py` (líneas ~230-240, prompts de clasificación)
 
-### ✅ SECCIÓN 4: SERVICIO OLLAMA Y EXTRACCIÓN DE QUERY
-**Estado**: 🔍 VERIFICANDO
-**Archivo Principal**: `/app/backend/src/services/ollama_service.py` líneas 256-365
+#### 3.2 Sistema de Auto-corrección Inteligente
+**Archivos a Crear**:
+- [ ] `/app/backend/src/correction/intelligent_self_correction_engine.py`
+- [ ] `/app/backend/src/correction/pattern_analyzer.py`
+- [ ] `/app/backend/src/correction/correction_strategies.py`
 
-**Implementación Encontrada**:
-- ✅ Función `_parse_response()` con estrategias robustas múltiples
-- ✅ Función `extract_search_query_from_message()` con LLM en `agent_routes.py`
-- ✅ Función `_fallback_query_extraction()` para respaldo heurístico
-- ✅ Parámetros optimizados para JSON en `_call_ollama_api()`
+**Archivos a Modificar**:
+- [ ] `/app/backend/src/routes/agent_routes.py` (líneas ~540-570, manejo de errores)
 
-**Estrategias de Parseo Implementadas**:
-```python
-# Estrategia 1: Buscar bloques JSON clásicos con ```
-# Estrategia 2: Buscar JSON sin marcadores de bloque  
-# Estrategia 3: Buscar cualquier JSON válido
-# Estrategia 4: Extracción por regex específico de tool_call
-```
+### FASE 4: INTEGRACIÓN Y OPTIMIZACIÓN (Semana 7-8) - 🎯 PRIORIDAD MEDIA
+**Objetivo**: Integrar todos los sistemas y optimizar rendimiento
 
-**Verificación Requerida**:
-- [ ] Probar parseo con respuestas JSON válidas
-- [ ] Probar parseo con respuestas JSON malformadas
-- [ ] Verificar extracción de queries con LLM
-- [ ] Validar funcionamiento del fallback heurístico
+#### 4.1 Aprendizaje Continuo
+**Archivos a Crear**:
+- [ ] `/app/backend/src/learning/continuous_learning_engine.py`
+- [ ] `/app/backend/src/learning/pattern_analyzer.py`
+- [ ] `/app/backend/src/learning/strategy_optimizer.py`
+
+#### 4.2 Memoria Inteligente Integrada
+**Archivos a Modificar**:
+- [ ] `/app/backend/src/memory/advanced_memory_manager.py` (agregar métodos inteligentes)
+
+**Archivos a Crear**:
+- [ ] `/app/backend/src/memory/intelligent_context.py`
+
+**Integrar en**:
+- [ ] `/app/backend/src/routes/agent_routes.py` (usar contexto inteligente en todas las respuestas)
 
 ---
 
-### ✅ SECCIÓN 5: PERSISTENCIA DEL ESTADO DE TAREAS
-**Estado**: 🔍 VERIFICANDO
-**Archivo Principal**: `/app/backend/src/services/task_manager.py`
+## 📊 MÉTRICAS DE ÉXITO DEFINIDAS
 
-**Implementación Encontrada**:
-- ✅ Clase `TaskManager` completamente implementada
-- ✅ Integración con MongoDB a través de `DatabaseService`
-- ✅ Funciones `get_task_data()`, `save_task_data()`, `update_task_data()` en `agent_routes.py`
-- ✅ Migración gradual desde `active_task_plans` en memoria
-- ✅ Sistema de caché para reducir latencia
-- ✅ Recuperación de tareas incompletas al inicio
+### Métricas Cuantitativas por Área
 
-**Funcionalidades TaskManager**:
-```python
-class TaskManager:
-    def create_task(self, task_id: str, task_data: Dict[str, Any]) -> bool
-    def get_task(self, task_id: str) -> Optional[Dict[str, Any]]  
-    def update_task(self, task_id: str, updates: Dict[str, Any]) -> bool
-    def update_task_step_status(self, task_id: str, step_id: str, new_status: str) -> bool
-    def recover_incomplete_tasks_on_startup(self) -> List[str]
-```
+#### 1. Gestión de Contexto
+- [ ] **Relevancia**: >85% (actual: ~60%)
+- [ ] **Tiempo construcción**: <2s (actual: ~5s)
+- [ ] **Uso memoria L.P.**: >70% (actual: ~30%)
 
-**Verificación Requerida**:
-- [ ] Probar persistencia de tareas nuevas
-- [ ] Verificar recuperación después de reinicio
-- [ ] Probar actualización de estados de pasos
-- [ ] Validar historial de tareas
+#### 2. Ejecución de Tareas  
+- [ ] **Completitud verificada**: >90% (actual: ~70%)
+- [ ] **Detección incompletas**: >85% (actual: ~40%)
+- [ ] **Optimización tiempo**: -25%
+
+#### 3. Razonamiento Proactivo
+- [ ] **Acciones proactivas/día**: >3 (actual: 0)
+- [ ] **Problemas prevenidos**: >60% (actual: 0%)
+- [ ] **Mejoras/semana**: >5 (actual: 0)
+
+#### 4. Aprendizaje Continuo
+- [ ] **Mejora semanal efectividad**: >2% (actual: 0%)
+- [ ] **Correcciones automáticas**: >80% (actual: ~20%)
+- [ ] **Insights accionables/semana**: >10 (actual: 0)
 
 ---
 
-### ✅ SECCIÓN 6: MANEJO DE ERRORES Y RESILIENCIA
-**Estado**: 🔍 VERIFICANDO
-**Archivo Principal**: `/app/backend/src/routes/agent_routes.py` líneas 472-564
+## 🎯 PRÓXIMOS PASOS INMEDIATOS
 
-**Implementación Encontrada**:
-- ✅ Decorador `@retry` con `tenacity` para reintentos automáticos
-- ✅ Estrategia de retroceso exponencial
-- ✅ Función `execute_tool_with_retries()` 
-- ✅ Estrategias de fallback para herramientas críticas
-- ✅ Comunicación detallada de errores vía WebSocket
-- ✅ Respuesta final condicional según resultado de tarea
+### Fase 1A - Iniciar Implementación (Hoy)
+1. **✅ UPGRADE.md v2.0 Creado** - Plan maestro definido
+2. **✅ Progress Log Actualizado** - Tracking system establecido  
+3. **🔄 A Continuación**: Comenzar implementación de IntelligentContextManager
 
-**Configuración de Reintentos**:
-```python
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=8),
-    retry=retry_if_exception_type((requests.RequestException, ConnectionError, TimeoutError))
-)
-def execute_tool_with_retries(tool_name: str, tool_params: dict, step_title: str):
-```
+### Tareas Inmediatas
+1. [ ] Crear estructura de directorios para nuevos componentes
+2. [ ] Implementar IntelligentContextManager base
+3. [ ] Crear primera estrategia de contexto (TaskExecutionStrategy)
+4. [ ] Testing inicial del sistema de contexto inteligente
+5. [ ] Integración básica con agent_routes.py
 
-**Verificación Requerida**:
-- [ ] Probar reintentos automáticos con herramientas que fallan
-- [ ] Verificar estrategias de fallback
-- [ ] Probar comunicación de errores al frontend
-- [ ] Validar respuestas finales condicionadas por resultado
+### Criterios para Avanzar a Fase 2
+- [ ] IntelligentContextManager funcional
+- [ ] EnhancedToolExecutionEngine implementado
+- [ ] Verificadores básicos funcionando  
+- [ ] Métricas Fase 1 cumplidas (>80% de objetivos)
+- [ ] Testing comprehensivo completado
 
 ---
 
-## PRÓXIMOS PASOS
-1. **Verificación Sistemática**: Probar cada funcionalidad implementada
-2. **Testing Backend**: Usar deep_testing_backend_v2 para validar mejoras  
-3. **Documentación de Resultados**: Actualizar este log con resultados de pruebas
-4. **Identificación de Gaps**: Documentar cualquier mejora faltante
-5. **Reporte Final**: Crear resumen ejecutivo del estado de implementación
+## 📈 ESTADO DE IMPLEMENTACIÓN
 
 ---
 
