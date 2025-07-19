@@ -126,4 +126,11 @@ if __name__ == '__main__':
         print(f"   - {tool['name']}: {tool['description']}")
     
     print("🎯 Servidor listo para recibir conexiones")
-    app.run(host=HOST, port=PORT, debug=DEBUG)
+    print("🔗 WebSocket support enabled for real-time updates")
+    
+    # Usar SocketIO run para soporte WebSocket
+    if websocket_manager and websocket_manager.socketio:
+        websocket_manager.socketio.run(app, host=HOST, port=PORT, debug=DEBUG)
+    else:
+        print("⚠️ WebSocket manager not available, falling back to regular Flask")
+        app.run(host=HOST, port=PORT, debug=DEBUG)
