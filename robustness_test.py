@@ -12,7 +12,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://1c32aeea-df76-40f5-846a-2a0344ecde96.preview.emergentagent.com"
+BACKEND_URL = "https://adc245dd-b933-4dc3-8e9a-77c66655b811.preview.emergentagent.com"
 TEST_TIMEOUT = 10
 
 class BackendRobustnessTest:
