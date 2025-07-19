@@ -1,1025 +1,923 @@
-# UPGRADE.md - Mitosis V5-beta Agent Improvements Plan
-## Comprehensive Solution for Agent Limitations
+# Diseño de Soluciones y Mejoras Específicas para el Agente Mitosis
 
-**Fecha**: Julio 2025  
-**Versión**: 2.0 - Enhanced  
-**Objetivo**: Abordar las 4 limitaciones clave identificadas y transformar el agente en un sistema verdaderamente autónomo
+Basándose en el diagnóstico de problemas identificados y las mejores prácticas investigadas, este documento presenta un conjunto integral de soluciones y mejoras específicas para transformar el agente Mitosis en un sistema más efectivo y robusto. Las mejoras están diseñadas para abordar las limitaciones fundamentales identificadas mientras se mantiene la arquitectura modular existente y se respeta la interfaz de usuario actual.
 
----
+## 1. Mejora del Sistema de Gestión de Contexto y Prompts
 
-## 🎯 RESUMEN EJECUTIVO
+### 1.1 Implementación de un Sistema de Contexto Dinámico Avanzado
 
-### Limitaciones Identificadas a Abordar:
+**Problema Abordado:** El sistema actual de gestión de contexto es demasiado simplista y no aprovecha eficientemente la información disponible en la memoria a largo plazo ni las capacidades del agente.
 
-1. **Gestión de Contexto y Prompts Insuficiente**: El LLM no recibe el contexto óptimo para razonar y actuar
-2. **Ejecución de Tareas Frágil y Simulada**: La detección de finalización de fase es débil y la ejecución de acciones es simulación, no interacción real
-3. **Falta de un Bucle de Razonamiento Proactivo y Adaptativo**: El agente no puede discernir autónomamente la necesidad de acciones complejas ni aprender de errores continuamente
-4. **Subutilización de la Memoria a Largo Plazo**: El conocimiento acumulado no se integra activamente en el proceso de razonamiento
+**Solución Propuesta:** Implementar un sistema de contexto dinámico que integre múltiples fuentes de información de manera inteligente y adaptativa.
 
-### Estado Actual Verificado:
-✅ **Ya Implementado**: Sistema avanzado de memoria, WebSockets, persistencia MongoDB, clasificación de intención LLM  
-⚠️ **Parcialmente Implementado**: Gestión de contexto, ejecución real de herramientas  
-❌ **Por Implementar**: Bucle de razonamiento proactivo, integración completa de memoria a largo plazo
+#### Componentes de la Solución:
 
----
+**A. Gestor de Contexto Inteligente (IntelligentContextManager)**
 
-## 1. MEJORA DE GESTIÓN DE CONTEXTO Y PROMPTS
-
-### 1.1 Sistema de Contexto Dinámico Inteligente
-
-**Problema**: El contexto actual no aprovecha eficientemente la memoria disponible ni se adapta al tipo de tarea.
-
-**Solución**: Implementar `IntelligentContextManager` que construya contexto óptimo para cada tipo de interacción.
+Este nuevo componente actuará como una capa intermedia entre el `EnhancedPromptManager` y las fuentes de información, proporcionando contexto optimizado para cada tipo de tarea.
 
 ```python
-# Archivo: /app/backend/src/context/intelligent_context_manager.py
 class IntelligentContextManager:
     def __init__(self, memory_manager, task_manager, model_manager):
         self.memory_manager = memory_manager
         self.task_manager = task_manager
         self.model_manager = model_manager
         self.context_strategies = {
-            'casual_chat': CasualContextStrategy(),
+            'chat': ChatContextStrategy(),
             'task_planning': TaskPlanningContextStrategy(),
             'task_execution': TaskExecutionContextStrategy(),
             'reflection': ReflectionContextStrategy(),
-            'error_recovery': ErrorRecoveryContextStrategy()
+            'error_handling': ErrorHandlingContextStrategy()
         }
     
-    async def build_optimized_context(self, context_type: str, query: str, 
-                                    max_tokens: int = 4000) -> Dict[str, Any]:
-        """Construir contexto optimizado basado en el tipo de interacción"""
+    def build_context(self, context_type: str, query: str, max_tokens: int = 4000) -> Dict[str, Any]:
         strategy = self.context_strategies.get(context_type)
         if not strategy:
-            return await self._build_default_context(query, max_tokens)
+            return self._build_default_context(query, max_tokens)
         
-        # Obtener contexto relevante de memoria a largo plazo
-        memory_context = await self.memory_manager.retrieve_context(
+        return strategy.build_context(
             query=query,
-            max_items=10,
-            include_episodic=True,
-            include_semantic=True,
-            include_procedural=True
-        )
-        
-        # Aplicar estrategia específica
-        context = await strategy.build_context(
-            query=query,
-            memory_context=memory_context,
+            memory_manager=self.memory_manager,
             task_manager=self.task_manager,
             max_tokens=max_tokens
         )
+```
+
+**B. Estrategias de Contexto Especializadas**
+
+Cada estrategia se especializa en construir contexto óptimo para diferentes tipos de interacciones:
+
+```python
+class TaskExecutionContextStrategy:
+    def build_context(self, query, memory_manager, task_manager, max_tokens):
+        context = {
+            'current_task': None,
+            'current_phase': None,
+            'available_tools': [],
+            'relevant_knowledge': [],
+            'conversation_history': [],
+            'execution_history': []
+        }
+        
+        # Obtener tarea y fase actual
+        current_task = task_manager.get_current_task()
+        if current_task:
+            context['current_task'] = {
+                'title': current_task.title,
+                'goal': current_task.goal,
+                'description': current_task.description
+            }
+            
+            current_phase = task_manager.get_current_phase(current_task.id)
+            if current_phase:
+                context['current_phase'] = {
+                    'title': current_phase.title,
+                    'description': current_phase.description,
+                    'required_capabilities': current_phase.required_capabilities
+                }
+        
+        # Buscar conocimiento relevante
+        relevant_knowledge = memory_manager.search_knowledge(
+            query=query,
+            limit=5,
+            min_confidence=0.7
+        )
+        context['relevant_knowledge'] = [
+            {'content': k.content, 'confidence': k.confidence}
+            for k in relevant_knowledge
+        ]
+        
+        # Obtener historial de ejecución de fases similares
+        similar_tasks = memory_manager.get_recent_tasks(count=5, status='completed')
+        context['execution_history'] = [
+            {'title': t.title, 'results': t.results}
+            for t in similar_tasks
+        ]
         
         return context
 ```
 
-**Implementación Requerida**:
-- Crear archivo `/app/backend/src/context/intelligent_context_manager.py`
-- Crear estrategias especializadas en `/app/backend/src/context/strategies/`
-- Integrar en `agent_routes.py` línea ~200 (función `is_casual_conversation`)
+**C. Sistema de Embeddings para Búsqueda Semántica**
 
-### 1.2 Sistema de Prompts Adaptativos Basado en Rendimiento
-
-**Problema**: Los prompts son estáticos y no mejoran con la experiencia.
-
-**Solución**: Implementar `AdaptivePromptGenerator` que optimice prompts basándose en resultados históricos.
+Implementar un sistema de embeddings para mejorar la búsqueda de conocimiento relevante:
 
 ```python
-# Archivo: /app/backend/src/prompts/adaptive_prompt_generator.py
+class SemanticSearchManager:
+    def __init__(self, model_manager):
+        self.model_manager = model_manager
+        self.embedding_cache = {}
+    
+    def search_relevant_knowledge(self, query: str, knowledge_base: List[KnowledgeItem], 
+                                top_k: int = 5) -> List[KnowledgeItem]:
+        query_embedding = self._get_embedding(query)
+        
+        scored_items = []
+        for item in knowledge_base:
+            item_embedding = self._get_embedding(item.content)
+            similarity = self._cosine_similarity(query_embedding, item_embedding)
+            scored_items.append((item, similarity))
+        
+        # Ordenar por similitud y devolver top_k
+        scored_items.sort(key=lambda x: x[1], reverse=True)
+        return [item for item, score in scored_items[:top_k]]
+    
+    def _get_embedding(self, text: str):
+        if text in self.embedding_cache:
+            return self.embedding_cache[text]
+        
+        # Usar modelo de embeddings (ej. sentence-transformers)
+        embedding = self.model_manager.get_embedding(text)
+        self.embedding_cache[text] = embedding
+        return embedding
+```
+
+### 1.2 Sistema de Prompts Adaptativos
+
+**Problema Abordado:** Los prompts actuales son estáticos y no se adaptan al contexto específico de la tarea o al estado del agente.
+
+**Solución Propuesta:** Implementar un sistema de prompts que se adapte dinámicamente basándose en el contexto, el historial de rendimiento y las características específicas de la tarea.
+
+#### Componentes de la Solución:
+
+**A. Generador de Prompts Adaptativos**
+
+```python
 class AdaptivePromptGenerator:
     def __init__(self, context_manager, performance_tracker):
         self.context_manager = context_manager
         self.performance_tracker = performance_tracker
-        self.prompt_templates = self._load_templates()
-        self.optimization_rules = {}
+        self.prompt_templates = self._load_prompt_templates()
+        self.prompt_optimizations = {}
     
-    async def generate_optimized_prompt(self, context_type: str, query: str, 
-                                      model_capabilities: Dict[str, Any]) -> str:
-        """Genera prompt optimizado basado en rendimiento histórico"""
-        
+    def generate_system_prompt(self, context_type: str, query: str, 
+                             model_capabilities: Dict[str, Any]) -> str:
         # Obtener contexto optimizado
-        context = await self.context_manager.build_optimized_context(
-            context_type, query
-        )
+        context = self.context_manager.build_context(context_type, query)
         
-        # Obtener optimizaciones basadas en rendimiento
-        optimizations = await self._get_performance_optimizations(context_type)
+        # Seleccionar template base
+        base_template = self.prompt_templates[context_type]
+        
+        # Aplicar optimizaciones basadas en rendimiento histórico
+        optimizations = self._get_optimizations_for_context(context_type)
         
         # Adaptar al modelo específico
         model_adaptations = self._adapt_for_model(model_capabilities)
         
-        # Construir prompt final optimizado
-        prompt = self._build_optimized_prompt(
+        # Construir prompt final
+        prompt = self._build_prompt(
+            template=base_template,
             context=context,
             optimizations=optimizations,
-            adaptations=model_adaptations
+            model_adaptations=model_adaptations
         )
         
         return prompt
     
-    async def _get_performance_optimizations(self, context_type: str) -> Dict[str, Any]:
-        """Obtiene optimizaciones basadas en rendimiento histórico"""
-        performance_data = await self.performance_tracker.get_performance_metrics(
-            context_type
-        )
+    def _get_optimizations_for_context(self, context_type: str) -> Dict[str, Any]:
+        # Analizar rendimiento histórico para este tipo de contexto
+        performance_data = self.performance_tracker.get_performance_data(context_type)
         
         optimizations = {}
         
-        # Si tasa de éxito < 70%, añadir ejemplos y especificidad
+        # Si el rendimiento es bajo, aplicar técnicas específicas
         if performance_data.get('success_rate', 1.0) < 0.7:
-            optimizations.update({
-                'add_examples': True,
-                'increase_specificity': True,
-                'add_step_by_step': True
-            })
+            optimizations['add_examples'] = True
+            optimizations['increase_specificity'] = True
+            optimizations['add_step_by_step'] = True
         
-        # Si errores > 30%, añadir verificaciones
+        # Si hay errores frecuentes, añadir instrucciones de verificación
         if performance_data.get('error_rate', 0.0) > 0.3:
-            optimizations.update({
-                'add_verification_steps': True,
-                'add_error_handling': True,
-                'include_fallback_strategies': True
-            })
+            optimizations['add_verification_steps'] = True
+            optimizations['add_error_handling'] = True
         
         return optimizations
 ```
 
-**Implementación Requerida**:
-- Crear `/app/backend/src/prompts/adaptive_prompt_generator.py`
-- Crear `/app/backend/src/prompts/performance_tracker.py`
-- Modificar `agent_routes.py` líneas ~230-240 para usar prompts adaptativos
-
----
-
-## 2. EJECUCIÓN REAL Y ROBUSTA DE HERRAMIENTAS
-
-### 2.1 Motor de Ejecución Reforzado con Verificación
-
-**Problema**: La ejecución actual es parcialmente simulada y no verifica completitud real.
-
-**Solución**: Mejorar `ToolExecutionEngine` con verificación real de resultados y detección de completitud.
+**B. Sistema de Retroalimentación y Optimización de Prompts**
 
 ```python
-# Archivo: /app/backend/src/execution/enhanced_tool_execution_engine.py
-class EnhancedToolExecutionEngine:
-    def __init__(self, tool_manager, memory_manager, verification_service):
-        self.tool_manager = tool_manager
+class PromptPerformanceTracker:
+    def __init__(self, memory_manager):
         self.memory_manager = memory_manager
-        self.verification_service = verification_service
-        self.execution_history = []
-        self.completion_verifiers = {
-            'web_search': WebSearchCompletionVerifier(),
-            'analysis': AnalysisCompletionVerifier(),
-            'creation': CreationCompletionVerifier(),
-            'delivery': DeliveryCompletionVerifier()
-        }
+        self.performance_history = {}
     
-    async def execute_step_with_verification(self, step: Dict[str, Any], 
-                                           task_context: Dict[str, Any]) -> StepExecutionResult:
-        """Ejecuta un paso con verificación real de completitud"""
+    def track_prompt_performance(self, prompt_id: str, context_type: str, 
+                               success: bool, quality_score: float, 
+                               execution_time: float, error_message: str = None):
+        performance_record = {
+            'prompt_id': prompt_id,
+            'context_type': context_type,
+            'success': success,
+            'quality_score': quality_score,
+            'execution_time': execution_time,
+            'error_message': error_message,
+            'timestamp': time.time()
+        }
         
-        # 1. Ejecutar herramienta real
-        tool_result = await self._execute_tool_real(step, task_context)
-        
-        # 2. Verificar completitud del resultado
-        verifier = self.completion_verifiers.get(step['tool'])
-        if verifier:
-            completion_check = await verifier.verify_completion(
-                step=step,
-                result=tool_result,
-                expected_outcomes=step.get('expected_outcomes', [])
-            )
-        else:
-            completion_check = CompletionCheck(is_complete=True, confidence=0.5)
-        
-        # 3. Si no está completo, intentar completar
-        if not completion_check.is_complete and completion_check.confidence > 0.3:
-            enhanced_result = await self._complete_partial_result(
-                step, tool_result, completion_check
-            )
-            tool_result = enhanced_result
-        
-        # 4. Registrar ejecución para aprendizaje
-        execution_record = ExecutionRecord(
-            step_id=step['id'],
-            tool_name=step['tool'],
-            result=tool_result,
-            completion_status=completion_check,
-            execution_time=time.time(),
-            success=tool_result.get('success', False)
+        # Guardar en memoria a largo plazo
+        self.memory_manager.add_knowledge(
+            content=f"Rendimiento de prompt: {prompt_id} - Éxito: {success}, Calidad: {quality_score}",
+            category="prompt_performance",
+            source="performance_tracker",
+            confidence=0.9,
+            tags=["prompt", "performance", context_type]
         )
         
-        self.execution_history.append(execution_record)
+        # Actualizar estadísticas locales
+        if context_type not in self.performance_history:
+            self.performance_history[context_type] = []
         
-        # 5. Almacenar experiencia en memoria para aprendizaje futuro
-        await self.memory_manager.store_execution_experience(execution_record)
+        self.performance_history[context_type].append(performance_record)
         
-        return StepExecutionResult(
-            success=tool_result.get('success', False),
-            result=tool_result,
-            completion_verified=completion_check.is_complete,
-            completion_confidence=completion_check.confidence
-        )
+        # Mantener solo los últimos 100 registros por tipo
+        if len(self.performance_history[context_type]) > 100:
+            self.performance_history[context_type] = self.performance_history[context_type][-100:]
+    
+    def get_performance_data(self, context_type: str) -> Dict[str, float]:
+        if context_type not in self.performance_history:
+            return {}
+        
+        records = self.performance_history[context_type]
+        if not records:
+            return {}
+        
+        # Calcular métricas
+        total_records = len(records)
+        successful_records = [r for r in records if r['success']]
+        failed_records = [r for r in records if not r['success']]
+        
+        return {
+            'success_rate': len(successful_records) / total_records,
+            'error_rate': len(failed_records) / total_records,
+            'avg_quality_score': sum(r['quality_score'] for r in successful_records) / len(successful_records) if successful_records else 0,
+            'avg_execution_time': sum(r['execution_time'] for r in records) / total_records
+        }
 ```
 
-**Verificadores de Completitud Especializados**:
+## 2. Mejora del Sistema de Gestión de Tareas
+
+### 2.1 Implementación de un Motor de Ejecución Robusto
+
+**Problema Abordado:** El sistema actual de ejecución de tareas es frágil y se basa en simulación en lugar de ejecución real de herramientas.
+
+**Solución Propuesta:** Implementar un motor de ejecución que pueda invocar herramientas reales, verificar resultados y manejar errores de manera robusta.
+
+#### Componentes de la Solución:
+
+**A. Motor de Ejecución de Herramientas (ToolExecutionEngine)**
 
 ```python
-# Archivo: /app/backend/src/execution/verifiers.py
-class WebSearchCompletionVerifier:
-    async def verify_completion(self, step: Dict[str, Any], result: Dict[str, Any], 
-                              expected_outcomes: List[str]) -> CompletionCheck:
-        """Verifica si una búsqueda web está realmente completa"""
-        
-        search_results = result.get('search_results', [])
-        
-        # Criterios de completitud
-        has_enough_results = len(search_results) >= 3
-        has_relevant_content = any(
-            self._is_relevant_to_query(r, step.get('query', '')) 
-            for r in search_results
-        )
-        covers_expected_outcomes = all(
-            self._outcome_covered(outcome, search_results)
-            for outcome in expected_outcomes
-        )
-        
-        completion_score = (
-            0.4 * has_enough_results +
-            0.4 * has_relevant_content +
-            0.2 * covers_expected_outcomes
-        )
-        
-        return CompletionCheck(
-            is_complete=completion_score > 0.7,
-            confidence=completion_score,
-            missing_elements=self._identify_missing_elements(
-                search_results, expected_outcomes
-            )
-        )
-```
-
-**Implementación Requerida**:
-- Crear `/app/backend/src/execution/enhanced_tool_execution_engine.py`
-- Crear `/app/backend/src/execution/verifiers.py` con verificadores especializados
-- Modificar `agent_routes.py` líneas ~470-600 para usar motor mejorado
-
-### 2.2 Sistema de Auto-corrección Inteligente
-
-**Problema**: El agente no aprende de errores ni mejora automáticamente.
-
-**Solución**: Implementar `IntelligentSelfCorrectionEngine` que detecte patrones de error y aplique correcciones.
-
-```python
-# Archivo: /app/backend/src/correction/intelligent_self_correction_engine.py
-class IntelligentSelfCorrectionEngine:
-    def __init__(self, memory_manager, execution_engine, pattern_analyzer):
+class ToolExecutionEngine:
+    def __init__(self, model_manager, memory_manager):
+        self.model_manager = model_manager
         self.memory_manager = memory_manager
-        self.execution_engine = execution_engine
-        self.pattern_analyzer = pattern_analyzer
+        self.available_tools = {}
+        self.execution_history = []
+        self._register_default_tools()
+    
+    def register_tool(self, tool_name: str, tool_instance: BaseTool):
+        """Registra una herramienta disponible para el agente"""
+        self.available_tools[tool_name] = tool_instance
+        
+        # Añadir información de la herramienta a la memoria
+        self.memory_manager.add_knowledge(
+            content=f"Herramienta disponible: {tool_name} - {tool_instance.description}",
+            category="tools",
+            source="tool_registration",
+            confidence=1.0,
+            tags=["tool", "capability", tool_name]
+        )
+    
+    def execute_phase(self, task: Task, phase: TaskPhase) -> PhaseExecutionResult:
+        """Ejecuta una fase de tarea usando herramientas reales"""
+        
+        # Generar plan de ejecución para la fase
+        execution_plan = self._generate_execution_plan(task, phase)
+        
+        # Ejecutar el plan paso a paso
+        results = []
+        for step in execution_plan.steps:
+            try:
+                step_result = self._execute_step(step)
+                results.append(step_result)
+                
+                # Verificar si el paso fue exitoso
+                if not step_result.success:
+                    return self._handle_step_failure(step, step_result, results)
+                    
+            except Exception as e:
+                return PhaseExecutionResult(
+                    success=False,
+                    error_message=f"Error ejecutando paso {step.id}: {str(e)}",
+                    partial_results=results
+                )
+        
+        # Verificar si la fase está completa
+        completion_check = self._verify_phase_completion(task, phase, results)
+        
+        return PhaseExecutionResult(
+            success=completion_check.is_complete,
+            results=results,
+            completion_evidence=completion_check.evidence,
+            next_actions=completion_check.next_actions if not completion_check.is_complete else []
+        )
+    
+    def _generate_execution_plan(self, task: Task, phase: TaskPhase) -> ExecutionPlan:
+        """Genera un plan de ejecución detallado para la fase"""
+        
+        # Construir contexto para planificación
+        planning_context = {
+            'task_goal': task.goal,
+            'task_description': task.description,
+            'phase_title': phase.title,
+            'phase_description': phase.description,
+            'required_capabilities': phase.required_capabilities,
+            'available_tools': list(self.available_tools.keys()),
+            'tool_descriptions': {
+                name: tool.description 
+                for name, tool in self.available_tools.items()
+            }
+        }
+        
+        # Generar plan usando LLM
+        planning_prompt = self._build_planning_prompt(planning_context)
+        
+        # Seleccionar modelo apropiado para planificación
+        planning_model = self.model_manager.select_best_model(
+            task_type="planning",
+            max_cost=0.02
+        )
+        
+        plan_response = self.model_manager.generate_response(
+            planning_prompt,
+            model=planning_model,
+            max_tokens=2000,
+            temperature=0.3
+        )
+        
+        # Parsear el plan
+        execution_plan = self._parse_execution_plan(plan_response)
+        
+        return execution_plan
+    
+    def _execute_step(self, step: ExecutionStep) -> StepExecutionResult:
+        """Ejecuta un paso individual del plan"""
+        
+        if step.tool_name not in self.available_tools:
+            return StepExecutionResult(
+                success=False,
+                error_message=f"Herramienta {step.tool_name} no disponible"
+            )
+        
+        tool = self.available_tools[step.tool_name]
+        
+        try:
+            # Ejecutar la herramienta
+            tool_result = tool.execute(step.parameters)
+            
+            # Registrar la ejecución
+            execution_record = {
+                'step_id': step.id,
+                'tool_name': step.tool_name,
+                'parameters': step.parameters,
+                'result': tool_result,
+                'timestamp': time.time(),
+                'success': tool_result.success if hasattr(tool_result, 'success') else True
+            }
+            
+            self.execution_history.append(execution_record)
+            
+            return StepExecutionResult(
+                success=True,
+                result=tool_result,
+                execution_time=execution_record['timestamp']
+            )
+            
+        except Exception as e:
+            return StepExecutionResult(
+                success=False,
+                error_message=str(e),
+                execution_time=time.time()
+            )
+```
+
+**B. Sistema de Verificación de Completitud**
+
+```python
+class PhaseCompletionVerifier:
+    def __init__(self, model_manager):
+        self.model_manager = model_manager
+    
+    def verify_completion(self, task: Task, phase: TaskPhase, 
+                         execution_results: List[StepExecutionResult]) -> CompletionCheck:
+        """Verifica si una fase ha sido completada exitosamente"""
+        
+        # Construir evidencia de ejecución
+        evidence = self._collect_evidence(execution_results)
+        
+        # Generar prompt de verificación
+        verification_prompt = self._build_verification_prompt(
+            task, phase, evidence
+        )
+        
+        # Usar LLM para verificar completitud
+        verification_model = self.model_manager.select_best_model(
+            task_type="analysis",
+            max_cost=0.01
+        )
+        
+        verification_response = self.model_manager.generate_response(
+            verification_prompt,
+            model=verification_model,
+            max_tokens=500,
+            temperature=0.2
+        )
+        
+        # Parsear respuesta de verificación
+        completion_check = self._parse_verification_response(verification_response)
+        
+        return completion_check
+    
+    def _collect_evidence(self, execution_results: List[StepExecutionResult]) -> Dict[str, Any]:
+        """Recopila evidencia de la ejecución para verificación"""
+        evidence = {
+            'total_steps': len(execution_results),
+            'successful_steps': len([r for r in execution_results if r.success]),
+            'failed_steps': len([r for r in execution_results if not r.success]),
+            'step_results': [],
+            'artifacts_created': [],
+            'errors_encountered': []
+        }
+        
+        for result in execution_results:
+            step_evidence = {
+                'success': result.success,
+                'has_output': bool(result.result),
+                'execution_time': result.execution_time
+            }
+            
+            if result.success and result.result:
+                # Analizar el resultado para identificar artefactos
+                if hasattr(result.result, 'files_created'):
+                    evidence['artifacts_created'].extend(result.result.files_created)
+                
+                if hasattr(result.result, 'data_generated'):
+                    step_evidence['data_generated'] = True
+            
+            if not result.success:
+                evidence['errors_encountered'].append(result.error_message)
+            
+            evidence['step_results'].append(step_evidence)
+        
+        return evidence
+```
+
+### 2.2 Sistema de Auto-corrección y Adaptación
+
+**Problema Abordado:** El agente actual no puede aprender de sus errores ni adaptar su comportamiento basándose en la experiencia.
+
+**Solución Propuesta:** Implementar un sistema de auto-corrección que permita al agente detectar errores, reflexionar sobre las causas y adaptar su estrategia.
+
+#### Componentes de la Solución:
+
+**A. Motor de Auto-corrección (SelfCorrectionEngine)**
+
+```python
+class SelfCorrectionEngine:
+    def __init__(self, model_manager, memory_manager, tool_execution_engine):
+        self.model_manager = model_manager
+        self.memory_manager = memory_manager
+        self.tool_execution_engine = tool_execution_engine
         self.correction_strategies = {
             'tool_failure': ToolFailureCorrectionStrategy(),
             'incomplete_result': IncompleteResultCorrectionStrategy(),
-            'context_mismatch': ContextMismatchCorrectionStrategy(),
-            'verification_failure': VerificationFailureCorrectionStrategy()
+            'quality_issue': QualityIssueCorrectionStrategy(),
+            'timeout': TimeoutCorrectionStrategy()
         }
     
-    async def handle_execution_failure(self, failed_step: Dict[str, Any], 
-                                     failure_context: Dict[str, Any]) -> CorrectionPlan:
-        """Maneja fallo de ejecución con corrección inteligente"""
+    def handle_phase_failure(self, task: Task, phase: TaskPhase, 
+                           failure_result: PhaseExecutionResult) -> CorrectionPlan:
+        """Maneja el fallo de una fase y genera un plan de corrección"""
         
-        # 1. Analizar patrón de fallo
-        failure_pattern = await self.pattern_analyzer.analyze_failure_pattern(
-            failed_step, failure_context, self.execution_engine.execution_history
+        # Analizar la causa del fallo
+        failure_analysis = self._analyze_failure(task, phase, failure_result)
+        
+        # Seleccionar estrategia de corrección
+        correction_strategy = self._select_correction_strategy(failure_analysis)
+        
+        # Generar plan de corrección
+        correction_plan = correction_strategy.generate_correction_plan(
+            task=task,
+            phase=phase,
+            failure_analysis=failure_analysis,
+            available_tools=self.tool_execution_engine.available_tools
         )
         
-        # 2. Buscar experiencias similares exitosas en memoria
-        similar_successes = await self.memory_manager.find_similar_successful_executions(
-            step_type=failed_step['tool'],
-            context_similarity=failure_context,
-            min_similarity=0.7
-        )
+        # Registrar el fallo y la estrategia en memoria
+        self._record_failure_and_correction(task, phase, failure_analysis, correction_plan)
         
-        # 3. Generar estrategia de corrección basada en aprendizaje
-        correction_strategy = self.correction_strategies.get(
-            failure_pattern.failure_type
-        )
-        
-        correction_plan = await correction_strategy.generate_plan(
-            failed_step=failed_step,
-            failure_pattern=failure_pattern,
-            successful_examples=similar_successes,
-            available_alternatives=self._get_alternative_approaches(failed_step)
-        )
-        
-        # 4. Ejecutar corrección
-        correction_result = await self._execute_correction_plan(correction_plan)
-        
-        # 5. Aprender de la corrección para futuras mejoras
-        await self._learn_from_correction(
-            failure_pattern, correction_plan, correction_result
-        )
-        
-        return correction_result
+        return correction_plan
     
-    async def _learn_from_correction(self, failure_pattern: FailurePattern, 
-                                   correction_plan: CorrectionPlan,
-                                   correction_result: CorrectionResult):
-        """Aprende de correcciones para mejorar futuras estrategias"""
+    def _analyze_failure(self, task: Task, phase: TaskPhase, 
+                        failure_result: PhaseExecutionResult) -> FailureAnalysis:
+        """Analiza las causas del fallo de una fase"""
         
-        learning_episode = {
-            'type': 'self_correction',
-            'failure_pattern': failure_pattern,
-            'correction_applied': correction_plan,
-            'success': correction_result.success,
-            'improvement_achieved': correction_result.improvement_score,
-            'timestamp': datetime.now()
+        analysis_context = {
+            'task_context': {
+                'title': task.title,
+                'goal': task.goal,
+                'description': task.description
+            },
+            'phase_context': {
+                'title': phase.title,
+                'description': phase.description,
+                'required_capabilities': phase.required_capabilities
+            },
+            'failure_details': {
+                'error_message': failure_result.error_message,
+                'partial_results': failure_result.partial_results,
+                'execution_history': self.tool_execution_engine.execution_history[-10:]  # Últimas 10 ejecuciones
+            }
         }
         
-        # Almacenar en memoria procedimental
-        await self.memory_manager.store_procedural_knowledge(
-            procedure_type='error_correction',
-            pattern=failure_pattern.to_dict(),
-            successful_strategy=correction_plan.to_dict() if correction_result.success else None,
-            effectiveness_score=correction_result.improvement_score
+        # Generar prompt de análisis
+        analysis_prompt = self._build_failure_analysis_prompt(analysis_context)
+        
+        # Usar LLM para analizar el fallo
+        analysis_model = self.model_manager.select_best_model(
+            task_type="analysis",
+            max_cost=0.015
         )
+        
+        analysis_response = self.model_manager.generate_response(
+            analysis_prompt,
+            model=analysis_model,
+            max_tokens=1000,
+            temperature=0.4
+        )
+        
+        # Parsear análisis
+        failure_analysis = self._parse_failure_analysis(analysis_response)
+        
+        return failure_analysis
+    
+    def execute_correction_plan(self, correction_plan: CorrectionPlan, 
+                              task: Task, phase: TaskPhase) -> PhaseExecutionResult:
+        """Ejecuta un plan de corrección"""
+        
+        correction_results = []
+        
+        for correction_action in correction_plan.actions:
+            try:
+                action_result = self._execute_correction_action(correction_action)
+                correction_results.append(action_result)
+                
+                if not action_result.success:
+                    # Si una acción de corrección falla, intentar estrategia alternativa
+                    alternative_result = self._try_alternative_correction(
+                        correction_action, task, phase
+                    )
+                    if alternative_result:
+                        correction_results.append(alternative_result)
+                
+            except Exception as e:
+                correction_results.append(CorrectionActionResult(
+                    success=False,
+                    error_message=f"Error ejecutando corrección: {str(e)}"
+                ))
+        
+        # Verificar si las correcciones resolvieron el problema
+        if all(r.success for r in correction_results):
+            # Reintentar la ejecución de la fase
+            return self.tool_execution_engine.execute_phase(task, phase)
+        else:
+            # Las correcciones no fueron suficientes
+            return PhaseExecutionResult(
+                success=False,
+                error_message="Las correcciones aplicadas no resolvieron el problema",
+                correction_attempts=correction_results
+            )
 ```
 
-**Implementación Requerida**:
-- Crear `/app/backend/src/correction/intelligent_self_correction_engine.py`
-- Crear `/app/backend/src/correction/pattern_analyzer.py`
-- Integrar en `agent_routes.py` líneas ~540-570 para manejo de errores
-
----
-
-## 3. BUCLE DE RAZONAMIENTO PROACTIVO Y ADAPTATIVO
-
-### 3.1 Sistema de Razonamiento Continuo
-
-**Problema**: El agente solo reacciona, no analiza proactivamente la situación ni toma iniciativa.
-
-**Solución**: Implementar `ProactiveReasoningEngine` que evalúe continuamente el estado y tome acciones autónomas.
+**B. Estrategias de Corrección Especializadas**
 
 ```python
-# Archivo: /app/backend/src/reasoning/proactive_reasoning_engine.py
-class ProactiveReasoningEngine:
-    def __init__(self, memory_manager, context_manager, execution_engine):
-        self.memory_manager = memory_manager
-        self.context_manager = context_manager
-        self.execution_engine = execution_engine
-        self.reasoning_cycles = 0
-        self.active_insights = []
+class ToolFailureCorrectionStrategy:
+    def generate_correction_plan(self, task: Task, phase: TaskPhase, 
+                               failure_analysis: FailureAnalysis, 
+                               available_tools: Dict[str, BaseTool]) -> CorrectionPlan:
+        """Genera plan de corrección para fallos de herramientas"""
         
-        # Configurar bucle de razonamiento
-        self.reasoning_loop = None
-        self.is_running = False
+        actions = []
         
-    async def start_reasoning_loop(self, interval_seconds: int = 30):
-        """Inicia el bucle de razonamiento proactivo"""
-        if self.is_running:
-            return
-            
-        self.is_running = True
-        self.reasoning_loop = asyncio.create_task(
-            self._reasoning_loop_task(interval_seconds)
+        # Identificar herramienta que falló
+        failed_tool = failure_analysis.failed_tool
+        
+        # Estrategia 1: Intentar herramienta alternativa
+        alternative_tools = self._find_alternative_tools(
+            failed_tool, phase.required_capabilities, available_tools
         )
         
-    async def _reasoning_loop_task(self, interval: int):
-        """Tarea del bucle de razonamiento continuo"""
-        while self.is_running:
-            try:
-                await self._execute_reasoning_cycle()
-                await asyncio.sleep(interval)
-            except Exception as e:
-                logger.error(f"Error en ciclo de razonamiento: {e}")
-                await asyncio.sleep(interval * 2)  # Backoff en caso de error
-                
-    async def _execute_reasoning_cycle(self):
-        """Ejecuta un ciclo completo de razonamiento proactivo"""
-        self.reasoning_cycles += 1
-        
-        # 1. Análisis del Estado Actual
-        current_state = await self._analyze_current_state()
-        
-        # 2. Identificación de Oportunidades de Mejora
-        improvement_opportunities = await self._identify_improvement_opportunities(
-            current_state
-        )
-        
-        # 3. Evaluación de Acciones Proactivas Posibles
-        proactive_actions = await self._evaluate_proactive_actions(
-            improvement_opportunities
-        )
-        
-        # 4. Ejecución de Acciones Prioritarias
-        if proactive_actions:
-            await self._execute_priority_actions(proactive_actions[:3])  # Top 3
-        
-        # 5. Reflexión sobre Resultados
-        await self._reflect_on_cycle_results(current_state, proactive_actions)
-        
-    async def _analyze_current_state(self) -> SystemState:
-        """Analiza el estado actual del sistema y contexto"""
-        
-        # Obtener métricas de rendimiento reciente
-        performance_metrics = await self.memory_manager.get_recent_performance_metrics(
-            days=7
-        )
-        
-        # Analizar patrones en memoria episódica
-        recent_episodes = await self.memory_manager.get_recent_episodes(
-            limit=20,
-            include_failed=True
-        )
-        
-        # Evaluar efectividad de herramientas
-        tool_effectiveness = await self._evaluate_tool_effectiveness()
-        
-        # Identificar conocimiento faltante
-        knowledge_gaps = await self._identify_knowledge_gaps(recent_episodes)
-        
-        return SystemState(
-            performance_metrics=performance_metrics,
-            recent_episodes=recent_episodes,
-            tool_effectiveness=tool_effectiveness,
-            knowledge_gaps=knowledge_gaps,
-            timestamp=datetime.now()
-        )
-    
-    async def _identify_improvement_opportunities(self, state: SystemState) -> List[ImprovementOpportunity]:
-        """Identifica oportunidades de mejora específicas"""
-        opportunities = []
-        
-        # 1. Herramientas con baja efectividad
-        for tool_name, effectiveness in state.tool_effectiveness.items():
-            if effectiveness < 0.6:
-                opportunities.append(ImprovementOpportunity(
-                    type='tool_optimization',
-                    priority=0.8,
-                    description=f'Optimizar uso de herramienta {tool_name}',
-                    target=tool_name,
-                    potential_improvement=0.4
-                ))
-        
-        # 2. Gaps de conocimiento frecuentes
-        for gap in state.knowledge_gaps:
-            if gap.frequency > 3:
-                opportunities.append(ImprovementOpportunity(
-                    type='knowledge_acquisition',
-                    priority=0.7,
-                    description=f'Adquirir conocimiento sobre {gap.topic}',
-                    target=gap.topic,
-                    potential_improvement=0.3
-                ))
-        
-        # 3. Patrones de error recurrentes
-        error_patterns = self._analyze_error_patterns(state.recent_episodes)
-        for pattern in error_patterns:
-            opportunities.append(ImprovementOpportunity(
-                type='error_prevention',
-                priority=0.9,
-                description=f'Prevenir patrón de error: {pattern.description}',
-                target=pattern,
-                potential_improvement=0.5
+        if alternative_tools:
+            actions.append(CorrectionAction(
+                type="switch_tool",
+                description=f"Cambiar de {failed_tool} a {alternative_tools[0]}",
+                parameters={
+                    "original_tool": failed_tool,
+                    "alternative_tool": alternative_tools[0]
+                }
             ))
         
-        return sorted(opportunities, key=lambda x: x.priority, reverse=True)
+        # Estrategia 2: Ajustar parámetros de la herramienta
+        if failure_analysis.error_type == "parameter_error":
+            actions.append(CorrectionAction(
+                type="adjust_parameters",
+                description="Ajustar parámetros de la herramienta",
+                parameters={
+                    "tool": failed_tool,
+                    "suggested_adjustments": failure_analysis.suggested_parameter_fixes
+                }
+            ))
+        
+        # Estrategia 3: Dividir la tarea en pasos más pequeños
+        actions.append(CorrectionAction(
+            type="decompose_task",
+            description="Dividir la fase en pasos más pequeños",
+            parameters={
+                "original_phase": phase,
+                "decomposition_strategy": "incremental"
+            }
+        ))
+        
+        return CorrectionPlan(
+            strategy_name="tool_failure_correction",
+            actions=actions,
+            estimated_success_probability=0.7
+        )
 ```
 
-**Implementación Requerida**:
-- Crear `/app/backend/src/reasoning/proactive_reasoning_engine.py`
-- Crear `/app/backend/src/reasoning/system_state.py`
-- Integrar en `main.py` para iniciar bucle al arrancar el sistema
+## 3. Mejora del Sistema de Memoria y Aprendizaje
 
-### 3.2 Sistema de Toma de Decisiones Autónomas
+### 3.1 Sistema de Memoria Episódica Avanzada
 
-**Problema**: El agente no puede tomar decisiones complejas sin intervención explícita.
+**Problema Abordado:** El sistema actual de memoria no captura ni utiliza eficientemente las experiencias de ejecución para mejorar el rendimiento futuro.
 
-**Solución**: Implementar `AutonomousDecisionMaker` que evalúe opciones y tome decisiones basadas en objetivos.
+**Solución Propuesta:** Implementar un sistema de memoria episódica que capture experiencias completas de ejecución y las utilice para mejorar la planificación y ejecución futuras.
+
+#### Componentes de la Solución:
+
+**A. Gestor de Memoria Episódica (EpisodicMemoryManager)**
 
 ```python
-# Archivo: /app/backend/src/reasoning/autonomous_decision_maker.py
-class AutonomousDecisionMaker:
-    def __init__(self, memory_manager, goal_manager, risk_assessor):
+class EpisodicMemoryManager:
+    def __init__(self, memory_manager, model_manager):
         self.memory_manager = memory_manager
-        self.goal_manager = goal_manager
-        self.risk_assessor = risk_assessor
-        self.decision_history = []
-        
-    async def make_autonomous_decision(self, decision_context: DecisionContext) -> Decision:
-        """Toma decisión autónoma basada en contexto y objetivos"""
-        
-        # 1. Evaluar opciones disponibles
-        available_options = await self._evaluate_available_options(decision_context)
-        
-        # 2. Analizar riesgos y beneficios
-        risk_analysis = await self.risk_assessor.analyze_options(
-            available_options, decision_context
-        )
-        
-        # 3. Considerar objetivos actuales
-        current_goals = await self.goal_manager.get_active_goals()
-        goal_alignment = await self._assess_goal_alignment(
-            available_options, current_goals
-        )
-        
-        # 4. Consultar experiencias pasadas similares
-        similar_decisions = await self.memory_manager.find_similar_decisions(
-            decision_context, min_similarity=0.6
-        )
-        
-        # 5. Calcular score de decisión para cada opción
-        decision_scores = {}
-        for option in available_options:
-            score = await self._calculate_decision_score(
-                option=option,
-                risk_analysis=risk_analysis.get(option.id),
-                goal_alignment=goal_alignment.get(option.id),
-                similar_decisions=similar_decisions,
-                context=decision_context
-            )
-            decision_scores[option.id] = score
-        
-        # 6. Seleccionar mejor opción
-        best_option_id = max(decision_scores.keys(), key=lambda x: decision_scores[x])
-        best_option = next(opt for opt in available_options if opt.id == best_option_id)
-        
-        # 7. Crear decisión con justificación
-        decision = Decision(
-            selected_option=best_option,
-            confidence=decision_scores[best_option_id],
-            reasoning=self._generate_decision_reasoning(
-                best_option, decision_scores, risk_analysis, goal_alignment
-            ),
-            context=decision_context,
-            timestamp=datetime.now()
-        )
-        
-        # 8. Registrar decisión para aprendizaje futuro
-        self.decision_history.append(decision)
-        await self.memory_manager.store_decision_record(decision)
-        
-        return decision
+        self.model_manager = model_manager
+        self.episode_patterns = {}
+        self.success_patterns = {}
     
-    async def _calculate_decision_score(self, option: DecisionOption, 
-                                      risk_analysis: RiskAssessment,
-                                      goal_alignment: GoalAlignment,
-                                      similar_decisions: List[DecisionRecord],
-                                      context: DecisionContext) -> float:
-        """Calcula score de decisión multifactorial"""
+    def record_episode(self, task: Task, execution_trace: ExecutionTrace, 
+                      outcome: TaskOutcome) -> str:
+        """Registra un episodio completo de ejecución"""
         
-        # Factores de scoring
-        risk_score = 1.0 - risk_analysis.risk_level  # Menor riesgo = mayor score
-        goal_score = goal_alignment.alignment_score
-        experience_score = self._calculate_experience_score(similar_decisions, option)
-        feasibility_score = option.feasibility
-        impact_score = option.expected_impact
-        
-        # Pesos por contexto
-        weights = self._get_context_weights(context)
-        
-        # Score ponderado
-        final_score = (
-            weights['risk'] * risk_score +
-            weights['goal'] * goal_score +
-            weights['experience'] * experience_score +
-            weights['feasibility'] * feasibility_score +
-            weights['impact'] * impact_score
+        episode = Episode(
+            id=str(uuid.uuid4()),
+            task_context={
+                'title': task.title,
+                'goal': task.goal,
+                'description': task.description,
+                'domain': self._extract_domain(task)
+            },
+            execution_trace=execution_trace,
+            outcome=outcome,
+            timestamp=time.time(),
+            success=outcome.success,
+            quality_score=outcome.quality_score
         )
         
-        return min(1.0, max(0.0, final_score))  # Normalizar entre 0-1
+        # Extraer patrones del episodio
+        patterns = self._extract_patterns(episode)
+        
+        # Guardar episodio en memoria a largo plazo
+        self.memory_manager.add_knowledge(
+            content=f"Episodio de ejecución: {episode.task_context['title']} - Éxito: {episode.success}",
+            category="episodes",
+            source="episodic_memory",
+            confidence=episode.quality_score,
+            tags=["episode", "execution", episode.task_context['domain']]
+        )
+        
+        # Actualizar patrones de éxito/fallo
+        self._update_patterns(patterns, episode.success)
+        
+        return episode.id
+    
+    def retrieve_similar_episodes(self, current_task: Task, 
+                                current_phase: TaskPhase, 
+                                limit: int = 5) -> List[Episode]:
+        """Recupera episodios similares para informar la ejecución actual"""
+        
+        # Extraer características de la tarea/fase actual
+        current_features = self._extract_task_features(current_task, current_phase)
+        
+        # Buscar episodios similares
+        similar_episodes = self._search_similar_episodes(current_features, limit)
+        
+        # Ordenar por relevancia y éxito
+        similar_episodes.sort(
+            key=lambda e: (e.success, e.quality_score, e.relevance_score),
+            reverse=True
+        )
+        
+        return similar_episodes
+    
+    def get_success_recommendations(self, task: Task, 
+                                  phase: TaskPhase) -> List[Recommendation]:
+        """Obtiene recomendaciones basadas en episodios exitosos similares"""
+        
+        similar_episodes = self.retrieve_similar_episodes(task, phase)
+        successful_episodes = [e for e in similar_episodes if e.success]
+        
+        if not successful_episodes:
+            return []
+        
+        recommendations = []
+        
+        # Analizar patrones comunes en episodios exitosos
+        common_patterns = self._find_common_patterns(successful_episodes)
+        
+        for pattern in common_patterns:
+            recommendation = Recommendation(
+                type=pattern.type,
+                description=pattern.description,
+                confidence=pattern.frequency / len(successful_episodes),
+                supporting_episodes=[e.id for e in successful_episodes if pattern in e.patterns]
+            )
+            recommendations.append(recommendation)
+        
+        return recommendations
 ```
 
-**Implementación Requerida**:
-- Crear `/app/backend/src/reasoning/autonomous_decision_maker.py`
-- Crear `/app/backend/src/reasoning/goal_manager.py`
-- Crear `/app/backend/src/reasoning/risk_assessor.py`
-- Integrar en motor de ejecución de tareas
+### 3.2 Sistema de Aprendizaje Continuo
 
----
+**Problema Abordado:** El agente no mejora su rendimiento con la experiencia ni adapta sus estrategias basándose en los resultados obtenidos.
 
-## 4. INTEGRACIÓN AVANZADA DE MEMORIA A LARGO PLAZO
+**Solución Propuesta:** Implementar un sistema de aprendizaje continuo que analice patrones de éxito y fallo para mejorar automáticamente las estrategias del agente.
 
-### 4.1 Sistema de Recuperación Contextual Inteligente
+#### Componentes de la Solución:
 
-**Problema**: La memoria se almacena pero no se integra activamente en el razonamiento.
-
-**Solución**: Mejorar `AdvancedMemoryManager` con recuperación contextual inteligente y síntesis automática.
+**A. Motor de Aprendizaje Continuo (ContinuousLearningEngine)**
 
 ```python
-# Modificación: /app/backend/src/memory/advanced_memory_manager.py
-# Agregar métodos mejorados
-
-class AdvancedMemoryManager:
-    # ... código existente ...
-    
-    async def retrieve_intelligent_context(self, query: str, task_type: str,
-                                         max_context_tokens: int = 2000) -> IntelligentContext:
-        """Recupera contexto inteligente optimizado para la consulta específica"""
-        
-        # 1. Búsqueda semántica inteligente
-        semantic_results = await self.semantic_indexer.intelligent_search(
-            query=query,
-            filters={'task_type': task_type},
-            max_results=15,
-            relevance_threshold=0.6
-        )
-        
-        # 2. Recuperación episódica contextual
-        similar_episodes = await self.episodic_memory.find_contextually_similar(
-            query=query,
-            context_type=task_type,
-            max_episodes=10,
-            similarity_threshold=0.5
-        )
-        
-        # 3. Conocimiento procedimental aplicable
-        applicable_procedures = await self.procedural_memory.get_applicable_procedures(
-            task_type=task_type,
-            context=query,
-            min_effectiveness=0.6
-        )
-        
-        # 4. Síntesis inteligente de contexto
-        synthesized_context = await self._synthesize_intelligent_context(
-            semantic_results=semantic_results,
-            episodic_context=similar_episodes,
-            procedural_knowledge=applicable_procedures,
-            query=query,
-            max_tokens=max_context_tokens
-        )
-        
-        return IntelligentContext(
-            synthesized_context=synthesized_context,
-            source_episodes=similar_episodes,
-            relevant_procedures=applicable_procedures,
-            semantic_knowledge=semantic_results,
-            relevance_score=self._calculate_context_relevance(synthesized_context, query)
-        )
-    
-    async def _synthesize_intelligent_context(self, semantic_results: List[dict],
-                                            episodic_context: List[Episode],
-                                            procedural_knowledge: List[Procedure],
-                                            query: str, max_tokens: int) -> str:
-        """Sintetiza contexto inteligente desde múltiples fuentes de memoria"""
-        
-        context_sections = []
-        token_count = 0
-        
-        # 1. Experiencias exitosas más relevantes
-        if episodic_context:
-            successful_episodes = [ep for ep in episodic_context if ep.success][:3]
-            if successful_episodes:
-                episodes_summary = self._summarize_successful_episodes(successful_episodes)
-                context_sections.append(f"Experiencias exitosas relevantes:\n{episodes_summary}")
-                token_count += len(episodes_summary.split())
-        
-        # 2. Conocimiento procedimental aplicable
-        if procedural_knowledge and token_count < max_tokens * 0.6:
-            procedures_summary = self._summarize_applicable_procedures(procedural_knowledge)
-            context_sections.append(f"Procedimientos aplicables:\n{procedures_summary}")
-            token_count += len(procedures_summary.split())
-        
-        # 3. Conocimiento semántico relevante
-        if semantic_results and token_count < max_tokens * 0.8:
-            remaining_tokens = max_tokens - token_count
-            semantic_summary = self._summarize_semantic_knowledge(
-                semantic_results, max_tokens=remaining_tokens
-            )
-            context_sections.append(f"Conocimiento relevante:\n{semantic_summary}")
-        
-        return "\n\n".join(context_sections)
-    
-    async def learn_from_context_usage(self, context: IntelligentContext, 
-                                     query: str, success: bool, quality_score: float):
-        """Aprende de cómo se usó el contexto para mejorarlo futuro"""
-        
-        # Actualizar efectividad de episodios utilizados
-        for episode in context.source_episodes:
-            effectiveness_delta = 0.1 if success else -0.05
-            await self.episodic_memory.update_episode_effectiveness(
-                episode.id, effectiveness_delta
-            )
-        
-        # Actualizar efectividad de procedimientos
-        for procedure in context.relevant_procedures:
-            if success:
-                await self.procedural_memory.update_procedure_success(
-                    procedure.id, success=True, execution_time=None
-                )
-        
-        # Crear nuevo conocimiento si el contexto fue muy exitoso
-        if success and quality_score > 0.8:
-            new_knowledge = SemanticFact(
-                id=f"context_success_{datetime.now().timestamp()}",
-                subject=query[:50],
-                predicate="benefits_from_context",
-                object=context.synthesized_context[:100],
-                confidence=quality_score,
-                source="context_learning"
-            )
-            await self.semantic_memory.store_fact(new_knowledge)
-```
-
-**Implementación Requerida**:
-- Modificar `/app/backend/src/memory/advanced_memory_manager.py` (agregar métodos)
-- Crear `/app/backend/src/memory/intelligent_context.py`
-- Integrar en `agent_routes.py` para usar contexto inteligente en todas las respuestas
-
-### 4.2 Sistema de Aprendizaje Continuo Avanzado
-
-**Problema**: El sistema no mejora automáticamente con la experiencia acumulada.
-
-**Solución**: Implementar `ContinuousLearningEngine` que analice patrones y actualice estrategias automáticamente.
-
-```python
-# Archivo: /app/backend/src/learning/continuous_learning_engine.py
 class ContinuousLearningEngine:
-    def __init__(self, memory_manager, pattern_analyzer, strategy_optimizer):
+    def __init__(self, episodic_memory, model_manager, memory_manager):
+        self.episodic_memory = episodic_memory
+        self.model_manager = model_manager
         self.memory_manager = memory_manager
-        self.pattern_analyzer = pattern_analyzer
-        self.strategy_optimizer = strategy_optimizer
         self.learning_cycles = 0
-        self.insights_generated = []
+        self.performance_trends = {}
+    
+    def run_learning_cycle(self):
+        """Ejecuta un ciclo de aprendizaje para mejorar las estrategias del agente"""
         
-    async def run_learning_cycle(self, depth: str = 'standard'):
-        """Ejecuta ciclo de aprendizaje continuo"""
         self.learning_cycles += 1
         
-        # 1. Análisis de Patrones en Datos Recientes
-        recent_data = await self._collect_learning_data(days=14)
-        patterns = await self.pattern_analyzer.analyze_comprehensive_patterns(recent_data)
+        # Analizar episodios recientes
+        recent_episodes = self._get_recent_episodes(days=7)
         
-        # 2. Identificación de Insights Accionables
-        actionable_insights = await self._extract_actionable_insights(patterns)
+        if len(recent_episodes) < 10:  # Necesitamos suficientes datos
+            return
         
-        # 3. Optimización de Estrategias
-        strategy_updates = []
-        for insight in actionable_insights:
-            if insight.confidence > 0.7:
-                updates = await self.strategy_optimizer.optimize_based_on_insight(insight)
-                strategy_updates.extend(updates)
+        # Identificar patrones de éxito y fallo
+        success_patterns = self._analyze_success_patterns(recent_episodes)
+        failure_patterns = self._analyze_failure_patterns(recent_episodes)
         
-        # 4. Aplicación de Mejoras
-        applied_improvements = await self._apply_strategy_improvements(strategy_updates)
-        
-        # 5. Validación de Mejoras
-        improvement_validation = await self._validate_improvements(applied_improvements)
-        
-        # 6. Registro de Aprendizaje
-        learning_record = LearningRecord(
-            cycle_id=self.learning_cycles,
-            patterns_found=len(patterns),
-            insights_generated=len(actionable_insights),
-            improvements_applied=len(applied_improvements),
-            validation_results=improvement_validation,
-            timestamp=datetime.now()
+        # Generar insights de aprendizaje
+        learning_insights = self._generate_learning_insights(
+            success_patterns, failure_patterns
         )
         
-        await self.memory_manager.store_learning_record(learning_record)
+        # Actualizar estrategias basándose en insights
+        strategy_updates = self._update_strategies(learning_insights)
         
-        return learning_record
+        # Registrar aprendizajes en memoria
+        self._record_learning_insights(learning_insights, strategy_updates)
+        
+        # Actualizar tendencias de rendimiento
+        self._update_performance_trends(recent_episodes)
     
-    async def _extract_actionable_insights(self, patterns: List[Pattern]) -> List[ActionableInsight]:
-        """Extrae insights accionables de los patrones identificados"""
+    def _analyze_success_patterns(self, episodes: List[Episode]) -> List[Pattern]:
+        """Analiza patrones en episodios exitosos"""
+        
+        successful_episodes = [e for e in episodes if e.success and e.quality_score > 0.7]
+        
+        if not successful_episodes:
+            return []
+        
+        # Extraer características comunes
+        common_features = self._extract_common_features(successful_episodes)
+        
+        patterns = []
+        for feature, frequency in common_features.items():
+            if frequency / len(successful_episodes) > 0.6:  # Aparece en >60% de casos exitosos
+                pattern = Pattern(
+                    type="success_factor",
+                    feature=feature,
+                    frequency=frequency,
+                    confidence=frequency / len(successful_episodes),
+                    description=f"Factor de éxito: {feature}"
+                )
+                patterns.append(pattern)
+        
+        return patterns
+    
+    def _generate_learning_insights(self, success_patterns: List[Pattern], 
+                                  failure_patterns: List[Pattern]) -> List[LearningInsight]:
+        """Genera insights de aprendizaje basándose en patrones identificados"""
+        
         insights = []
         
-        for pattern in patterns:
-            if pattern.strength > 0.6:  # Patrón suficientemente fuerte
-                
-                # Insight sobre herramientas
-                if pattern.type == 'tool_usage':
-                    insight = ActionableInsight(
-                        type='tool_optimization',
-                        description=f'Herramienta {pattern.subject} muestra {pattern.trend}',
-                        recommended_action=self._generate_tool_recommendation(pattern),
-                        confidence=pattern.strength,
-                        potential_impact=self._estimate_tool_impact(pattern)
-                    )
-                    insights.append(insight)
-                
-                # Insight sobre contextos exitosos
-                elif pattern.type == 'success_context':
-                    insight = ActionableInsight(
-                        type='context_strategy',
-                        description=f'Contexto {pattern.subject} correlaciona con éxito',
-                        recommended_action=self._generate_context_recommendation(pattern),
-                        confidence=pattern.strength,
-                        potential_impact=self._estimate_context_impact(pattern)
-                    )
-                    insights.append(insight)
-                
-                # Insight sobre prevención de errores
-                elif pattern.type == 'error_prevention':
-                    insight = ActionableInsight(
-                        type='error_prevention',
-                        description=f'Patrón de error identificado: {pattern.subject}',
-                        recommended_action=self._generate_prevention_recommendation(pattern),
-                        confidence=pattern.strength,
-                        potential_impact=self._estimate_prevention_impact(pattern)
-                    )
-                    insights.append(insight)
+        # Insight 1: Herramientas más efectivas
+        tool_success_rates = self._calculate_tool_success_rates(success_patterns, failure_patterns)
+        for tool, success_rate in tool_success_rates.items():
+            if success_rate > 0.8:
+                insights.append(LearningInsight(
+                    type="tool_preference",
+                    content=f"La herramienta {tool} tiene una tasa de éxito del {success_rate:.1%}",
+                    confidence=success_rate,
+                    actionable_recommendation=f"Priorizar el uso de {tool} para tareas similares"
+                ))
         
-        return sorted(insights, key=lambda x: x.potential_impact, reverse=True)
+        # Insight 2: Estrategias de planificación efectivas
+        planning_patterns = [p for p in success_patterns if p.type == "planning_strategy"]
+        for pattern in planning_patterns:
+            if pattern.confidence > 0.7:
+                insights.append(LearningInsight(
+                    type="planning_strategy",
+                    content=f"Estrategia de planificación efectiva: {pattern.description}",
+                    confidence=pattern.confidence,
+                    actionable_recommendation=f"Aplicar {pattern.feature} en la planificación de tareas similares"
+                ))
+        
+        # Insight 3: Condiciones que predicen fallo
+        high_risk_patterns = [p for p in failure_patterns if p.confidence > 0.6]
+        for pattern in high_risk_patterns:
+            insights.append(LearningInsight(
+                type="risk_factor",
+                content=f"Factor de riesgo identificado: {pattern.description}",
+                confidence=pattern.confidence,
+                actionable_recommendation=f"Implementar verificaciones adicionales cuando se detecte {pattern.feature}"
+            ))
+        
+        return insights
     
-    async def _apply_strategy_improvements(self, strategy_updates: List[StrategyUpdate]) -> List[AppliedImprovement]:
-        """Aplica mejoras de estrategia al sistema"""
-        applied_improvements = []
+    def _update_strategies(self, learning_insights: List[LearningInsight]) -> List[StrategyUpdate]:
+        """Actualiza las estrategias del agente basándose en los insights de aprendizaje"""
         
-        for update in strategy_updates:
-            try:
-                # Aplicar mejora según el componente
-                if update.component == 'tool_selection':
-                    improvement = await self._apply_tool_selection_improvement(update)
-                elif update.component == 'context_building':
-                    improvement = await self._apply_context_building_improvement(update)
-                elif update.component == 'error_handling':
-                    improvement = await self._apply_error_handling_improvement(update)
-                elif update.component == 'prompt_optimization':
-                    improvement = await self._apply_prompt_optimization_improvement(update)
+        strategy_updates = []
+        
+        for insight in learning_insights:
+            if insight.confidence > 0.7:  # Solo aplicar insights con alta confianza
                 
-                if improvement and improvement.success:
-                    applied_improvements.append(improvement)
-                    
-            except Exception as e:
-                logger.error(f"Error aplicando mejora {update.id}: {e}")
+                if insight.type == "tool_preference":
+                    # Actualizar preferencias de herramientas
+                    update = StrategyUpdate(
+                        component="tool_selection",
+                        change_type="preference_adjustment",
+                        details={
+                            "tool": insight.content.split()[2],  # Extraer nombre de herramienta
+                            "new_priority": "high",
+                            "reason": insight.content
+                        }
+                    )
+                    strategy_updates.append(update)
+                
+                elif insight.type == "planning_strategy":
+                    # Actualizar estrategias de planificación
+                    update = StrategyUpdate(
+                        component="task_planning",
+                        change_type="strategy_enhancement",
+                        details={
+                            "enhancement": insight.actionable_recommendation,
+                            "confidence": insight.confidence
+                        }
+                    )
+                    strategy_updates.append(update)
+                
+                elif insight.type == "risk_factor":
+                    # Añadir verificaciones de riesgo
+                    update = StrategyUpdate(
+                        component="risk_management",
+                        change_type="add_verification",
+                        details={
+                            "risk_pattern": insight.content,
+                            "verification_action": insight.actionable_recommendation
+                        }
+                    )
+                    strategy_updates.append(update)
         
-        return applied_improvements
+        return strategy_updates
 ```
 
-**Implementación Requerida**:
-- Crear `/app/backend/src/learning/continuous_learning_engine.py`
-- Crear `/app/backend/src/learning/pattern_analyzer.py`
-- Crear `/app/backend/src/learning/strategy_optimizer.py`
-- Integrar en bucle de razonamiento proactivo
+Estas mejoras transformarían el agente Mitosis de un sistema reactivo y frágil en un agente verdaderamente autónomo y adaptativo, capaz de aprender de la experiencia y mejorar continuamente su rendimiento. La implementación de estas soluciones requeriría un desarrollo incremental, comenzando con el sistema de contexto dinámico y progresando hacia las capacidades de aprendizaje más avanzadas.
 
----
-
-## 5. PLAN DE IMPLEMENTACIÓN DETALLADO
-
-### Fase 1: Fundamentos (Semana 1-2)
-**Prioridad**: Alta  
-**Objetivo**: Establecer sistemas base para mejoras avanzadas
-
-1. **Sistema de Contexto Inteligente**
-   - [ ] Crear `IntelligentContextManager` 
-   - [ ] Implementar estrategias de contexto especializadas
-   - [ ] Integrar con sistema de memoria existente
-   - [ ] Testing: Verificar mejora en calidad de respuestas
-
-2. **Motor de Ejecución Mejorado**
-   - [ ] Crear `EnhancedToolExecutionEngine`
-   - [ ] Implementar verificadores de completitud
-   - [ ] Integrar verificación en flujo de ejecución
-   - [ ] Testing: Verificar detección real de completitud
-
-### Fase 2: Razonamiento Proactivo (Semana 3-4)
-**Prioridad**: Alta  
-**Objetivo**: Implementar capacidades de razonamiento autónomo
-
-3. **Bucle de Razonamiento Proactivo**
-   - [ ] Crear `ProactiveReasoningEngine`
-   - [ ] Implementar análisis de estado del sistema
-   - [ ] Crear identificador de oportunidades de mejora
-   - [ ] Testing: Verificar detección y ejecución de acciones proactivas
-
-4. **Sistema de Decisiones Autónomas**
-   - [ ] Crear `AutonomousDecisionMaker`
-   - [ ] Implementar evaluación de riesgos y beneficios
-   - [ ] Crear gestor de objetivos
-   - [ ] Testing: Verificar calidad de decisiones autónomas
-
-### Fase 3: Aprendizaje Avanzado (Semana 5-6)
-**Prioridad**: Media  
-**Objetivo**: Implementar aprendizaje y mejora continua
-
-5. **Sistema de Prompts Adaptativos**
-   - [ ] Crear `AdaptivePromptGenerator`
-   - [ ] Implementar seguimiento de rendimiento
-   - [ ] Crear optimizaciones basadas en historial
-   - [ ] Testing: Verificar mejora en calidad de prompts
-
-6. **Sistema de Auto-corrección Inteligente**
-   - [ ] Crear `IntelligentSelfCorrectionEngine`
-   - [ ] Implementar análisis de patrones de error
-   - [ ] Crear estrategias de corrección especializadas
-   - [ ] Testing: Verificar capacidad de auto-corrección
-
-### Fase 4: Integración y Optimización (Semana 7-8)
-**Prioridad**: Media  
-**Objetivo**: Integrar todos los sistemas y optimizar rendimiento
-
-7. **Aprendizaje Continuo**
-   - [ ] Crear `ContinuousLearningEngine`
-   - [ ] Implementar análisis de patrones avanzado
-   - [ ] Crear optimizador de estrategias
-   - [ ] Testing: Verificar mejora continua del sistema
-
-8. **Integración Completa**
-   - [ ] Integrar todos los sistemas nuevos
-   - [ ] Optimizar rendimiento y memoria
-   - [ ] Crear dashboard de monitoreo
-   - [ ] Testing: Verificación integral del sistema mejorado
-
----
-
-## 6. CRITERIOS DE ÉXITO Y MÉTRICAS
-
-### Métricas de Rendimiento
-
-1. **Gestión de Contexto**
-   - Relevancia de contexto: >85% (vs 60% actual)
-   - Tiempo de construcción de contexto: <2s (vs 5s actual)
-   - Uso efectivo de memoria a largo plazo: >70% (vs 30% actual)
-
-2. **Ejecución de Tareas**
-   - Tasa de completitud real verificada: >90% (vs 70% actual)
-   - Detección correcta de tareas incompletas: >85% (vs 40% actual)
-   - Tiempo promedio de ejecución: -25% (optimización)
-
-3. **Razonamiento Proactivo**
-   - Acciones proactivas exitosas por día: >3 (vs 0 actual)
-   - Problemas prevenidos proactivamente: >60% (vs 0% actual)
-   - Mejoras autónomas identificadas por semana: >5 (vs 0 actual)
-
-4. **Aprendizaje Continuo**
-   - Tasa de mejora semanal en efectividad: >2% (vs 0% actual)
-   - Correcciones exitosas automáticas: >80% (vs 20% actual)
-   - Insights accionables generados por semana: >10 (vs 0 actual)
-
-### Criterios de Aceptación
-
-✅ **Sistema debe demostrar**:
-- Capacidad de razonamiento proactivo documentada
-- Mejora continua measurable en métricas de rendimiento
-- Auto-corrección exitosa de al menos 5 tipos de errores comunes
-- Integración efectiva de memoria a largo plazo en todas las respuestas
-- Toma de decisiones autónomas con justificación clara
-
----
-
-## 7. CONSIDERACIONES DE IMPLEMENTACIÓN
-
-### Compatibilidad con Sistema Actual
-- **Integración Incremental**: Cada mejora se puede implementar independientemente
-- **Fallback Gracioso**: Sistema actual funciona si nuevos componentes fallan
-- **Migración de Datos**: Memoria existente se migra automáticamente
-
-### Recursos y Rendimiento
-- **Memoria Adicional**: ~500MB para nuevos componentes de aprendizaje
-- **CPU**: ~10% adicional para bucle de razonamiento proactivo
-- **Latencia**: <50ms adicionales por respuesta con contexto inteligente
-
-### Seguridad y Estabilidad
-- **Límites de Autonomía**: Acciones autónomas limitadas a dominio definido
-- **Logging Completo**: Todas las decisiones autónomas se registran
-- **Circuit Breaker**: Sistema se degrada graciosamente ante fallos
-
----
-
-## 8. MONITOREO Y EVALUACIÓN
-
-### Dashboard de Métricas en Tiempo Real
-```python
-# Nuevo endpoint: /api/agent/intelligence-metrics
-{
-    "context_intelligence": {
-        "relevance_score": 0.87,
-        "memory_integration": 0.73,
-        "context_build_time": 1.2
-    },
-    "proactive_reasoning": {
-        "active_insights": 12,
-        "actions_taken_today": 5,
-        "problems_prevented": 3
-    },
-    "continuous_learning": {
-        "learning_cycles_completed": 45,
-        "improvements_applied": 23,
-        "effectiveness_trend": "+2.3%/week"
-    },
-    "autonomous_decisions": {
-        "decisions_made_today": 8,
-        "average_confidence": 0.81,
-        "success_rate": 0.89
-    }
-}
-```
-
-### Alertas y Notificaciones
-- **Degradación de Rendimiento**: Alerta si métricas caen >10%
-- **Oportunidades de Mejora**: Notificación de insights accionables importantes
-- **Decisiones Críticas**: Log de todas las decisiones autónomas de alto impacto
-
----
-
-## CONCLUSIÓN
-
-Este plan de mejoras transformará el agente Mitosis de un sistema reactivo en un agente verdaderamente inteligente y autónomo. Las mejoras abordan directamente las 4 limitaciones identificadas:
-
-1. ✅ **Contexto Óptimo**: Sistema de contexto inteligente con memoria integrada
-2. ✅ **Ejecución Real**: Motor de ejecución robusto con verificación de completitud  
-3. ✅ **Razonamiento Proactivo**: Bucle continuo de análisis y mejora autónoma
-4. ✅ **Memoria Integrada**: Uso activo de experiencias pasadas en todo el proceso
-
-El resultado será un agente que aprende continuamente, se auto-corrige, toma decisiones inteligentes y mejora su rendimiento de forma autónoma, representando un avance significativo hacia la verdadera inteligencia artificial.
