@@ -343,11 +343,13 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                     logger.warning(f"⚠️ WebSocket update failed: {e}")
         
         def execute_steps():
-            if task_id not in active_task_plans:
+            # Usar TaskManager en lugar de active_task_plans
+            task_data = get_task_data(task_id)
+            if not task_data:
+                logger.error(f"❌ Task {task_id} not found, cannot execute")
                 return
                 
-            plan_data = active_task_plans[task_id]
-            steps = plan_data['plan']
+            steps = task_data['plan']
             final_results = []  # Almacenar resultados de cada paso
             
             logger.info(f"🚀 Starting REAL execution of {len(steps)} steps for task: {message}")
