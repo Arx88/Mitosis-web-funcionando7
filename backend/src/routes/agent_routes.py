@@ -1082,20 +1082,67 @@ def chat():
             'response': 'Lo siento, hubo un error procesando tu solicitud.'
         }), 500
 
+@agent_bp.route('/test-plan-generation', methods=['POST'])
+def test_plan_generation():
+    """
+    Endpoint para probar la generación de planes con IA
+    """
+    try:
+        data = request.get_json() or {}
+        message = data.get('message', 'Crear un informe completo sobre inteligencia artificial en 2024')
+        task_id = data.get('task_id', f'test-{uuid.uuid4()}')
+        
+        logger.info(f"🧪 Testing AI plan generation for: {message}")
+        
+        # Probar generación con IA
+        ai_plan = generate_dynamic_plan_with_ai(message, task_id)
+        
+        # También generar plan de fallback para comparación
+        fallback_task_id = f'fallback-{uuid.uuid4()}'
+        fallback_plan = generate_fallback_plan(message, fallback_task_id)
+        
+        return jsonify({
+            'test_results': {
+                'ai_plan': {
+                    'plan': ai_plan,
+                    'ai_generated': ai_plan.get('ai_generated', False),
+                    'plan_type': ai_plan.get('task_type', 'unknown')
+                },
+                'fallback_plan': {
+                    'plan': fallback_plan,
+                    'ai_generated': fallback_plan.get('ai_generated', False),
+                    'plan_type': fallback_plan.get('task_type', 'unknown')
+                }
+            },
+            'test_message': message,
+            'timestamp': datetime.now().isoformat(),
+            'comparison': {
+                'ai_steps': len(ai_plan.get('steps', [])),
+                'fallback_steps': len(fallback_plan.get('steps', [])),
+                'ai_working': len(ai_plan.get('steps', [])) > 0,
+                'plans_different': ai_plan.get('steps', []) != fallback_plan.get('steps', [])
+            }
+        })
+    
+    except Exception as e:
+        logger.error(f"❌ Error in plan generation test: {str(e)}")
+        return jsonify({
+            'error': f'Error testing plan generation: {str(e)}',
+            'test_failed': True
+        }), 500
+
 @agent_bp.route('/generate-plan', methods=['POST'])
 def generate_plan():
     """
-    Endpoint para generar planes de acción dinámicos usando IA
+    Genera un plan de acción dinámico usando IA mejorada
     """
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         task_title = data.get('task_title', '')
+        task_id = data.get('task_id', str(uuid.uuid4()))
         
         if not task_title:
             return jsonify({'error': 'task_title is required'}), 400
-        
-        # Generar task_id temporal
-        task_id = str(uuid.uuid4())
         
         logger.info(f"🚀 Generating dynamic plan for: {task_title}")
         
@@ -1112,7 +1159,8 @@ def generate_plan():
             'task_type': dynamic_plan['task_type'],
             'complexity': dynamic_plan.get('complexity', 'media'),
             'timestamp': datetime.now().isoformat(),
-            'status': 'plan_generated'
+            'status': 'plan_generated',
+            'ai_generated': dynamic_plan.get('ai_generated', False)
         })
     
     except Exception as e:
