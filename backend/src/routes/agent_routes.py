@@ -1586,7 +1586,7 @@ def chat():
                 'tool_calls': ollama_response.get('tool_calls', []),
                 'tool_results': tool_results,
                 'timestamp': datetime.now().isoformat(),
-                'execution_status': 'completed',
+                'execution_status': 'plan_generated',  # ✅ MEJORA: Estado inicial correcto
                 'mode': 'agent_with_structured_plan',
                 'memory_used': True
             })
