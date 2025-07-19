@@ -467,6 +467,34 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                 
                 step_start_time = time.time()
                 step_result = None
+                
+                # Función para ejecutar herramientas con reintentos y retroceso exponencial
+                # Mejora implementada según UPGRADE.md Sección 6: Manejo de Errores y Resiliencia
+                @retry(
+                    stop=stop_after_attempt(3),
+                    wait=wait_exponential(multiplier=1, min=2, max=8),
+                    retry=retry_if_exception_type((requests.RequestException, ConnectionError, TimeoutError))
+                )
+                def execute_tool_with_retries(tool_name: str, tool_params: dict, step_title: str):
+                    """Ejecutar herramienta con reintentos automáticos"""
+                    logger.info(f"🔄 Executing tool '{tool_name}' with retries for step: {step_title}")
+                    
+                    if tool_name == 'web_search':
+                        if not tool_manager:
+                            raise Exception("Tool manager not available")
+                        return tool_manager.execute_tool('web_search', tool_params, task_id=task_id)
+                    elif tool_name in ['analysis', 'creation', 'planning', 'delivery', 'processing']:
+                        if not ollama_service:
+                            raise Exception("Ollama service not available")
+                        # Para herramientas basadas en Ollama, usar generate_response
+                        return ollama_service.generate_response(tool_params.get('prompt', ''), {})
+                    else:
+                        # Herramienta genérica
+                        if tool_manager:
+                            return tool_manager.execute_tool(tool_name, tool_params, task_id=task_id)
+                        else:
+                            raise Exception(f"No handler available for tool: {tool_name}")
+                
                 try:
                     # EJECUTAR HERRAMIENTA REAL según el tipo de paso
                     if step['tool'] == 'web_search' or 'búsqueda' in step['title'].lower():
