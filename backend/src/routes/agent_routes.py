@@ -205,19 +205,42 @@ TASK_PATTERNS = [
 def is_casual_conversation(message: str) -> bool:
     """
     Detecta si un mensaje es una conversación casual usando clasificación LLM
-    Mejora implementada según UPGRADE.md Sección 1: Detección de Intención Basada en LLM
+    Mejora implementada según UPGRADE.md Sección 1: Sistema de Contexto Dinámico Inteligente
     """
     try:
         # Obtener servicio de Ollama para clasificación inteligente
         ollama_service = get_ollama_service()
+        
+        # Obtener gestor de contexto inteligente (placeholder para futura implementación)
+        context_manager = None  # TODO: Implementar get_intelligent_context_manager()
+        
+        # Construir contexto inteligente para clasificación
+        if context_manager:
+            logger.info(f"🧠 Usando contexto inteligente para clasificación: '{message[:50]}...'")
+            context = context_manager.build_context('chat', message, max_tokens=1000)
+        else:
+            context = None
+            logger.debug("⚠️ IntelligentContextManager no disponible, usando contexto básico")
         
         # Fallback a lógica heurística si Ollama no está disponible
         if not ollama_service or not ollama_service.is_healthy():
             logger.warning("⚠️ Ollama no disponible, usando detección heurística de respaldo")
             return _fallback_casual_detection(message)
         
-        # Prompt específico para clasificación de intención con Ollama
+        # Prompt mejorado con contexto inteligente
+        context_info = ""
+        if context and isinstance(context, dict):
+            # Agregar información relevante del contexto
+            if context.get('conversation_history'):
+                context_info += f"\nHistorial reciente: {len(context['conversation_history'])} conversaciones\n"
+            if context.get('mood') and context['mood'] != 'neutral':
+                context_info += f"Tono detectado: {context['mood']}\n"
+            if context.get('topics'):
+                context_info += f"Temas: {', '.join(context['topics'])}\n"
+        
         intent_prompt = f"""Clasifica la siguiente frase del usuario en una de estas categorías exactas: 'casual', 'tarea_investigacion', 'tarea_creacion', 'tarea_analisis', 'otro'.
+
+{context_info}
 
 Responde ÚNICAMENTE con un objeto JSON con la clave 'intent'. No agregues explicaciones adicionales.
 
