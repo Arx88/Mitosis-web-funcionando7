@@ -82,6 +82,8 @@ app.ollama_service = ollama_service
 app.tool_manager = tool_manager
 app.database_service = database_service
 app.websocket_manager = websocket_manager
+app.memory_manager = memory_manager
+app.intelligent_context_manager = intelligent_context_manager
 
 # Registrar blueprints
 app.register_blueprint(agent_bp, url_prefix='/api/agent')
