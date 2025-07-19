@@ -357,6 +357,15 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                         if ollama_service:
                             logger.info(f"🧠 Executing analysis using Ollama")
                             
+                            # Enviar detalle de ejecución de herramienta
+                            send_websocket_update('tool_execution_detail', {
+                                'type': 'tool_execution_detail',
+                                'tool_name': 'analysis',
+                                'input_params': {'context': step['description']},
+                                'message': f'🧠 Ejecutando análisis: {step["title"]}',
+                                'timestamp': datetime.now().isoformat()
+                            })
+                            
                             # Generar análisis específico usando contexto previo
                             analysis_context = f"Tarea: {message}\nPaso actual: {step['title']}\nDescripción: {step['description']}"
                             if final_results:
@@ -385,6 +394,16 @@ Formato: Respuesta estructurada y profesional.
                             
                             step['result'] = step_result
                             final_results.append(step_result)
+                            
+                            # Enviar resultado de herramienta
+                            send_websocket_update('tool_execution_detail', {
+                                'type': 'tool_execution_detail',
+                                'tool_name': 'analysis',
+                                'output_summary': step_result['summary'],
+                                'message': f'✅ Análisis completado: {step["title"]}',
+                                'timestamp': datetime.now().isoformat()
+                            })
+                            
                             logger.info(f"✅ Analysis completed")
                         else:
                             time.sleep(2)
@@ -392,6 +411,15 @@ Formato: Respuesta estructurada y profesional.
                     elif step['tool'] == 'creation' or 'creación' in step['title'].lower() or 'desarrollo' in step['title'].lower():
                         if ollama_service:
                             logger.info(f"🛠️ Executing creation using Ollama")
+                            
+                            # Enviar detalle de ejecución de herramienta
+                            send_websocket_update('tool_execution_detail', {
+                                'type': 'tool_execution_detail',
+                                'tool_name': 'creation',
+                                'input_params': {'task': step['title']},
+                                'message': f'🛠️ Creando contenido: {step["title"]}',
+                                'timestamp': datetime.now().isoformat()
+                            })
                             
                             # Generar contenido específico
                             creation_context = f"Tarea: {message}\nPaso: {step['title']}\nDescripción: {step['description']}"
