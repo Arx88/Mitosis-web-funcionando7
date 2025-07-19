@@ -930,17 +930,18 @@ Formato: Profesional, estructurado y completo.
             if task_id in active_task_plans:
                 active_task_plans[task_id].update(task_completion_updates)
             
-            # Enviar notificación de finalización del plan
-            final_result_content = active_task_plans[task_id].get('final_result', {}).get('content', 'Tarea completada exitosamente')
+            # Enviar notificación de finalización del plan con estado real
             send_websocket_update('task_completed', {
                 'type': 'task_completed',
                 'task_id': task_id,
-                'status': 'success',
-                'final_result': final_result_content,
-                'total_steps': len(steps),
-                'completed_steps': sum(1 for step in steps if step.get('completed', False)),
+                'status': 'success' if final_task_status == "completed_success" else 'completed_with_warnings',
+                'final_result': final_dynamic_response,
+                'final_task_status': final_task_status,
+                'total_steps': total_steps,
+                'completed_steps': completed_steps,
+                'failed_steps': failed_steps,
                 'execution_time': (datetime.now() - active_task_plans[task_id]['start_time']).total_seconds(),
-                'message': f'🎉 Tarea completada exitosamente: {len(final_results)} resultados generados',
+                'message': f'🎉 Tarea completada: {completed_steps}/{total_steps} pasos exitosos',
                 'timestamp': datetime.now().isoformat()
             })
             
