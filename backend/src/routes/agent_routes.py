@@ -18,11 +18,16 @@ logger = logging.getLogger(__name__)
 
 agent_bp = Blueprint('agent', __name__)
 
+# Importar nuevo TaskManager para persistencia
+from ..services.task_manager import get_task_manager
+
 # Almacenamiento temporal para compartir conversaciones
 shared_conversations = {}
 # Almacenamiento temporal para archivos por tarea
 task_files = {}
-# Almacenamiento global para planes de tareas
+
+# DEPRECATED: Reemplazado por TaskManager con persistencia MongoDB
+# Mantenido temporalmente para migración gradual
 active_task_plans = {}
 
 # Patrones para detectar tipo de mensaje
