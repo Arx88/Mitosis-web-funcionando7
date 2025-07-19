@@ -349,10 +349,10 @@ def test_7_estabilidad():
     
     # Perform multiple consecutive requests to test stability
     stability_tests = [
-        ("GET", "/api/health"),
-        ("GET", "/api/agent/status"),
+        ("GET", "/api/health", None),
+        ("GET", "/api/agent/status", None),
         ("POST", "/api/agent/chat", {"message": "Test message 1"}),
-        ("GET", "/api/agent/tools"),
+        ("GET", "/api/agent/tools", None),
         ("POST", "/api/agent/chat", {"message": "Test message 2"}),
     ]
     
