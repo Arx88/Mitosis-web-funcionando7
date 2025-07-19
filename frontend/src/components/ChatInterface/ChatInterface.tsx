@@ -238,8 +238,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         };
 
         // Si hay un plan estructurado, notificar al TaskView para que lo actualice
-        if (response.plan && response.plan.steps && onUpdateMessages) {
+        if (response.plan && response.plan.steps) {
           console.log('📋 Structured plan received:', response.plan);
+          
+          // PRIMERO: Notificar al TaskView sobre el plan generado
+          if (onTaskPlanGenerated) {
+            console.log('📋 Calling onTaskPlanGenerated with plan:', response.plan);
+            onTaskPlanGenerated(response.plan);
+          }
           
           // Crear mensaje especial para indicar que se generó un plan
           const planNotificationMessage: Message = {
@@ -254,24 +260,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           };
 
           // Actualizar mensajes con plan
-          const messagesWithPlan = [...messages, userMessage, planNotificationMessage, agentMessage];
-          onUpdateMessages(messagesWithPlan);
-          
-          // Notificar al TaskView sobre el plan generado
-          if (onTaskPlanGenerated) {
-            onTaskPlanGenerated(response.plan);
+          if (onUpdateMessages) {
+            const messagesWithPlan = [...messages, userMessage, planNotificationMessage, agentMessage];
+            onUpdateMessages(messagesWithPlan);
           }
         } else {
           // Update messages normalmente si no hay plan
-          const updatedMessages = [...messages, userMessage, agentMessage];
-          onUpdateMessages(updatedMessages);
-        }
-
-        // Update messages if callback provided
-        if (onUpdateMessages) {
-          const currentMessages = [...messages, userMessage];
-          const updatedMessages = [...currentMessages, agentMessage];
-          onUpdateMessages(updatedMessages);
+          if (onUpdateMessages) {
+            const updatedMessages = [...messages, userMessage, agentMessage];
+            onUpdateMessages(updatedMessages);
+          }
         }
 
         // Log tool executions to terminal
