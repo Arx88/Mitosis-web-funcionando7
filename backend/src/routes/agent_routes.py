@@ -211,8 +211,8 @@ def is_casual_conversation(message: str) -> bool:
         # Obtener servicio de Ollama para clasificación inteligente
         ollama_service = get_ollama_service()
         
-        # Obtener gestor de contexto inteligente (placeholder para futura implementación)
-        context_manager = None  # TODO: Implementar get_intelligent_context_manager()
+        # Obtener gestor de contexto inteligente
+        context_manager = get_intelligent_context_manager()
         
         # Construir contexto inteligente para clasificación
         if context_manager:
