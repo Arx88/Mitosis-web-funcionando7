@@ -16,6 +16,14 @@ import re
 import jsonschema
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
+# 🆕 PROBLEMA 2: Importar sistema de validación de resultados
+from ..validation.result_validators import (
+    validate_step_result, 
+    StepStatus, 
+    TaskStatus, 
+    determine_task_status_from_steps
+)
+
 logger = logging.getLogger(__name__)
 
 # JSON Schema para validación de planes generados por Ollama
