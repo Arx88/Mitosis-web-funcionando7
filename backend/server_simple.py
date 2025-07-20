@@ -56,7 +56,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 # Inicializar WebSocket Manager
 try:
-    from websocket.websocket_manager import initialize_websocket
+    from src.websocket.websocket_manager import initialize_websocket
     websocket_manager = initialize_websocket(app)
     app.websocket_manager = websocket_manager
     logger.info("✅ WebSocket Manager inicializado exitosamente")
