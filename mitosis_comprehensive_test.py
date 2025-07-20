@@ -23,7 +23,7 @@ from datetime import datetime
 
 # Configuration
 BASE_URL = "http://localhost:8001"
-EXTERNAL_URL = "https://984b0d28-3c94-4aea-9fd9-150a7277bb81.preview.emergentagent.com"
+EXTERNAL_URL = "https://83909662-df6f-4f29-84f8-7fbae4e6d42c.preview.emergentagent.com"
 EXPECTED_OLLAMA_ENDPOINT = "https://78d08925604a.ngrok-free.app"
 EXPECTED_MODEL = "llama3.1:8b"
 EXPECTED_TOOLS_COUNT = 12

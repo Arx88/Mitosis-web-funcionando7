@@ -11,7 +11,7 @@ import os
 from datetime import datetime
 
 # Test external URL
-BACKEND_URL = "https://984b0d28-3c94-4aea-9fd9-150a7277bb81.preview.emergentagent.com"
+BACKEND_URL = "https://83909662-df6f-4f29-84f8-7fbae4e6d42c.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 def test_external_plan_execution():

@@ -18,7 +18,7 @@ import time
 import os
 from datetime import datetime
 
-BASE_URL = "https://984b0d28-3c94-4aea-9fd9-150a7277bb81.preview.emergentagent.com"
+BASE_URL = "https://83909662-df6f-4f29-84f8-7fbae4e6d42c.preview.emergentagent.com"
 GENERATED_FILES_PATH = "/app/backend/static/generated_files"
 
 print(f"🧪 FINAL COMPREHENSIVE BACKEND VERIFICATION")
