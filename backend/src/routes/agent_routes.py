@@ -1317,21 +1317,50 @@ Formato: Profesional, estructurado y completo.
                         'error': str(e)
                     }
             
-            # Determinar estado final de la tarea para respuesta dinámica
-            completed_steps = sum(1 for step in steps if step.get('completed', False))
-            failed_steps = sum(1 for step in steps if step.get('status') == 'failed')
+            # 🆕 PROBLEMA 2: DETERMINACIÓN INTELIGENTE DE ESTADO FINAL USANDO VALIDACIÓN GRANULAR
+            final_task_status = determine_task_status_from_steps(steps)
+            
+            # Estadísticas detalladas para logging y respuesta
+            success_steps = sum(1 for step in steps if step.get('status') == StepStatus.COMPLETED_SUCCESS)
+            warning_steps = sum(1 for step in steps if step.get('status') == StepStatus.COMPLETED_WITH_WARNINGS)
+            failed_steps = sum(1 for step in steps if step.get('status') == StepStatus.FAILED)
             total_steps = len(steps)
             
-            # Clasificar estado final
-            if completed_steps == total_steps:
-                final_task_status = "completed_success"
-            elif completed_steps > total_steps // 2 and failed_steps > 0:
-                final_task_status = "completed_with_warnings"
-            else:
-                final_task_status = "completed_success"  # Por defecto optimista
+            # Calcular completed_steps para compatibilidad con código existente
+            completed_steps = success_steps + warning_steps
             
-            # Generar respuesta final dinámica basada en estado real
-            failed_step_titles = [step.get('title', 'Paso desconocido') for step in steps if step.get('status') == 'failed']
+            logger.info(f"📊 TASK COMPLETION STATS - Success: {success_steps}, Warnings: {warning_steps}, Failed: {failed_steps}, Total: {total_steps}")
+            logger.info(f"🎯 FINAL TASK STATUS: {final_task_status}")
+            
+            # Generar respuesta final dinámica basada en estado real y validación
+            failed_step_details = []
+            warning_step_details = []
+            
+            for step in steps:
+                if step.get('status') == StepStatus.FAILED:
+                    failed_step_details.append({
+                        'title': step.get('title', 'Paso desconocido'),
+                        'error': step.get('error', 'Error desconocido'),
+                        'validation_message': step.get('result', {}).get('validation_message', '')
+                    })
+                elif step.get('status') == StepStatus.COMPLETED_WITH_WARNINGS:
+                    warning_step_details.append({
+                        'title': step.get('title', 'Paso con advertencias'),
+                        'warning': step.get('result', {}).get('validation_message', 'Advertencia no especificada')
+                    })
+            
+            # Construir mensaje de errores y advertencias para respuesta
+            error_message = None
+            warnings = []
+            
+            if failed_step_details:
+                error_message = f"{len(failed_step_details)} paso(s) fallaron: " + ", ".join([f"'{detail['title']}'" for detail in failed_step_details])
+            
+            if warning_step_details:
+                warnings = [f"'{detail['title']}': {detail['warning']}" for detail in warning_step_details]
+            
+            # Mantener compatibilidad con código existente - generar failed_step_titles
+            failed_step_titles = [detail['title'] for detail in failed_step_details]
             final_dynamic_response = generate_clean_response(
                 ollama_response="",
                 tool_results=final_results,
