@@ -11,6 +11,8 @@ from typing import List, Dict, Optional, Any, Union
 from dataclasses import dataclass
 import asyncio
 from enum import Enum
+import jsonschema
+import re
 
 from model_manager import ModelManager, UnifiedModel, ModelProvider
 from memory_manager import MemoryManager, Message, TaskMemory, KnowledgeItem
