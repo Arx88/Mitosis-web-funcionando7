@@ -37,6 +37,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
   const [showShareModal, setShowShareModal] = useState(false);
   const [taskFiles, setTaskFiles] = useState<FileItem[]>([]);
   const [terminalLogs, setTerminalLogs] = useState<Array<{message: string, type: 'info' | 'success' | 'error', timestamp: Date}>>([]);
+  const monitorRef = useRef<HTMLDivElement>(null);
   
   // 🚀 WebSocket integration para updates en tiempo real
   const {
