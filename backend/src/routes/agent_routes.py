@@ -1619,23 +1619,24 @@ Responde ÚNICAMENTE con un objeto JSON válido siguiendo EXACTAMENTE este forma
   "steps": [
     {{
       "title": "Título específico del paso (5-100 caracteres)",
-      "description": "Descripción detallada del paso (10-300 caracteres)",
-      "tool": "web_search|analysis|creation|planning|delivery|processing|synthesis|research|investigation|shell",
+      "description": "Descripción detallada del paso (10-300 caracteres)", 
+      "tool": "ELIGE_UNA: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database",
       "estimated_time": "Tiempo estimado como string",
       "priority": "alta|media|baja"
     }}
   ],
   "task_type": "Tipo de tarea específico (mínimo 3 caracteres)",
-  "complexity": "baja|media|alta",
+  "complexity": "baja|media|alta", 
   "estimated_total_time": "Tiempo total estimado"
 }}
 
-IMPORTANTE:
+REGLAS CRÍTICAS:
 - Mínimo 1 paso, máximo 10 pasos
-- Usar solo las herramientas listadas en "tool"
+- Para "tool": ELIGE SOLO UNA herramienta, NO combines con |
+- HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
 - Títulos y descripciones específicas para la tarea, NO genéricas
 - NO agregues texto adicional, solo el JSON
-- Asegúrate de que sea JSON válido
+- Asegúrate de que sea JSON válido y parseable
 """
                 elif attempt == 2:
                     # Segunda tentativa: prompt con corrección específica
