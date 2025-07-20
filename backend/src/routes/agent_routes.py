@@ -3696,56 +3696,63 @@ def execute_single_step(task_id: str, step_id: str):
 
 @agent_bp.route('/initialize-task', methods=['POST'])
 def initialize_task():
-    """Inicializar tarea con generación de plan y ejecución automática"""
+    """Initialize task with plan generation and WebSocket emission"""
     try:
-        data = request.json
+        data = request.get_json()
         task_id = data.get('task_id')
-        title = data.get('title')
+        title = data.get('title', '')
         auto_execute = data.get('auto_execute', False)
         
-        websocket_manager = getattr(current_app, 'websocket_manager', None)
+        logger.info(f"🚀 Initializing task {task_id}: {title}")
         
-        # Emitir evento de inicio de tarea
-        if websocket_manager:
-            websocket_manager.emit_update(
-                task_id=task_id,
-                update_type=UpdateType.TASK_STARTED,
-                data={
-                    'task_id': task_id,
-                    'title': title,
-                    'timestamp': datetime.now().isoformat()
-                }
-            )
+        # Generar plan usando Ollama (código existente)
+        plan_response = generate_task_plan(title, task_id)
         
-        # Generar plan usando el agente
-        plan_data = generate_task_plan(title, task_id)
+        # NUEVA FUNCIONALIDAD: Emitir evento WebSocket
+        if hasattr(current_app, 'websocket_manager') and current_app.websocket_manager:
+            try:
+                current_app.websocket_manager.emit_to_task(
+                    task_id,
+                    'plan_updated',
+                    {
+                        'task_id': task_id,
+                        'plan': {
+                            'steps': plan_response.get('steps', []),
+                            'task_type': plan_response.get('task_type', 'general'),
+                            'complexity': plan_response.get('complexity', 'media'),
+                            'estimated_total_time': plan_response.get('estimated_total_time', '10-15 minutos')
+                        },
+                        'timestamp': datetime.now().isoformat()
+                    }
+                )
+                logger.info(f"📡 Plan emitted via WebSocket to task {task_id}")
+            except Exception as ws_error:
+                logger.error(f"❌ WebSocket emission failed: {ws_error}")
         
-        # Emitir plan actualizado
-        if websocket_manager and plan_data:
-            websocket_manager.emit_update(
-                task_id=task_id,
-                update_type=UpdateType.PLAN_UPDATED,
-                data={
-                    'plan': plan_data,
-                    'task_id': task_id,
-                    'auto_execute': auto_execute,
-                    'timestamp': datetime.now().isoformat()
-                }
-            )
+        # Auto-ejecutar si está habilitado
+        if auto_execute:
+            # Iniciar ejecución en hilo separado después de 3 segundos
+            def delayed_execution():
+                time.sleep(3)
+                execute_plan_with_real_tools(task_id, plan_response.get('steps', []), title)
+            
+            import threading
+            execution_thread = threading.Thread(target=delayed_execution)
+            execution_thread.daemon = True
+            execution_thread.start()
+            
+            logger.info(f"🔄 Auto-execution scheduled for task {task_id}")
         
         return jsonify({
             'success': True,
+            'plan': plan_response,
             'task_id': task_id,
-            'plan': plan_data,
             'auto_execute': auto_execute
         })
         
     except Exception as e:
-        logger.error(f"Error initializing task: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        logger.error(f"❌ Error initializing task: {e}")
+        return jsonify({'error': str(e)}), 500
 
 def generate_task_plan(title: str, task_id: str) -> Dict:
     """Generar plan de tarea usando el agente mejorado"""
