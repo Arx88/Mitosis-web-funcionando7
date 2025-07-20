@@ -578,7 +578,10 @@ SOLO JSON, sin explicaciones:"""
             self.logger.error(f"Error registrando validation error: {e}")
     
     def execute_current_phase(self, task_id: Optional[str] = None) -> str:
-        """Ejecuta la fase actual de una tarea"""
+        """
+        Ejecuta la fase actual de una tarea con herramientas reales
+        Implementa mejoras según UPGRADE.md Problema 2: Despachador de Herramientas (Tool Dispatcher)
+        """
         try:
             self.state = AgentState.EXECUTING
             
@@ -596,8 +599,8 @@ SOLO JSON, sin explicaciones:"""
             if not current_phase:
                 return "Error: No hay fase activa en la tarea."
             
-            # Generar prompt de ejecución
-            execution_prompt = self.prompt_manager.generate_phase_execution_prompt(task, current_phase)
+            # Generar prompt de ejecución para tool calling
+            execution_prompt = self._create_tool_calling_prompt(task, current_phase)
             
             # Seleccionar modelo apropiado para la fase
             task_type = self._determine_task_type_from_capabilities(current_phase.required_capabilities)
@@ -609,43 +612,343 @@ SOLO JSON, sin explicaciones:"""
             if not execution_model:
                 return "Error: No hay modelos disponibles para ejecutar la fase."
             
-            # Ejecutar fase
+            # Ejecutar fase con LLM para obtener tool call
             execution_response = self.model_manager.generate_response(
                 execution_prompt,
                 model=execution_model,
                 max_tokens=2000,
-                temperature=0.5
+                temperature=0.3  # Temperatura baja para tool calling preciso
             )
             
             if not execution_response:
-                return "Error: No se pudo ejecutar la fase."
+                return "Error: No se pudo obtener respuesta para ejecutar la fase."
             
-            # Simular resultados de la fase (en una implementación real, aquí se ejecutarían herramientas)
-            phase_results = {
-                "execution_response": execution_response,
-                "model_used": execution_model.name,
-                "completed_at": time.time()
-            }
+            # PASO CRÍTICO: Parsear y ejecutar herramientas reales
+            tool_result = self._parse_and_execute_tools(execution_response, task, current_phase)
             
-            # Determinar si la fase está completa o necesita más trabajo
-            if "completado" in execution_response.lower() or "finalizado" in execution_response.lower():
-                # Avanzar a la siguiente fase
+            if not tool_result:
+                return "Error: No se pudo ejecutar ninguna herramienta válida."
+            
+            # Actualización del progreso basada en resultados reales de herramientas
+            if tool_result.get("status") == "success":
+                # Avanzar a la siguiente fase basándose en éxito de herramienta
                 next_phase_id = current_phase.id + 1
                 if next_phase_id <= len(task.phases):
-                    self.task_manager.advance_phase(task.id, current_phase.id, next_phase_id, phase_results)
-                    return f"Fase {current_phase.id} completada. Avanzando a fase {next_phase_id}."
+                    self.task_manager.advance_phase(task.id, current_phase.id, next_phase_id, tool_result)
+                    return f"Fase {current_phase.id} completada exitosamente con herramientas. Resultado: {tool_result.get('summary', '')}. Avanzando a fase {next_phase_id}."
                 else:
                     # Completar tarea
-                    self.task_manager.complete_task(task.id, phase_results)
+                    self.task_manager.complete_task(task.id, tool_result)
                     self.stats["tasks_completed"] += 1
-                    return f"Tarea '{task.title}' completada exitosamente."
+                    return f"Tarea '{task.title}' completada exitosamente. Resultado final: {tool_result.get('summary', '')}"
+            elif tool_result.get("status") == "failure":
+                # Manejar error de herramienta
+                error_result = self._handle_tool_error(task, current_phase, tool_result.get("error", ""))
+                return f"Error ejecutando fase {current_phase.id}: {error_result}"
             else:
-                return f"Fase {current_phase.id} en progreso: {execution_response[:200]}..."
+                return f"Fase {current_phase.id} en progreso: {tool_result.get('summary', '')}"
             
         except Exception as e:
             self.logger.error(f"Error al ejecutar fase: {e}")
             self.state = AgentState.ERROR
             return f"Error al ejecutar fase: {str(e)}"
+    
+    def _create_tool_calling_prompt(self, task, current_phase) -> str:
+        """
+        Crea un prompt para tool calling según UPGRADE.md
+        Incluye descripciones de herramientas disponibles y esquemas de parámetros
+        """
+        tools_registry = self._get_tools_registry()
+        
+        # Construir descripciones de herramientas disponibles
+        tools_description = "\n".join([
+            f"- {name}: {info['description']} | Parámetros: {info['parameters']}"
+            for name, info in tools_registry.items()
+        ])
+        
+        return f"""Eres un agente que debe ejecutar esta fase de tarea usando herramientas reales.
+
+TAREA: {task.title}
+DESCRIPCIÓN DE TAREA: {task.description}
+OBJETIVO: {task.goal}
+
+FASE ACTUAL:
+- ID: {current_phase.id}
+- Título: {current_phase.title}
+- Descripción: {current_phase.description}
+- Capacidades requeridas: {current_phase.required_capabilities}
+
+HERRAMIENTAS DISPONIBLES:
+{tools_description}
+
+INSTRUCCIONES:
+Responde ÚNICAMENTE con un JSON que contenga:
+1. "action_type": "tool_call", "reflection", o "report"
+2. Si es "tool_call":
+   - "tool_name": nombre de la herramienta a usar
+   - "tool_parameters": parámetros específicos para la herramienta
+   - "thought": por qué usas esta herramienta
+   - "status_update": mensaje de progreso para el usuario
+
+EJEMPLO DE RESPUESTA:
+{{"action_type": "tool_call", "tool_name": "web_search", "tool_parameters": {{"query": "tendencias IA 2025", "num_results": 5}}, "thought": "Necesito buscar información actualizada sobre IA", "status_update": "Buscando información sobre tendencias de IA"}}
+
+Si la fase no requiere herramientas, usa:
+{{"action_type": "report", "summary": "descripción del trabajo realizado", "status_update": "Fase completada"}}
+
+RESPUESTA (SOLO JSON):"""
+    
+    def _get_tools_registry(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Obtiene el registro central de herramientas según UPGRADE.md
+        Mapea nombres de herramientas a sus funciones reales y esquemas de parámetros
+        """
+        return {
+            "web_search": {
+                "description": "Buscar información en la web",
+                "parameters": {"query": "string", "num_results": "integer"},
+                "function": self._execute_web_search
+            },
+            "file_write": {
+                "description": "Escribir contenido a un archivo",
+                "parameters": {"filename": "string", "content": "string"},
+                "function": self._execute_file_write
+            },
+            "shell_exec": {
+                "description": "Ejecutar comando de shell",
+                "parameters": {"command": "string", "timeout": "integer"},
+                "function": self._execute_shell_command
+            },
+            "analysis": {
+                "description": "Realizar análisis detallado",
+                "parameters": {"data": "string", "analysis_type": "string"},
+                "function": self._execute_analysis
+            },
+            "creation": {
+                "description": "Crear contenido o documentos",
+                "parameters": {"content_type": "string", "specifications": "string"},
+                "function": self._execute_creation
+            },
+            "general": {
+                "description": "Procesamiento general",
+                "parameters": {"task_description": "string"},
+                "function": self._execute_general_task
+            }
+        }
+    
+    def _parse_and_execute_tools(self, execution_response: str, task, current_phase) -> Dict[str, Any]:
+        """
+        Parsea la respuesta del LLM y ejecuta herramientas reales según UPGRADE.md
+        Implementa lógica de despacho en execute_current_phase
+        """
+        try:
+            # Parsear respuesta JSON del LLM
+            tool_call_data = self._parse_tool_call_response(execution_response)
+            
+            if not tool_call_data:
+                return {"status": "failure", "error": "No se pudo parsear llamada a herramienta"}
+            
+            action_type = tool_call_data.get("action_type")
+            
+            if action_type == "tool_call":
+                tool_name = tool_call_data.get("tool_name")
+                tool_parameters = tool_call_data.get("tool_parameters", {})
+                thought = tool_call_data.get("thought", "")
+                status_update = tool_call_data.get("status_update", "")
+                
+                # Validar herramienta en registry
+                tools_registry = self._get_tools_registry()
+                if tool_name not in tools_registry:
+                    return {"status": "failure", "error": f"Herramienta '{tool_name}' no disponible"}
+                
+                # Validar parámetros contra esquema de la herramienta
+                tool_info = tools_registry[tool_name]
+                if not self._validate_tool_parameters(tool_parameters, tool_info["parameters"]):
+                    return {"status": "failure", "error": f"Parámetros inválidos para herramienta '{tool_name}'"}
+                
+                # Invocar la función de la herramienta
+                try:
+                    self.logger.info(f"Ejecutando herramienta '{tool_name}' con parámetros: {tool_parameters}")
+                    tool_function = tool_info["function"]
+                    result = tool_function(tool_parameters)
+                    
+                    # Registrar resultado de la herramienta en la memoria
+                    self._register_tool_execution(tool_name, tool_parameters, result, task.id, current_phase.id)
+                    
+                    return {
+                        "status": "success" if result.get("success", True) else "failure",
+                        "tool_name": tool_name,
+                        "tool_result": result,
+                        "thought": thought,
+                        "status_update": status_update,
+                        "summary": result.get("summary", f"Herramienta '{tool_name}' ejecutada")
+                    }
+                    
+                except Exception as tool_error:
+                    self.logger.error(f"Error ejecutando herramienta '{tool_name}': {tool_error}")
+                    return {"status": "failure", "error": str(tool_error), "tool_name": tool_name}
+            
+            elif action_type == "reflection":
+                # Invocar función de reflexión del agente
+                reflection_result = self._handle_reflection(tool_call_data, task, current_phase)
+                return {"status": "success", "summary": reflection_result, "action_type": "reflection"}
+            
+            elif action_type == "report":
+                # La fase está completa sin herramientas
+                summary = tool_call_data.get("summary", "Fase completada")
+                return {"status": "success", "summary": summary, "action_type": "report"}
+            
+            else:
+                return {"status": "failure", "error": f"Tipo de acción no reconocido: {action_type}"}
+                
+        except Exception as e:
+            self.logger.error(f"Error parseando y ejecutando herramientas: {e}")
+            return {"status": "failure", "error": str(e)}
+    
+    def _parse_tool_call_response(self, response: str) -> Optional[Dict[str, Any]]:
+        """
+        Parsea la respuesta JSON del LLM con múltiples estrategias
+        """
+        tool_data = None
+        
+        # Estrategia 1: JSON directo
+        try:
+            cleaned_response = response.strip()
+            if cleaned_response.startswith('{') and cleaned_response.endswith('}'):
+                tool_data = json.loads(cleaned_response)
+        except json.JSONDecodeError:
+            pass
+        
+        # Estrategia 2: Buscar JSON en el texto
+        if not tool_data:
+            try:
+                json_match = re.search(r'\{[^{}]*"action_type"[^{}]*\}', response, re.DOTALL)
+                if json_match:
+                    tool_data = json.loads(json_match.group())
+            except json.JSONDecodeError:
+                pass
+        
+        # Estrategia 3: JSON con corrección de formato
+        if not tool_data:
+            try:
+                corrected_text = response.replace("'", '"')
+                start_idx = corrected_text.find('{')
+                end_idx = corrected_text.rfind('}') + 1
+                if start_idx != -1 and end_idx != 0:
+                    json_text = corrected_text[start_idx:end_idx]
+                    tool_data = json.loads(json_text)
+            except (json.JSONDecodeError, Exception):
+                pass
+        
+        return tool_data
+    
+    def _validate_tool_parameters(self, parameters: Dict[str, Any], schema: Dict[str, str]) -> bool:
+        """
+        Valida parámetros de herramienta contra esquema
+        """
+        try:
+            for param_name, param_type in schema.items():
+                if param_name not in parameters:
+                    return False
+                
+                param_value = parameters[param_name]
+                if param_type == "string" and not isinstance(param_value, str):
+                    return False
+                elif param_type == "integer" and not isinstance(param_value, int):
+                    return False
+            
+            return True
+        except Exception:
+            return False
+    
+    def _handle_tool_error(self, task, current_phase, error: str) -> str:
+        """
+        Maneja errores de herramientas según UPGRADE.md
+        Implementa estrategias de recuperación
+        """
+        try:
+            # Generar prompt de recuperación
+            recovery_prompt = f"""ERROR AL EJECUTAR HERRAMIENTA: {error}
+
+CONTEXTO:
+- Tarea: {task.title}
+- Fase: {current_phase.title}
+- Error: {error}
+
+Sugiere una estrategia de recuperación. Opciones:
+1. Reintentar con diferentes parámetros
+2. Usar herramienta alternativa
+3. Pedir ayuda al usuario
+4. Marcar fase como fallida
+
+Responde con JSON: {{"strategy": "retry|alternative|ask_user|fail", "details": "explicación", "new_action": "acción específica"}}"""
+
+            # Usar modelo para estrategia de recuperación
+            model = self.model_manager.select_best_model(task_type="analysis")
+            if model:
+                recovery_response = self.model_manager.generate_response(
+                    recovery_prompt, model=model, max_tokens=500, temperature=0.3
+                )
+                
+                # Implementar estrategia de recuperación básica
+                if recovery_response and "retry" in recovery_response.lower():
+                    return f"Reintentando fase después de error: {error}"
+                elif recovery_response and "alternative" in recovery_response.lower():
+                    return f"Buscando herramienta alternativa después de error: {error}"
+            
+            return f"Error en herramienta: {error}. Se requiere intervención manual."
+            
+        except Exception as e:
+            self.logger.error(f"Error en manejo de errores: {e}")
+            return f"Error crítico: {error}"
+    
+    def _register_tool_execution(self, tool_name: str, parameters: Dict[str, Any], 
+                               result: Dict[str, Any], task_id: str, phase_id: int):
+        """
+        Registra la ejecución de herramienta en la memoria del agente
+        """
+        try:
+            execution_record = {
+                "tool_name": tool_name,
+                "parameters": parameters,
+                "result": result,
+                "task_id": task_id,
+                "phase_id": phase_id,
+                "timestamp": time.time()
+            }
+            
+            self.memory_manager.add_knowledge(
+                content=f"Tool execution: {tool_name} - {result.get('summary', 'executed')}",
+                category="tool_execution",
+                source="agent_execution",
+                confidence=0.9,
+                tags=["tool", "execution", tool_name]
+            )
+            
+        except Exception as e:
+            self.logger.error(f"Error registrando ejecución de herramienta: {e}")
+    
+    def _handle_reflection(self, reflection_data: Dict[str, Any], task, current_phase) -> str:
+        """
+        Maneja reflexiones del agente
+        """
+        try:
+            reflection_content = reflection_data.get("reflection", "Reflexión realizada")
+            
+            # Añadir reflexión a la memoria
+            self.memory_manager.add_knowledge(
+                content=f"Reflection on phase {current_phase.id}: {reflection_content}",
+                category="reflections",
+                source="agent_reflection",
+                confidence=0.8,
+                tags=["reflection", "phase", str(current_phase.id)]
+            )
+            
+            return f"Reflexión completada: {reflection_content}"
+            
+        except Exception as e:
+            self.logger.error(f"Error en reflexión: {e}")
+            return "Error en reflexión"
     
     def reflect_on_action(self, action: str, result: str, expected: str) -> str:
         """Reflexiona sobre una acción ejecutada"""
