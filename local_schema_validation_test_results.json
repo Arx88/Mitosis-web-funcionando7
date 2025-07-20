@@ -1,0 +1,66 @@
+{
+  "total_tests": 8,
+  "passed_tests": 8,
+  "failed_tests": 0,
+  "success_rate": 100.0,
+  "results": [
+    {
+      "test_name": "Backend Health Check",
+      "success": true,
+      "details": "Services: Ollama=True, Tools=12, Database=True",
+      "response_time": 5.286179542541504,
+      "timestamp": "2025-07-20T17:46:14.124021"
+    },
+    {
+      "test_name": "Agent Status Check",
+      "success": true,
+      "details": "Endpoint: https://78d08925604a.ngrok-free.app, Model: , Endpoint Match: True",
+      "response_time": 0.0044536590576171875,
+      "timestamp": "2025-07-20T17:46:14.128686"
+    },
+    {
+      "test_name": "Schema Validation - Investigación",
+      "success": true,
+      "details": "Task ID: True, Response: True, No Schema Errors: True, Plan Generated: True",
+      "response_time": 24.929210901260376,
+      "timestamp": "2025-07-20T17:46:39.058142"
+    },
+    {
+      "test_name": "Schema Validation - Creación",
+      "success": true,
+      "details": "Task ID: True, Response Length: 612, No Schema Errors: True",
+      "response_time": 36.44116830825806,
+      "timestamp": "2025-07-20T17:47:15.499563"
+    },
+    {
+      "test_name": "Schema Validation - Análisis",
+      "success": true,
+      "details": "Task ID: True, Response: True, Memory Used: True, No Schema Errors: True",
+      "response_time": 19.55008625984192,
+      "timestamp": "2025-07-20T17:47:35.049870"
+    },
+    {
+      "test_name": "Schema Validation - General Processing",
+      "success": true,
+      "details": "Task ID: True, Response: True, Status: plan_generated, No Schema Errors: True",
+      "response_time": 16.52592706680298,
+      "timestamp": "2025-07-20T17:47:51.576017"
+    },
+    {
+      "test_name": "Tool Consistency Check",
+      "success": true,
+      "details": "No Invalid Tools: True, No Schema Errors: True, Valid Tools Mentioned: 0",
+      "response_time": 29.086426734924316,
+      "timestamp": "2025-07-20T17:48:20.662757"
+    },
+    {
+      "test_name": "Casual vs Task Detection",
+      "success": true,
+      "details": "No Plan Structure: True, Casual Response: True, Has Greeting: True",
+      "response_time": 16.750157594680786,
+      "timestamp": "2025-07-20T17:48:37.413153"
+    }
+  ],
+  "schema_validation_fixed": false,
+  "tool_consistency_fixed": false
+}
