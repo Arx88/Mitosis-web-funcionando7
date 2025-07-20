@@ -705,47 +705,46 @@ Formato: Respuesta estructurada y profesional.
                             })
                     
                     elif step['tool'] == 'creation' or 'creación' in step['title'].lower() or 'desarrollo' in step['title'].lower():
-                        if ollama_service:
-                            logger.info(f"🛠️ Executing creation with REAL file generation")
-                            
-                            # Enviar detalle de ejecución de herramienta
-                            send_websocket_update('tool_execution_detail', {
-                                'type': 'tool_execution_detail',
-                                'tool_name': 'creation',
-                                'input_params': {'task': step['title']},
-                                'message': f'🛠️ Creando contenido y archivo: {step["title"]}',
-                                'timestamp': datetime.now().isoformat()
-                            })
-                            
-                            # Generar contenido específico
-                            creation_context = f"Tarea: {message}\nPaso: {step['title']}\nDescripción: {step['description']}"
-                            if final_results:
-                                creation_context += f"\nInformación previa: {final_results}"
-                            
-                            # PROMPT ULTRA ESPECÍFICO PARA EVITAR PLANES DE ACCIÓN
-                            if 'archivo' in message.lower() and ('contenga' in message.lower() or 'texto' in message.lower()):
-                                # Para solicitudes de archivos simples con contenido específico
-                                import re
-                                content_match = re.search(r'contenga[^:]*[:]\s*(.+?)(?:\.|$|")', message, re.IGNORECASE)
-                                if content_match:
-                                    requested_content = content_match.group(1).strip()
-                                    creation_prompt = f"""
+                        logger.info(f"🛠️ Executing creation with REAL file generation - NO SIMULATION")
+                        
+                        # Enviar detalle de ejecución de herramienta
+                        send_websocket_update('tool_execution_detail', {
+                            'type': 'tool_execution_detail',
+                            'tool_name': 'creation',
+                            'input_params': {'task': step['title']},
+                            'message': f'🛠️ Creando contenido y archivo: {step["title"]}',
+                            'timestamp': datetime.now().isoformat()
+                        })
+                        
+                        # Generar contenido específico
+                        creation_context = f"Tarea: {message}\nPaso: {step['title']}\nDescripción: {step['description']}"
+                        if final_results:
+                            creation_context += f"\nInformación previa: {final_results}"
+                        
+                        # PROMPT ULTRA ESPECÍFICO PARA EVITAR PLANES DE ACCIÓN
+                        if 'archivo' in message.lower() and ('contenga' in message.lower() or 'texto' in message.lower()):
+                            # Para solicitudes de archivos simples con contenido específico
+                            import re
+                            content_match = re.search(r'contenga[^:]*[:]\s*(.+?)(?:\.|$|")', message, re.IGNORECASE)
+                            if content_match:
+                                requested_content = content_match.group(1).strip()
+                                creation_prompt = f"""
 INSTRUCCIÓN: Responde ÚNICAMENTE con el contenido exacto solicitado. NO generes planes de acción.
 
 CONTENIDO EXACTO A GENERAR: {requested_content}
 
 Responde SOLO con: {requested_content}
 """
-                                else:
-                                    creation_prompt = f"""
+                            else:
+                                creation_prompt = f"""
 IMPORTANTE: NO generes un plan de acción. Genera el CONTENIDO REAL solicitado.
 
 Tarea: {message}
 
 Responde con el contenido exacto que el usuario solicitó, NO con un plan de cómo hacerlo.
 """
-                            else:
-                                creation_prompt = f"""
+                        else:
+                            creation_prompt = f"""
 IMPORTANTE: NO generes un plan de acción. Genera el CONTENIDO REAL solicitado.
 
 {creation_context}
@@ -754,11 +753,17 @@ INSTRUCCIÓN CRÍTICA: Responde con el contenido final que se solicita, NO con p
 
 Genera el contenido específico, detallado y profesional que se solicita DIRECTAMENTE.
 """
+                        
+                        try:
+                            # EJECUCIÓN REAL CON REINTENTOS - NO SIMULACIÓN
+                            result = execute_tool_with_retries('creation', {
+                                'prompt': creation_prompt,
+                                'ollama_options': {}
+                            }, step['title'])
                             
-                            result = ollama_service.generate_response(creation_prompt, {})
                             content = result.get('response', 'Contenido creado')
                             
-                            # 🆕 CREAR ARCHIVO REAL TANGIBLE
+                            # 🆕 CREAR ARCHIVO REAL TANGIBLE - VALIDACIÓN RIGUROSA
                             try:
                                 # Determinar tipo de archivo basado en la tarea
                                 file_extension = '.md'  # Por defecto markdown
@@ -782,15 +787,15 @@ Genera el contenido específico, detallado y profesional que se solicita DIRECTA
                                 with open(file_path, 'w', encoding='utf-8') as f:
                                     f.write(content)
                                 
-                                # Verificar que el archivo se creó
-                                if os.path.exists(file_path):
+                                # VALIDACIÓN RIGUROSA - PROBLEMA 8 IMPLEMENTADO PARCIALMENTE
+                                if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
                                     file_size = os.path.getsize(file_path)
-                                    logger.info(f"✅ ARCHIVO REAL CREADO: {filename} ({file_size} bytes)")
+                                    logger.info(f"✅ ARCHIVO REAL CREADO Y VALIDADO: {filename} ({file_size} bytes)")
                                     
                                     step_result = {
                                         'type': 'creation',
                                         'content': content,
-                                        'summary': f'✅ Archivo creado exitosamente: {filename}',
+                                        'summary': f'✅ Archivo creado y validado exitosamente: {filename}',
                                         'file_created': True,
                                         'file_path': file_path,
                                         'file_name': filename,
@@ -803,31 +808,47 @@ Genera el contenido específico, detallado y profesional que se solicita DIRECTA
                                     send_websocket_update('tool_execution_detail', {
                                         'type': 'tool_execution_detail',
                                         'tool_name': 'creation',
-                                        'output_summary': f'✅ Archivo creado: {filename} ({file_size} bytes)',
+                                        'output_summary': f'✅ Archivo creado y validado: {filename} ({file_size} bytes)',
                                         'file_created': filename,
                                         'download_url': f'/api/download/{filename}',
-                                        'message': f'✅ Archivo generado y listo para descargar: {filename}',
+                                        'message': f'✅ Archivo generado, validado y listo para descargar: {filename}',
                                         'timestamp': datetime.now().isoformat()
                                     })
                                     
                                 else:
-                                    raise Exception("El archivo no se pudo crear correctamente")
+                                    raise FileCreationError("El archivo no se pudo crear correctamente o está vacío")
                                 
                             except Exception as file_error:
                                 logger.error(f"❌ Error creando archivo real: {str(file_error)}")
-                                step_result = {
-                                    'type': 'creation',
-                                    'content': content,
-                                    'summary': f'Contenido generado (error creando archivo: {str(file_error)})',
-                                    'file_created': False,
-                                    'file_error': str(file_error)
-                                }
+                                raise FileCreationError(f"Error en creación de archivo: {str(file_error)}")
                             
                             step['result'] = step_result
                             final_results.append(step_result)
-                            logger.info(f"✅ Content creation with file generation completed")
-                        else:
-                            time.sleep(4)
+                            logger.info(f"✅ Content creation with REAL file generation completed")
+                            
+                        except (OllamaServiceError, ToolNotAvailableError, FileCreationError) as creation_error:
+                            logger.error(f"❌ Creation failed after retries: {str(creation_error)}")
+                            
+                            # Marcar paso como fallido sin simulación
+                            step_result = {
+                                'type': 'creation_failed',
+                                'error': str(creation_error),
+                                'summary': f'❌ Error en creación: {str(creation_error)}',
+                                'file_created': False,
+                                'fallback_used': True
+                            }
+                            step['result'] = step_result
+                            step['status'] = 'failed'
+                            final_results.append(step_result)
+                            
+                            # Enviar error detallado
+                            send_websocket_update('tool_execution_detail', {
+                                'type': 'tool_execution_detail',
+                                'tool_name': 'creation',
+                                'error': str(creation_error),
+                                'message': f'❌ Error en creación: {str(creation_error)}',
+                                'timestamp': datetime.now().isoformat()
+                            })
                     
                     elif step['tool'] == 'planning' or 'planificación' in step['title'].lower():
                         if ollama_service:
