@@ -625,24 +625,23 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                             final_results.append(step_result)
                     
                     elif step['tool'] == 'analysis' or 'análisis' in step['title'].lower():
-                        if ollama_service:
-                            logger.info(f"🧠 Executing analysis using Ollama")
-                            
-                            # Enviar detalle de ejecución de herramienta
-                            send_websocket_update('tool_execution_detail', {
-                                'type': 'tool_execution_detail',
-                                'tool_name': 'analysis',
-                                'input_params': {'context': step['description']},
-                                'message': f'🧠 Ejecutando análisis: {step["title"]}',
-                                'timestamp': datetime.now().isoformat()
-                            })
-                            
-                            # Generar análisis específico usando contexto previo
-                            analysis_context = f"Tarea: {message}\nPaso actual: {step['title']}\nDescripción: {step['description']}"
-                            if final_results:
-                                analysis_context += f"\nResultados previos: {final_results[-1] if final_results else 'Ninguno'}"
-                            
-                            analysis_prompt = f"""
+                        logger.info(f"🧠 Executing analysis using REAL execution")
+                        
+                        # Enviar detalle de ejecución de herramienta
+                        send_websocket_update('tool_execution_detail', {
+                            'type': 'tool_execution_detail',
+                            'tool_name': 'analysis',
+                            'input_params': {'context': step['description']},
+                            'message': f'🧠 Ejecutando análisis: {step["title"]}',
+                            'timestamp': datetime.now().isoformat()
+                        })
+                        
+                        # Generar análisis específico usando contexto previo
+                        analysis_context = f"Tarea: {message}\nPaso actual: {step['title']}\nDescripción: {step['description']}"
+                        if final_results:
+                            analysis_context += f"\nResultados previos: {final_results[-1] if final_results else 'Ninguno'}"
+                        
+                        analysis_prompt = f"""
 Realiza un análisis detallado para:
 {analysis_context}
 
@@ -654,8 +653,13 @@ Proporciona:
 
 Formato: Respuesta estructurada y profesional.
 """
-                            
-                            result = ollama_service.generate_response(analysis_prompt, {})
+                        
+                        try:
+                            # EJECUCIÓN REAL CON REINTENTOS - NO SIMULACIÓN
+                            result = execute_tool_with_retries('analysis', {
+                                'prompt': analysis_prompt,
+                                'ollama_options': {}
+                            }, step['title'])
                             
                             step_result = {
                                 'type': 'analysis',
@@ -675,9 +679,30 @@ Formato: Respuesta estructurada y profesional.
                                 'timestamp': datetime.now().isoformat()
                             })
                             
-                            logger.info(f"✅ Analysis completed")
-                        else:
-                            time.sleep(2)
+                            logger.info(f"✅ Analysis completed successfully")
+                            
+                        except (OllamaServiceError, ToolNotAvailableError) as analysis_error:
+                            logger.error(f"❌ Analysis failed after retries: {str(analysis_error)}")
+                            
+                            # Marcar paso como fallido sin simulación
+                            step_result = {
+                                'type': 'analysis_failed',
+                                'error': str(analysis_error),
+                                'summary': f'❌ Error en análisis: {str(analysis_error)}',
+                                'fallback_used': True
+                            }
+                            step['result'] = step_result
+                            step['status'] = 'failed'
+                            final_results.append(step_result)
+                            
+                            # Enviar error detallado
+                            send_websocket_update('tool_execution_detail', {
+                                'type': 'tool_execution_detail',
+                                'tool_name': 'analysis',
+                                'error': str(analysis_error),
+                                'message': f'❌ Error en análisis: {str(analysis_error)}',
+                                'timestamp': datetime.now().isoformat()
+                            })
                     
                     elif step['tool'] == 'creation' or 'creación' in step['title'].lower() or 'desarrollo' in step['title'].lower():
                         if ollama_service:
