@@ -339,8 +339,7 @@ class MitosisAgent:
                 # Seleccionar modelo optimizado para JSON
                 planning_model = self.model_manager.select_best_model(
                     task_type="analysis",
-                    max_cost=self.config.max_cost_per_1k_tokens,
-                    preferred_capabilities=["json", "structured_output"]  # Priorizar modelos para JSON
+                    max_cost=self.config.max_cost_per_1k_tokens
                 )
                 
                 if not planning_model:
