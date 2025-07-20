@@ -421,7 +421,7 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                 logger.info(f"✅ WebSocket manager obtained from Flask app for task {task_id}")
             except AttributeError:
                 # Fallback al método directo
-                from websocket.websocket_manager import get_websocket_manager
+                from src.websocket.websocket_manager import get_websocket_manager
                 websocket_manager = get_websocket_manager()
                 logger.info(f"✅ WebSocket manager obtained directly for task {task_id}")
                 
