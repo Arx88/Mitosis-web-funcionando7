@@ -2975,14 +2975,14 @@ def chat():
             
             # PASO 5: Generar respuesta LIMPIA basada en estado inicial (tarea comenzando)
             final_response = generate_clean_response(ollama_response['response'], tool_results, 
-                                                    task_status="starting", 
+                                                    task_status="plan_ready", 
                                                     failed_step_title=None, 
                                                     error_message=None)
             
-            # PASO 6: Ejecutar plan automáticamente
-            execute_plan_with_real_tools(task_id, structured_plan['steps'], message)
+            # MODIFICACIÓN: NO ejecutar automáticamente - dejar que el usuario controle la ejecución paso a paso
+            # execute_plan_with_real_tools(task_id, structured_plan['steps'], message)
             
-            logger.info(f"✅ Task completed successfully with structured plan")
+            logger.info(f"✅ Plan generated successfully - ready for step-by-step execution")
             
             return jsonify({
                 'response': final_response,
@@ -2991,7 +2991,7 @@ def chat():
                 'tool_calls': ollama_response.get('tool_calls', []),
                 'tool_results': tool_results,
                 'timestamp': datetime.now().isoformat(),
-                'execution_status': 'plan_generated',  # ✅ MEJORA: Estado inicial correcto
+                'execution_status': 'plan_ready',  # Estado: listo para ejecución controlada
                 'mode': 'agent_with_structured_plan',
                 'memory_used': True
             })
