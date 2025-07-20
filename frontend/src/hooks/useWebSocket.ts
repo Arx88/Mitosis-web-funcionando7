@@ -93,7 +93,7 @@ export const useWebSocket = (): UseWebSocketReturn => {
   const joinTaskRoom = (taskId: string) => {
     if (socketRef.current && isConnected) {
       console.log('🏠 Joining task room:', taskId);
-      socketRef.current.emit('join_task_room', { task_id: taskId });
+      socketRef.current.emit('join_task', { task_id: taskId });
     }
   };
 
