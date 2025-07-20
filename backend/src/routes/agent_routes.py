@@ -2954,12 +2954,19 @@ def get_ollama_models():
                     else:
                         model_info['size'] = 'Unknown size'
                     
-                    # Agregar información adicional si está disponible
+                    # Agregar información adicional directamente del modelo
+                    if 'parameter_size' in model:
+                        model_info['parameter_size'] = model['parameter_size']
+                    
+                    if 'quantization_level' in model:
+                        model_info['quantization'] = model['quantization_level']
+                    
+                    # También buscar en details si está disponible
                     if 'details' in model:
                         details = model['details']
-                        if 'parameter_size' in details:
+                        if 'parameter_size' in details and 'parameter_size' not in model_info:
                             model_info['parameter_size'] = details['parameter_size']
-                        if 'quantization_level' in details:
+                        if 'quantization_level' in details and 'quantization' not in model_info:
                             model_info['quantization'] = details['quantization_level']
                     
                     models.append(model_info)
