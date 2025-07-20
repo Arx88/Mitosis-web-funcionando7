@@ -679,19 +679,37 @@ Formato: Respuesta estructurada y profesional.
                             if final_results:
                                 creation_context += f"\nInformación previa: {final_results}"
                             
-                            creation_prompt = f"""
-Crea el contenido solicitado para:
+                            # PROMPT ULTRA ESPECÍFICO PARA EVITAR PLANES DE ACCIÓN
+                            if 'archivo' in message.lower() and ('contenga' in message.lower() or 'texto' in message.lower()):
+                                # Para solicitudes de archivos simples con contenido específico
+                                import re
+                                content_match = re.search(r'contenga[^:]*[:]\s*(.+?)(?:\.|$|")', message, re.IGNORECASE)
+                                if content_match:
+                                    requested_content = content_match.group(1).strip()
+                                    creation_prompt = f"""
+INSTRUCCIÓN: Responde ÚNICAMENTE con el contenido exacto solicitado. NO generes planes de acción.
+
+CONTENIDO EXACTO A GENERAR: {requested_content}
+
+Responde SOLO con: {requested_content}
+"""
+                                else:
+                                    creation_prompt = f"""
+IMPORTANTE: NO generes un plan de acción. Genera el CONTENIDO REAL solicitado.
+
+Tarea: {message}
+
+Responde con el contenido exacto que el usuario solicitó, NO con un plan de cómo hacerlo.
+"""
+                            else:
+                                creation_prompt = f"""
+IMPORTANTE: NO generes un plan de acción. Genera el CONTENIDO REAL solicitado.
+
 {creation_context}
 
-Genera contenido específico, detallado y profesional que cumpla exactamente con los requisitos de la tarea.
+INSTRUCCIÓN CRÍTICA: Responde con el contenido final que se solicita, NO con pasos de cómo crearlo.
 
-Incluye:
-1. Contenido principal solicitado
-2. Estructura organizada
-3. Información relevante y precisa
-4. Formato profesional
-
-Responde con el contenido completo y listo para usar.
+Genera el contenido específico, detallado y profesional que se solicita DIRECTAMENTE.
 """
                             
                             result = ollama_service.generate_response(creation_prompt, {})
