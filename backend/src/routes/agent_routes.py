@@ -2145,7 +2145,7 @@ He ejecutado todos los pasos del plan de acción que puedes ver en el panel late
 Puedes revisar los detalles completos de la ejecución en el monitor de progreso."""
 
         elif task_status == "completed_with_warnings":
-            # Tarea completada con algunas advertencias
+            # 🆕 PROBLEMA 2: Tarea completada con advertencias específicas de validación
             if files_created:
                 clean_response = f"""✅ He completado tu solicitud con {len(files_created)} archivo(s) generado(s), aunque con algunas advertencias menores.
 
@@ -2155,15 +2155,43 @@ Puedes revisar los detalles completos de la ejecución en el monitor de progreso
                     clean_response += f"• **{file_info['name']}** ({file_info['size']} bytes)\n"
                 
                 clean_response += """
-⚠️ El plan de acción se ejecutó correctamente en general, pero algunos pasos secundarios tuvieron limitaciones. El resultado principal fue alcanzado exitosamente.
+⚠️ El plan de acción se ejecutó correctamente en general, pero algunos pasos tuvieron limitaciones."""
+                
+                # Añadir advertencias específicas si están disponibles
+                if warnings:
+                    clean_response += f"""
 
-Puedes revisar los detalles y advertencias específicas en el monitor de ejecución para más información."""
+**ADVERTENCIAS ESPECÍFICAS:**
+"""
+                    for warning in warnings[:3]:  # Mostrar máximo 3 advertencias
+                        clean_response += f"• {warning}\n"
+                    
+                    if len(warnings) > 3:
+                        clean_response += f"• ... y {len(warnings) - 3} advertencia(s) adicional(es)\n"
+                
+                clean_response += """
+
+El resultado principal fue alcanzado exitosamente. Te recomiendo revisar el monitor de ejecución para más detalles."""
             else:
                 clean_response = """He completado tu solicitud, aunque con algunas advertencias menores.
 
-El plan de acción se ejecutó correctamente en general, pero algunos pasos secundarios tuvieron limitaciones. El resultado principal fue alcanzado exitosamente.
+⚠️ El plan de acción se ejecutó correctamente en general, pero algunos pasos tuvieron limitaciones."""
+                
+                # Añadir advertencias específicas si están disponibles
+                if warnings:
+                    clean_response += f"""
 
-Puedes revisar los detalles y advertencias específicas en el monitor de ejecución para más información."""
+**ADVERTENCIAS ESPECÍFICAS:**
+"""
+                    for warning in warnings[:3]:  # Mostrar máximo 3 advertencias
+                        clean_response += f"• {warning}\n"
+                    
+                    if len(warnings) > 3:
+                        clean_response += f"• ... y {len(warnings) - 3} advertencia(s) adicional(es)\n"
+                
+                clean_response += """
+
+El resultado principal fue alcanzado exitosamente. Te recomiendo revisar el monitor de ejecución para más detalles."""
 
         elif task_status == "failed":
             # Tarea falló
