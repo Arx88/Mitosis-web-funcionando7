@@ -440,7 +440,7 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
             if websocket_manager and websocket_manager.is_initialized:
                 try:
                     if update_type == 'step_update':
-                        websocket_manager.send_update(task_id, websocket_manager.UpdateType.STEP_STARTED if data.get('status') == 'in-progress' else websocket_manager.UpdateType.STEP_COMPLETED, data)
+                        websocket_manager.send_update(task_id, UpdateType.STEP_STARTED if data.get('status') == 'in-progress' else UpdateType.STEP_COMPLETED, data)
                     elif update_type == 'log_message':
                         websocket_manager.send_update(task_id, websocket_manager.UpdateType.TASK_PROGRESS, data)
                     elif update_type == 'tool_execution_detail':
