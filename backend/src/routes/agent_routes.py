@@ -1576,6 +1576,190 @@ def _fallback_query_extraction(message: str, step_title: str) -> str:
     except Exception:
         return message[:50]  # Fallback seguro
 
+def generate_emergency_structured_plan(message: str, task_id: str, ollama_error: str) -> dict:
+    """
+    Genera un plan estructurado inteligente cuando Ollama falla completamente
+    Análisis heurístico mejorado del mensaje para crear plan específico
+    """
+    logger.info(f"🆘 Generating emergency structured plan for task {task_id} due to Ollama failure: {ollama_error}")
+    
+    message_lower = message.lower().strip()
+    
+    # Análisis inteligente del tipo de tarea
+    task_analysis = {
+        'type': 'unknown',
+        'tools': ['processing'],
+        'steps': 1,
+        'complexity': 'media'
+    }
+    
+    # Detectar tipo de tarea principal
+    if any(word in message_lower for word in ['buscar', 'investigar', 'encontrar', 'información', 'datos']):
+        task_analysis.update({
+            'type': 'investigación',
+            'tools': ['web_search', 'research', 'analysis'],
+            'steps': 3,
+            'complexity': 'media'
+        })
+    elif any(word in message_lower for word in ['crear', 'generar', 'escribir', 'desarrollar', 'hacer']):
+        task_analysis.update({
+            'type': 'creación',
+            'tools': ['planning', 'creation', 'delivery'],
+            'steps': 3,
+            'complexity': 'media'
+        })
+    elif any(word in message_lower for word in ['analizar', 'análisis', 'estudiar', 'evaluar']):
+        task_analysis.update({
+            'type': 'análisis',
+            'tools': ['data_analysis', 'analysis', 'synthesis'],
+            'steps': 3,
+            'complexity': 'media'
+        })
+    elif any(word in message_lower for word in ['documento', 'informe', 'reporte', 'archivo']):
+        task_analysis.update({
+            'type': 'documentación',
+            'tools': ['planning', 'creation', 'delivery'],
+            'steps': 3,
+            'complexity': 'alta'
+        })
+    else:
+        # Tarea general/procesamiento
+        task_analysis.update({
+            'type': 'procesamiento_general',
+            'tools': ['processing', 'analysis'],
+            'steps': 2,
+            'complexity': 'baja'
+        })
+    
+    # Construir plan estructurado basado en análisis
+    emergency_steps = []
+    
+    if task_analysis['type'] == 'investigación':
+        emergency_steps = [
+            {
+                "title": f"Buscar información sobre: {message[:50]}...",
+                "description": f"Realizar búsqueda web detallada para obtener información relevante sobre la consulta del usuario",
+                "tool": "web_search",
+                "estimated_time": "2-3 minutos",
+                "priority": "alta"
+            },
+            {
+                "title": "Investigar fuentes adicionales",
+                "description": "Realizar investigación complementaria para obtener más detalles y verificar información",
+                "tool": "research", 
+                "estimated_time": "2-3 minutos",
+                "priority": "media"
+            },
+            {
+                "title": "Analizar y sintetizar información",
+                "description": "Procesar y analizar la información recopilada para generar respuesta completa",
+                "tool": "analysis",
+                "estimated_time": "1-2 minutos", 
+                "priority": "alta"
+            }
+        ]
+    elif task_analysis['type'] == 'creación':
+        emergency_steps = [
+            {
+                "title": f"Planificar creación: {message[:40]}...",
+                "description": "Establecer estructura y planificación detallada para la creación solicitada",
+                "tool": "planning",
+                "estimated_time": "1-2 minutos",
+                "priority": "alta"
+            },
+            {
+                "title": "Crear contenido principal",
+                "description": f"Desarrollar y crear el contenido principal según los requerimientos específicos",
+                "tool": "creation",
+                "estimated_time": "3-5 minutos",
+                "priority": "alta"
+            },
+            {
+                "title": "Entregar resultado final",
+                "description": "Formatear, revisar y entregar el resultado final de la creación",
+                "tool": "delivery",
+                "estimated_time": "1-2 minutos",
+                "priority": "media"
+            }
+        ]
+    elif task_analysis['type'] == 'análisis':
+        emergency_steps = [
+            {
+                "title": f"Analizar datos: {message[:40]}...",
+                "description": "Realizar análisis detallado de los datos o información proporcionada",
+                "tool": "data_analysis", 
+                "estimated_time": "2-3 minutos",
+                "priority": "alta"
+            },
+            {
+                "title": "Procesar resultados analíticos",
+                "description": "Interpretar y procesar los resultados del análisis para obtener insights",
+                "tool": "analysis",
+                "estimated_time": "2-3 minutos",
+                "priority": "alta"
+            },
+            {
+                "title": "Sintetizar conclusiones",
+                "description": "Sintetizar hallazgos y generar conclusiones claras y accionables",
+                "tool": "synthesis",
+                "estimated_time": "1-2 minutos",
+                "priority": "media"
+            }
+        ]
+    elif task_analysis['type'] == 'documentación':
+        emergency_steps = [
+            {
+                "title": f"Planificar documento: {message[:35]}...",
+                "description": "Planificar estructura, contenido y formato del documento solicitado",
+                "tool": "planning",
+                "estimated_time": "1-2 minutos",
+                "priority": "alta"
+            },
+            {
+                "title": "Crear contenido del documento",
+                "description": "Desarrollar el contenido principal del documento con información detallada",
+                "tool": "creation",
+                "estimated_time": "4-6 minutos",
+                "priority": "alta"
+            },
+            {
+                "title": "Finalizar y entregar documento",
+                "description": "Revisar, formatear y entregar el documento final completo",
+                "tool": "delivery",
+                "estimated_time": "1-2 minutos",
+                "priority": "media"
+            }
+        ]
+    else:
+        # Plan general de procesamiento
+        emergency_steps = [
+            {
+                "title": f"Procesar solicitud: {message[:45]}...",
+                "description": f"Procesar y atender la solicitud específica del usuario de manera integral",
+                "tool": "processing",
+                "estimated_time": "2-3 minutos",
+                "priority": "alta"
+            },
+            {
+                "title": "Analizar y completar",
+                "description": "Analizar los requerimientos y completar la tarea de manera satisfactoria",
+                "tool": "analysis",
+                "estimated_time": "1-2 minutos",
+                "priority": "media"
+            }
+        ]
+    
+    # Calcular tiempo total estimado
+    total_time_minutes = sum(int(step['estimated_time'].split('-')[0]) for step in emergency_steps if step['estimated_time'].split('-')[0].isdigit())
+    total_time = f"{total_time_minutes}-{total_time_minutes + len(emergency_steps)} minutos"
+    
+    return {
+        "steps": emergency_steps,
+        "task_type": f"emergency_{task_analysis['type']}",
+        "complexity": task_analysis['complexity'],
+        "estimated_total_time": total_time
+    }
+
 def generate_dynamic_plan_with_ai(message: str, task_id: str) -> dict:
     """
     Genera un plan dinámico usando Ollama con robustecimiento y validación de esquemas
