@@ -440,11 +440,21 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                     logger.warning(f"⚠️ WebSocket update failed: {e}")
         
         def execute_steps():
+            logger.info(f"🔍 DEBUG: execute_steps iniciado para task_id: {task_id}")
+            
             # Usar TaskManager en lugar de active_task_plans
             task_data = get_task_data(task_id)
+            logger.info(f"🔍 DEBUG: task_data obtenida: {task_data is not None}")
+            
             if not task_data:
-                logger.error(f"❌ Task {task_id} not found, cannot execute")
-                return
+                logger.error(f"❌ Task {task_id} not found, cannot execute - Fallback a active_task_plans")
+                # Fallback a memoria legacy
+                if task_id in active_task_plans:
+                    task_data = active_task_plans[task_id]
+                    logger.info(f"🔍 DEBUG: Encontrada en active_task_plans")
+                else:
+                    logger.error(f"❌ Task {task_id} no existe ni en TaskManager ni en active_task_plans")
+                    return
                 
             steps = task_data['plan']
             final_results = []  # Almacenar resultados de cada paso
