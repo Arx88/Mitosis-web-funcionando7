@@ -131,7 +131,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
           if (data.plan && data.plan.steps) {
             const updatedTask = {
               ...task,
-              plan: data.plan.steps.map((step, index) => ({
+              plan: data.plan.steps.map((step: any, index: number) => ({
                 id: step.id || `step-${index}`,
                 title: step.title,
                 description: step.description,
@@ -139,19 +139,88 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 active: false,
                 tool: step.tool,
                 estimated_time: step.estimated_time,
+                priority: step.priority,
                 status: 'pending'
               }))
             };
             onUpdateTask(updatedTask);
             
-            // Auto-ejecutar primer paso después de 2 segundos
+            // Mostrar resumen en terminal
+            logToTerminal(`📊 Plan generado: ${data.plan.steps.length} pasos`, 'info');
+            logToTerminal(`⏱️ Tiempo estimado: ${data.plan.estimated_total_time || 'No especificado'}`, 'info');
+            
+            // NUEVA FUNCIONALIDAD: Auto-iniciar ejecución
             setTimeout(() => {
-              if (data.plan.steps.length > 0) {
-                executeNextStep(data.plan.steps[0].id);
-              }
-            }, 2000);
+              startTaskExecution(task.id);
+            }, 2000); // Esperar 2 segundos antes de iniciar
           }
         },
+
+        task_started: (data) => {
+          console.log('🚀 Task started:', data);
+          logToTerminal(`🚀 Iniciando ejecución de ${data.total_steps} pasos`, 'info');
+        },
+
+        step_started: (data) => {
+          console.log('🔄 Step started:', data);
+          logToTerminal(`🔄 Paso ${data.step_number || '?'}/${data.total_steps || '?'}: ${data.title}`, 'info');
+          
+          // Actualizar estado del paso en el plan
+          updateStepStatus(data.step_id, 'in-progress', true);
+        },
+
+        step_completed: (data) => {
+          console.log('✅ Step completed:', data);
+          logToTerminal(`✅ Completado: ${data.title}`, 'success');
+          
+          // Marcar paso como completado
+          updateStepStatus(data.step_id, 'completed', false, true);
+          
+          // Actualizar progreso general
+          if (onUpdateTaskProgress) {
+            onUpdateTaskProgress(task.id);
+          }
+        },
+
+        step_failed: (data) => {
+          console.log('❌ Step failed:', data);
+          logToTerminal(`❌ Error en: ${data.title} - ${data.error}`, 'error');
+          
+          // Marcar paso como fallido
+          updateStepStatus(data.step_id, 'failed', false);
+        },
+
+        task_progress: (data) => {
+          console.log('⏳ Task progress:', data);
+          if (data.activity) {
+            logToTerminal(`⏳ ${data.activity}`, 'info');
+          }
+        },
+
+        task_completed: (data) => {
+          console.log('🎉 Task completed:', data);
+          logToTerminal('🎉 ¡Tarea completada exitosamente!', 'success');
+          
+          // Marcar tarea como completada
+          const completedTask = {
+            ...task,
+            status: 'completed' as const,
+            progress: 100
+          };
+          onUpdateTask(completedTask);
+        },
+
+        task_failed: (data) => {
+          console.log('💥 Task failed:', data);
+          logToTerminal(`💥 Error en la tarea: ${data.error}`, 'error');
+          
+          // Marcar tarea como fallida
+          const failedTask = {
+            ...task,
+            status: 'failed' as const
+          };
+          onUpdateTask(failedTask);
+        }
 
         context_changed: (data) => {
           console.log('🔄 Context changed:', data);
