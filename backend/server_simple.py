@@ -63,6 +63,24 @@ try:
 except Exception as e:
     logger.error(f"❌ Error inicializando WebSocket Manager: {e}")
 
+# Inicializar servicio Ollama
+try:
+    from src.services.ollama_service import OllamaService
+    ollama_service = OllamaService()
+    app.ollama_service = ollama_service
+    logger.info("✅ Ollama Service inicializado exitosamente")
+except Exception as e:
+    logger.error(f"❌ Error inicializando Ollama Service: {e}")
+
+# Inicializar Tool Manager  
+try:
+    from src.services.tools_manager import get_tools_manager
+    tool_manager = get_tools_manager()
+    app.tool_manager = tool_manager
+    logger.info("✅ Tool Manager inicializado exitosamente")
+except Exception as e:
+    logger.error(f"❌ Error inicializando Tool Manager: {e}")
+
 # Importar y registrar las rutas del agente
 try:
     from routes.agent_routes import agent_bp
