@@ -448,7 +448,7 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                     elif update_type == 'task_completed':
                         websocket_manager.send_update(task_id, UpdateType.TASK_COMPLETED, data)
                     elif update_type == 'task_failed':
-                        websocket_manager.send_update(task_id, websocket_manager.UpdateType.TASK_FAILED, data)
+                        websocket_manager.send_update(task_id, UpdateType.TASK_FAILED, data)
                         
                     logger.info(f"📡 WebSocket update sent: {update_type} for task {task_id}")
                 except Exception as e:
