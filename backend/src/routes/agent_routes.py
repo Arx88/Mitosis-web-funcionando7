@@ -511,32 +511,50 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                 step_start_time = time.time()
                 step_result = None
                 
-                # Función para ejecutar herramientas con reintentos y retroceso exponencial
-                # Mejora implementada según UPGRADE.md Sección 6: Manejo de Errores y Resiliencia
+                # Excepciones personalizadas para manejo de errores específico
+                class OllamaServiceError(Exception):
+                    pass
+
+                class ToolNotAvailableError(Exception):
+                    pass
+
+                class FileCreationError(Exception):
+                    pass
+
+                # Función ROBUSTA para ejecutar herramientas con reintentos y retroceso exponencial
+                # PROBLEMA 1 SOLUCIONADO: Eliminación completa de simulación
                 @retry(
                     stop=stop_after_attempt(3),
                     wait=wait_exponential(multiplier=1, min=2, max=8),
-                    retry=retry_if_exception_type((requests.RequestException, ConnectionError, TimeoutError))
+                    retry=retry_if_exception_type((requests.RequestException, ConnectionError, TimeoutError, OllamaServiceError))
                 )
                 def execute_tool_with_retries(tool_name: str, tool_params: dict, step_title: str):
-                    """Ejecutar herramienta con reintentos automáticos"""
-                    logger.info(f"🔄 Executing tool '{tool_name}' with retries for step: {step_title}")
+                    """Ejecutar herramienta con reintentos automáticos - SOLO EJECUCIÓN REAL"""
+                    logger.info(f"🔄 Intentando ejecutar herramienta '{tool_name}' para el paso: {step_title}")
                     
                     if tool_name == 'web_search':
-                        if not tool_manager:
-                            raise Exception("Tool manager not available")
+                        if not tool_manager or not hasattr(tool_manager, 'execute_tool'):
+                            raise ToolNotAvailableError(f"Tool manager no disponible o herramienta 'web_search' no inicializada.")
                         return tool_manager.execute_tool('web_search', tool_params, task_id=task_id)
-                    elif tool_name in ['analysis', 'creation', 'planning', 'delivery', 'processing']:
-                        if not ollama_service:
-                            raise Exception("Ollama service not available")
-                        # Para herramientas basadas en Ollama, usar generate_response
-                        return ollama_service.generate_response(tool_params.get('prompt', ''), {})
+                    
+                    elif tool_name in ['analysis', 'creation', 'planning', 'delivery', 'processing', 'synthesis', 'search_definition', 'data_analysis']:
+                        if not ollama_service or not ollama_service.is_healthy():
+                            raise OllamaServiceError("Ollama service no está disponible o no es saludable.")
+                        
+                        # Para herramientas basadas en Ollama, la lógica de prompt debe ser robusta
+                        result = ollama_service.generate_response(tool_params.get('prompt', ''), tool_params.get('ollama_options', {}))
+                        
+                        # Verificar que la respuesta de Ollama no sea un error
+                        if result.get('error'):
+                            raise OllamaServiceError(f"Error en Ollama: {result['error']}")
+                        
+                        return result
+                    
                     else:
-                        # Herramienta genérica
-                        if tool_manager:
-                            return tool_manager.execute_tool(tool_name, tool_params, task_id=task_id)
-                        else:
-                            raise Exception(f"No handler available for tool: {tool_name}")
+                        # Para herramientas no explícitamente manejadas, intentar con tool_manager
+                        if not tool_manager or not hasattr(tool_manager, 'execute_tool'):
+                            raise ToolNotAvailableError(f"Herramienta '{tool_name}' no reconocida o no disponible.")
+                        return tool_manager.execute_tool(tool_name, tool_params, task_id=task_id)
                 
                 try:
                     # EJECUTAR HERRAMIENTA REAL según el tipo de paso con reintentos automáticos
