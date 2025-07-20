@@ -1251,14 +1251,14 @@ Proporciona un resultado específico y útil para este paso.
                         'timestamp': datetime.now().isoformat()
                     })
                 
-                # Actualizar plan en memoria y persistencia
+                # Actualizar plan en memoria y persistencia con estados granulares
                 task_manager = get_task_manager()
                 task_manager.update_task_step_status(
                     task_id,
                     step['id'],
-                    'completed' if step['status'] == 'completed' else 'failed',
-                    step_result.get('summary') if step_result else None,
-                    step.get('error') if step['status'] == 'failed' else None
+                    step.get('status', StepStatus.FAILED),  # Usar estado granular
+                    step_result.get('validation_message') if step_result else step.get('error'),
+                    step.get('error') if step.get('status') == StepStatus.FAILED else None
                 )
                 update_task_data(task_id, {'plan': steps})
             
