@@ -1071,9 +1071,9 @@ Formato: Documento profesional completo y estructurado.
                         })
                     
                     else:
-                        # Paso genérico - ejecutar con Ollama
-                        if ollama_service:
-                            logger.info(f"⚡ Executing generic step: {step['title']}")
+                        # Paso genérico - ejecutar con REAL Ollama execution - NO SIMULATION
+                        try:
+                            logger.info(f"⚡ Executing generic step with REAL execution: {step['title']}")
                             
                             generic_prompt = f"""
 Ejecuta el paso '{step['title']}' para la tarea: {message}
@@ -1084,7 +1084,11 @@ Contexto previo: {final_results if final_results else 'Inicio de tarea'}
 Proporciona un resultado específico y útil para este paso.
 """
                             
-                            result = ollama_service.generate_response(generic_prompt, {})
+                            # EJECUCIÓN REAL CON REINTENTOS - NO SIMULACIÓN
+                            result = execute_tool_with_retries('processing', {
+                                'prompt': generic_prompt,
+                                'ollama_options': {}
+                            }, step['title'])
                             
                             step_result = {
                                 'type': 'generic',
@@ -1094,9 +1098,30 @@ Proporciona un resultado específico y útil para este paso.
                             
                             step['result'] = step_result
                             final_results.append(step_result)
-                            logger.info(f"✅ Generic step completed: {step['title']}")
-                        else:
-                            time.sleep(2)
+                            logger.info(f"✅ Generic step completed successfully: {step['title']}")
+                            
+                        except (OllamaServiceError, ToolNotAvailableError) as generic_error:
+                            logger.error(f"❌ Generic step failed after retries: {str(generic_error)}")
+                            
+                            # Marcar paso como fallido sin simulación
+                            step_result = {
+                                'type': 'generic_failed',
+                                'error': str(generic_error),
+                                'summary': f'❌ Error en paso genérico: {str(generic_error)}',
+                                'fallback_used': True
+                            }
+                            step['result'] = step_result
+                            step['status'] = 'failed'
+                            final_results.append(step_result)
+                            
+                            # Enviar error detallado
+                            send_websocket_update('tool_execution_detail', {
+                                'type': 'tool_execution_detail',
+                                'tool_name': 'processing',
+                                'error': str(generic_error),
+                                'message': f'❌ Error en paso genérico: {str(generic_error)}',
+                                'timestamp': datetime.now().isoformat()
+                            })
                     
                     # Marcar paso como completado
                     step_execution_time = time.time() - step_start_time
