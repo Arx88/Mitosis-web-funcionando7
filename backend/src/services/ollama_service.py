@@ -14,10 +14,115 @@ from requests.exceptions import RequestException, Timeout
 class OllamaService:
     def __init__(self, base_url: str = None):
         self.base_url = base_url or os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-        self.default_model = "llama3.1:8b"
+        self.default_model = os.getenv("OLLAMA_DEFAULT_MODEL", "llama3.1:8b")  # Configurable por defecto
         self.current_model = None
         self.conversation_history = []
-        self.request_timeout = 90  # Timeout aumentado para planes dinámicos complejos
+        self.request_timeout = 90  # Base timeout, será sobrescrito por configuración por modelo
+        
+        # 🆕 PROBLEMA 3: Configuración de parámetros por modelo
+        self.model_configs = self._load_model_configs()
+        
+    def _load_model_configs(self) -> dict:
+        """Carga las configuraciones de los modelos desde un archivo o define valores por defecto."""
+        config_path = os.getenv("OLLAMA_MODEL_CONFIGS_PATH", "/app/backend/config/ollama_model_configs.json")
+        
+        try:
+            if os.path.exists(config_path):
+                with open(config_path, "r", encoding="utf-8") as f:
+                    configs = json.load(f)
+                    
+                    # Validar estructura básica de las configuraciones cargadas
+                    for model, params in configs.items():
+                        if model.startswith('_'):  # Ignorar metadatos
+                            continue
+                        if not isinstance(params, dict) or "options" not in params:
+                            logging.getLogger(__name__).warning(f"⚠️ Configuración inválida para el modelo {model}. Usando valores por defecto.")
+                            configs[model] = self._get_default_model_config()
+                    
+                    logging.getLogger(__name__).info(f"✅ Configuraciones de modelos Ollama cargadas desde {config_path}")
+                    return configs
+            else:
+                logging.getLogger(__name__).info(f"ℹ️ Archivo de configuración no encontrado en {config_path}. Usando valores por defecto.")
+                return self._get_default_model_configs()
+                
+        except Exception as e:
+            logging.getLogger(__name__).error(f"❌ Error al cargar configuraciones de modelos desde {config_path}: {e}. Usando valores por defecto.")
+            return self._get_default_model_configs()
+    
+    def _get_default_model_configs(self) -> dict:
+        """Define las configuraciones por defecto para los modelos conocidos."""
+        return {
+            "llama3.1:8b": {
+                "options": {
+                    "temperature": 0.15,  # Más creativo que 0.1 pero preciso
+                    "top_p": 0.7,         # Reduce probabilidad de palabras menos probables
+                    "top_k": 20,          # Limita muestreo a las 20 palabras más probables
+                    "repeat_penalty": 1.1,# Penaliza repetición de tokens
+                    "stop": ["```", "---", "<|eot_id|>", "<|end_of_text|>"]  # Tokens de parada específicos
+                },
+                "request_timeout": 180    # 3 minutos para Llama3.1:8b
+            },
+            "qwen3:32b": {
+                "options": {
+                    "temperature": 0.1,   # Muy bajo para máxima precisión
+                    "top_p": 0.6,         # Más restrictivo para evitar divagaciones
+                    "top_k": 15,          # Muestreo muy limitado
+                    "repeat_penalty": 1.05,# Penalización ligera
+                    "stop": ["```json", "</tool_code>", "<|im_end|>", "<|endoftext|>"]  # Tokens específicos Qwen
+                },
+                "request_timeout": 480    # 8 minutos para Qwen3:32b (modelo grande)
+            },
+            "deepseek-r1:32b": {
+                "options": {
+                    "temperature": 0.12,
+                    "top_p": 0.65,
+                    "top_k": 18,
+                    "repeat_penalty": 1.08,
+                    "stop": ["```", "---", "<|endofthought|>", "<|end|>"]
+                },
+                "request_timeout": 420    # 7 minutos para DeepSeek R1
+            },
+            "default": {
+                "options": {
+                    "temperature": 0.7,
+                    "top_p": 0.9,
+                    "top_k": 40,
+                    "repeat_penalty": 1.1,
+                    "stop": []
+                },
+                "request_timeout": 120    # 2 minutos por defecto
+            }
+        }
+    
+    def _get_model_config(self, model_name: str) -> dict:
+        """Obtiene la configuración para un modelo dado, con fallback a la configuración por defecto."""
+        if model_name in self.model_configs:
+            return self.model_configs[model_name]
+        else:
+            logging.getLogger(__name__).warning(f"⚠️ No hay configuración específica para el modelo '{model_name}', usando configuración por defecto.")
+            return self.model_configs.get("default", self.model_configs["default"])
+    
+    def get_model_info(self, model_name: str = None) -> dict:
+        """
+        Obtiene información detallada sobre la configuración de un modelo.
+        
+        Args:
+            model_name: Nombre del modelo (si no se especifica, usa el modelo actual)
+        
+        Returns:
+            Dict con información de configuración del modelo
+        """
+        target_model = model_name or self.get_current_model()
+        config = self._get_model_config(target_model)
+        
+        return {
+            'model_name': target_model,
+            'config': config,
+            'is_optimized': target_model in self.model_configs and target_model != 'default',
+            'timeout': config.get('request_timeout', 120),
+            'temperature': config.get('options', {}).get('temperature', 0.7),
+            'description': config.get('description', 'Sin descripción disponible')
+        }
         
         
     def is_healthy(self) -> bool:
