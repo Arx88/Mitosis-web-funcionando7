@@ -537,7 +537,8 @@ def main():
     """Main test execution"""
     # Get backend URL from environment
     import os
-    backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://8049c779-a1f0-4d98-a352-e5dc504716dd.preview.emergentagent.com')
+    # Use localhost for testing since we're running on the same machine
+    backend_url = 'http://localhost:8001'
     
     logger.info(f"🎯 Testing Action Plan and Real-time Terminal Functionality")
     logger.info(f"🔗 Backend URL: {backend_url}")
