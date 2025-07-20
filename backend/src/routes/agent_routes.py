@@ -1131,33 +1131,95 @@ Proporciona un resultado específico y útil para este paso.
                                 'timestamp': datetime.now().isoformat()
                             })
                     
-                    # Marcar paso como completado
+                    # 🆕 PROBLEMA 2: VALIDACIÓN RIGUROSA DE RESULTADOS ANTES DE MARCAR COMO COMPLETADO
                     step_execution_time = time.time() - step_start_time
-                    step['completed'] = True
-                    step['active'] = False
-                    step['status'] = 'completed'
                     
-                    # Enviar actualización de paso completado en tiempo real
-                    send_websocket_update('step_update', {
-                        'type': 'step_update',
-                        'step_id': step['id'],
-                        'status': 'completed',
-                        'title': step['title'],
-                        'description': step['description'],
-                        'result_summary': step_result.get('summary', 'Paso completado') if step_result else 'Paso completado',
-                        'execution_time': step_execution_time,
-                        'progress': ((i + 1) / len(steps)) * 100
-                    })
+                    # Solo marcar como completado si tenemos un step_result válido
+                    if step_result and 'status' not in step or step.get('status') != 'failed':
+                        # VALIDAR RESULTADO USANDO SISTEMA ROBUSTO
+                        validation_status, validation_message = validate_step_result(step['tool'], step_result)
+                        
+                        logger.info(f"🔍 Validación para {step['tool']}: {validation_status} - {validation_message}")
+                        
+                        # Actualizar step_result con información de validación
+                        step_result['validation_status'] = validation_status
+                        step_result['validation_message'] = validation_message
+                        
+                        # Establecer estado del paso basado en validación
+                        if validation_status == 'success':
+                            step['status'] = StepStatus.COMPLETED_SUCCESS
+                            step['completed'] = True
+                            websocket_status = 'completed_success'
+                        elif validation_status == 'warning':
+                            step['status'] = StepStatus.COMPLETED_WITH_WARNINGS  
+                            step['completed'] = True
+                            websocket_status = 'completed_with_warnings'
+                        else:  # validation_status == 'failure'
+                            step['status'] = StepStatus.FAILED
+                            step['completed'] = False
+                            websocket_status = 'failed'
+                            
+                        step['active'] = False
+                        step['result'] = step_result
+                        
+                        # Enviar actualización de paso con estado detallado
+                        send_websocket_update('step_update', {
+                            'type': 'step_update',
+                            'step_id': step['id'],
+                            'status': websocket_status,
+                            'title': step['title'],
+                            'description': step['description'],
+                            'result_summary': validation_message,  # Usar mensaje de validación como resumen
+                            'execution_time': step_execution_time,
+                            'progress': ((i + 1) / len(steps)) * 100,
+                            'validation_status': validation_status
+                        })
+                        
+                        # Log detallado basado en validación
+                        if validation_status == 'success':
+                            send_websocket_update('log_message', {
+                                'type': 'log_message',
+                                'level': 'info',
+                                'message': f'✅ Paso {i+1}/{len(steps)} completado exitosamente: {step["title"]} - {validation_message} ({step_execution_time:.1f}s)',
+                                'timestamp': datetime.now().isoformat()
+                            })
+                            logger.info(f"✅ Step {i+1} VALIDATED AND COMPLETED successfully: {step['title']} in {step_execution_time:.1f}s")
+                        elif validation_status == 'warning':
+                            send_websocket_update('log_message', {
+                                'type': 'log_message',
+                                'level': 'warning', 
+                                'message': f'⚠️ Paso {i+1}/{len(steps)} completado con advertencias: {step["title"]} - {validation_message} ({step_execution_time:.1f}s)',
+                                'timestamp': datetime.now().isoformat()
+                            })
+                            logger.warning(f"⚠️ Step {i+1} COMPLETED WITH WARNINGS: {step['title']} - {validation_message}")
+                        else:
+                            send_websocket_update('log_message', {
+                                'type': 'log_message',
+                                'level': 'error',
+                                'message': f'❌ Paso {i+1}/{len(steps)} falló en validación: {step["title"]} - {validation_message} ({step_execution_time:.1f}s)',
+                                'timestamp': datetime.now().isoformat()
+                            })
+                            logger.error(f"❌ Step {i+1} FAILED VALIDATION: {step['title']} - {validation_message}")
+                    else:
+                        # Paso ya marcado como fallido o sin resultado válido
+                        step['active'] = False
+                        if not step.get('status'):
+                            step['status'] = StepStatus.FAILED
+                            step['completed'] = False
+                        
+                        send_websocket_update('step_update', {
+                            'type': 'step_update',
+                            'step_id': step['id'],
+                            'status': 'failed',
+                            'title': step['title'],
+                            'description': step['description'],
+                            'result_summary': step.get('error', 'Paso falló durante ejecución'),
+                            'execution_time': step_execution_time,
+                            'progress': ((i + 1) / len(steps)) * 100
+                        })
+                        
+                        logger.error(f"❌ Step {i+1} FAILED during execution: {step['title']}")
                     
-                    # Enviar log de completado
-                    send_websocket_update('log_message', {
-                        'type': 'log_message',
-                        'level': 'info',
-                        'message': f'✅ Paso {i+1}/{len(steps)} completado: {step["title"]} ({step_execution_time:.1f}s)',
-                        'timestamp': datetime.now().isoformat()
-                    })
-                    
-                    logger.info(f"✅ Step {i+1} completed successfully: {step['title']} in {step_execution_time:.1f}s")
                     
                     # ELIMINADO: Pausa simulada entre pasos
                     # Ahora el progreso se muestra en tiempo real sin pausas artificiales
