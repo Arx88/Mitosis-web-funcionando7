@@ -598,7 +598,7 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                                   context: {
                                     task_id: newTask.id,
                                     previous_messages: [],
-                                    search_mode: null
+                                    auto_execute: true  // Activar ejecución automática
                                   }
                                 })
                               });
