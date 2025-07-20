@@ -254,6 +254,25 @@ class WebSocketManager:
                 'timestamp': datetime.now().isoformat()
             }
         )
+
+    def emit_to_task(self, task_id: str, event: str, data: Dict[str, Any]):
+        """Emit event to all clients connected to a specific task"""
+        if not self.is_initialized or not self.socketio:
+            logger.warning("WebSocket not initialized, cannot emit event")
+            return
+            
+        try:
+            # Emit to task room
+            self.socketio.emit(event, data, room=task_id)
+            logger.info(f"Emitted {event} to task {task_id}: {data}")
+            
+            # Also emit to individual sessions if room doesn't work
+            if task_id in self.active_connections:
+                for session_id in self.active_connections[task_id]:
+                    self.socketio.emit(event, data, room=session_id)
+                    
+        except Exception as e:
+            logger.error(f"Error emitting to task {task_id}: {e}")
     
     def send_orchestration_progress(self, task_id: str, step_id: str, progress: float, 
                                    current_step: str, total_steps: int):
