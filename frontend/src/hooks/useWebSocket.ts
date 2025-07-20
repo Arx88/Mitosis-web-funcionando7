@@ -100,7 +100,7 @@ export const useWebSocket = (): UseWebSocketReturn => {
   const leaveTaskRoom = (taskId: string) => {
     if (socketRef.current && isConnected) {
       console.log('🚪 Leaving task room:', taskId);
-      socketRef.current.emit('leave_task_room', { task_id: taskId });
+      socketRef.current.emit('leave_task', { task_id: taskId });
     }
   };
 
