@@ -64,7 +64,9 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
         task_progress: (data) => {
           console.log('⏳ Task progress:', data);
-          logToTerminal(`⏳ Progreso: ${data.data?.step_id || 'Paso actual'}`, 'info');
+          if (data.activity) {
+            logToTerminal(`⏳ ${data.activity}`, 'info');
+          }
         },
 
         task_completed: (data) => {
