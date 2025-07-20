@@ -176,7 +176,63 @@ def execute_single_step(task_id: str, step_id: str):
         
     except Exception as e:
         logger.error(f"❌ Error ejecutando paso {step_id}: {str(e)}")
-        return jsonify({'error': f'Error executing step: {str(e)}'}), 500
+@agent_bp.route('/get-task-plan/<task_id>', methods=['GET'])
+def get_task_plan(task_id: str):
+    """
+    Obtener el estado actual del plan de una tarea
+    """
+    try:
+        task_data = get_task_data(task_id)
+        if not task_data:
+            return jsonify({'error': f'Task {task_id} not found'}), 404
+        
+        steps = task_data.get('plan', [])
+        
+        # Calcular estadísticas del plan
+        completed_steps = sum(1 for step in steps if step.get('completed', False))
+        in_progress_steps = sum(1 for step in steps if step.get('status') == 'in-progress')
+        
+        # Determinar siguiente paso disponible
+        next_step = None
+        for i, step in enumerate(steps):
+            if not step.get('completed', False):
+                # Verificar si todos los pasos anteriores están completados
+                if i == 0 or all(steps[j].get('completed', False) for j in range(i)):
+                    next_step = step
+                    break
+        
+        # Estado general de la tarea
+        task_status = 'pending'
+        if completed_steps == len(steps) and len(steps) > 0:
+            task_status = 'completed'
+        elif in_progress_steps > 0:
+            task_status = 'in_progress'
+        elif completed_steps > 0:
+            task_status = 'partially_completed'
+        
+        return jsonify({
+            'task_id': task_id,
+            'status': task_status,
+            'plan': steps,
+            'stats': {
+                'total_steps': len(steps),
+                'completed_steps': completed_steps,
+                'in_progress_steps': in_progress_steps,
+                'remaining_steps': len(steps) - completed_steps
+            },
+            'next_step': next_step,
+            'can_execute_next': next_step is not None,
+            'task_data': {
+                'message': task_data.get('message', ''),
+                'created_at': task_data.get('created_at', ''),
+                'task_type': task_data.get('task_type', ''),
+                'complexity': task_data.get('complexity', '')
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo plan para task {task_id}: {str(e)}")
+        return jsonify({'error': f'Error getting task plan: {str(e)}'}), 500
 
 def execute_single_step_logic(step: dict, original_message: str, task_id: str) -> dict:
     """
