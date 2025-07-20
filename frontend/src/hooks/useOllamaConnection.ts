@@ -54,20 +54,35 @@ export const useOllamaConnection = ({ endpoint, enabled }: UseOllamaConnectionPr
 
       // Handle both old format (array of strings) and new format (array of objects)
       const formattedModels = data.models.map((model: any) => {
+        let modelName: string;
+        let modelSize: string | undefined;
+        
         if (typeof model === 'string') {
           // Old format - just model name as string
-          return {
-            name: model,
-            label: model.charAt(0).toUpperCase() + model.slice(1).replace(/[.-]/g, ' ')
-          };
-        } else {
+          modelName = model;
+          modelSize = undefined;
+        } else if (model && typeof model === 'object') {
           // New format - object with name and size
-          return {
-            name: model.name || model,
-            label: `${model.name || model}${model.size ? ` (${model.size})` : ''}`,
-            size: model.size
-          };
+          modelName = model.name || '';
+          modelSize = model.size;
+        } else {
+          // Fallback for unexpected format
+          modelName = String(model || '');
+          modelSize = undefined;
         }
+        
+        // Ensure modelName is always a string
+        if (!modelName || typeof modelName !== 'string') {
+          modelName = 'Unknown Model';
+        }
+        
+        return {
+          name: modelName,
+          label: modelSize 
+            ? `${modelName} (${modelSize})` 
+            : modelName.charAt(0).toUpperCase() + modelName.slice(1).replace(/[.-]/g, ' '),
+          size: modelSize
+        };
       });
 
       setModels(formattedModels);
