@@ -3654,8 +3654,7 @@ def execute_single_step(task_id: str, step_id: str):
         step_data = request.json.get('step', {})
         
         # Emitir inicio de paso
-        if websocket_manager and hasattr(websocket_manager, 'emit_update'):
-            from src.websocket.websocket_manager import UpdateType
+        if websocket_manager:
             websocket_manager.emit_update(
                 task_id=task_id,
                 update_type=UpdateType.STEP_STARTED,
@@ -3672,7 +3671,7 @@ def execute_single_step(task_id: str, step_id: str):
         result = execute_tool_simulation(tool_name, step_data, task_id, websocket_manager)
         
         # Emitir finalización
-        if websocket_manager and hasattr(websocket_manager, 'emit_update'):
+        if websocket_manager:
             websocket_manager.emit_update(
                 task_id=task_id,
                 update_type=UpdateType.STEP_COMPLETED,
@@ -3695,6 +3694,60 @@ def execute_single_step(task_id: str, step_id: str):
     except Exception as e:
         logger.error(f"Error executing step {step_id}: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+def execute_tool_simulation(tool_name: str, step_data: Dict, task_id: str, websocket_manager):
+    """Simular ejecución de herramientas con actividad en tiempo real"""
+    import time
+    
+    activities = {
+        'web_search': [
+            'Iniciando búsqueda web...',
+            'Conectando con motores de búsqueda...',
+            'Analizando resultados...',
+            'Filtrando información relevante...',
+            'Búsqueda completada'
+        ],
+        'analysis': [
+            'Iniciando análisis...',
+            'Procesando datos...',
+            'Aplicando algoritmos de análisis...',
+            'Generando insights...',
+            'Análisis completado'
+        ],
+        'creation': [
+            'Iniciando creación de documento...',
+            'Estructurando contenido...',
+            'Generando texto...',
+            'Aplicando formato...',
+            'Documento creado exitosamente'
+        ],
+        'planning': [
+            'Iniciando planificación...',
+            'Analizando requisitos...',
+            'Definiendo estrategia...',
+            'Creando cronograma...',
+            'Plan completado'
+        ]
+    }
+    
+    tool_activities = activities.get(tool_name, [
+        f'Iniciando {tool_name}...',
+        f'Procesando con {tool_name}...',
+        f'{tool_name} completado'
+    ])
+    
+    # Emitir cada actividad con delay
+    for i, activity in enumerate(tool_activities):
+        if websocket_manager:
+            websocket_manager.emit_activity(task_id, activity, tool_name)
+        time.sleep(0.8)  # Delay realista entre actividades
+    
+    return {
+        'tool': tool_name,
+        'summary': f'{tool_name} ejecutado exitosamente',
+        'activities_count': len(tool_activities),
+        'duration': len(tool_activities) * 0.8
+    }
 
 def execute_tool_simulation(tool_name: str, step_data: Dict, task_id: str, websocket_manager):
     """Simular ejecución de herramientas con actividad en tiempo real"""
