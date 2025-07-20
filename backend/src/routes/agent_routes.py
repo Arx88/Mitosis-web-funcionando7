@@ -2731,18 +2731,54 @@ def get_final_result(task_id):
             'error': f'Error obteniendo resultado final: {str(e)}'
         }), 500
 
-@agent_bp.route('/health', methods=['GET'])
-def health_check():
-    """Health check endpoint"""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.now().isoformat(),
-        'services': {
-            'ollama': True,  # Simplified
-            'tools': 12,     # Simplified
-            'database': True # Simplified
-        }
-    })
+@agent_bp.route("/model-info", methods=["GET"])
+def get_model_info():
+    """
+    PROBLEMA 3: Endpoint para obtener información de configuración de modelos
+    """
+    try:
+        ollama_service = get_ollama_service()
+        if not ollama_service:
+            return jsonify({
+                "error": "Ollama service not available",
+                "status": "error"
+            }), 503
+        
+        # Obtener información del modelo actual
+        current_model_info = ollama_service.get_model_info()
+        
+        # Obtener todos los modelos configurados
+        available_configs = {}
+        for model_name in ollama_service.model_configs.keys():
+            if not model_name.startswith('_'):  # Ignorar metadatos
+                try:
+                    model_info = ollama_service.get_model_info(model_name)
+                    available_configs[model_name] = {
+                        'timeout': model_info['timeout'],
+                        'temperature': model_info['temperature'],
+                        'is_optimized': model_info['is_optimized'],
+                        'description': model_info['description']
+                    }
+                except Exception as e:
+                    logger.warning(f"Error getting info for model {model_name}: {e}")
+        
+        # Verificar conexión con Ollama
+        connection_status = ollama_service.check_connection()
+        
+        return jsonify({
+            "status": "success",
+            "current_model": current_model_info,
+            "available_configs": available_configs,
+            "ollama_connection": connection_status,
+            "total_configured_models": len(available_configs)
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error getting model info: {str(e)}")
+        return jsonify({
+            "error": f"Error retrieving model information: {str(e)}",
+            "status": "error"
+        }), 500
 
 @agent_bp.route('/status', methods=['GET'])
 def agent_status():
