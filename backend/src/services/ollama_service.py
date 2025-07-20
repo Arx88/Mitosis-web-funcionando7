@@ -6,6 +6,7 @@ Conecta directamente con Ollama para generar respuestas
 import json
 import time
 import os
+import logging
 from typing import Dict, List, Optional, Any
 import requests
 from requests.exceptions import RequestException, Timeout
