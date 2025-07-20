@@ -601,10 +601,42 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                               if (response.ok) {
                                 const initData = await response.json();
                                 console.log('✅ Task initialized with auto-execution:', initData);
+                                
+                                // PASO 5: Actualizar la tarea con el plan generado
+                                if (initData.plan && initData.plan.steps) {
+                                  const updatedTaskWithPlan = {
+                                    ...basicTaskUpdate,
+                                    plan: initData.plan.steps.map((step: any) => ({
+                                      id: step.id,
+                                      title: step.title,
+                                      description: step.description,
+                                      tool: step.tool,
+                                      estimated_time: step.estimated_time,
+                                      priority: step.priority,
+                                      completed: false,
+                                      active: false,
+                                      status: 'pending'
+                                    })),
+                                    status: 'in-progress' as const,
+                                    progress: 25
+                                  };
+                                  
+                                  setTasks(prev => prev.map(task => 
+                                    task.id === newTask.id ? updatedTaskWithPlan : task
+                                  ));
+                                  
+                                  console.log('✅ Task updated with generated plan:', initData.plan.steps.length, 'steps');
+                                }
+                              } else {
+                                console.error('❌ Initialize task failed:', response.status);
+                                // Fallback to chat endpoint if initialize fails
+                                await fallbackToChat(newTask, message, basicTaskUpdate, userMessage);
                               }
                               
                             } catch (error) {
                               console.error('❌ Error initializing task:', error);
+                              // Fallback to chat endpoint if initialize fails
+                              await fallbackToChat(newTask, message, basicTaskUpdate, userMessage);
                             }
                           }
                         }}
