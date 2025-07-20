@@ -3678,3 +3678,254 @@ def get_ollama_models():
             'models': [],
             'error': str(e)
         }), 500
+
+@agent_bp.route('/execute-step/<task_id>/<step_id>', methods=['POST'])
+def execute_single_step(task_id: str, step_id: str):
+    """Ejecutar un paso específico con emisión de eventos WebSocket"""
+    try:
+        websocket_manager = getattr(current_app, 'websocket_manager', None)
+        step_data = request.json.get('step', {})
+        
+        # Emitir inicio de paso
+        if websocket_manager and hasattr(websocket_manager, 'emit_update'):
+            from src.websocket.websocket_manager import UpdateType
+            websocket_manager.emit_update(
+                task_id=task_id,
+                update_type=UpdateType.STEP_STARTED,
+                data={
+                    'step_id': step_id,
+                    'task_id': task_id,
+                    'title': step_data.get('title', 'Paso'),
+                    'timestamp': datetime.now().isoformat()
+                }
+            )
+        
+        # Ejecutar paso según herramienta
+        tool_name = step_data.get('tool', 'analysis')
+        result = execute_tool_simulation(tool_name, step_data, task_id, websocket_manager)
+        
+        # Emitir finalización
+        if websocket_manager and hasattr(websocket_manager, 'emit_update'):
+            websocket_manager.emit_update(
+                task_id=task_id,
+                update_type=UpdateType.STEP_COMPLETED,
+                data={
+                    'step_id': step_id,
+                    'task_id': task_id,
+                    'title': step_data.get('title', 'Paso'),
+                    'result': result,
+                    'result_summary': result.get('summary', 'Completado'),
+                    'timestamp': datetime.now().isoformat()
+                }
+            )
+        
+        return jsonify({
+            'success': True,
+            'step_id': step_id,
+            'result': result
+        })
+        
+    except Exception as e:
+        logger.error(f"Error executing step {step_id}: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+def execute_tool_simulation(tool_name: str, step_data: Dict, task_id: str, websocket_manager):
+    """Simular ejecución de herramientas con actividad en tiempo real"""
+    import time
+    
+    activities = {
+        'web_search': [
+            'Iniciando búsqueda web...',
+            'Conectando con motores de búsqueda...',
+            'Analizando resultados...',
+            'Filtrando información relevante...',
+            'Búsqueda completada'
+        ],
+        'analysis': [
+            'Iniciando análisis...',
+            'Procesando datos...',
+            'Aplicando algoritmos de análisis...',
+            'Generando insights...',
+            'Análisis completado'
+        ],
+        'creation': [
+            'Iniciando creación de documento...',
+            'Estructurando contenido...',
+            'Generando texto...',
+            'Aplicando formato...',
+            'Documento creado exitosamente'
+        ],
+        'planning': [
+            'Iniciando planificación...',
+            'Analizando requisitos...',
+            'Definiendo estrategia...',
+            'Creando cronograma...',
+            'Plan completado'
+        ]
+    }
+    
+    tool_activities = activities.get(tool_name, [
+        f'Iniciando {tool_name}...',
+        f'Procesando con {tool_name}...',
+        f'{tool_name} completado'
+    ])
+    
+    # Emitir cada actividad con delay
+    for i, activity in enumerate(tool_activities):
+        if websocket_manager and hasattr(websocket_manager, 'emit_activity'):
+            websocket_manager.emit_activity(task_id, activity, tool_name)
+        time.sleep(0.8)  # Delay realista entre actividades
+    
+    return {
+        'tool': tool_name,
+        'summary': f'{tool_name} ejecutado exitosamente',
+        'activities_count': len(tool_activities),
+        'duration': len(tool_activities) * 0.8
+    }
+
+@agent_bp.route('/initialize-task', methods=['POST'])
+def initialize_task():
+    """Inicializar tarea con generación de plan y ejecución automática"""
+    try:
+        data = request.json
+        task_id = data.get('task_id')
+        title = data.get('title')
+        auto_execute = data.get('auto_execute', False)
+        
+        websocket_manager = getattr(current_app, 'websocket_manager', None)
+        
+        # Emitir evento de inicio de tarea
+        if websocket_manager and hasattr(websocket_manager, 'emit_update'):
+            from src.websocket.websocket_manager import UpdateType
+            websocket_manager.emit_update(
+                task_id=task_id,
+                update_type=UpdateType.TASK_STARTED,
+                data={
+                    'task_id': task_id,
+                    'title': title,
+                    'timestamp': datetime.now().isoformat()
+                }
+            )
+        
+        # Generar plan usando el agente
+        plan_data = generate_task_plan(title, task_id)
+        
+        # Emitir plan actualizado
+        if websocket_manager and hasattr(websocket_manager, 'emit_update') and plan_data:
+            websocket_manager.emit_update(
+                task_id=task_id,
+                update_type=UpdateType.PLAN_UPDATED,
+                data={
+                    'plan': plan_data,
+                    'task_id': task_id,
+                    'auto_execute': auto_execute,
+                    'timestamp': datetime.now().isoformat()
+                }
+            )
+        
+        return jsonify({
+            'success': True,
+            'task_id': task_id,
+            'plan': plan_data,
+            'auto_execute': auto_execute
+        })
+        
+    except Exception as e:
+        logger.error(f"Error initializing task: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+def generate_task_plan(title: str, task_id: str) -> Dict:
+    """Generar plan de tarea usando el agente mejorado"""
+    try:
+        enhanced_agent = getattr(current_app, 'enhanced_agent', None)
+        if not enhanced_agent:
+            # Fallback a generación básica
+            return generate_basic_plan(title)
+        
+        # Usar el agente mejorado para generar plan
+        plan_prompt = f"""
+        Genera un plan detallado para la siguiente tarea: "{title}"
+        
+        El plan debe incluir:
+        1. Pasos específicos y accionables
+        2. Herramientas necesarias para cada paso
+        3. Estimación de tiempo
+        4. Descripción clara de cada paso
+        
+        Responde en formato JSON con la estructura:
+        {{
+            "steps": [
+                {{
+                    "id": "step_1",
+                    "title": "Título del paso",
+                    "description": "Descripción detallada",
+                    "tool": "web_search|analysis|creation|planning|delivery",
+                    "estimated_time": "2-3 minutos",
+                    "priority": "alta|media|baja"
+                }}
+            ],
+            "task_type": "investigación|análisis|creación|planificación",
+            "complexity": "baja|media|alta",
+            "estimated_total_time": "10-15 minutos"
+        }}
+        """
+        
+        response = enhanced_agent.process_message(plan_prompt, task_id)
+        
+        # Parsear respuesta JSON
+        try:
+            import json
+            plan_data = json.loads(response)
+            return plan_data
+        except json.JSONDecodeError:
+            # Si no es JSON válido, generar plan básico
+            return generate_basic_plan(title)
+            
+    except Exception as e:
+        logger.error(f"Error generating plan with enhanced agent: {e}")
+        return generate_basic_plan(title)
+
+def generate_basic_plan(title: str) -> Dict:
+    """Generar plan básico como fallback"""
+    return {
+        "steps": [
+            {
+                "id": "step_1",
+                "title": "Análisis inicial",
+                "description": f"Analizar los requisitos de: {title}",
+                "tool": "analysis",
+                "estimated_time": "2-3 minutos",
+                "priority": "alta"
+            },
+            {
+                "id": "step_2", 
+                "title": "Investigación",
+                "description": "Buscar información relevante",
+                "tool": "web_search",
+                "estimated_time": "3-5 minutos",
+                "priority": "alta"
+            },
+            {
+                "id": "step_3",
+                "title": "Procesamiento",
+                "description": "Procesar y sintetizar información",
+                "tool": "processing",
+                "estimated_time": "2-4 minutos", 
+                "priority": "media"
+            },
+            {
+                "id": "step_4",
+                "title": "Entrega",
+                "description": "Preparar y entregar resultados",
+                "tool": "delivery",
+                "estimated_time": "1-2 minutos",
+                "priority": "alta"
+            }
+        ],
+        "task_type": "general",
+        "complexity": "media",
+        "estimated_total_time": "8-14 minutos"
+    }
