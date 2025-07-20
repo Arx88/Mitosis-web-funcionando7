@@ -1936,8 +1936,18 @@ SOLO JSON válido, sin texto adicional.
                 continue
         
         # Si llegamos aquí, todos los reintentos fallaron
-        logger.error(f"❌ All {max_attempts} plan generation attempts failed for task {task_id}")
-        raise Exception(f"Failed to generate valid plan after {max_attempts} attempts. Last error: {last_error}")
+        logger.error(f"❌ All {max_attempts} plan generation attempts failed for task {task_id}. Last error: {last_error}")
+        
+        # ESTRATEGIA DE EMERGENCIA: Crear plan básico estructurado basado en análisis del mensaje
+        logger.warning(f"🆘 Activating emergency plan generation for task {task_id}")
+        
+        try:
+            emergency_plan = generate_emergency_structured_plan(message, task_id, last_error)
+            logger.info(f"✅ Emergency plan generated successfully for task {task_id}")
+            return emergency_plan
+        except Exception as emergency_error:
+            logger.error(f"❌ Emergency plan generation also failed for task {task_id}: {str(emergency_error)}")
+            raise Exception(f"Complete failure: All plan generation strategies failed. Ollama errors: {last_error}. Emergency error: {str(emergency_error)}")
     
     try:
         # Intentar generar plan con reintentos
