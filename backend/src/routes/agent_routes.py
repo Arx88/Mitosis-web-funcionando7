@@ -3733,8 +3733,9 @@ def initialize_task():
         if auto_execute:
             # Iniciar ejecución en hilo separado después de 3 segundos
             def delayed_execution():
-                time.sleep(3)
-                execute_plan_with_real_tools(task_id, plan_response.get('steps', []), title)
+                with current_app.app_context():
+                    time.sleep(3)
+                    execute_plan_with_real_tools(task_id, plan_response.get('steps', []), title)
             
             import threading
             execution_thread = threading.Thread(target=delayed_execution)
