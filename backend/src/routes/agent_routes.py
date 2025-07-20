@@ -3667,8 +3667,7 @@ def execute_single_step(task_id: str, step_id: str):
             )
         
         # Ejecutar paso según herramienta
-        tool_name = step_data.get('tool', 'analysis')
-        result = execute_tool_simulation(tool_name, step_data, task_id, websocket_manager)
+        result = execute_single_step_logic(step_data, '', task_id)
         
         # Emitir finalización
         if websocket_manager:
