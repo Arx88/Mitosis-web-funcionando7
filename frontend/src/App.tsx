@@ -531,6 +531,8 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
     setIsInitialLoading(false);
   }, []);
 
+  const activeTask = tasks.find(task => task.id === activeTaskId);
+
   return (
     <div className="flex h-screen w-full bg-[#272728] text-[#DADADA]" style={{ fontFamily: "'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, sans-serif", fontWeight: 400 }}>
       {isInitialLoading ? (
