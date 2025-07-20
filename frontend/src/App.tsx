@@ -460,14 +460,10 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
     }
   }, [isConfigOpen]);
 
-  // Optimized initial loading
+  // Remove artificial loading delay - set loading to false immediately
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialLoading(false);
-    }, 1000); // 1 second loading simulation
-
-    return () => clearTimeout(timer);
-  }, []); // Sin dependencias innecesarias
+    setIsInitialLoading(false);
+  }, []);
 
   return (
     <div className="flex h-screen w-full bg-[#272728] text-[#DADADA]" style={{ fontFamily: "'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, sans-serif", fontWeight: 400 }}>
