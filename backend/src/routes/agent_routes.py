@@ -2924,18 +2924,64 @@ def get_ollama_models():
         data = request.get_json() or {}
         endpoint = data.get('endpoint', 'https://78d08925604a.ngrok-free.app')
         
-        # Simular modelos disponibles
-        models = [
-            {'name': 'llama3.1:8b', 'size': '4.7GB'},
-            {'name': 'deepseek-r1:32b', 'size': '20GB'},
-            {'name': 'qwen3:32b', 'size': '18GB'}
-        ]
-        
-        return jsonify({
-            'models': models,
-            'endpoint': endpoint,
-            'count': len(models)
-        })
+        # Hacer llamada real a Ollama para obtener modelos
+        try:
+            import requests
+            logger.info(f"🔍 Fetching models from Ollama endpoint: {endpoint}")
+            response = requests.get(f"{endpoint}/api/tags", timeout=10)
+            
+            if response.status_code == 200:
+                data_response = response.json()
+                models_list = data_response.get('models', [])
+                
+                # Formatear modelos para la respuesta
+                models = []
+                for model in models_list:
+                    model_info = {
+                        'name': model.get('name', ''),
+                        'size': model.get('size', 'Unknown size'),
+                    }
+                    # Agregar información adicional si está disponible
+                    if 'details' in model:
+                        details = model['details']
+                        if 'parameter_size' in details:
+                            model_info['parameter_size'] = details['parameter_size']
+                        if 'quantization_level' in details:
+                            model_info['quantization'] = details['quantization_level']
+                    
+                    models.append(model_info)
+                
+                logger.info(f"✅ Found {len(models)} models from Ollama")
+                
+                return jsonify({
+                    'models': models,
+                    'endpoint': endpoint,
+                    'count': len(models)
+                })
+            else:
+                logger.warning(f"⚠️ Ollama returned status code {response.status_code}")
+                raise Exception(f"Ollama API returned status code {response.status_code}")
+                
+        except requests.exceptions.RequestException as req_error:
+            logger.error(f"❌ Request error connecting to Ollama: {req_error}")
+            # Fallback a modelos conocidos si hay error de conexión
+            fallback_models = [
+                {'name': 'llama3.1:8b', 'size': '4.7GB'},
+                {'name': 'llama3.2:3b', 'size': '2.0GB'},
+                {'name': 'deepseek-r1:32b', 'size': '20GB'},
+                {'name': 'qwen3:32b', 'size': '18GB'},
+                {'name': 'mistral:7b', 'size': '4.1GB'},
+                {'name': 'codellama:7b', 'size': '3.8GB'},
+                {'name': 'phi3:3.8b', 'size': '2.3GB'}
+            ]
+            
+            return jsonify({
+                'models': fallback_models,
+                'endpoint': endpoint,
+                'count': len(fallback_models),
+                'fallback': True,
+                'warning': f'Could not connect to Ollama. Showing common models. Error: {str(req_error)}'
+            })
     
     except Exception as e:
         logger.error(f"Error getting Ollama models: {str(e)}")
