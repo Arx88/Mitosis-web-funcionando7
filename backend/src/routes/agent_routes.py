@@ -90,8 +90,8 @@ PLAN_SCHEMA = {
 
 agent_bp = Blueprint('agent', __name__)
 
-@agent_bp.route('/execute-step/<task_id>/<step_id>', methods=['POST'])
-def execute_single_step(task_id: str, step_id: str):
+@agent_bp.route('/execute-step-detailed/<task_id>/<step_id>', methods=['POST'])
+def execute_single_step_detailed(task_id: str, step_id: str):
     """
     Ejecutar un paso específico del plan de manera controlada y secuencial
     """
