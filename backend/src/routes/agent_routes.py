@@ -2869,17 +2869,19 @@ Por favor, revisa el monitor de ejecución para más detalles sobre el problema,
 
         else:
             # Estado por defecto (en progreso o desconocido)
-            clean_response = """Perfecto, he recibido tu solicitud y ya estoy trabajando en ella. 
+            clean_response = """¡Perfecto! He recibido tu solicitud y he preparado un plan de acción detallado.
 
-He generado un plan de acción detallado que puedes ver en la sección "Plan de Acción" del panel lateral. El plan incluye varios pasos que ejecutaré automáticamente para completar tu tarea.
+📋 **Plan generado y listo para ejecutar**
 
-📋 **Mi proceso incluirá:**
-- Análisis de tu solicitud
-- Generación de contenido específico
-- Creación de archivos tangibles (cuando aplique)
-- Entrega de resultados finales
+El plan está listo para ejecutarse paso a paso. Puedes ver todos los pasos en el panel lateral y ejecutarlos uno por uno para un control total sobre el proceso.
 
-🔄 Mientras trabajo en tu solicitud, puedes seguir el progreso en tiempo real a través del panel de monitoreo. Los archivos generados aparecerán automáticamente cuando estén listos."""
+🎯 **Cómo proceder:**
+- Revisa el plan completo en el panel lateral
+- Ejecuta cada paso cuando estés listo (los pasos deben completarse en orden)
+- Supervisa los resultados de cada paso
+- Los archivos generados aparecerán automáticamente
+
+⚡ **Control total:** Tienes control completo sobre cuándo y cómo se ejecuta cada paso del plan."""
 
         # Agregar información sobre herramientas si están disponibles
         if tool_results and task_status in ["completed_success", "completed_with_warnings"]:
