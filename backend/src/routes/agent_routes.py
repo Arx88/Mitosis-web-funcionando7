@@ -3042,6 +3042,24 @@ def chat():
             
             logger.info(f"✅ Plan generated successfully - ready for step-by-step execution")
             
+            # 🚀 Emitir evento WebSocket de plan actualizado
+            websocket_manager = current_app.websocket_manager
+            if websocket_manager and hasattr(websocket_manager, 'emit_update'):
+                from src.websocket.websocket_manager import UpdateType
+                websocket_manager.emit_update(
+                    task_id=task_id,
+                    update_type=UpdateType.PLAN_UPDATED,
+                    data={
+                        'plan': structured_plan,
+                        'task_id': task_id,
+                        'auto_execute': True,  # Activar ejecución automática
+                        'timestamp': datetime.now().isoformat()
+                    }
+                )
+                logger.info(f"🔌 Plan emitted via WebSocket for task {task_id}")
+            else:
+                logger.warning(f"⚠️ WebSocket manager not available for task {task_id}")
+            
             return jsonify({
                 'response': final_response,
                 'task_id': task_id,
