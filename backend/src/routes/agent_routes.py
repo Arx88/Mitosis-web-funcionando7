@@ -3845,9 +3845,10 @@ def start_task_execution(task_id: str):
         
         # Ejecutar pasos secuencialmente en un hilo separado
         import threading
+        app = current_app._get_current_object()  # Get the actual app instance
         
         def execute_with_context():
-            with current_app.app_context():
+            with app.app_context():
                 execute_task_steps_sequentially(task_id, task_plan.get('steps', []))
         
         execution_thread = threading.Thread(target=execute_with_context)
