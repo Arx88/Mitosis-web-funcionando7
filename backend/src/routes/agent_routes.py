@@ -2083,20 +2083,21 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
 
 
 def generate_clean_response(ollama_response: str, tool_results: list, task_status: str = "success", 
-                          failed_step_title: str = None, error_message: str = None) -> str:
+                          failed_step_title: str = None, error_message: str = None, warnings: list = None) -> str:
     """
     Genera una respuesta final condicional y dinámica basada en el estado real de la tarea
-    Incluye información sobre archivos tangibles generados.
+    PROBLEMA 2: Incluye información sobre validación de resultados y advertencias.
     
     Args:
         ollama_response: Respuesta original de Ollama
         tool_results: Resultados de herramientas ejecutadas
-        task_status: Estado final de la tarea ('success', 'completed_with_warnings', 'failed')
+        task_status: Estado final de la tarea ('completed_success', 'completed_with_warnings', 'failed')
         failed_step_title: Título del paso que falló (si aplica)
         error_message: Mensaje de error específico (si aplica)
+        warnings: Lista de advertencias detalladas (si aplica)
     
     Returns:
-        str: Respuesta final apropiada para el estado de la tarea con información de archivos
+        str: Respuesta final apropiada para el estado de la tarea con información de archivos y validación
     """
     try:
         # Detectar archivos creados en los resultados
