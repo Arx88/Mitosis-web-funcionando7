@@ -226,6 +226,34 @@ class WebSocketManager:
             'context': context or {},
             'message': f'Error: {error_message}'
         })
+
+    def emit_update(self, task_id: str, update_type: UpdateType, data: Dict[str, Any]):
+        """Emit update to all clients in task room"""
+        if not self.is_initialized or not self.socketio:
+            logger.warning("WebSocket not initialized, cannot emit update")
+            return
+            
+        try:
+            self.socketio.emit(
+                update_type.value,
+                data,
+                room=task_id
+            )
+            logger.info(f"Emitted {update_type.value} to task {task_id}")
+        except Exception as e:
+            logger.error(f"Error emitting update: {e}")
+
+    def emit_activity(self, task_id: str, activity: str, tool: str = None):
+        """Emit real-time activity to terminal"""
+        self.emit_update(
+            task_id=task_id,
+            update_type=UpdateType.TASK_PROGRESS,
+            data={
+                'activity': activity,
+                'tool': tool,
+                'timestamp': datetime.now().isoformat()
+            }
+        )
     
     def send_orchestration_progress(self, task_id: str, step_id: str, progress: float, 
                                    current_step: str, total_steps: int):
