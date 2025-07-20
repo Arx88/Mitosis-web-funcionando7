@@ -83,42 +83,23 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
         step_started: (data) => {
           console.log('🔄 Step started:', data);
-          logToTerminal(`🔄 Iniciando: ${data.title || data.data?.title || 'Paso'}`, 'info');
+          logToTerminal(`🔄 Iniciando: ${data.title || 'Paso'}`, 'info');
           
-          // Update step status in the plan
-          if (task.plan && Array.isArray(task.plan)) {
-            const updatedPlan = task.plan.map(step => ({
-              ...step,
-              status: step.id === data.step_id ? 'in-progress' : step.status,
-              active: step.id === data.step_id
-            }));
-            
-            // Update task with new plan state
-            if (onUpdateTaskProgress && task.id) {
-              onUpdateTaskProgress(task.id);
-            }
-          }
+          // Actualizar estado del paso en el plan
+          updateStepStatus(data.step_id, 'in-progress', true);
         },
 
         step_completed: (data) => {
           console.log('✅ Step completed:', data);
-          logToTerminal(`✅ Completado: ${data.title || data.data?.title || 'Paso'} - ${data.result_summary || 'Exitoso'}`, 'success');
+          logToTerminal(`✅ Completado: ${data.title || 'Paso'}`, 'success');
           
-          // Update step status in the plan
-          if (task.plan && Array.isArray(task.plan)) {
-            const updatedPlan = task.plan.map(step => ({
-              ...step,
-              status: step.id === data.step_id ? 'completed' : step.status,
-              completed: step.id === data.step_id ? true : step.completed,
-              active: false,
-              result: step.id === data.step_id ? data : step.result
-            }));
-            
-            // Update task with new plan state
-            if (onTaskUpdate) {
-              onTaskUpdate();
-            }
-          }
+          // Actualizar estado del paso
+          updateStepStatus(data.step_id, 'completed', false, true);
+          
+          // Ejecutar siguiente paso después de 1 segundo
+          setTimeout(() => {
+            executeNextStep();
+          }, 1000);
         },
 
         step_failed: (data) => {
