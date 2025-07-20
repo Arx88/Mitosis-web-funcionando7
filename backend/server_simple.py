@@ -173,5 +173,5 @@ def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
-    logger.info(f"🚀 Iniciando servidor simplificado en {HOST}:{PORT}")
-    app.run(host=HOST, port=PORT, debug=DEBUG)
+    logger.info(f"🚀 Iniciando servidor simplificado con WebSocket en {HOST}:{PORT}")
+    socketio.run(app, host=HOST, port=PORT, debug=DEBUG)
