@@ -1444,7 +1444,7 @@ Formato: Profesional, estructurado y completo.
             from src.websocket.websocket_manager import get_websocket_manager
             websocket_manager = get_websocket_manager()
             if websocket_manager and websocket_manager.is_initialized:
-                websocket_manager.send_update(task_id, websocket_manager.UpdateType.TASK_FAILED, {
+                websocket_manager.send_update(task_id, UpdateType.TASK_FAILED, {
                     'type': 'task_failed',
                     'task_id': task_id,
                     'status': 'failed',
