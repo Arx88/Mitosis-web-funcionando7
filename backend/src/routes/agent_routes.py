@@ -1366,7 +1366,8 @@ Formato: Profesional, estructurado y completo.
                 tool_results=final_results,
                 task_status=final_task_status,
                 failed_step_title=failed_step_titles[0] if failed_step_titles else None,
-                error_message=f"{len(failed_step_titles)} pasos fallaron" if failed_step_titles else None
+                error_message=error_message,
+                warnings=warnings  # 🆕 Pasar advertencias detalladas
             )
             
             # Marcar tarea como completada en persistencia y memoria
