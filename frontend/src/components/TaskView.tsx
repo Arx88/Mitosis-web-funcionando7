@@ -70,6 +70,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
         task_completed: (data) => {
           console.log('✅ Task completed:', data);
           logToTerminal('✅ Tarea completada exitosamente', 'success');
+          // Reload task data to get final results
+          if (onTaskUpdate) {
+            onTaskUpdate();
+          }
         },
 
         task_failed: (data) => {
@@ -77,14 +81,84 @@ export const TaskView: React.FC<TaskViewProps> = ({
           logToTerminal(`❌ Error en la tarea: ${data.error || 'Error desconocido'}`, 'error');
         },
 
+        step_started: (data) => {
+          console.log('🔄 Step started:', data);
+          logToTerminal(`🔄 Iniciando: ${data.title || data.data?.title || 'Paso'}`, 'info');
+          
+          // Update step status in the plan
+          if (task.plan && Array.isArray(task.plan)) {
+            const updatedPlan = task.plan.map(step => ({
+              ...step,
+              status: step.id === data.step_id ? 'in-progress' : step.status,
+              active: step.id === data.step_id
+            }));
+            
+            // Update task with new plan state
+            if (onTaskUpdate) {
+              onTaskUpdate();
+            }
+          }
+        },
+
+        step_completed: (data) => {
+          console.log('✅ Step completed:', data);
+          logToTerminal(`✅ Completado: ${data.title || data.data?.title || 'Paso'} - ${data.result_summary || 'Exitoso'}`, 'success');
+          
+          // Update step status in the plan
+          if (task.plan && Array.isArray(task.plan)) {
+            const updatedPlan = task.plan.map(step => ({
+              ...step,
+              status: step.id === data.step_id ? 'completed' : step.status,
+              completed: step.id === data.step_id ? true : step.completed,
+              active: false,
+              result: step.id === data.step_id ? data : step.result
+            }));
+            
+            // Update task with new plan state
+            if (onTaskUpdate) {
+              onTaskUpdate();
+            }
+          }
+        },
+
+        step_failed: (data) => {
+          console.log('❌ Step failed:', data);
+          logToTerminal(`❌ Error en paso: ${data.title || data.data?.title || 'Paso'} - ${data.error || 'Error desconocido'}`, 'error');
+          
+          // Update step status in the plan
+          if (task.plan && Array.isArray(task.plan)) {
+            const updatedPlan = task.plan.map(step => ({
+              ...step,
+              status: step.id === data.step_id ? 'failed' : step.status,
+              active: false,
+              error: step.id === data.step_id ? data.error : step.error
+            }));
+            
+            // Update task with new plan state
+            if (onTaskUpdate) {
+              onTaskUpdate();
+            }
+          }
+        },
+
         plan_updated: (data) => {
           console.log('📋 Plan updated:', data);
           logToTerminal('📋 Plan actualizado dinámicamente', 'info');
+          
+          // Trigger task data reload
+          if (onTaskUpdate) {
+            onTaskUpdate();
+          }
         },
 
         context_changed: (data) => {
           console.log('🔄 Context changed:', data);
           logToTerminal('🔄 Contexto de ejecución actualizado', 'info');
+        },
+
+        error: (data) => {
+          console.log('❌ WebSocket error:', data);
+          logToTerminal(`❌ Error: ${data.message || 'Error desconocido'}`, 'error');
         },
       });
 
