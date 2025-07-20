@@ -851,40 +851,85 @@ Genera el contenido específico, detallado y profesional que se solicita DIRECTA
                             })
                     
                     elif step['tool'] == 'planning' or 'planificación' in step['title'].lower():
-                        if ollama_service:
-                            logger.info(f"📋 Executing planning using Ollama")
-                            
-                            planning_prompt = f"""
-Crea un plan detallado para: {message}
+                        logger.info(f"📋 Executing planning with REAL plan generation - NO SIMULATION")
+                        
+                        # Enviar detalle de ejecución de herramienta
+                        send_websocket_update('tool_execution_detail', {
+                            'type': 'tool_execution_detail',
+                            'tool_name': 'planning',
+                            'input_params': {'context': step['description']},
+                            'message': f'📋 Ejecutando planificación: {step["title"]}',
+                            'timestamp': datetime.now().isoformat()
+                        })
+                        
+                        # Generar plan específico usando contexto previo
+                        planning_context = f"Tarea: {message}\nPaso: {step['title']}\nDescripción: {step['description']}"
+                        if final_results:
+                            planning_context += f"\nResultados anteriores: {final_results}"
+                        
+                        planning_prompt = f"""
+Desarrolla un plan específico para:
+{planning_context}
 
-Basándote en el contexto:
-- Tarea: {step['title']}
-- Descripción: {step['description']}
-- Información previa: {final_results if final_results else 'Primera fase'}
-
-Genera un plan estructurado con:
-1. Objetivos claros
-2. Pasos específicos
+Incluye:
+1. Objetivos específicos del plan
+2. Estrategias detalladas
 3. Recursos necesarios
 4. Cronograma estimado
-5. Criterios de éxito
+5. Métricas de éxito
 
-Proporciona un plan completo y actionable.
+Formato: Plan estructurado y profesional.
 """
-                            
-                            result = ollama_service.generate_response(planning_prompt, {})
+                        
+                        try:
+                            # EJECUCIÓN REAL CON REINTENTOS - NO SIMULACIÓN
+                            result = execute_tool_with_retries('planning', {
+                                'prompt': planning_prompt,
+                                'ollama_options': {}
+                            }, step['title'])
                             
                             step_result = {
                                 'type': 'planning',
                                 'content': result.get('response', 'Plan generado'),
-                                'summary': 'Plan detallado creado exitosamente'
+                                'summary': 'Plan detallado generado exitosamente'
                             }
                             
                             step['result'] = step_result
                             final_results.append(step_result)
-                            logger.info(f"✅ Planning completed")
-                        else:
-                            time.sleep(2)
+                            
+                            # Enviar resultado de herramienta
+                            send_websocket_update('tool_execution_detail', {
+                                'type': 'tool_execution_detail',
+                                'tool_name': 'planning',
+                                'output_summary': step_result['summary'],
+                                'message': f'✅ Planificación completada: {step["title"]}',
+                                'timestamp': datetime.now().isoformat()
+                            })
+                            
+                            logger.info(f"✅ Planning completed successfully")
+                            
+                        except (OllamaServiceError, ToolNotAvailableError) as planning_error:
+                            logger.error(f"❌ Planning failed after retries: {str(planning_error)}")
+                            
+                            # Marcar paso como fallido sin simulación
+                            step_result = {
+                                'type': 'planning_failed',
+                                'error': str(planning_error),
+                                'summary': f'❌ Error en planificación: {str(planning_error)}',
+                                'fallback_used': True
+                            }
+                            step['result'] = step_result
+                            step['status'] = 'failed'
+                            final_results.append(step_result)
+                            
+                            # Enviar error detallado
+                            send_websocket_update('tool_execution_detail', {
+                                'type': 'tool_execution_detail',
+                                'tool_name': 'planning',
+                                'error': str(planning_error),
+                                'message': f'❌ Error en planificación: {str(planning_error)}',
+                                'timestamp': datetime.now().isoformat()
+                            })
                     
                     elif step['tool'] == 'delivery' or 'entrega' in step['title'].lower():
                         if ollama_service:
