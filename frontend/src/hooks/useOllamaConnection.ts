@@ -5,6 +5,8 @@ interface OllamaModel {
   label: string;
   size?: string;
   modified?: string;
+  parameter_size?: string;
+  quantization?: string;
 }
 
 interface UseOllamaConnectionProps {
