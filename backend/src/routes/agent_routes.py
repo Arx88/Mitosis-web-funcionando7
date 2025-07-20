@@ -6,6 +6,7 @@ Y distingue entre conversaciones casuales y tareas complejas
 
 from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime
+from typing import Dict, Any
 import logging
 import time
 import uuid
