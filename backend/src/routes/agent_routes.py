@@ -1666,13 +1666,17 @@ HERRAMIENTAS VÁLIDAS (elige UNA por paso): web_search, analysis, creation, plan
 SOLO JSON, sin explicaciones adicionales. NO uses | para combinar herramientas.
 """
                 else:
-                    # Tercera tentativa: prompt simplificado
+                    # Tercera tentativa: prompt simplificado con plan de emergencia más robusto
                     prompt = f"""
-Genera SOLO este JSON válido para: "{message}"
+URGENTE: Genera SOLO este JSON válido para: "{message}"
 
-{{"steps":[{{"title":"Completar solicitud","description":"Procesar y completar la solicitud del usuario","tool":"processing","estimated_time":"2 minutos","priority":"media"}}],"task_type":"procesamiento_general","complexity":"media","estimated_total_time":"2 minutos"}}
+Usa ESTE TEMPLATE y personalizalo:
+{{"steps":[{{"title":"Procesar: {message[:30]}",...","description":"Completar la solicitud específica del usuario","tool":"processing","estimated_time":"2-5 minutos","priority":"media"}}],"task_type":"procesamiento_personalizado","complexity":"media","estimated_total_time":"2-5 minutos"}}
 
-Pero personalízalo para la tarea específica. SOLO JSON.
+PERSONALIZA el título y descripción para la tarea específica.
+HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
+
+SOLO JSON válido, sin texto adicional.
 """
                 
                 # Llamar a Ollama con parámetros optimizados para JSON
