@@ -3843,10 +3843,12 @@ def start_task_execution(task_id: str):
         
         # Ejecutar pasos secuencialmente en un hilo separado
         import threading
-        execution_thread = threading.Thread(
-            target=execute_task_steps_sequentially,
-            args=(task_id, task_plan.get('steps', []))
-        )
+        
+        def execute_with_context():
+            with current_app.app_context():
+                execute_task_steps_sequentially(task_id, task_plan.get('steps', []))
+        
+        execution_thread = threading.Thread(target=execute_with_context)
         execution_thread.daemon = True
         execution_thread.start()
         
