@@ -89,6 +89,390 @@ PLAN_SCHEMA = {
 
 agent_bp = Blueprint('agent', __name__)
 
+@agent_bp.route('/execute-step/<task_id>/<step_id>', methods=['POST'])
+def execute_single_step(task_id: str, step_id: str):
+    """
+    Ejecutar un paso específico del plan de manera controlada y secuencial
+    """
+    try:
+        # Obtener datos de la tarea
+        task_data = get_task_data(task_id)
+        if not task_data:
+            return jsonify({'error': f'Task {task_id} not found'}), 404
+        
+        # Encontrar el paso específico
+        steps = task_data.get('plan', [])
+        current_step = None
+        step_index = -1
+        
+        for i, step in enumerate(steps):
+            if step.get('id') == step_id:
+                current_step = step
+                step_index = i
+                break
+        
+        if not current_step:
+            return jsonify({'error': f'Step {step_id} not found'}), 404
+        
+        # VALIDACIÓN: Verificar que los pasos anteriores estén completados
+        if step_index > 0:
+            for i in range(step_index):
+                previous_step = steps[i]
+                if not previous_step.get('completed', False):
+                    return jsonify({
+                        'error': 'Los pasos anteriores deben completarse primero',
+                        'blocking_step': previous_step.get('title'),
+                        'must_complete_first': True
+                    }), 400
+        
+        # Verificar que el paso no esté ya completado
+        if current_step.get('completed', False):
+            return jsonify({
+                'error': 'Este paso ya está completado',
+                'step_already_completed': True
+            }), 400
+        
+        logger.info(f"🔄 Ejecutando paso específico {step_index + 1}: {current_step['title']} para task {task_id}")
+        
+        # Marcar paso como en progreso
+        current_step['active'] = True
+        current_step['status'] = 'in-progress'
+        current_step['start_time'] = datetime.now().isoformat()
+        
+        # Actualizar en persistencia
+        update_task_data(task_id, {'plan': steps})
+        
+        # Ejecutar el paso específico
+        step_result = execute_single_step_logic(current_step, task_data.get('message', ''), task_id)
+        
+        # Actualizar resultado del paso
+        current_step['active'] = False
+        current_step['completed'] = True
+        current_step['status'] = 'completed'
+        current_step['result'] = step_result
+        current_step['completed_time'] = datetime.now().isoformat()
+        
+        # Actualizar en persistencia
+        update_task_data(task_id, {'plan': steps})
+        
+        # Verificar si todos los pasos están completados
+        all_completed = all(step.get('completed', False) for step in steps)
+        
+        response_data = {
+            'success': True,
+            'step_result': step_result,
+            'step_completed': True,
+            'all_steps_completed': all_completed,
+            'next_step': steps[step_index + 1] if step_index + 1 < len(steps) else None
+        }
+        
+        if all_completed:
+            # Marcar tarea como completada
+            update_task_data(task_id, {'status': 'completed', 'completed_at': datetime.now().isoformat()})
+            response_data['task_completed'] = True
+            logger.info(f"🎉 Tarea {task_id} completada - todos los pasos ejecutados")
+        
+        return jsonify(response_data)
+        
+    except Exception as e:
+        logger.error(f"❌ Error ejecutando paso {step_id}: {str(e)}")
+        return jsonify({'error': f'Error executing step: {str(e)}'}), 500
+
+def execute_single_step_logic(step: dict, original_message: str, task_id: str) -> dict:
+    """
+    Lógica de ejecución para un paso individual con manejo de errores robusto
+    """
+    try:
+        step_tool = step.get('tool', 'processing')
+        step_title = step.get('title', 'Paso sin título')
+        step_description = step.get('description', 'Sin descripción')
+        
+        logger.info(f"⚡ Ejecutando herramienta '{step_tool}' para paso: {step_title}")
+        
+        # Obtener servicios necesarios
+        ollama_service = get_ollama_service()
+        tool_manager = get_tool_manager()
+        
+        # Ejecutar según el tipo de herramienta
+        if step_tool == 'web_search':
+            return execute_web_search_step(step_title, step_description, tool_manager, task_id)
+        elif step_tool in ['analysis', 'data_analysis']:
+            return execute_analysis_step(step_title, step_description, ollama_service, original_message)
+        elif step_tool == 'creation':
+            return execute_creation_step(step_title, step_description, ollama_service, original_message, task_id)
+        elif step_tool in ['planning', 'delivery']:
+            return execute_planning_delivery_step(step_tool, step_title, step_description, ollama_service, original_message)
+        else:
+            # Herramienta genérica
+            return execute_generic_step(step_title, step_description, ollama_service, original_message)
+            
+    except Exception as e:
+        logger.error(f"❌ Error en ejecución de paso: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'execution_error',
+            'summary': f'❌ Error al ejecutar: {str(e)}'
+        }
+
+def execute_web_search_step(title: str, description: str, tool_manager, task_id: str) -> dict:
+    """Ejecutar paso de búsqueda web"""
+    try:
+        # Extraer query de búsqueda
+        search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
+        
+        if tool_manager and hasattr(tool_manager, 'execute_tool'):
+            result = tool_manager.execute_tool('web_search', {
+                'query': search_query,
+                'num_results': 5
+            }, task_id=task_id)
+            
+            return {
+                'success': True,
+                'type': 'web_search',
+                'query': search_query,
+                'results_count': len(result.get('search_results', [])),
+                'summary': f"✅ Búsqueda completada: {len(result.get('search_results', []))} resultados encontrados",
+                'data': result.get('search_results', [])
+            }
+        else:
+            raise Exception("Tool manager no disponible")
+            
+    except Exception as e:
+        logger.error(f"❌ Web search error: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'web_search_error',
+            'summary': f'❌ Error en búsqueda: {str(e)}'
+        }
+
+def execute_analysis_step(title: str, description: str, ollama_service, original_message: str) -> dict:
+    """Ejecutar paso de análisis"""
+    try:
+        if not ollama_service or not ollama_service.is_healthy():
+            raise Exception("Servicio Ollama no disponible")
+        
+        analysis_prompt = f"""
+Realiza un análisis detallado para la tarea: {original_message}
+
+Paso específico: {title}
+Descripción: {description}
+
+Proporciona:
+1. Análisis específico del contexto
+2. Hallazgos principales  
+3. Recomendaciones
+4. Conclusiones
+
+Formato: Respuesta estructurada y profesional en español.
+"""
+        
+        result = ollama_service.generate_response(analysis_prompt, {'temperature': 0.7})
+        
+        if result.get('error'):
+            raise Exception(f"Error Ollama: {result['error']}")
+        
+        analysis_content = result.get('response', 'Análisis completado')
+        
+        return {
+            'success': True,
+            'type': 'analysis',
+            'content': analysis_content,
+            'length': len(analysis_content),
+            'summary': f"✅ Análisis completado - {len(analysis_content)} caracteres generados"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Analysis error: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'analysis_error',
+            'summary': f'❌ Error en análisis: {str(e)}'
+        }
+
+def execute_creation_step(title: str, description: str, ollama_service, original_message: str, task_id: str) -> dict:
+    """Ejecutar paso de creación con archivo real"""
+    try:
+        if not ollama_service or not ollama_service.is_healthy():
+            raise Exception("Servicio Ollama no disponible")
+        
+        creation_prompt = f"""
+IMPORTANTE: Genera el CONTENIDO REAL solicitado, NO un plan de acción.
+
+Tarea original: {original_message}
+Paso: {title}
+Descripción: {description}
+
+Genera contenido específico, detallado y profesional que responda exactamente a lo solicitado.
+Responde SOLO con el contenido final, NO con pasos de cómo crearlo.
+"""
+        
+        result = ollama_service.generate_response(creation_prompt, {'temperature': 0.7})
+        
+        if result.get('error'):
+            raise Exception(f"Error Ollama: {result['error']}")
+        
+        content = result.get('response', 'Contenido creado')
+        
+        # Crear archivo real
+        try:
+            import re
+            import os
+            safe_title = re.sub(r'[^a-zA-Z0-9\-_]', '_', title[:50])
+            filename = f"{safe_title}_{int(time.time())}.md"
+            file_path = f"/app/backend/static/generated_files/{filename}"
+            
+            # Crear directorio si no existe
+            os.makedirs("/app/backend/static/generated_files", exist_ok=True)
+            
+            # Escribir contenido al archivo
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(f"# {title}\n\n")
+                f.write(f"**Tarea:** {original_message}\n\n")
+                f.write(f"**Descripción:** {description}\n\n")
+                f.write("---\n\n")
+                f.write(content)
+            
+            file_size = os.path.getsize(file_path)
+            
+            logger.info(f"✅ Archivo creado: {filename} ({file_size} bytes)")
+            
+            return {
+                'success': True,
+                'type': 'creation_with_file',
+                'content': content,
+                'file_created': True,
+                'file_name': filename,
+                'file_path': file_path,
+                'file_size': file_size,
+                'download_url': f"/api/agent/download/{filename}",
+                'summary': f"✅ Contenido creado y archivo generado: {filename} ({file_size} bytes)"
+            }
+            
+        except Exception as file_error:
+            logger.error(f"❌ Error creando archivo: {file_error}")
+            return {
+                'success': True,
+                'type': 'creation_no_file',
+                'content': content,
+                'file_created': False,
+                'file_error': str(file_error),
+                'summary': f"✅ Contenido generado (error al crear archivo: {str(file_error)})"
+            }
+        
+    except Exception as e:
+        logger.error(f"❌ Creation error: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'creation_error',
+            'summary': f'❌ Error en creación: {str(e)}'
+        }
+
+def execute_planning_delivery_step(tool_type: str, title: str, description: str, ollama_service, original_message: str) -> dict:
+    """Ejecutar paso de planificación o entrega"""
+    try:
+        if not ollama_service or not ollama_service.is_healthy():
+            raise Exception("Servicio Ollama no disponible")
+        
+        if tool_type == 'planning':
+            prompt = f"""
+Realiza planificación detallada para:
+
+Tarea original: {original_message}
+Paso: {title}
+Descripción: {description}
+
+Proporciona:
+1. Objetivos específicos
+2. Recursos necesarios
+3. Estrategia de implementación
+4. Cronograma sugerido
+
+Formato: Planificación estructurada y práctica.
+"""
+        else:  # delivery
+            prompt = f"""
+Prepara la entrega final para:
+
+Tarea original: {original_message}
+Paso: {title}
+Descripción: {description}
+
+Proporciona:
+1. Resumen ejecutivo
+2. Resultados principales
+3. Recomendaciones
+4. Próximos pasos
+
+Formato: Entrega profesional y completa.
+"""
+        
+        result = ollama_service.generate_response(prompt, {'temperature': 0.7})
+        
+        if result.get('error'):
+            raise Exception(f"Error Ollama: {result['error']}")
+        
+        content = result.get('response', f'{tool_type} completado')
+        
+        return {
+            'success': True,
+            'type': tool_type,
+            'content': content,
+            'summary': f"✅ {tool_type.title()} completado exitosamente"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ {tool_type} error: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': f'{tool_type}_error',
+            'summary': f'❌ Error en {tool_type}: {str(e)}'
+        }
+
+def execute_generic_step(title: str, description: str, ollama_service, original_message: str) -> dict:
+    """Ejecutar paso genérico"""
+    try:
+        if not ollama_service or not ollama_service.is_healthy():
+            raise Exception("Servicio Ollama no disponible")
+        
+        generic_prompt = f"""
+Ejecuta la siguiente tarea:
+
+Tarea original: {original_message}
+Paso: {title}
+Descripción: {description}
+
+Proporciona un resultado específico y útil para este paso.
+Responde de manera clara y profesional.
+"""
+        
+        result = ollama_service.generate_response(generic_prompt, {'temperature': 0.7})
+        
+        if result.get('error'):
+            raise Exception(f"Error Ollama: {result['error']}")
+        
+        content = result.get('response', 'Paso completado')
+        
+        return {
+            'success': True,
+            'type': 'generic_processing',
+            'content': content,
+            'summary': f"✅ Paso completado: {title}"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Generic step error: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'generic_error',
+            'summary': f'❌ Error en paso: {str(e)}'
+        }
+
 # Importar nuevo TaskManager para persistencia
 from ..services.task_manager import get_task_manager
 
