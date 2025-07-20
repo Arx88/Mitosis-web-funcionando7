@@ -568,11 +568,18 @@ Para usar una herramienta, incluye en tu respuesta un bloque JSON con el siguien
 ```
 
 Herramientas disponibles:
-1. **shell** - Ejecutar comandos de terminal
-2. **web_search** - Buscar información en internet
-3. **file_manager** - Gestionar archivos y directorios
-4. **deep_research** - Investigación profunda
-5. **tavily_search** - Búsqueda avanzada web
+1. **web_search** - Buscar información en internet
+2. **analysis** - Realizar análisis de datos e información
+3. **creation** - Crear contenido, documentos o código
+4. **planning** - Planificación y organización de tareas
+5. **delivery** - Entrega y presentación de resultados
+6. **processing** - Procesamiento general de información
+7. **synthesis** - Síntesis y resumen de información
+8. **research** - Investigación detallada
+9. **investigation** - Investigación específica
+10. **shell** - Ejecutar comandos de terminal
+11. **search_definition** - Búsqueda de definiciones
+12. **data_analysis** - Análisis específico de datos
 """
             return base_prompt + tools_prompt
         
