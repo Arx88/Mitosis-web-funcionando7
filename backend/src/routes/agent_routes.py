@@ -24,6 +24,13 @@ from ..validation.result_validators import (
     determine_task_status_from_steps
 )
 
+# Import UpdateType for WebSocket updates
+try:
+    from src.websocket.websocket_manager import UpdateType
+except ImportError:
+    # Fallback if UpdateType is not available
+    UpdateType = None
+
 logger = logging.getLogger(__name__)
 
 # JSON Schema para validación de planes generados por Ollama
