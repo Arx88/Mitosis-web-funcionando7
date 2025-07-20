@@ -3743,6 +3743,27 @@ def initialize_task():
             
             logger.info(f"🔄 Auto-execution scheduled for task {task_id}")
         
+        # NUEVA FUNCIONALIDAD: Guardar datos de la tarea para posterior consulta
+        task_data = {
+            'task_id': task_id,
+            'title': title,
+            'message': title,  # Para compatibilidad
+            'plan': plan_response.get('steps', []),
+            'task_type': plan_response.get('task_type', 'general'),
+            'complexity': plan_response.get('complexity', 'media'),
+            'estimated_total_time': plan_response.get('estimated_total_time', '10-15 minutos'),
+            'auto_execute': auto_execute,
+            'status': 'initialized',
+            'created_at': datetime.now().isoformat()
+        }
+        
+        # Guardar en persistencia
+        save_success = save_task_data(task_id, task_data)
+        if save_success:
+            logger.info(f"✅ Task {task_id} saved to persistent storage")
+        else:
+            logger.warning(f"⚠️ Task {task_id} saved to legacy storage only")
+        
         return jsonify({
             'success': True,
             'plan': plan_response,
