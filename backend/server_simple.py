@@ -9,6 +9,7 @@ import sys
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_socketio import SocketIO
 from dotenv import load_dotenv
 import pymongo
 import logging
