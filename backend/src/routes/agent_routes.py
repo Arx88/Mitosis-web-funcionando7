@@ -1639,18 +1639,18 @@ REGLAS CRÍTICAS:
 - Asegúrate de que sea JSON válido y parseable
 """
                 elif attempt == 2:
-                    # Segunda tentativa: prompt con corrección específica
+                    # Segunda tentativa: prompt con corrección específica y herramientas claras
                     prompt = f"""
-El JSON anterior tuvo errores. CORRIGE y genera un plan válido para: "{message}"
+ATENCIÓN: El JSON anterior tuvo errores de validación. CORRIGE y genera un plan válido para: "{message}"
 
 ERROR PREVIO: {last_error}
 
-Responde SOLO con JSON válido:
+Responde SOLO con JSON válido usando EXACTAMENTE este formato:
 {{
   "steps": [
     {{
-      "title": "string de 5-100 caracteres",
-      "description": "string de 10-300 caracteres", 
+      "title": "string de 5-100 caracteres específico para la tarea",
+      "description": "string de 10-300 caracteres detallado", 
       "tool": "web_search",
       "estimated_time": "string",
       "priority": "media"
@@ -1661,7 +1661,9 @@ Responde SOLO con JSON válido:
   "estimated_total_time": "string"
 }}
 
-SOLO JSON, sin explicaciones adicionales.
+HERRAMIENTAS VÁLIDAS (elige UNA por paso): web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
+
+SOLO JSON, sin explicaciones adicionales. NO uses | para combinar herramientas.
 """
                 else:
                     # Tercera tentativa: prompt simplificado
