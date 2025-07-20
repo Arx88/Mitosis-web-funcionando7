@@ -2939,8 +2939,21 @@ def get_ollama_models():
                 for model in models_list:
                     model_info = {
                         'name': model.get('name', ''),
-                        'size': model.get('size', 'Unknown size'),
                     }
+                    
+                    # Formatear tamaño si está disponible
+                    if 'size' in model and model['size']:
+                        size_bytes = model['size']
+                        if size_bytes >= 1073741824:  # 1GB
+                            size_formatted = f"{size_bytes / 1073741824:.1f}GB"
+                        elif size_bytes >= 1048576:  # 1MB
+                            size_formatted = f"{size_bytes / 1048576:.0f}MB"
+                        else:
+                            size_formatted = f"{size_bytes}B"
+                        model_info['size'] = size_formatted
+                    else:
+                        model_info['size'] = 'Unknown size'
+                    
                     # Agregar información adicional si está disponible
                     if 'details' in model:
                         details = model['details']
