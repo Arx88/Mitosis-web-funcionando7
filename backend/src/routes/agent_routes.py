@@ -3044,8 +3044,8 @@ def chat():
             logger.info(f"✅ Plan generated successfully - ready for step-by-step execution")
             
             # 🚀 Emitir evento WebSocket de plan actualizado
-            websocket_manager = current_app.websocket_manager
-            if websocket_manager and hasattr(websocket_manager, 'emit_update'):
+            websocket_manager = getattr(current_app, 'websocket_manager', None)
+            if websocket_manager and hasattr(websocket_manager, 'emit_update') and structured_plan and 'steps' in structured_plan:
                 from src.websocket.websocket_manager import UpdateType
                 websocket_manager.emit_update(
                     task_id=task_id,
@@ -3057,7 +3057,7 @@ def chat():
                         'timestamp': datetime.now().isoformat()
                     }
                 )
-                logger.info(f"🔌 Plan emitted via WebSocket for task {task_id}")
+                logger.info(f"📡 Plan emitted via WebSocket for task {task_id}")
             else:
                 logger.warning(f"⚠️ WebSocket manager not available for task {task_id}")
             
