@@ -1151,8 +1151,8 @@ Proporciona un resultado específico y útil para este paso.
                     
                     logger.info(f"✅ Step {i+1} completed successfully: {step['title']} in {step_execution_time:.1f}s")
                     
-                    # Pausa entre pasos para dar tiempo a mostrar progreso
-                    time.sleep(2)
+                    # ELIMINADO: Pausa simulada entre pasos
+                    # Ahora el progreso se muestra en tiempo real sin pausas artificiales
                     
                 except Exception as step_error:
                     step_execution_time = time.time() - step_start_time
