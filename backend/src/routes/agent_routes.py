@@ -1434,7 +1434,7 @@ Formato: Profesional, estructurado y completo.
         
         # Enviar notificación de fallo de tarea si WebSocket está disponible
         try:
-            from websocket.websocket_manager import get_websocket_manager
+            from src.websocket.websocket_manager import get_websocket_manager
             websocket_manager = get_websocket_manager()
             if websocket_manager and websocket_manager.is_initialized:
                 websocket_manager.send_update(task_id, websocket_manager.UpdateType.TASK_FAILED, {
