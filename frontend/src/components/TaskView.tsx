@@ -172,6 +172,73 @@ export const TaskView: React.FC<TaskViewProps> = ({
     }
   }, [isConnected, task.id, joinTaskRoom, leaveTaskRoom, addEventListeners, removeEventListeners]);
 
+  // 🚀 Función de ejecución automática de pasos
+  const executeNextStep = async (specificStepId?: string) => {
+    if (!task.plan || task.plan.length === 0) return;
+    
+    // Encontrar el siguiente paso a ejecutar
+    let nextStep;
+    if (specificStepId) {
+      nextStep = task.plan.find(step => step.id === specificStepId);
+    } else {
+      nextStep = task.plan.find(step => !step.completed && !step.active);
+    }
+    
+    if (!nextStep) {
+      logToTerminal('🎉 Todos los pasos completados', 'success');
+      return;
+    }
+    
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+      
+      logToTerminal(`🚀 Ejecutando: ${nextStep.title}`, 'info');
+      
+      const response = await fetch(`${backendUrl}/api/agent/execute-step/${task.id}/${nextStep.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          step: nextStep,
+          context: {
+            task_id: task.id,
+            previous_steps: task.plan.filter(s => s.completed)
+          }
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      logToTerminal(`📊 Resultado: ${result.summary || 'Ejecutado'}`, 'info');
+      
+    } catch (error) {
+      console.error('Error executing step:', error);
+      logToTerminal(`❌ Error ejecutando paso: ${error.message}`, 'error');
+    }
+  };
+
+  const updateStepStatus = (stepId: string, status: string, active: boolean, completed?: boolean) => {
+    const updatedTask = {
+      ...task,
+      plan: task.plan?.map(step => ({
+        ...step,
+        status: step.id === stepId ? status : step.status,
+        active: step.id === stepId ? active : false,
+        completed: completed !== undefined && step.id === stepId ? completed : step.completed
+      }))
+    };
+    onUpdateTask(updatedTask);
+    
+    // Actualizar progreso
+    if (onUpdateTaskProgress) {
+      onUpdateTaskProgress(task.id);
+    }
+  };
+
   // Debug effects for modal states
   useEffect(() => {
     console.log('🗂️ FilesModal state changed:', showFilesModal);
