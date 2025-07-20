@@ -267,65 +267,18 @@ class MitosisAgent:
     
     def create_and_execute_task(self, title: str, description: str, goal: str,
                                auto_execute: bool = True) -> str:
-        """Crea y opcionalmente ejecuta una nueva tarea"""
+        """
+        Crea y opcionalmente ejecuta una nueva tarea con generación robusta de planes
+        Implementa mejoras según UPGRADE.md Problema 1: Generación de Planes Genéricos
+        """
         try:
             self.state = AgentState.PLANNING
             
-            # Generar plan de tarea usando el prompt manager
-            planning_prompt = self.prompt_manager.generate_task_planning_prompt(
-                goal=goal,
-                description=description,
-                context=f"Título: {title}"
-            )
+            # Generar plan usando la nueva función robusta
+            plan_data = self._generate_robust_plan_with_retries(title, description, goal)
             
-            # Seleccionar modelo para planificación
-            planning_model = self.model_manager.select_best_model(
-                task_type="analysis",
-                max_cost=self.config.max_cost_per_1k_tokens
-            )
-            
-            if not planning_model:
-                return "Error: No hay modelos disponibles para planificación."
-            
-            # Generar plan
-            plan_response = self.model_manager.generate_response(
-                planning_prompt,
-                model=planning_model,
-                max_tokens=1500,
-                temperature=0.3
-            )
-            
-            if not plan_response:
-                return "Error: No se pudo generar el plan de tarea."
-            
-            # Parsear el plan (asumiendo formato JSON)
-            try:
-                # Extraer JSON del response si está envuelto en texto
-                start_idx = plan_response.find('{')
-                end_idx = plan_response.rfind('}') + 1
-                if start_idx != -1 and end_idx != 0:
-                    plan_json = plan_response[start_idx:end_idx]
-                    plan_data = json.loads(plan_json)
-                else:
-                    # Si no hay JSON, crear plan básico
-                    plan_data = {
-                        "goal": goal,
-                        "phases": [
-                            {"id": 1, "title": "Análisis", "description": description, "required_capabilities": ["analysis"]},
-                            {"id": 2, "title": "Ejecución", "description": "Ejecutar la tarea", "required_capabilities": ["general"]},
-                            {"id": 3, "title": "Entrega", "description": "Entregar resultados", "required_capabilities": ["communication"]}
-                        ]
-                    }
-            except json.JSONDecodeError:
-                # Plan de respaldo
-                plan_data = {
-                    "goal": goal,
-                    "phases": [
-                        {"id": 1, "title": "Análisis", "description": description, "required_capabilities": ["analysis"]},
-                        {"id": 2, "title": "Ejecución", "description": "Ejecutar la tarea", "required_capabilities": ["general"]},
-                        {"id": 3, "title": "Entrega", "description": "Entregar resultados", "required_capabilities": ["communication"]}
-                    ]
-                }
+            if not plan_data:
+                return "Error: No se pudo generar un plan válido para la tarea."
             
             # Crear tarea
             task_id = self.task_manager.create_task(
@@ -333,7 +286,7 @@ class MitosisAgent:
                 description=description,
                 goal=goal,
                 phases=plan_data.get("phases", []),
-                context={"plan_response": plan_response}
+                context={"plan_response": plan_data.get("_original_response", ""), "ai_generated": True}
             )
             
             # Añadir información a la memoria
@@ -353,13 +306,276 @@ class MitosisAgent:
                 else:
                     return f"Tarea '{title}' creada con ID: {task_id}, pero no se pudo iniciar automáticamente."
             else:
-                self.state = AgentState.IDLE
-                return f"Tarea '{title}' creada con ID: {task_id}. Use execute_task() para iniciarla."
+                return f"Tarea '{title}' creada con ID: {task_id}. Usa start_task() para ejecutar."
             
         except Exception as e:
-            self.logger.error(f"Error al crear/ejecutar tarea: {e}")
+            self.logger.error(f"Error al crear y ejecutar tarea: {e}")
             self.state = AgentState.ERROR
             return f"Error al crear tarea: {str(e)}"
+    
+    def _generate_robust_plan_with_retries(self, title: str, description: str, goal: str, 
+                                         max_attempts: int = 3) -> Optional[Dict[str, Any]]:
+        """
+        Genera un plan robusto con reintentos y validación de esquemas
+        Implementa mejoras según UPGRADE.md Problema 1: Validación y Reintento Robusto
+        """
+        last_error = None
+        
+        for attempt in range(1, max_attempts + 1):
+            try:
+                self.logger.info(f"Generando plan - Intento {attempt}/{max_attempts}")
+                
+                # Generar prompt específico según el intento
+                if attempt == 1:
+                    # Primera tentativa: prompt con ejemplos (few-shot learning)
+                    planning_prompt = self._create_coercive_planning_prompt(title, description, goal)
+                elif attempt == 2:
+                    # Segunda tentativa: prompt con corrección específica
+                    planning_prompt = self._create_correction_prompt(title, description, goal, last_error)
+                else:
+                    # Tercera tentativa: prompt simplificado de emergencia
+                    planning_prompt = self._create_emergency_fallback_prompt(title, description, goal)
+                
+                # Seleccionar modelo optimizado para JSON
+                planning_model = self.model_manager.select_best_model(
+                    task_type="analysis",
+                    max_cost=self.config.max_cost_per_1k_tokens,
+                    preferred_capabilities=["json", "structured_output"]  # Priorizar modelos para JSON
+                )
+                
+                if not planning_model:
+                    last_error = "No hay modelos disponibles para planificación"
+                    continue
+                
+                # Generar respuesta
+                plan_response = self.model_manager.generate_response(
+                    planning_prompt,
+                    model=planning_model,
+                    max_tokens=1500,
+                    temperature=0.2  # Temperatura baja para mayor consistencia
+                )
+                
+                if not plan_response:
+                    last_error = "El modelo no generó respuesta"
+                    continue
+                
+                # Parsear y validar con múltiples estrategias
+                plan_data = self._parse_and_validate_plan(plan_response)
+                
+                if plan_data:
+                    # Éxito! Registrar rendimiento del prompt
+                    self._record_prompt_performance(attempt, True, plan_response)
+                    plan_data["_original_response"] = plan_response
+                    plan_data["_generation_attempt"] = attempt
+                    return plan_data
+                else:
+                    last_error = "JSON generado no cumple con el esquema requerido"
+                    
+            except Exception as e:
+                last_error = f"Error inesperado: {str(e)}"
+                self.logger.error(f"Error en intento {attempt}: {e}")
+                
+            # Registrar fallo
+            self._record_prompt_performance(attempt, False, "")
+        
+        # Si llegamos aquí, todos los intentos fallaron
+        self.logger.error(f"Falló generación de plan después de {max_attempts} intentos. Último error: {last_error}")
+        
+        # Generar plan de respaldo SOLO después de agotar reintentos
+        self.logger.warning("Generando plan de respaldo genérico como último recurso")
+        fallback_plan = self._create_fallback_plan_with_notification(title, description, goal, last_error)
+        return fallback_plan
+    
+    def _create_coercive_planning_prompt(self, title: str, description: str, goal: str) -> str:
+        """
+        Crea un prompt coercitivo con ejemplos según UPGRADE.md
+        Incluye instrucciones más imperativas y ejemplos en contexto (few-shot learning)
+        """
+        return f"""¡ADVERTENCIA! La respuesta DEBE ser un JSON válido y nada más. No incluyas texto explicativo antes o después del JSON.
+
+TAREA: {title}
+DESCRIPCIÓN: {description}
+OBJETIVO: {goal}
+
+EJEMPLOS DE FORMATO CORRECTO:
+
+Ejemplo 1 - Análisis:
+{{"goal": "Analizar tendencias de IA en 2025", "phases": [{{"id": 1, "title": "Investigación de fuentes actuales", "description": "Buscar información actualizada sobre IA en 2025", "required_capabilities": ["web_search"], "tool_name": "web_search"}}, {{"id": 2, "title": "Análisis de datos encontrados", "description": "Procesar y analizar la información recolectada", "required_capabilities": ["analysis"], "tool_name": "analysis"}}, {{"id": 3, "title": "Redacción de informe detallado", "description": "Crear documento con conclusiones y tendencias identificadas", "required_capabilities": ["creation"], "tool_name": "creation"}}]}}
+
+Ejemplo 2 - Creación:
+{{"goal": "Crear script de automatización", "phases": [{{"id": 1, "title": "Definición de requisitos técnicos", "description": "Identificar funcionalidades específicas requeridas", "required_capabilities": ["analysis"], "tool_name": "analysis"}}, {{"id": 2, "title": "Desarrollo del código fuente", "description": "Escribir el script con las funcionalidades definidas", "required_capabilities": ["creation"], "tool_name": "creation"}}, {{"id": 3, "title": "Pruebas y optimización final", "description": "Validar funcionamiento y optimizar rendimiento", "required_capabilities": ["analysis"], "tool_name": "analysis"}}]}}
+
+AHORA GENERA EL JSON PARA LA TAREA ACTUAL. Debe ser específico, NO genérico como "Análisis", "Ejecución", "Entrega".
+
+ESQUEMA REQUERIDO:
+- "goal": string (mínimo 3 caracteres)
+- "phases": array de 1-10 objetos
+  - Cada fase DEBE tener: "id" (integer), "title" (5-100 chars), "description" (10-300 chars), "required_capabilities" (array), "tool_name" (string)
+  - Herramientas válidas: "web_search", "file_write", "analysis", "creation", "shell_exec", "general"
+
+RESPUESTA (SOLO JSON):"""
+
+    def _create_correction_prompt(self, title: str, description: str, goal: str, error: str) -> str:
+        """
+        Crea un prompt de corrección específica según UPGRADE.md
+        """
+        return f"""El JSON anterior tuvo errores. ERROR: {error}
+
+Por favor, corrige el JSON y asegúrate de que cumpla con el esquema.
+
+TAREA: {title}
+OBJETIVO: {goal}
+
+FORMATO CORRECTO REQUERIDO:
+{{"goal": "objetivo específico aquí", "phases": [{{"id": 1, "title": "título específico NO genérico", "description": "descripción detallada de 10-300 caracteres", "required_capabilities": ["capability"], "tool_name": "herramienta_válida"}}]}}
+
+HERRAMIENTAS VÁLIDAS: web_search, file_write, analysis, creation, shell_exec, general
+CAPACIDADES VÁLIDAS: analysis, web_search, creation, planning, delivery, processing, synthesis, general, communication
+
+NO uses títulos genéricos como "Análisis", "Ejecución", "Entrega". Sé específico para esta tarea.
+
+RESPUESTA CORREGIDA (SOLO JSON):"""
+
+    def _create_emergency_fallback_prompt(self, title: str, description: str, goal: str) -> str:
+        """
+        Crea un prompt simplificado de emergencia
+        """
+        return f"""Genera SOLO este JSON válido para: {title}
+
+{{"goal": "completar la tarea solicitada", "phases": [{{"id": 1, "title": "Procesar solicitud específica", "description": "Analizar y procesar la solicitud del usuario de manera específica", "required_capabilities": ["analysis"], "tool_name": "analysis"}}, {{"id": 2, "title": "Ejecutar acciones necesarias", "description": "Realizar las acciones específicas requeridas para completar la tarea", "required_capabilities": ["general"], "tool_name": "general"}}]}}
+
+Pero personalízalo para la tarea específica: {description}
+
+SOLO JSON, sin explicaciones:"""
+
+    def _parse_and_validate_plan(self, plan_response: str) -> Optional[Dict[str, Any]]:
+        """
+        Parsea y valida el plan usando múltiples estrategias según UPGRADE.md
+        Implementa validación de esquema post-generación robusta
+        """
+        plan_data = None
+        
+        # Estrategia 1: JSON directo
+        try:
+            # Limpiar respuesta
+            cleaned_response = plan_response.strip()
+            if cleaned_response.startswith('{') and cleaned_response.endswith('}'):
+                plan_data = json.loads(cleaned_response)
+        except json.JSONDecodeError:
+            pass
+        
+        # Estrategia 2: Buscar JSON en el texto
+        if not plan_data:
+            try:
+                json_match = re.search(r'\{[^{}]*"goal"[^{}]*"phases"[^{}]*\[.*?\][^{}]*\}', plan_response, re.DOTALL)
+                if json_match:
+                    plan_data = json.loads(json_match.group())
+            except json.JSONDecodeError:
+                pass
+        
+        # Estrategia 3: JSON con corrección de formato
+        if not plan_data:
+            try:
+                # Corregir comillas simples por dobles
+                corrected_text = plan_response.replace("'", '"')
+                # Buscar el JSON principal
+                start_idx = corrected_text.find('{')
+                end_idx = corrected_text.rfind('}') + 1
+                if start_idx != -1 and end_idx != 0:
+                    json_text = corrected_text[start_idx:end_idx]
+                    plan_data = json.loads(json_text)
+            except (json.JSONDecodeError, Exception):
+                pass
+        
+        # Validar esquema usando jsonschema
+        if plan_data:
+            try:
+                jsonschema.validate(plan_data, PLAN_SCHEMA)
+                self.logger.info("Plan generado válido según esquema")
+                return plan_data
+            except jsonschema.ValidationError as e:
+                self.logger.warning(f"Plan no cumple esquema: {e.message}")
+                # Registrar error para análisis futuro (aprendizaje)
+                self._register_validation_error(plan_response, str(e))
+        
+        return None
+    
+    def _create_fallback_plan_with_notification(self, title: str, description: str, goal: str, reason: str) -> Dict[str, Any]:
+        """
+        Crea plan de respaldo solo después de agotar reintentos según UPGRADE.md
+        """
+        self.logger.warning(f"Generando plan de respaldo para '{title}'. Razón: {reason}")
+        
+        return {
+            "goal": goal,
+            "phases": [
+                {
+                    "id": 1, 
+                    "title": f"Análisis específico: {title}", 
+                    "description": f"Analizar los requisitos específicos para: {description}", 
+                    "required_capabilities": ["analysis"],
+                    "tool_name": "analysis"
+                },
+                {
+                    "id": 2, 
+                    "title": f"Procesamiento de: {title}", 
+                    "description": f"Procesar y trabajar en la tarea específica: {description}", 
+                    "required_capabilities": ["general"],
+                    "tool_name": "general"
+                },
+                {
+                    "id": 3, 
+                    "title": f"Entrega final de: {title}", 
+                    "description": f"Completar y entregar los resultados finales de: {description}", 
+                    "required_capabilities": ["delivery"],
+                    "tool_name": "general"
+                }
+            ],
+            "_fallback_used": True,
+            "_fallback_reason": reason,
+            "_warning": "Este plan fue generado como respaldo después de múltiples intentos fallidos"
+        }
+    
+    def _record_prompt_performance(self, attempt: int, success: bool, response: str):
+        """
+        Registra el rendimiento del prompt para análisis futuro según UPGRADE.md
+        Utiliza métricas de PromptPerformance para monitoreo
+        """
+        try:
+            # Aquí se integraría con enhanced_prompts.py para registrar métricas
+            performance_data = {
+                "attempt": attempt,
+                "success": success,
+                "response_length": len(response) if response else 0,
+                "timestamp": time.time()
+            }
+            
+            # Añadir a memoria para análisis futuro
+            self.memory_manager.add_knowledge(
+                content=f"Prompt performance: {performance_data}",
+                category="prompt_optimization",
+                source="agent_planning",
+                confidence=1.0,
+                tags=["performance", "planning", "optimization"]
+            )
+            
+        except Exception as e:
+            self.logger.error(f"Error registrando performance: {e}")
+    
+    def _register_validation_error(self, response: str, error: str):
+        """
+        Registra errores de validación para análisis futuro según UPGRADE.md
+        """
+        try:
+            self.memory_manager.add_knowledge(
+                content=f"Validation error: {error} | Response: {response[:200]}...",
+                category="validation_errors",
+                source="agent_planning",
+                confidence=0.8,
+                tags=["error", "validation", "planning"]
+            )
+        except Exception as e:
+            self.logger.error(f"Error registrando validation error: {e}")
     
     def execute_current_phase(self, task_id: Optional[str] = None) -> str:
         """Ejecuta la fase actual de una tarea"""
