@@ -221,7 +221,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
             status: 'failed' as const
           };
           onUpdateTask(failedTask);
-        }
+        },
 
         context_changed: (data) => {
           console.log('🔄 Context changed:', data);
