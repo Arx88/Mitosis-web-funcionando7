@@ -220,13 +220,14 @@ class WebSocketBackendTester:
                 execution_data = response.json()
                 
                 success = execution_data.get('success', False)
-                step_completed = execution_data.get('step_completed', False)
+                step_id_returned = execution_data.get('step_id')
+                result = execution_data.get('result')
                 
-                if success and step_completed:
+                if success and step_id_returned and result:
                     self.log_test_result(
                         "Step Execution Endpoint", 
                         True, 
-                        f"Step {step_id} executed successfully",
+                        f"Step {step_id} executed successfully with result",
                         response_time
                     )
                     return True
