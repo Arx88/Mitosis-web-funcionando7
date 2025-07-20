@@ -518,11 +518,12 @@ class TaskManager:
             "current_task_id": self.current_task_id,
             "monitoring_enabled": self.monitoring_enabled,
             "max_concurrent_tasks": self.max_concurrent_tasks,
-            "task_status_counts": {
-                status.value: len([t for t in self.active_tasks.values() if t.status == status])
-                for status in TaskStatus
-            }
+            "auto_retry_failed_phases": self.auto_retry_failed_phases
         }
+    
+    def get_all_tasks(self) -> List[Task]:
+        """Obtiene todas las tareas activas"""
+        return list(self.active_tasks.values())
 
 # Ejemplo de uso
 if __name__ == "__main__":
