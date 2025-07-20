@@ -1046,8 +1046,29 @@ Formato: Documento profesional completo y estructurado.
                             step['result'] = step_result
                             final_results.append(step_result)
                             logger.info(f"✅ Final delivery with tangible results completed")
-                        else:
-                            time.sleep(2)
+                        # Si llegamos aquí, Ollama no está disponible para delivery
+                        logger.error(f"❌ Ollama service not available for delivery step: {step['title']}")
+                        
+                        # En lugar de simulación, marcar como fallido
+                        step_result = {
+                            'type': 'delivery_failed',
+                            'error': 'Ollama service not available',
+                            'summary': '❌ Error: No se pudo completar la entrega - Ollama no disponible',
+                            'file_created': False,
+                            'fallback_used': True
+                        }
+                        step['result'] = step_result
+                        step['status'] = 'failed'
+                        final_results.append(step_result)
+                        
+                        # Enviar error detallado
+                        send_websocket_update('tool_execution_detail', {
+                            'type': 'tool_execution_detail',
+                            'tool_name': 'delivery',
+                            'error': 'Ollama service not available',
+                            'message': '❌ Error en entrega final: Ollama no disponible',
+                            'timestamp': datetime.now().isoformat()
+                        })
                     
                     else:
                         # Paso genérico - ejecutar con Ollama
