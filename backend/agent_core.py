@@ -29,6 +29,59 @@ class AgentState(Enum):
     WAITING_USER = "waiting_user"
     ERROR = "error"
 
+# Esquema JSON para validación de planes generados según UPGRADE.md
+PLAN_SCHEMA = {
+    "type": "object",
+    "required": ["goal", "phases"],
+    "properties": {
+        "goal": {
+            "type": "string",
+            "minLength": 3
+        },
+        "phases": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 10,
+            "items": {
+                "type": "object",
+                "required": ["id", "title", "description", "required_capabilities"],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "minLength": 5,
+                        "maxLength": 100
+                    },
+                    "description": {
+                        "type": "string", 
+                        "minLength": 10,
+                        "maxLength": 300
+                    },
+                    "required_capabilities": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": ["analysis", "web_search", "creation", "planning", "delivery", "processing", "synthesis", "general", "communication"]
+                        }
+                    },
+                    "estimated_time": {
+                        "type": "string"
+                    },
+                    "tool_name": {
+                        "type": "string",
+                        "enum": ["web_search", "file_write", "analysis", "creation", "shell_exec", "general"]
+                    }
+                },
+                "additionalProperties": False
+            }
+        }
+    },
+    "additionalProperties": False
+}
+
 @dataclass
 class AgentConfig:
     """Configuración del agente"""
