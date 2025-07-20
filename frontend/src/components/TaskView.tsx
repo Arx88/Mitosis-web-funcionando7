@@ -243,6 +243,27 @@ export const TaskView: React.FC<TaskViewProps> = ({
     }
   }, [isConnected, task.id, joinTaskRoom, leaveTaskRoom, addEventListeners, removeEventListeners]);
 
+  // Nueva función para iniciar ejecución
+  const startTaskExecution = async (taskId: string) => {
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+      
+      const response = await fetch(`${backendUrl}/api/agent/start-task-execution/${taskId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (response.ok) {
+        logToTerminal('🚀 Iniciando ejecución automática...', 'info');
+      }
+    } catch (error) {
+      console.error('Error starting task execution:', error);
+      logToTerminal('❌ Error iniciando ejecución', 'error');
+    }
+  };
+
   // 🚀 Función de ejecución automática de pasos
   const executeNextStep = async (specificStepId?: string) => {
     if (!task.plan || task.plan.length === 0) return;
