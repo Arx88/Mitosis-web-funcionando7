@@ -662,7 +662,7 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                                 body: JSON.stringify({
                                   task_id: newTask.id,
                                   title: message.trim(),
-                                  auto_execute: true  // Activar ejecución automática
+                                  auto_execute: true  // 🚀 ACTIVAR EJECUCIÓN AUTOMÁTICA
                                 })
                               });
                               
