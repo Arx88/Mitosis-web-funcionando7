@@ -59,7 +59,7 @@ PLAN_SCHEMA = {
                     },
                     "tool": {
                         "type": "string",
-                        "enum": ["web_search", "analysis", "creation", "planning", "delivery", "processing", "synthesis", "search_definition", "data_analysis"]
+                        "enum": ["web_search", "analysis", "creation", "planning", "delivery", "processing", "synthesis", "search_definition", "data_analysis", "shell", "research", "investigation", "web_scraping", "search", "mind_map", "spreadsheets", "database"]
                     },
                     "estimated_time": {
                         "type": "string"
