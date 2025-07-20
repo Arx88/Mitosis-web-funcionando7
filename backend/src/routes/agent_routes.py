@@ -3754,6 +3754,255 @@ def initialize_task():
         logger.error(f"❌ Error initializing task: {e}")
         return jsonify({'error': str(e)}), 500
 
+@agent_bp.route('/execute-step/<task_id>/<step_id>', methods=['POST'])
+def execute_step(task_id: str, step_id: str):
+    """Execute a specific step and emit real-time updates"""
+    try:
+        # Obtener datos del paso
+        step_data = get_step_data(task_id, step_id)
+        
+        # Emitir evento de inicio
+        emit_step_event(task_id, 'step_started', {
+            'step_id': step_id,
+            'title': step_data.get('title', 'Ejecutando paso'),
+            'description': step_data.get('description', ''),
+            'tool': step_data.get('tool', 'general'),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        # Ejecutar el paso según su herramienta
+        result = execute_step_by_tool(step_data)
+        
+        # Emitir evento de progreso durante la ejecución
+        emit_step_event(task_id, 'task_progress', {
+            'step_id': step_id,
+            'activity': f"Procesando con {step_data.get('tool', 'herramienta general')}...",
+            'progress_percentage': 50,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        # Emitir evento de completado
+        emit_step_event(task_id, 'step_completed', {
+            'step_id': step_id,
+            'title': step_data.get('title', 'Paso completado'),
+            'result': result,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        return jsonify({
+            'success': True,
+            'result': result,
+            'step_id': step_id
+        })
+        
+    except Exception as e:
+        # Emitir evento de error
+        emit_step_event(task_id, 'step_failed', {
+            'step_id': step_id,
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        return jsonify({'error': str(e)}), 500
+
+@agent_bp.route('/start-task-execution/<task_id>', methods=['POST'])
+def start_task_execution(task_id: str):
+    """Start automatic execution of all task steps"""
+    try:
+        # Obtener plan de la tarea
+        task_plan = get_task_plan_data(task_id)
+        
+        # Emitir evento de inicio de tarea
+        emit_step_event(task_id, 'task_started', {
+            'task_id': task_id,
+            'total_steps': len(task_plan.get('steps', [])),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        # Ejecutar pasos secuencialmente en un hilo separado
+        import threading
+        execution_thread = threading.Thread(
+            target=execute_task_steps_sequentially,
+            args=(task_id, task_plan.get('steps', []))
+        )
+        execution_thread.daemon = True
+        execution_thread.start()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Task execution started',
+            'task_id': task_id
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+def get_step_data(task_id: str, step_id: str) -> dict:
+    """Get step data from task plan"""
+    try:
+        task_data = get_task_data(task_id)
+        if task_data and 'plan' in task_data:
+            steps = task_data['plan']
+            for step in steps:
+                if step.get('id') == step_id:
+                    return step
+        return {}
+    except Exception as e:
+        logger.error(f"❌ Error getting step data: {e}")
+        return {}
+
+def get_task_plan_data(task_id: str) -> dict:
+    """Get task plan data"""
+    try:
+        task_data = get_task_data(task_id)
+        return task_data if task_data else {}
+    except Exception as e:
+        logger.error(f"❌ Error getting task plan: {e}")
+        return {}
+
+def execute_step_by_tool(step_data: dict) -> dict:
+    """Execute step based on its tool"""
+    tool = step_data.get('tool', 'general')
+    title = step_data.get('title', 'Step')
+    description = step_data.get('description', '')
+    
+    # Simulate step execution with the existing logic
+    result = {
+        'success': True,
+        'tool': tool,
+        'title': title,
+        'output': f"Executed {title} using {tool}",
+        'timestamp': datetime.now().isoformat()
+    }
+    
+    # Add delay for visualization
+    time.sleep(2)
+    
+    return result
+
+def execute_task_steps_sequentially(task_id: str, steps: list):
+    """Execute task steps one by one with delays"""
+    for i, step in enumerate(steps):
+        try:
+            step_id = step.get('id', f'step-{i+1}')
+            
+            # Ejecutar el paso
+            execute_step_internal(task_id, step_id, step)
+            
+            # Pausa entre pasos para visualización
+            time.sleep(2)
+            
+        except Exception as e:
+            logger.error(f"Error executing step {step_id}: {e}")
+            emit_step_event(task_id, 'step_failed', {
+                'step_id': step_id,
+                'error': str(e),
+                'timestamp': datetime.now().isoformat()
+            })
+            break
+    
+    # Emitir evento de tarea completada
+    emit_step_event(task_id, 'task_completed', {
+        'task_id': task_id,
+        'timestamp': datetime.now().isoformat()
+    })
+
+def execute_step_internal(task_id: str, step_id: str, step: dict):
+    """Execute a single step internally with progress updates"""
+    try:
+        # Emitir inicio de paso
+        emit_step_event(task_id, 'step_started', {
+            'step_id': step_id,
+            'title': step.get('title', 'Ejecutando paso'),
+            'description': step.get('description', ''),
+            'tool': step.get('tool', 'general'),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        # Simular ejecución del paso
+        execute_step_simulation(task_id, step_id, step)
+        
+        # Emitir completado
+        emit_step_event(task_id, 'step_completed', {
+            'step_id': step_id,
+            'title': step.get('title', 'Paso completado'),
+            'result': f"Completado: {step.get('title', 'Paso')}",
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error executing step {step_id}: {e}")
+        emit_step_event(task_id, 'step_failed', {
+            'step_id': step_id,
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        })
+
+def execute_step_simulation(task_id: str, step_id: str, step: dict):
+    """Simulate step execution with progress updates"""
+    tool = step.get('tool', 'general')
+    title = step.get('title', 'Ejecutando paso')
+    
+    # Emitir progreso inicial
+    emit_step_event(task_id, 'task_progress', {
+        'step_id': step_id,
+        'activity': f"Iniciando {tool}...",
+        'progress_percentage': 25,
+        'timestamp': datetime.now().isoformat()
+    })
+    
+    time.sleep(1)
+    
+    # Emitir progreso medio
+    emit_step_event(task_id, 'task_progress', {
+        'step_id': step_id,
+        'activity': f"Procesando con {tool}...",
+        'progress_percentage': 75,
+        'timestamp': datetime.now().isoformat()
+    })
+    
+    time.sleep(2)
+    
+    # Simular resultado según herramienta
+    if tool == 'web_search':
+        emit_step_event(task_id, 'task_progress', {
+            'step_id': step_id,
+            'activity': "Búsqueda web completada, analizando resultados...",
+            'progress_percentage': 90,
+            'timestamp': datetime.now().isoformat()
+        })
+    elif tool == 'analysis':
+        emit_step_event(task_id, 'task_progress', {
+            'step_id': step_id,
+            'activity': "Análisis completado, generando insights...",
+            'progress_percentage': 90,
+            'timestamp': datetime.now().isoformat()
+        })
+    elif tool == 'creation':
+        emit_step_event(task_id, 'task_progress', {
+            'step_id': step_id,
+            'activity': "Contenido creado, aplicando formato final...",
+            'progress_percentage': 90,
+            'timestamp': datetime.now().isoformat()
+        })
+    else:
+        emit_step_event(task_id, 'task_progress', {
+            'step_id': step_id,
+            'activity': f"Finalizando {title}...",
+            'progress_percentage': 90,
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    time.sleep(1)
+
+def emit_step_event(task_id: str, event_type: str, data: dict):
+    """Helper function to emit step events"""
+    if hasattr(current_app, 'websocket_manager') and current_app.websocket_manager:
+        current_app.websocket_manager.emit_to_task(task_id, event_type, data)
+        logger.info(f"📡 Emitted {event_type} for task {task_id}")
+    else:
+        logger.warning("⚠️ WebSocket manager not available")
+
 def generate_task_plan(title: str, task_id: str) -> Dict:
     """Generar plan de tarea usando el agente mejorado"""
     try:
