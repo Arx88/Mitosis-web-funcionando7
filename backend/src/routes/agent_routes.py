@@ -1620,7 +1620,7 @@ Responde ÚNICAMENTE con un objeto JSON válido siguiendo EXACTAMENTE este forma
     {{
       "title": "Título específico del paso (5-100 caracteres)",
       "description": "Descripción detallada del paso (10-300 caracteres)",
-      "tool": "web_search|analysis|creation|planning|delivery|processing|synthesis|search_definition|data_analysis",
+      "tool": "web_search|analysis|creation|planning|delivery|processing|synthesis|research|investigation|shell",
       "estimated_time": "Tiempo estimado como string",
       "priority": "alta|media|baja"
     }}
