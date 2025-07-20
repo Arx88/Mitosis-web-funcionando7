@@ -52,10 +52,14 @@ export const useOllamaConnection = ({ endpoint, enabled }: UseOllamaConnectionPr
         throw new Error(data.error);
       }
 
+      console.log('🔍 Raw models data from backend:', data.models);
+
       // Handle both old format (array of strings) and new format (array of objects)
-      const formattedModels = data.models.map((model: any) => {
+      const formattedModels = data.models.map((model: any, index: number) => {
         let modelName: string;
         let modelSize: string | undefined;
+        
+        console.log(`Processing model ${index}:`, model, typeof model);
         
         if (typeof model === 'string') {
           // Old format - just model name as string
@@ -73,16 +77,20 @@ export const useOllamaConnection = ({ endpoint, enabled }: UseOllamaConnectionPr
         
         // Ensure modelName is always a string
         if (!modelName || typeof modelName !== 'string') {
+          console.warn(`Invalid model name for model ${index}:`, modelName);
           modelName = 'Unknown Model';
         }
         
-        return {
+        const formattedModel = {
           name: modelName,
           label: modelSize 
             ? `${modelName} (${modelSize})` 
             : modelName.charAt(0).toUpperCase() + modelName.slice(1).replace(/[.-]/g, ' '),
           size: modelSize
         };
+        
+        console.log(`Formatted model ${index}:`, formattedModel);
+        return formattedModel;
       });
 
       setModels(formattedModels);
