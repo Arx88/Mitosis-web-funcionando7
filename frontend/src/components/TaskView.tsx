@@ -94,8 +94,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
             }));
             
             // Update task with new plan state
-            if (onTaskUpdate) {
-              onTaskUpdate();
+            if (onUpdateTaskProgress && task.id) {
+              onUpdateTaskProgress(task.id);
             }
           }
         },
