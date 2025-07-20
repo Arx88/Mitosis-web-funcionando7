@@ -366,13 +366,25 @@ export const TaskView: React.FC<TaskViewProps> = ({
     addMemoryFile(memoryFile);
     logToTerminal(`🧠 Archivo "${file.name}" agregado a la memoria`, 'success');
   };
-  const logToTerminal = (message: string, type: 'info' | 'success' | 'error' = 'info') => {
-    setTerminalLogs(prev => [...prev, {
+  const logToTerminal = useCallback((message: string, type: 'info' | 'success' | 'error' | 'warning' = 'info') => {
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = {
       message,
       type,
       timestamp: new Date()
-    }]);
-  };
+    };
+    
+    setTerminalLogs(prev => [...prev, logEntry]);
+    
+    // Auto-scroll al final
+    setTimeout(() => {
+      if (monitorRef.current) {
+        monitorRef.current.scrollTop = monitorRef.current.scrollHeight;
+      }
+    }, 100);
+    
+    console.log(`📝 Terminal log (${type}):`, message);
+  }, []);
 
   // Función para generar enlace de compartir
   const generateShareLink = async (taskId: string): Promise<string> => {
