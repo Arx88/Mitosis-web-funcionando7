@@ -11,8 +11,12 @@ interface WebSocketEvents {
   task_progress: (data: any) => void;
   task_completed: (data: any) => void;
   task_failed: (data: any) => void;
+  step_started: (data: any) => void;
+  step_completed: (data: any) => void;
+  step_failed: (data: any) => void;
   plan_updated: (data: any) => void;
   context_changed: (data: any) => void;
+  error: (data: any) => void;
 }
 
 interface UseWebSocketReturn {
