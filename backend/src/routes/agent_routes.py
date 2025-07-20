@@ -3732,8 +3732,10 @@ def initialize_task():
         # Auto-ejecutar si está habilitado
         if auto_execute:
             # Iniciar ejecución en hilo separado después de 3 segundos
+            app = current_app._get_current_object()  # Get the actual app instance
+            
             def delayed_execution():
-                with current_app.app_context():
+                with app.app_context():
                     time.sleep(3)
                     execute_plan_with_real_tools(task_id, plan_response.get('steps', []), title)
             
