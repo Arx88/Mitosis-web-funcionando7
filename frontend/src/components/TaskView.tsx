@@ -126,14 +126,13 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
         plan_updated: (data) => {
           console.log('📋 Plan updated:', data);
-          logToTerminal('📋 Plan de acción actualizado', 'info');
+          logToTerminal('📋 Plan de acción generado', 'info');
           
-          // Actualizar el plan en la tarea
           if (data.plan && data.plan.steps) {
             const updatedTask = {
               ...task,
-              plan: data.plan.steps.map(step => ({
-                id: step.id || `step-${Date.now()}-${Math.random()}`,
+              plan: data.plan.steps.map((step, index) => ({
+                id: step.id || `step-${index}`,
                 title: step.title,
                 description: step.description,
                 completed: false,
@@ -145,12 +144,12 @@ export const TaskView: React.FC<TaskViewProps> = ({
             };
             onUpdateTask(updatedTask);
             
-            // Iniciar ejecución automática del primer paso
-            if (data.plan.steps.length > 0) {
-              setTimeout(() => {
+            // Auto-ejecutar primer paso después de 2 segundos
+            setTimeout(() => {
+              if (data.plan.steps.length > 0) {
                 executeNextStep(data.plan.steps[0].id);
-              }, 2000);
-            }
+              }
+            }, 2000);
           }
         },
 
