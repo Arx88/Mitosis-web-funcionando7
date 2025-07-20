@@ -11,8 +11,23 @@ import sys
 import os
 from datetime import datetime
 
-# Backend URL from environment
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://d804ef70-2b83-4cfc-811b-23a8959fa2bf.preview.emergentagent.com')
+# Backend URL from environment - try local first, then external
+LOCAL_BACKEND_URL = "http://localhost:8001"
+EXTERNAL_BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://d804ef70-2b83-4cfc-811b-23a8959fa2bf.preview.emergentagent.com')
+
+# Test local first
+try:
+    test_response = requests.get(f"{LOCAL_BACKEND_URL}/api/health", timeout=5)
+    if test_response.status_code == 200:
+        BACKEND_URL = LOCAL_BACKEND_URL
+        print(f"✅ Using local backend: {BACKEND_URL}")
+    else:
+        BACKEND_URL = EXTERNAL_BACKEND_URL
+        print(f"⚠️ Local backend not available, using external: {BACKEND_URL}")
+except:
+    BACKEND_URL = EXTERNAL_BACKEND_URL
+    print(f"⚠️ Local backend not available, using external: {BACKEND_URL}")
+
 API_BASE = f"{BACKEND_URL}/api"
 
 class SchemaValidationTester:
