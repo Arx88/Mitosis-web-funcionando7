@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Task, Message, TerminalCommand } from '../types';
 import { TerminalView } from './TerminalView';
 import { ChatInterface } from './ChatInterface';
