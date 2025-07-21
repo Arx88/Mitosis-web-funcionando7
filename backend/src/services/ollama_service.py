@@ -13,7 +13,7 @@ from requests.exceptions import RequestException, Timeout
 
 class OllamaService:
     def __init__(self, base_url: str = None):
-        self.base_url = base_url or os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
+        self.base_url = base_url or os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app')
         self.default_model = os.getenv("OLLAMA_DEFAULT_MODEL", "llama3.1:8b")  # Configurable por defecto
         self.current_model = None
         self.conversation_history = []
