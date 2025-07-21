@@ -1,0 +1,190 @@
+{
+  "timestamp": "2025-07-21T00:49:27.916573",
+  "backend_url": "https://15ffcb16-6c55-47fc-8da7-e48ddd5d43ae.preview.emergentagent.com",
+  "tests": [
+    {
+      "name": "Enhanced Health Check (/api/health)",
+      "endpoint": "/api/health",
+      "method": "GET",
+      "status_code": 200,
+      "expected_status": 200,
+      "passed": false,
+      "missing_keys": [
+        "services"
+      ],
+      "response_data": null
+    },
+    {
+      "name": "Agent Status (/api/agent/status)",
+      "endpoint": "/api/agent/status",
+      "method": "GET",
+      "status_code": 200,
+      "expected_status": 200,
+      "passed": true,
+      "missing_keys": null,
+      "response_data": {
+        "autonomous_execution": {
+          "active": false,
+          "active_tasks": 0,
+          "current_task_id": null
+        },
+        "capabilities": [
+          "autonomous_task_execution",
+          "real_time_terminal_output",
+          "step_by_step_progress",
+          "websocket_communication",
+          "plan_generation",
+          "tool_execution",
+          "error_recovery"
+        ],
+        "enhanced_features": true,
+        "memory_enabled": true,
+        "models_available": [
+          "llama3.1:8b"
+        ],
+        "status": "operational",
+        "timestamp": "2025-07-21T00:49:28.048005",
+        "tools_available": 12,
+        "uptime": 1753058968.0480142
+      }
+    },
+    {
+      "name": "Agent Health (/api/agent/health)",
+      "endpoint": "/api/agent/health",
+      "method": "GET",
+      "status_code": 404,
+      "expected_status": 200,
+      "passed": false,
+      "missing_keys": null,
+      "response_data": null
+    },
+    {
+      "name": "Initialize Autonomous Task (/api/agent/initialize-task)",
+      "endpoint": "/api/agent/initialize-task",
+      "method": "POST",
+      "status_code": 200,
+      "expected_status": 200,
+      "passed": true,
+      "missing_keys": null,
+      "response_data": {
+        "auto_execution_started": false,
+        "plan": {
+          "created_at": "2025-07-21T00:49:28.148034",
+          "description": "",
+          "progress_percentage": 0.0,
+          "status": "pending",
+          "steps": [
+            {
+              "description": "Analizar los requisitos y crear un plan detallado",
+              "id": "step_1",
+              "status": "pending",
+              "title": "Planificaci\u00f3n inicial",
+              "tool": "planning"
+            },
+            {
+              "description": "Verificar resultados y preparar entrega final",
+              "id": "step_2",
+              "status": "pending",
+              "title": "Validaci\u00f3n y entrega",
+              "tool": "testing"
+            }
+          ],
+          "task_id": "task_1753058968_0",
+          "title": "Tarea Aut\u00f3noma"
+        },
+        "success": true,
+        "task_id": "task_1753058968_0"
+      }
+    },
+    {
+      "name": "Autonomous Chat Execution (/api/agent/chat)",
+      "endpoint": "/api/agent/chat",
+      "method": "POST",
+      "status_code": 200,
+      "expected_status": 200,
+      "passed": true,
+      "missing_keys": null,
+      "response_data": {
+        "autonomous_execution": true,
+        "execution_plan": {
+          "created_at": "2025-07-21T00:49:28.238443",
+          "description": "Crear un plan de marketing digital completo para una startup de tecnolog\u00eda",
+          "progress_percentage": 0.0,
+          "status": "pending",
+          "steps": [
+            {
+              "description": "Analizar los requisitos y crear un plan detallado",
+              "id": "step_1",
+              "status": "pending",
+              "title": "Planificaci\u00f3n inicial",
+              "tool": "planning"
+            },
+            {
+              "description": "Crear archivos y documentos necesarios",
+              "id": "step_2",
+              "status": "pending",
+              "title": "Creaci\u00f3n de contenido",
+              "tool": "file_creation"
+            },
+            {
+              "description": "Verificar resultados y preparar entrega final",
+              "id": "step_3",
+              "status": "pending",
+              "title": "Validaci\u00f3n y entrega",
+              "tool": "testing"
+            }
+          ],
+          "task_id": "task_1753058968_0",
+          "title": "Tarea aut\u00f3noma: Crear un plan de marketing digital completo para u..."
+        },
+        "memory_used": true,
+        "model": "autonomous_agent_enhanced",
+        "response": "He generado un plan de acci\u00f3n para tu solicitud y comenzar\u00e9 la ejecuci\u00f3n aut\u00f3noma. Puedes seguir el progreso en tiempo real en la terminal y en el monitor de ejecuci\u00f3n.\n\n**Plan generado:**\n1. Planificaci\u00f3n inicial\n2. Creaci\u00f3n de contenido\n3. Validaci\u00f3n y entrega\n\n**ID de tarea:** task_1753058968_0\n**Estado:** Ejecut\u00e1ndose aut\u00f3nomamente",
+        "task_id": "task_1753058968_0",
+        "timestamp": "2025-07-21T00:49:28.239002"
+      }
+    },
+    {
+      "name": "Tools List",
+      "endpoint": "/api/agent/tools",
+      "method": "GET",
+      "status_code": 404,
+      "expected_status": 200,
+      "passed": false,
+      "missing_keys": null,
+      "response_data": null
+    },
+    {
+      "name": "Models List",
+      "endpoint": "/api/agent/models",
+      "method": "GET",
+      "status_code": 404,
+      "expected_status": 200,
+      "passed": false,
+      "missing_keys": null,
+      "response_data": null
+    },
+    {
+      "name": "Terminal Output Test",
+      "endpoint": "/api/agent/chat",
+      "method": "POST",
+      "status_code": 200,
+      "expected_status": 200,
+      "passed": true,
+      "missing_keys": null,
+      "response_data": {
+        "autonomous_execution": false,
+        "memory_used": true,
+        "model": "conversational_mode",
+        "response": "He recibido tu mensaje: 'Realizar an\u00e1lisis de mercado'. Como agente mejorado, puedo ayudarte con tareas complejas de forma aut\u00f3noma.",
+        "task_id": "chat_1753058968",
+        "timestamp": "2025-07-21T00:49:28.528585"
+      }
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "passed": 4,
+    "failed": 4
+  }
+}
