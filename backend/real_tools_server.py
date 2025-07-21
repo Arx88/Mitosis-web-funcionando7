@@ -270,6 +270,109 @@ def execute_task_real():
         logger.error(f"❌ Error ejecutando tarea: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+# ENDPOINTS DE OLLAMA (que faltaban para el frontend)
+@app.route('/api/agent/ollama/check', methods=['GET', 'POST'])
+def ollama_check():
+    """Verificación de conexión con Ollama"""
+    try:
+        import requests
+        ollama_url = os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app')
+        
+        logger.info(f"🔍 Verificando conexión Ollama: {ollama_url}")
+        response = requests.get(f"{ollama_url}/api/tags", timeout=10)
+        
+        if response.status_code == 200:
+            return jsonify({
+                "status": "connected",
+                "endpoint": ollama_url,
+                "models_available": len(response.json().get('models', [])),
+                "timestamp": datetime.now().isoformat()
+            })
+        else:
+            return jsonify({
+                "status": "disconnected",
+                "endpoint": ollama_url,
+                "error": f"HTTP {response.status_code}",
+                "timestamp": datetime.now().isoformat()
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"❌ Error conectando con Ollama: {str(e)}")
+        return jsonify({
+            "status": "disconnected",
+            "endpoint": os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app'),
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }), 500
+
+@app.route('/api/agent/ollama/models', methods=['GET', 'POST'])
+def ollama_models():
+    """Lista de modelos Ollama disponibles"""
+    try:
+        import requests
+        ollama_url = os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app')
+        
+        logger.info(f"📋 Obteniendo modelos de Ollama: {ollama_url}")
+        response = requests.get(f"{ollama_url}/api/tags", timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            models = [model['name'] for model in data.get('models', [])]
+            return jsonify({
+                "models": models,
+                "count": len(models),
+                "endpoint": ollama_url,
+                "status": "connected",
+                "timestamp": datetime.now().isoformat()
+            })
+        else:
+            return jsonify({
+                "models": [],
+                "error": f"HTTP {response.status_code}",
+                "endpoint": ollama_url,
+                "status": "disconnected"
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo modelos Ollama: {str(e)}")
+        return jsonify({
+            "models": [],
+            "error": str(e),
+            "endpoint": os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app'),
+            "status": "disconnected"
+        }), 500
+
+@app.route('/api/agent/generate', methods=['POST'])
+def ollama_generate():
+    """Generar respuesta usando Ollama"""
+    try:
+        import requests
+        data = request.get_json()
+        
+        ollama_url = os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app')
+        model = data.get('model', 'llama3.1:8b')
+        prompt = data.get('prompt', '')
+        
+        logger.info(f"🤖 Generando con Ollama - Modelo: {model}")
+        
+        response = requests.post(f"{ollama_url}/api/generate", 
+            json={
+                "model": model,
+                "prompt": prompt,
+                "stream": False
+            },
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            return jsonify(response.json())
+        else:
+            return jsonify({"error": f"Ollama error: {response.status_code}"}), 500
+            
+    except Exception as e:
+        logger.error(f"❌ Error generando con Ollama: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/agent/test-real-tools', methods=['GET'])
 def test_real_tools():
     """Endpoint para probar que las herramientas son REALES"""
