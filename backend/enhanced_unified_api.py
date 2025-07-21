@@ -91,7 +91,7 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
         self.config = self._create_proper_config(config)
         self.active_config = self.config
         
-        # Inicializar el núcleo autónomo
+        # Inicializar el núcleo autónomo pasando la configuración correcta
         base_agent = getattr(self, 'agent', None) if HAS_BASE_API else None
         try:
             self.autonomous_agent = AutonomousAgentCore(base_agent)
