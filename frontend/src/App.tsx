@@ -586,7 +586,7 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
           />
           
           <div className="flex-1 flex flex-col overflow-hidden">
-            {activeTask ? (
+            {activeTask && activeTaskId ? (
               <TaskView 
                 task={activeTask} 
                 onUpdateTask={updateTask}
