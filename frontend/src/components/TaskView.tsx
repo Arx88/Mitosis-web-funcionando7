@@ -581,7 +581,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
   // Function to generate dynamic plan from backend
   const generateDynamicPlan = async (taskContent: string) => {
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
       
       const response = await fetch(`${backendUrl}/api/agent/generate-plan`, {
         method: 'POST',
