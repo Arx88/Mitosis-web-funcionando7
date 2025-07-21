@@ -9,6 +9,10 @@ import time
 from typing import Dict, Any, List
 from urllib.parse import urljoin, urlparse
 
+# CARGAR VARIABLES DE ENTORNO
+from dotenv import load_dotenv
+load_dotenv('/app/backend/.env')
+
 class WebSearchTool:
     def __init__(self):
         self.name = "web_search"
