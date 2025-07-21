@@ -298,6 +298,8 @@ class ToolManager:
     
     def _should_execute_in_container(self, tool_name: str) -> bool:
         """Determinar si una herramienta debe ejecutarse en container"""
+        if not HAS_CONTAINER:
+            return False
         # Herramientas que se benefician de aislamiento
         containerized_tools = ['shell', 'file_manager']
         return tool_name in containerized_tools
@@ -305,6 +307,10 @@ class ToolManager:
     def _execute_in_container(self, tool_name: str, parameters: Dict[str, Any], 
                              config: Dict[str, Any], task_id: str) -> Dict[str, Any]:
         """Ejecutar herramienta dentro de un container"""
+        if not self.container_manager:
+            # Fallback a ejecución normal si no hay container manager
+            return self.tools[tool_name].execute(parameters, config)
+            
         try:
             # Obtener información del container
             container_info = self.container_manager.get_container_info(task_id)
