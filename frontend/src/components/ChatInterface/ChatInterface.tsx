@@ -182,12 +182,93 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       onSendMessage(processedMessage);
 
       try {
-        // Enviar mensaje al backend
-        const response: ChatResponse = await agentAPI.sendMessage(processedMessage, {
-          task_id: dataId,
-          previous_messages: messages.slice(-5), // Enviar últimos 5 mensajes como contexto
-          search_mode: searchMode // Enviar modo de búsqueda al backend
-        });
+        // 🚀 LÓGICA MEJORADA: Si es el primer mensaje de la tarea, usar initialize-task para plan automático
+        const isFirstMessage = messages.length === 0;
+        
+        if (isFirstMessage) {
+          console.log('🎯 FIRST MESSAGE - Calling initialize-task for automatic plan generation');
+          // Llamar al endpoint initialize-task para generar plan automático
+          const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
+          const initResponse = await fetch(`${backendUrl}/api/agent/initialize-task`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              task_id: dataId,
+              title: message.trim(),
+              auto_execute: true  // 🚀 ACTIVAR EJECUCIÓN AUTOMÁTICA
+            })
+          });
+          
+          if (initResponse.ok) {
+            const initData = await initResponse.json();
+            console.log('✅ Task initialized with automatic plan generation:', initData);
+            
+            // Crear respuesta del agente indicando que el plan fue generado
+            const agentMessage: Message = {
+              id: `msg-${Date.now()}-agent`,
+              content: `✅ Plan de acción generado automáticamente. Ejecutando ${initData.plan?.steps?.length || 0} pasos para completar tu tarea.`,
+              sender: 'agent',
+              timestamp: new Date(),
+              plan: initData.plan
+            };
+            
+            if (onUpdateMessages) {
+              const updatedMessages = [...messages, userMessage, agentMessage];
+              onUpdateMessages(updatedMessages);
+            }
+            
+            // Actualizar la tarea con el plan generado si onUpdateTask está disponible
+            if (onUpdateTask && initData.plan) {
+              onUpdateTask({
+                ...task,
+                plan: initData.plan.steps?.map((step: any) => ({
+                  id: step.id,
+                  title: step.title,
+                  description: step.description,
+                  tool: step.tool,
+                  estimated_time: step.estimated_time,
+                  priority: step.priority,
+                  completed: false,
+                  active: false,
+                  status: 'pending'
+                })) || [],
+                status: 'in-progress',
+                progress: 25
+              });
+            }
+            
+          } else {
+            console.error('❌ Initialize task failed:', initResponse.status);
+            // Fallback al chat normal si falla
+            await sendRegularChatMessage(processedMessage, userMessage);
+          }
+          
+        } else {
+          // Para mensajes posteriores, usar el chat normal
+          await sendRegularChatMessage(processedMessage, userMessage);
+        }
+        
+      } catch (error) {
+        console.error('❌ Error in handleSendMessage:', error);
+        // Fallback al chat normal si hay error
+        await sendRegularChatMessage(processedMessage, userMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+  
+  // Función helper para el chat normal
+  const sendRegularChatMessage = async (processedMessage: string, userMessage: Message) => {
+    try {
+      // Enviar mensaje al backend usando el endpoint chat normal
+      const response: ChatResponse = await agentAPI.sendMessage(processedMessage, {
+        task_id: dataId,
+        previous_messages: messages.slice(-5), // Enviar últimos 5 mensajes como contexto
+        search_mode: searchMode // Enviar modo de búsqueda al backend
+      });
 
         // Parse links from response (definición simple)
         const parseLinksFromText = (text: string) => {
