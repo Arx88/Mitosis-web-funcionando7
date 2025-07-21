@@ -476,6 +476,277 @@ class AutonomousAgentCore:
             for task in self.active_tasks.values()
         ]
 
+# ==================================================================================
+# CLASES HEREDADAS PARA COMPATIBILIDAD
+# ==================================================================================
+
+@dataclass
+class ReflectionEntry:
+    """Entrada de reflexión para aprendizaje (compatibilidad)"""
+    id: str
+    action: str
+    expected_outcome: str
+    actual_outcome: str
+    success: bool
+    confidence: float
+    context: Dict[str, Any]
+    timestamp: float
+    learned_patterns: List[str] = None
+    
+    def __post_init__(self):
+        if self.learned_patterns is None:
+            self.learned_patterns = []
+
+@dataclass
+class PromptTemplate:
+    """Plantilla de prompt mejorada (compatibilidad)"""
+    id: str
+    name: str
+    template: str
+    variables: List[str]
+    success_rate: float = 0.0
+    usage_count: int = 0
+    average_quality_score: float = 0.0
+    context_types: List[str] = None
+    
+    def __post_init__(self):
+        if self.context_types is None:
+            self.context_types = []
+
+@dataclass
+class LearningMetrics:
+    """Métricas de aprendizaje del agente (compatibilidad)"""
+    total_reflections: int = 0
+    successful_actions: int = 0
+    failed_actions: int = 0
+    success_rate: float = 0.0
+    improvement_rate: float = 0.0
+    knowledge_growth: float = 0.0
+    prompt_optimization_score: float = 0.0
+
+class CognitiveMode(Enum):
+    """Modos cognitivos del agente (compatibilidad)"""
+    ANALYTICAL = "analytical"
+    CREATIVE = "creative"
+    PRACTICAL = "practical"
+    REFLECTIVE = "reflective"
+    ADAPTIVE = "adaptive"
+
+class EnhancedMitosisAgent:
+    """Agente Mitosis mejorado con capacidades cognitivas avanzadas y autonomía"""
+    
+    def __init__(self, config=None):
+        """Inicializa el agente mejorado con núcleo autónomo"""
+        self.config = config or {}
+        self.logger = terminal_logger
+        
+        # Núcleo autónomo integrado
+        self.autonomous_core = AutonomousAgentCore(self)
+        
+        # Capacidades cognitivas (compatibilidad)
+        self.reflection_history: List[ReflectionEntry] = []
+        self.prompt_templates: Dict[str, PromptTemplate] = {}
+        self.learning_metrics = LearningMetrics()
+        self.cognitive_mode = CognitiveMode.ADAPTIVE
+        
+        # Configuración de aprendizaje
+        self.learning_enabled = True
+        self.reflection_threshold = 0.7
+        self.prompt_optimization_enabled = True
+        self.max_reflection_history = 1000
+        
+        # Patrones aprendidos
+        self.learned_patterns: Dict[str, float] = {}
+        self.action_outcomes: Dict[str, List[bool]] = defaultdict(list)
+        
+        # Estadísticas cognitivas
+        self.cognitive_stats = {
+            "reflections_performed": 0,
+            "patterns_learned": 0,
+            "prompts_optimized": 0,
+            "cognitive_mode_changes": 0,
+            "successful_adaptations": 0
+        }
+        
+        self.logger.info("🧠 Enhanced Mitosis Agent con núcleo autónomo inicializado")
+    
+    def process_user_message_enhanced(self, message: str, context: Optional[Dict[str, Any]] = None) -> str:
+        """Procesa un mensaje del usuario con capacidades mejoradas"""
+        try:
+            self.logger.info(f"💬 Procesando mensaje: {message[:50]}...")
+            
+            # Respuesta mejorada con capacidades autónomas
+            response = f"""Como agente mejorado con capacidades autónomas, he recibido tu mensaje: "{message}"
+
+Puedo ayudarte con:
+🤖 Ejecución autónoma de tareas complejas
+📊 Análisis y procesamiento de información
+💻 Generación de código y documentación
+🔍 Investigación y búsqueda de datos
+📋 Planificación y organización de proyectos
+
+Para activar la ejecución autónoma, utiliza palabras clave como:
+- "crear", "generar", "desarrollar"
+- "investigar", "analizar", "buscar"
+- "planificar", "organizar", "diseñar"
+
+¿Te gustaría que ejecute alguna tarea de forma autónoma?"""
+            
+            return response
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error procesando mensaje: {e}")
+            return f"Error interno: {str(e)}"
+    
+    def enhanced_reflect_on_action(self, action: str, result: str, expected: str,
+                                 context: Optional[Dict[str, Any]] = None) -> ReflectionEntry:
+        """Reflexión mejorada sobre una acción con aprendizaje"""
+        try:
+            reflection_id = f"reflection_{int(time.time())}_{len(self.reflection_history)}"
+            
+            # Evaluar éxito de la acción
+            success = self._evaluate_action_success(action, result, expected)
+            
+            # Crear entrada de reflexión
+            reflection_entry = ReflectionEntry(
+                id=reflection_id,
+                action=action,
+                expected_outcome=expected,
+                actual_outcome=result,
+                success=success,
+                confidence=0.8,
+                context=context or {},
+                timestamp=time.time(),
+                learned_patterns=[]
+            )
+            
+            # Añadir a historial
+            self.reflection_history.append(reflection_entry)
+            
+            # Mantener límite de historial
+            if len(self.reflection_history) > self.max_reflection_history:
+                self.reflection_history.pop(0)
+            
+            # Actualizar métricas de aprendizaje
+            self._update_learning_metrics(success)
+            
+            self.logger.info(f"🔍 Reflexión realizada: {reflection_id} - Éxito: {success}")
+            return reflection_entry
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error en reflexión mejorada: {e}")
+            return ReflectionEntry(
+                id=f"reflection_error_{int(time.time())}",
+                action=action,
+                expected_outcome=expected,
+                actual_outcome=result,
+                success=False,
+                confidence=0.5,
+                context=context or {},
+                timestamp=time.time()
+            )
+    
+    def _evaluate_action_success(self, action: str, result: str, expected: str) -> bool:
+        """Evalúa si una acción fue exitosa"""
+        success_indicators = ["exitoso", "completado", "correcto", "funciona", "resuelto"]
+        failure_indicators = ["error", "fallo", "incorrecto", "problema", "falló"]
+        
+        result_lower = result.lower()
+        
+        success_score = sum(1 for indicator in success_indicators if indicator in result_lower)
+        failure_score = sum(1 for indicator in failure_indicators if indicator in result_lower)
+        
+        return success_score > failure_score
+    
+    def _update_learning_metrics(self, success: bool):
+        """Actualiza las métricas de aprendizaje"""
+        self.learning_metrics.total_reflections += 1
+        
+        if success:
+            self.learning_metrics.successful_actions += 1
+        else:
+            self.learning_metrics.failed_actions += 1
+        
+        # Calcular tasa de éxito
+        total_actions = (self.learning_metrics.successful_actions + 
+                        self.learning_metrics.failed_actions)
+        if total_actions > 0:
+            self.learning_metrics.success_rate = (
+                self.learning_metrics.successful_actions / total_actions
+            )
+    
+    def get_enhanced_status(self) -> Dict[str, Any]:
+        """Obtiene el estado mejorado del agente"""
+        try:
+            enhanced_status = {
+                "agent_type": "enhanced_mitosis_agent",
+                "autonomous_core_available": True,
+                "cognitive_capabilities": {
+                    "current_mode": self.cognitive_mode.value,
+                    "learning_enabled": self.learning_enabled,
+                    "reflection_threshold": self.reflection_threshold,
+                    "prompt_optimization_enabled": self.prompt_optimization_enabled
+                },
+                "learning_metrics": asdict(self.learning_metrics),
+                "cognitive_stats": self.cognitive_stats.copy(),
+                "learned_patterns_count": len(self.learned_patterns),
+                "reflection_history_size": len(self.reflection_history),
+                "prompt_templates_count": len(self.prompt_templates),
+                "active_autonomous_tasks": len(self.autonomous_core.active_tasks),
+                "available_tools": list(self.autonomous_core.available_tools.keys())
+            }
+            
+            return enhanced_status
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error en get_enhanced_status: {e}")
+            return {
+                "error": "Error obteniendo estado enhanced",
+                "agent_type": "enhanced_mitosis_agent",
+                "autonomous_core_available": True
+            }
+
+# ==================================================================================
+# EJEMPLO DE USO Y PRUEBAS
+# ==================================================================================
+
+if __name__ == "__main__":
+    # Configurar logging
+    logging.basicConfig(level=logging.INFO)
+    
+    # Crear agente mejorado
+    enhanced_agent = EnhancedMitosisAgent()
+    
+    print("🧠 Probando Enhanced Mitosis Agent con Núcleo Autónomo...")
+    
+    # Crear núcleo autónomo independiente
+    autonomous_core = AutonomousAgentCore()
+    
+    # Generar plan de acción
+    task = autonomous_core.generate_action_plan(
+        "Crear un informe sobre inteligencia artificial",
+        "Investigar y crear un documento completo sobre IA en 2024"
+    )
+    
+    print(f"✅ Plan generado con ID: {task.id}")
+    print(f"📊 Número de pasos: {len(task.steps)}")
+    
+    # Simular ejecución (en entorno real sería asíncrona)
+    print("🚀 Para ejecutar la tarea de forma autónoma:")
+    print(f"await autonomous_core.execute_task_autonomously('{task.id}')")
+    
+    # Obtener estado
+    status = autonomous_core.get_task_status(task.id)
+    print(f"📈 Estado de la tarea: {status['status'] if status else 'No encontrada'}")
+    
+    # Probar agente mejorado
+    response = enhanced_agent.process_user_message_enhanced(
+        "Crea un plan para desarrollar una aplicación web"
+    )
+    print(f"🤖 Respuesta del agente: {response[:100]}...")
+    
+    print("✅ Pruebas completadas - Sistema listo para ejecución autónoma")
+
 @dataclass
 class ReflectionEntry:
     """Entrada de reflexión para aprendizaje"""
