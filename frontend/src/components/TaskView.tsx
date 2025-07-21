@@ -778,7 +778,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 
                 try {
                   // Llamar al backend para procesar el mensaje y generar el plan
-                  const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+                  const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
                   const response = await fetch(`${backendUrl}/api/agent/chat`, {
                     method: 'POST',
                     headers: {
