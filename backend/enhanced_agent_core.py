@@ -526,54 +526,77 @@ class AutonomousAgentCore:
         
         terminal_logger.info("================================================================================")
 
-    # Métodos de herramientas (simulaciones)
-    async def _execute_web_search(self, step: TaskStep, task: AutonomousTask) -> str:
+    # Métodos de simulación (fallback cuando no hay herramientas reales)
+    async def _execute_simulation(self, step: TaskStep, task: AutonomousTask) -> str:
+        """Ejecuta simulación como fallback"""
+        terminal_logger.info(f"⚠️ Usando simulación para: {step.tool}")
+        
+        if step.tool == "web_search":
+            return await self._simulate_web_search(step, task)
+        elif step.tool == "file_creation":
+            return await self._simulate_file_creation(step, task)
+        elif step.tool == "data_analysis":
+            return await self._simulate_data_analysis(step, task)
+        elif step.tool == "code_generation":
+            return await self._simulate_code_generation(step, task)
+        elif step.tool == "research":
+            return await self._simulate_research(step, task)
+        elif step.tool == "planning":
+            return await self._simulate_planning(step, task)
+        elif step.tool == "documentation":
+            return await self._simulate_documentation(step, task)
+        elif step.tool == "testing":
+            return await self._simulate_testing(step, task)
+        else:
+            return f"Simulación completada para: {step.title}"
+
+    async def _simulate_web_search(self, step: TaskStep, task: AutonomousTask) -> str:
         """Simulación de búsqueda web"""
-        terminal_logger.info("🔍 Ejecutando búsqueda web...")
+        terminal_logger.info("🔍 Simulando búsqueda web...")
         await asyncio.sleep(2)  # Simular tiempo de búsqueda
-        return f"Búsqueda completada para: {task.title}. Se encontraron 15 resultados relevantes."
+        return f"[SIMULACIÓN] Búsqueda completada para: {task.title}. Se encontraron 15 resultados relevantes."
 
-    async def _execute_file_creation(self, step: TaskStep, task: AutonomousTask) -> str:
+    async def _simulate_file_creation(self, step: TaskStep, task: AutonomousTask) -> str:
         """Simulación de creación de archivos"""
-        terminal_logger.info("📄 Creando archivos...")
+        terminal_logger.info("📄 Simulando creación de archivos...")
         await asyncio.sleep(1)
-        return f"Archivo creado exitosamente para: {step.title}"
+        return f"[SIMULACIÓN] Archivo creado exitosamente para: {step.title}"
 
-    async def _execute_data_analysis(self, step: TaskStep, task: AutonomousTask) -> str:
+    async def _simulate_data_analysis(self, step: TaskStep, task: AutonomousTask) -> str:
         """Simulación de análisis de datos"""
-        terminal_logger.info("📊 Analizando datos...")
+        terminal_logger.info("📊 Simulando análisis de datos...")
         await asyncio.sleep(2)
-        return f"Análisis completado. Se procesaron 150 registros de datos."
+        return f"[SIMULACIÓN] Análisis completado. Se procesaron 150 registros de datos."
 
-    async def _execute_code_generation(self, step: TaskStep, task: AutonomousTask) -> str:
+    async def _simulate_code_generation(self, step: TaskStep, task: AutonomousTask) -> str:
         """Simulación de generación de código"""
-        terminal_logger.info("💻 Generando código...")
+        terminal_logger.info("💻 Simulando generación de código...")
         await asyncio.sleep(2)
-        return f"Código generado exitosamente. 250 líneas de código creadas."
+        return f"[SIMULACIÓN] Código generado exitosamente. 250 líneas de código creadas."
 
-    async def _execute_research(self, step: TaskStep, task: AutonomousTask) -> str:
+    async def _simulate_research(self, step: TaskStep, task: AutonomousTask) -> str:
         """Simulación de investigación"""
-        terminal_logger.info("🔬 Realizando investigación...")
+        terminal_logger.info("🔬 Simulando investigación...")
         await asyncio.sleep(3)
-        return f"Investigación completada. Se analizaron 25 fuentes relevantes."
+        return f"[SIMULACIÓN] Investigación completada. Se analizaron 25 fuentes relevantes."
 
-    async def _execute_planning(self, step: TaskStep, task: AutonomousTask) -> str:
+    async def _simulate_planning(self, step: TaskStep, task: AutonomousTask) -> str:
         """Simulación de planificación"""
-        terminal_logger.info("📋 Realizando planificación detallada...")
+        terminal_logger.info("📋 Simulando planificación detallada...")
         await asyncio.sleep(1)
-        return f"Plan detallado creado con {len(task.steps)} pasos y cronograma definido."
+        return f"[SIMULACIÓN] Plan detallado creado con {len(task.steps)} pasos y cronograma definido."
 
-    async def _execute_documentation(self, step: TaskStep, task: AutonomousTask) -> str:
+    async def _simulate_documentation(self, step: TaskStep, task: AutonomousTask) -> str:
         """Simulación de documentación"""
-        terminal_logger.info("📚 Creando documentación...")
+        terminal_logger.info("📚 Simulando creación de documentación...")
         await asyncio.sleep(1)
-        return f"Documentación creada: 15 páginas de documentación técnica."
+        return f"[SIMULACIÓN] Documentación creada: 15 páginas de documentación técnica."
 
-    async def _execute_testing(self, step: TaskStep, task: AutonomousTask) -> str:
+    async def _simulate_testing(self, step: TaskStep, task: AutonomousTask) -> str:
         """Simulación de testing y validación"""
-        terminal_logger.info("🧪 Ejecutando validaciones...")
+        terminal_logger.info("🧪 Simulando validaciones...")
         await asyncio.sleep(1)
-        return f"Validación completada. Todos los criterios de calidad cumplidos."
+        return f"[SIMULACIÓN] Validación completada. Todos los criterios de calidad cumplidos."
 
     # Métodos de consulta
     def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
