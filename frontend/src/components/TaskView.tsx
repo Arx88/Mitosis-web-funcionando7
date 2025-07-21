@@ -283,7 +283,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
     }
     
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
       
       logToTerminal(`🚀 Ejecutando: ${nextStep.title}`, 'info');
       
