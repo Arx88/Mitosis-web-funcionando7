@@ -267,7 +267,7 @@ class OllamaService:
         """
         if not self.is_healthy():
             return {
-                'response': "⚠️ Ollama no está disponible en este momento. Asegúrate de que esté ejecutándose en localhost:11434",
+                'response': "⚠️ Ollama no está disponible en este momento. Verifica la configuración del endpoint de Ollama.",
                 'tool_calls': [],
                 'raw_response': "",
                 'model': self.get_current_model(),
