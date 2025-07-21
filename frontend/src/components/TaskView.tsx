@@ -157,71 +157,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
           }
         },
 
-        task_started: (data) => {
-          console.log('🚀 Task started:', data);
-          logToTerminal(`🚀 Iniciando ejecución de ${data.total_steps} pasos`, 'info');
-        },
-
-        step_started: (data) => {
-          console.log('🔄 Step started:', data);
-          logToTerminal(`🔄 Paso ${data.step_number || '?'}/${data.total_steps || '?'}: ${data.title}`, 'info');
-          
-          // Actualizar estado del paso en el plan
-          updateStepStatus(data.step_id, 'in-progress', true);
-        },
-
-        step_completed: (data) => {
-          console.log('✅ Step completed:', data);
-          logToTerminal(`✅ Completado: ${data.title}`, 'success');
-          
-          // Marcar paso como completado
-          updateStepStatus(data.step_id, 'completed', false, true);
-          
-          // Actualizar progreso general
-          if (onUpdateTaskProgress) {
-            onUpdateTaskProgress(task.id);
-          }
-        },
-
-        step_failed: (data) => {
-          console.log('❌ Step failed:', data);
-          logToTerminal(`❌ Error en: ${data.title} - ${data.error}`, 'error');
-          
-          // Marcar paso como fallido
-          updateStepStatus(data.step_id, 'failed', false);
-        },
-
-        task_progress: (data) => {
-          console.log('⏳ Task progress:', data);
-          if (data.activity) {
-            logToTerminal(`⏳ ${data.activity}`, 'info');
-          }
-        },
-
-        task_completed: (data) => {
-          console.log('🎉 Task completed:', data);
-          logToTerminal('🎉 ¡Tarea completada exitosamente!', 'success');
-          
-          // Marcar tarea como completada
-          const completedTask = {
-            ...task,
-            status: 'completed' as const,
-            progress: 100
-          };
-          onUpdateTask(completedTask);
-        },
-
-        task_failed: (data) => {
-          console.log('💥 Task failed:', data);
-          logToTerminal(`💥 Error en la tarea: ${data.error}`, 'error');
-          
-          // Marcar tarea como fallida
-          const failedTask = {
-            ...task,
-            status: 'failed' as const
-          };
-          onUpdateTask(failedTask);
-        },
+        // Duplicated event handlers removed - keeping only the first set at lines 61-125
 
         context_changed: (data) => {
           console.log('🔄 Context changed:', data);
