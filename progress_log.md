@@ -365,12 +365,36 @@
 
 ## 🔧 FASE 2: INVESTIGACIÓN DETALLADA  
 **Fecha**: 2025-07-21 17:10:00
+**Estado**: COMPLETADO
+
+### ✅ Problema Real Identificado:
+**Issue**: VanishInput NO está disparando onSendMessage
+- Input acepta texto correctamente ✅
+- handleSubmit NO se ejecuta ❌ (logs ausentes)
+- handleKeyDown NO se ejecuta ❌ (logs ausentes)
+- onSendMessage nunca es llamado ❌
+
+### Evidencia de Console Logs:
+- ❌ NO se ven logs: "🚀 VanishInput handleSubmit called"
+- ❌ NO se ven logs: "⌨️ VanishInput Key pressed"  
+- ❌ NO se ven logs: "🎯 App.tsx onSendMessage CALLED"
+- ✅ SÍ funciona: Tipeo de texto en input
+- ✅ SÍ funciona: Sidebar search "No se encontraron tareas"
+
+### Archivos Afectados:
+- `/app/frontend/src/components/VanishInput.tsx` líneas 164-196 (event handlers)
+- `/app/frontend/src/App.tsx` líneas 625-720 (onSendMessage nunca ejecutado)
+
+---
+
+## 🔨 FASE 3: IMPLEMENTACIÓN DE FIX
+**Fecha**: 2025-07-21 17:15:00  
 **Estado**: EN PROGRESO
 
-### Tareas:
-- [ ] Añadir logs detallados para debug
-- [ ] Probar el flujo step-by-step  
-- [ ] Identificar si es timing issue o logic bug
-- [ ] Verificar estado de `tasks` vs `activeTaskId`
+### Plan de Acción:
+- [ ] Verificar si los event handlers están correctamente bound
+- [ ] Revisar estructura JSX del VanishInput
+- [ ] Implementar fix para event handlers
+- [ ] Probar funcionamiento step-by-step
 
 ---
