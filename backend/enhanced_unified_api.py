@@ -106,6 +106,25 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
             self.autonomous_agent = AutonomousAgentCore()
             terminal_logger.info("🚀 Enhanced Unified Mitosis API inicializada exitosamente")
         
+        # NUEVO: Inicializar sistema de clasificación de intenciones
+        try:
+            # Crear un agente auxiliar solo para el clasificador de intenciones
+            if HAS_BASE_API:
+                from agent_core import MitosisAgent, AgentConfig as ClassifierConfig
+                classifier_config = ClassifierConfig()
+                classifier_config.ollama_url = self.config.ollama_url if hasattr(self.config, 'ollama_url') else os.getenv('OLLAMA_BASE_URL')
+                classifier_config.openrouter_api_key = self.config.openrouter_api_key if hasattr(self.config, 'openrouter_api_key') else os.getenv('OPENROUTER_API_KEY', '')
+                
+                classifier_agent = MitosisAgent(classifier_config)
+                self.intention_classifier = classifier_agent.intention_classifier
+                terminal_logger.info("🎯 IntentionClassifier inicializado correctamente")
+            else:
+                self.intention_classifier = None
+                terminal_logger.warning("⚠️ IntentionClassifier no disponible sin API base")
+        except Exception as e:
+            terminal_logger.warning(f"⚠️ No se pudo inicializar IntentionClassifier: {e}")
+            self.intention_classifier = None
+        
         # Variables de estado autónomo
         self.autonomous_execution_active = False
         self.current_autonomous_task_id = None
