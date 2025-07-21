@@ -54,6 +54,21 @@ def test_search_tools():
         print(f"   Resultado WebSearch: {result}")
     else:
         print("   ❌ WebSearch no habilitado")
+    
+    # Test específico BasicWebSearch
+    print(f"\n🧪 Test directo de BasicWebSearch:")
+    if tool_manager.is_tool_enabled('basic_web_search'):
+        result = tool_manager.execute_tool(
+            tool_name='basic_web_search',
+            parameters={
+                'query': 'Python programming',
+                'max_results': 3
+            },
+            config={'timeout': 30}
+        )
+        print(f"   Resultado BasicWebSearch: {result}")
+    else:
+        print("   ❌ BasicWebSearch no habilitado")
 
 if __name__ == "__main__":
     test_search_tools()
