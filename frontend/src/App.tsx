@@ -142,6 +142,13 @@ export function App() {
     setActiveTaskId(newTask.id);
     setIsTaskCreating(false);
     
+    // 🐛 DEBUG: Logging task creation state
+    console.log('🎯 TASK CREATION DEBUG:', {
+      newTaskId: newTask.id,
+      setActiveTaskIdCalled: true,
+      tasksUpdate: 'Added to beginning of array'
+    });
+    
     // Inicializar el proceso de inicialización
     setInitializingTaskId(newTask.id);
     setInitializationLogs([]);
