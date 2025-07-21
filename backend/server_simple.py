@@ -170,6 +170,177 @@ except Exception as e:
     app.register_blueprint(agent_bp, url_prefix='/api/agent')
     logger.info("⚠️ Usando rutas de agente básicas de fallback")
 
+# Endpoints de configuración dinámica
+@app.route('/api/agent/config/current', methods=['GET'])
+def get_current_configuration():
+    """Obtiene la configuración actual del agente"""
+    try:
+        # Verificar estado de servicios
+        ollama_status = {
+            "connected": False,
+            "endpoint": os.getenv('OLLAMA_BASE_URL', ''),
+            "available_models": []
+        }
+        
+        if hasattr(app, 'ollama_service') and app.ollama_service:
+            try:
+                ollama_status["connected"] = app.ollama_service.is_healthy()
+                ollama_status["endpoint"] = app.ollama_service.base_url
+                if ollama_status["connected"]:
+                    ollama_status["available_models"] = app.ollama_service.get_available_models()
+            except:
+                pass
+        
+        # Verificar OpenRouter
+        openrouter_status = {
+            "configured": bool(os.getenv('OPENROUTER_API_KEY')),
+            "available": False
+        }
+        
+        if openrouter_status["configured"]:
+            try:
+                from openrouter_service import OpenRouterService
+                or_service = OpenRouterService()
+                openrouter_status["available"] = or_service.is_available()
+            except:
+                pass
+        
+        config = {
+            "success": True,
+            "config": {
+                "current_provider": os.getenv('AGENT_LLM_PROVIDER', 'ollama'),
+                "ollama": {
+                    "enabled": True,
+                    "endpoint": os.getenv('OLLAMA_BASE_URL', ''),
+                    "model": os.getenv('OLLAMA_DEFAULT_MODEL', 'llama3.1:8b')
+                },
+                "openrouter": {
+                    "enabled": openrouter_status["configured"],
+                    "endpoint": os.getenv('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1')
+                }
+            },
+            "services_status": {
+                "ollama": ollama_status,
+                "openrouter": openrouter_status
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        return jsonify(config), 200
+    except Exception as e:
+        logger.error(f"Config current error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/agent/config/apply', methods=['POST'])  
+def apply_configuration():
+    """Aplica nueva configuración del agente"""
+    try:
+        data = request.get_json()
+        if not data or 'config' not in data:
+            return jsonify({"success": False, "error": "Config is required"}), 400
+        
+        new_config = data['config']
+        
+        # Aplicar configuración de Ollama
+        if 'ollama' in new_config:
+            ollama_config = new_config['ollama']
+            if 'endpoint' in ollama_config:
+                # Actualizar servicio Ollama si existe
+                if hasattr(app, 'ollama_service') and app.ollama_service:
+                    success = app.ollama_service.update_endpoint(ollama_config['endpoint'])
+                    if not success:
+                        logger.warning(f"Failed to update Ollama endpoint to {ollama_config['endpoint']}")
+        
+        # Verificar nueva configuración
+        ollama_connected = False
+        if hasattr(app, 'ollama_service') and app.ollama_service:
+            ollama_connected = app.ollama_service.is_healthy()
+        
+        result = {
+            "success": True,
+            "message": "Configuration applied successfully",
+            "config_applied": {
+                "ollama": {
+                    "enabled": new_config.get('ollama', {}).get('enabled', True),
+                    "endpoint": new_config.get('ollama', {}).get('endpoint', os.getenv('OLLAMA_BASE_URL')),
+                    "model": new_config.get('ollama', {}).get('model', os.getenv('OLLAMA_DEFAULT_MODEL')),
+                    "connected": ollama_connected
+                },
+                "openrouter": {
+                    "enabled": new_config.get('openrouter', {}).get('enabled', False)
+                }
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        return jsonify(result), 200
+    except Exception as e:
+        logger.error(f"Config apply error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/agent/ollama/models', methods=['POST'])
+def get_ollama_models():
+    """Obtiene modelos de un endpoint Ollama específico"""
+    try:
+        data = request.get_json()
+        endpoint = data.get('endpoint') if data else os.getenv('OLLAMA_BASE_URL')
+        
+        if not endpoint:
+            return jsonify({"error": "Endpoint is required"}), 400
+        
+        # Importar el servicio dentro de la función para evitar problemas de importación
+        from src.services.ollama_service import OllamaService
+        
+        # Crear servicio temporal para el endpoint
+        temp_service = OllamaService(endpoint)
+        
+        if temp_service.is_healthy():
+            models = temp_service.get_available_models()
+            return jsonify({
+                "models": [{"name": model, "endpoint": endpoint} for model in models],
+                "endpoint": endpoint,
+                "count": len(models),
+                "fallback": False
+            }), 200
+        else:
+            # Fallback con modelos conocidos
+            fallback_models = ["llama3.1:8b", "llama3:latest", "mistral:latest", "codellama:latest"]
+            return jsonify({
+                "models": [{"name": model, "endpoint": endpoint} for model in fallback_models],
+                "endpoint": endpoint, 
+                "count": len(fallback_models),
+                "fallback": True,
+                "warning": "Could not connect to endpoint, showing fallback models"
+            }), 200
+    except Exception as e:
+        logger.error(f"Ollama models error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/agent/ollama/check', methods=['POST'])
+def check_ollama_connection():
+    """Verifica conexión a un endpoint Ollama específico"""
+    try:
+        data = request.get_json() 
+        endpoint = data.get('endpoint') if data else os.getenv('OLLAMA_BASE_URL')
+        
+        if not endpoint:
+            return jsonify({"error": "Endpoint is required"}), 400
+        
+        from src.services.ollama_service import OllamaService
+        temp_service = OllamaService(endpoint)
+        
+        is_connected = temp_service.is_healthy()
+        
+        return jsonify({
+            "is_connected": is_connected,
+            "endpoint": endpoint,
+            "status": "connected" if is_connected else "disconnected",
+            "timestamp": datetime.now().isoformat()
+        }), 200
+    except Exception as e:
+        logger.error(f"Ollama check error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 # Ruta de health check
 @app.route('/health', methods=['GET'])
 def health_check():
