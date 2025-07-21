@@ -66,19 +66,38 @@ class ToolManager:
             'web_search': WebSearchTool(),  # USAR HERRAMIENTA REAL
             'file_manager': FileManagerTool(),
             'tavily_search': TavilySearchTool(),
-            'deep_research': DeepResearchTool(),  # Usar versión mejorada
-            'comprehensive_research': ComprehensiveResearchTool(),
-            'enhanced_web_search': WebSearchTool(),  # Usar herramienta real para compatibilidad
-            'enhanced_deep_research': DeepResearchTool(),  # Alias para compatibilidad
-            # Nuevas herramientas
-            'firecrawl': FirecrawlTool(),
-            'qstash': QStashTool(),
-            'playwright': PlaywrightTool(),
-            'autonomous_web_navigation': AutonomousWebNavigation()  # Navegación web autónoma GENERAL
+            'comprehensive_research': ComprehensiveResearchTool()
         }
         
-        # Inicializar container manager
-        self.container_manager = ContainerManager()
+        # Agregar herramientas opcionales si están disponibles
+        if HAS_DEEP_RESEARCH:
+            self.tools['deep_research'] = DeepResearchTool()
+            self.tools['enhanced_deep_research'] = DeepResearchTool()
+        else:
+            # Usar comprehensive_research como fallback
+            self.tools['deep_research'] = ComprehensiveResearchTool()
+            self.tools['enhanced_deep_research'] = ComprehensiveResearchTool()
+            
+        if HAS_ENHANCED_WEB:
+            self.tools['enhanced_web_search'] = EnhancedWebSearchTool()
+        else:
+            self.tools['enhanced_web_search'] = WebSearchTool()
+            
+        # Herramientas opcionales
+        if HAS_FIRECRAWL:
+            self.tools['firecrawl'] = FirecrawlTool()
+        if HAS_QSTASH:
+            self.tools['qstash'] = QStashTool()
+        if HAS_PLAYWRIGHT:
+            self.tools['playwright'] = PlaywrightTool()
+        if HAS_AUTO_NAV:
+            self.tools['autonomous_web_navigation'] = AutonomousWebNavigation()
+        
+        # Inicializar container manager si está disponible
+        if HAS_CONTAINER:
+            self.container_manager = ContainerManager()
+        else:
+            self.container_manager = None
         
         # Configuración de seguridad mejorada
         self.security_config = {
