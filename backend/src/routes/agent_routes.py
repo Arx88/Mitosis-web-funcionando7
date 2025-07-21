@@ -3935,13 +3935,16 @@ def initialize_task():
         
         # Auto-ejecutar si está habilitado
         if auto_execute:
+            # 🔧 FIX: Usar execute_task_steps_sequentially en lugar de execute_plan_with_real_tools
             # Iniciar ejecución en hilo separado después de 3 segundos
             app = current_app._get_current_object()  # Get the actual app instance
             
             def delayed_execution():
                 with app.app_context():
                     time.sleep(3)
-                    execute_plan_with_real_tools(task_id, plan_response.get('steps', []), title)
+                    logger.info(f"🔄 Auto-executing task {task_id} with {len(plan_response.get('steps', []))} steps")
+                    execute_task_steps_sequentially(task_id, plan_response.get('steps', []))
+                    logger.info(f"✅ Auto-execution completed for task {task_id}")
             
             import threading
             execution_thread = threading.Thread(target=delayed_execution)
