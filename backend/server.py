@@ -58,6 +58,9 @@ def main():
         if app is None:
             raise Exception("No se pudo obtener la aplicación Flask de la API mejorada")
         
+        # Exponer la variable app para uvicorn
+        globals()['app'] = app
+        
         # Modo de ejecución - usar el método run de la API mejorada directamente
         print("🔄 Iniciando en modo Enhanced API con ejecución autónoma...")
         print("📡 Endpoints mejorados disponibles:")
