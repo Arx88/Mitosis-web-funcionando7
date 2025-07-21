@@ -193,7 +193,8 @@ except Exception as e:
             tools_available = []
             if hasattr(app, 'tool_manager') and app.tool_manager:
                 try:
-                    tools_available = app.tool_manager.get_available_tools()
+                    tools_list = app.tool_manager.get_available_tools()
+                    tools_available = [tool['name'] for tool in tools_list] if tools_list else []
                 except:
                     pass
             
