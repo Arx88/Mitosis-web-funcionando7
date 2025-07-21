@@ -4152,7 +4152,7 @@ def execute_step_internal(task_id: str, step_id: str, step: dict):
         })
         
         # Simular ejecución del paso
-        execute_step_simulation(task_id, step_id, step)
+        execute_step_real(task_id, step_id, step)
         
         # Emitir completado
         emit_step_event(task_id, 'step_completed', {
