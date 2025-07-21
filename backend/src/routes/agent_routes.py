@@ -4116,25 +4116,59 @@ def execute_step_by_tool(step_data: dict) -> dict:
     return result
 
 def execute_task_steps_sequentially(task_id: str, steps: list):
-    """Execute task steps one by one with delays"""
-    for i, step in enumerate(steps):
-        try:
-            step_id = step.get('id', f'step-{i+1}')
+    """Execute task steps one by one with delays and enhanced logging"""
+    # Log directo a archivo para debugging
+    log_file = f"/tmp/mitosis_execution_{task_id}.log"
+    
+    try:
+        with open(log_file, "w") as f:
+            f.write(f"🚀 STARTING AUTONOMOUS EXECUTION for task {task_id}\n")
+            f.write(f"📋 Steps to execute: {len(steps)}\n")
+            for i, step in enumerate(steps):
+                f.write(f"  Step {i+1}: {step.get('title', 'Unnamed')} using {step.get('tool', 'unknown')}\n")
+            f.write("="*50 + "\n")
+        
+        logger.info(f"🚀 AUTONOMOUS EXECUTION STARTED - Logging to {log_file}")
+        
+        for i, step in enumerate(steps):
+            try:
+                step_id = step.get('id', f'step-{i+1}')
+                
+                with open(log_file, "a") as f:
+                    f.write(f"\n⚡ EXECUTING STEP {i+1}: {step.get('title', 'Unnamed')}\n")
+                    f.write(f"   Tool: {step.get('tool', 'unknown')}\n")
+                    f.write(f"   Description: {step.get('description', 'N/A')}\n")
+                
+                # Ejecutar el paso
+                execute_step_internal(task_id, step_id, step)
+                
+                with open(log_file, "a") as f:
+                    f.write(f"✅ STEP {i+1} COMPLETED\n")
+                
+                # Pausa entre pasos para visualización
+                time.sleep(2)
+                
+            except Exception as e:
+                error_msg = f"❌ Error executing step {step_id}: {e}"
+                logger.error(error_msg)
+                
+                with open(log_file, "a") as f:
+                    f.write(f"\n❌ ERROR IN STEP {i+1}: {str(e)}\n")
+                
+                emit_step_event(task_id, 'step_failed', {
+                    'step_id': step_id,
+                    'error': str(e),
+                    'timestamp': datetime.now().isoformat()
+                })
+                break
+        
+        with open(log_file, "a") as f:
+            f.write(f"\n🎉 AUTONOMOUS EXECUTION COMPLETED for task {task_id}\n")
             
-            # Ejecutar el paso
-            execute_step_internal(task_id, step_id, step)
-            
-            # Pausa entre pasos para visualización
-            time.sleep(2)
-            
-        except Exception as e:
-            logger.error(f"Error executing step {step_id}: {e}")
-            emit_step_event(task_id, 'step_failed', {
-                'step_id': step_id,
-                'error': str(e),
-                'timestamp': datetime.now().isoformat()
-            })
-            break
+    except Exception as e:
+        logger.error(f"❌ Critical error in autonomous execution: {e}")
+        with open(log_file, "a") as f:
+            f.write(f"\n💥 CRITICAL ERROR: {str(e)}\n")
     
     # Emitir evento de tarea completada
     emit_step_event(task_id, 'task_completed', {
