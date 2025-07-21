@@ -20,7 +20,7 @@ from datetime import datetime
 from urllib.parse import urljoin
 
 # Configuration
-BACKEND_URL = "https://8d16e29e-d31b-4df5-8776-8ccd6eb88863.preview.emergentagent.com"
+BACKEND_URL = "https://22af8bfc-c281-4a17-8ac1-69cc73fa49bb.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class PlanExecutionTester:
