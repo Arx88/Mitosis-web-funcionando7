@@ -131,5 +131,22 @@ def main():
         sys.exit(1)
 
 
+# Inicializar la aplicación para uvicorn
+app = None
+init_error_msg = None
+
+# Ejecutar main para inicializar
+try:
+    app = main()
+except Exception as init_error:
+    # Si main falla, crear una app básica de Flask
+    init_error_msg = str(init_error)
+    from flask import Flask
+    app = Flask(__name__)
+    
+    @app.route('/health')
+    def health():
+        return {"status": "error", "message": f"Failed to initialize: {init_error_msg}"}
+
 if __name__ == "__main__":
     main()
