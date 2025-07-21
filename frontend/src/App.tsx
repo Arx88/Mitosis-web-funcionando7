@@ -375,7 +375,7 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
         // Actualizar progreso en el backend
         const updateFileAttachmentProgress = async () => {
           try {
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
             for (let i = 0; i < fileAttachmentPlan.length; i++) {
               const step = fileAttachmentPlan[i];
               await fetch(`${backendUrl}/api/agent/update-task-progress`, {
