@@ -503,7 +503,7 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
         ));
         
         // 🚀 CRUCIAL: Cambiar a la nueva tarea para mostrar TaskView
-        setActiveTaskId(updatedTaskWithPlan.id);
+        setActiveTaskId(fullTaskUpdate.id);
         
         console.log('✅ Task updated with fallback chat response and plan');
       } else {
