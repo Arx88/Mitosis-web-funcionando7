@@ -3425,8 +3425,8 @@ def agent_status():
         'active_tasks': len(active_task_plans),
         'ollama': {
             'connected': True,
-            'endpoint': 'https://78d08925604a.ngrok-free.app',
-            'model': 'llama3.1:8b'
+            'endpoint': os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app'),
+            'model': os.getenv('OLLAMA_DEFAULT_MODEL', 'llama3.1:8b')
         },
         'tools': 12,
         'memory': {
