@@ -206,6 +206,200 @@ class MitosisAgent:
         self.logger.info(f"Nueva sesión iniciada: {self.current_session_id}")
         return self.current_session_id
     
+    def process_user_input(self, message: str, context: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Procesa la entrada del usuario con clasificación de intención inteligente
+        NUEVA MEJORA: Reemplaza lógica heurística con LLM dedicado
+        """
+        try:
+            self.state = AgentState.THINKING
+            self.stats["messages_processed"] += 1
+            
+            # Añadir mensaje del usuario a la memoria
+            self.memory_manager.add_message("user", message, context or {})
+            
+            # CLASIFICAR INTENCIÓN usando LLM dedicado
+            conversation_context = self.memory_manager.get_conversation_context(max_tokens=1000)
+            active_tasks = [
+                {
+                    'title': task.title, 
+                    'status': task.status.value,
+                    'id': task.id
+                } 
+                for task in self.task_manager.list_tasks(TaskStatus.ACTIVE)[:5]
+            ]
+            
+            intention_result = self.intention_classifier.classify_intention(
+                user_message=message,
+                conversation_context=conversation_context,
+                active_tasks=active_tasks
+            )
+            
+            self.logger.info(f"🎯 Intención clasificada: {intention_result.intention_type.value} "
+                           f"(confianza: {intention_result.confidence:.2f})")
+            
+            # Registrar clasificación en memoria para análisis futuro
+            self.memory_manager.add_knowledge(
+                content=f"Intención clasificada: {intention_result.intention_type.value} - {intention_result.reasoning}",
+                category="intention_classification",
+                source="intention_classifier",
+                confidence=intention_result.confidence,
+                tags=["intention", "classification", "llm"]
+            )
+            
+            # ENRUTAR según intención clasificada
+            if intention_result.requires_clarification:
+                return self._handle_clarification_request(intention_result)
+            
+            elif intention_result.intention_type == IntentionType.CASUAL_CONVERSATION:
+                return self.process_user_message(message, context)
+            
+            elif intention_result.intention_type == IntentionType.INFORMATION_REQUEST:
+                return self._handle_information_request(message, intention_result, context)
+            
+            elif intention_result.intention_type in [IntentionType.SIMPLE_TASK, IntentionType.COMPLEX_TASK]:
+                return self._handle_task_creation(message, intention_result, context)
+            
+            elif intention_result.intention_type == IntentionType.TASK_MANAGEMENT:
+                return self._handle_task_management(message, intention_result, context)
+            
+            elif intention_result.intention_type == IntentionType.AGENT_CONFIGURATION:
+                return self._handle_agent_configuration(message, intention_result, context)
+            
+            else:  # UNCLEAR
+                return self._handle_unclear_intention(message, intention_result, context)
+    
+        except Exception as e:
+            self.logger.error(f"Error en procesamiento de entrada con clasificación: {e}")
+            # Fallback al método original
+            return self.process_user_message(message, context)
+    
+    def _handle_clarification_request(self, intention_result) -> str:
+        """Maneja solicitudes que requieren clarificación"""
+        clarification_message = "Necesito más información para ayudarte mejor. "
+        if intention_result.clarification_questions:
+            clarification_message += "Específicamente:\n"
+            for i, question in enumerate(intention_result.clarification_questions, 1):
+                clarification_message += f"{i}. {question}\n"
+        else:
+            clarification_message += "¿Podrías ser más específico sobre lo que necesitas?"
+        
+        return clarification_message
+
+    def _handle_information_request(self, message: str, intention_result, 
+                                   context: Optional[Dict[str, Any]]) -> str:
+        """Maneja solicitudes de información con búsqueda en memoria"""
+        # Buscar en memoria primero
+        search_terms = intention_result.extracted_entities.get('search_terms', message)
+        knowledge_results = self.memory_manager.search_knowledge(search_terms, limit=5)
+        
+        if knowledge_results:
+            # Usar conocimiento existente
+            knowledge_context = "\n".join([item.content for item in knowledge_results[:3]])
+            enhanced_message = f"Basándome en mi conocimiento previo:\n{knowledge_context}\n\nPregunta: {message}"
+            return self.process_user_message(enhanced_message, context)
+        else:
+            # Si no hay conocimiento previo, procesar normalmente
+            # En el futuro, aquí se activaría la búsqueda web real
+            return self.process_user_message(message, context)
+
+    def _handle_task_creation(self, message: str, intention_result, 
+                             context: Optional[Dict[str, Any]]) -> str:
+        """Maneja la creación de tareas simples y complejas con entidades extraídas"""
+        entities = intention_result.extracted_entities
+        
+        title = entities.get('task_title', message[:100])
+        description = entities.get('task_description', message)
+        goal = f"Completar la solicitud del usuario: {message}"
+        
+        # Determinar si es tarea compleja basándose en la clasificación y entidades
+        is_complex = (intention_result.intention_type == IntentionType.COMPLEX_TASK or 
+                      len(entities.get('mentioned_tools', [])) > 1 or
+                      'time_constraints' in entities)
+        
+        if is_complex:
+            self.logger.info(f"🏗️ Creando tarea compleja: {title}")
+            return self.create_and_execute_task(title, description, goal, auto_execute=True)
+        else:
+            # Para tareas simples, crear un plan más directo
+            self.logger.info(f"⚡ Creando tarea simple: {title}")
+            simple_phases = [
+                {
+                    "id": 1,
+                    "title": f"Ejecutar: {title}",
+                    "description": description,
+                    "required_capabilities": ["general"]
+                }
+            ]
+            task_id = self.task_manager.create_task(title, description, goal, simple_phases)
+            if self.task_manager.start_task(task_id):
+                return f"Tarea simple '{title}' creada e iniciada."
+            else:
+                return f"Tarea simple '{title}' creada pero no se pudo iniciar."
+
+    def _handle_task_management(self, message: str, intention_result, 
+                               context: Optional[Dict[str, Any]]) -> str:
+        """Maneja comandos de gestión de tareas"""
+        entities = intention_result.extracted_entities
+        task_reference = entities.get('task_reference', '')
+        
+        # Obtener tareas activas
+        active_tasks = self.task_manager.list_tasks(TaskStatus.ACTIVE)
+        
+        if not active_tasks:
+            return "No tienes tareas activas en este momento."
+        
+        if 'estado' in message.lower() or 'progreso' in message.lower():
+            # Mostrar estado de tareas
+            status_message = "📋 Estado de tus tareas activas:\n\n"
+            for task in active_tasks:
+                current_phase = self.task_manager.get_current_phase(task.id)
+                phase_info = f" - Fase actual: {current_phase.title}" if current_phase else ""
+                status_message += f"• **{task.title}** ({task.status.value}){phase_info}\n"
+            
+            return status_message
+        
+        elif 'pausar' in message.lower():
+            # Pausar tareas activas
+            paused_count = 0
+            for task in active_tasks:
+                if self.task_manager.pause_task(task.id):
+                    paused_count += 1
+            return f"Se pausaron {paused_count} tareas."
+        
+        elif 'reanudar' in message.lower():
+            # Reanudar tareas pausadas
+            paused_tasks = self.task_manager.list_tasks(TaskStatus.PAUSED)
+            resumed_count = 0
+            for task in paused_tasks:
+                if self.task_manager.resume_task(task.id):
+                    resumed_count += 1
+            return f"Se reanudaron {resumed_count} tareas."
+        
+        else:
+            return "No entiendo qué operación quieres realizar con las tareas. ¿Estado, pausar o reanudar?"
+
+    def _handle_agent_configuration(self, message: str, intention_result, 
+                                   context: Optional[Dict[str, Any]]) -> str:
+        """Maneja solicitudes de configuración del agente"""
+        return ("Las funciones de configuración del agente están en desarrollo. "
+                "Por ahora, puedes consultar mi estado actual o crear nuevas tareas.")
+
+    def _handle_unclear_intention(self, message: str, intention_result, 
+                                 context: Optional[Dict[str, Any]]) -> str:
+        """Maneja mensajes con intención poco clara"""
+        clarification = ("No estoy seguro de qué quieres que haga. ¿Podrías ser más específico? "
+                        "Puedo ayudarte con:\n"
+                        "• Responder preguntas\n"
+                        "• Crear y ejecutar tareas\n"
+                        "• Consultar el estado de tareas\n"
+                        "• Conversación general")
+        
+        # También procesar como conversación por si acaso
+        conversation_response = self.process_user_message(message, context)
+        
+        return f"{clarification}\n\nMientras tanto, aquí tienes mi respuesta: {conversation_response}"
+    
     def process_user_message(self, message: str, context: Optional[Dict[str, Any]] = None) -> str:
         """Procesa un mensaje del usuario y genera una respuesta"""
         try:
