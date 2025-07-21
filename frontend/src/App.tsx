@@ -138,8 +138,15 @@ export function App() {
       isFavorite: false,
       progress: 0 // Initialize progress at 0
     };
-    setTasks(prev => [newTask, ...prev]);
+    console.log('🔍 DEBUG - About to add task to tasks array:', newTask.id);
+    setTasks(prev => {
+      const updated = [newTask, ...prev];
+      console.log('🔍 DEBUG - Tasks array updated, new length:', updated.length);
+      return updated;
+    });
+    console.log('🔍 DEBUG - About to set activeTaskId:', newTask.id);
     setActiveTaskId(newTask.id);
+    console.log('🔍 DEBUG - ActiveTaskId set to:', newTask.id);
     setIsTaskCreating(false);
     
     // Inicializar el proceso de inicialización
