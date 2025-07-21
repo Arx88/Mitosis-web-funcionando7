@@ -3092,7 +3092,7 @@ def chat():
                 'tool_calls': ollama_response.get('tool_calls', []),
                 'tool_results': tool_results,
                 'timestamp': datetime.now().isoformat(),
-                'execution_status': 'plan_ready',  # Estado: listo para ejecución controlada
+                'execution_status': execution_status,  # Estado dinámico: executing o plan_ready
                 'mode': 'agent_with_structured_plan',
                 'memory_used': True
             })
