@@ -869,98 +869,52 @@ Para activar la ejecución autónoma, utiliza palabras clave como:
                                  context: Optional[Dict[str, Any]] = None) -> ReflectionEntry:
         """Reflexión mejorada sobre una acción con aprendizaje"""
         try:
-            self.state = AgentState.REFLECTING
-            
-            # Crear entrada de reflexión
             reflection_id = f"reflection_{int(time.time())}_{len(self.reflection_history)}"
             
-            # Generar prompt de reflexión optimizado
-            reflection_prompt = self._generate_optimized_prompt(
-                "reflection_analysis",
-                {
-                    "action": action,
-                    "expected": expected,
-                    "actual": result,
-                    "context": json.dumps(context or {})
-                }
+            # Evaluar éxito de la acción
+            success = self._evaluate_action_success(action, result, expected)
+            
+            # Crear entrada de reflexión
+            reflection_entry = ReflectionEntry(
+                id=reflection_id,
+                action=action,
+                expected_outcome=expected,
+                actual_outcome=result,
+                success=success,
+                confidence=0.8,
+                context=context or {},
+                timestamp=time.time(),
+                learned_patterns=[]
             )
             
-            # Usar modelo analítico para reflexión
-            reflection_model = self.model_manager.select_best_model("analysis")
+            # Añadir a historial
+            self.reflection_history.append(reflection_entry)
             
-            if reflection_model:
-                reflection_response = self.model_manager.generate_response(
-                    reflection_prompt,
-                    model=reflection_model,
-                    max_tokens=800,
-                    temperature=0.4
-                )
-                
-                # Evaluar éxito de la acción
-                success = self._evaluate_action_success(action, result, expected)
-                
-                # Extraer patrones aprendidos
-                learned_patterns = self._extract_patterns_from_reflection(
-                    action, result, reflection_response
-                )
-                
-                # Crear entrada de reflexión
-                reflection_entry = ReflectionEntry(
-                    id=reflection_id,
-                    action=action,
-                    expected_outcome=expected,
-                    actual_outcome=result,
-                    success=success,
-                    confidence=0.8,  # Simplificado
-                    context=context or {},
-                    timestamp=time.time(),
-                    learned_patterns=learned_patterns
-                )
-                
-                # Añadir a historial
-                self.reflection_history.append(reflection_entry)
-                
-                # Mantener límite de historial
-                if len(self.reflection_history) > self.max_reflection_history:
-                    self.reflection_history.pop(0)
-                
-                # Actualizar patrones aprendidos
-                self._update_learned_patterns(learned_patterns, success)
-                
-                # Actualizar métricas de aprendizaje
-                self._update_learning_metrics(success)
-                
-                # Guardar reflexión en memoria
-                self.memory_manager.add_knowledge_enhanced(
-                    content=f"Reflexión: {action} -> {reflection_response}",
-                    category="reflection",
-                    source="agent_reflection",
-                    confidence=0.8,
-                    tags=["reflection", "learning", "self_improvement"]
-                )
-                
-                self.state = AgentState.IDLE
-                return reflection_entry
+            # Mantener límite de historial
+            if len(self.reflection_history) > self.max_reflection_history:
+                self.reflection_history.pop(0)
+            
+            # Actualizar métricas de aprendizaje
+            self._update_learning_metrics(success)
+            
+            self.logger.info(f"🔍 Reflexión realizada: {reflection_id} - Éxito: {success}")
+            return reflection_entry
             
         except Exception as e:
-            self.logger.error(f"Error en reflexión mejorada: {e}")
-            self.state = AgentState.ERROR
-        
-        # Reflexión fallback
-        return ReflectionEntry(
-            id=reflection_id,
-            action=action,
-            expected_outcome=expected,
-            actual_outcome=result,
-            success=False,
-            confidence=0.5,
-            context=context or {},
-            timestamp=time.time()
-        )
+            self.logger.error(f"❌ Error en reflexión mejorada: {e}")
+            return ReflectionEntry(
+                id=f"reflection_error_{int(time.time())}",
+                action=action,
+                expected_outcome=expected,
+                actual_outcome=result,
+                success=False,
+                confidence=0.5,
+                context=context or {},
+                timestamp=time.time()
+            )
     
     def _evaluate_action_success(self, action: str, result: str, expected: str) -> bool:
         """Evalúa si una acción fue exitosa"""
-        # Evaluación simplificada basada en palabras clave
         success_indicators = ["exitoso", "completado", "correcto", "funciona", "resuelto"]
         failure_indicators = ["error", "fallo", "incorrecto", "problema", "falló"]
         
@@ -970,35 +924,6 @@ Para activar la ejecución autónoma, utiliza palabras clave como:
         failure_score = sum(1 for indicator in failure_indicators if indicator in result_lower)
         
         return success_score > failure_score
-    
-    def _extract_patterns_from_reflection(self, action: str, result: str, 
-                                        reflection: str) -> List[str]:
-        """Extrae patrones de una reflexión"""
-        patterns = []
-        
-        # Patrones simples basados en palabras clave
-        if "siempre" in reflection.lower():
-            patterns.append(f"Patrón: {action} -> resultado consistente")
-        
-        if "cuando" in reflection.lower() and "entonces" in reflection.lower():
-            patterns.append(f"Patrón condicional identificado en: {action}")
-        
-        if "mejorar" in reflection.lower():
-            patterns.append(f"Área de mejora: {action}")
-        
-        return patterns
-    
-    def _update_learned_patterns(self, patterns: List[str], success: bool):
-        """Actualiza los patrones aprendidos"""
-        confidence_delta = 0.1 if success else -0.05
-        
-        for pattern in patterns:
-            if pattern in self.learned_patterns:
-                self.learned_patterns[pattern] = min(1.0, 
-                    max(0.0, self.learned_patterns[pattern] + confidence_delta))
-            else:
-                self.learned_patterns[pattern] = 0.6 if success else 0.4
-                self.cognitive_stats["patterns_learned"] += 1
     
     def _update_learning_metrics(self, success: bool):
         """Actualiza las métricas de aprendizaje"""
@@ -1016,163 +941,76 @@ Para activar la ejecución autónoma, utiliza palabras clave como:
             self.learning_metrics.success_rate = (
                 self.learning_metrics.successful_actions / total_actions
             )
-        
-        # Calcular tasa de mejora (simplificado)
-        if len(self.reflection_history) > 10:
-            recent_successes = sum(1 for r in self.reflection_history[-10:] if r.success)
-            self.learning_metrics.improvement_rate = recent_successes / 10
-    
-    def optimize_prompt_template(self, template_id: str, success_feedback: bool,
-                               quality_score: float = 0.5):
-        """Optimiza una plantilla de prompt basándose en el feedback"""
-        if not self.prompt_optimization_enabled:
-            return
-        
-        template = self.prompt_templates.get(template_id)
-        if not template:
-            return
-        
-        # Actualizar métricas de la plantilla
-        template.usage_count += 1
-        
-        # Actualizar tasa de éxito
-        if template.usage_count == 1:
-            template.success_rate = 1.0 if success_feedback else 0.0
-        else:
-            # Promedio móvil
-            alpha = 0.1  # Factor de aprendizaje
-            template.success_rate = (
-                (1 - alpha) * template.success_rate + 
-                alpha * (1.0 if success_feedback else 0.0)
-            )
-        
-        # Actualizar puntuación de calidad
-        template.average_quality_score = (
-            (template.average_quality_score * (template.usage_count - 1) + quality_score) /
-            template.usage_count
-        )
-        
-        # Si el rendimiento es bajo, marcar para optimización
-        if template.success_rate < 0.6 and template.usage_count > 5:
-            self._schedule_prompt_optimization(template_id)
-    
-    def _schedule_prompt_optimization(self, template_id: str):
-        """Programa la optimización de una plantilla de prompt"""
-        # En una implementación completa, esto podría usar un LLM para reescribir la plantilla
-        self.logger.info(f"Plantilla {template_id} programada para optimización")
-        self.cognitive_stats["prompts_optimized"] += 1
-    
-    def _extract_enhanced_knowledge(self, user_message: str, agent_response: str):
-        """Extrae conocimiento mejorado de la interacción"""
-        # Identificar si la interacción contiene información valiosa
-        knowledge_indicators = [
-            "aprendí", "descubrí", "encontré", "resultado", "solución",
-            "importante", "clave", "fundamental", "técnica", "método",
-            "patrón", "regla", "principio"
-        ]
-        
-        combined_text = (user_message + " " + agent_response).lower()
-        
-        if any(indicator in combined_text for indicator in knowledge_indicators):
-            # Usar búsqueda semántica para evitar duplicados
-            similar_knowledge = self.memory_manager.search_knowledge_semantic(
-                user_message, n_results=3, min_confidence=0.8
-            )
-            
-            # Solo añadir si no hay conocimiento muy similar
-            if not similar_knowledge or len(similar_knowledge) == 0:
-                knowledge_content = (
-                    f"Interacción cognitiva (modo: {self.cognitive_mode.value}): "
-                    f"Usuario: '{user_message[:100]}...' -> "
-                    f"Agente: '{agent_response[:200]}...'"
-                )
-                
-                self.memory_manager.add_knowledge_enhanced(
-                    content=knowledge_content,
-                    category="cognitive_interaction",
-                    source="enhanced_user_interaction",
-                    confidence=0.7,
-                    tags=["interaction", "cognitive", self.cognitive_mode.value]
-                )
     
     def get_enhanced_status(self) -> Dict[str, Any]:
         """Obtiene el estado mejorado del agente"""
         try:
-            base_status = self.get_status()
-            
-            # Convertir sets a lists para serialización JSON
-            def serialize_for_json(obj):
-                if isinstance(obj, set):
-                    return list(obj)
-                elif isinstance(obj, dict):
-                    return {k: serialize_for_json(v) for k, v in obj.items()}
-                elif isinstance(obj, list):
-                    return [serialize_for_json(item) for item in obj]
-                else:
-                    return obj
-            
             enhanced_status = {
-                **serialize_for_json(base_status),
+                "agent_type": "enhanced_mitosis_agent",
+                "autonomous_core_available": True,
                 "cognitive_capabilities": {
                     "current_mode": self.cognitive_mode.value,
                     "learning_enabled": self.learning_enabled,
                     "reflection_threshold": self.reflection_threshold,
                     "prompt_optimization_enabled": self.prompt_optimization_enabled
                 },
-                "learning_metrics": serialize_for_json(asdict(self.learning_metrics)),
-                "cognitive_stats": serialize_for_json(self.cognitive_stats.copy()),
+                "learning_metrics": asdict(self.learning_metrics),
+                "cognitive_stats": self.cognitive_stats.copy(),
                 "learned_patterns_count": len(self.learned_patterns),
                 "reflection_history_size": len(self.reflection_history),
-                "prompt_templates_count": len(self.prompt_templates)
+                "prompt_templates_count": len(self.prompt_templates),
+                "active_autonomous_tasks": len(self.autonomous_core.active_tasks),
+                "available_tools": list(self.autonomous_core.available_tools.keys())
             }
             
             return enhanced_status
             
         except Exception as e:
-            self.logger.error(f"Error en get_enhanced_status: {e}")
+            self.logger.error(f"❌ Error en get_enhanced_status: {e}")
             return {
                 "error": "Error obteniendo estado enhanced",
-                "basic_status": {
-                    "cognitive_mode": self.cognitive_mode.value,
-                    "learning_enabled": self.learning_enabled
-                }
+                "agent_type": "enhanced_mitosis_agent",
+                "autonomous_core_available": True
             }
 
-# Ejemplo de uso
+# ==================================================================================
+# EJEMPLO DE USO Y PRUEBAS
+# ==================================================================================
+
 if __name__ == "__main__":
+    # Configurar logging
     logging.basicConfig(level=logging.INFO)
     
     # Crear agente mejorado
     enhanced_agent = EnhancedMitosisAgent()
     
-    print("🧠 Probando Enhanced Mitosis Agent...")
+    print("🧠 Probando Enhanced Mitosis Agent con Núcleo Autónomo...")
     
-    # Iniciar sesión
-    session_id = enhanced_agent.start_session()
-    print(f"🚀 Sesión iniciada: {session_id}")
+    # Crear núcleo autónomo independiente
+    autonomous_core = AutonomousAgentCore()
     
-    # Procesar mensaje con capacidades mejoradas
+    # Generar plan de acción
+    task = autonomous_core.generate_action_plan(
+        "Crear un informe sobre inteligencia artificial",
+        "Investigar y crear un documento completo sobre IA en 2024"
+    )
+    
+    print(f"✅ Plan generado con ID: {task.id}")
+    print(f"📊 Número de pasos: {len(task.steps)}")
+    
+    # Simular ejecución (en entorno real sería asíncrona)
+    print("🚀 Para ejecutar la tarea de forma autónoma:")
+    print(f"await autonomous_core.execute_task_autonomously('{task.id}')")
+    
+    # Obtener estado
+    status = autonomous_core.get_task_status(task.id)
+    print(f"📈 Estado de la tarea: {status['status'] if status else 'No encontrada'}")
+    
+    # Probar agente mejorado
     response = enhanced_agent.process_user_message_enhanced(
-        "Analiza cómo puedo mejorar mi productividad en el trabajo"
+        "Crea un plan para desarrollar una aplicación web"
     )
-    print(f"🤖 Respuesta: {response[:200]}...")
+    print(f"🤖 Respuesta del agente: {response[:100]}...")
     
-    # Realizar reflexión manual
-    reflection = enhanced_agent.enhanced_reflect_on_action(
-        action="Analizar productividad",
-        result=response,
-        expected="Consejos útiles y específicos",
-        context={"domain": "productivity", "user_type": "professional"}
-    )
-    print(f"🔍 Reflexión realizada: {reflection.success}")
-    
-    # Obtener estado mejorado
-    status = enhanced_agent.get_enhanced_status()
-    print(f"📊 Estado cognitivo:")
-    print(f"  Modo actual: {status['cognitive_capabilities']['current_mode']}")
-    print(f"  Patrones aprendidos: {status['learned_patterns_count']}")
-    print(f"  Reflexiones realizadas: {status['cognitive_stats']['reflections_performed']}")
-    print(f"  Tasa de éxito: {status['learning_metrics']['success_rate']:.2f}")
-    
-    print("✅ Pruebas completadas")
+    print("✅ Pruebas completadas - Sistema listo para ejecución autónoma")
 
