@@ -301,7 +301,7 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
     
     // Upload files to the backend and get file information
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
       console.log('🔗 Backend URL for file upload:', backendUrl);
       console.log('📤 Uploading files to backend');
       
