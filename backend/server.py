@@ -63,7 +63,17 @@ CORS(app, resources={
 })
 
 # Inicializar SocketIO para WebSocket
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet', 
+                   allow_upgrades=True, transports=['polling', 'websocket'])
+
+# Añadir ruta de proxy para frontend
+@app.before_request
+def handle_api_requests():
+    """Handle API proxy requests"""
+    if request.path.startswith('/api/'):
+        # Log the request for debugging
+        logger.info(f"🌐 API Request: {request.method} {request.path}")
+        return None  # Continue with normal routing
 
 # Configurar MongoDB
 try:
