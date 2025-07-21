@@ -1,7 +1,7 @@
 """
 Enhanced Agent Core - El Cerebro de la Autonomía
-Núcleo del sistema de ejecución autónoma para el agente Mitosis-Beta
-Gestiona el ciclo de vida completo de tareas complejas con salida en terminal
+Este módulo es el corazón de la nueva capacidad de ejecución autónoma del agente.
+Su diseño se centra en la gestión del ciclo de vida de las tareas complejas.
 """
 
 import logging
