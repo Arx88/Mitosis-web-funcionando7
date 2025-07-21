@@ -71,7 +71,7 @@ class AutonomousTask:
 
 
 class AutonomousAgentCore:
-    """Núcleo autónomo del agente con capacidades de ejecución de tareas"""
+    """Núcleo autónomo del agente con capacidades de ejecución de tareas REALES"""
     
     def __init__(self, base_agent=None):
         """
@@ -82,20 +82,52 @@ class AutonomousAgentCore:
         self.base_agent = base_agent
         self.active_tasks: Dict[str, AutonomousTask] = {}
         
-        # Diccionario de herramientas disponibles
-        self.available_tools = {
-            "web_search": self._execute_web_search,
-            "file_creation": self._execute_file_creation,
-            "data_analysis": self._execute_data_analysis,
-            "code_generation": self._execute_code_generation,
-            "research": self._execute_research,
-            "planning": self._execute_planning,
-            "documentation": self._execute_documentation,
-            "testing": self._execute_testing
-        }
+        # Inicializar ToolManager REAL
+        if HAS_TOOL_MANAGER:
+            self.tool_manager = ToolManager()
+            terminal_logger.info("🔧 ToolManager REAL inicializado con herramientas reales")
+        else:
+            self.tool_manager = None
+            terminal_logger.warning("⚠️ ToolManager no disponible, usando simulaciones")
+        
+        # Mapeo de herramientas - AHORA USA HERRAMIENTAS REALES
+        self.available_tools = self._get_real_tools_mapping()
         
         terminal_logger.info("🧠 AutonomousAgentCore inicializado exitosamente")
-        terminal_logger.info("✅ AutonomousAgentCore inicializado exitosamente")
+        if HAS_TOOL_MANAGER:
+            real_tools = list(self.tool_manager.tools.keys()) if self.tool_manager else []
+            terminal_logger.info(f"✅ {len(real_tools)} herramientas reales disponibles: {', '.join(real_tools[:5])}...")
+        else:
+            terminal_logger.info("✅ AutonomousAgentCore inicializado exitosamente (modo simulación)")
+
+    def _get_real_tools_mapping(self) -> Dict[str, str]:
+        """
+        Mapea conceptos de herramientas a herramientas reales del ToolManager
+        """
+        if not self.tool_manager:
+            # Fallback a simulaciones si no hay ToolManager
+            return {
+                "web_search": "simulation",
+                "file_creation": "simulation", 
+                "data_analysis": "simulation",
+                "code_generation": "simulation",
+                "research": "simulation",
+                "planning": "simulation",
+                "documentation": "simulation",
+                "testing": "simulation"
+            }
+        
+        # Mapeo a herramientas reales del ToolManager
+        return {
+            "web_search": "tavily_search",  # Usar Tavily para búsquedas web
+            "file_creation": "file_manager",  # Usar file manager para crear archivos
+            "data_analysis": "comprehensive_research",  # Usar research comprehensivo
+            "code_generation": "file_manager",  # Crear archivos de código
+            "research": "deep_research",  # Usar investigación profunda
+            "planning": "file_manager",  # Crear archivos de planificación
+            "documentation": "file_manager",  # Crear documentos
+            "testing": "shell"  # Usar shell para testing
+        }
 
     def generate_action_plan(self, task_title: str, task_description: str = "") -> AutonomousTask:
         """
