@@ -30,13 +30,23 @@ def main():
         from enhanced_unified_api import EnhancedUnifiedMitosisAPI
         
         # Crear configuración básica
-        config = {
-            'OLLAMA_BASE_URL': os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app'),
-            'MONGO_URL': os.getenv('MONGO_URL', 'mongodb://localhost:27017/task_manager'),
-            'DEBUG_MODE': os.getenv('DEBUG_MODE', 'true').lower() == 'true',
-            'HOST': os.getenv('HOST', '0.0.0.0'),
-            'PORT': int(os.getenv('PORT', '8001'))
-        }
+        try:
+            from agent_core import AgentConfig
+            config = AgentConfig()
+            # Configurar desde variables de entorno
+            config.ollama_url = os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app')
+            config.openrouter_api_key = os.getenv('OPENROUTER_API_KEY', '')
+            config.prefer_local_models = True
+            config.memory_db_path = os.getenv('MEMORY_DB_PATH', 'mitosis_memory.db')
+            config.debug_mode = os.getenv('DEBUG', 'true').lower() == 'true'
+        except ImportError:
+            config = {
+                'OLLAMA_BASE_URL': os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app'),
+                'MONGO_URL': os.getenv('MONGO_URL', 'mongodb://localhost:27017/task_manager'),
+                'DEBUG_MODE': os.getenv('DEBUG', 'true').lower() == 'true',
+                'HOST': os.getenv('HOST', '0.0.0.0'),
+                'PORT': int(os.getenv('PORT', '8001'))
+            }
         
         # Crear API mejorada
         enhanced_api = EnhancedUnifiedMitosisAPI(config)
