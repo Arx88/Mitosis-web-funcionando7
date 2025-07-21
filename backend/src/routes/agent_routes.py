@@ -4267,6 +4267,103 @@ def execute_step_simulation(task_id: str, step_id: str, step: dict):
             'timestamp': datetime.now().isoformat()
         })
 
+def execute_step_real(task_id: str, step_id: str, step: dict):
+    """Execute step with REAL tools instead of simulation"""
+    tool = step.get('tool', 'general')
+    title = step.get('title', 'Ejecutando paso')
+    description = step.get('description', '')
+    
+    logger.info(f"🔧 Ejecutando REAL TOOL: {tool} para paso: {title}")
+    
+    # Emitir progreso inicial
+    emit_step_event(task_id, 'task_progress', {
+        'step_id': step_id,
+        'activity': f"Iniciando {tool}...",
+        'progress_percentage': 25,
+        'timestamp': datetime.now().isoformat()
+    })
+    
+    try:
+        # ⭐ USAR HERRAMIENTAS REALES EN LUGAR DE SIMULACIÓN
+        tool_manager = get_tool_manager()
+        
+        if tool_manager and hasattr(tool_manager, 'execute_tool'):
+            # Preparar parámetros para la herramienta
+            if tool == 'web_search':
+                tool_params = {
+                    'query': f"{title} {description}",
+                    'max_results': 5
+                }
+            elif tool == 'analysis':
+                tool_params = {
+                    'topic': title,
+                    'focus': description,
+                    'analysis_type': 'comprehensive'
+                }
+            elif tool == 'creation':
+                tool_params = {
+                    'task': title,
+                    'description': description,
+                    'format': 'document'
+                }
+            else:
+                tool_params = {
+                    'task': title,
+                    'description': description
+                }
+            
+            # Emitir progreso medio
+            emit_step_event(task_id, 'task_progress', {
+                'step_id': step_id,
+                'activity': f"Ejecutando {tool} con herramientas reales...",
+                'progress_percentage': 50,
+                'timestamp': datetime.now().isoformat()
+            })
+            
+            # EJECUTAR HERRAMIENTA REAL
+            logger.info(f"🚀 Executing real tool {tool} with params: {tool_params}")
+            tool_result = tool_manager.execute_tool(tool, tool_params, task_id=task_id)
+            
+            # Emitir progreso avanzado
+            emit_step_event(task_id, 'task_progress', {
+                'step_id': step_id,
+                'activity': f"Procesando resultados de {tool}...",
+                'progress_percentage': 90,
+                'timestamp': datetime.now().isoformat()
+            })
+            
+            # Log del resultado
+            logger.info(f"✅ Tool {tool} executed successfully, result: {str(tool_result)[:200]}...")
+            
+            # Emitir resultado del tool
+            emit_step_event(task_id, 'tool_result', {
+                'step_id': step_id,
+                'tool': tool,
+                'result': tool_result,
+                'timestamp': datetime.now().isoformat()
+            })
+            
+        else:
+            logger.warning(f"⚠️ Tool manager not available, falling back to simulation for {tool}")
+            # Fallback a simulación solo si no hay tool manager
+            time.sleep(3)
+            emit_step_event(task_id, 'task_progress', {
+                'step_id': step_id,
+                'activity': f"Simulación de {tool} completada (herramientas no disponibles)",
+                'progress_percentage': 90,
+                'timestamp': datetime.now().isoformat()
+            })
+            
+    except Exception as e:
+        logger.error(f"❌ Error executing real tool {tool}: {e}")
+        # Emitir error pero continuar
+        emit_step_event(task_id, 'task_progress', {
+            'step_id': step_id,
+            'activity': f"Error en {tool}: {str(e)}, continuando...",
+            'progress_percentage': 75,
+            'timestamp': datetime.now().isoformat()
+        })
+
 def emit_step_event(task_id: str, event_type: str, data: dict):
     """Helper function to emit step events"""
     if hasattr(current_app, 'websocket_manager') and current_app.websocket_manager:
