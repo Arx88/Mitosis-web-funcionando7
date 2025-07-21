@@ -311,6 +311,45 @@ class EnhancedUnifiedMitosisAPI:
             if self.monitor_pages:
                 return jsonify(self.monitor_pages[-1])
             return jsonify({'title': 'No hay páginas disponibles', 'content': ''})
+        
+        # Ruta de verificación de Ollama para el frontend
+        @self.app.route('/api/agent/ollama/check', methods=['POST'])
+        def check_ollama_connection():
+            """Verifica conexión con Ollama"""
+            try:
+                data = request.get_json() or {}
+                endpoint = data.get('endpoint', 'https://bef4a4bb93d1.ngrok-free.app')
+                
+                terminal_logger.info(f"🔍 Verificando conexión Ollama: {endpoint}")
+                
+                # Verificar conexión real con Ollama
+                try:
+                    import requests
+                    response = requests.get(f"{endpoint}/api/tags", timeout=10)
+                    is_connected = response.status_code == 200
+                    
+                    if is_connected:
+                        data = response.json()
+                        models = [model['name'] for model in data.get('models', [])]
+                        terminal_logger.info(f"✅ Ollama conectado - {len(models)} modelos disponibles")
+                    else:
+                        terminal_logger.warning(f"❌ Ollama desconectado - HTTP {response.status_code}")
+                except Exception as req_e:
+                    is_connected = False
+                    terminal_logger.error(f"❌ Error conectando a Ollama: {req_e}")
+                
+                return jsonify({
+                    'is_connected': is_connected,
+                    'endpoint': endpoint,
+                    'status': 'healthy' if is_connected else 'disconnected'
+                })
+            
+            except Exception as e:
+                terminal_logger.error(f"❌ Error verificando Ollama: {str(e)}")
+                return jsonify({
+                    'is_connected': False,
+                    'error': str(e)
+                }), 500
     
     def _register_websocket_events(self):
         """Registra eventos WebSocket para comunicación en tiempo real"""
