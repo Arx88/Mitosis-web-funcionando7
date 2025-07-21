@@ -437,6 +437,7 @@ def health_check():
 def api_health_check():
     """API Health check endpoint"""
     try:
+        logger.info("🩺 Health check requested")
         status = {
             "status": "healthy",
             "timestamp": datetime.now().isoformat(),
@@ -444,12 +445,36 @@ def api_health_check():
                 "database": db is not None,
                 "ollama": True,  # Simplificado
                 "tools": 12     # Simplificado
-            }
+            },
+            "cors_test": True,
+            "backend_url": "working"
         }
         return jsonify(status), 200
     except Exception as e:
         logger.error(f"API Health check error: {e}")
         return jsonify({"status": "unhealthy", "error": str(e)}), 500
+
+# Ruta de proxy simple para que funcione desde la misma URL
+@app.route('/api/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
+def api_proxy(path):
+    """Simple API proxy"""
+    try:
+        logger.info(f"🔀 Proxy request: {request.method} /api/{path}")
+        # Buscar la ruta en las rutas registradas del agente
+        with app.test_client() as client:
+            if request.method == 'OPTIONS':
+                response = app.make_response('')
+                response.headers['Access-Control-Allow-Origin'] = '*'
+                response.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
+                response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+                return response
+        
+        # Continuar con el enrutamiento normal
+        return jsonify({"error": "Route not found", "path": path}), 404
+        
+    except Exception as e:
+        logger.error(f"Proxy error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 # Endpoint para sugerencias dinámicas que faltaba
 @app.route('/api/agent/generate-suggestions', methods=['POST'])
