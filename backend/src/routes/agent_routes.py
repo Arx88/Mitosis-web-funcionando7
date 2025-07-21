@@ -3957,7 +3957,8 @@ def initialize_task():
             'estimated_total_time': plan_response.get('estimated_total_time', '10-15 minutos'),
             'auto_execute': auto_execute,
             'status': 'initialized',
-            'created_at': datetime.now().isoformat()
+            'created_at': datetime.now().isoformat(),
+            'start_time': datetime.now()  # Add start_time for execution tracking
         }
         
         # Guardar en persistencia
