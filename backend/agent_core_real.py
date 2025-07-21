@@ -797,36 +797,56 @@ RESPUESTA (SOLO JSON):"""
     
     def execute_real_web_search(self, query: str, max_results: int = 5) -> Dict[str, Any]:
         """
-        SOLUCION 2: Ejecuta búsqueda web REAL usando Tavily API
+        SOLUCION 2: Ejecuta búsqueda web REAL usando ToolManager
         Reemplaza completamente _execute_web_search simulada
         """
         try:
-            # Usar herramienta real de Tavily
-            tavily_tool = self.tool_manager.tools.get('tavily_search')
-            if tavily_tool:
-                result = tavily_tool.execute({
-                    'query': query,
-                    'max_results': max_results,
-                    'include_answer': True
-                })
+            # Usar herramienta real de Tavily primero
+            if self.tool_manager.is_tool_enabled('tavily_search'):
+                self.logger.info(f"🔍 Usando Tavily para búsqueda REAL: '{query}'")
+                result = self.tool_manager.execute_tool(
+                    tool_name='tavily_search',
+                    parameters={
+                        'query': query,
+                        'max_results': max_results,
+                        'include_answer': True
+                    },
+                    config={"timeout": 30}
+                )
                 
                 if result.get('success'):
-                    self.logger.info(f"✅ Búsqueda web REAL completada: {len(result.get('results', []))} resultados para '{query}'")
+                    self.logger.info(f"✅ Búsqueda Tavily REAL completada: {len(result.get('results', []))} resultados para '{query}'")
                     return result
+                else:
+                    self.logger.warning(f"⚠️  Tavily falló: {result.get('error', 'Error desconocido')}")
             
             # Fallback a WebSearch si Tavily no disponible
-            web_tool = self.tool_manager.tools.get('web_search')
-            if web_tool:
-                result = web_tool.execute({
-                    'query': query,
-                    'max_results': max_results
-                })
+            if self.tool_manager.is_tool_enabled('web_search'):
+                self.logger.info(f"🔍 Usando WebSearch para búsqueda REAL: '{query}'")
+                result = self.tool_manager.execute_tool(
+                    tool_name='web_search',
+                    parameters={
+                        'query': query,
+                        'max_results': max_results
+                    },
+                    config={"timeout": 30}
+                )
                 
                 if result.get('success'):
-                    self.logger.info(f"✅ Búsqueda web REAL (fallback) completada: {len(result.get('results', []))} resultados")
+                    self.logger.info(f"✅ Búsqueda web REAL completada: {len(result.get('results', []))} resultados")
                     return result
+                else:
+                    self.logger.warning(f"⚠️  WebSearch falló: {result.get('error', 'Error desconocido')}")
             
-            return {"success": False, "error": "No hay herramientas de búsqueda disponibles", "query": query}
+            # Si ninguna herramienta funciona
+            available_tools = list(self.tool_manager.tools.keys())
+            enabled_tools = [t for t in available_tools if self.tool_manager.is_tool_enabled(t)]
+            
+            return {
+                "success": False, 
+                "error": f"No hay herramientas de búsqueda funcionales. Disponibles: {available_tools}, Habilitadas: {enabled_tools}", 
+                "query": query
+            }
             
         except Exception as e:
             self.logger.error(f"❌ Error en búsqueda web real: {e}")
