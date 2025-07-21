@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://b31e34fa-8db4-4a6b-83b4-4600e46cffab.preview.emergentagent.com"
+BACKEND_URL = "https://fc43afba-cac1-4ccc-89fc-6c44bd1cee16.preview.emergentagent.com"
 
 def test_intent_classification():
     """Test Intent Classification System"""
