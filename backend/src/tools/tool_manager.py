@@ -191,6 +191,14 @@ class ToolManager:
                 'timeout': 60000,
                 'slow_motion': 1000,
                 'visual_mode': True
+            },
+            # HERRAMIENTA DE BÚSQUEDA BÁSICA REAL
+            'basic_web_search': {
+                'enabled': True,
+                'timeout': 30,
+                'max_results': 10,
+                'rate_limit_delay': 1,
+                'fallback_enabled': True
             }
         }
         
