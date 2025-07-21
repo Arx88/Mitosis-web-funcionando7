@@ -8,7 +8,7 @@ import requests
 import json
 import time
 
-BACKEND_URL = "https://966bbbbe-c451-44e3-8482-e53a33961323.preview.emergentagent.com"
+BACKEND_URL = "https://73b79ebf-cffc-4089-9b3f-8d82565fadcb.preview.emergentagent.com"
 
 def test_dynamic_configuration():
     """Prueba completa del sistema de configuración dinámica"""

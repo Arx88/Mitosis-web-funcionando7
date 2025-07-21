@@ -1,6 +1,6 @@
 {
   "timestamp": "2025-07-21T00:49:27.916573",
-  "backend_url": "https://966bbbbe-c451-44e3-8482-e53a33961323.preview.emergentagent.com",
+  "backend_url": "https://73b79ebf-cffc-4089-9b3f-8d82565fadcb.preview.emergentagent.com",
   "tests": [
     {
       "name": "Enhanced Health Check (/api/health)",
