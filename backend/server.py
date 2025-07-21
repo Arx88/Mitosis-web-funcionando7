@@ -63,6 +63,7 @@ def main():
             raise Exception("No se pudo obtener la aplicación Flask de la API mejorada")
         
         # Establecer la aplicación globalmente para uvicorn
+        app = flask_app  # Asignar a variable global
         sys.modules[__name__].app = flask_app
         globals()['app'] = flask_app
         
