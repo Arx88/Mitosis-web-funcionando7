@@ -8,7 +8,7 @@ import requests
 import json
 import time
 
-BACKEND_URL = "https://2192a0fb-304a-45ab-a961-f5c628a64f34.preview.emergentagent.com"
+BACKEND_URL = "https://5ee3d056-2e8a-4cf4-9c24-833be751801b.preview.emergentagent.com"
 
 def test_complete_user_workflow():
     """Simula el flujo completo de un usuario cambiando la configuración"""
