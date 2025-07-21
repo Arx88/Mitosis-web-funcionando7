@@ -1,19 +1,29 @@
 """
-Núcleo del Agente Mitosis Mejorado con Capacidades Cognitivas Avanzadas
-Incluye aprendizaje reforzado, auto-mejora de prompts y razonamiento avanzado
+Enhanced Agent Core - El Cerebro de la Autonomía
+Núcleo del sistema de ejecución autónoma para el agente Mitosis-Beta
+Gestiona el ciclo de vida completo de tareas complejas con salida en terminal
 """
 
 import logging
 import json
 import time
 import os
-import random
-import numpy as np
-from typing import List, Dict, Optional, Any, Union, Tuple
-from dataclasses import dataclass, asdict
 import asyncio
+import sys
+from typing import List, Dict, Optional, Any, Union
+from dataclasses import dataclass, asdict
 from enum import Enum
-from collections import defaultdict, deque
+from datetime import datetime
+from collections import defaultdict
+
+# Configurar logging para terminal
+terminal_logger = logging.getLogger('MITOSIS')
+terminal_handler = logging.StreamHandler(sys.stdout)
+terminal_handler.setLevel(logging.INFO)
+terminal_formatter = logging.Formatter('%(asctime)s - [MITOSIS] - %(message)s')
+terminal_handler.setFormatter(terminal_formatter)
+terminal_logger.addHandler(terminal_handler)
+terminal_logger.setLevel(logging.INFO)
 
 from agent_core import MitosisAgent, AgentConfig, AgentState
 from enhanced_memory_manager import EnhancedMemoryManager, VectorKnowledgeItem
