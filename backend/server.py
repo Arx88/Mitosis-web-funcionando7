@@ -28,8 +28,8 @@ def main():
     )
     
     try:
-        # Intentar usar la API mejorada
-        print("📦 Cargando Enhanced Unified API...")
+        # Intentar usar la API mejorada REAL
+        print("🛠️  Cargando Enhanced Unified API con Agente REAL...")
         from enhanced_unified_api import EnhancedUnifiedMitosisAPI
         
         # Crear configuración básica
