@@ -100,14 +100,40 @@ try:
 except Exception as e:
     logger.error(f"❌ Error inicializando Tool Manager: {e}")
 
-# Importar y registrar las rutas del agente
+# FORZAR IMPORTACIÓN DE RUTAS REALES DEL AGENTE CON LOGGING INTENSO
+terminal_logger.info("🔄 Intentando importar las rutas REALES del agente con funcionalidad completa...")
 try:
-    from routes.agent_routes import agent_bp
+    # Importar primero las dependencias necesarias
+    sys.path.insert(0, '/app/backend/src')
+    
+    terminal_logger.info("📋 Importando rutas del agente...")
+    from src.routes.agent_routes import agent_bp
+    
+    # Verificar que las rutas se importaron correctamente
     app.register_blueprint(agent_bp, url_prefix='/api/agent')
-    logger.info("✅ Rutas del agente registradas exitosamente")
+    terminal_logger.info("✅ RUTAS REALES DEL AGENTE CARGADAS EXITOSAMENTE - Sistema completo disponible")
+    print("✅ RUTAS REALES DEL AGENTE CARGADAS EXITOSAMENTE - Sistema completo disponible")
+    
+    # Log de endpoints disponibles
+    terminal_logger.info("📡 Endpoints del agente disponibles:")
+    print("📡 Endpoints del agente disponibles:")
+    for rule in app.url_map.iter_rules():
+        if '/api/agent/' in rule.rule:
+            terminal_logger.info(f"   - {rule.methods} {rule.rule}")
+            print(f"   - {rule.methods} {rule.rule}")
+    
+    AGENT_ROUTES_LOADED = True
+    
 except Exception as e:
-    logger.error(f"❌ Error importando rutas del agente: {e}")
-    # Crear rutas básicas como fallback
+    terminal_logger.error(f"❌ FALLO al importar rutas reales del agente: {e}")
+    print(f"❌ FALLO al importar rutas reales del agente: {e}")
+    import traceback
+    traceback.print_exc()
+    
+    terminal_logger.warning("⚠️ Fallback a rutas básicas...")
+    print("⚠️ Fallback a rutas básicas...")
+    
+    AGENT_ROUTES_LOADED = False
     from flask import Blueprint
     agent_bp = Blueprint('agent', __name__)
     
