@@ -842,6 +842,24 @@ RESPUESTA (SOLO JSON):"""
                 else:
                     self.logger.warning(f"⚠️  WebSearch falló: {result.get('error', 'Error desconocido')}")
             
+            # Fallback a búsqueda básica REAL si las otras fallan
+            if self.tool_manager.is_tool_enabled('basic_web_search'):
+                self.logger.info(f"🔍 Usando búsqueda básica REAL para: '{query}'")
+                result = self.tool_manager.execute_tool(
+                    tool_name='basic_web_search',
+                    parameters={
+                        'query': query,
+                        'max_results': max_results
+                    },
+                    config={"timeout": 30}
+                )
+                
+                if result.get('success'):
+                    self.logger.info(f"✅ Búsqueda básica REAL completada: {len(result.get('results', []))} resultados")
+                    return result
+                else:
+                    self.logger.warning(f"⚠️  Búsqueda básica falló: {result.get('error', 'Error desconocido')}")
+            
             # Si ninguna herramienta funciona
             available_tools = list(self.tool_manager.tools.keys())
             enabled_tools = [t for t in available_tools if self.tool_manager.is_tool_enabled(t)]
