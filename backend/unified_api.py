@@ -20,8 +20,8 @@ from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
-# Import Mitosis Enhanced modules
-from agent_core import MitosisAgent, AgentConfig
+# Import Mitosis Enhanced modules (USANDO AGENTE REAL)
+from agent_core_real import MitosisRealAgent, AgentConfig  # AGENTE REAL
 from memory_manager import MemoryManager
 from task_manager import TaskManager
 from model_manager import ModelManager
@@ -75,7 +75,7 @@ class UnifiedMitosisAPI:
                 debug_mode=True
             )
         
-        self.agent = MitosisAgent(config)
+        self.agent = MitosisRealAgent(config)
         self.start_time = time.time()
         self.monitor_pages: List[MonitorPage] = []
         self.active_sessions: Dict[str, str] = {}  # session_id -> room_id mapping
