@@ -374,7 +374,7 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
             })
 
         # Endpoints de compatibilidad con el frontend
-        @self.app.route('/api/agent/ollama/check', methods=['GET'])
+        @self.app.route('/api/agent/ollama/check', methods=['GET', 'POST'])
         def ollama_check():
             """Verificación de conexión con Ollama - compatibilidad"""
             try:
@@ -393,7 +393,7 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
                     "timestamp": datetime.now().isoformat()
                 }), 500
 
-        @self.app.route('/api/agent/ollama/models', methods=['GET'])
+        @self.app.route('/api/agent/ollama/models', methods=['GET', 'POST'])
         def ollama_models():
             """Lista de modelos Ollama disponibles - compatibilidad"""
             try:
@@ -414,7 +414,7 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
             except Exception as e:
                 return jsonify({"models": [], "error": str(e)}), 500
 
-        @self.app.route('/api/agent/generate-suggestions', methods=['GET'])
+        @self.app.route('/api/agent/generate-suggestions', methods=['GET', 'POST'])
         def generate_suggestions():
             """Genera sugerencias dinámicas - compatibilidad"""
             return jsonify({
