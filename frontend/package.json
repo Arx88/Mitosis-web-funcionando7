@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "echo '⚠️  USANDO MODO PRODUCCIÓN AUTOMÁTICO' && /app/scripts/auto-build.sh && serve -s dist -l 3000",
-    "dev": "echo '⚠️  DESARROLLO LOCAL - NO USAR EN PRODUCCIÓN' && npx vite",
+    "start": "npx vite --host 0.0.0.0 --port 3000",
+    "dev": "npx vite --host 0.0.0.0 --port 3000",
     "build": "npx vite build",
     "production": "npm run build && serve -s dist -l 3000",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
