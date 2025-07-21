@@ -411,6 +411,6 @@ export const VanishInput: React.FC<VanishInputProps> = ({
           </button>
         </div>
       </form>
-    </Button>
+    </div>
   );
 };
