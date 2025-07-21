@@ -223,3 +223,11 @@ class BasicWebSearchTool:
             'parameters': self.parameters,
             'enabled': self.enabled
         }
+    
+    def get_description(self) -> str:
+        """Retorna descripción de la herramienta"""
+        return self.description
+    
+    def get_parameters(self) -> List[Dict[str, Any]]:
+        """Retorna parámetros de la herramienta"""
+        return self.parameters
