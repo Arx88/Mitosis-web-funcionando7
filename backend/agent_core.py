@@ -19,6 +19,7 @@ from memory_manager import MemoryManager, Message, TaskMemory, KnowledgeItem
 from task_manager import TaskManager, Task, TaskPhase, TaskStatus
 from enhanced_prompts import EnhancedPromptManager, PromptType
 from intention_classifier import IntentionClassifier, IntentionType
+from web_browser_manager import WebBrowserManager, BrowserConfig, ScrapingMode, search_web_simple
 
 class AgentState(Enum):
     """Estados del agente"""
