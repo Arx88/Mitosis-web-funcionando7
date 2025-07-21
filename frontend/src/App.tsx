@@ -256,7 +256,7 @@ export function App() {
 // Función para generar planes dinámicos usando IA
 const generateDynamicTaskPlan = async (taskTitle: string) => {
   try {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
     
     // Solicitar al backend generar un plan específico para esta tarea
     const response = await fetch(`${backendUrl}/api/agent/generate-plan`, {
