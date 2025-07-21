@@ -270,129 +270,126 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         search_mode: searchMode // Enviar modo de búsqueda al backend
       });
 
-        // Parse links from response (definición simple)
-        const parseLinksFromText = (text: string) => {
-          const urlRegex = /https?:\/\/[^\s\)]+/g;
-          const matches = text.match(urlRegex) || [];
-          return matches.map(url => ({
-            url,
-            title: url,
-            description: ''
-          }));
-        };
+      // Parse links from response (definición simple)
+      const parseLinksFromText = (text: string) => {
+        const urlRegex = /https?:\/\/[^\s\)]+/g;
+        const matches = text.match(urlRegex) || [];
+        return matches.map(url => ({
+          url,
+          title: url,
+          description: ''
+        }));
+      };
 
-        const parseStructuredLinks = (text: string) => {
-          // Buscar patrones como [title](url)
-          const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-          const matches = [...text.matchAll(linkRegex)];
-          return matches.map(match => ({
-            url: match[2],
-            title: match[1],
-            description: ''
-          }));
-        };
+      const parseStructuredLinks = (text: string) => {
+        // Buscar patrones como [title](url)
+        const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+        const matches = [...text.matchAll(linkRegex)];
+        return matches.map(match => ({
+          url: match[2],
+          title: match[1],
+          description: ''
+        }));
+      };
 
-        // Parse links from response
-        const responseLinks = parseLinksFromText(response.response);
-        const structuredLinks = parseStructuredLinks(response.response);
-        const allLinks = [...responseLinks, ...structuredLinks];
+      // Parse links from response
+      const responseLinks = parseLinksFromText(response.response);
+      const structuredLinks = parseStructuredLinks(response.response);
+      const allLinks = [...responseLinks, ...structuredLinks];
+      
+      // Remove duplicates
+      const uniqueLinks = allLinks.filter((link, index, self) => 
+        index === self.findIndex(l => l.url === link.url)
+      );
+
+      // Create agent message with enhanced data
+      const agentMessage: Message = {
+        id: `msg-${Date.now()}`,
+        content: response.response,
+        sender: 'assistant',
+        timestamp: new Date(response.timestamp),
+        toolResults: response.tool_results || [],
+        searchData: response.search_data,
+        uploadData: response.upload_data,
+        links: uniqueLinks.length > 0 ? uniqueLinks : undefined,
+        status: response.tool_results && response.tool_results.length > 0 ? {
+          type: 'success',
+          message: `Ejecuté ${response.tool_results.length} herramienta(s)`
+        } : undefined
+      };
+
+      // Si hay un plan estructurado, notificar al TaskView para que lo actualice
+      if (response.plan && response.plan.steps) {
+        console.log('📋 Structured plan received:', response.plan);
         
-        // Remove duplicates
-        const uniqueLinks = allLinks.filter((link, index, self) => 
-          index === self.findIndex(l => l.url === link.url)
-        );
-
-        // Create agent message with enhanced data
-        const agentMessage: Message = {
-          id: `msg-${Date.now()}`,
-          content: response.response,
+        // PRIMERO: Notificar al TaskView sobre el plan generado
+        if (onTaskPlanGenerated) {
+          console.log('📋 Calling onTaskPlanGenerated with plan:', response.plan);
+          onTaskPlanGenerated(response.plan);
+        }
+        
+        // Crear mensaje especial para indicar que se generó un plan
+        const planNotificationMessage: Message = {
+          id: `plan-${Date.now()}`,
+          content: `📋 **Plan generado y ejecutándose**\n\nHe creado un plan de ${response.plan.total_steps} pasos para tu tarea. Puedes ver el progreso en la sección "Plan de Acción".`,
           sender: 'assistant',
           timestamp: new Date(response.timestamp),
-          toolResults: response.tool_results || [],
-          searchData: response.search_data,
-          uploadData: response.upload_data,
-          links: uniqueLinks.length > 0 ? uniqueLinks : undefined,
-          status: response.tool_results && response.tool_results.length > 0 ? {
+          status: {
             type: 'success',
-            message: `Ejecuté ${response.tool_results.length} herramienta(s)`
-          } : undefined
+            message: `Plan de ${response.plan.total_steps} pasos generado`
+          }
         };
 
-        // Si hay un plan estructurado, notificar al TaskView para que lo actualice
-        if (response.plan && response.plan.steps) {
-          console.log('📋 Structured plan received:', response.plan);
-          
-          // PRIMERO: Notificar al TaskView sobre el plan generado
-          if (onTaskPlanGenerated) {
-            console.log('📋 Calling onTaskPlanGenerated with plan:', response.plan);
-            onTaskPlanGenerated(response.plan);
-          }
-          
-          // Crear mensaje especial para indicar que se generó un plan
-          const planNotificationMessage: Message = {
-            id: `plan-${Date.now()}`,
-            content: `📋 **Plan generado y ejecutándose**\n\nHe creado un plan de ${response.plan.total_steps} pasos para tu tarea. Puedes ver el progreso en la sección "Plan de Acción".`,
-            sender: 'assistant',
-            timestamp: new Date(response.timestamp),
-            status: {
-              type: 'success',
-              message: `Plan de ${response.plan.total_steps} pasos generado`
-            }
-          };
-
-          // Actualizar mensajes con plan
-          if (onUpdateMessages) {
-            const messagesWithPlan = [...messages, userMessage, planNotificationMessage, agentMessage];
-            onUpdateMessages(messagesWithPlan);
-          }
-        } else {
-          // Update messages normalmente si no hay plan
-          if (onUpdateMessages) {
-            const updatedMessages = [...messages, userMessage, agentMessage];
-            onUpdateMessages(updatedMessages);
-          }
+        // Actualizar mensajes con plan
+        if (onUpdateMessages) {
+          const messagesWithPlan = [...messages, userMessage, planNotificationMessage, agentMessage];
+          onUpdateMessages(messagesWithPlan);
         }
+      } else {
+        // Update messages normalmente si no hay plan
+        if (onUpdateMessages) {
+          const updatedMessages = [...messages, userMessage, agentMessage];
+          onUpdateMessages(updatedMessages);
+        }
+      }
 
-        // Log tool executions to terminal
-        if (response.tool_results && response.tool_results.length > 0 && onLogToTerminal) {
-          response.tool_results.forEach((toolResult, index) => {
-            const toolInfo = `🔧 HERRAMIENTA EJECUTADA [${index + 1}/${response.tool_results.length}]
+      // Log tool executions to terminal
+      if (response.tool_results && response.tool_results.length > 0 && onLogToTerminal) {
+        response.tool_results.forEach((toolResult, index) => {
+          const toolInfo = `🔧 HERRAMIENTA EJECUTADA [${index + 1}/${response.tool_results.length}]
 ────────────────────────────────────────
 🛠️  Herramienta: ${toolResult.tool}
 📋 Parámetros: ${JSON.stringify(toolResult.parameters, null, 2)}
 📊 Estado: ${toolResult.result?.success ? '✅ EXITOSO' : '❌ ERROR'}
 📄 Resultado: ${typeof toolResult.result === 'object' ? JSON.stringify(toolResult.result, null, 2) : toolResult.result}
 ────────────────────────────────────────`;
-            
-            onLogToTerminal(toolInfo, toolResult.result?.success ? 'success' : 'error');
-          });
           
-          // Summary log
-          onLogToTerminal(`📈 RESUMEN: ${response.tool_results.length} herramienta(s) ejecutada(s) correctamente`, 'info');
-        }
-
-      } catch (error) {
-        console.error('Error sending message:', error);
+          onLogToTerminal(toolInfo, toolResult.result?.success ? 'success' : 'error');
+        });
         
-        // Crear mensaje de error
-        const errorMessage: Message = {
-          id: `msg-${Date.now()}`,
-          content: 'Lo siento, hubo un error al procesar tu mensaje. Asegúrate de que Ollama esté ejecutándose.',
-          sender: 'assistant',
-          timestamp: new Date(),
-          status: {
-            type: 'error',
-            message: 'Error de conexión'
-          }
-        };
+        // Summary log
+        onLogToTerminal(`📈 RESUMEN: ${response.tool_results.length} herramienta(s) ejecutada(s) correctamente`, 'info');
+      }
 
-        if (onUpdateMessages) {
-          const currentMessages = [...messages, userMessage];
-          const updatedMessages = [...currentMessages, errorMessage];
-          onUpdateMessages(updatedMessages);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      
+      // Crear mensaje de error
+      const errorMessage: Message = {
+        id: `msg-${Date.now()}`,
+        content: 'Lo siento, hubo un error al procesar tu mensaje. Asegúrate de que Ollama esté ejecutándose.',
+        sender: 'assistant',
+        timestamp: new Date(),
+        status: {
+          type: 'error',
+          message: 'Error de conexión'
         }
-      } finally {
-        setIsLoading(false);
+      };
+
+      if (onUpdateMessages) {
+        const currentMessages = [...messages, userMessage];
+        const updatedMessages = [...currentMessages, errorMessage];
+        onUpdateMessages(updatedMessages);
       }
     }
   };
