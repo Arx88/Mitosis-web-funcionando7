@@ -14,9 +14,28 @@ from dotenv import load_dotenv
 import pymongo
 import logging
 
-# Configurar logging
-logging.basicConfig(level=logging.INFO)
+# Configurar logging más intenso
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('/var/log/mitosis_debug.log')
+    ]
+)
 logger = logging.getLogger(__name__)
+
+# Logging para terminal también
+terminal_logger = logging.getLogger('MITOSIS_TERMINAL')
+terminal_handler = logging.StreamHandler(sys.stdout)
+terminal_handler.setLevel(logging.INFO)
+terminal_formatter = logging.Formatter('%(asctime)s - [MITOSIS] - %(levelname)s - %(message)s')
+terminal_handler.setFormatter(terminal_formatter)
+terminal_logger.addHandler(terminal_handler)
+terminal_logger.setLevel(logging.INFO)
+
+terminal_logger.info("🚀 INICIANDO SERVIDOR CON LOGGING INTENSO - Sistema completo del agente")
+print("🚀 INICIANDO SERVIDOR CON LOGGING INTENSO - Sistema completo del agente")
 
 # Cargar variables de entorno
 load_dotenv()
