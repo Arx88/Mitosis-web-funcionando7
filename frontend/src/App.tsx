@@ -631,6 +631,10 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                             const newTask = await createTask(message.trim());
                             console.log('✅ Task created successfully:', newTask.id);
                             
+                            // PASO 1.5: 🚀 ACTIVAR LA TAREA INMEDIATAMENTE PARA MOSTRAR TaskView
+                            setActiveTaskId(newTask.id);
+                            console.log('🚀 CRITICAL FIX: Active task set immediately:', newTask.id);
+                            
                             // PASO 2: Crear solo el mensaje del usuario
                             const userMessage = {
                               id: `msg-${Date.now()}`,
