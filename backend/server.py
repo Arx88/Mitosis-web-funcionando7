@@ -18,6 +18,7 @@ sys.path.insert(0, current_dir)
 
 def main():
     """Función principal del servidor"""
+    global app  # Declarar variable global
     
     print("🚀 Iniciando Mitosis-Beta Enhanced Server...")
     
