@@ -161,14 +161,42 @@ export function App() {
     }));
   };
 
-  const handleConfigChange = (newConfig: AgentConfig) => {
+  const handleConfigChange = async (newConfig: AgentConfig) => {
+    // Aplicar configuración al estado local
     setAppState(prev => ({
       ...prev,
       config: newConfig
     }));
     
-    // Aquí podrías enviar la configuración al backend
-    console.log('Configuración actualizada:', newConfig);
+    // Enviar configuración al backend para aplicar dinámicamente
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 
+                     import.meta.env.REACT_APP_BACKEND_URL || 
+                     process.env.REACT_APP_BACKEND_URL;
+                     
+      console.log('🔧 Enviando nueva configuración al backend...');
+      
+      const response = await fetch(`${backendUrl}/api/agent/config/apply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          config: newConfig
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Configuración aplicada exitosamente:', result);
+      } else {
+        console.error('❌ Error aplicando configuración:', await response.text());
+      }
+    } catch (error) {
+      console.error('❌ Error enviando configuración al backend:', error);
+    }
+    
+    console.log('🔧 Configuración actualizada:', newConfig);
   };
 
   const handleTerminalResize = (height: number) => {
