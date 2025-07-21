@@ -285,4 +285,54 @@ curl -s "http://localhost:8001/api/agent/status" | jq '.tools'
 # - Información de 2024-2025, no genérica
 ```
 
-*Última actualización: 2025-07-21 22:05:00 - DOCUMENTACIÓN INICIADA - INVESTIGACIÓN SISTEMÁTICA PENDIENTE*
+---
+
+## 2025-07-21 22:10:00 - PROBLEMA RAÍZ REAL IDENTIFICADO
+
+### Mejora Implementada
+INVESTIGACIÓN DIRECTA: Test directo de herramienta web_search
+
+### Archivos Analizados
+- `/app/backend/src/tools/web_search_tool.py`
+
+### Descripción del Cambio
+Ejecuté test directo de la herramienta web_search FUERA del flujo del agente
+
+### Resultados del Testeo - DESCUBRIMIENTO CRÍTICO
+❌ **TEST DIRECTO web_search**:
+```bash
+# Query: "mejores bares valencia 2025"
+# Resultado: ERROR: Ratelimit (202)
+# Success: False
+# Count: 0
+```
+
+✅ **PROBLEMA RAÍZ IDENTIFICADO**: 
+- Las herramientas SÍ se ejecutan correctamente
+- El problema es **rate-limiting de DuckDuckGo API**
+- Por eso los resultados son vacíos y se crean templates
+
+### Estado de la Tarea
+EN PROGRESO - Problema real identificado, solución específica requerida
+
+### Evaluación/Notas
+**DESCUBRIMIENTO IMPORTANTE**: 
+1. Mi diagnóstico previo sobre "mapeo de herramientas" era incorrecto
+2. Las herramientas funcionan correctamente 
+3. El problema es rate-limiting de servicios externos
+4. Necesito implementar fallback o usar API alternativa
+
+### Próximos Pasos - SOLUCIÓN ESPECÍFICA
+1. ✅ Comprobar herramienta Tavily (alternativa a DuckDuckGo)
+2. Implementar rate-limiting handling
+3. Agregar fallback entre múltiples APIs
+4. Test con API que no tenga rate limits
+
+---
+
+## 2025-07-21 22:12:00 - TEST DE HERRAMIENTA TAVILY
+
+### Mejora Implementada
+TEST ALTERNATIVO: Verificación de herramienta Tavily como alternativa
+
+*Última actualización: 2025-07-21 22:12:00 - PROBLEMA RAÍZ IDENTIFICADO - TESTING TAVILY*
