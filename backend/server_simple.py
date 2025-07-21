@@ -436,6 +436,21 @@ def api_health_check():
         logger.error(f"API Health check error: {e}")
         return jsonify({"status": "unhealthy", "error": str(e)}), 500
 
+# Endpoint para sugerencias dinámicas que faltaba
+@app.route('/api/agent/generate-suggestions', methods=['POST'])
+def generate_suggestions():
+    """Genera sugerencias dinámicas para el frontend"""
+    try:
+        suggestions = [
+            {"title": "Buscar información sobre IA", "description": "Investigar avances recientes en inteligencia artificial"},
+            {"title": "Analizar datos de mercado", "description": "Procesar tendencias y métricas comerciales"},
+            {"title": "Crear documento técnico", "description": "Generar documentación profesional con análisis detallado"}
+        ]
+        return jsonify({"suggestions": suggestions}), 200
+    except Exception as e:
+        logger.error(f"Generate suggestions error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 # Manejo de errores
 @app.errorhandler(404)
 def not_found(error):
