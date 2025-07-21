@@ -1,0 +1,109 @@
+{
+  "timestamp": "2025-07-21T13:30:55.256317",
+  "total_tests": 7,
+  "passed_tests": 7,
+  "success_rate": 100.0,
+  "evaluation": "✅ EXCELENTE - Sistema funcionando perfectamente",
+  "results": [
+    {
+      "test_case": "Saludo casual",
+      "message": "Hola, ¿cómo estás?",
+      "expected_type": "casual_conversation",
+      "classified_type": "casual_conversation",
+      "confidence": 0.98,
+      "reasoning": "El mensaje es un saludo informal y una pregunta sobre el estado emocional del interlocutor, sin solicitud de acción específica ni contenido relacionado con tareas o configuraciones",
+      "success": true,
+      "type_matches": true
+    },
+    {
+      "test_case": "Pregunta de información",
+      "message": "¿Cuál es la capital de Francia?",
+      "expected_type": "information_request",
+      "classified_type": "information_request",
+      "confidence": 0.97,
+      "reasoning": "El mensaje es una pregunta directa sobre un hecho geográfico específico (capital de un país) que requiere consulta de información externa. No implica acción, gestión de tareas ni configuración del agente.",
+      "success": true,
+      "type_matches": true
+    },
+    {
+      "test_case": "Tarea simple",
+      "message": "Crea un archivo de texto",
+      "expected_type": "simple_task",
+      "classified_type": "simple_task",
+      "confidence": 0.97,
+      "reasoning": "Solicitud directa de creación de un archivo de texto, acción simple y concreta sin necesidad de planificación compleja o múltiples herramientas",
+      "success": true,
+      "type_matches": true
+    },
+    {
+      "test_case": "Tarea compleja",
+      "message": "Desarrolla una aplicación web con dashboard de analytics",
+      "expected_type": "complex_task",
+      "classified_type": "complex_task",
+      "confidence": 0.94,
+      "reasoning": "La solicitud implica desarrollar una aplicación web con un dashboard de analytics, lo que requiere múltiples fases: diseño de la arquitectura, implementación de funcionalidades, integración de herramientas de visualización de datos, pruebas y despliegue. Requiere planificación detallada y uso de diversas tecnologías.",
+      "success": true,
+      "type_matches": true
+    },
+    {
+      "test_case": "Gestión de tareas",
+      "message": "¿Cuál es el estado de mis tareas?",
+      "expected_type": "task_management",
+      "classified_type": "task_management",
+      "confidence": 0.95,
+      "reasoning": "El usuario está consultando el estado de sus tareas, lo que corresponde a la gestión de tareas existentes. Aunque no hay tareas activas, la intención clara es verificar su estado actual.",
+      "success": true,
+      "type_matches": true
+    },
+    {
+      "test_case": "Configuración del agente",
+      "message": "Cambia tu configuración de modelo",
+      "expected_type": "agent_configuration",
+      "classified_type": "agent_configuration",
+      "confidence": 0.97,
+      "reasoning": "El mensaje solicita explícitamente un cambio en la configuración del modelo del agente, lo que corresponde directamente a la categoría de configuración del agente",
+      "success": true,
+      "type_matches": true
+    },
+    {
+      "test_case": "Mensaje ambiguo",
+      "message": "Esto... bueno... no sé...",
+      "expected_type": "unclear",
+      "classified_type": "unclear",
+      "confidence": 0.95,
+      "reasoning": "El mensaje expresa incertidumbre o vacilación sin plantear una solicitud explícita. No hay indicios claros de intención de conversación casual, consulta de información, gestión de tareas o ejecución de acciones. Requiere aclaración para identificar la necesidad real del usuario.",
+      "success": true,
+      "type_matches": true
+    }
+  ],
+  "categories": {
+    "casual_conversation": {
+      "total": 1,
+      "passed": 1
+    },
+    "information_request": {
+      "total": 1,
+      "passed": 1
+    },
+    "simple_task": {
+      "total": 1,
+      "passed": 1
+    },
+    "complex_task": {
+      "total": 1,
+      "passed": 1
+    },
+    "task_management": {
+      "total": 1,
+      "passed": 1
+    },
+    "agent_configuration": {
+      "total": 1,
+      "passed": 1
+    },
+    "unclear": {
+      "total": 1,
+      "passed": 1
+    }
+  }
+}
