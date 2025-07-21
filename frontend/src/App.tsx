@@ -654,7 +654,7 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                             
                             // PASO 4: Llamar al backend para procesar la tarea y generar el plan
                             try {
-                              const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+                              const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
                               console.log('🌐 Calling backend:', `${backendUrl}/api/agent/initialize-task`);
                               
                               const response = await fetch(`${backendUrl}/api/agent/initialize-task`, {
