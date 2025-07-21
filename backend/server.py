@@ -58,33 +58,40 @@ def main():
         if app is None:
             raise Exception("No se pudo obtener la aplicación Flask de la API mejorada")
         
-        # Exponer la variable app para uvicorn
+        # Exponer la variable app para uvicorn a nivel de módulo
+        app = enhanced_api.app
+        
+        # Establecer la aplicación globalmente
+        sys.modules[__name__].app = app
         globals()['app'] = app
         
-        # Modo de ejecución - usar el método run de la API mejorada directamente
-        print("🔄 Iniciando en modo Enhanced API con ejecución autónoma...")
-        print("📡 Endpoints mejorados disponibles:")
-        print("   - POST /api/agent/initialize-task")
-        print("   - POST /api/agent/chat (con detección autónoma)")
-        print("   - GET /api/agent/status (mejorado)")
-        print("   - GET /api/health (mejorado)")
-        print("🖥️  Salida en tiempo real habilitada en terminal")
+        print("✅ Aplicación Flask expuesta correctamente para uvicorn")
         
-        # La API mejorada se encarga de todo
-        if hasattr(config, 'debug_mode'):  # Es AgentConfig
-            host = getattr(config, 'HOST', '0.0.0.0') if hasattr(config, 'HOST') else '0.0.0.0'
-            port = getattr(config, 'PORT', 8001) if hasattr(config, 'PORT') else 8001
-            debug = config.debug_mode
-        else:  # Es diccionario
-            host = config.get('HOST', '0.0.0.0')
-            port = config.get('PORT', 8001) 
-            debug = config.get('DEBUG_MODE', True)
-        
-        enhanced_api.run(
-            host=host, 
-            port=port, 
-            debug=debug
-        )
+        # Solo ejecutar directamente si se llama como script principal
+        if __name__ == "__main__":
+            print("🔄 Iniciando en modo Enhanced API con ejecución autónoma...")
+            print("📡 Endpoints mejorados disponibles:")
+            print("   - POST /api/agent/initialize-task")
+            print("   - POST /api/agent/chat (con detección autónoma)")
+            print("   - GET /api/agent/status (mejorado)")
+            print("   - GET /api/health (mejorado)")
+            print("🖥️  Salida en tiempo real habilitada en terminal")
+            
+            # La API mejorada se encarga de todo
+            if hasattr(config, 'debug_mode'):  # Es AgentConfig
+                host = getattr(config, 'HOST', '0.0.0.0') if hasattr(config, 'HOST') else '0.0.0.0'
+                port = getattr(config, 'PORT', 8001) if hasattr(config, 'PORT') else 8001
+                debug = config.debug_mode
+            else:  # Es diccionario
+                host = config.get('HOST', '0.0.0.0')
+                port = config.get('PORT', 8001) 
+                debug = config.get('DEBUG_MODE', True)
+            
+            enhanced_api.run(
+                host=host, 
+                port=port, 
+                debug=debug
+            )
         
     except ImportError as e:
         print(f"⚠️ Enhanced API no disponible: {e}")
