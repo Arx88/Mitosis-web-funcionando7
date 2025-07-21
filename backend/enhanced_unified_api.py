@@ -366,12 +366,24 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
         @self.app.route('/api/health', methods=['GET'])
         def enhanced_health():
             """Health check mejorado"""
-            return jsonify({
-                "status": "healthy",
-                "enhanced": True,
-                "autonomous_execution": self.autonomous_execution_active,
-                "timestamp": datetime.now().isoformat()
-            })
+            try:
+                return jsonify({
+                    "status": "healthy",
+                    "enhanced": True,
+                    "autonomous_execution": getattr(self, 'autonomous_execution_active', False),
+                    "timestamp": datetime.now().isoformat()
+                })
+            except Exception as e:
+                return jsonify({
+                    "status": "error",
+                    "error": str(e),
+                    "timestamp": datetime.now().isoformat()
+                }), 500
+
+        @self.app.route('/api/simple-test', methods=['GET'])
+        def simple_test():
+            """Test endpoint simple"""
+            return {"test": "ok", "timestamp": datetime.now().isoformat()}
 
         # Endpoints de compatibilidad con el frontend
         @self.app.route('/api/agent/ollama/check', methods=['GET', 'POST'])
