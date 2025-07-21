@@ -358,7 +358,7 @@ if __name__ == "__main__":
         print("   GET  /api/agent/test-real-tools - Probar herramientas REALES")
         print()
         
-        app.run(host='0.0.0.0', port=8003, debug=False)
+        app.run(host='0.0.0.0', port=8001, debug=False)
     else:
         print("❌ Error inicializando herramientas. Servidor no iniciado.")
         sys.exit(1)
