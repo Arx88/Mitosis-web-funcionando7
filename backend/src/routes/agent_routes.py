@@ -3061,6 +3061,30 @@ def chat():
             else:
                 logger.warning(f"⚠️ WebSocket manager not available for task {task_id}")
             
+            # 🎯 INICIAR EJECUCIÓN AUTOMÁTICA DESPUÉS DE GENERAR EL PLAN
+            logger.info(f"🚀 Starting automatic execution for task {task_id}")
+            try:
+                # Llamar internamente al endpoint de ejecución automática
+                import threading
+                app = current_app._get_current_object()
+                
+                def auto_execute_with_context():
+                    with app.app_context():
+                        logger.info(f"🔄 Auto-executing task {task_id} with {len(structured_plan.get('steps', []))} steps")
+                        execute_task_steps_sequentially(task_id, structured_plan.get('steps', []))
+                        logger.info(f"✅ Auto-execution completed for task {task_id}")
+                
+                execution_thread = threading.Thread(target=auto_execute_with_context)
+                execution_thread.daemon = True
+                execution_thread.start()
+                
+                logger.info(f"🎯 Auto-execution thread started for task {task_id}")
+                execution_status = 'executing'  # Estado: ejecutándose automáticamente
+                
+            except Exception as e:
+                logger.error(f"❌ Error starting auto-execution for task {task_id}: {e}")
+                execution_status = 'plan_ready'  # Fallback al estado anterior
+            
             return jsonify({
                 'response': final_response,
                 'task_id': task_id,
