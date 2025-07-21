@@ -121,18 +121,45 @@ except Exception as e:
     def agent_status():
         """Status del agente"""
         try:
+            # Verificar conexión Ollama real
+            ollama_connected = False
+            ollama_models = []
+            
+            if hasattr(app, 'ollama_service') and app.ollama_service:
+                try:
+                    ollama_connected = app.ollama_service.is_healthy()
+                    if ollama_connected:
+                        ollama_models = app.ollama_service.get_available_models()
+                except:
+                    ollama_connected = False
+            
+            # Obtener herramientas disponibles
+            tools_available = []
+            if hasattr(app, 'tool_manager') and app.tool_manager:
+                try:
+                    tools_available = app.tool_manager.get_available_tools()
+                except:
+                    pass
+            
             status = {
                 "status": "running",
                 "timestamp": datetime.now().isoformat(),
                 "ollama": {
-                    "connected": False,
+                    "connected": ollama_connected,
                     "endpoint": os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app'),
-                    "model": os.getenv('OLLAMA_DEFAULT_MODEL', 'llama3.1:8b')
+                    "model": os.getenv('OLLAMA_DEFAULT_MODEL', 'llama3.1:8b'),
+                    "available_models": ollama_models[:5] if ollama_models else [],  # Primeros 5
+                    "models_count": len(ollama_models)
                 },
-                "tools": [],
+                "tools": tools_available[:5] if tools_available else [],  # Primeros 5
+                "tools_count": len(tools_available) if tools_available else 0,
                 "memory": {
                     "enabled": True,
                     "initialized": True
+                },
+                "configuration": {
+                    "provider": os.getenv('AGENT_LLM_PROVIDER', 'ollama'),
+                    "openrouter_configured": bool(os.getenv('OPENROUTER_API_KEY'))
                 }
             }
             return jsonify(status), 200
