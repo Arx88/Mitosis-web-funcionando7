@@ -20,7 +20,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 # Importar la API base
 try:
     from unified_api import UnifiedMitosisAPI
-    from agent_core import MitosisAgent
+    from agent_core_real import MitosisRealAgent  # USAR AGENTE REAL
     HAS_BASE_API = True
 except ImportError:
     HAS_BASE_API = False
