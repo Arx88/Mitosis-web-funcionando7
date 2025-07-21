@@ -44,12 +44,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     const taskNumber = tasks.length + 1;
     const defaultTitle = `Tarea ${taskNumber}`;
     
-    // Reset any previous task state before creating new task
-    if (onTaskSelect) {
-      onTaskSelect(''); // Clear current selection
-    }
+    // Crear la nueva tarea (no limpiar la selección antes, ya que createTask setea activeTaskId)
+    const newTask = onCreateTask(defaultTitle);
     
-    onCreateTask(defaultTitle);
+    // Asegurar que la nueva tarea se seleccione correctamente
+    if (newTask && onTaskSelect) {
+      setTimeout(() => {
+        onTaskSelect(newTask.id);
+      }, 100); // Pequeño delay para asegurar que la tarea esté en el estado
+    }
   };
 
   const handleDeleteTask = (taskId: string, taskTitle: string, e: React.MouseEvent) => {
