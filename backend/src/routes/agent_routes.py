@@ -3646,6 +3646,182 @@ def get_ollama_models():
             'error': str(e)
         }), 500
 
+# ==========================================
+# SISTEMA DE CONFIGURACIÓN DINÁMICA
+# ==========================================
+
+@agent_bp.route('/config/apply', methods=['POST'])
+def apply_configuration():
+    """Aplica configuración desde el frontend al backend en tiempo real"""
+    try:
+        data = request.get_json()
+        config = data.get('config', {})
+        
+        logger.info(f"🔧 Aplicando nueva configuración desde frontend")
+        
+        # Obtener servicios actuales
+        ollama_service = get_ollama_service()
+        
+        # Aplicar configuración Ollama si está habilitada
+        ollama_config = config.get('ollama', {})
+        if ollama_config.get('enabled', False):
+            endpoint = ollama_config.get('endpoint')
+            model = ollama_config.get('model')
+            
+            if endpoint and ollama_service:
+                logger.info(f"🔄 Actualizando Ollama: endpoint={endpoint}, modelo={model}")
+                
+                # Actualizar endpoint del servicio
+                ollama_service.base_url = endpoint
+                
+                # Actualizar modelo si se especifica
+                if model:
+                    ollama_service.set_model(model)
+                
+                # Verificar nueva configuración
+                connection_status = ollama_service.check_connection()
+                
+                logger.info(f"✅ Ollama reconfigurado: {connection_status}")
+        
+        # Aplicar configuración OpenRouter si está habilitada
+        openrouter_config = config.get('openrouter', {})
+        if openrouter_config.get('enabled', False):
+            # TODO: Implementar OpenRouter service cuando esté listo
+            logger.info("🔄 OpenRouter configuración recibida (pendiente implementación)")
+        
+        # Guardar configuración aplicada para persistencia
+        current_app.active_config = config
+        
+        return jsonify({
+            'success': True,
+            'message': 'Configuración aplicada exitosamente',
+            'timestamp': datetime.now().isoformat(),
+            'config_applied': {
+                'ollama': {
+                    'enabled': ollama_config.get('enabled', False),
+                    'endpoint': ollama_config.get('endpoint', ''),
+                    'model': ollama_config.get('model', ''),
+                    'connected': ollama_service.is_healthy() if ollama_service else False
+                },
+                'openrouter': {
+                    'enabled': openrouter_config.get('enabled', False)
+                }
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error aplicando configuración: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@agent_bp.route('/config/current', methods=['GET'])
+def get_current_configuration():
+    """Obtiene la configuración actualmente aplicada en el backend"""
+    try:
+        ollama_service = get_ollama_service()
+        
+        # Obtener configuración actual
+        current_config = getattr(current_app, 'active_config', {})
+        
+        # Obtener estado actual de servicios
+        ollama_status = {}
+        if ollama_service:
+            ollama_status = {
+                'endpoint': ollama_service.base_url,
+                'current_model': ollama_service.get_current_model(),
+                'connected': ollama_service.is_healthy(),
+                'available_models': ollama_service.get_available_models()
+            }
+        
+        return jsonify({
+            'success': True,
+            'config': current_config,
+            'services_status': {
+                'ollama': ollama_status,
+                'openrouter': {
+                    'implemented': False
+                }
+            },
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo configuración actual: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@agent_bp.route('/config/validate', methods=['POST'])
+def validate_configuration():
+    """Valida una configuración antes de aplicarla"""
+    try:
+        data = request.get_json()
+        config = data.get('config', {})
+        
+        validation_results = {
+            'valid': True,
+            'issues': [],
+            'services_tested': {}
+        }
+        
+        # Validar configuración Ollama
+        ollama_config = config.get('ollama', {})
+        if ollama_config.get('enabled', False):
+            endpoint = ollama_config.get('endpoint')
+            if endpoint:
+                try:
+                    import requests
+                    response = requests.get(f"{endpoint}/api/tags", timeout=10)
+                    if response.status_code == 200:
+                        models = response.json().get('models', [])
+                        validation_results['services_tested']['ollama'] = {
+                            'endpoint': endpoint,
+                            'connected': True,
+                            'models_available': len(models),
+                            'models': [model.get('name', '') for model in models[:5]]  # Primeros 5
+                        }
+                    else:
+                        validation_results['valid'] = False
+                        validation_results['issues'].append(f"Ollama endpoint {endpoint} returned HTTP {response.status_code}")
+                        validation_results['services_tested']['ollama'] = {
+                            'endpoint': endpoint,
+                            'connected': False,
+                            'error': f"HTTP {response.status_code}"
+                        }
+                except Exception as conn_error:
+                    validation_results['valid'] = False
+                    validation_results['issues'].append(f"Cannot connect to Ollama endpoint {endpoint}: {str(conn_error)}")
+                    validation_results['services_tested']['ollama'] = {
+                        'endpoint': endpoint,
+                        'connected': False,
+                        'error': str(conn_error)
+                    }
+            else:
+                validation_results['issues'].append("Ollama enabled but no endpoint specified")
+        
+        # Validar configuración OpenRouter
+        openrouter_config = config.get('openrouter', {})
+        if openrouter_config.get('enabled', False):
+            api_key = openrouter_config.get('apiKey')
+            if not api_key:
+                validation_results['issues'].append("OpenRouter enabled but no API key provided")
+            validation_results['services_tested']['openrouter'] = {
+                'implemented': False,
+                'message': 'OpenRouter validation pending implementation'
+            }
+        
+        return jsonify(validation_results)
+        
+    except Exception as e:
+        logger.error(f"❌ Error validando configuración: {str(e)}")
+        return jsonify({
+            'valid': False,
+            'error': str(e)
+        }), 500
+
 @agent_bp.route('/execute-step/<task_id>/<step_id>', methods=['POST'])
 def execute_single_step(task_id: str, step_id: str):
     """Ejecutar un paso específico con emisión de eventos WebSocket"""
