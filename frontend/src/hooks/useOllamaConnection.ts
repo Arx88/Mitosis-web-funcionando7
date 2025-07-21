@@ -32,6 +32,8 @@ export const useOllamaConnection = ({ endpoint, enabled }: UseOllamaConnectionPr
 
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+      console.log(`🔍 Obteniendo modelos de: ${endpoint}`);
+      
       const response = await fetch(`${backendUrl}/api/agent/ollama/models`, {
         method: 'POST',
         headers: {
@@ -88,11 +90,17 @@ export const useOllamaConnection = ({ endpoint, enabled }: UseOllamaConnectionPr
       setModels(formattedModels);
       setIsConnected(true);
       
-      // Also check connection when fetching models
-      await checkConnection();
+      console.log(`✅ ${formattedModels.length} modelos obtenidos de ${endpoint}`);
+      
+      // Show fallback warning if applicable
+      if (data.fallback) {
+        console.warn(`⚠️ Usando modelos fallback: ${data.warning}`);
+        setError(`Conexión limitada: ${data.warning}`);
+      }
+      
     } catch (err) {
-      console.error('Error fetching Ollama models:', err);
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      console.error('❌ Error fetching Ollama models:', err);
+      setError(err instanceof Error ? err.message : 'Error desconocido obteniendo modelos');
       setIsConnected(false);
       setModels([]);
     } finally {
