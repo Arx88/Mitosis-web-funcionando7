@@ -278,13 +278,8 @@ export const VanishInput: React.FC<VanishInputProps> = ({
   };
 
   return (
-    <Button 
-      as="div"
-      containerClassName="relative group w-full h-auto min-h-[60px] sm:min-h-[75px]"
-      borderRadius="0.75rem"
-      duration={5184} // 20% más suave (más lento) que 4320
-      className="bg-[#363537] text-[#DADADA] border-[rgba(255,255,255,0.08)]"
-      borderClassName="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 opacity-[0.9]"
+    <div 
+      className="relative group w-full h-auto min-h-[60px] sm:min-h-[75px] bg-[#363537] border border-[rgba(255,255,255,0.08)] rounded-xl"
     >
       <form onSubmit={handleSubmit} className={`w-full ${className}`}>
         <div className="relative">
