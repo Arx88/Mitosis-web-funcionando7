@@ -4,17 +4,14 @@ Este módulo es el corazón de la nueva capacidad de ejecución autónoma del ag
 Su diseño se centra en la gestión del ciclo de vida de las tareas complejas.
 """
 
-import logging
-import json
-import time
-import os
 import asyncio
+import json
+import logging
 import sys
-from typing import List, Dict, Optional, Any, Union
-from dataclasses import dataclass, asdict
-from enum import Enum
 from datetime import datetime
-from collections import defaultdict
+from enum import Enum
+from dataclasses import dataclass
+from typing import List, Dict, Optional, Any
 
 # Configurar logging para terminal
 terminal_logger = logging.getLogger('MITOSIS')
@@ -25,34 +22,15 @@ terminal_handler.setFormatter(terminal_formatter)
 terminal_logger.addHandler(terminal_handler)
 terminal_logger.setLevel(logging.INFO)
 
-# Importar componentes base (con manejo de errores)
-try:
-    from agent_core import MitosisAgent, AgentConfig, AgentState
-except ImportError:
-    # Fallback si no están disponibles
-    MitosisAgent = None
-    AgentConfig = None
-    AgentState = None
-
-try:
-    from enhanced_memory_manager import EnhancedMemoryManager, VectorKnowledgeItem
-    from enhanced_task_manager import EnhancedTaskManager
-    from model_manager import ModelManager, UnifiedModel, ModelProvider
-    from enhanced_prompts import EnhancedPromptManager, PromptType
-except ImportError as e:
-    terminal_logger.warning(f"⚠️ Algunos componentes no disponibles: {e}")
-
-# ==================================================================================
-# CLASES Y ESTRUCTURAS DE DATOS FUNDAMENTALES PARA EJECUCIÓN AUTÓNOMA
-# ==================================================================================
 
 class TaskStatus(Enum):
-    """Estados posibles de una tarea o paso individual"""
+    """Define los posibles estados de una tarea o un paso individual"""
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     FAILED = "failed"
     PAUSED = "paused"
+
 
 @dataclass
 class TaskStep:
@@ -66,24 +44,11 @@ class TaskStep:
     error: Optional[str] = None
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
-    
-    def to_dict(self):
-        """Convierte el paso a diccionario para serialización"""
-        return {
-            'id': self.id,
-            'title': self.title,
-            'description': self.description,
-            'tool': self.tool,
-            'status': self.status.value,
-            'result': self.result,
-            'error': self.error,
-            'start_time': self.start_time.isoformat() if self.start_time else None,
-            'end_time': self.end_time.isoformat() if self.end_time else None
-        }
 
-@dataclass  
+
+@dataclass
 class AutonomousTask:
-    """Representa una tarea autónoma completa con plan de acción"""
+    """Representa una tarea autónoma completa"""
     id: str
     title: str
     description: str
@@ -94,45 +59,21 @@ class AutonomousTask:
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     progress_percentage: float = 0.0
-    
-    def calculate_progress(self):
-        """Calcula el porcentaje de progreso basado en pasos completados"""
-        if not self.steps:
-            return 0.0
-        
-        completed_steps = sum(1 for step in self.steps if step.status == TaskStatus.COMPLETED)
-        self.progress_percentage = (completed_steps / len(self.steps)) * 100.0
-        return self.progress_percentage
-    
-    def to_dict(self):
-        """Convierte la tarea a diccionario para serialización"""
-        return {
-            'id': self.id,
-            'title': self.title,
-            'description': self.description,
-            'goal': self.goal,
-            'steps': [step.to_dict() for step in self.steps],
-            'status': self.status.value,
-            'created_at': self.created_at.isoformat(),
-            'started_at': self.started_at.isoformat() if self.started_at else None,
-            'completed_at': self.completed_at.isoformat() if self.completed_at else None,
-            'progress_percentage': self.progress_percentage
-        }
 
-# ==================================================================================
-# CLASE PRINCIPAL DEL NÚCLEO AUTÓNOMO
-# ==================================================================================
 
 class AutonomousAgentCore:
-    """El Cerebro de la Autonomía - Gestiona el ciclo completo de tareas autónomas"""
+    """Núcleo autónomo del agente con capacidades de ejecución de tareas"""
     
     def __init__(self, base_agent=None):
-        """Inicializa el núcleo autónomo con acceso al agente base"""
+        """
+        Inicializar el núcleo autónomo
+        Args:
+            base_agent: Instancia del MitosisAgent original
+        """
         self.base_agent = base_agent
         self.active_tasks: Dict[str, AutonomousTask] = {}
-        self.logger = terminal_logger
         
-        # Registro de herramientas disponibles
+        # Diccionario de herramientas disponibles
         self.available_tools = {
             "web_search": self._execute_web_search,
             "file_creation": self._execute_file_creation,
@@ -141,115 +82,121 @@ class AutonomousAgentCore:
             "research": self._execute_research,
             "planning": self._execute_planning,
             "documentation": self._execute_documentation,
-            "testing": self._execute_testing,
+            "testing": self._execute_testing
         }
         
-        self.logger.info("🧠 AutonomousAgentCore inicializado exitosamente")
-    
+        terminal_logger.info("🧠 AutonomousAgentCore inicializado exitosamente")
+        terminal_logger.info("✅ AutonomousAgentCore inicializado exitosamente")
+
     def generate_action_plan(self, task_title: str, task_description: str = "") -> AutonomousTask:
-        """Transforma una solicitud en un AutonomousTask estructurado"""
-        try:
-            task_id = f"task_{int(time.time())}_{len(self.active_tasks)}"
-            
-            self.logger.info(f"📋 Generando plan de acción para: {task_title}")
-            
-            # Generar pasos basado en análisis heurístico
-            steps = self._analyze_and_generate_steps(task_title, task_description)
-            
-            # Crear tarea autónoma
-            task = AutonomousTask(
-                id=task_id,
-                title=task_title,
-                description=task_description,
-                goal=task_description or task_title,
-                steps=steps,
-                status=TaskStatus.PENDING,
-                created_at=datetime.now()
-            )
-            
-            # Almacenar tarea
-            self.active_tasks[task_id] = task
-            
-            # Mostrar plan en terminal
-            self._display_action_plan(task)
-            
-            return task
-            
-        except Exception as e:
-            self.logger.error(f"❌ Error generando plan de acción: {e}")
-            raise
-    
+        """
+        Genera un plan de acción estructurado para una tarea
+        Args:
+            task_title: Título de la tarea
+            task_description: Descripción detallada de la tarea
+        Returns:
+            AutonomousTask: Tarea estructurada con plan de pasos
+        """
+        terminal_logger.info(f"📋 Generando plan de acción para: {task_title}")
+        
+        # Generar ID único para la tarea
+        task_id = f"task_{int(datetime.now().timestamp())}_{len(self.active_tasks)}"
+        
+        # Analizar y generar pasos
+        steps = self._analyze_and_generate_steps(task_title, task_description)
+        
+        # Crear tarea autónoma
+        task = AutonomousTask(
+            id=task_id,
+            title=task_title,
+            description=task_description,
+            goal=f"Completar: {task_title}",
+            steps=steps,
+            status=TaskStatus.PENDING,
+            created_at=datetime.now()
+        )
+        
+        # Almacenar en tareas activas
+        self.active_tasks[task_id] = task
+        
+        # Mostrar plan en terminal
+        self._display_action_plan(task)
+        
+        return task
+
     def _analyze_and_generate_steps(self, title: str, description: str) -> List[TaskStep]:
-        """Descompone la tarea en pasos ejecutables basado en palabras clave"""
+        """
+        Analiza la tarea y genera pasos específicos basados en palabras clave
+        """
         steps = []
+        step_counter = 1
         
         # Paso inicial siempre presente
         steps.append(TaskStep(
-            id="step_1",
+            id=f"step_{step_counter}",
             title="Planificación inicial",
             description="Analizar los requisitos y crear un plan detallado",
             tool="planning",
             status=TaskStatus.PENDING
         ))
+        step_counter += 1
         
-        # Análisis heurístico para determinar pasos
+        # Analizar palabras clave para determinar pasos intermedios
         content = (title + " " + description).lower()
-        step_id = 2
         
-        # Pasos basados en palabras clave
-        if any(word in content for word in ["buscar", "investigar", "información", "datos"]):
+        if any(word in content for word in ["buscar", "investigar", "research", "información"]):
             steps.append(TaskStep(
-                id=f"step_{step_id}",
+                id=f"step_{step_counter}",
                 title="Investigación y búsqueda",
                 description="Buscar información relevante en la web",
                 tool="web_search",
                 status=TaskStatus.PENDING
             ))
-            step_id += 1
+            step_counter += 1
         
-        if any(word in content for word in ["crear", "generar", "documento", "archivo"]):
+        if any(word in content for word in ["crear", "archivo", "documento", "contenido"]):
             steps.append(TaskStep(
-                id=f"step_{step_id}",
+                id=f"step_{step_counter}",
                 title="Creación de contenido",
                 description="Crear archivos y documentos necesarios",
                 tool="file_creation",
                 status=TaskStatus.PENDING
             ))
-            step_id += 1
+            step_counter += 1
         
-        if any(word in content for word in ["código", "programar", "desarrollar", "implementar"]):
+        if any(word in content for word in ["código", "programar", "desarrollar", "app", "aplicación"]):
             steps.append(TaskStep(
-                id=f"step_{step_id}",
+                id=f"step_{step_counter}",
                 title="Generación de código",
                 description="Desarrollar código y componentes técnicos",
                 tool="code_generation",
                 status=TaskStatus.PENDING
             ))
-            step_id += 1
+            step_counter += 1
         
-        if any(word in content for word in ["analizar", "estudiar", "evaluar"]):
+        if any(word in content for word in ["analizar", "análisis", "datos", "estadísticas"]):
             steps.append(TaskStep(
-                id=f"step_{step_id}",
+                id=f"step_{step_counter}",
                 title="Análisis de datos",
-                description="Analizar y procesar información recopilada",
+                description="Analizar y procesar información",
                 tool="data_analysis",
                 status=TaskStatus.PENDING
             ))
-            step_id += 1
+            step_counter += 1
         
-        if any(word in content for word in ["documentar", "explicar", "manual"]):
+        if any(word in content for word in ["documentar", "documentación", "manual", "guía"]):
             steps.append(TaskStep(
-                id=f"step_{step_id}",
+                id=f"step_{step_counter}",
                 title="Documentación",
                 description="Crear documentación detallada",
                 tool="documentation",
                 status=TaskStatus.PENDING
             ))
-            step_id += 1
+            step_counter += 1
         
         # Paso final siempre presente
         steps.append(TaskStep(
-            id=f"step_{step_id}",
+            id=f"step_{step_counter}",
             title="Validación y entrega",
             description="Verificar resultados y preparar entrega final",
             tool="testing",
@@ -257,760 +204,222 @@ class AutonomousAgentCore:
         ))
         
         return steps
-    
-    def _display_action_plan(self, task: AutonomousTask):
-        """Muestra el plan de acción en terminal de forma legible"""
-        plan_output = f"""
-{'='*80}
-{'='*80}
-📋 PLAN DE ACCIÓN GENERADO
-{'='*80}
-🎯 Tarea: {task.title}
-📝 Descripción: {task.description}
-🆔 ID: {task.id}
-📅 Creado: {task.created_at.strftime('%Y-%m-%d %H:%M:%S')}
 
-📋 PASOS A EJECUTAR:
-"""
+    def _display_action_plan(self, task: AutonomousTask):
+        """Muestra el plan de acción de manera estructurada en terminal"""
+        terminal_logger.info("================================================================================")
+        terminal_logger.info("📋 PLAN DE ACCIÓN GENERADO")
+        terminal_logger.info("================================================================================")
+        terminal_logger.info(f"🎯 Tarea: {task.title}")
+        terminal_logger.info(f"📝 Descripción: {task.description}")
+        terminal_logger.info(f"🆔 ID: {task.id}")
+        terminal_logger.info(f"📅 Creado: {task.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+        terminal_logger.info("")
+        terminal_logger.info("📋 PASOS A EJECUTAR:")
         
         for i, step in enumerate(task.steps, 1):
-            plan_output += f"""
-{i}. {step.title}
-📄 {step.description}
-🛠 Herramienta: {step.tool}
-📊 Estado: {step.status.value}"""
+            terminal_logger.info(f"{i}. {step.title}")
+            terminal_logger.info(f"📄 {step.description}")
+            terminal_logger.info(f"🛠 Herramienta: {step.tool}")
+            terminal_logger.info(f"📊 Estado: {step.status.value}")
         
-        plan_output += f"\n{'='*80}"
-        
-        self.logger.info(plan_output)
-    
+        terminal_logger.info("================================================================================")
+
     async def execute_task_autonomously(self, task_id: str) -> bool:
-        """Ejecuta una tarea de forma autónoma paso a paso"""
+        """
+        Ejecuta una tarea autónoma paso a paso
+        Args:
+            task_id: ID de la tarea a ejecutar
+        Returns:
+            bool: True si la ejecución fue exitosa
+        """
+        if task_id not in self.active_tasks:
+            terminal_logger.error(f"❌ Tarea no encontrada: {task_id}")
+            return False
+        
+        task = self.active_tasks[task_id]
+        terminal_logger.info(f"🚀 Iniciando ejecución autónoma para tarea: {task_id}")
+        
+        # Actualizar estado de la tarea
+        task.status = TaskStatus.IN_PROGRESS
+        task.started_at = datetime.now()
+        
+        terminal_logger.info("🚀 INICIANDO EJECUCIÓN AUTÓNOMA")
+        terminal_logger.info("================================================================================")
+        
         try:
-            task = self.active_tasks.get(task_id)
-            if not task:
-                self.logger.error(f"❌ Tarea {task_id} no encontrada")
-                return False
-            
-            self.logger.info("🚀 INICIANDO EJECUCIÓN AUTÓNOMA")
-            self.logger.info("="*80)
-            
-            task.status = TaskStatus.IN_PROGRESS
-            task.started_at = datetime.now()
-            
             for step in task.steps:
-                # Actualizar estado del paso
-                step.status = TaskStatus.IN_PROGRESS
-                step.start_time = datetime.now()
+                # Ejecutar cada paso
+                success = await self._execute_step(step, task)
                 
-                self.logger.info(f"⚡ Ejecutando paso: {step.title}")
-                self.logger.info(f"📄 Descripción: {step.description}")
-                self.logger.info(f"🛠 Herramienta: {step.tool}")
-                
-                # Ejecutar herramienta
-                try:
-                    tool_function = self.available_tools.get(step.tool)
-                    if tool_function:
-                        result = await tool_function(step, task)
-                        step.result = result
-                        step.status = TaskStatus.COMPLETED
-                        self.logger.info("✅ Paso completado exitosamente")
-                        self.logger.info(f"📊 Resultado: {result}")
-                    else:
-                        step.error = f"Herramienta {step.tool} no disponible"
-                        step.status = TaskStatus.FAILED
-                        self.logger.error(f"❌ Herramienta {step.tool} no disponible")
-                        
-                except Exception as e:
-                    step.error = str(e)
-                    step.status = TaskStatus.FAILED
-                    self.logger.error(f"❌ Error ejecutando paso: {e}")
-                
-                step.end_time = datetime.now()
+                if not success:
+                    task.status = TaskStatus.FAILED
+                    terminal_logger.error(f"❌ Tarea falló en el paso: {step.title}")
+                    break
                 
                 # Actualizar progreso
-                task.calculate_progress()
-                self.logger.info(f"📈 Progreso: {task.progress_percentage:.1f}% ({sum(1 for s in task.steps if s.status == TaskStatus.COMPLETED)}/{len(task.steps)})")
-                self.logger.info("-" * 40)
+                completed_steps = sum(1 for s in task.steps if s.status == TaskStatus.COMPLETED)
+                task.progress_percentage = (completed_steps / len(task.steps)) * 100
                 
-                # Pausa entre pasos para visibilidad
+                terminal_logger.info(f"📈 Progreso: {task.progress_percentage:.1f}% ({completed_steps}/{len(task.steps)})")
+                terminal_logger.info("----------------------------------------")
+                
+                # Pausa entre pasos para realismo
                 await asyncio.sleep(1)
             
             # Finalizar tarea
-            all_completed = all(step.status == TaskStatus.COMPLETED for step in task.steps)
-            task.status = TaskStatus.COMPLETED if all_completed else TaskStatus.FAILED
-            task.completed_at = datetime.now()
+            if task.status != TaskStatus.FAILED:
+                task.status = TaskStatus.COMPLETED
+                task.progress_percentage = 100.0
             
-            if all_completed:
-                self.logger.info("🎉 TAREA COMPLETADA EXITOSAMENTE")
-            else:
-                self.logger.info("⚠️ TAREA COMPLETADA CON ALGUNOS FALLOS")
+            task.completed_at = datetime.now()
             
             # Mostrar resumen final
             self._display_task_summary(task)
             
-            return all_completed
+            return task.status == TaskStatus.COMPLETED
             
         except Exception as e:
-            self.logger.error(f"❌ Error crítico en ejecución autónoma: {e}")
-            if task_id in self.active_tasks:
-                self.active_tasks[task_id].status = TaskStatus.FAILED
+            terminal_logger.error(f"❌ Error durante ejecución: {str(e)}")
+            task.status = TaskStatus.FAILED
             return False
-    
+
+    async def _execute_step(self, step: TaskStep, task: AutonomousTask) -> bool:
+        """Ejecuta un paso individual de la tarea"""
+        terminal_logger.info(f"⚡ Ejecutando paso: {step.title}")
+        terminal_logger.info(f"📄 Descripción: {step.description}")
+        terminal_logger.info(f"🛠 Herramienta: {step.tool}")
+        
+        step.status = TaskStatus.IN_PROGRESS
+        step.start_time = datetime.now()
+        
+        try:
+            # Ejecutar herramienta correspondiente
+            if step.tool in self.available_tools:
+                result = await self.available_tools[step.tool](step, task)
+                step.result = result
+                step.status = TaskStatus.COMPLETED
+                terminal_logger.info("✅ Paso completado exitosamente")
+                terminal_logger.info(f"📊 Resultado: {result}")
+                return True
+            else:
+                step.status = TaskStatus.FAILED
+                step.error = f"Herramienta no encontrada: {step.tool}"
+                terminal_logger.error(f"❌ Herramienta no encontrada: {step.tool}")
+                return False
+                
+        except Exception as e:
+            step.status = TaskStatus.FAILED
+            step.error = str(e)
+            terminal_logger.error(f"❌ Error en paso: {str(e)}")
+            return False
+        finally:
+            step.end_time = datetime.now()
+
     def _display_task_summary(self, task: AutonomousTask):
         """Muestra resumen final de la ejecución"""
-        duration = 0
-        if task.started_at and task.completed_at:
-            duration = (task.completed_at - task.started_at).total_seconds()
+        duration = (task.completed_at - task.started_at).total_seconds() if task.completed_at and task.started_at else 0
         
-        summary = f"""
-{'='*80}
-📊 RESUMEN DE EJECUCIÓN
-{'='*80}
-🎯 Tarea: {task.title}
-📊 Estado final: {task.status.value}
-📈 Progreso: {task.progress_percentage}%
-⏱️ Duración: {duration:.1f} segundos
+        if task.status == TaskStatus.COMPLETED:
+            terminal_logger.info("🎉 TAREA COMPLETADA EXITOSAMENTE")
+        else:
+            terminal_logger.info("❌ TAREA FALLÓ")
+        
+        terminal_logger.info("================================================================================")
+        terminal_logger.info("📊 RESUMEN DE EJECUCIÓN")
+        terminal_logger.info("================================================================================")
+        terminal_logger.info(f"🎯 Tarea: {task.title}")
+        terminal_logger.info(f"📊 Estado final: {task.status.value}")
+        terminal_logger.info(f"📈 Progreso: {task.progress_percentage:.1f}%")
+        terminal_logger.info(f"⏱️ Duración: {duration:.1f} segundos")
+        terminal_logger.info("")
+        terminal_logger.info("📋 RESUMEN DE PASOS:")
+        
+        for i, step in enumerate(task.steps, 1):
+            status_icon = "✅" if step.status == TaskStatus.COMPLETED else ("❌" if step.status == TaskStatus.FAILED else "⏸️")
+            terminal_logger.info(f"{status_icon} {i}. {step.title} - {step.status.value}")
+        
+        terminal_logger.info("================================================================================")
 
-📋 RESUMEN DE PASOS:
-"""
-        
-        for step in task.steps:
-            status_icon = "✅" if step.status == TaskStatus.COMPLETED else "❌"
-            summary += f"{status_icon} {step.id}. {step.title} - {step.status.value}\n"
-        
-        summary += "="*80
-        
-        self.logger.info(summary)
-    
-    # ==================================================================================
-    # MÉTODOS DE HERRAMIENTAS (SIMULADOS)
-    # ==================================================================================
-    
+    # Métodos de herramientas (simulaciones)
     async def _execute_web_search(self, step: TaskStep, task: AutonomousTask) -> str:
-        """Simula búsqueda web"""
-        self.logger.info("🔍 Ejecutando búsqueda web...")
-        await asyncio.sleep(2)  # Simular tiempo de ejecución
+        """Simulación de búsqueda web"""
+        terminal_logger.info("🔍 Ejecutando búsqueda web...")
+        await asyncio.sleep(2)  # Simular tiempo de búsqueda
         return f"Búsqueda completada para: {task.title}. Se encontraron 15 resultados relevantes."
-    
+
     async def _execute_file_creation(self, step: TaskStep, task: AutonomousTask) -> str:
-        """Simula creación de archivos"""
-        self.logger.info("📄 Creando archivos...")
+        """Simulación de creación de archivos"""
+        terminal_logger.info("📄 Creando archivos...")
         await asyncio.sleep(1)
         return f"Archivo creado exitosamente para: {step.title}"
-    
+
     async def _execute_data_analysis(self, step: TaskStep, task: AutonomousTask) -> str:
-        """Simula análisis de datos"""
-        self.logger.info("📊 Analizando datos...")
-        await asyncio.sleep(3)
-        return f"Análisis de datos completado. Se identificaron 8 patrones relevantes."
-    
+        """Simulación de análisis de datos"""
+        terminal_logger.info("📊 Analizando datos...")
+        await asyncio.sleep(2)
+        return f"Análisis completado. Se procesaron 150 registros de datos."
+
     async def _execute_code_generation(self, step: TaskStep, task: AutonomousTask) -> str:
-        """Simula generación de código"""
-        self.logger.info("💻 Generando código...")
+        """Simulación de generación de código"""
+        terminal_logger.info("💻 Generando código...")
         await asyncio.sleep(2)
-        return f"Código generado exitosamente para: {step.title}"
-    
+        return f"Código generado exitosamente. 250 líneas de código creadas."
+
     async def _execute_research(self, step: TaskStep, task: AutonomousTask) -> str:
-        """Simula investigación"""
-        self.logger.info("🔬 Realizando investigación...")
-        await asyncio.sleep(2)
-        return f"Investigación completada. Se recopilaron 12 fuentes relevantes."
-    
+        """Simulación de investigación"""
+        terminal_logger.info("🔬 Realizando investigación...")
+        await asyncio.sleep(3)
+        return f"Investigación completada. Se analizaron 25 fuentes relevantes."
+
     async def _execute_planning(self, step: TaskStep, task: AutonomousTask) -> str:
-        """Simula planificación"""
-        self.logger.info("📋 Realizando planificación detallada...")
+        """Simulación de planificación"""
+        terminal_logger.info("📋 Realizando planificación detallada...")
         await asyncio.sleep(1)
         return f"Plan detallado creado con {len(task.steps)} pasos y cronograma definido."
-    
+
     async def _execute_documentation(self, step: TaskStep, task: AutonomousTask) -> str:
-        """Simula documentación"""
-        self.logger.info("📚 Creando documentación...")
+        """Simulación de documentación"""
+        terminal_logger.info("📚 Creando documentación...")
         await asyncio.sleep(1)
-        return f"Documentación creada exitosamente para: {step.title}"
-    
+        return f"Documentación creada: 15 páginas de documentación técnica."
+
     async def _execute_testing(self, step: TaskStep, task: AutonomousTask) -> str:
-        """Simula testing y validación"""
-        self.logger.info("🧪 Ejecutando validación y testing...")
+        """Simulación de testing y validación"""
+        terminal_logger.info("🧪 Ejecutando validaciones...")
         await asyncio.sleep(1)
-        return f"Validación completada. Todos los criterios de éxito cumplidos."
-    
-    # ==================================================================================
-    # MÉTODOS DE GESTIÓN Y ESTADO
-    # ==================================================================================
-    
+        return f"Validación completada. Todos los criterios de calidad cumplidos."
+
+    # Métodos de consulta
     def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
-        """Obtiene el estado detallado de una tarea específica"""
-        task = self.active_tasks.get(task_id)
-        if not task:
+        """Obtiene el estado detallado de una tarea"""
+        if task_id not in self.active_tasks:
             return None
         
+        task = self.active_tasks[task_id]
         return {
-            'task_id': task.id,
-            'title': task.title,
-            'description': task.description,
-            'status': task.status.value,
-            'progress': task.progress_percentage,
-            'steps': [step.to_dict() for step in task.steps],
-            'created_at': task.created_at.isoformat(),
-            'started_at': task.started_at.isoformat() if task.started_at else None,
-            'completed_at': task.completed_at.isoformat() if task.completed_at else None,
-            'statistics': {
-                'total_steps': len(task.steps),
-                'completed_steps': sum(1 for step in task.steps if step.status == TaskStatus.COMPLETED),
-                'in_progress_steps': sum(1 for step in task.steps if step.status == TaskStatus.IN_PROGRESS),
-                'failed_steps': sum(1 for step in task.steps if step.status == TaskStatus.FAILED)
-            }
+            "task_id": task.id,
+            "title": task.title,
+            "status": task.status.value,
+            "progress": task.progress_percentage,
+            "steps": [{
+                "id": step.id,
+                "title": step.title,
+                "status": step.status.value,
+                "result": step.result,
+                "error": step.error
+            } for step in task.steps],
+            "created_at": task.created_at.isoformat(),
+            "started_at": task.started_at.isoformat() if task.started_at else None,
+            "completed_at": task.completed_at.isoformat() if task.completed_at else None
         }
-    
+
     def list_active_tasks(self) -> List[Dict[str, Any]]:
         """Lista todas las tareas activas con resumen de estado"""
-        return [
-            {
-                'task_id': task.id,
-                'title': task.title,
-                'status': task.status.value,
-                'progress': task.progress_percentage,
-                'created_at': task.created_at.isoformat()
-            }
-            for task in self.active_tasks.values()
-        ]
-
-# ==================================================================================
-# CLASES HEREDADAS PARA COMPATIBILIDAD
-# ==================================================================================
-
-@dataclass
-class ReflectionEntry:
-    """Entrada de reflexión para aprendizaje (compatibilidad)"""
-    id: str
-    action: str
-    expected_outcome: str
-    actual_outcome: str
-    success: bool
-    confidence: float
-    context: Dict[str, Any]
-    timestamp: float
-    learned_patterns: List[str] = None
-    
-    def __post_init__(self):
-        if self.learned_patterns is None:
-            self.learned_patterns = []
-
-@dataclass
-class PromptTemplate:
-    """Plantilla de prompt mejorada (compatibilidad)"""
-    id: str
-    name: str
-    template: str
-    variables: List[str]
-    success_rate: float = 0.0
-    usage_count: int = 0
-    average_quality_score: float = 0.0
-    context_types: List[str] = None
-    
-    def __post_init__(self):
-        if self.context_types is None:
-            self.context_types = []
-
-@dataclass
-class LearningMetrics:
-    """Métricas de aprendizaje del agente (compatibilidad)"""
-    total_reflections: int = 0
-    successful_actions: int = 0
-    failed_actions: int = 0
-    success_rate: float = 0.0
-    improvement_rate: float = 0.0
-    knowledge_growth: float = 0.0
-    prompt_optimization_score: float = 0.0
-
-class CognitiveMode(Enum):
-    """Modos cognitivos del agente (compatibilidad)"""
-    ANALYTICAL = "analytical"
-    CREATIVE = "creative"
-    PRACTICAL = "practical"
-    REFLECTIVE = "reflective"
-    ADAPTIVE = "adaptive"
-
-class EnhancedMitosisAgent:
-    """Agente Mitosis mejorado con capacidades cognitivas avanzadas y autonomía"""
-    
-    def __init__(self, config=None):
-        """Inicializa el agente mejorado con núcleo autónomo"""
-        self.config = config or {}
-        self.logger = terminal_logger
-        
-        # Núcleo autónomo integrado
-        self.autonomous_core = AutonomousAgentCore(self)
-        
-        # Capacidades cognitivas (compatibilidad)
-        self.reflection_history: List[ReflectionEntry] = []
-        self.prompt_templates: Dict[str, PromptTemplate] = {}
-        self.learning_metrics = LearningMetrics()
-        self.cognitive_mode = CognitiveMode.ADAPTIVE
-        
-        # Configuración de aprendizaje
-        self.learning_enabled = True
-        self.reflection_threshold = 0.7
-        self.prompt_optimization_enabled = True
-        self.max_reflection_history = 1000
-        
-        # Patrones aprendidos
-        self.learned_patterns: Dict[str, float] = {}
-        self.action_outcomes: Dict[str, List[bool]] = defaultdict(list)
-        
-        # Estadísticas cognitivas
-        self.cognitive_stats = {
-            "reflections_performed": 0,
-            "patterns_learned": 0,
-            "prompts_optimized": 0,
-            "cognitive_mode_changes": 0,
-            "successful_adaptations": 0
-        }
-        
-        self.logger.info("🧠 Enhanced Mitosis Agent con núcleo autónomo inicializado")
-    
-    def process_user_message_enhanced(self, message: str, context: Optional[Dict[str, Any]] = None) -> str:
-        """Procesa un mensaje del usuario con capacidades mejoradas"""
-        try:
-            self.logger.info(f"💬 Procesando mensaje: {message[:50]}...")
-            
-            # Respuesta mejorada con capacidades autónomas
-            response = f"""Como agente mejorado con capacidades autónomas, he recibido tu mensaje: "{message}"
-
-Puedo ayudarte con:
-🤖 Ejecución autónoma de tareas complejas
-📊 Análisis y procesamiento de información
-💻 Generación de código y documentación
-🔍 Investigación y búsqueda de datos
-📋 Planificación y organización de proyectos
-
-Para activar la ejecución autónoma, utiliza palabras clave como:
-- "crear", "generar", "desarrollar"
-- "investigar", "analizar", "buscar"
-- "planificar", "organizar", "diseñar"
-
-¿Te gustaría que ejecute alguna tarea de forma autónoma?"""
-            
-            return response
-            
-        except Exception as e:
-            self.logger.error(f"❌ Error procesando mensaje: {e}")
-            return f"Error interno: {str(e)}"
-    
-    def enhanced_reflect_on_action(self, action: str, result: str, expected: str,
-                                 context: Optional[Dict[str, Any]] = None) -> ReflectionEntry:
-        """Reflexión mejorada sobre una acción con aprendizaje"""
-        try:
-            reflection_id = f"reflection_{int(time.time())}_{len(self.reflection_history)}"
-            
-            # Evaluar éxito de la acción
-            success = self._evaluate_action_success(action, result, expected)
-            
-            # Crear entrada de reflexión
-            reflection_entry = ReflectionEntry(
-                id=reflection_id,
-                action=action,
-                expected_outcome=expected,
-                actual_outcome=result,
-                success=success,
-                confidence=0.8,
-                context=context or {},
-                timestamp=time.time(),
-                learned_patterns=[]
-            )
-            
-            # Añadir a historial
-            self.reflection_history.append(reflection_entry)
-            
-            # Mantener límite de historial
-            if len(self.reflection_history) > self.max_reflection_history:
-                self.reflection_history.pop(0)
-            
-            # Actualizar métricas de aprendizaje
-            self._update_learning_metrics(success)
-            
-            self.logger.info(f"🔍 Reflexión realizada: {reflection_id} - Éxito: {success}")
-            return reflection_entry
-            
-        except Exception as e:
-            self.logger.error(f"❌ Error en reflexión mejorada: {e}")
-            return ReflectionEntry(
-                id=f"reflection_error_{int(time.time())}",
-                action=action,
-                expected_outcome=expected,
-                actual_outcome=result,
-                success=False,
-                confidence=0.5,
-                context=context or {},
-                timestamp=time.time()
-            )
-    
-    def _evaluate_action_success(self, action: str, result: str, expected: str) -> bool:
-        """Evalúa si una acción fue exitosa"""
-        success_indicators = ["exitoso", "completado", "correcto", "funciona", "resuelto"]
-        failure_indicators = ["error", "fallo", "incorrecto", "problema", "falló"]
-        
-        result_lower = result.lower()
-        
-        success_score = sum(1 for indicator in success_indicators if indicator in result_lower)
-        failure_score = sum(1 for indicator in failure_indicators if indicator in result_lower)
-        
-        return success_score > failure_score
-    
-    def _update_learning_metrics(self, success: bool):
-        """Actualiza las métricas de aprendizaje"""
-        self.learning_metrics.total_reflections += 1
-        
-        if success:
-            self.learning_metrics.successful_actions += 1
-        else:
-            self.learning_metrics.failed_actions += 1
-        
-        # Calcular tasa de éxito
-        total_actions = (self.learning_metrics.successful_actions + 
-                        self.learning_metrics.failed_actions)
-        if total_actions > 0:
-            self.learning_metrics.success_rate = (
-                self.learning_metrics.successful_actions / total_actions
-            )
-    
-    def get_enhanced_status(self) -> Dict[str, Any]:
-        """Obtiene el estado mejorado del agente"""
-        try:
-            enhanced_status = {
-                "agent_type": "enhanced_mitosis_agent",
-                "autonomous_core_available": True,
-                "cognitive_capabilities": {
-                    "current_mode": self.cognitive_mode.value,
-                    "learning_enabled": self.learning_enabled,
-                    "reflection_threshold": self.reflection_threshold,
-                    "prompt_optimization_enabled": self.prompt_optimization_enabled
-                },
-                "learning_metrics": asdict(self.learning_metrics),
-                "cognitive_stats": self.cognitive_stats.copy(),
-                "learned_patterns_count": len(self.learned_patterns),
-                "reflection_history_size": len(self.reflection_history),
-                "prompt_templates_count": len(self.prompt_templates),
-                "active_autonomous_tasks": len(self.autonomous_core.active_tasks),
-                "available_tools": list(self.autonomous_core.available_tools.keys())
-            }
-            
-            return enhanced_status
-            
-        except Exception as e:
-            self.logger.error(f"❌ Error en get_enhanced_status: {e}")
-            return {
-                "error": "Error obteniendo estado enhanced",
-                "agent_type": "enhanced_mitosis_agent",
-                "autonomous_core_available": True
-            }
-
-# ==================================================================================
-# EJEMPLO DE USO Y PRUEBAS
-# ==================================================================================
-
-if __name__ == "__main__":
-    # Configurar logging
-    logging.basicConfig(level=logging.INFO)
-    
-    # Crear agente mejorado
-    enhanced_agent = EnhancedMitosisAgent()
-    
-    print("🧠 Probando Enhanced Mitosis Agent con Núcleo Autónomo...")
-    
-    # Crear núcleo autónomo independiente
-    autonomous_core = AutonomousAgentCore()
-    
-    # Generar plan de acción
-    task = autonomous_core.generate_action_plan(
-        "Crear un informe sobre inteligencia artificial",
-        "Investigar y crear un documento completo sobre IA en 2024"
-    )
-    
-    print(f"✅ Plan generado con ID: {task.id}")
-    print(f"📊 Número de pasos: {len(task.steps)}")
-    
-    # Simular ejecución (en entorno real sería asíncrona)
-    print("🚀 Para ejecutar la tarea de forma autónoma:")
-    print(f"await autonomous_core.execute_task_autonomously('{task.id}')")
-    
-    # Obtener estado
-    status = autonomous_core.get_task_status(task.id)
-    print(f"📈 Estado de la tarea: {status['status'] if status else 'No encontrada'}")
-    
-    # Probar agente mejorado
-    response = enhanced_agent.process_user_message_enhanced(
-        "Crea un plan para desarrollar una aplicación web"
-    )
-    print(f"🤖 Respuesta del agente: {response[:100]}...")
-    
-    print("✅ Pruebas completadas - Sistema listo para ejecución autónoma")
-
-@dataclass
-class ReflectionEntry:
-    """Entrada de reflexión para aprendizaje"""
-    id: str
-    action: str
-    expected_outcome: str
-    actual_outcome: str
-    success: bool
-    confidence: float
-    context: Dict[str, Any]
-    timestamp: float
-    learned_patterns: List[str] = None
-    
-    def __post_init__(self):
-        if self.learned_patterns is None:
-            self.learned_patterns = []
-
-@dataclass
-class PromptTemplate:
-    """Plantilla de prompt mejorada"""
-    id: str
-    name: str
-    template: str
-    variables: List[str]
-    success_rate: float = 0.0
-    usage_count: int = 0
-    average_quality_score: float = 0.0
-    context_types: List[str] = None
-    
-    def __post_init__(self):
-        if self.context_types is None:
-            self.context_types = []
-
-@dataclass
-class LearningMetrics:
-    """Métricas de aprendizaje del agente"""
-    total_reflections: int = 0
-    successful_actions: int = 0
-    failed_actions: int = 0
-    success_rate: float = 0.0
-    improvement_rate: float = 0.0
-    knowledge_growth: float = 0.0
-    prompt_optimization_score: float = 0.0
-
-class CognitiveMode(Enum):
-    """Modos cognitivos del agente"""
-    ANALYTICAL = "analytical"
-    CREATIVE = "creative"
-    PRACTICAL = "practical"
-    REFLECTIVE = "reflective"
-    ADAPTIVE = "adaptive"
-
-class EnhancedMitosisAgent:
-    """Agente Mitosis mejorado con capacidades cognitivas avanzadas y autonomía"""
-    
-    def __init__(self, config=None):
-        """Inicializa el agente mejorado con núcleo autónomo"""
-        self.config = config or {}
-        self.logger = terminal_logger
-        
-        # Núcleo autónomo integrado
-        self.autonomous_core = AutonomousAgentCore(self)
-        
-        # Capacidades cognitivas (compatibilidad)
-        self.reflection_history: List[ReflectionEntry] = []
-        self.prompt_templates: Dict[str, PromptTemplate] = {}
-        self.learning_metrics = LearningMetrics()
-        self.cognitive_mode = CognitiveMode.ADAPTIVE
-        
-        # Configuración de aprendizaje
-        self.learning_enabled = True
-        self.reflection_threshold = 0.7
-        self.prompt_optimization_enabled = True
-        self.max_reflection_history = 1000
-        
-        # Patrones aprendidos
-        self.learned_patterns: Dict[str, float] = {}
-        self.action_outcomes: Dict[str, List[bool]] = defaultdict(list)
-        
-        # Estadísticas cognitivas
-        self.cognitive_stats = {
-            "reflections_performed": 0,
-            "patterns_learned": 0,
-            "prompts_optimized": 0,
-            "cognitive_mode_changes": 0,
-            "successful_adaptations": 0
-        }
-        
-        self.logger.info("🧠 Enhanced Mitosis Agent con núcleo autónomo inicializado")
-    
-    def process_user_message_enhanced(self, message: str, context: Optional[Dict[str, Any]] = None) -> str:
-        """Procesa un mensaje del usuario con capacidades mejoradas"""
-        try:
-            self.logger.info(f"💬 Procesando mensaje: {message[:50]}...")
-            
-            # Respuesta mejorada con capacidades autónomas
-            response = f"""Como agente mejorado con capacidades autónomas, he recibido tu mensaje: "{message}"
-
-Puedo ayudarte con:
-🤖 Ejecución autónoma de tareas complejas
-📊 Análisis y procesamiento de información
-💻 Generación de código y documentación
-🔍 Investigación y búsqueda de datos
-📋 Planificación y organización de proyectos
-
-Para activar la ejecución autónoma, utiliza palabras clave como:
-- "crear", "generar", "desarrollar"
-- "investigar", "analizar", "buscar"
-- "planificar", "organizar", "diseñar"
-
-¿Te gustaría que ejecute alguna tarea de forma autónoma?"""
-            
-            return response
-            
-        except Exception as e:
-            self.logger.error(f"❌ Error procesando mensaje: {e}")
-            return f"Error interno: {str(e)}"
-    
-    def enhanced_reflect_on_action(self, action: str, result: str, expected: str,
-                                 context: Optional[Dict[str, Any]] = None) -> ReflectionEntry:
-        """Reflexión mejorada sobre una acción con aprendizaje"""
-        try:
-            reflection_id = f"reflection_{int(time.time())}_{len(self.reflection_history)}"
-            
-            # Evaluar éxito de la acción
-            success = self._evaluate_action_success(action, result, expected)
-            
-            # Crear entrada de reflexión
-            reflection_entry = ReflectionEntry(
-                id=reflection_id,
-                action=action,
-                expected_outcome=expected,
-                actual_outcome=result,
-                success=success,
-                confidence=0.8,
-                context=context or {},
-                timestamp=time.time(),
-                learned_patterns=[]
-            )
-            
-            # Añadir a historial
-            self.reflection_history.append(reflection_entry)
-            
-            # Mantener límite de historial
-            if len(self.reflection_history) > self.max_reflection_history:
-                self.reflection_history.pop(0)
-            
-            # Actualizar métricas de aprendizaje
-            self._update_learning_metrics(success)
-            
-            self.logger.info(f"🔍 Reflexión realizada: {reflection_id} - Éxito: {success}")
-            return reflection_entry
-            
-        except Exception as e:
-            self.logger.error(f"❌ Error en reflexión mejorada: {e}")
-            return ReflectionEntry(
-                id=f"reflection_error_{int(time.time())}",
-                action=action,
-                expected_outcome=expected,
-                actual_outcome=result,
-                success=False,
-                confidence=0.5,
-                context=context or {},
-                timestamp=time.time()
-            )
-    
-    def _evaluate_action_success(self, action: str, result: str, expected: str) -> bool:
-        """Evalúa si una acción fue exitosa"""
-        success_indicators = ["exitoso", "completado", "correcto", "funciona", "resuelto"]
-        failure_indicators = ["error", "fallo", "incorrecto", "problema", "falló"]
-        
-        result_lower = result.lower()
-        
-        success_score = sum(1 for indicator in success_indicators if indicator in result_lower)
-        failure_score = sum(1 for indicator in failure_indicators if indicator in result_lower)
-        
-        return success_score > failure_score
-    
-    def _update_learning_metrics(self, success: bool):
-        """Actualiza las métricas de aprendizaje"""
-        self.learning_metrics.total_reflections += 1
-        
-        if success:
-            self.learning_metrics.successful_actions += 1
-        else:
-            self.learning_metrics.failed_actions += 1
-        
-        # Calcular tasa de éxito
-        total_actions = (self.learning_metrics.successful_actions + 
-                        self.learning_metrics.failed_actions)
-        if total_actions > 0:
-            self.learning_metrics.success_rate = (
-                self.learning_metrics.successful_actions / total_actions
-            )
-    
-    def get_enhanced_status(self) -> Dict[str, Any]:
-        """Obtiene el estado mejorado del agente"""
-        try:
-            enhanced_status = {
-                "agent_type": "enhanced_mitosis_agent",
-                "autonomous_core_available": True,
-                "cognitive_capabilities": {
-                    "current_mode": self.cognitive_mode.value,
-                    "learning_enabled": self.learning_enabled,
-                    "reflection_threshold": self.reflection_threshold,
-                    "prompt_optimization_enabled": self.prompt_optimization_enabled
-                },
-                "learning_metrics": asdict(self.learning_metrics),
-                "cognitive_stats": self.cognitive_stats.copy(),
-                "learned_patterns_count": len(self.learned_patterns),
-                "reflection_history_size": len(self.reflection_history),
-                "prompt_templates_count": len(self.prompt_templates),
-                "active_autonomous_tasks": len(self.autonomous_core.active_tasks),
-                "available_tools": list(self.autonomous_core.available_tools.keys())
-            }
-            
-            return enhanced_status
-            
-        except Exception as e:
-            self.logger.error(f"❌ Error en get_enhanced_status: {e}")
-            return {
-                "error": "Error obteniendo estado enhanced",
-                "agent_type": "enhanced_mitosis_agent",
-                "autonomous_core_available": True
-            }
-
-# ==================================================================================
-# EJEMPLO DE USO Y PRUEBAS
-# ==================================================================================
-
-if __name__ == "__main__":
-    # Configurar logging
-    logging.basicConfig(level=logging.INFO)
-    
-    # Crear agente mejorado
-    enhanced_agent = EnhancedMitosisAgent()
-    
-    print("🧠 Probando Enhanced Mitosis Agent con Núcleo Autónomo...")
-    
-    # Crear núcleo autónomo independiente
-    autonomous_core = AutonomousAgentCore()
-    
-    # Generar plan de acción
-    task = autonomous_core.generate_action_plan(
-        "Crear un informe sobre inteligencia artificial",
-        "Investigar y crear un documento completo sobre IA en 2024"
-    )
-    
-    print(f"✅ Plan generado con ID: {task.id}")
-    print(f"📊 Número de pasos: {len(task.steps)}")
-    
-    # Simular ejecución (en entorno real sería asíncrona)
-    print("🚀 Para ejecutar la tarea de forma autónoma:")
-    print(f"await autonomous_core.execute_task_autonomously('{task.id}')")
-    
-    # Obtener estado
-    status = autonomous_core.get_task_status(task.id)
-    print(f"📈 Estado de la tarea: {status['status'] if status else 'No encontrada'}")
-    
-    # Probar agente mejorado
-    response = enhanced_agent.process_user_message_enhanced(
-        "Crea un plan para desarrollar una aplicación web"
-    )
-    print(f"🤖 Respuesta del agente: {response[:100]}...")
-    
-    print("✅ Pruebas completadas - Sistema listo para ejecución autónoma")
-
+        return [{
+            "task_id": task.id,
+            "title": task.title,
+            "status": task.status.value,
+            "progress": task.progress_percentage,
+            "created_at": task.created_at.isoformat()
+        } for task in self.active_tasks.values()]
