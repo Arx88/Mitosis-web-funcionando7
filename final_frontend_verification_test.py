@@ -14,7 +14,7 @@ def test_frontend_verification():
     try:
         # Simular la llamada que hace el frontend
         response = requests.post(
-            "https://d26b60d3-abd6-4714-88af-d65f3f002095.preview.emergentagent.com/api/agent/ollama/check",
+            "https://ab8f65aa-6161-48b9-8c17-958b6ca47d13.preview.emergentagent.com/api/agent/ollama/check",
             json={"endpoint": "https://bef4a4bb93d1.ngrok-free.app"},
             timeout=10
         )
