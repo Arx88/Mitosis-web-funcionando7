@@ -58,6 +58,12 @@ try:
 except ImportError:
     HAS_AUTO_NAV = False
 
+try:
+    from .basic_web_search_tool import BasicWebSearchTool
+    HAS_BASIC_SEARCH = True
+except ImportError:
+    HAS_BASIC_SEARCH = False
+
 class ToolManager:
     def __init__(self):
         # Inicializar herramientas con versiones REALES (no simuladas)
