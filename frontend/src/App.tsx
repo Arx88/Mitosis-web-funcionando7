@@ -536,6 +536,15 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
 
   const activeTask = tasks.find(task => task.id === activeTaskId);
 
+  // 🐛 DEBUG: Logging critical render state
+  console.log('🔍 RENDER DEBUG:', {
+    activeTaskId,
+    tasksLength: tasks.length,
+    activeTask: activeTask ? `Found: ${activeTask.id}` : 'Not found',
+    condition: `activeTask=${!!activeTask}, activeTaskId=${!!activeTaskId}`,
+    renderResult: activeTask && activeTaskId ? 'TaskView' : 'Homepage'
+  });
+
   return (
     <div className="flex h-screen w-full bg-[#272728] text-[#DADADA]" style={{ fontFamily: "'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, sans-serif", fontWeight: 400 }}>
       {isInitialLoading ? (
