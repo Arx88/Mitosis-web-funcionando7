@@ -302,7 +302,7 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
 
         @self.app.route('/api/agent/chat', methods=['POST'])
         def enhanced_chat():
-            """Chat mejorado con detección de intención autónoma"""
+            """Chat mejorado con clasificación de intención basada en LLM"""
             try:
                 data = request.get_json()
                 message = data.get('message', '')
@@ -318,15 +318,89 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
                     {"session_id": context.get('session_id', 'unknown')}
                 )
                 
+                # NUEVA FUNCIONALIDAD: Clasificar intención usando LLM
+                intention_result = None
+                if self.intention_classifier:
+                    try:
+                        # Obtener contexto conversacional (simulado por ahora)
+                        conversation_context = ""
+                        active_tasks = []
+                        
+                        if hasattr(self.autonomous_agent, 'list_active_tasks'):
+                            active_tasks_list = self.autonomous_agent.list_active_tasks()
+                            active_tasks = [
+                                {
+                                    'title': task.title if hasattr(task, 'title') else str(task),
+                                    'status': task.status.value if hasattr(task, 'status') else 'unknown',
+                                    'id': task.id if hasattr(task, 'id') else str(hash(str(task)))
+                                }
+                                for task in active_tasks_list[:5]
+                            ]
+                        
+                        intention_result = self.intention_classifier.classify_intention(
+                            user_message=message,
+                            conversation_context=conversation_context,
+                            active_tasks=active_tasks
+                        )
+                        
+                        terminal_logger.info(f"🎯 Intención clasificada: {intention_result.intention_type.value} (confianza: {intention_result.confidence:.2f})")
+                        
+                        # Agregar página de monitor para clasificación
+                        self._add_monitor_page(
+                            "Clasificación de Intención",
+                            f"**Tipo:** {intention_result.intention_type.value}\n**Confianza:** {intention_result.confidence:.2f}\n**Razonamiento:** {intention_result.reasoning}",
+                            "intention-classification",
+                            {"confidence": intention_result.confidence, "type": intention_result.intention_type.value}
+                        )
+                        
+                    except Exception as e:
+                        terminal_logger.warning(f"⚠️ Error en clasificación de intención: {e}")
+                        intention_result = None
+                
+                # ENRUTAMIENTO BASADO EN INTENCIÓN CLASIFICADA
+                if intention_result:
+                    # Usar clasificación LLM para determinar el flujo
+                    should_execute_autonomously = intention_result.intention_type in [
+                        IntentionType.COMPLEX_TASK,
+                        IntentionType.SIMPLE_TASK
+                    ] and intention_result.confidence >= 0.8
+                    
+                    # Si requiere clarificación, manejar apropiadamente
+                    if intention_result.requires_clarification:
+                        clarification_message = "Necesito más información para ayudarte mejor. "
+                        if intention_result.clarification_questions:
+                            clarification_message += "Específicamente:\n"
+                            for i, question in enumerate(intention_result.clarification_questions, 1):
+                                clarification_message += f"{i}. {question}\n"
+                        else:
+                            clarification_message += "¿Podrías ser más específico sobre lo que necesitas?"
+                        
+                        return jsonify({
+                            "response": clarification_message,
+                            "autonomous_execution": False,
+                            "intention_classification": {
+                                "type": intention_result.intention_type.value,
+                                "confidence": intention_result.confidence,
+                                "requires_clarification": True
+                            },
+                            "timestamp": datetime.now().isoformat(),
+                            "model": "intention_classifier_llm"
+                        })
+                
+                else:
+                    # Fallback a lógica heurística original
+                    should_execute_autonomously = self._should_execute_autonomously(message)
+                
                 # Determinar si requiere ejecución autónoma
-                if self._should_execute_autonomously(message):
+                if should_execute_autonomously:
                     terminal_logger.info("🎯 Mensaje detectado como tarea autónoma")
                     
-                    # Generar plan de acción
-                    task = self.autonomous_agent.generate_action_plan(
-                        f"Tarea autónoma: {message[:50]}...",
-                        message
-                    )
+                    # Generar plan de acción usando la información de intención si está disponible
+                    task_title = f"Tarea autónoma: {message[:50]}..."
+                    if intention_result and intention_result.extracted_entities.get('task_title'):
+                        task_title = intention_result.extracted_entities['task_title']
+                    
+                    task = self.autonomous_agent.generate_action_plan(task_title, message)
                     
                     # Iniciar ejecución autónoma
                     self._start_autonomous_execution(task.id)
@@ -355,7 +429,8 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
                         f"\n\n**ID de tarea:** {task.id}\n**Estado:** Ejecutándose autónomamente"
                     )
                     
-                    return jsonify({
+                    # Incluir información de intención si está disponible
+                    response_data = {
                         "response": response_text,
                         "autonomous_execution": True,
                         "execution_plan": execution_plan,
@@ -363,29 +438,64 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
                         "timestamp": datetime.now().isoformat(),
                         "model": "autonomous_agent_enhanced",
                         "memory_used": True
-                    })
+                    }
+                    
+                    if intention_result:
+                        response_data["intention_classification"] = {
+                            "type": intention_result.intention_type.value,
+                            "confidence": intention_result.confidence,
+                            "reasoning": intention_result.reasoning,
+                            "extracted_entities": intention_result.extracted_entities
+                        }
+                    
+                    return jsonify(response_data)
                 
                 else:
-                    # Procesamiento conversacional normal
+                    # Procesamiento conversacional mejorado con clasificación
                     terminal_logger.info("💬 Procesando como conversación normal")
                     
                     # Generar ID de tarea para seguimiento
                     task_id = f"chat_{int(time.time())}"
                     
-                    response_text = f"He recibido tu mensaje: '{message}'. Como agente mejorado, puedo ayudarte con tareas complejas de forma autónoma."
+                    # Respuesta contextualizada basada en intención
+                    if intention_result:
+                        if intention_result.intention_type == IntentionType.CASUAL_CONVERSATION:
+                            response_text = f"Hola! He clasificado tu mensaje como conversación casual. {intention_result.suggested_action}."
+                        elif intention_result.intention_type == IntentionType.INFORMATION_REQUEST:
+                            response_text = f"Entiendo que buscas información. {intention_result.suggested_action}. ¿Podrías ser más específico?"
+                        elif intention_result.intention_type == IntentionType.TASK_MANAGEMENT:
+                            response_text = f"Veo que quieres gestionar tareas. {intention_result.suggested_action}."
+                        else:
+                            response_text = f"He analizado tu mensaje y {intention_result.suggested_action.lower()}."
+                    else:
+                        response_text = f"He recibido tu mensaje: '{message}'. Como agente mejorado, puedo ayudarte con tareas complejas de forma autónoma."
                     
-                    return jsonify({
+                    response_data = {
                         "response": response_text,
                         "autonomous_execution": False,
                         "task_id": task_id,
                         "timestamp": datetime.now().isoformat(),
-                        "model": "conversational_mode",
+                        "model": "conversational_mode_enhanced",
                         "memory_used": True
-                    })
+                    }
+                    
+                    if intention_result:
+                        response_data["intention_classification"] = {
+                            "type": intention_result.intention_type.value,
+                            "confidence": intention_result.confidence,
+                            "reasoning": intention_result.reasoning,
+                            "suggested_action": intention_result.suggested_action
+                        }
+                    
+                    return jsonify(response_data)
                     
             except Exception as e:
                 terminal_logger.error(f"❌ Error en chat: {str(e)}")
-                return jsonify({"error": str(e)}), 500
+                return jsonify({
+                    "error": str(e),
+                    "fallback_message": "Error en procesamiento avanzado, usando modo básico",
+                    "timestamp": datetime.now().isoformat()
+                }), 500
 
         @self.app.route('/api/health', methods=['GET'])
         def enhanced_health():
