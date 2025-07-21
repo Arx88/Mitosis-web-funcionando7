@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Task Manager - Backend Principal
-Servidor Flask que integra Ollama con un sistema de herramientas extensible
+Mitosis-Beta Enhanced Server - Servidor Principal con Ejecución Autónoma
+Servidor Flask que integra el núcleo autónomo con salida en terminal
 """
 
 import os
@@ -18,120 +18,115 @@ load_dotenv()
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 
-from src.routes.agent_routes import agent_bp
-from src.tools.tool_manager import ToolManager
-from src.services.ollama_service import OllamaService
-from src.services.database import DatabaseService
-from src.utils.json_encoder import MongoJSONEncoder
-from src.websocket.websocket_manager import initialize_websocket
+# Intentar usar la API mejorada primero
+try:
+    from enhanced_unified_api import EnhancedUnifiedMitosisAPI
+    USE_ENHANCED_API = True
+    print("🚀 Usando Enhanced Unified API con capacidades autónomas")
+except ImportError as e:
+    print(f"⚠️ Enhanced API no disponible: {e}")
+    print("📍 Usando API base como fallback")
+    USE_ENHANCED_API = False
 
 # Configuración
 HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', 8001))
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
-app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
-app.json_encoder = MongoJSONEncoder
-
-# Configurar CORS
-CORS(app, resources={
-    r"/api/*": {
-        "origins": [
-            "http://localhost:3000", 
-            "http://localhost:5173",
-            "https://15ffcb16-6c55-47fc-8da7-e48ddd5d43ae.preview.emergentagent.com",
-            "*"  # Allow all origins for now to fix connectivity issues
-        ],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+if USE_ENHANCED_API:
+    # Usar API mejorada
+    print("✨ Inicializando Mitosis-Beta con capacidades autónomas mejoradas...")
+    
+    # Crear configuración
+    config = {
+        'OLLAMA_URL': os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434'),
+        'OPENROUTER_API_KEY': os.getenv('OPENROUTER_API_KEY', ''),
+        'DEBUG_MODE': DEBUG,
+        'HOST': HOST,
+        'PORT': PORT
     }
-})
-
-# 🚀 Inicializar WebSocket para updates en tiempo real
-print("🔌 Initializing WebSocket for real-time updates...")
-websocket_manager = initialize_websocket(app)
-print("✅ WebSocket initialized successfully")
-
-# Hacer WebSocket manager disponible globalmente
-app.websocket_manager = websocket_manager
-
-# Inicializar servicios con configuración correcta
-ollama_base_url = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-print(f"🧠 Inicializando Ollama con URL: {ollama_base_url}")
-ollama_service = OllamaService(base_url=ollama_base_url)
-tool_manager = ToolManager()
-database_service = DatabaseService()
-
-# Inicializar Enhanced Components
-print("🚀 Inicializando Enhanced Components...")
-try:
-    # Importar desde el directorio raíz del backend
-    import sys
-    import os
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     
-    from enhanced_agent_core import EnhancedMitosisAgent
-    from enhanced_memory_manager import EnhancedMemoryManager
-    from enhanced_task_manager import EnhancedTaskManager
+    # Crear API mejorada
+    enhanced_api = EnhancedUnifiedMitosisAPI(config)
+    app = enhanced_api.app
+    socketio = enhanced_api.socketio
     
-    # Crear enhanced components
-    enhanced_memory = EnhancedMemoryManager()
-    enhanced_task_manager = EnhancedTaskManager(enhanced_memory)
-    enhanced_agent = EnhancedMitosisAgent()
+    print("🎯 CARACTERÍSTICAS MEJORADAS HABILITADAS:")
+    print("   ✅ Ejecución autónoma de tareas completas")
+    print("   ✅ Salida en tiempo real en terminal formateada")
+    print("   ✅ Monitoreo de progreso paso a paso automático")
+    print("   ✅ Entrega de resultados finales estructurada")
+    print("   ✅ Compatibilidad total con UI existente")
+    print("   ✅ WebSockets para actualizaciones en tiempo real")
     
-    print("✅ Enhanced components inicializados exitosamente")
-except ImportError as e:
-    print(f"⚠️ Error importando enhanced components: {e}")
-    enhanced_agent = None
-    enhanced_memory = None
-    enhanced_task_manager = None
-except Exception as e:
-    print(f"⚠️ Error inicializando enhanced components: {e}")
-    enhanced_agent = None
-    enhanced_memory = None
-    enhanced_task_manager = None
+else:
+    # Fallback al servidor original
+    from src.routes.agent_routes import agent_bp
+    from src.tools.tool_manager import ToolManager
+    from src.services.ollama_service import OllamaService
+    from src.services.database import DatabaseService
+    from src.utils.json_encoder import MongoJSONEncoder
+    from src.websocket.websocket_manager import initialize_websocket
 
-# Hacer servicios disponibles globalmente
-app.ollama_service = ollama_service
-app.tool_manager = tool_manager
-app.database_service = database_service
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
+    app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
+    app.json_encoder = MongoJSONEncoder
 
-# Hacer enhanced components disponibles globalmente
-app.enhanced_agent = enhanced_agent
-app.enhanced_memory = enhanced_memory
-app.enhanced_task_manager = enhanced_task_manager
+    # Configurar CORS
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": [
+                "http://localhost:3000", 
+                "http://localhost:5173",
+                "https://15ffcb16-6c55-47fc-8da7-e48ddd5d43ae.preview.emergentagent.com",
+                "*"
+            ],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
+        }
+    })
 
-# Registrar blueprints
-app.register_blueprint(agent_bp, url_prefix='/api/agent')
+    # Inicializar WebSocket
+    print("🔌 Initializing WebSocket for real-time updates...")
+    websocket_manager = initialize_websocket(app)
+    socketio = websocket_manager.socketio if websocket_manager else None
+    print("✅ WebSocket initialized successfully")
 
-# Importar y registrar rutas de memoria
-from src.routes.memory_routes import memory_bp
-app.register_blueprint(memory_bp, url_prefix='/api/memory')
+    # Hacer WebSocket manager disponible globalmente
+    app.websocket_manager = websocket_manager
 
-# Memory manager will be initialized if available
-try:
-    from src.routes.agent_routes import memory_manager
-    app.memory_manager = memory_manager
-except ImportError:
-    print("⚠️ Memory manager not available in agent_routes")
-    app.memory_manager = None
+    # Inicializar servicios
+    ollama_base_url = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
+    print(f"🧠 Inicializando Ollama con URL: {ollama_base_url}")
+    ollama_service = OllamaService(base_url=ollama_base_url)
+    tool_manager = ToolManager()
+    database_service = DatabaseService()
 
-# Inicializar gestor de contexto inteligente
-# Mejora implementada según UPGRADE.md Sección 1: Sistema de Contexto Dinámico Avanzado
-try:
-    from src.context.intelligent_context_manager import IntelligentContextManager
-    intelligent_context_manager = IntelligentContextManager(
-        memory_manager=app.memory_manager,
-        task_manager=None,  # TODO: Implementar task_manager cuando esté disponible
-        model_manager=ollama_service  # Usar ollama_service como model_manager
-    )
-    app.intelligent_context_manager = intelligent_context_manager
-    print("✅ Intelligent Context Manager initialized")
-except Exception as e:
-    print(f"⚠️ Could not initialize Intelligent Context Manager: {e}")
-    app.intelligent_context_manager = None
+    # Hacer servicios disponibles globalmente
+    app.ollama_service = ollama_service
+    app.tool_manager = tool_manager
+    app.database_service = database_service
+
+    # Registrar blueprints
+    app.register_blueprint(agent_bp, url_prefix='/api/agent')
+
+    # Importar rutas de memoria
+    from src.routes.memory_routes import memory_bp
+    app.register_blueprint(memory_bp, url_prefix='/api/memory')
+
+    # Endpoint de salud
+    @app.route('/api/health')
+    def health_check():
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'services': {
+                'ollama': ollama_service.is_healthy(),
+                'tools': len(tool_manager.get_available_tools()),
+                'database': database_service.is_connected()
+            }
+        })
 
 # Servir archivos estáticos del frontend
 @app.route('/')
@@ -142,25 +137,6 @@ def serve_frontend():
 def serve_static(path):
     return send_from_directory('static', path)
 
-# Endpoint de salud
-@app.route('/api/health')
-def health_check():
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.now().isoformat(),
-        'services': {
-            'ollama': ollama_service.is_healthy(),
-            'tools': len(tool_manager.get_available_tools()),
-            'database': database_service.is_connected()
-        }
-    })
-
-# Endpoint de estadísticas de la base de datos
-@app.route('/api/stats')
-def get_stats():
-    stats = database_service.get_stats()
-    return jsonify(stats)
-
 # Manejo de errores
 @app.errorhandler(404)
 def not_found(error):
@@ -170,58 +146,39 @@ def not_found(error):
 def internal_error(error):
     return jsonify({'error': 'Internal server error'}), 500
 
-# Convertir Flask WSGI app a ASGI para uvicorn
-try:
-    from asgiref.wsgi import WsgiToAsgi
-    
-    # Crear aplicación ASGI
-    asgi_app = WsgiToAsgi(app)
-    
-except ImportError:
-    # Si asgiref no está disponible, mantener la aplicación Flask
-    print("asgiref not available, using Flask directly")
-    asgi_app = app
-
 if __name__ == '__main__':
-    print(f"🚀 Iniciando Task Manager Backend...")
+    print(f"🚀 Iniciando Mitosis-Beta Enhanced Server...")
     print(f"🔗 Host: {HOST}:{PORT}")
     print(f"🛠️  Debug: {DEBUG}")
     print(f"🔧 Puerto configurado: {PORT}")
-    print(f"🧠 Conectando a Ollama...")
     
-    # Verificar conexión con Ollama
-    if ollama_service.is_healthy():
-        print("✅ Ollama conectado exitosamente")
-        models = ollama_service.get_available_models()
-        print(f"📚 Modelos disponibles: {models}")
+    if USE_ENHANCED_API:
+        print("🌟 Ejecutando con capacidades autónomas mejoradas")
+        print("📊 Monitorea la terminal para ver actividad en tiempo real")
+        print("🔗 La UI existente funcionará sin cambios")
+        
+        # Ejecutar con la API mejorada
+        enhanced_api.run(host=HOST, port=PORT, debug=DEBUG)
     else:
-        print("⚠️  Advertencia: No se pudo conectar a Ollama")
-        print("   Asegúrate de que Ollama esté ejecutándose en localhost:11434")
-    
-    # Verificar conexión con MongoDB
-    if database_service.is_connected():
-        print("✅ MongoDB conectado exitosamente")
-        stats = database_service.get_stats()
-        print(f"📊 Estadísticas DB: {stats}")
-    else:
-        print("⚠️  Advertencia: No se pudo conectar a MongoDB")
-    
-    # Mostrar herramientas disponibles
-    tools = tool_manager.get_available_tools()
-    print(f"🔧 Herramientas disponibles: {len(tools)}")
-    for tool in tools:
-        print(f"   - {tool['name']}: {tool['description']}")
-    
-    print("🎯 Servidor listo para recibir conexiones")
-    
-    # 🚀 Ejecutar con SocketIO
-    socketio = websocket_manager.socketio
-    if socketio:
-        print("🔌 Starting server with WebSocket support...")
-        socketio.run(app, host=HOST, port=PORT, debug=DEBUG, allow_unsafe_werkzeug=True)
-    else:
-        print("⚠️  WebSocket not initialized, starting without WebSocket support")
-        app.run(host=HOST, port=PORT, debug=DEBUG)
-
-# Hacer disponible para uvicorn
-app = asgi_app
+        print("📍 Ejecutando con configuración base")
+        
+        # Verificar servicios base
+        if 'ollama_service' in locals():
+            if ollama_service.is_healthy():
+                print("✅ Ollama conectado exitosamente")
+            else:
+                print("⚠️  Advertencia: No se pudo conectar a Ollama")
+        
+        if 'database_service' in locals():
+            if database_service.is_connected():
+                print("✅ MongoDB conectado exitosamente")
+            else:
+                print("⚠️  Advertencia: No se pudo conectar a MongoDB")
+        
+        # Ejecutar servidor
+        if socketio:
+            print("🔌 Starting server with WebSocket support...")
+            socketio.run(app, host=HOST, port=PORT, debug=DEBUG, allow_unsafe_werkzeug=True)
+        else:
+            print("⚠️  WebSocket not initialized, starting without WebSocket support")
+            app.run(host=HOST, port=PORT, debug=DEBUG)
