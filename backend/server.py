@@ -68,10 +68,14 @@ def main():
         print("🖥️  Salida en tiempo real habilitada en terminal")
         
         # La API mejorada se encarga de todo
+        host = getattr(config, 'HOST', '0.0.0.0') if hasattr(config, 'HOST') else config.get('HOST', '0.0.0.0')
+        port = getattr(config, 'PORT', 8001) if hasattr(config, 'PORT') else config.get('PORT', 8001) 
+        debug = getattr(config, 'debug_mode', True) if hasattr(config, 'debug_mode') else config.get('DEBUG_MODE', True)
+        
         enhanced_api.run(
-            host=config['HOST'], 
-            port=config['PORT'], 
-            debug=config['DEBUG_MODE']
+            host=host, 
+            port=port, 
+            debug=debug
         )
         
     except ImportError as e:
