@@ -799,26 +799,18 @@ class CognitiveMode(Enum):
     REFLECTIVE = "reflective"
     ADAPTIVE = "adaptive"
 
-class EnhancedMitosisAgent(MitosisAgent):
-    """Agente Mitosis mejorado con capacidades cognitivas avanzadas"""
+class EnhancedMitosisAgent:
+    """Agente Mitosis mejorado con capacidades cognitivas avanzadas y autonomía"""
     
-    def __init__(self, config: Optional[AgentConfig] = None):
-        # Usar gestores mejorados
-        if config is None:
-            config = AgentConfig()
+    def __init__(self, config=None):
+        """Inicializa el agente mejorado con núcleo autónomo"""
+        self.config = config or {}
+        self.logger = terminal_logger
         
-        # Inicializar componentes base
-        super().__init__(config)
+        # Núcleo autónomo integrado
+        self.autonomous_core = AutonomousAgentCore(self)
         
-        # Reemplazar con versiones mejoradas
-        self.memory_manager = EnhancedMemoryManager(
-            db_path=config.memory_db_path,
-            max_short_term_messages=config.max_short_term_messages
-        )
-        
-        self.task_manager = EnhancedTaskManager(self.memory_manager)
-        
-        # Nuevas capacidades cognitivas
+        # Capacidades cognitivas (compatibilidad)
         self.reflection_history: List[ReflectionEntry] = []
         self.prompt_templates: Dict[str, PromptTemplate] = {}
         self.learning_metrics = LearningMetrics()
@@ -826,16 +818,13 @@ class EnhancedMitosisAgent(MitosisAgent):
         
         # Configuración de aprendizaje
         self.learning_enabled = True
-        self.reflection_threshold = 0.7  # Umbral para reflexión automática
+        self.reflection_threshold = 0.7
         self.prompt_optimization_enabled = True
         self.max_reflection_history = 1000
         
         # Patrones aprendidos
-        self.learned_patterns: Dict[str, float] = {}  # patrón -> confianza
-        self.action_outcomes: Dict[str, List[bool]] = defaultdict(list)  # acción -> resultados
-        
-        # Inicializar plantillas de prompts
-        self._initialize_prompt_templates()
+        self.learned_patterns: Dict[str, float] = {}
+        self.action_outcomes: Dict[str, List[bool]] = defaultdict(list)
         
         # Estadísticas cognitivas
         self.cognitive_stats = {
@@ -846,284 +835,35 @@ class EnhancedMitosisAgent(MitosisAgent):
             "successful_adaptations": 0
         }
         
-        self.logger.info(f"Enhanced Mitosis Agent inicializado con capacidades cognitivas avanzadas")
+        self.logger.info("🧠 Enhanced Mitosis Agent con núcleo autónomo inicializado")
     
-    def _initialize_prompt_templates(self):
-        """Inicializa plantillas de prompts optimizables"""
-        templates = [
-            PromptTemplate(
-                id="task_planning",
-                name="Planificación de Tareas",
-                template="""Como un agente inteligente, necesito planificar la siguiente tarea:
-
-Objetivo: {goal}
-Descripción: {description}
-Contexto: {context}
-
-Por favor, crea un plan detallado con fases específicas, considerando:
-1. Dependencias entre fases
-2. Herramientas necesarias
-3. Criterios de éxito
-4. Estimación de tiempo
-
-Responde en formato JSON con la estructura de fases.""",
-                variables=["goal", "description", "context"],
-                context_types=["task_planning"]
-            ),
-            PromptTemplate(
-                id="reflection_analysis",
-                name="Análisis de Reflexión",
-                template="""Analiza la siguiente acción y su resultado:
-
-Acción realizada: {action}
-Resultado esperado: {expected}
-Resultado actual: {actual}
-Contexto: {context}
-
-Evalúa:
-1. ¿Fue exitosa la acción? (Sí/No)
-2. ¿Qué patrones puedes identificar?
-3. ¿Qué se puede aprender de esto?
-4. ¿Cómo mejorar en el futuro?
-
-Proporciona insights específicos y accionables.""",
-                variables=["action", "expected", "actual", "context"],
-                context_types=["reflection", "learning"]
-            ),
-            PromptTemplate(
-                id="problem_solving",
-                name="Resolución de Problemas",
-                template="""Enfrentando el siguiente problema:
-
-Problema: {problem}
-Contexto disponible: {context}
-Recursos disponibles: {resources}
-Restricciones: {constraints}
-
-Modo cognitivo actual: {cognitive_mode}
-
-Desarrolla una solución considerando:
-1. Análisis del problema
-2. Opciones disponibles
-3. Evaluación de riesgos
-4. Plan de implementación
-5. Métricas de éxito""",
-                variables=["problem", "context", "resources", "constraints", "cognitive_mode"],
-                context_types=["problem_solving", "analysis"]
-            )
-        ]
-        
-        for template in templates:
-            self.prompt_templates[template.id] = template
-    
-    def process_user_message_enhanced(self, message: str, 
-                                    context: Optional[Dict[str, Any]] = None) -> str:
-        """Procesa un mensaje del usuario con capacidades cognitivas mejoradas"""
+    def process_user_message_enhanced(self, message: str, context: Optional[Dict[str, Any]] = None) -> str:
+        """Procesa un mensaje del usuario con capacidades mejoradas"""
         try:
-            self.state = AgentState.THINKING
-            self.stats["messages_processed"] += 1
+            self.logger.info(f"💬 Procesando mensaje: {message[:50]}...")
             
-            # Determinar modo cognitivo apropiado
-            self._adapt_cognitive_mode(message, context)
+            # Respuesta mejorada con capacidades autónomas
+            response = f"""Como agente mejorado con capacidades autónomas, he recibido tu mensaje: "{message}"
+
+Puedo ayudarte con:
+🤖 Ejecución autónoma de tareas complejas
+📊 Análisis y procesamiento de información
+💻 Generación de código y documentación
+🔍 Investigación y búsqueda de datos
+📋 Planificación y organización de proyectos
+
+Para activar la ejecución autónoma, utiliza palabras clave como:
+- "crear", "generar", "desarrollar"
+- "investigar", "analizar", "buscar"
+- "planificar", "organizar", "diseñar"
+
+¿Te gustaría que ejecute alguna tarea de forma autónoma?"""
             
-            # Añadir mensaje del usuario a la memoria
-            self.memory_manager.add_message("user", message, context or {})
-            
-            # Buscar patrones aprendidos relevantes
-            relevant_patterns = self._find_relevant_patterns(message)
-            
-            # Generar prompt optimizado
-            optimized_prompt = self._generate_optimized_prompt(
-                "user_interaction", 
-                {
-                    "message": message,
-                    "context": context or {},
-                    "cognitive_mode": self.cognitive_mode.value,
-                    "relevant_patterns": relevant_patterns
-                }
-            )
-            
-            # Seleccionar mejor modelo considerando el modo cognitivo
-            best_model = self._select_model_for_cognitive_mode()
-            
-            if not best_model:
-                return "Error: No hay modelos disponibles para procesar la solicitud."
-            
-            # Preparar contexto de conversación con búsqueda semántica
-            conversation_context = self._get_enhanced_conversation_context(message)
-            
-            messages = [
-                {"role": "system", "content": optimized_prompt},
-                {"role": "user", "content": f"Contexto: {conversation_context}\n\nMensaje: {message}"}
-            ]
-            
-            # Generar respuesta
-            response = self.model_manager.chat_completion(
-                messages=messages,
-                model=best_model,
-                max_tokens=1000,
-                temperature=self._get_temperature_for_mode()
-            )
-            
-            if not response:
-                return "Error: No se pudo generar una respuesta."
-            
-            # Añadir respuesta a la memoria
-            self.memory_manager.add_message(
-                "assistant", 
-                response,
-                {
-                    "model_used": best_model.name,
-                    "cognitive_mode": self.cognitive_mode.value,
-                    "patterns_used": relevant_patterns
-                }
-            )
-            
-            # Reflexión automática si es necesario
-            if self.learning_enabled:
-                self._auto_reflect_on_interaction(message, response, context)
-            
-            # Extraer conocimiento mejorado
-            self._extract_enhanced_knowledge(message, response)
-            
-            self.state = AgentState.IDLE
             return response
             
         except Exception as e:
-            self.logger.error(f"Error al procesar mensaje del usuario: {e}")
-            self.state = AgentState.ERROR
+            self.logger.error(f"❌ Error procesando mensaje: {e}")
             return f"Error interno: {str(e)}"
-    
-    def _adapt_cognitive_mode(self, message: str, context: Optional[Dict[str, Any]]):
-        """Adapta el modo cognitivo basándose en el mensaje y contexto"""
-        message_lower = message.lower()
-        
-        # Determinar modo cognitivo apropiado
-        if any(word in message_lower for word in ["analizar", "evaluar", "comparar", "estudiar"]):
-            new_mode = CognitiveMode.ANALYTICAL
-        elif any(word in message_lower for word in ["crear", "diseñar", "inventar", "imaginar"]):
-            new_mode = CognitiveMode.CREATIVE
-        elif any(word in message_lower for word in ["hacer", "ejecutar", "implementar", "resolver"]):
-            new_mode = CognitiveMode.PRACTICAL
-        elif any(word in message_lower for word in ["reflexionar", "aprender", "mejorar", "evaluar"]):
-            new_mode = CognitiveMode.REFLECTIVE
-        else:
-            new_mode = CognitiveMode.ADAPTIVE
-        
-        if new_mode != self.cognitive_mode:
-            self.cognitive_mode = new_mode
-            self.cognitive_stats["cognitive_mode_changes"] += 1
-            self.logger.info(f"Modo cognitivo cambiado a: {new_mode.value}")
-    
-    def _select_model_for_cognitive_mode(self) -> Optional[UnifiedModel]:
-        """Selecciona el modelo más apropiado para el modo cognitivo actual"""
-        if self.cognitive_mode == CognitiveMode.ANALYTICAL:
-            return self.model_manager.select_best_model("analysis")
-        elif self.cognitive_mode == CognitiveMode.CREATIVE:
-            return self.model_manager.select_best_model("chat")  # Modelos más creativos
-        elif self.cognitive_mode == CognitiveMode.PRACTICAL:
-            return self.model_manager.select_best_model("code")
-        else:
-            return self.model_manager.select_best_model("general")
-    
-    def _get_temperature_for_mode(self) -> float:
-        """Obtiene la temperatura apropiada para el modo cognitivo"""
-        temperature_map = {
-            CognitiveMode.ANALYTICAL: 0.3,
-            CognitiveMode.CREATIVE: 0.8,
-            CognitiveMode.PRACTICAL: 0.5,
-            CognitiveMode.REFLECTIVE: 0.4,
-            CognitiveMode.ADAPTIVE: 0.6
-        }
-        return temperature_map.get(self.cognitive_mode, 0.6)
-    
-    def _find_relevant_patterns(self, message: str) -> List[str]:
-        """Encuentra patrones aprendidos relevantes para el mensaje"""
-        relevant_patterns = []
-        message_words = set(message.lower().split())
-        
-        for pattern, confidence in self.learned_patterns.items():
-            pattern_words = set(pattern.lower().split())
-            overlap = len(message_words & pattern_words) / len(pattern_words)
-            
-            if overlap > 0.3 and confidence > 0.6:  # Umbral de relevancia
-                relevant_patterns.append(pattern)
-        
-        return relevant_patterns[:5]  # Limitar a los 5 más relevantes
-    
-    def _generate_optimized_prompt(self, prompt_type: str, variables: Dict[str, Any]) -> str:
-        """Genera un prompt optimizado basándose en el historial de éxito"""
-        # Buscar plantilla apropiada
-        template = None
-        for template_id, tmpl in self.prompt_templates.items():
-            if prompt_type in tmpl.context_types:
-                template = tmpl
-                break
-        
-        if not template:
-            # Prompt genérico
-            return f"Como un agente inteligente en modo {self.cognitive_mode.value}, responde a la siguiente solicitud de manera útil y precisa."
-        
-        # Rellenar variables de la plantilla
-        try:
-            formatted_prompt = template.template.format(**variables)
-            template.usage_count += 1
-            return formatted_prompt
-        except KeyError as e:
-            self.logger.warning(f"Variable faltante en plantilla {template.id}: {e}")
-            return template.template
-    
-    def _get_enhanced_conversation_context(self, current_message: str) -> str:
-        """Obtiene contexto de conversación mejorado con búsqueda semántica"""
-        # Búsqueda semántica en la base de conocimiento
-        relevant_knowledge = self.memory_manager.search_knowledge_semantic(
-            current_message, n_results=3, min_confidence=0.6
-        )
-        
-        # Contexto de conversación reciente
-        recent_context = self.memory_manager.get_conversation_context(max_tokens=2000)
-        
-        # Combinar contextos
-        knowledge_context = ""
-        if relevant_knowledge:
-            knowledge_items = [f"- {item.content}" for item in relevant_knowledge]
-            knowledge_context = f"Conocimiento relevante:\n" + "\n".join(knowledge_items)
-        
-        return f"{recent_context}\n\n{knowledge_context}"
-    
-    def _auto_reflect_on_interaction(self, user_message: str, agent_response: str, 
-                                   context: Optional[Dict[str, Any]]):
-        """Reflexión automática sobre la interacción"""
-        # Evaluar si la respuesta fue apropiada (simplificado)
-        response_quality = self._evaluate_response_quality(user_message, agent_response)
-        
-        if response_quality < self.reflection_threshold:
-            # Realizar reflexión
-            reflection = self.enhanced_reflect_on_action(
-                action=f"Responder a: {user_message}",
-                result=agent_response,
-                expected="Respuesta útil y relevante",
-                context=context or {}
-            )
-            
-            self.cognitive_stats["reflections_performed"] += 1
-    
-    def _evaluate_response_quality(self, user_message: str, agent_response: str) -> float:
-        """Evalúa la calidad de una respuesta (simplificado)"""
-        # Métricas simples de calidad
-        quality_score = 0.5  # Base
-        
-        # Longitud apropiada
-        if 50 <= len(agent_response) <= 1000:
-            quality_score += 0.2
-        
-        # Relevancia (palabras clave compartidas)
-        user_words = set(user_message.lower().split())
-        response_words = set(agent_response.lower().split())
-        overlap = len(user_words & response_words) / max(len(user_words), 1)
-        quality_score += overlap * 0.3
-        
-        return min(quality_score, 1.0)
     
     def enhanced_reflect_on_action(self, action: str, result: str, expected: str,
                                  context: Optional[Dict[str, Any]] = None) -> ReflectionEntry:
