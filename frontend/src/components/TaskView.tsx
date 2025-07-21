@@ -533,7 +533,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
       // Polling menos agresivo - cada 10 segundos en lugar de 1-3 segundos
       intervalId = setInterval(async () => {
         try {
-          const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+          const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
           const response = await fetch(`${backendUrl}/api/agent/get-task-plan/${task.id}`);
           
           if (response.ok) {
