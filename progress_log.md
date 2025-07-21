@@ -345,12 +345,32 @@
 
 ## 🔍 FASE 1: ANÁLISIS DETALLADO
 **Fecha**: 2025-07-21 17:05:00  
+**Estado**: COMPLETADO
+
+### ✅ Análisis del Código App.tsx:
+- **Función createTask**: Línea 122-151 - Crea tarea y llama `setActiveTaskId(newTask.id)` 
+- **onSendMessage**: Línea 625-720 - Llama createTask y después llama `setActiveTaskId(newTask.id)` OTRA VEZ
+- **Renderizado**: Línea 589 - `{activeTask ?` donde `activeTask = tasks.find(task => task.id === activeTaskId)`
+
+### 🔍 PROBLEMA IDENTIFICADO:
+**Issue**: Posible condición de carrera en flujo de creación de tareas
+- `setActiveTaskId` se llama TWICE (línea 142 y 635)
+- Flujo asíncrono podría causar problemas de timing
+- Estado `tasks` se actualiza después de `activeTaskId`
+
+### Archivos Analizados:
+- `/app/frontend/src/App.tsx` líneas 122-151, 625-720, 537, 589
+
+---
+
+## 🔧 FASE 2: INVESTIGACIÓN DETALLADA  
+**Fecha**: 2025-07-21 17:10:00
 **Estado**: EN PROGRESO
 
 ### Tareas:
-- [ ] Analizar código actual de App.tsx  
-- [ ] Identificar flujo exacto de creación de tareas
-- [ ] Verificar estado de activeTaskId
-- [ ] Revisar lógica de renderizado condicional
+- [ ] Añadir logs detallados para debug
+- [ ] Probar el flujo step-by-step  
+- [ ] Identificar si es timing issue o logic bug
+- [ ] Verificar estado de `tasks` vs `activeTaskId`
 
 ---
