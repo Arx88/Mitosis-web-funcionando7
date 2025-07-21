@@ -93,6 +93,9 @@ def main():
                 debug=debug
             )
         
+        # Retornar la aplicación para uvicorn
+        return flask_app
+        
     except ImportError as e:
         print(f"⚠️ Enhanced API no disponible: {e}")
         print("📍 Intentando fallback a API estándar...")
