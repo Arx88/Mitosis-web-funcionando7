@@ -25,7 +25,7 @@ from agent_core_real import MitosisRealAgent, AgentConfig  # AGENTE REAL
 from memory_manager import MemoryManager
 from task_manager import TaskManager
 from model_manager import ModelManager
-from enhanced_prompts import PromptManager
+from enhanced_prompts import EnhancedPromptManager  # CORRECCION
 
 # Configure logging
 logging.basicConfig(
