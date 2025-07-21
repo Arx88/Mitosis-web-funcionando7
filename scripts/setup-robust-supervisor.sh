@@ -9,7 +9,7 @@ echo "🛡️  CONFIGURANDO SUPERVISOR ROBUSTO..."
 # Crear configuración robusta
 cat > /etc/supervisor/conf.d/supervisord.conf << 'EOF'
 [program:backend]
-command=/root/.venv/bin/uvicorn server:app --host 0.0.0.0 --port 8001 --workers 1 --no-use-colors --log-level info
+command=/root/.venv/bin/python server_simple.py
 directory=/app/backend
 autostart=true
 autorestart=true
