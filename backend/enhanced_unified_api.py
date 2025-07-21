@@ -373,6 +373,61 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
                 "timestamp": datetime.now().isoformat()
             })
 
+        # Endpoints de compatibilidad con el frontend
+        @self.app.route('/api/agent/ollama/check', methods=['GET'])
+        def ollama_check():
+            """Verificación de conexión con Ollama - compatibilidad"""
+            try:
+                import requests
+                ollama_url = os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app')
+                response = requests.get(f"{ollama_url}/api/tags", timeout=5)
+                return jsonify({
+                    "status": "connected" if response.status_code == 200 else "disconnected",
+                    "endpoint": ollama_url,
+                    "timestamp": datetime.now().isoformat()
+                })
+            except Exception as e:
+                return jsonify({
+                    "status": "disconnected",
+                    "error": str(e),
+                    "timestamp": datetime.now().isoformat()
+                }), 500
+
+        @self.app.route('/api/agent/ollama/models', methods=['GET'])
+        def ollama_models():
+            """Lista de modelos Ollama disponibles - compatibilidad"""
+            try:
+                import requests
+                ollama_url = os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app')
+                response = requests.get(f"{ollama_url}/api/tags", timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    models = [model['name'] for model in data.get('models', [])]
+                    return jsonify({
+                        "models": models,
+                        "count": len(models),
+                        "endpoint": ollama_url,
+                        "timestamp": datetime.now().isoformat()
+                    })
+                else:
+                    return jsonify({"models": [], "error": "Failed to fetch models"}), 500
+            except Exception as e:
+                return jsonify({"models": [], "error": str(e)}), 500
+
+        @self.app.route('/api/agent/generate-suggestions', methods=['GET'])
+        def generate_suggestions():
+            """Genera sugerencias dinámicas - compatibilidad"""
+            return jsonify({
+                "suggestions": [
+                    {"id": 1, "title": "Crear un plan de marketing digital", "description": "Desarrollar estrategia completa de marketing online"},
+                    {"id": 2, "title": "Analizar datos de ventas", "description": "Procesar y visualizar métricas de rendimiento"},
+                    {"id": 3, "title": "Generar informe ejecutivo", "description": "Crear presentación profesional con KPIs"},
+                    {"id": 4, "title": "Investigación de mercado", "description": "Análisis competitivo y tendencias del sector"},
+                    {"id": 5, "title": "Automatizar proceso de trabajo", "description": "Optimizar flujos de trabajo repetitivos"}
+                ],
+                "timestamp": datetime.now().isoformat()
+            })
+
     def _should_execute_autonomously(self, message: str) -> bool:
         """
         Determina si un mensaje debe activar ejecución autónoma
