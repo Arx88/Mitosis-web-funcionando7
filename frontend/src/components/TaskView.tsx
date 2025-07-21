@@ -247,7 +247,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
   // Nueva función para iniciar ejecución
   const startTaskExecution = async (taskId: string) => {
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
       
       const response = await fetch(`${backendUrl}/api/agent/start-task-execution/${taskId}`, {
         method: 'POST',
