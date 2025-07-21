@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Backend URL from environment
-BACKEND_URL = "https://07f8abff-67bc-4538-b7ae-7b937e1c40d1.preview.emergentagent.com"
+BACKEND_URL = "https://966bbbbe-c451-44e3-8482-e53a33961323.preview.emergentagent.com"
 
 class WebSocketBackendTester:
     def __init__(self, backend_url: str):

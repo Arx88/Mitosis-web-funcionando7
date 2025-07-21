@@ -93,7 +93,7 @@ Frontend Components:
   "navigation": {
     "page_loaded": true,
     "task_created": true,
-    "url": "https://07f8abff-67bc-4538-b7ae-7b937e1c40d1.preview.emergentagent.com/"
+    "url": "https://966bbbbe-c451-44e3-8482-e53a33961323.preview.emergentagent.com/"
   },
   "upload_modal": {
     "opened": false,

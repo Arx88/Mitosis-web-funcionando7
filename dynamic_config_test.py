@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 # Configuración de prueba
-BACKEND_URL = "https://07f8abff-67bc-4538-b7ae-7b937e1c40d1.preview.emergentagent.com"
+BACKEND_URL = "https://966bbbbe-c451-44e3-8482-e53a33961323.preview.emergentagent.com"
 TEST_OLLAMA_ENDPOINT = "https://bef4a4bb93d1.ngrok-free.app"
 
 def print_test_header(test_name):
