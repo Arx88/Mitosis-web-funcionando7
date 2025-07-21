@@ -693,6 +693,9 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                                     task.id === newTask.id ? updatedTaskWithPlan : task
                                   ));
                                   
+                                  // 🚀 CRUCIAL: Cambiar a la nueva tarea para mostrar TaskView
+                                  setCurrentTask(updatedTaskWithPlan);
+                                  
                                   console.log('✅ Task updated with generated plan:', initData.plan.steps.length, 'steps');
                                 }
                               } else {
