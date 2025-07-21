@@ -1846,7 +1846,7 @@ Formato: Profesional, estructurado y completo.
                 'total_steps': total_steps,
                 'completed_steps': completed_steps,
                 'failed_steps': failed_steps,
-                'execution_time': (datetime.now() - active_task_plans[task_id]['start_time']).total_seconds(),
+                'execution_time': (datetime.now() - active_task_plans[task_id].get('start_time', datetime.now())).total_seconds(),
                 'message': f'🎉 Tarea completada: {completed_steps}/{total_steps} pasos exitosos',
                 'timestamp': datetime.now().isoformat()
             })
