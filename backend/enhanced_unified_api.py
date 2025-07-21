@@ -109,6 +109,34 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
         self._setup_enhanced_routes()
         self._setup_websocket_events()
 
+    def _create_proper_config(self, config):
+        """Crea configuración correcta desde variables de entorno"""
+        if HAS_BASE_API:
+            # Si tenemos la API base, crear AgentConfig apropiado
+            try:
+                from agent_core import AgentConfig
+                
+                agent_config = AgentConfig()
+                # Usar variables de entorno si están disponibles
+                agent_config.ollama_url = os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app')
+                agent_config.openrouter_api_key = os.getenv('OPENROUTER_API_KEY', '')
+                agent_config.prefer_local_models = True
+                agent_config.memory_db_path = os.getenv('MEMORY_DB_PATH', 'mitosis_memory.db')
+                agent_config.debug_mode = os.getenv('DEBUG', 'true').lower() == 'true'
+                
+                return agent_config
+            except ImportError:
+                pass
+        
+        # Fallback a configuración básica
+        return {
+            'OLLAMA_URL': os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app'),
+            'OPENROUTER_API_KEY': os.getenv('OPENROUTER_API_KEY', ''),
+            'PREFER_LOCAL_MODELS': True,
+            'MEMORY_DB_PATH': os.getenv('MEMORY_DB_PATH', 'mitosis_memory.db'),
+            'DEBUG_MODE': os.getenv('DEBUG', 'true').lower() == 'true'
+        }
+
     def _setup_enhanced_routes(self):
         """Configura las rutas mejoradas para funcionalidad autónoma"""
         
