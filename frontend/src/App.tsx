@@ -502,6 +502,9 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
           task.id === newTask.id ? fullTaskUpdate : task
         ));
         
+        // 🚀 CRUCIAL: Cambiar a la nueva tarea para mostrar TaskView
+        setCurrentTask(fullTaskUpdate);
+        
         console.log('✅ Task updated with fallback chat response and plan');
       } else {
         console.error('❌ Fallback chat request also failed:', response.status);
