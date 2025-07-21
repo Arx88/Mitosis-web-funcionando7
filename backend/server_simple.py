@@ -101,8 +101,9 @@ try:
     
     # Log de herramientas disponibles
     tools = tool_manager.get_available_tools()
-    terminal_logger.info(f"🛠️ Herramientas disponibles: {', '.join(tools[:5])}...")
-    print(f"🛠️ Herramientas disponibles: {', '.join(tools[:5])}...")
+    tool_names = [tool['name'] for tool in tools] if isinstance(tools[0] if tools else {}, dict) else tools
+    terminal_logger.info(f"🛠️ Herramientas disponibles: {', '.join(tool_names[:5])}...")
+    print(f"🛠️ Herramientas disponibles: {', '.join(tool_names[:5])}...")
     
 except Exception as e:
     terminal_logger.error(f"❌ Error inicializando Tool Manager: {e}")
