@@ -56,17 +56,14 @@ def main():
         print("✅ Enhanced Unified API cargada exitosamente")
         
         # Usar la aplicación Flask de la API mejorada
-        app = enhanced_api.app if hasattr(enhanced_api, 'app') else None
+        flask_app = enhanced_api.app if hasattr(enhanced_api, 'app') else None
         
-        if app is None:
+        if flask_app is None:
             raise Exception("No se pudo obtener la aplicación Flask de la API mejorada")
         
-        # Exponer la variable app para uvicorn a nivel de módulo
-        app = enhanced_api.app
-        
-        # Establecer la aplicación globalmente
-        sys.modules[__name__].app = app
-        globals()['app'] = app
+        # Establecer la aplicación globalmente para uvicorn
+        sys.modules[__name__].app = flask_app
+        globals()['app'] = flask_app
         
         print("✅ Aplicación Flask expuesta correctamente para uvicorn")
         
