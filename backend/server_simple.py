@@ -93,12 +93,22 @@ except Exception as e:
 
 # Inicializar Tool Manager  
 try:
-    from src.services.tools_manager import get_tools_manager
-    tool_manager = get_tools_manager()
+    from src.tools.tool_manager import ToolManager
+    tool_manager = ToolManager()
     app.tool_manager = tool_manager
-    logger.info("✅ Tool Manager inicializado exitosamente")
+    terminal_logger.info(f"✅ Tool Manager inicializado exitosamente - {len(tool_manager.get_available_tools())} herramientas")
+    print(f"✅ Tool Manager inicializado exitosamente - {len(tool_manager.get_available_tools())} herramientas")
+    
+    # Log de herramientas disponibles
+    tools = tool_manager.get_available_tools()
+    terminal_logger.info(f"🛠️ Herramientas disponibles: {', '.join(tools[:5])}...")
+    print(f"🛠️ Herramientas disponibles: {', '.join(tools[:5])}...")
+    
 except Exception as e:
-    logger.error(f"❌ Error inicializando Tool Manager: {e}")
+    terminal_logger.error(f"❌ Error inicializando Tool Manager: {e}")
+    print(f"❌ Error inicializando Tool Manager: {e}")
+    import traceback
+    traceback.print_exc()
 
 # FORZAR IMPORTACIÓN DE RUTAS REALES DEL AGENTE CON LOGGING INTENSO
 terminal_logger.info("🔄 Intentando importar las rutas REALES del agente con funcionalidad completa...")
