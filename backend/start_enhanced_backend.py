@@ -1,72 +1,72 @@
 #!/usr/bin/env python3
 """
-Script de Inicio Mejorado para Mitosis-Beta Backend
-Punto de entrada con capacidades de ejecución autónoma y salida en terminal
+Start Enhanced Backend - El Punto de Entrada Mejorado
+Nuevo punto de entrada para iniciar el backend del agente Mitosis-Beta
+con ejecución autónoma y salida en terminal
 """
 
 import os
 import sys
 import logging
-import time
 from datetime import datetime
+from typing import Dict, Any
 
-# Añadir directorio actual al path de Python
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Añadir directorio actual al path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
 
 def print_banner():
-    """Muestra el banner de inicio del sistema mejorado"""
+    """Muestra un banner ASCII art al inicio"""
     banner = """
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                                                                              ║
-║    ███╗   ███╗██╗████████╗ ██████╗ ███████╗██╗███████╗    ██╗   ██╗███████╗ ║
-║    ████╗ ████║██║╚══██╔══╝██╔═══██╗██╔════╝██║██╔════╝    ██║   ██║██╔════╝ ║
-║    ██╔████╔██║██║   ██║   ██║   ██║███████╗██║███████╗    ██║   ██║███████╗ ║
-║    ██║╚██╔╝██║██║   ██║   ██║   ██║╚════██║██║╚════██║    ╚██╗ ██╔╝╚════██║ ║
-║    ██║ ╚═╝ ██║██║   ██║   ╚██████╔╝███████║██║███████║     ╚████╔╝ ███████║ ║
-║    ╚═╝     ╚═╝╚═╝   ╚═╝    ╚═════╝ ╚══════╝╚═╝╚══════╝      ╚═══╝  ╚══════╝ ║
-║                                                                              ║
-║                     🚀 ENHANCED BACKEND CON EJECUCIÓN AUTÓNOMA 🚀            ║
-║                            ⚡ Salida en Terminal en Tiempo Real ⚡            ║
-║                                                                              ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-"""
+████████████████████████████████████████████████████████████████████████████████
+█                                                                              █
+█  ███    ███ ██ ████████  ██████  ███████ ██ ███████       ██████  ███████   █
+█  ████  ████ ██    ██    ██    ██ ██      ██ ██           ██       ██        █
+█  ██ ████ ██ ██    ██    ██    ██ ███████ ██ ███████      ██   ███ ███████   █
+█  ██  ██  ██ ██    ██    ██    ██      ██ ██      ██      ██    ██      ██   █
+█  ██      ██ ██    ██     ██████  ███████ ██ ███████       ██████  ███████   █
+█                                                                              █
+█               🚀 ENHANCED BACKEND WITH AUTONOMOUS EXECUTION 🚀                █
+█                          🖥️  REAL-TIME TERMINAL OUTPUT 🖥️                    █
+█                                                                              █
+████████████████████████████████████████████████████████████████████████████████
+    """
     print(banner)
-    print(f"📅 Fecha de inicio: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"🐍 Versión de Python: {sys.version.split()[0]}")
-    print(f"📁 Directorio de trabajo: {os.getcwd()}")
-    print("=" * 80)
+    print(f"🗓️  Fecha de inicio: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"🐍 Python version: {sys.version.split()[0]}")
+    print(f"📁 Working directory: {current_dir}")
+    print()
 
 def check_dependencies():
-    """Verifica las dependencias necesarias"""
+    """Verifica las dependencias básicas"""
+    required_modules = ['flask', 'flask_cors', 'flask_socketio', 'asyncio']
+    missing_modules = []
+    
     print("🔍 Verificando dependencias...")
     
-    required_modules = [
-        'flask',
-        'flask_cors', 
-        'flask_socketio',
-        'asyncio'
-    ]
-    
-    missing_modules = []
     for module in required_modules:
         try:
             __import__(module)
-            print(f"✅ {module}")
+            print(f"   ✅ {module}")
         except ImportError:
-            print(f"❌ {module} - FALTANTE")
             missing_modules.append(module)
+            print(f"   ❌ {module} - FALTANTE")
     
     if missing_modules:
-        print(f"\n⚠️ Módulos faltantes: {', '.join(missing_modules)}")
-        print(f"💡 Instalar con: pip install {' '.join(missing_modules)}")
+        print()
+        print("⚠️  Dependencias faltantes detectadas:")
+        for module in missing_modules:
+            print(f"   pip install {module}")
+        print()
         return False
     
-    print("✅ Todas las dependencias están disponibles")
+    print("   🎉 Todas las dependencias están disponibles")
+    print()
     return True
 
-def create_config():
-    """Crea configuración basada en variables de entorno"""
-    print("⚙️ Creando configuración...")
+def create_config() -> Dict[str, Any]:
+    """Crea la configuración del agente desde variables de entorno"""
+    print("⚙️  Cargando configuración desde variables de entorno...")
     
     config = {
         'OLLAMA_URL': os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434'),
@@ -76,140 +76,129 @@ def create_config():
         'MEMORY_DB_PATH': os.getenv('MEMORY_DB_PATH', 'enhanced_agent.db'),
         'MAX_SHORT_TERM_MESSAGES': int(os.getenv('MAX_SHORT_TERM_MESSAGES', '100')),
         'MAX_CONCURRENT_TASKS': int(os.getenv('MAX_CONCURRENT_TASKS', '3')),
-        'DEBUG_MODE': os.getenv('DEBUG', 'true').lower() == 'true',
+        'DEBUG_MODE': os.getenv('DEBUG_MODE', 'true').lower() == 'true',
         'HOST': os.getenv('HOST', '0.0.0.0'),
         'PORT': int(os.getenv('PORT', '8001'))
     }
     
-    print("📋 Configuración actual:")
+    print("   📋 Configuración cargada:")
     for key, value in config.items():
         # Ocultar claves API por seguridad
-        if 'KEY' in key or 'TOKEN' in key:
-            display_value = f"{'*' * (len(str(value)) - 4)}{str(value)[-4:]}" if value else "No configurado"
-        else:
-            display_value = value
-        print(f"   {key}: {display_value}")
+        display_value = value
+        if 'API_KEY' in key and value:
+            display_value = f"{value[:8]}..." if len(str(value)) > 8 else "***"
+        print(f"      {key}: {display_value}")
     
+    print()
     return config
 
 def main():
-    """Función principal de inicio"""
+    """Función principal"""
     try:
-        # Banner de bienvenida
+        # Mostrar banner
         print_banner()
         
         # Verificar dependencias
         if not check_dependencies():
-            print("❌ Error: No se pueden cargar las dependencias necesarias")
+            print("❌ No se puede continuar sin las dependencias requeridas")
             sys.exit(1)
+        
+        # Configurar logging global
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
         
         # Crear configuración
         config = create_config()
         
-        # Importar y crear la API mejorada
-        print("🚀 Iniciando Enhanced Unified Mitosis API...")
-        
+        # Importar y crear API mejorada
         try:
             from enhanced_unified_api import EnhancedUnifiedMitosisAPI
+            print("📦 Creando instancia de Enhanced Unified Mitosis API...")
+            
             api = EnhancedUnifiedMitosisAPI(config)
-            print("✅ API mejorada inicializada exitosamente")
+            print("   ✅ API mejorada inicializada exitosamente")
+            
         except ImportError as e:
-            print(f"❌ Error importando Enhanced API: {e}")
-            print("💡 Usando servidor base como fallback...")
-            # Fallback al servidor original
-            from server import app, socketio
-            api = app
+            print(f"❌ Error importando Enhanced Unified API: {e}")
+            sys.exit(1)
+        except Exception as e:
+            print(f"❌ Error inicializando API mejorada: {e}")
+            sys.exit(1)
         
-        # Mostrar características habilitadas
-        print("\n🌟 CARACTERÍSTICAS HABILITADAS:")
-        features = [
-            "✅ Ejecución autónoma de tareas completas",
-            "✅ Salida en tiempo real en terminal formateada",
-            "✅ Monitoreo de progreso paso a paso automático",
-            "✅ Entrega de resultados finales estructurada",
-            "✅ Compatibilidad total con UI existente",
-            "✅ WebSockets para actualizaciones en tiempo real",
-            "✅ Detección inteligente de intención autónoma",
-            "✅ Sistema de logging mejorado en terminal",
-            "✅ Orquestación de tareas complejas",
-            "✅ Gestión de herramientas integrada"
-        ]
+        # Información de características habilitadas
+        print()
+        print("🌟 CARACTERÍSTICAS MEJORADAS HABILITADAS:")
+        print("   ✅ Ejecución autónoma de tareas completas")
+        print("   ✅ Salida en tiempo real en terminal formateada")
+        print("   ✅ Monitoreo de progreso paso a paso automático")
+        print("   ✅ Entrega de resultados finales estructurada")
+        print("   ✅ Compatibilidad total con UI existente y paginador")
+        print("   ✅ WebSockets para actualizaciones en tiempo real")
+        print()
         
-        for feature in features:
-            print(f"   {feature}")
+        # Listado de endpoints disponibles
+        print("📡 ENDPOINTS API DISPONIBLES:")
+        print("   🔹 POST /api/agent/initialize-task - Iniciar tarea autónoma")
+        print("   🔹 POST /api/agent/start-task-execution/<task_id> - Iniciar ejecución")
+        print("   🔹 GET  /api/agent/get-task-plan/<task_id> - Obtener plan de tarea")
+        print("   🔹 POST /api/agent/execute-step/<task_id>/<step_id> - Ejecutar paso")
+        print("   🔹 POST /api/agent/chat - Chat con ejecución autónoma")
+        print("   🔹 GET  /api/agent/status - Estado mejorado del agente")
+        print("   🔹 GET  /api/health - Health check mejorado")
+        print()
         
-        # Mostrar endpoints disponibles
-        print("\n🌐 ENDPOINTS DISPONIBLES:")
-        endpoints = [
-            "🔹 GET  /api/health - Estado de salud del sistema",
-            "🔹 POST /api/agent/initialize-task - Inicializar tarea autónoma",
-            "🔹 POST /api/agent/start-task-execution/<task_id> - Iniciar ejecución",
-            "🔹 GET  /api/agent/get-task-plan/<task_id> - Obtener plan de tarea",
-            "🔹 POST /api/agent/chat - Chat con detección autónoma",
-            "🔹 GET  /api/agent/status - Estado detallado del agente",
-            "🔹 GET  /api/monitor/pages - Páginas del monitor",
-            "🔹 GET  /api/monitor/latest - Última página del monitor"
-        ]
+        print("🔌 EVENTOS WEBSOCKET:")
+        print("   🔸 connect/disconnect - Conexión de clientes")
+        print("   🔸 join_task_room - Unirse a sala de tarea")
+        print("   🔸 new_monitor_page - Nueva página del monitor")
+        print("   🔸 autonomous_execution_completed - Ejecución finalizada")
+        print()
         
-        for endpoint in endpoints:
-            print(f"   {endpoint}")
-        
-        # Mostrar eventos WebSocket
-        print("\n🔌 EVENTOS WEBSOCKET:")
-        ws_events = [
-            "🔸 connection_status - Estado de conexión",
-            "🔸 new_monitor_page - Nueva página en monitor",
-            "🔸 autonomous_execution_completed - Ejecución completada",
-            "🔸 task_progress_update - Actualización de progreso",
-            "🔸 step_status_changed - Cambio de estado de paso"
-        ]
-        
-        for event in ws_events:
-            print(f"   {event}")
-        
-        print("\n" + "=" * 80)
-        print("🎯 SISTEMA LISTO PARA EJECUCIÓN AUTÓNOMA")
-        print("📊 Monitorea la terminal para ver actividad en tiempo real")
-        print("🔗 La UI existente funcionará sin cambios")
-        print("=" * 80)
-        
-        # Iniciar el servidor
+        # Iniciar servidor
         host = config['HOST']
         port = config['PORT']
         debug = config['DEBUG_MODE']
         
-        print(f"\n🚀 Iniciando servidor en {host}:{port}")
-        print(f"🛠️ Modo debug: {'Activado' if debug else 'Desactivado'}")
-        print(f"🌐 Accesible en: http://{host}:{port}")
+        print("=" * 80)
+        print(f"🚀 INICIANDO SERVIDOR EN {host}:{port}")
+        print(f"🛠️  Modo debug: {'HABILITADO' if debug else 'DESHABILITADO'}")
+        print("🖥️  Monitorea esta terminal para ver actividad en tiempo real")
+        print("🌐 La UI existente funcionará sin cambios")
+        print("=" * 80)
+        print()
         
-        if hasattr(api, 'run'):
-            # API mejorada con WebSocket
-            api.run(host=host, port=port, debug=debug)
-        else:
-            # Fallback al servidor Flask
-            api.run(host=host, port=port, debug=debug)
-            
+        # Ejecutar servidor
+        api.run(host=host, port=port, debug=debug)
+        
     except KeyboardInterrupt:
-        print("\n\n🛑 Interrupción del usuario detectada")
-        print("🧹 Realizando limpieza...")
+        print()
+        print("🛑 Interrupción por teclado detectada")
+        print("🧹 Realizando apagado limpio...")
         
-        # Llamar al método de apagado si está disponible
-        if 'api' in locals() and hasattr(api, 'shutdown'):
+        # Apagado limpio
+        if 'api' in locals():
             api.shutdown()
         
-        print("✅ Limpieza completada")
-        print("👋 ¡Hasta la vista, baby!")
+        print("👋 Enhanced Unified Mitosis API apagada exitosamente")
+        sys.exit(0)
         
     except Exception as e:
-        print(f"\n❌ ERROR CRÍTICO: {e}")
-        print(f"📋 Tipo de error: {type(e).__name__}")
+        print()
+        print(f"💥 Error fatal: {str(e)}")
         import traceback
-        print(f"🔍 Traceback completo:")
         traceback.print_exc()
         sys.exit(1)
     
     finally:
-        print("\n🏁 Proceso de backend finalizado")
+        # Cleanup final
+        if 'api' in locals():
+            try:
+                api.shutdown()
+            except:
+                pass
+
 
 if __name__ == "__main__":
     main()
