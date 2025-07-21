@@ -25,11 +25,103 @@ terminal_handler.setFormatter(terminal_formatter)
 terminal_logger.addHandler(terminal_handler)
 terminal_logger.setLevel(logging.INFO)
 
-from agent_core import MitosisAgent, AgentConfig, AgentState
-from enhanced_memory_manager import EnhancedMemoryManager, VectorKnowledgeItem
-from enhanced_task_manager import EnhancedTaskManager
-from model_manager import ModelManager, UnifiedModel, ModelProvider
-from enhanced_prompts import EnhancedPromptManager, PromptType
+# Importar componentes base (con manejo de errores)
+try:
+    from agent_core import MitosisAgent, AgentConfig, AgentState
+except ImportError:
+    # Fallback si no están disponibles
+    MitosisAgent = None
+    AgentConfig = None
+    AgentState = None
+
+try:
+    from enhanced_memory_manager import EnhancedMemoryManager, VectorKnowledgeItem
+    from enhanced_task_manager import EnhancedTaskManager
+    from model_manager import ModelManager, UnifiedModel, ModelProvider
+    from enhanced_prompts import EnhancedPromptManager, PromptType
+except ImportError as e:
+    terminal_logger.warning(f"⚠️ Algunos componentes no disponibles: {e}")
+
+# ==================================================================================
+# CLASES Y ESTRUCTURAS DE DATOS FUNDAMENTALES PARA EJECUCIÓN AUTÓNOMA
+# ==================================================================================
+
+class TaskStatus(Enum):
+    """Estados posibles de una tarea o paso individual"""
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    PAUSED = "paused"
+
+@dataclass
+class TaskStep:
+    """Representa un paso individual dentro de un plan de acción"""
+    id: str
+    title: str
+    description: str
+    tool: str
+    status: TaskStatus
+    result: Optional[str] = None
+    error: Optional[str] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    
+    def to_dict(self):
+        """Convierte el paso a diccionario para serialización"""
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'tool': self.tool,
+            'status': self.status.value,
+            'result': self.result,
+            'error': self.error,
+            'start_time': self.start_time.isoformat() if self.start_time else None,
+            'end_time': self.end_time.isoformat() if self.end_time else None
+        }
+
+@dataclass  
+class AutonomousTask:
+    """Representa una tarea autónoma completa con plan de acción"""
+    id: str
+    title: str
+    description: str
+    goal: str
+    steps: List[TaskStep]
+    status: TaskStatus
+    created_at: datetime
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    progress_percentage: float = 0.0
+    
+    def calculate_progress(self):
+        """Calcula el porcentaje de progreso basado en pasos completados"""
+        if not self.steps:
+            return 0.0
+        
+        completed_steps = sum(1 for step in self.steps if step.status == TaskStatus.COMPLETED)
+        self.progress_percentage = (completed_steps / len(self.steps)) * 100.0
+        return self.progress_percentage
+    
+    def to_dict(self):
+        """Convierte la tarea a diccionario para serialización"""
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'goal': self.goal,
+            'steps': [step.to_dict() for step in self.steps],
+            'status': self.status.value,
+            'created_at': self.created_at.isoformat(),
+            'started_at': self.started_at.isoformat() if self.started_at else None,
+            'completed_at': self.completed_at.isoformat() if self.completed_at else None,
+            'progress_percentage': self.progress_percentage
+        }
+
+# ==================================================================================
+# CLASE PRINCIPAL DEL NÚCLEO AUTÓNOMO
+# ==================================================================================
 
 @dataclass
 class ReflectionEntry:
