@@ -623,6 +623,7 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                     ) : (
                       <VanishInput
                         onSendMessage={async (message) => {
+                          console.log('🎯 App.tsx onSendMessage CALLED with:', message);
                           if (message.trim()) {
                             console.log('🚀 Creating task with message:', message.trim());
                             
