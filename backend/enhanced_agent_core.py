@@ -1,17 +1,26 @@
 """
-Enhanced Agent Core - El Cerebro de la Autonomía
+Enhanced Agent Core - El Cerebro de la Autonomía REAL
 Este módulo es el corazón de la nueva capacidad de ejecución autónoma del agente.
-Su diseño se centra en la gestión del ciclo de vida de las tareas complejas.
+AHORA USA HERRAMIENTAS REALES EN LUGAR DE SIMULACIONES.
 """
 
 import asyncio
 import json
 import logging
 import sys
+import os
 from datetime import datetime
 from enum import Enum
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Any
+
+# Importar el ToolManager REAL
+sys.path.append('/app/backend/src')
+try:
+    from tools.tool_manager import ToolManager
+    HAS_TOOL_MANAGER = True
+except ImportError:
+    HAS_TOOL_MANAGER = False
 
 # Configurar logging para terminal
 terminal_logger = logging.getLogger('MITOSIS')
