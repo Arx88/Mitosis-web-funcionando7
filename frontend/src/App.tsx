@@ -446,7 +446,7 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
   // Función fallback para usar chat endpoint si initialize-task falla
   const fallbackToChat = async (newTask: Task, message: string, basicTaskUpdate: Task, userMessage: Message) => {
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
       console.log('🔄 Fallback to chat endpoint:', `${backendUrl}/api/agent/chat`);
       
       const response = await fetch(`${backendUrl}/api/agent/chat`, {
