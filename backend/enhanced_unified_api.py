@@ -114,7 +114,7 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
         if HAS_BASE_API:
             # Si tenemos la API base, crear AgentConfig apropiado
             try:
-                from agent_core import AgentConfig
+                from agent_core_real import AgentConfig  # USAR CONFIG REAL
                 
                 agent_config = AgentConfig()
                 # Usar variables de entorno si están disponibles
