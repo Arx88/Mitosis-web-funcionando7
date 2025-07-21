@@ -68,9 +68,14 @@ def main():
         print("🖥️  Salida en tiempo real habilitada en terminal")
         
         # La API mejorada se encarga de todo
-        host = getattr(config, 'HOST', '0.0.0.0') if hasattr(config, 'HOST') else config.get('HOST', '0.0.0.0')
-        port = getattr(config, 'PORT', 8001) if hasattr(config, 'PORT') else config.get('PORT', 8001) 
-        debug = getattr(config, 'debug_mode', True) if hasattr(config, 'debug_mode') else config.get('DEBUG_MODE', True)
+        if hasattr(config, 'debug_mode'):  # Es AgentConfig
+            host = getattr(config, 'HOST', '0.0.0.0') if hasattr(config, 'HOST') else '0.0.0.0'
+            port = getattr(config, 'PORT', 8001) if hasattr(config, 'PORT') else 8001
+            debug = config.debug_mode
+        else:  # Es diccionario
+            host = config.get('HOST', '0.0.0.0')
+            port = config.get('PORT', 8001) 
+            debug = config.get('DEBUG_MODE', True)
         
         enhanced_api.run(
             host=host, 
