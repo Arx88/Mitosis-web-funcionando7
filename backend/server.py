@@ -182,3 +182,11 @@ if __name__ == '__main__':
         else:
             print("⚠️  WebSocket not initialized, starting without WebSocket support")
             app.run(host=HOST, port=PORT, debug=DEBUG)
+
+# Hacer disponible para uvicorn
+if USE_ENHANCED_API:
+    # Para uvicorn cuando se usa la API mejorada, necesitamos export el app de Flask
+    app = enhanced_api.app if 'enhanced_api' in locals() else app
+else:
+    # Para el servidor base, usar la aplicación Flask directamente
+    pass
