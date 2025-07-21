@@ -177,11 +177,15 @@ class MitosisAgent:
                 self.memory_manager
             )
             
+            # Inicializar gestor de navegación web (NUEVA MEJORA - FASE 2)
+            self.web_browser_manager = WebBrowserManager(BrowserConfig(headless=True))
+            
             # Actualizar modelos disponibles
             self.model_manager.refresh_models()
             
             self.logger.info("Todos los componentes inicializados correctamente")
             self.logger.info("🎯 IntentionClassifier inicializado - Detección LLM habilitada")
+            self.logger.info("🌐 WebBrowserManager inicializado - Navegación real habilitada")
             
         except Exception as e:
             self.logger.error(f"Error al inicializar componentes: {e}")
