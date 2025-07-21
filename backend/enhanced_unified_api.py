@@ -316,10 +316,10 @@ class EnhancedUnifiedMitosisAPI:
         # Ruta de verificación de Ollama para el frontend
         @self.app.route('/api/agent/ollama/check', methods=['POST'])
         def check_ollama_connection():
-            """Verifica conexión con Ollama"""
+            """Verifica conexión con Ollama usando configuración dinámica"""
             try:
                 data = request.get_json() or {}
-                endpoint = data.get('endpoint', 'https://bef4a4bb93d1.ngrok-free.app')
+                endpoint = data.get('endpoint', os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app'))
                 
                 terminal_logger.info(f"🔍 Verificando conexión Ollama: {endpoint}")
                 
