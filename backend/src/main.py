@@ -139,7 +139,7 @@ if __name__ == '__main__':
         print(f"📚 Modelos disponibles: {models}")
     else:
         print("⚠️  Advertencia: No se pudo conectar a Ollama")
-        print("   Asegúrate de que Ollama esté ejecutándose en localhost:11434")
+        print("   Verifica la configuración del endpoint de Ollama en el archivo .env")
     
     # Verificar conexión con MongoDB
     if database_service.is_connected():
