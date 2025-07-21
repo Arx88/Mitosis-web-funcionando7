@@ -511,7 +511,7 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
         terminal_logger.info("✅ Compatibilidad completa con UI existente")
         terminal_logger.info("✅ WebSockets para actualizaciones en tiempo real")
         
-        self.socketio.run(self.app, host=host, port=port, debug=debug, allow_unsafe_werkzeug=True)
+        self.socketio.run(self.app, host=host, port=port, debug=False, allow_unsafe_werkzeug=True)
     
     def shutdown(self):
         """Apagado limpio de la API"""
