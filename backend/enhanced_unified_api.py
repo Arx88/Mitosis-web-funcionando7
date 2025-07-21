@@ -6,6 +6,7 @@ y salida en tiempo real en terminal
 
 import logging
 import json
+import os
 import time
 import threading
 import asyncio
