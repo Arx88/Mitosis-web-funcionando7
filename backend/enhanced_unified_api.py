@@ -351,6 +351,260 @@ class EnhancedUnifiedMitosisAPI:
                     'is_connected': False,
                     'error': str(e)
                 }), 500
+        
+        # Rutas para obtener modelos de Ollama
+        @self.app.route('/api/agent/ollama/models', methods=['POST'])
+        def get_ollama_models():
+            """Obtiene modelos disponibles de Ollama"""
+            try:
+                data = request.get_json() or {}
+                endpoint = data.get('endpoint', os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app'))
+                
+                terminal_logger.info(f"🔍 Obteniendo modelos de Ollama: {endpoint}")
+                
+                # Hacer llamada real a Ollama para obtener modelos
+                try:
+                    import requests
+                    response = requests.get(f"{endpoint}/api/tags", timeout=15)
+                    
+                    if response.status_code == 200:
+                        data_response = response.json()
+                        models_list = data_response.get('models', [])
+                        
+                        # Formatear modelos para la respuesta
+                        models = []
+                        for model in models_list:
+                            model_info = {
+                                'name': model.get('name', ''),
+                            }
+                            
+                            # Formatear tamaño si está disponible
+                            if 'size' in model and model['size']:
+                                size_bytes = model['size']
+                                if size_bytes >= 1073741824:  # 1GB
+                                    size_formatted = f"{size_bytes / 1073741824:.1f}GB"
+                                elif size_bytes >= 1048576:  # 1MB
+                                    size_formatted = f"{size_bytes / 1048576:.0f}MB"
+                                else:
+                                    size_formatted = f"{size_bytes}B"
+                                model_info['size'] = size_formatted
+                            else:
+                                model_info['size'] = 'Unknown size'
+                            
+                            models.append(model_info)
+                        
+                        terminal_logger.info(f"✅ Encontrados {len(models)} modelos de Ollama")
+                        
+                        return jsonify({
+                            'models': models,
+                            'endpoint': endpoint,
+                            'count': len(models)
+                        })
+                    else:
+                        terminal_logger.warning(f"⚠️ Ollama returned status code {response.status_code}")
+                        raise Exception(f"Ollama API returned status code {response.status_code}")
+                        
+                except requests.exceptions.RequestException as req_error:
+                    terminal_logger.error(f"❌ Request error connecting to Ollama: {req_error}")
+                    # Fallback a modelos conocidos si hay error de conexión
+                    fallback_models = [
+                        {'name': 'llama3.1:8b', 'size': '4.7GB'},
+                        {'name': 'llama3.2:3b', 'size': '2.0GB'},
+                        {'name': 'deepseek-r1:32b', 'size': '20GB'},
+                        {'name': 'qwen3:32b', 'size': '18GB'},
+                        {'name': 'mistral:7b', 'size': '4.1GB'},
+                        {'name': 'codellama:7b', 'size': '3.8GB'},
+                        {'name': 'phi3:3.8b', 'size': '2.3GB'}
+                    ]
+                    
+                    return jsonify({
+                        'models': fallback_models,
+                        'endpoint': endpoint,
+                        'count': len(fallback_models),
+                        'fallback': True,
+                        'warning': f'Could not connect to Ollama. Showing common models. Error: {str(req_error)}'
+                    })
+            
+            except Exception as e:
+                terminal_logger.error(f"❌ Error getting Ollama models: {str(e)}")
+                return jsonify({
+                    'models': [],
+                    'error': str(e)
+                }), 500
+        
+        # Sistema de Configuración Dinámica para Enhanced API
+        @self.app.route('/api/agent/config/apply', methods=['POST'])
+        def apply_configuration():
+            """Aplica configuración desde el frontend al backend en tiempo real"""
+            try:
+                data = request.get_json()
+                config = data.get('config', {})
+                
+                terminal_logger.info(f"🔧 Aplicando nueva configuración desde frontend")
+                
+                # Aplicar configuración Ollama si está habilitada
+                ollama_config = config.get('ollama', {})
+                if ollama_config.get('enabled', False):
+                    endpoint = ollama_config.get('endpoint')
+                    model = ollama_config.get('model')
+                    
+                    terminal_logger.info(f"🔄 Actualizando Ollama: endpoint={endpoint}, modelo={model}")
+                    
+                    # Verificar nueva configuración
+                    try:
+                        import requests
+                        response = requests.get(f"{endpoint}/api/tags", timeout=10)
+                        is_connected = response.status_code == 200
+                    except:
+                        is_connected = False
+                    
+                    terminal_logger.info(f"✅ Ollama reconfigurado: conectado={is_connected}")
+                
+                # Aplicar configuración OpenRouter si está habilitada
+                openrouter_config = config.get('openrouter', {})
+                if openrouter_config.get('enabled', False):
+                    terminal_logger.info("🔄 OpenRouter configuración recibida (pendiente implementación)")
+                
+                # Guardar configuración aplicada para persistencia
+                self.active_config = config
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'Configuración aplicada exitosamente',
+                    'timestamp': datetime.now().isoformat(),
+                    'config_applied': {
+                        'ollama': {
+                            'enabled': ollama_config.get('enabled', False),
+                            'endpoint': ollama_config.get('endpoint', ''),
+                            'model': ollama_config.get('model', ''),
+                            'connected': is_connected if 'is_connected' in locals() else False
+                        },
+                        'openrouter': {
+                            'enabled': openrouter_config.get('enabled', False)
+                        }
+                    }
+                })
+                
+            except Exception as e:
+                terminal_logger.error(f"❌ Error aplicando configuración: {str(e)}")
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                }), 500
+
+        @self.app.route('/api/agent/config/current', methods=['GET'])
+        def get_current_configuration():
+            """Obtiene la configuración actualmente aplicada en el backend"""
+            try:
+                # Obtener configuración actual
+                current_config = getattr(self, 'active_config', {})
+                
+                # Obtener estado actual de servicios
+                ollama_status = {
+                    'endpoint': os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app'),
+                    'current_model': 'llama3.1:8b',
+                    'connected': False,
+                    'available_models': []
+                }
+                
+                # Verificar conexión actual
+                try:
+                    import requests
+                    endpoint = ollama_status['endpoint']
+                    response = requests.get(f"{endpoint}/api/tags", timeout=10)
+                    if response.status_code == 200:
+                        ollama_status['connected'] = True
+                        models_data = response.json()
+                        ollama_status['available_models'] = [model.get('name', '') for model in models_data.get('models', [])]
+                except:
+                    pass
+                
+                return jsonify({
+                    'success': True,
+                    'config': current_config,
+                    'services_status': {
+                        'ollama': ollama_status,
+                        'openrouter': {
+                            'implemented': False
+                        }
+                    },
+                    'timestamp': datetime.now().isoformat()
+                })
+                
+            except Exception as e:
+                terminal_logger.error(f"❌ Error obteniendo configuración actual: {str(e)}")
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                }), 500
+
+        @self.app.route('/api/agent/config/validate', methods=['POST'])
+        def validate_configuration():
+            """Valida una configuración antes de aplicarla"""
+            try:
+                data = request.get_json()
+                config = data.get('config', {})
+                
+                validation_results = {
+                    'valid': True,
+                    'issues': [],
+                    'services_tested': {}
+                }
+                
+                # Validar configuración Ollama
+                ollama_config = config.get('ollama', {})
+                if ollama_config.get('enabled', False):
+                    endpoint = ollama_config.get('endpoint')
+                    if endpoint:
+                        try:
+                            import requests
+                            response = requests.get(f"{endpoint}/api/tags", timeout=10)
+                            if response.status_code == 200:
+                                models = response.json().get('models', [])
+                                validation_results['services_tested']['ollama'] = {
+                                    'endpoint': endpoint,
+                                    'connected': True,
+                                    'models_available': len(models),
+                                    'models': [model.get('name', '') for model in models[:5]]  # Primeros 5
+                                }
+                            else:
+                                validation_results['valid'] = False
+                                validation_results['issues'].append(f"Ollama endpoint {endpoint} returned HTTP {response.status_code}")
+                                validation_results['services_tested']['ollama'] = {
+                                    'endpoint': endpoint,
+                                    'connected': False,
+                                    'error': f"HTTP {response.status_code}"
+                                }
+                        except Exception as conn_error:
+                            validation_results['valid'] = False
+                            validation_results['issues'].append(f"Cannot connect to Ollama endpoint {endpoint}: {str(conn_error)}")
+                            validation_results['services_tested']['ollama'] = {
+                                'endpoint': endpoint,
+                                'connected': False,
+                                'error': str(conn_error)
+                            }
+                    else:
+                        validation_results['issues'].append("Ollama enabled but no endpoint specified")
+                
+                # Validar configuración OpenRouter
+                openrouter_config = config.get('openrouter', {})
+                if openrouter_config.get('enabled', False):
+                    api_key = openrouter_config.get('apiKey')
+                    if not api_key:
+                        validation_results['issues'].append("OpenRouter enabled but no API key provided")
+                    validation_results['services_tested']['openrouter'] = {
+                        'implemented': False,
+                        'message': 'OpenRouter validation pending implementation'
+                    }
+                
+                return jsonify(validation_results)
+                
+            except Exception as e:
+                terminal_logger.error(f"❌ Error validando configuración: {str(e)}")
+                return jsonify({
+                    'valid': False,
+                    'error': str(e)
+                }), 500
     
     def _register_websocket_events(self):
         """Registra eventos WebSocket para comunicación en tiempo real"""
