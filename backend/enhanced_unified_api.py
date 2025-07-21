@@ -2,6 +2,7 @@
 Enhanced Unified Mitosis API - El Puente entre la Autonomía y la Interfaz
 Extiende la UnifiedMitosisAPI original con capacidades de ejecución autónoma
 y salida en tiempo real en terminal
+ACTUALIZACIÓN NEWUPGRADE.MD: Integración con IntentionClassifier para detección LLM
 """
 
 import logging
@@ -21,6 +22,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 try:
     from unified_api import UnifiedMitosisAPI
     from agent_core_real import MitosisRealAgent  # USAR AGENTE REAL
+    from agent_core import MitosisAgent  # Para compatibilidad con IntentionClassifier
     HAS_BASE_API = True
 except ImportError:
     HAS_BASE_API = False
@@ -44,6 +46,9 @@ except ImportError:
 
 # Importar el núcleo autónomo
 from enhanced_agent_core import AutonomousAgentCore, TaskStatus
+
+# NUEVO: Importar sistema de clasificación de intenciones
+from intention_classifier import IntentionClassifier, IntentionType
 
 # Configurar logging para terminal
 terminal_logger = logging.getLogger('MITOSIS')
