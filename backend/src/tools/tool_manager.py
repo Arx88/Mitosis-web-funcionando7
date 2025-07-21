@@ -75,6 +75,10 @@ class ToolManager:
             'comprehensive_research': ComprehensiveResearchTool()
         }
         
+        # AGREGAR HERRAMIENTA DE BÚSQUEDA BÁSICA REAL
+        if HAS_BASIC_SEARCH:
+            self.tools['basic_web_search'] = BasicWebSearchTool()
+        
         # Agregar herramientas opcionales si están disponibles
         if HAS_DEEP_RESEARCH:
             self.tools['deep_research'] = DeepResearchTool()
