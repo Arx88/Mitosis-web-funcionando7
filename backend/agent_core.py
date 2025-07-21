@@ -211,6 +211,15 @@ class MitosisAgent:
         self.logger.info(f"Nueva sesión iniciada: {self.current_session_id}")
         return self.current_session_id
     
+    async def cleanup(self):
+        """Limpia recursos del agente, incluido el navegador web"""
+        try:
+            if hasattr(self, 'web_browser_manager') and self.web_browser_manager:
+                await self.web_browser_manager.cleanup()
+                self.logger.info("WebBrowserManager limpiado correctamente")
+        except Exception as e:
+            self.logger.error(f"Error durante cleanup: {e}")
+    
     def process_user_input(self, message: str, context: Optional[Dict[str, Any]] = None) -> str:
         """
         Procesa la entrada del usuario con clasificación de intención inteligente
