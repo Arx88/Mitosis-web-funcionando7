@@ -6,6 +6,8 @@ Coordina la ejecución de diferentes herramientas disponibles con mejoras integr
 import os
 import json
 from typing import Dict, List, Any, Optional
+
+# Importar herramientas básicas (que deberían estar siempre disponibles)
 from .shell_tool import ShellTool
 from .file_manager_tool import FileManagerTool
 from .tavily_search_tool import TavilySearchTool
@@ -13,15 +15,48 @@ from .comprehensive_research_tool import ComprehensiveResearchTool
 from .web_search_tool import WebSearchTool  # Importar herramienta real
 
 # Importar herramientas mejoradas
-from .enhanced_web_search_tool_improved import EnhancedWebSearchTool
-from .deep_research_tool_improved import DeepResearchTool
+try:
+    from .enhanced_web_search_tool_improved import EnhancedWebSearchTool
+    HAS_ENHANCED_WEB = True
+except ImportError:
+    HAS_ENHANCED_WEB = False
 
-# Importar nuevas herramientas
-from .firecrawl_tool import FirecrawlTool
-from .qstash_tool import QStashTool
-from .playwright_tool import PlaywrightTool
-from .container_manager import ContainerManager
-from .autonomous_web_navigation import AutonomousWebNavigation
+try:
+    from .deep_research_tool_improved import DeepResearchTool
+    HAS_DEEP_RESEARCH = True
+except ImportError:
+    HAS_DEEP_RESEARCH = False
+
+# Importar nuevas herramientas (opcionales)
+try:
+    from .firecrawl_tool import FirecrawlTool
+    HAS_FIRECRAWL = True
+except ImportError:
+    HAS_FIRECRAWL = False
+
+try:
+    from .qstash_tool import QStashTool
+    HAS_QSTASH = True
+except ImportError:
+    HAS_QSTASH = False
+
+try:
+    from .playwright_tool import PlaywrightTool
+    HAS_PLAYWRIGHT = True
+except ImportError:
+    HAS_PLAYWRIGHT = False
+
+try:
+    from .container_manager import ContainerManager
+    HAS_CONTAINER = True
+except ImportError:
+    HAS_CONTAINER = False
+
+try:
+    from .autonomous_web_navigation import AutonomousWebNavigation
+    HAS_AUTO_NAV = True
+except ImportError:
+    HAS_AUTO_NAV = False
 
 class ToolManager:
     def __init__(self):
