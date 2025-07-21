@@ -12,7 +12,7 @@ import time
 import os
 from datetime import datetime
 
-BASE_URL = "https://1efd0974-5765-4ff8-a58d-930b680f6965.preview.emergentagent.com"
+BASE_URL = "https://50041b40-574c-4bf5-8648-00b3fb079ce2.preview.emergentagent.com"
 GENERATED_FILES_PATH = "/app/backend/static/generated_files"
 
 print(f"🧪 FOCUSED REAL FILE GENERATION TEST")
