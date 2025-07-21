@@ -9,6 +9,9 @@ import sys
 import logging
 from typing import Optional
 
+# Variable global para uvicorn
+app = None
+
 # Añadir directorio actual al path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, current_dir)
