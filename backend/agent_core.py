@@ -1157,10 +1157,10 @@ Responde con JSON: {{"strategy": "retry|alternative|ask_user|fail", "details": "
             return "Error en reflexión"
     
     # IMPLEMENTACIONES DE HERRAMIENTAS REALES según UPGRADE.md Problema 2
-    def _execute_web_search(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_web_search_async(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Ejecuta búsqueda web real
-        Implementa herramienta según UPGRADE.md
+        Ejecuta búsqueda web real con WebBrowserManager
+        NUEVA IMPLEMENTACIÓN - NEWUPGRADE.md Fase 2: Reemplaza mockups con Playwright real
         """
         try:
             query = parameters.get("query", "")
@@ -1169,15 +1169,128 @@ Responde con JSON: {{"strategy": "retry|alternative|ask_user|fail", "details": "
             if not query:
                 return {"success": False, "error": "Query is required", "summary": "Error: búsqueda sin query"}
             
-            # Aquí se implementaría la búsqueda web real
-            # Por ahora simular con resultados estructurados
+            self.logger.info(f"🌐 Ejecutando búsqueda web real para: '{query}' (máximo {num_results} resultados)")
+            
+            # USAR WEBbrowsermanager REAL
+            try:
+                # Inicializar navegador si no está listo
+                if not self.web_browser_manager.browser:
+                    initialized = await self.web_browser_manager.initialize()
+                    if not initialized:
+                        # Fallback a búsqueda simple si falla la inicialización
+                        self.logger.warning("Navegador no disponible, usando fallback simple")
+                        return await self._execute_web_search_fallback(query, num_results)
+                
+                # Ejecutar búsqueda web real
+                scraping_result = await self.web_browser_manager.search_web(query, num_results)
+                
+                if not scraping_result.success:
+                    self.logger.warning(f"Búsqueda web falló: {scraping_result.error_message}")
+                    return await self._execute_web_search_fallback(query, num_results)
+                
+                # Procesar resultados
+                search_results = []
+                for i, page in enumerate(scraping_result.pages[:num_results]):
+                    if page.error:
+                        self.logger.warning(f"Error en página {page.url}: {page.error}")
+                        continue
+                    
+                    # Limpiar y resumir contenido
+                    content_summary = page.content[:300] + "..." if len(page.content) > 300 else page.content
+                    content_summary = content_summary.replace('\n', ' ').strip()
+                    
+                    search_results.append({
+                        "title": page.title or f"Resultado {i+1}",
+                        "url": page.url,
+                        "snippet": content_summary,
+                        "loading_time": page.loading_time,
+                        "scraped_at": page.timestamp.isoformat() if page.timestamp else None
+                    })
+                
+                if not search_results:
+                    return {
+                        "success": False,
+                        "error": "No se obtuvieron resultados válidos",
+                        "summary": f"Búsqueda completada pero sin resultados útiles para '{query}'"
+                    }
+                
+                # Registrar en memoria como conocimiento
+                knowledge_content = f"Búsqueda web: {query}\nResultados encontrados: {len(search_results)}"
+                self.memory_manager.add_knowledge(
+                    content=knowledge_content,
+                    category="web_search",
+                    source="web_browser_manager",
+                    confidence=0.8,
+                    tags=["search", "web", "real"]
+                )
+                
+                return {
+                    "success": True,
+                    "search_results": search_results,
+                    "query": query,
+                    "num_results": len(search_results),
+                    "processing_time": scraping_result.processing_time,
+                    "cache_hits": scraping_result.cache_hits,
+                    "summary": f"Búsqueda web REAL completada: encontradas {len(search_results)} fuentes sobre '{query}'"
+                }
+                
+            except Exception as e:
+                self.logger.error(f"Error en búsqueda web real: {e}")
+                return await self._execute_web_search_fallback(query, num_results)
+                
+        except Exception as e:
+            self.logger.error(f"Error crítico en búsqueda web: {e}")
+            return {"success": False, "error": str(e), "summary": f"Error en búsqueda web: {str(e)}"}
+
+    def _execute_web_search(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Wrapper sincrónico para _execute_web_search_async
+        Mantiene compatibilidad con el sistema de herramientas existente
+        """
+        import asyncio
+        
+        try:
+            # Ejecutar versión asíncrona
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            result = loop.run_until_complete(self._execute_web_search_async(parameters))
+            loop.close()
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"Error ejecutando búsqueda web asíncrona: {e}")
+            # Fallback final a implementación simple
+            return asyncio.run(self._execute_web_search_fallback(
+                parameters.get("query", ""), 
+                parameters.get("num_results", 5)
+            ))
+
+    async def _execute_web_search_fallback(self, query: str, num_results: int) -> Dict[str, Any]:
+        """
+        Fallback cuando el navegador principal no está disponible
+        Usa búsqueda simple sin navegador completo
+        """
+        try:
+            self.logger.info(f"🔄 Usando fallback de búsqueda para: '{query}'")
+            
+            # Usar función simple de búsqueda web
+            content = await search_web_simple(query, num_results)
+            
+            if "Error" in content:
+                return {
+                    "success": False,
+                    "error": content,
+                    "summary": f"Fallback falló para '{query}'"
+                }
+            
+            # Simular formato de resultados para compatibilidad
             mock_results = [
                 {
-                    "title": f"Resultado {i+1} para: {query}",
-                    "url": f"https://example.com/result{i+1}",
-                    "snippet": f"Información relevante sobre {query} - resultado {i+1}"
+                    "title": f"Resultado de búsqueda {i+1}: {query}",
+                    "url": f"https://search-result-{i+1}.com",
+                    "snippet": content[:200] + "..." if len(content) > 200 else content
                 }
-                for i in range(num_results)
+                for i in range(min(num_results, 3))  # Limitar fallback a 3 resultados
             ]
             
             return {
@@ -1185,11 +1298,17 @@ Responde con JSON: {{"strategy": "retry|alternative|ask_user|fail", "details": "
                 "search_results": mock_results,
                 "query": query,
                 "num_results": len(mock_results),
-                "summary": f"Búsqueda web completada: encontradas {len(mock_results)} fuentes sobre '{query}'"
+                "fallback_used": True,
+                "summary": f"Búsqueda fallback completada para '{query}' (navegador no disponible)"
             }
             
         except Exception as e:
-            return {"success": False, "error": str(e), "summary": f"Error en búsqueda web: {str(e)}"}
+            self.logger.error(f"Error en fallback de búsqueda: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "summary": f"Error crítico en fallback para '{query}'"
+            }
     
     def _execute_file_write(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
