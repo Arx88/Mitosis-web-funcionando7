@@ -2793,6 +2793,10 @@ He ejecutado todos los pasos del plan de acción que puedes ver en el panel late
 
 Puedes revisar los detalles completos de la ejecución en el monitor de progreso."""
 
+        elif task_status == "plan_ready":
+            # Plan generated and ready for execution - call Ollama for real response
+            clean_response = ollama_response
+            
         elif task_status == "completed_with_warnings":
             # 🆕 PROBLEMA 2: Tarea completada con advertencias específicas de validación
             if files_created:
