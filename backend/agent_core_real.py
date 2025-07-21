@@ -17,6 +17,10 @@ import re
 import sys
 import subprocess
 
+# CARGAR VARIABLES DE ENTORNO DESDE .ENV
+from dotenv import load_dotenv
+load_dotenv('/app/backend/.env')
+
 # Importar el ToolManager real que ya existe
 sys.path.append('/app/backend/src')
 from tools.tool_manager import ToolManager
