@@ -433,10 +433,28 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
         Determina si un mensaje debe activar ejecución autónoma
         """
         autonomous_triggers = [
-            "crear", "generar", "desarrollar", "implementar", "construir",
-            "buscar", "investigar", "analizar", "estudiar", "examinar",
-            "planificar", "organizar", "diseñar", "estructurar",
-            "automatizar", "optimizar", "mejorar", "resolver"
+            # Verbos de acción en diferentes conjugaciones
+            "crea", "crear", "creando", "creado", "cree",
+            "genera", "generar", "generando", "generado", "genere", 
+            "desarrolla", "desarrollar", "desarrollando", "desarrollado", "desarrolle",
+            "implementa", "implementar", "implementando", "implementado", "implemente",
+            "construye", "construir", "construyendo", "construido", "construya",
+            "busca", "buscar", "buscando", "buscado", "busque",
+            "investiga", "investigar", "investigando", "investigado", "investigue",
+            "analiza", "analizar", "analizando", "analizado", "analice",
+            "estudia", "estudiar", "estudiando", "estudiado", "estudie",
+            "examina", "examinar", "examinando", "examinado", "examine",
+            "planifica", "planificar", "planificando", "planificado", "planifique",
+            "organiza", "organizar", "organizando", "organizado", "organice",
+            "diseña", "diseñar", "diseñando", "diseñado", "diseñe",
+            "estructura", "estructurar", "estructurando", "estructurado", "estructure",
+            "automatiza", "automatizar", "automatizando", "automatizado", "automatice",
+            "optimiza", "optimizar", "optimizando", "optimizado", "optimice",
+            "mejora", "mejorar", "mejorando", "mejorado", "mejore",
+            "resuelve", "resolver", "resolviendo", "resuelto", "resuelva",
+            # Palabras clave adicionales
+            "informe", "reporte", "documento", "plan", "estrategia", "análisis",
+            "investigación", "estudio", "proyecto", "propuesta"
         ]
         
         message_lower = message.lower()
