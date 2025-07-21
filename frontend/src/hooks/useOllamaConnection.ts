@@ -119,7 +119,7 @@ export const useOllamaConnection = ({ endpoint, enabled }: UseOllamaConnectionPr
     setError(null);
 
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
       console.log('🌐 Making request to backend:', `${backendUrl}/api/agent/ollama/check`);
       const response = await fetch(`${backendUrl}/api/agent/ollama/check`, {
         method: 'POST',
