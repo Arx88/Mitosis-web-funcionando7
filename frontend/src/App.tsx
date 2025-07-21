@@ -542,17 +542,6 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
   }, []);
 
   const activeTask = tasks.find(task => task.id === activeTaskId);
-  
-  // 🔍 DEBUG LOGS - Remove after fixing
-  console.log('🔍 RENDER DEBUG - activeTaskId:', activeTaskId);
-  console.log('🔍 RENDER DEBUG - tasks.length:', tasks.length);
-  console.log('🔍 RENDER DEBUG - activeTask found:', !!activeTask);
-  if (activeTask) {
-    console.log('🔍 RENDER DEBUG - activeTask.id:', activeTask.id, 'title:', activeTask.title);
-  } else if (activeTaskId) {
-    console.log('🔍 RENDER DEBUG - activeTaskId set but task not found in array');
-    console.log('🔍 RENDER DEBUG - Available task IDs:', tasks.map(t => t.id));
-  }
 
   return (
     <div className="flex h-screen w-full bg-[#272728] text-[#DADADA]" style={{ fontFamily: "'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, sans-serif", fontWeight: 400 }}>
