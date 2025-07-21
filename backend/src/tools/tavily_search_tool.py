@@ -7,6 +7,10 @@ import requests
 from typing import Dict, Any, List
 from tavily import TavilyClient
 
+# CARGAR VARIABLES DE ENTORNO
+from dotenv import load_dotenv
+load_dotenv('/app/backend/.env')
+
 class TavilySearchTool:
     def __init__(self):
         self.name = "tavily_search"
