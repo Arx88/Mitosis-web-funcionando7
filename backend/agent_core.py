@@ -18,6 +18,7 @@ from model_manager import ModelManager, UnifiedModel, ModelProvider
 from memory_manager import MemoryManager, Message, TaskMemory, KnowledgeItem
 from task_manager import TaskManager, Task, TaskPhase, TaskStatus
 from enhanced_prompts import EnhancedPromptManager, PromptType
+from intention_classifier import IntentionClassifier, IntentionType
 
 class AgentState(Enum):
     """Estados del agente"""
