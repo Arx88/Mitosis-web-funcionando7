@@ -4151,7 +4151,7 @@ def execute_step_internal(task_id: str, step_id: str, step: dict):
             'timestamp': datetime.now().isoformat()
         })
         
-        # Simular ejecución del paso
+        # Ejecutar paso con herramientas REALES (no simulación)
         execute_step_real(task_id, step_id, step)
         
         # Emitir completado
