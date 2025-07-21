@@ -21,6 +21,45 @@ class OllamaService:
         
         # 🆕 PROBLEMA 3: Configuración de parámetros por modelo
         self.model_configs = self._load_model_configs()
+    
+    def update_endpoint(self, new_endpoint: str) -> bool:
+        """
+        Actualiza el endpoint de Ollama dinámicamente
+        """
+        try:
+            old_endpoint = self.base_url
+            self.base_url = new_endpoint
+            
+            # Verificar que el nuevo endpoint funciona
+            if self.is_healthy():
+                logging.getLogger(__name__).info(f"✅ Ollama endpoint updated: {old_endpoint} → {new_endpoint}")
+                return True
+            else:
+                # Revertir si no funciona
+                self.base_url = old_endpoint
+                logging.getLogger(__name__).error(f"❌ Failed to update Ollama endpoint to {new_endpoint}, reverted to {old_endpoint}")
+                return False
+                
+        except Exception as e:
+            logging.getLogger(__name__).error(f"❌ Error updating Ollama endpoint: {str(e)}")
+            return False
+    
+    def get_endpoint_info(self) -> dict:
+        """Obtiene información completa del endpoint actual"""
+        try:
+            return {
+                'endpoint': self.base_url,
+                'current_model': self.get_current_model(),
+                'is_healthy': self.is_healthy(),
+                'available_models': self.get_available_models(),
+                'connection_info': self.check_connection()
+            }
+        except Exception as e:
+            return {
+                'endpoint': self.base_url,
+                'error': str(e),
+                'is_healthy': False
+            }
         
     def _load_model_configs(self) -> dict:
         """Carga las configuraciones de los modelos desde un archivo o define valores por defecto."""
