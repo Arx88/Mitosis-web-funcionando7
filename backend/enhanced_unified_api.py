@@ -87,9 +87,9 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
             )
             self.monitor_pages = []
         
-        # Configuración mejorada
-        self.config = config
-        self.active_config = config
+        # Configuración mejorada desde variables de entorno
+        self.config = self._create_proper_config(config)
+        self.active_config = self.config
         
         # Inicializar el núcleo autónomo
         base_agent = getattr(self, 'agent', None) if HAS_BASE_API else None
