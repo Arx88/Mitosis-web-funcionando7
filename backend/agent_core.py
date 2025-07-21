@@ -170,10 +170,17 @@ class MitosisAgent:
             self.prompt_manager.max_context_tokens = self.config.max_context_tokens
             self.prompt_manager.include_memory_context = self.config.include_memory_context
             
+            # Inicializar clasificador de intenciones (NUEVA MEJORA)
+            self.intention_classifier = IntentionClassifier(
+                self.model_manager,
+                self.memory_manager
+            )
+            
             # Actualizar modelos disponibles
             self.model_manager.refresh_models()
             
             self.logger.info("Todos los componentes inicializados correctamente")
+            self.logger.info("🎯 IntentionClassifier inicializado - Detección LLM habilitada")
             
         except Exception as e:
             self.logger.error(f"Error al inicializar componentes: {e}")
