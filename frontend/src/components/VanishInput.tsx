@@ -338,10 +338,10 @@ export const VanishInput: React.FC<VanishInputProps> = ({
                   type="button"
                   onClick={handleWebSearch}
                   disabled={isWebSearchProcessing || isDeepSearchProcessing}
-                  className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition-all duration-200 group text-xs border z-30 ${
+                  className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition-all duration-200 group text-xs z-30 ${
                     webSearchActive || isWebSearchProcessing 
-                      ? 'bg-[rgba(59,130,246,0.2)] border-blue-400/50 text-blue-400' 
-                      : 'bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(59,130,246,0.2)] hover:border-blue-400/50 border-transparent text-[#ACACAC] hover:text-blue-400'
+                      ? 'bg-[rgba(59,130,246,0.2)] border border-blue-400/50 text-blue-400' 
+                      : 'bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(59,130,246,0.2)] hover:border hover:border-blue-400/50 text-[#ACACAC] hover:text-blue-400'
                   } ${(isWebSearchProcessing || isDeepSearchProcessing) ? 'opacity-50 cursor-not-allowed' : ''}`}
                   title="Búsqueda web"
                 >
