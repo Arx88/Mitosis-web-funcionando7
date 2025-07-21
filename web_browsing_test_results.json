@@ -1,0 +1,20 @@
+{
+  "test_timestamp": "2025-07-21T13:43:12.684351",
+  "backend_url": "https://87556866-698e-4163-ba9c-7b9643a98660.preview.emergentagent.com",
+  "tests_performed": [],
+  "web_search_tool": {
+    "status": "unknown",
+    "results": []
+  },
+  "tavily_search_tool": {
+    "status": "unknown",
+    "results": []
+  },
+  "chat_endpoint_web": {
+    "status": "unknown",
+    "results": []
+  },
+  "limitations_found": [],
+  "recommendations": [],
+  "phase_2_status": "unknown"
+}
