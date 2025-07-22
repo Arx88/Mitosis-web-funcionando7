@@ -4444,11 +4444,20 @@ def emit_step_event(task_id: str, event_type: str, data: dict):
 def generate_task_plan(title: str, task_id: str) -> Dict:
     """Generar plan de tarea usando Ollama DIRECTAMENTE - NO MORE MOCKUPS"""
     try:
+        logger.info(f"🚀 Starting generate_task_plan for task {task_id}: {title}")
+        
         # ✅ CRITICAL FIX: Use Ollama directly instead of enhanced_agent
         ollama_service = getattr(current_app, 'ollama_service', None)
         if not ollama_service:
             logger.error("❌ Ollama service not available, falling back to basic plan")
             return generate_basic_plan(title)
+        
+        # Verificar que Ollama esté saludable
+        if not ollama_service.is_healthy():
+            logger.error("❌ Ollama service not healthy, falling back to basic plan")
+            return generate_basic_plan(title)
+        
+        logger.info("✅ Ollama service is healthy, generating AI plan")
         
         # Crear prompt específico para generar plan ULTRA-ESPECÍFICO
         plan_prompt = f"""
@@ -4504,6 +4513,7 @@ def generate_task_plan(title: str, task_id: str) -> Dict:
         
         # Llamar a Ollama directamente
         try:
+            logger.info(f"📝 Calling Ollama for plan generation - task: {task_id}")
             ollama_response = ollama_service.generate_response(plan_prompt)
             
             if ollama_response.get('error'):
@@ -4520,6 +4530,8 @@ def generate_task_plan(title: str, task_id: str) -> Dict:
             elif '```' in clean_response:
                 clean_response = clean_response.split('```')[1].split('```')[0].strip()
             
+            logger.info(f"🧹 Cleaned response: {clean_response[:200]}...")
+            
             # Parsear JSON
             plan_data = json.loads(clean_response)
             logger.info(f"✅ Plan real generado exitosamente con {len(plan_data.get('steps', []))} pasos")
@@ -4534,7 +4546,7 @@ def generate_task_plan(title: str, task_id: str) -> Dict:
             return generate_basic_plan(title)
             
     except Exception as e:
-        logger.error(f"Error generating plan: {e}")
+        logger.error(f"❌ Error generating plan: {e}")
         return generate_basic_plan(title)
 
 def generate_basic_plan(title: str) -> Dict:
