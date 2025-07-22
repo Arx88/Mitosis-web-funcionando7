@@ -711,8 +711,26 @@ export const TaskView: React.FC<TaskViewProps> = ({
               }))} 
               onSendMessage={(message) => {
                 console.log('🚀 TaskView: Message received for processing:', message);
-                // Let ChatInterface handle the message processing internally
-                // It will call initialize-task for first messages and chat for subsequent ones
+                
+                // CRITICAL FIX: Actualizar el task inmediatamente con el mensaje del usuario
+                // para que no desaparezca del chat
+                const userMessage = {
+                  id: `msg-${Date.now()}`,
+                  content: message,
+                  sender: 'user' as const,
+                  timestamp: new Date()
+                };
+                
+                // Agregar el mensaje del usuario inmediatamente al task
+                const updatedMessages = [...task.messages, userMessage];
+                const updatedTask = {
+                  ...task,
+                  messages: updatedMessages,
+                  status: 'in-progress' as const
+                };
+                
+                console.log('✅ TaskView: Adding user message to task immediately to prevent disappearing');
+                onUpdateTask(updatedTask);
               }}
               isTyping={isTyping} 
               assistantName="Agente" 
