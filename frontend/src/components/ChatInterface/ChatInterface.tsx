@@ -239,6 +239,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               });
             }
             
+            // ✅ CRITICAL FIX: Call onTaskPlanGenerated callback for plan display in TerminalView
+            if (onTaskPlanGenerated && initData.plan) {
+              console.log('📋 Calling onTaskPlanGenerated with initialize-task plan:', initData.plan);
+              onTaskPlanGenerated(initData.plan);
+            }
+            
           } else {
             console.error('❌ Initialize task failed:', initResponse.status);
             // Fallback al chat normal si falla
