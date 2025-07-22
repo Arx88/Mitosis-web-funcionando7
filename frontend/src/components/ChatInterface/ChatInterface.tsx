@@ -233,6 +233,121 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
   
+  // Función helper para el chat normal
+  const sendRegularChatMessage = async (processedMessage: string, userMessage: Message) => {
+    try {
+      // Enviar mensaje al backend usando el endpoint chat normal
+      const response: ChatResponse = await agentAPI.sendMessage(processedMessage, {
+        task_id: dataId,
+        previous_messages: messages.slice(-5), // Enviar últimos 5 mensajes como contexto
+      });
+
+      // Parse links from response
+      const parseLinksFromText = (text: string) => {
+        const urlRegex = /https?:\/\/[^\s\)]+/g;
+        const matches = text.match(urlRegex) || [];
+        return matches.map(url => ({
+          url,
+          title: url,
+          description: ''
+        }));
+      };
+
+      const parseStructuredLinks = (text: string) => {
+        const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+        const matches = [...text.matchAll(linkRegex)];
+        return matches.map(match => ({
+          url: match[2],
+          title: match[1],
+          description: ''
+        }));
+      };
+
+      const responseLinks = parseLinksFromText(response.response);
+      const structuredLinks = parseStructuredLinks(response.response);
+      const allLinks = [...responseLinks, ...structuredLinks];
+      
+      const uniqueLinks = allLinks.filter((link, index, self) => 
+        index === self.findIndex(l => l.url === link.url)
+      );
+
+      const agentMessage: Message = {
+        id: `msg-${Date.now()}`,
+        content: response.response,
+        sender: 'assistant',
+        timestamp: new Date(response.timestamp),
+        toolResults: response.tool_results || [],
+        searchData: response.search_data,
+        uploadData: response.upload_data,
+        links: uniqueLinks.length > 0 ? uniqueLinks : undefined,
+        status: response.tool_results && response.tool_results.length > 0 ? {
+          type: 'success',
+          message: `Ejecuté ${response.tool_results.length} herramienta(s)`
+        } : undefined
+      };
+
+      if (onUpdateMessages) {
+        if (response.plan && response.plan.steps) {
+          const planNotificationMessage: Message = {
+            id: `plan-${Date.now()}`,
+            content: `📋 **Plan generado**\n\nCreé un plan de ${response.plan.total_steps} pasos. Ver progreso en "Plan de Acción".`,
+            sender: 'assistant',
+            timestamp: new Date(response.timestamp),
+            status: {
+              type: 'success',
+              message: `Plan de ${response.plan.total_steps} pasos generado`
+            }
+          };
+          const messagesWithPlan = [...messages, userMessage, planNotificationMessage];
+          onUpdateMessages(messagesWithPlan);
+          
+          if (onTaskPlanGenerated) {
+            onTaskPlanGenerated(response.plan);
+          }
+        } else {
+          const updatedMessages = [...messages, userMessage, agentMessage];
+          onUpdateMessages(updatedMessages);
+        }
+      }
+
+      if (response.tool_results && response.tool_results.length > 0 && onLogToTerminal) {
+        response.tool_results.forEach((toolResult, index) => {
+          const toolInfo = `🔧 HERRAMIENTA EJECUTADA [${index + 1}/${response.tool_results.length}]
+────────────────────────────────────────
+🛠️  Herramienta: ${toolResult.tool}
+📋 Parámetros: ${JSON.stringify(toolResult.parameters, null, 2)}
+📊 Estado: ${toolResult.result?.success ? '✅ EXITOSO' : '❌ ERROR'}
+📄 Resultado: ${typeof toolResult.result === 'object' ? JSON.stringify(toolResult.result, null, 2) : toolResult.result}
+────────────────────────────────────────`;
+          
+          onLogToTerminal(toolInfo, toolResult.result?.success ? 'success' : 'error');
+        });
+        
+        onLogToTerminal(`📈 RESUMEN: ${response.tool_results.length} herramienta(s) ejecutada(s) correctamente`, 'info');
+      }
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      
+      const errorMessage: Message = {
+        id: `msg-${Date.now()}`,
+        content: 'Lo siento, hubo un error al procesar tu mensaje. Asegúrate de que Ollama esté ejecutándose.',
+        sender: 'assistant',
+        timestamp: new Date(),
+        status: {
+          type: 'error',
+          message: 'Error de conexión'
+        }
+      };
+
+      if (onUpdateMessages) {
+        const currentMessages = [...messages, userMessage];
+        const updatedMessages = [...currentMessages, errorMessage];
+        onUpdateMessages(updatedMessages);
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim() && !isLoading) {
