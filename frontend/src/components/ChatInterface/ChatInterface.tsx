@@ -68,7 +68,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [activeQuickAction, setActiveQuickAction] = useState<string | null>(null);
   const [showFileUpload, setShowFileUpload] = useState(false);
-  const [searchMode, setSearchMode] = useState<'websearch' | 'deepsearch' | null>(null); // No default WebSearch activation
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
