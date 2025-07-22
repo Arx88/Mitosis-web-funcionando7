@@ -363,6 +363,9 @@ export function App() {
         
         // Actualizar progreso simplificado
         const updateFileAttachmentProgress = async () => {
+          // Simplificado - ya no hay múltiples pasos que actualizar
+          console.log('✅ File attachment progress completed');
+        };
         
         const updatedTask = {
           ...newTask,
