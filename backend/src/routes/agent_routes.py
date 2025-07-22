@@ -4272,6 +4272,10 @@ def initialize_task():
         # Generar plan usando Ollama (código existente)
         plan_response = generate_task_plan(title, task_id)
         
+        # ✨ NUEVA FUNCIONALIDAD: Generar título mejorado con LLM
+        enhanced_title = generate_task_title_with_llm(title, task_id)
+        logger.info(f"📝 Enhanced title generated for initialization: '{enhanced_title}'")
+        
         # NUEVA FUNCIONALIDAD: Emitir evento WebSocket
         if hasattr(current_app, 'websocket_manager') and current_app.websocket_manager:
             try:
