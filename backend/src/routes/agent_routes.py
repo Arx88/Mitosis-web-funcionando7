@@ -2230,16 +2230,16 @@ def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool =
     
     def generate_plan_with_retries() -> dict:
         """Generar plan con reintentos y retroalimentación específica a Ollama"""
-        max_attempts = 3 if attempt_retries else 1
+        max_attempts = 2 if attempt_retries else 1
         last_error = None
         
         for attempt in range(1, max_attempts + 1):
             try:
                 logger.info(f"🔄 Unified plan generation attempt {attempt}/{max_attempts} for task {task_id}")
                 
-                # Construir prompt genérico mejorado para generación de JSON estructurado
+                # Construir prompt específico mejorado para generación de JSON estructurado
                 if attempt == 1:
-                    # Primera tentativa: prompt genérico dinámico
+                    # Primera tentativa: prompt específico dinámico
                     prompt = f"""
 GENERA UN PLAN DE ACCIÓN ULTRA-ESPECÍFICO para esta tarea: "{message}"
 
@@ -2281,7 +2281,7 @@ REGLAS ULTRA-CRÍTICAS:
 - CADA paso debe incorporar elementos específicos únicos del dominio
 - Evita completamente palabras genéricas
 - Adapta automáticamente al contexto específico de la tarea
-- Mínimo 1 paso, máximo 10 pasos
+- Mínimo 3 pasos, máximo 6 pasos
 - HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
 - NO agregues texto adicional, solo el JSON
 - Asegúrate de que sea JSON válido y parseable
@@ -2321,52 +2321,15 @@ Responde SOLO con JSON válido usando EXACTAMENTE este formato:
   "estimated_total_time": "string"
 }}
 
-HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
+REGLAS ULTRA-CRÍTICAS:
+- CADA paso debe incorporar elementos específicos únicos del dominio
+- Evita completamente palabras genéricas
+- Adapta automáticamente al contexto específico de la tarea
+- Mínimo 3 pasos, máximo 6 pasos
+- HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
 
 SOLO JSON, sin explicaciones adicionales.
 """
-                else:
-                    # Tercera tentativa: prompt simplificado con plan de emergencia más robusto
-                    prompt = f"""Genera un plan de acción en formato JSON válido para: "{message}"
-
-Responde ÚNICAMENTE con este JSON (sin texto adicional, sin markdown, sin explicaciones):
-
-{{
-  "title": "Título optimizado y descriptivo para la tarea",
-  "steps": [
-    {{
-      "title": "Investigar: {message[:50]}",
-      "description": "Buscar información relevante sobre la tarea solicitada",
-      "tool": "web_search",
-      "estimated_time": "2-3 minutos",
-      "priority": "alta"
-    }},
-    {{
-      "title": "Analizar información obtenida",
-      "description": "Procesar y analizar la información encontrada",
-      "tool": "analysis",
-      "estimated_time": "3-5 minutos", 
-      "priority": "alta"
-    }},
-    {{
-      "title": "Generar resultado final",
-      "description": "Crear y formatear el resultado final solicitado",
-      "tool": "creation",
-      "estimated_time": "2-4 minutos",
-      "priority": "media"
-    }}
-  ],
-  "task_type": "investigación_y_análisis",
-  "complexity": "media",
-  "estimated_total_time": "7-12 minutos"
-}}
-
-INSTRUCCIONES ESPECÍFICAS:
-1. Genera un "title" profesional y descriptivo basado en: "{message}"
-2. Personaliza los títulos y descripciones de los steps para que sean específicos a la tarea
-3. Herramientas válidas: web_search, analysis, creation, planning, delivery, processing, synthesis, research, investigation, data_analysis
-
-IMPORTANTE: Responde SOLO con el JSON, sin texto adicional."""
                 
                 # Llamar a Ollama con parámetros optimizados para JSON
                 response = ollama_service.generate_response(prompt, {
