@@ -173,6 +173,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         // 🚀 LÓGICA MEJORADA: Si es el primer mensaje de la tarea, usar generate-plan para generar plan específico
         const isFirstMessage = messages.length === 0;
         
+        // 🐛 DEBUG: Log critical values for debugging title generation issue
+        console.log('🐛 DEBUG - Title Generation Check:', {
+          isFirstMessage,
+          hasExistingPlan,
+          messagesLength: messages.length,
+          dataId,
+          condition: isFirstMessage && !hasExistingPlan
+        });
+        
         if (isFirstMessage && !hasExistingPlan) {
           console.log('🎯 FIRST MESSAGE - Calling generate-plan for specific plan generation');
           // Llamar al endpoint generate-plan para generar plan específico
