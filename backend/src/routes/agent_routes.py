@@ -2236,16 +2236,31 @@ def generate_dynamic_plan_with_ai(message: str, task_id: str) -> dict:
                 if attempt == 1:
                     # Primera tentativa: prompt normal
                     prompt = f"""
-GENERA UN PLAN DE ACCIÓN ESTRUCTURADO para esta tarea: "{message}"
+GENERA UN PLAN DE ACCIÓN ULTRA-ESPECÍFICO para esta tarea: "{message}"
+
+CRÍTICO: NO uses pasos genéricos como "Buscar información", "Análisis", "Crear documento", "Revisar". 
+DEBES crear pasos que sean ÚNICOS para esta tarea específica.
+
+EJEMPLO DE LO QUE NO QUIERO (GENÉRICO):
+- "Buscar información sobre bares"
+- "Análisis de datos"
+- "Crear informe"
+
+EJEMPLO DE LO QUE SÍ QUIERO (ESPECÍFICO):
+Para bares de Valencia:
+- "Identificar zonas gastronómicas clave: Ruzafa, Carmen, Xàtiva"
+- "Recopilar reseñas en Google Maps de bares valencianos con +4 estrellas"
+- "Analizar precios de cañas y tapas por barrio"
+- "Verificar terrazas y eventos especiales 2025"
 
 Responde ÚNICAMENTE con un objeto JSON válido siguiendo EXACTAMENTE este formato:
 
 {{
   "steps": [
     {{
-      "title": "Título específico del paso (5-100 caracteres)",
-      "description": "Descripción detallada del paso (10-300 caracteres)", 
-      "tool": "ELIGE_UNA: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database",
+      "title": "Paso ULTRA-ESPECÍFICO para esta tarea exacta (5-100 caracteres)",
+      "description": "Acción concreta y detallada que NO sea aplicable a otras tareas (10-300 caracteres)", 
+      "tool": "web_search",
       "estimated_time": "Tiempo estimado como string",
       "priority": "alta|media|baja"
     }}
@@ -2255,11 +2270,12 @@ Responde ÚNICAMENTE con un objeto JSON válido siguiendo EXACTAMENTE este forma
   "estimated_total_time": "Tiempo total estimado"
 }}
 
-REGLAS CRÍTICAS:
+REGLAS ULTRA-CRÍTICAS:
+- CADA paso debe ser ÚNICO para esta tarea - no aplicable a otros temas
+- NO uses palabras genéricas como "información", "análisis", "documento"  
+- USA detalles específicos del tema (nombres, lugares, conceptos únicos)
 - Mínimo 1 paso, máximo 10 pasos
-- Para "tool": ELIGE SOLO UNA herramienta, NO combines con |
 - HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
-- Títulos y descripciones específicas para la tarea, NO genéricas
 - NO agregues texto adicional, solo el JSON
 - Asegúrate de que sea JSON válido y parseable
 """
