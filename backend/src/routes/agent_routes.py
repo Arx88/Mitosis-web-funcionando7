@@ -4504,7 +4504,7 @@ def generate_task_plan(title: str, task_id: str) -> Dict:
         
         # Llamar a Ollama directamente
         try:
-            response = ollama_service.generate_response(plan_prompt, model="llama3.2")
+            response = ollama_service.generate_response(plan_prompt)
             logger.info(f"🤖 Ollama response for plan generation: {response[:200]}...")
             
             # Limpiar respuesta y extraer JSON
