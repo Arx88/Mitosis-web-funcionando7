@@ -278,9 +278,10 @@ export function App() {
     console.log('🚀 CONSOLIDATED TASK CREATION:', {
       taskId: newTask.id,
       hasMessage: true,
-      status: 'active',
+      status: 'in-progress',
       activeTaskIdSet: true,
       titleGenerated: true,
+      planGenerated: true,
       finalTitle: newTask.title
     });
     
