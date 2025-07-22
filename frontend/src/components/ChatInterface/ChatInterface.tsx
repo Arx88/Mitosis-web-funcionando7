@@ -64,7 +64,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onUpdateMessages,
   onLogToTerminal,
   onTaskPlanGenerated,
-  onTitleGenerated // ✨ NUEVO: Callback para título generado
+  onTitleGenerated, // ✨ NUEVO: Callback para título generado
+  hasExistingPlan = false // ✨ NUEVO: Indica si ya hay plan
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
