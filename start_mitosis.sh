@@ -81,7 +81,7 @@ done
 echo ""
 echo "🎉 MITOSIS ONE-STEP READY - ESTADO FINAL"
 echo "=============================================================="
-echo "📍 Frontend: https://1423f38d-2501-4585-8d50-6dba18ba086d.preview.emergentagent.com"
+echo "📍 Frontend: https://d79399bb-6676-4576-b731-9b083352213c.preview.emergentagent.com"
 echo "📍 Backend API: http://localhost:8001"
 echo "=============================================================="
 
