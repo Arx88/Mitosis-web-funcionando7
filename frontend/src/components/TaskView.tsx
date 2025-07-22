@@ -711,26 +711,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
               }))} 
               onSendMessage={(message) => {
                 console.log('🚀 TaskView: Message received for processing:', message);
-                
-                // CRITICAL FIX: Actualizar el task inmediatamente con el mensaje del usuario
-                // para que no desaparezca del chat
-                const userMessage = {
-                  id: `msg-${Date.now()}`,
-                  content: message,
-                  sender: 'user' as const,
-                  timestamp: new Date()
-                };
-                
-                // Agregar el mensaje del usuario inmediatamente al task
-                const updatedMessages = [...task.messages, userMessage];
-                const updatedTask = {
-                  ...task,
-                  messages: updatedMessages,
-                  status: 'in-progress' as const
-                };
-                
-                console.log('✅ TaskView: Adding user message to task immediately to prevent disappearing');
-                onUpdateTask(updatedTask);
+                // SimpleChatInterface ya maneja la adición de mensajes
+                // Solo necesitamos procesar el mensaje para generar respuesta si es necesario
               }}
               isTyping={isTyping} 
               assistantName="Agente" 
