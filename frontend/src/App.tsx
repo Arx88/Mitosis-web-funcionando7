@@ -204,9 +204,9 @@ export function App() {
     setInitializingTaskId(newTask.id);
     setInitializationLogs([]);
     
-    // 🚀 NEW: Generate enhanced title with backend API
+    // 🚀 NEW: Generate enhanced title AND plan with backend API
     try {
-      console.log('📝 Generating enhanced title for task:', newTask.id);
+      console.log('📝 Generating enhanced title and plan for task:', newTask.id);
       const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
       const initResponse = await fetch(`${backendUrl}/api/agent/generate-plan`, {
         method: 'POST',
@@ -223,24 +223,54 @@ export function App() {
         const initData = await initResponse.json();
         console.log('✅ Backend response received:', initData);
         
-        // ✨ Update task with enhanced title if available
+        // ✨ Process complete response: enhanced_title AND plan
+        let updatedTask = { ...newTask };
+        
+        // Update title if available
         if (initData.enhanced_title) {
           console.log('📝 Updating task with enhanced title:', initData.enhanced_title);
-          setTasks(prev => prev.map(task => 
-            task.id === newTask.id 
-              ? { ...task, title: initData.enhanced_title }
-              : task
-          ));
-          
-          // Update the newTask object for return
-          newTask.title = initData.enhanced_title;
-          console.log('✅ Task title updated in state and returned object');
+          updatedTask.title = initData.enhanced_title;
+          newTask.title = initData.enhanced_title; // Update return object
         }
+        
+        // 🚀 NEW: Process plan if available (same logic as ChatInterface)
+        if (initData.plan) {
+          console.log('📋 Processing plan for homepage task:', initData.plan);
+          
+          // Convert backend plan to frontend format (same as TaskView)
+          const frontendPlan = initData.plan.map((step: any) => ({
+            id: step.id,
+            title: step.title,
+            description: step.description,
+            tool: step.tool,
+            status: step.status,
+            estimated_time: step.estimated_time,
+            completed: step.completed || false,
+            active: step.active || false
+          }));
+          
+          // Update task with plan and set to in-progress
+          updatedTask = {
+            ...updatedTask,
+            plan: frontendPlan,
+            status: 'in-progress',
+            progress: 0
+          };
+          
+          console.log('✅ Plan processed for homepage task, steps:', frontendPlan.length);
+        }
+        
+        // Update tasks state with complete data
+        setTasks(prev => prev.map(task => 
+          task.id === newTask.id ? updatedTask : task
+        ));
+        
+        console.log('✅ Task updated with enhanced title and plan');
       } else {
-        console.warn('⚠️ Failed to generate enhanced title, using original message');
+        console.warn('⚠️ Failed to generate enhanced title and plan, using original message');
       }
     } catch (error) {
-      console.error('❌ Error generating enhanced title:', error);
+      console.error('❌ Error generating enhanced title and plan:', error);
     }
     
     setIsTaskCreating(false);
