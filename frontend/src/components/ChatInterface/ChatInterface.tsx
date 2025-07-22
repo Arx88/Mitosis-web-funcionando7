@@ -184,50 +184,63 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         
         if (isFirstMessage && !hasExistingPlan) {
           console.log('🎯 FIRST MESSAGE - Calling generate-plan for specific plan generation');
-          // Llamar al endpoint generate-plan para generar plan específico
+          
+          // 🐛 DEBUG: Log backend URL and request details
           const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
-          const initResponse = await fetch(`${backendUrl}/api/agent/generate-plan`, {
+          console.log('🐛 DEBUG - Backend URL:', backendUrl);
+          console.log('🐛 DEBUG - Request details:', {
+            url: `${backendUrl}/api/agent/generate-plan`,
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              task_title: message.trim(),
-              task_id: dataId
-            })
+            taskTitle: message.trim(),
+            taskId: dataId
           });
           
-          if (initResponse.ok) {
-            const initData = await initResponse.json();
-            console.log('✅ Plan generated with specific AI planning:', initData);
+          try {
+            const initResponse = await fetch(`${backendUrl}/api/agent/generate-plan`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                task_title: message.trim(),
+                task_id: dataId
+              })
+            });
             
-            // ✨ NUEVA FUNCIONALIDAD: Usar título mejorado si está disponible
-            if (onTitleGenerated && initData.enhanced_title) {
-              console.log('📝 Updating task title with enhanced title:', initData.enhanced_title);
-              onTitleGenerated(initData.enhanced_title);
-            }
-            
-            // Crear respuesta del agente indicando que el plan fue generado
-            const agentMessage: Message = {
-              id: `msg-${Date.now()}-agent`,
-              content: `✅ Plan de acción específico generado. Ejecutando ${initData.plan?.length || initData.total_steps || 0} pasos personalizados para completar tu tarea.`,
-              sender: 'agent',
-              timestamp: new Date()
-            };
-            
-            // ÚNICA ACTUALIZACIÓN DE MENSAJES - consolidada
-            if (onUpdateMessages) {
-              const updatedMessages = [...messages, userMessage, agentMessage];
-              onUpdateMessages(updatedMessages);
-            }
-            
-            // ✅ CRITICAL FIX: Call onTaskPlanGenerated callback for plan display in TerminalView
-            if (onTaskPlanGenerated && initData.plan) {
-              console.log('📋 Calling onTaskPlanGenerated with specific AI plan:', initData);
-              onTaskPlanGenerated({
-                steps: initData.plan,
-                total_steps: initData.total_steps,
-                estimated_total_time: initData.estimated_total_time,
+            console.log('🐛 DEBUG - Response status:', initResponse.status);
+            console.log('🐛 DEBUG - Response ok:', initResponse.ok);
+          
+            if (initResponse.ok) {
+              const initData = await initResponse.json();
+              console.log('✅ Plan generated with specific AI planning:', initData);
+              
+              // ✨ NUEVA FUNCIONALIDAD: Usar título mejorado si está disponible
+              if (onTitleGenerated && initData.enhanced_title) {
+                console.log('📝 Updating task title with enhanced title:', initData.enhanced_title);
+                onTitleGenerated(initData.enhanced_title);
+              }
+              
+              // Crear respuesta del agente indicando que el plan fue generado
+              const agentMessage: Message = {
+                id: `msg-${Date.now()}-agent`,
+                content: `✅ Plan de acción específico generado. Ejecutando ${initData.plan?.length || initData.total_steps || 0} pasos personalizados para completar tu tarea.`,
+                sender: 'agent',
+                timestamp: new Date()
+              };
+              
+              // ÚNICA ACTUALIZACIÓN DE MENSAJES - consolidada
+              if (onUpdateMessages) {
+                const updatedMessages = [...messages, userMessage, agentMessage];
+                onUpdateMessages(updatedMessages);
+              }
+              
+              // ✅ CRITICAL FIX: Call onTaskPlanGenerated callback for plan display in TerminalView
+              if (onTaskPlanGenerated && initData.plan) {
+                console.log('📋 Calling onTaskPlanGenerated with specific AI plan:', initData);
+                onTaskPlanGenerated({
+                  steps: initData.plan,
+                  total_steps: initData.total_steps,
+                  estimated_total_time: initData.estimated_total_time,
                 task_type: initData.task_type,
                 complexity: initData.complexity
               });
