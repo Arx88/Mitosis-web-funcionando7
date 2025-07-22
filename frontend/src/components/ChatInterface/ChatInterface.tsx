@@ -166,44 +166,84 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       onSendMessage(message);
 
       try {
-        // 🚀 LÓGICA SIMPLE: Siempre llamar a initialize-task (maneja casual vs tareas automáticamente)
         const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
-        const response = await fetch(`${backendUrl}/api/agent/initialize-task`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            task_id: dataId || `task-${Date.now()}`,
-            title: message.trim(),
-            auto_execute: true
-          })
-        });
         
-        if (response.ok) {
-          const data = await response.json();
-          console.log('✅ Response received:', data);
+        // 🎯 LÓGICA INTELIGENTE: Primer mensaje usa generate-plan (específico), resto usa initialize-task
+        const isFirstMessage = messages.length === 0;
+        
+        if (isFirstMessage) {
+          // Para el primer mensaje, usar generate-plan para PLANES ESPECÍFICOS
+          const response = await fetch(`${backendUrl}/api/agent/generate-plan`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              task_title: message.trim(),
+              task_id: dataId || `task-${Date.now()}`
+            })
+          });
           
-          // Crear mensaje del agente
-          const agentMessage: Message = {
-            id: `msg-${Date.now()}-agent`,
-            content: data.response || data.message || 'Procesado correctamente',
-            sender: 'agent',
-            timestamp: new Date()
-          };
-          
-          // Actualizar mensajes
-          if (onUpdateMessages) {
-            onUpdateMessages([...messages, userMessage, agentMessage]);
+          if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Specific plan generated:', data);
+            
+            // Crear mensaje del agente
+            const agentMessage: Message = {
+              id: `msg-${Date.now()}-agent`,
+              content: `✅ Plan específico generado para: "${message}". Ejecutando ${data.total_steps} pasos personalizados.`,
+              sender: 'agent',
+              timestamp: new Date()
+            };
+            
+            // Actualizar mensajes
+            if (onUpdateMessages) {
+              onUpdateMessages([...messages, userMessage, agentMessage]);
+            }
+            
+            // Notificar el plan específico
+            if (onTaskPlanGenerated && data.plan) {
+              onTaskPlanGenerated({
+                steps: data.plan,
+                total_steps: data.total_steps,
+                estimated_total_time: data.estimated_total_time,
+                task_type: data.task_type,
+                complexity: data.complexity
+              });
+            }
           }
-          
-          // Si hay plan, notificarlo
-          if (onTaskPlanGenerated && data.plan) {
-            onTaskPlanGenerated(data.plan);
-          }
-          
         } else {
-          console.error('❌ Request failed:', response.status);
+          // Para mensajes posteriores, usar initialize-task (más simple)
+          const response = await fetch(`${backendUrl}/api/agent/initialize-task`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              task_id: dataId || `task-${Date.now()}`,
+              title: message.trim(),
+              auto_execute: true
+            })
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Response received:', data);
+            
+            // Crear mensaje del agente
+            const agentMessage: Message = {
+              id: `msg-${Date.now()}-agent`,
+              content: data.response || data.message || 'Procesado correctamente',
+              sender: 'agent',
+              timestamp: new Date()
+            };
+            
+            // Actualizar mensajes
+            if (onUpdateMessages) {
+              onUpdateMessages([...messages, userMessage, agentMessage]);
+            }
+            
+            // Si hay plan, notificarlo
+            if (onTaskPlanGenerated && data.plan) {
+              onTaskPlanGenerated(data.plan);
+            }
+          }
         }
         
       } catch (error) {
