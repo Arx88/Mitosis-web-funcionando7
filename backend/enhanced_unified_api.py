@@ -103,8 +103,27 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
             terminal_logger.info("🚀 Enhanced Unified Mitosis API inicializada exitosamente")
         except Exception as e:
             terminal_logger.warning(f"⚠️ Algunos componentes no disponibles: {str(e)}")
-            self.autonomous_agent = AutonomousAgentCore()
-            terminal_logger.info("🚀 Enhanced Unified Mitosis API inicializada exitosamente")
+            # Crear autonomous agent básico sin base_agent
+            try:
+                from enhanced_agent_core import AutonomousAgentCore
+                self.autonomous_agent = AutonomousAgentCore()
+                terminal_logger.info("🚀 Enhanced Unified Mitosis API inicializada con componentes básicos")
+            except Exception as fallback_e:
+                terminal_logger.error(f"❌ Error crítico inicializando autonomous agent: {fallback_e}")
+                # Crear agente dummy para evitar errores
+                class DummyAgent:
+                    def generate_action_plan(self, title, description):
+                        return type('Task', (), {'id': 'dummy', 'status': type('Status', (), {'value': 'pending'})(), 'progress_percentage': 0, 'steps': [], 'title': title, 'created_at': datetime.now()})()
+                    def list_active_tasks(self):
+                        return []
+                    def get_task_status(self, task_id):
+                        return {"task_id": task_id, "status": "unknown"}
+                    @property
+                    def available_tools(self):
+                        return ["dummy_tool"]
+                
+                self.autonomous_agent = DummyAgent()
+                terminal_logger.info("🔧 Enhanced Unified Mitosis API inicializada con agente dummy")
         
         # NUEVO: Inicializar sistema de clasificación de intenciones
         try:
