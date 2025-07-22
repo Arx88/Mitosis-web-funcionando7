@@ -62,7 +62,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   'data-id': dataId,
   onUpdateMessages,
   onLogToTerminal,
-  onTaskPlanGenerated
+  onTaskPlanGenerated,
+  onTitleGenerated // ✨ NUEVO: Callback para título generado
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
