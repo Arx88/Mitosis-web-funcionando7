@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-EXTERNAL_URL = "https://3445cd60-a036-4ee2-9d29-7dd17ae4e962.preview.emergentagent.com"
+EXTERNAL_URL = "https://1423f38d-2501-4585-8d50-6dba18ba086d.preview.emergentagent.com"
 EXPECTED_OLLAMA_ENDPOINT = "https://bef4a4bb93d1.ngrok-free.app"
 EXPECTED_MODEL = "llama3.1:8b"
 
