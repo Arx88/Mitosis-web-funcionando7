@@ -306,40 +306,33 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         } : undefined
       };
 
-      // Si hay un plan estructurado, notificar al TaskView para que lo actualice
-      if (response.plan && response.plan.steps) {
-        console.log('📋 Structured plan received:', response.plan);
-        
-        // PRIMERO: Notificar al TaskView sobre el plan generado
-        if (onTaskPlanGenerated) {
-          console.log('📋 Calling onTaskPlanGenerated with plan:', response.plan);
-          onTaskPlanGenerated(response.plan);
-        }
-        
-        // Crear mensaje especial para indicar que se generó un plan
-        const planNotificationMessage: Message = {
-          id: `plan-${Date.now()}`,
-          content: `📋 **Plan generado y ejecutándose**\n\nHe creado un plan de ${response.plan.total_steps} pasos para tu tarea. Puedes ver el progreso en la sección "Plan de Acción".`,
-          sender: 'assistant',
-          timestamp: new Date(response.timestamp),
-          status: {
-            type: 'success',
-            message: `Plan de ${response.plan.total_steps} pasos generado`
+        // ÚNICA ACTUALIZACIÓN DE MENSAJES - elimina duplicación
+        if (onUpdateMessages) {
+          if (response.plan && response.plan.steps) {
+            // Si hay plan, crear mensaje de notificación 
+            const planNotificationMessage: Message = {
+              id: `plan-${Date.now()}`,
+              content: `📋 **Plan generado**\n\nCreé un plan de ${response.plan.total_steps} pasos. Ver progreso en "Plan de Acción".`,
+              sender: 'assistant',
+              timestamp: new Date(response.timestamp),
+              status: {
+                type: 'success',
+                message: `Plan de ${response.plan.total_steps} pasos generado`
+              }
+            };
+            const messagesWithPlan = [...messages, userMessage, planNotificationMessage];
+            onUpdateMessages(messagesWithPlan);
+            
+            // Notificar TaskView sobre el plan
+            if (onTaskPlanGenerated) {
+              onTaskPlanGenerated(response.plan);
+            }
+          } else {
+            // Mensaje normal
+            const updatedMessages = [...messages, userMessage, agentMessage];
+            onUpdateMessages(updatedMessages);
           }
-        };
-
-        // Actualizar mensajes con plan
-        if (onUpdateMessages) {
-          const messagesWithPlan = [...messages, userMessage, planNotificationMessage, agentMessage];
-          onUpdateMessages(messagesWithPlan);
         }
-      } else {
-        // Update messages normalmente si no hay plan
-        if (onUpdateMessages) {
-          const updatedMessages = [...messages, userMessage, agentMessage];
-          onUpdateMessages(updatedMessages);
-        }
-      }
 
       // Log tool executions to terminal
       if (response.tool_results && response.tool_results.length > 0 && onLogToTerminal) {
