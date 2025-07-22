@@ -215,6 +215,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               }
             };
             
+            // ÚNICA ACTUALIZACIÓN DE MENSAJES - consolidada
             if (onUpdateMessages) {
               const updatedMessages = [...messages, userMessage, agentMessage];
               onUpdateMessages(updatedMessages);
