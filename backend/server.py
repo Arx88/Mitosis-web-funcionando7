@@ -48,6 +48,7 @@ DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
+app.config['START_TIME'] = time.time()
 
 # Configurar CORS
 CORS(app, resources={
