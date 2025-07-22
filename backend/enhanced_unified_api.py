@@ -126,23 +126,24 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
                 terminal_logger.info("🔧 Enhanced Unified Mitosis API inicializada con agente dummy")
         
         # NUEVO: Inicializar sistema de clasificación de intenciones
+        self.intention_classifier = None  # Placeholder para compatibilidad
+        
+        # Inicializar agente autónomo de forma más robusta
         try:
-            # Crear un agente auxiliar solo para el clasificador de intenciones
             if HAS_BASE_API:
-                from agent_core import MitosisAgent, AgentConfig as ClassifierConfig
-                classifier_config = ClassifierConfig()
-                classifier_config.ollama_url = self.config.ollama_url if hasattr(self.config, 'ollama_url') else os.getenv('OLLAMA_BASE_URL')
-                classifier_config.openrouter_api_key = self.config.openrouter_api_key if hasattr(self.config, 'openrouter_api_key') else os.getenv('OPENROUTER_API_KEY', '')
-                
-                classifier_agent = MitosisAgent(classifier_config)
-                self.intention_classifier = classifier_agent.intention_classifier
-                terminal_logger.info("🎯 IntentionClassifier inicializado correctamente")
+                # Intentar crear agente REAL si disponible
+                base_agent = getattr(self, 'agent', None)
+                self.autonomous_agent = AutonomousAgentCore(base_agent)
+                terminal_logger.info("🚀 AutonomousAgentCore con agente base inicializado")
             else:
-                self.intention_classifier = None
-                terminal_logger.warning("⚠️ IntentionClassifier no disponible sin API base")
+                # Crear agente sin base
+                self.autonomous_agent = AutonomousAgentCore()
+                terminal_logger.info("🚀 AutonomousAgentCore básico inicializado")
         except Exception as e:
-            terminal_logger.warning(f"⚠️ No se pudo inicializar IntentionClassifier: {e}")
-            self.intention_classifier = None
+            terminal_logger.warning(f"⚠️ Error con AutonomousAgentCore: {e}")
+            # Crear agente dummy funcional
+            self.autonomous_agent = self._create_dummy_autonomous_agent()
+            terminal_logger.info("🔧 Usando agente dummy por compatibilidad")
         
         # Variables de estado autónomo
         self.autonomous_execution_active = False
