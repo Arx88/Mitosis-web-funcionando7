@@ -2297,8 +2297,17 @@ Tu respuesta debe ser ÚNICAMENTE el título:
         # Limpiar formato markdown o caracteres extra
         generated_title = generated_title.replace('**', '').replace('*', '')
         generated_title = generated_title.replace('"', '').replace("'", '')
-        generated_title = generated_title.strip()
+        generated_title = generated_title.replace('Output:', '').replace('Input:', '')
         
+        # Tomar solo la primera línea (en caso de que venga texto extra)
+        generated_title = generated_title.split('\n')[0].strip()
+        
+        # Limpiar prefijos comunes
+        if generated_title.lower().startswith('título:'):
+            generated_title = generated_title[7:].strip()
+        if generated_title.lower().startswith('output:'):
+            generated_title = generated_title[7:].strip()
+            
         # Validaciones
         if len(generated_title) == 0:
             logger.warning(f"⚠️ Empty title generated, using original message")
