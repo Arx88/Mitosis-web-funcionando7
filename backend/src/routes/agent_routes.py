@@ -2775,6 +2775,153 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
 
 
 def generate_clean_response(ollama_response: str, tool_results: list, task_status: str = "success", 
+                          failed_step_title: str = None, error_message: str = None, warnings: list = None) -> dict:
+    """
+    Genera una respuesta final estructurada en JSON basada en el estado real de la tarea
+    ENHANCED VERSION - As per NEWUPGRADE.md Section 4: Returns structured JSON instead of plain text
+    
+    Args:
+        ollama_response: Respuesta original de Ollama
+        tool_results: Resultados de herramientas ejecutadas
+        task_status: Estado final de la tarea ('completed_success', 'completed_with_warnings', 'failed')
+        failed_step_title: Título del paso que falló (si aplica)
+        error_message: Mensaje de error específico (si aplica)
+        warnings: Lista de advertencias detalladas (si aplica)
+    
+    Returns:
+        dict: Objeto JSON estructurado con toda la información de la tarea
+    """
+    try:
+        # Detectar archivos creados en los resultados
+        files_created = []
+        deliverables_info = []
+        
+        for result in tool_results or []:
+            if isinstance(result, dict):
+                if result.get('file_created') and result.get('file_name'):
+                    files_created.append({
+                        'name': result['file_name'],
+                        'size': result.get('file_size', 0),
+                        'download_url': result.get('download_url', ''),
+                        'type': result.get('type', 'unknown')
+                    })
+                    
+                if result.get('tangible_result') or result.get('final_deliverable'):
+                    deliverables_info.append(result)
+        
+        # BUILD STRUCTURED RESPONSE OBJECT
+        response_data = {
+            "status": task_status,
+            "message": "",  # Will be set below based on status
+            "files_generated": files_created,
+            "warnings": warnings or [],
+            "error": error_message,
+            "deliverables_count": len(files_created),
+            "raw_ollama_response": ollama_response,
+            "tool_results_count": len(tool_results or []),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Generate message based on task status
+        if task_status == "completed_success":
+            # Tarea completada exitosamente
+            if files_created:
+                response_data["message"] = f"""🎉 ¡Excelente! He completado tu solicitud con éxito y he generado {len(files_created)} archivo(s) tangible(s).
+
+📁 **ARCHIVOS GENERADOS:**
+
+"""
+                for file_info in files_created:
+                    response_data["message"] += f"""• **{file_info['name']}** 
+  📄 Tamaño: {file_info.get('size', 0)} bytes
+  🔗 [Descargar archivo]({file_info.get('download_url', '#')})
+
+"""
+                response_data["message"] += """
+
+✅ **Estado**: Completado exitosamente
+📊 **Resultados**: Todos los objetivos alcanzados
+
+Puedes descargar los archivos haciendo clic en los enlaces de arriba."""
+            else:
+                response_data["message"] = f"""🎉 ¡Perfecto! He completado tu solicitud exitosamente.
+
+✅ **Estado**: Completado con éxito
+📋 **Resumen**: {ollama_response[:200]}...
+
+Todos los objetivos han sido alcanzados según lo solicitado."""
+
+        elif task_status == "completed_with_warnings":
+            # Tarea completada pero con advertencias
+            response_data["message"] = f"""⚠️ Tu solicitud ha sido completada, pero con algunas advertencias importantes.
+
+📋 **Resumen**: {ollama_response[:200] if ollama_response else 'Tarea procesada'}...
+
+⚠️ **ADVERTENCIAS DETECTADAS:**
+
+"""
+            for warning in (warnings or []):
+                response_data["message"] += f"• {warning}\n"
+
+            if files_created:
+                response_data["message"] += f"""
+
+📁 **ARCHIVOS GENERADOS** ({len(files_created)}):
+
+"""
+                for file_info in files_created:
+                    response_data["message"] += f"""• **{file_info['name']}** 
+  🔗 [Descargar]({file_info.get('download_url', '#')})
+
+"""
+            response_data["message"] += """
+
+✅ **Estado**: Completado con advertencias
+💡 **Recomendación**: Revisa las advertencias antes de proceder."""
+
+        elif task_status == "failed":
+            # Tarea fallida
+            response_data["message"] = f"""❌ Lo siento, no pude completar tu solicitud debido a un error.
+
+🚨 **ERROR PRINCIPAL**: {error_message or 'Error desconocido'}
+
+"""
+            if failed_step_title:
+                response_data["message"] += f"📍 **Paso fallido**: {failed_step_title}\n\n"
+
+            response_data["message"] += f"""📋 **Contexto**: {ollama_response[:150] if ollama_response else 'Sin contexto disponible'}...
+
+❌ **Estado**: Fallido
+🔧 **Sugerencia**: Intenta reformular tu solicitud o contacta soporte técnico."""
+
+        else:
+            # Estado desconocido - fallback
+            response_data["message"] = f"""ℹ️ Tu solicitud ha sido procesada.
+
+📋 **Información**: {ollama_response[:200] if ollama_response else 'Procesado'}...
+
+📊 **Estado**: {task_status}
+⏰ **Procesado**: {datetime.now().strftime('%d/%m/%Y %H:%M')}"""
+
+        return response_data
+        
+    except Exception as e:
+        logger.error(f"❌ Error generating clean response: {e}")
+        # Return error response structure
+        return {
+            "status": "error",
+            "message": f"❌ Error al generar respuesta final: {str(e)}",
+            "files_generated": [],
+            "warnings": ["Error interno al procesar respuesta"],
+            "error": str(e),
+            "deliverables_count": 0,
+            "raw_ollama_response": ollama_response or "",
+            "tool_results_count": len(tool_results or []),
+            "timestamp": datetime.now().isoformat()
+        }
+
+
+def generate_clean_response_legacy(ollama_response: str, tool_results: list, task_status: str = "success", 
                           failed_step_title: str = None, error_message: str = None, warnings: list = None) -> str:
     """
     Genera una respuesta final condicional y dinámica basada en el estado real de la tarea
