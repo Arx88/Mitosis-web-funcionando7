@@ -2232,26 +2232,28 @@ def generate_dynamic_plan_with_ai(message: str, task_id: str) -> dict:
             try:
                 logger.info(f"🔄 Plan generation attempt {attempt}/{max_attempts} for task {task_id}")
                 
-                # Construir prompt específico para generación de JSON estructurado
+                # Construir prompt genérico mejorado para generación de JSON estructurado
                 if attempt == 1:
-                    # Primera tentativa: prompt normal
+                    # Primera tentativa: prompt genérico dinámico
                     prompt = f"""
 GENERA UN PLAN DE ACCIÓN ULTRA-ESPECÍFICO para esta tarea: "{message}"
 
-CRÍTICO: NO uses pasos genéricos como "Buscar información", "Análisis", "Crear documento", "Revisar". 
-DEBES crear pasos que sean ÚNICOS para esta tarea específica.
+INSTRUCCIONES CRÍTICAS:
+- Analiza el tipo de tarea y dominio específico
+- Crea pasos únicos que solo apliquen a esta tarea exacta
+- NO uses términos genéricos como "información", "análisis", "documento"
+- Identifica elementos específicos del dominio (nombres propios, conceptos técnicos, ubicaciones, etc.)
+- Cada paso debe ser imposible de reutilizar para otra tarea
 
-EJEMPLO DE LO QUE NO QUIERO (GENÉRICO):
-- "Buscar información sobre bares"
-- "Análisis de datos"
-- "Crear informe"
+METODOLOGÍA ADAPTATIVA:
+1. Identifica el dominio principal de la tarea
+2. Extrae elementos específicos únicos (nombres, lugares, conceptos)
+3. Crea pasos que incorporen estos elementos específicos
+4. Asegúrate que cada paso sea altamente especializado
 
-EJEMPLO DE LO QUE SÍ QUIERO (ESPECÍFICO):
-Para bares de Valencia:
-- "Identificar zonas gastronómicas clave: Ruzafa, Carmen, Xàtiva"
-- "Recopilar reseñas en Google Maps de bares valencianos con +4 estrellas"
-- "Analizar precios de cañas y tapas por barrio"
-- "Verificar terrazas y eventos especiales 2025"
+EJEMPLO DE TRANSFORMACIÓN:
+- En lugar de: "Buscar información sobre X"
+- Mejor: "Identificar [elementos específicos únicos de X] en [fuentes específicas del dominio]"
 
 Responde ÚNICAMENTE con un objeto JSON válido siguiendo EXACTAMENTE este formato:
 
@@ -2259,7 +2261,7 @@ Responde ÚNICAMENTE con un objeto JSON válido siguiendo EXACTAMENTE este forma
   "steps": [
     {{
       "title": "Paso ULTRA-ESPECÍFICO para esta tarea exacta (5-100 caracteres)",
-      "description": "Acción concreta y detallada que NO sea aplicable a otras tareas (10-300 caracteres)", 
+      "description": "Acción concreta con elementos únicos del dominio (10-300 caracteres)", 
       "tool": "web_search",
       "estimated_time": "Tiempo estimado como string",
       "priority": "alta|media|baja"
@@ -2271,9 +2273,9 @@ Responde ÚNICAMENTE con un objeto JSON válido siguiendo EXACTAMENTE este forma
 }}
 
 REGLAS ULTRA-CRÍTICAS:
-- CADA paso debe ser ÚNICO para esta tarea - no aplicable a otros temas
-- NO uses palabras genéricas como "información", "análisis", "documento"  
-- USA detalles específicos del tema (nombres, lugares, conceptos únicos)
+- CADA paso debe incorporar elementos específicos únicos del dominio
+- Evita completamente palabras genéricas
+- Adapta automáticamente al contexto específico de la tarea
 - Mínimo 1 paso, máximo 10 pasos
 - HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
 - NO agregues texto adicional, solo el JSON
