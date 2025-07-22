@@ -27,7 +27,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://d79399bb-6676-4576-b731-9b083352213c.preview.emergentagent.com"
+BASE_URL = "https://547ef252-0f4f-4939-abed-10bfcc63c029.preview.emergentagent.com"
 API_PREFIX = "/api/agent"
 MEMORY_PREFIX = "/api/memory"
 
