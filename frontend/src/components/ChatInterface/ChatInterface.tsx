@@ -166,84 +166,63 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       onSendMessage(message);
 
       try {
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
-        
-        // 🎯 LÓGICA INTELIGENTE: Primer mensaje usa generate-plan (específico), resto usa initialize-task
+        // 🚀 LÓGICA MEJORADA: Si es el primer mensaje de la tarea, usar generate-plan para generar plan específico
         const isFirstMessage = messages.length === 0;
         
         if (isFirstMessage) {
-          // Para el primer mensaje, usar generate-plan para PLANES ESPECÍFICOS
-          const response = await fetch(`${backendUrl}/api/agent/generate-plan`, {
+          console.log('🎯 FIRST MESSAGE - Calling generate-plan for specific plan generation');
+          // Llamar al endpoint generate-plan para generar plan específico
+          const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
+          const initResponse = await fetch(`${backendUrl}/api/agent/generate-plan`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+            },
             body: JSON.stringify({
               task_title: message.trim(),
-              task_id: dataId || `task-${Date.now()}`
+              task_id: dataId
             })
           });
           
-          if (response.ok) {
-            const data = await response.json();
-            console.log('✅ Specific plan generated:', data);
+          if (initResponse.ok) {
+            const initData = await initResponse.json();
+            console.log('✅ Plan generated with specific AI planning:', initData);
             
-            // Crear mensaje del agente
+            // Crear respuesta del agente indicando que el plan fue generado
             const agentMessage: Message = {
               id: `msg-${Date.now()}-agent`,
-              content: `✅ Plan específico generado para: "${message}". Ejecutando ${data.total_steps} pasos personalizados.`,
+              content: `✅ Plan de acción específico generado. Ejecutando ${initData.plan?.length || initData.total_steps || 0} pasos personalizados para completar tu tarea.`,
               sender: 'agent',
               timestamp: new Date()
             };
             
-            // Actualizar mensajes
+            // ÚNICA ACTUALIZACIÓN DE MENSAJES - consolidada
             if (onUpdateMessages) {
-              onUpdateMessages([...messages, userMessage, agentMessage]);
+              const updatedMessages = [...messages, userMessage, agentMessage];
+              onUpdateMessages(updatedMessages);
             }
             
-            // Notificar el plan específico
-            if (onTaskPlanGenerated && data.plan) {
+            // ✅ CRITICAL FIX: Call onTaskPlanGenerated callback for plan display in TerminalView
+            if (onTaskPlanGenerated && initData.plan) {
+              console.log('📋 Calling onTaskPlanGenerated with specific AI plan:', initData);
               onTaskPlanGenerated({
-                steps: data.plan,
-                total_steps: data.total_steps,
-                estimated_total_time: data.estimated_total_time,
-                task_type: data.task_type,
-                complexity: data.complexity
+                steps: initData.plan,
+                total_steps: initData.total_steps,
+                estimated_total_time: initData.estimated_total_time,
+                task_type: initData.task_type,
+                complexity: initData.complexity
               });
             }
+            
+          } else {
+            console.error('❌ Generate plan failed:', initResponse.status);
+            // Fallback al chat normal si falla
+            await sendRegularChatMessage(message, userMessage);
           }
-        } else {
-          // Para mensajes posteriores, usar initialize-task (más simple)
-          const response = await fetch(`${backendUrl}/api/agent/initialize-task`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              task_id: dataId || `task-${Date.now()}`,
-              title: message.trim(),
-              auto_execute: true
-            })
-          });
           
-          if (response.ok) {
-            const data = await response.json();
-            console.log('✅ Response received:', data);
-            
-            // Crear mensaje del agente
-            const agentMessage: Message = {
-              id: `msg-${Date.now()}-agent`,
-              content: data.response || data.message || 'Procesado correctamente',
-              sender: 'agent',
-              timestamp: new Date()
-            };
-            
-            // Actualizar mensajes
-            if (onUpdateMessages) {
-              onUpdateMessages([...messages, userMessage, agentMessage]);
-            }
-            
-            // Si hay plan, notificarlo
-            if (onTaskPlanGenerated && data.plan) {
-              onTaskPlanGenerated(data.plan);
-            }
-          }
+        } else {
+          // Para mensajes posteriores, usar el chat normal
+          await sendRegularChatMessage(message, userMessage);
         }
         
       } catch (error) {
