@@ -491,8 +491,8 @@ def initialize_task():
         
         terminal_logger.info(f"📋 Inicializando tarea: {title}")
         
-        # Generar plan específico y detallado usando el agente principal
-        plan = generate_detailed_specific_plan(title, description)
+        # Generar plan usando SOLO la función mejor con LLM - NO fallbacks genéricos
+        plan = generate_intelligent_plan_or_fail(title, description)
         
         # Añadir página del monitor
         add_monitor_page(
