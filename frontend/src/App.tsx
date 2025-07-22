@@ -578,39 +578,13 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                     ) : (
                       <VanishInput
                         onSendMessage={async (message) => {
-                          console.log('🎯 Homepage: Creating task and calling initialize-task');
+                          console.log('🎯 Homepage: Creating task only');
                           if (message.trim()) {
-                            // Crear la tarea
+                            // SOLO crear la tarea y activar TaskView
                             const newTask = await createTask(message.trim());
-                            
-                            // Activar TaskView inmediatamente
                             setActiveTaskId(newTask.id);
                             
-                            // Llamar al backend que ya maneja todo automáticamente
-                            try {
-                              const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
-                              const response = await fetch(`${backendUrl}/api/agent/initialize-task`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  task_id: newTask.id,
-                                  title: message.trim(),
-                                  auto_execute: true
-                                })
-                              });
-                              
-                              if (response.ok) {
-                                const data = await response.json();
-                                console.log('✅ Task initialized:', data);
-                                
-                                // El ChatInterface se encargará del resto
-                              } else {
-                                console.error('❌ Initialize task failed:', response.status);
-                              }
-                              
-                            } catch (error) {
-                              console.error('❌ Error:', error);
-                            }
+                            // ChatInterface se encargará de todo lo demás (planes, backend calls)
                           }
                         }}
                         placeholder="Escribe tu tarea aquí..."
