@@ -42,8 +42,8 @@ PLAN_SCHEMA = {
     "properties": {
         "steps": {
             "type": "array",
-            "minItems": 1,
-            "maxItems": 10,
+            "minItems": 3,
+            "maxItems": 6,
             "items": {
                 "type": "object",
                 "required": ["title", "description", "tool"],
