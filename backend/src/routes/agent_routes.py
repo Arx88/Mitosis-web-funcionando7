@@ -90,6 +90,45 @@ PLAN_SCHEMA = {
 
 agent_bp = Blueprint('agent', __name__)
 
+@agent_bp.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint para verificar MongoDB y sistema"""
+    try:
+        # Verificar TaskManager y MongoDB
+        task_manager = get_task_manager()
+        db_service = task_manager.db_service
+        
+        # Test de conexión MongoDB
+        mongo_status = db_service.check_connection()
+        
+        # Verificar Ollama
+        ollama_service = get_ollama_service()
+        ollama_healthy = ollama_service.is_healthy() if ollama_service else False
+        
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'mongodb': {
+                'connected': mongo_status.get('healthy', False),
+                'database': mongo_status.get('database', 'unknown'),
+                'collections': mongo_status.get('collections', 0),
+                'size_mb': mongo_status.get('size_mb', 0)
+            },
+            'ollama': {
+                'connected': ollama_healthy
+            },
+            'task_manager': {
+                'active_cache_size': len(task_manager.active_cache)
+            }
+        })
+    except Exception as e:
+        logger.error(f"❌ Error en health check: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 @agent_bp.route('/execute-step-detailed/<task_id>/<step_id>', methods=['POST'])
 def execute_single_step_detailed(task_id: str, step_id: str):
     """
