@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Task, Message, TerminalCommand } from '../types';
 import { TerminalView } from './TerminalView';
-import { ChatInterface } from './ChatInterface';
+import { SimpleChatInterface } from './ChatInterface/SimpleChatInterface';
 import { ThinkingAnimation } from './ThinkingAnimation';
 import { FilesModal } from './FilesModal';
 import { ShareModal } from './ShareModal';
