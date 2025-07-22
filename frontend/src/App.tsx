@@ -320,7 +320,8 @@ export function App() {
   };
 
   const handleDynamicIdea = (idea: any) => {
-    createTask(idea.title);
+    // ✅ FIXED: Use consolidated function for task creation
+    createTaskWithMessage(idea.title);
   };
 
   const handleAttachFiles = () => {
