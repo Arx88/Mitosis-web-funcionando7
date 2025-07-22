@@ -391,31 +391,8 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
           }
         ];
         
-        // Actualizar progreso en el backend
+        // Actualizar progreso simplificado
         const updateFileAttachmentProgress = async () => {
-          try {
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
-            for (let i = 0; i < fileAttachmentPlan.length; i++) {
-              const step = fileAttachmentPlan[i];
-              await fetch(`${backendUrl}/api/agent/update-task-progress`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  task_id: newTask.id,
-                  step_id: step.id,
-                  completed: true
-                })
-              });
-            }
-          } catch (error) {
-            console.error('Error updating file attachment progress:', error);
-          }
-        };
-        
-        // Actualizar progreso
-        updateFileAttachmentProgress();
         
         const updatedTask = {
           ...newTask,
