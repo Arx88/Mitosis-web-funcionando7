@@ -2240,10 +2240,77 @@ def generate_emergency_structured_plan(message: str, task_id: str, ollama_error:
         "estimated_total_time": total_time
     }
 
+def generate_task_title_with_llm(message: str, task_id: str) -> str:
+    """
+    Genera un título mejorado y profesional para la tarea usando LLM
+    """
+    logger.info(f"📝 Generating enhanced title for task {task_id} - Original: {message[:50]}...")
+    
+    # Obtener servicio de Ollama
+    ollama_service = get_ollama_service()
+    if not ollama_service or not ollama_service.is_healthy():
+        logger.warning(f"⚠️ Ollama not available for title generation, using original message")
+        return message.strip()
+    
+    try:
+        # Prompt específico para generar títulos profesionales
+        title_prompt = f"""
+Genera un TÍTULO PROFESIONAL, ESPECÍFICO y CONCISO para esta tarea: "{message}"
+
+INSTRUCCIONES:
+- El título debe ser claro y descriptivo
+- Máximo 60 caracteres
+- Incluye elementos específicos del dominio
+- Debe sonar profesional y atractivo
+- NO incluyas palabras genéricas como "información", "datos"
+- Capitaliza correctamente (formato título)
+
+EJEMPLOS:
+- "buscar información sobre IA" → "Análisis de Tendencias en Inteligencia Artificial 2025"
+- "crear un informe de ventas" → "Informe de Rendimiento de Ventas Q1 2025"  
+- "analizar el mercado" → "Estudio de Análisis de Mercado Sectorial"
+
+Responde ÚNICAMENTE con el título, sin explicaciones adicionales.
+"""
+        
+        response = ollama_service.generate_response(title_prompt, {
+            'temperature': 0.3,  # Creativo pero controlado
+            'max_tokens': 100,   # Título corto
+            'top_p': 0.9
+        })
+        
+        if response.get('error'):
+            logger.warning(f"⚠️ Error generating title with LLM: {response['error']}")
+            return message.strip()
+        
+        # Limpiar y validar el título generado
+        generated_title = response.get('response', '').strip()
+        
+        # Limpiar formato markdown o caracteres extra
+        generated_title = generated_title.replace('**', '').replace('*', '')
+        generated_title = generated_title.replace('"', '').replace("'", '')
+        generated_title = generated_title.strip()
+        
+        # Validaciones
+        if len(generated_title) == 0:
+            logger.warning(f"⚠️ Empty title generated, using original message")
+            return message.strip()
+        
+        if len(generated_title) > 80:
+            generated_title = generated_title[:77] + "..."
+        
+        logger.info(f"✅ Generated enhanced title for task {task_id}: '{generated_title}'")
+        return generated_title
+        
+    except Exception as e:
+        logger.error(f"❌ Error generating title with LLM: {str(e)}")
+        return message.strip()
+
 def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool = True) -> dict:
     """
     Función UNIFICADA para generación de planes usando Ollama con robustecimiento y validación de esquemas
     Consolidación de generate_dynamic_plan_with_ai y generate_task_plan para eliminar duplicación
+    ✨ NUEVA FUNCIONALIDAD: También genera título mejorado con LLM
     """
     logger.info(f"🧠 Generating unified AI-powered plan for task {task_id} - Message: {message[:50]}...")
     
@@ -2257,6 +2324,12 @@ def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool =
     if not ollama_service.is_healthy():
         logger.error("❌ Ollama service not healthy for unified plan generation")
         return generate_fallback_plan_with_notification(message, task_id, "Ollama service not healthy")
+    
+    # ✨ NUEVA FUNCIONALIDAD: Generar título mejorado con LLM
+    enhanced_title = generate_task_title_with_llm(message, task_id)
+    logger.info(f"📝 Enhanced title generated: '{enhanced_title}'")
+    
+    # Continuar con la generación del plan...
     
     def validate_plan_schema(plan_data: dict) -> bool:
         """Validar que el plan cumple con el esquema requerido"""
