@@ -111,6 +111,20 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
+# ✅ CRITICAL FIX: Inicializar Enhanced Mitosis Agent para generar planes REALES
+try:
+    from src.core.enhanced_mitosis_agent import EnhancedMitosisAgent
+    enhanced_agent = EnhancedMitosisAgent()
+    app.enhanced_agent = enhanced_agent
+    terminal_logger.info("✅ Enhanced Mitosis Agent inicializado exitosamente - PLANES REALES ACTIVADOS")
+    print("✅ Enhanced Mitosis Agent inicializado exitosamente - PLANES REALES ACTIVADOS")
+except Exception as e:
+    terminal_logger.error(f"❌ Error inicializando Enhanced Mitosis Agent: {e}")
+    print(f"❌ Error inicializando Enhanced Mitosis Agent: {e}")
+    app.enhanced_agent = None
+    import traceback
+    traceback.print_exc()
+
 # FORZAR IMPORTACIÓN DE RUTAS REALES DEL AGENTE CON LOGGING INTENSO
 terminal_logger.info("🔄 Intentando importar las rutas REALES del agente con funcionalidad completa...")
 try:
