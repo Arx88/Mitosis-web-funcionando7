@@ -2255,22 +2255,30 @@ def generate_task_title_with_llm(message: str, task_id: str) -> str:
     try:
         # Prompt específico para generar títulos profesionales
         title_prompt = f"""
-Genera un TÍTULO PROFESIONAL, ESPECÍFICO y CONCISO para esta tarea: "{message}"
+Genera SOLAMENTE un título profesional y conciso para esta tarea: "{message}"
 
-INSTRUCCIONES:
-- El título debe ser claro y descriptivo
+REGLAS ESTRICTAS:
+- Responde SOLO con el título, nada más
 - Máximo 60 caracteres
-- Incluye elementos específicos del dominio
-- Debe sonar profesional y atractivo
-- NO incluyas palabras genéricas como "información", "datos"
-- Capitaliza correctamente (formato título)
+- Debe ser específico al tema tratado
+- Formato profesional y claro
+- NO agregues explicaciones, planes ni pasos
+- NO uses palabras como "información", "datos", "plan de acción"
 
 EJEMPLOS:
-- "buscar información sobre IA" → "Análisis de Tendencias en Inteligencia Artificial 2025"
-- "crear un informe de ventas" → "Informe de Rendimiento de Ventas Q1 2025"  
-- "analizar el mercado" → "Estudio de Análisis de Mercado Sectorial"
+Input: "buscar información sobre IA"
+Output: Análisis de Tendencias en Inteligencia Artificial 2025
 
-Responde ÚNICAMENTE con el título, sin explicaciones adicionales.
+Input: "crear un informe de ventas" 
+Output: Informe de Rendimiento de Ventas Q1 2025
+
+Input: "analizar el mercado"
+Output: Estudio de Análisis de Mercado Sectorial
+
+Input: "GENERA UN INFORME SOBRE LA selección Argentina de futbol en 2025"
+Output: Informe Selección Argentina de Fútbol 2025
+
+Tu respuesta debe ser ÚNICAMENTE el título:
 """
         
         response = ollama_service.generate_response(title_prompt, {
