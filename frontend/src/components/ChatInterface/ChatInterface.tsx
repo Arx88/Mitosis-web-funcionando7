@@ -214,12 +214,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               const initData = await initResponse.json();
               console.log('✅ Plan generated with specific AI planning:', initData);
               
-              // ✨ NUEVA FUNCIONALIDAD: Usar título mejorado si está disponible
-              if (onTitleGenerated && initData.enhanced_title) {
-                console.log('📝 Updating task title with enhanced title:', initData.enhanced_title);
-                onTitleGenerated(initData.enhanced_title);
-              }
-              
               // Crear respuesta del agente indicando que el plan fue generado
               const agentMessage: Message = {
                 id: `msg-${Date.now()}-agent`,
@@ -228,10 +222,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 timestamp: new Date()
               };
               
-              // ÚNICA ACTUALIZACIÓN DE MENSAJES - consolidada
+              // ✅ FIXED: Update messages FIRST before title to avoid race condition
               if (onUpdateMessages) {
                 const updatedMessages = [...messages, userMessage, agentMessage];
                 onUpdateMessages(updatedMessages);
+              }
+              
+              // ✨ FIXED: Update title AFTER messages to ensure it doesn't get overwritten
+              if (onTitleGenerated && initData.enhanced_title) {
+                console.log('📝 Updating task title with enhanced title (AFTER messages):', initData.enhanced_title);
+                onTitleGenerated(initData.enhanced_title);
               }
               
               // ✅ CRITICAL FIX: Call onTaskPlanGenerated callback for plan display in TerminalView
