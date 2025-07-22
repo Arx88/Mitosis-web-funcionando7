@@ -2201,7 +2201,299 @@ def generate_emergency_structured_plan(message: str, task_id: str, ollama_error:
         "estimated_total_time": total_time
     }
 
+def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool = True) -> dict:
+    """
+    Función UNIFICADA para generación de planes usando Ollama con robustecimiento y validación de esquemas
+    Consolidación de generate_dynamic_plan_with_ai y generate_task_plan para eliminar duplicación
+    """
+    logger.info(f"🧠 Generating unified AI-powered plan for task {task_id} - Message: {message[:50]}...")
+    
+    # Obtener servicio de Ollama
+    ollama_service = get_ollama_service()
+    if not ollama_service:
+        logger.error("❌ Ollama service not available for unified plan generation")
+        return generate_fallback_plan_with_notification(message, task_id, "Ollama service not available")
+    
+    # Verificar que Ollama esté saludable
+    if not ollama_service.is_healthy():
+        logger.error("❌ Ollama service not healthy for unified plan generation")
+        return generate_fallback_plan_with_notification(message, task_id, "Ollama service not healthy")
+    
+    def validate_plan_schema(plan_data: dict) -> bool:
+        """Validar que el plan cumple con el esquema requerido"""
+        try:
+            jsonschema.validate(plan_data, PLAN_SCHEMA)
+            return True
+        except jsonschema.ValidationError as e:
+            logger.warning(f"❌ Plan schema validation failed for task {task_id}: {e.message}")
+            return False
+    
+    def generate_plan_with_retries() -> dict:
+        """Generar plan con reintentos y retroalimentación específica a Ollama"""
+        max_attempts = 3 if attempt_retries else 1
+        last_error = None
+        
+        for attempt in range(1, max_attempts + 1):
+            try:
+                logger.info(f"🔄 Unified plan generation attempt {attempt}/{max_attempts} for task {task_id}")
+                
+                # Construir prompt genérico mejorado para generación de JSON estructurado
+                if attempt == 1:
+                    # Primera tentativa: prompt genérico dinámico
+                    prompt = f"""
+GENERA UN PLAN DE ACCIÓN ULTRA-ESPECÍFICO para esta tarea: "{message}"
+
+INSTRUCCIONES CRÍTICAS:
+- Analiza el tipo de tarea y dominio específico
+- Crea pasos únicos que solo apliquen a esta tarea exacta
+- NO uses términos genéricos como "información", "análisis", "documento"
+- Identifica elementos específicos del dominio (nombres propios, conceptos técnicos, ubicaciones, etc.)
+- Cada paso debe ser imposible de reutilizar para otra tarea
+
+METODOLOGÍA ADAPTATIVA:
+1. Identifica el dominio principal de la tarea
+2. Extrae elementos específicos únicos (nombres, lugares, conceptos)
+3. Crea pasos que incorporen estos elementos específicos
+4. Asegúrate que cada paso sea altamente especializado
+
+EJEMPLO DE TRANSFORMACIÓN:
+- En lugar de: "Buscar información sobre X"
+- Mejor: "Identificar [elementos específicos únicos de X] en [fuentes específicas del dominio]"
+
+Responde ÚNICAMENTE con un objeto JSON válido siguiendo EXACTAMENTE este formato:
+
+{{
+  "steps": [
+    {{
+      "title": "Paso ULTRA-ESPECÍFICO para esta tarea exacta (5-100 caracteres)",
+      "description": "Acción concreta con elementos únicos del dominio (10-300 caracteres)", 
+      "tool": "web_search",
+      "estimated_time": "Tiempo estimado como string",
+      "priority": "alta|media|baja"
+    }}
+  ],
+  "task_type": "Tipo de tarea específico (mínimo 3 caracteres)",
+  "complexity": "baja|media|alta", 
+  "estimated_total_time": "Tiempo total estimado"
+}}
+
+REGLAS ULTRA-CRÍTICAS:
+- CADA paso debe incorporar elementos específicos únicos del dominio
+- Evita completamente palabras genéricas
+- Adapta automáticamente al contexto específico de la tarea
+- Mínimo 1 paso, máximo 10 pasos
+- HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
+- NO agregues texto adicional, solo el JSON
+- Asegúrate de que sea JSON válido y parseable
+"""
+                elif attempt == 2:
+                    # Segunda tentativa: prompt con corrección específica y metodología adaptativa
+                    prompt = f"""
+ATENCIÓN: El JSON anterior tuvo errores. GENERA UN PLAN ULTRA-ESPECÍFICO para: "{message}"
+
+ERROR PREVIO: {last_error}
+
+METODOLOGÍA ADAPTATIVA MEJORADA:
+1. Analiza el dominio específico de la tarea
+2. Identifica elementos únicos (términos técnicos, nombres, ubicaciones específicas)
+3. Crea pasos que incorporen estos elementos específicos del dominio
+4. Evita completamente palabras genéricas
+
+PROCESO DE ESPECIALIZACIÓN AUTOMÁTICA:
+- Si es sobre tecnología → usa nombres específicos de tecnologías, versiones, plataformas
+- Si es sobre lugares → usa nombres específicos de ubicaciones, características locales
+- Si es sobre negocios → usa métricas específicas, herramientas del sector
+- Si es sobre investigación → usa fuentes específicas, metodologías del campo
+
+Responde SOLO con JSON válido usando EXACTAMENTE este formato:
+{{
+  "steps": [
+    {{
+      "title": "Paso especializado con elementos específicos del dominio (5-100 caracteres)",
+      "description": "Acción concreta incorporando conceptos únicos de este tema (10-300 caracteres)", 
+      "tool": "web_search",
+      "estimated_time": "string",
+      "priority": "media"
+    }}
+  ],
+  "task_type": "string de mínimo 3 caracteres",
+  "complexity": "media",
+  "estimated_total_time": "string"
+}}
+
+HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
+
+SOLO JSON, sin explicaciones adicionales.
+"""
+                else:
+                    # Tercera tentativa: prompt simplificado con plan de emergencia más robusto
+                    prompt = f"""
+URGENTE: Genera SOLO este JSON válido para: "{message}"
+
+Usa ESTE TEMPLATE y personalizalo:
+{{"steps":[{{"title":"Procesar: {message[:30]}",...","description":"Completar la solicitud específica del usuario","tool":"processing","estimated_time":"2-5 minutos","priority":"media"}}],"task_type":"procesamiento_personalizado","complexity":"media","estimated_total_time":"2-5 minutos"}}
+
+PERSONALIZA el título y descripción para la tarea específica.
+HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
+
+SOLO JSON válido, sin texto adicional.
+"""
+                
+                # Llamar a Ollama con parámetros optimizados para JSON
+                response = ollama_service.generate_response(prompt, {
+                    'temperature': 0.2,  # Baja para mayor consistencia
+                    'max_tokens': 1000,
+                    'response_format': 'json'
+                })
+                
+                if response.get('error'):
+                    last_error = response['error']
+                    logger.warning(f"⚠️ Ollama error attempt {attempt}: {response['error']}")
+                    continue
+                
+                # Parsear respuesta JSON con múltiples estrategias
+                response_text = response.get('response', '').strip()
+                logger.info(f"📥 Ollama response attempt {attempt} for task {task_id}: {response_text[:200]}...")
+                
+                plan_data = None
+                
+                # Estrategia 1: JSON limpio directo
+                try:
+                    cleaned_response = response_text.replace('```json', '').replace('```', '').strip()
+                    if cleaned_response.startswith('{') and cleaned_response.endswith('}'):
+                        plan_data = json.loads(cleaned_response)
+                except json.JSONDecodeError as e:
+                    logger.debug(f"📝 JSON parsing strategy 1 failed: {str(e)}")
+                
+                # Estrategia 2: Buscar JSON en el texto
+                if not plan_data:
+                    try:
+                        json_match = re.search(r'\{[^}]*"steps"[^}]*\[.*?\][^}]*\}', response_text, re.DOTALL)
+                        if json_match:
+                            plan_data = json.loads(json_match.group())
+                    except json.JSONDecodeError as e:
+                        logger.debug(f"📝 JSON parsing strategy 2 failed: {str(e)}")
+                
+                # Estrategia 3: JSON con corrección de formato común
+                if not plan_data:
+                    try:
+                        # Corregir comillas simples por dobles
+                        corrected_text = response_text.replace("'", '"')
+                        # Remover caracteres no JSON
+                        corrected_text = re.sub(r'^[^{]*', '', corrected_text)
+                        corrected_text = re.sub(r'[^}]*$', '', corrected_text)
+                        plan_data = json.loads(corrected_text)
+                    except (json.JSONDecodeError, Exception) as e:
+                        logger.debug(f"📝 JSON parsing strategy 3 failed: {str(e)}")
+                
+                if not plan_data:
+                    last_error = f"No se pudo parsear JSON válido. Respuesta: {response_text[:100]}..."
+                    logger.warning(f"❌ Failed to parse JSON on attempt {attempt}: {last_error}")
+                    continue
+                
+                # Validar esquema
+                if not validate_plan_schema(plan_data):
+                    last_error = "El JSON no cumple con el esquema requerido"
+                    logger.warning(f"❌ Schema validation failed on attempt {attempt}")
+                    continue
+                
+                # Validar que el plan tenga la estructura esperada
+                if not isinstance(plan_data.get('steps'), list) or len(plan_data.get('steps', [])) == 0:
+                    last_error = "El plan no contiene pasos válidos"
+                    logger.warning(f"❌ Invalid plan structure on attempt {attempt}")
+                    continue
+                
+                logger.info(f"✅ Successfully generated and validated unified plan for task {task_id} on attempt {attempt}")
+                return plan_data
+                
+            except Exception as e:
+                last_error = f"Error inesperado: {str(e)}"
+                logger.error(f"❌ Unexpected error on attempt {attempt} for task {task_id}: {str(e)}")
+                continue
+        
+        # Si llegamos aquí, todos los reintentos fallaron
+        logger.error(f"❌ All {max_attempts} plan generation attempts failed for task {task_id}. Last error: {last_error}")
+        
+        # ESTRATEGIA DE EMERGENCIA: Crear plan básico estructurado basado en análisis del mensaje
+        logger.warning(f"🆘 Activating emergency plan generation for task {task_id}")
+        
+        try:
+            emergency_plan = generate_emergency_structured_plan(message, task_id, last_error)
+            logger.info(f"✅ Emergency plan generated successfully for task {task_id}")
+            return emergency_plan
+        except Exception as emergency_error:
+            logger.error(f"❌ Emergency plan generation also failed for task {task_id}: {str(emergency_error)}")
+            raise Exception(f"Complete failure: All plan generation strategies failed. Ollama errors: {last_error}. Emergency error: {str(emergency_error)}")
+    
+    try:
+        # Intentar generar plan con reintentos
+        plan_data = generate_plan_with_retries()
+        
+        # Convertir a formato frontend
+        plan_steps = []
+        for i, step in enumerate(plan_data.get('steps', [])):
+            if not isinstance(step, dict):
+                logger.warning(f"⚠️ Invalid step format for task {task_id}, step {i}: {step}")
+                continue
+                
+            plan_steps.append({
+                'id': f"step_{i+1}",
+                'title': step.get('title', f'Paso {i+1}').strip(),
+                'description': step.get('description', 'Procesando...').strip(),
+                'tool': step.get('tool', 'processing'),
+                'status': 'pending',
+                'estimated_time': step.get('estimated_time', '1 minuto'),
+                'completed': False,
+                'active': i == 0,  # Solo el primer paso activo
+                'priority': step.get('priority', 'media')
+            })
+        
+        if len(plan_steps) == 0:
+            logger.error(f"❌ No valid steps created for task {task_id}")
+            return generate_fallback_plan_with_notification(message, task_id, "No se pudieron crear pasos válidos")
+            
+        # Guardar plan con TaskManager (persistencia MongoDB)
+        task_data = {
+            'plan': plan_steps,
+            'current_step': 0,
+            'status': 'plan_generated',  # ✅ MEJORA: Estado inicial correcto
+            'created_at': datetime.now().isoformat(),
+            'start_time': datetime.now(),
+            'message': message,
+            'task_type': plan_data.get('task_type', 'general'),
+            'complexity': plan_data.get('complexity', 'media'),
+            'ai_generated': True,
+            'plan_source': 'unified_ai_generated'  # Indicar fuente del plan unificado
+        }
+        
+        # Guardar en persistencia y memoria legacy
+        save_task_data(task_id, task_data)
+        
+        logger.info(f"🎉 Generated unified AI-powered plan for task {task_id} with {len(plan_steps)} specific steps")
+        logger.info(f"📋 Plan steps for task {task_id}: {[step['title'] for step in plan_steps]}")
+        
+        return {
+            'steps': plan_steps,
+            'total_steps': len(plan_steps),
+            'estimated_total_time': plan_data.get('estimated_total_time', '2-5 minutos'),
+            'task_type': plan_data.get('task_type', 'unified_ai_generated_dynamic'),
+            'complexity': plan_data.get('complexity', 'media'),
+            'ai_generated': True,
+            'plan_source': 'unified_ai_generated',  # ✅ MEJORA: Indicar fuente del plan unificado
+            'schema_validated': True  # ✅ MEJORA: Indicar que pasó validación
+        }
+            
+    except Exception as e:
+        logger.error(f"❌ All retries failed for unified AI plan generation task {task_id}: {str(e)}")
+        return generate_fallback_plan_with_notification(message, task_id, f"Error en generación IA unificada: {str(e)}")
+
 def generate_dynamic_plan_with_ai(message: str, task_id: str) -> dict:
+    """
+    DEPRECATED: Usar generate_unified_ai_plan en su lugar
+    Mantenido temporalmente para compatibilidad con código existente
+    """
+    logger.warning(f"⚠️ Using deprecated generate_dynamic_plan_with_ai, consider migrating to generate_unified_ai_plan")
+    return generate_unified_ai_plan(message, task_id, attempt_retries=True)
     """
     Genera un plan dinámico usando Ollama con robustecimiento y validación de esquemas
     Mejora implementada según UPGRADE.md Sección 2: Generación de Plan y Robustez
