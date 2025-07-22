@@ -93,48 +93,8 @@ def add_monitor_page(title, content, page_type, metadata=None):
     terminal_logger.info(content)
     terminal_logger.info("=" * 80)
 
-def generate_simple_plan(title, description):
-    """Genera un plan simple sin LLM"""
-    task_id = f"task_{int(time.time())}"
-    
-    plan = {
-        "task_id": task_id,
-        "title": title,
-        "status": "pending",
-        "progress": 0,
-        "created_at": datetime.now().isoformat(),
-        "steps": [
-            {
-                "id": "step1",
-                "title": f"Investigar: {title}",
-                "description": f"Buscar información sobre: {description}",
-                "tool": "web_search",
-                "status": "pending",
-                "estimated_time": 2,
-                "priority": "high"
-            },
-            {
-                "id": "step2", 
-                "title": "Analizar información",
-                "description": "Procesar y analizar los datos encontrados",
-                "tool": "analysis",
-                "status": "pending",
-                "estimated_time": 3,
-                "priority": "normal"
-            },
-            {
-                "id": "step3",
-                "title": "Generar resultado final",
-                "description": "Crear documento con los resultados obtenidos",
-                "tool": "file_creation",
-                "status": "pending", 
-                "estimated_time": 2,
-                "priority": "normal"
-            }
-        ]
-    }
-    
-    return plan
+# FUNCIÓN ELIMINADA: generate_simple_plan - NO SE DEBEN USAR PLANES GENÉRICOS
+# Si no hay LLM, debe fallar con error claro, no generar basura genérica
 
 def generate_detailed_specific_plan(title, description):
     """Genera un plan específico y detallado usando el agente principal"""
