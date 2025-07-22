@@ -278,7 +278,21 @@ def enhanced_chat():
             plan = generate_simple_plan(f"Tarea: {message[:50]}...", message)
             
             # Iniciar ejecución autónoma
-            asyncio.create_task(execute_autonomous_task(plan["task_id"]))
+            task_execution_task = asyncio.create_task(execute_autonomous_task(plan["task_id"]))
+            
+            # No esperar la tarea, simplemente crearla en background
+            def run_task_in_background():
+                try:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop.run_until_complete(execute_autonomous_task(plan["task_id"]))
+                    loop.close()
+                except Exception as e:
+                    terminal_logger.error(f"Error en tarea background: {e}")
+            
+            import threading
+            thread = threading.Thread(target=run_task_in_background, daemon=True)
+            thread.start()
             
             response_text = (
                 f"He generado un plan de acción para tu solicitud y comenzaré la ejecución autónoma. "
