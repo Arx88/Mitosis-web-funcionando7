@@ -150,7 +150,7 @@ def main():
         print("🔧 Revisar conectividad y configuración del backend")
     
     print("\n💡 Para verificación visual completa, revisar la interfaz web:")
-    print("🌐 https://553ce3c1-a524-4671-8ced-b2ea2295e0f8.preview.emergentagent.com")
+    print("🌐 https://21a4481d-b7bc-4f4d-8638-6bc680072ee5.preview.emergentagent.com")
 
 if __name__ == "__main__":
     main()
