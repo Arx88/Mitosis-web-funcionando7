@@ -4466,49 +4466,52 @@ def generate_task_plan(title: str, task_id: str) -> Dict:
         
         logger.info("✅ Ollama service is healthy, generating AI plan")
         
-        # Crear prompt específico para generar plan ULTRA-ESPECÍFICO
+        # Crear prompt genérico mejorado para generar plan ULTRA-ESPECÍFICO
         plan_prompt = f"""
         Eres un agente inteligente especializado en crear planes de acción ULTRA-ESPECÍFICOS.
 
         TAREA A PLANIFICAR: "{title}"
 
+        METODOLOGÍA ADAPTATIVA:
+        1. Analiza el dominio específico de la tarea (tecnología, ubicación, negocio, etc.)
+        2. Identifica elementos únicos del dominio (nombres específicos, conceptos técnicos, ubicaciones)
+        3. Crea pasos que incorporen estos elementos específicos
+        4. Evita completamente términos genéricos
+
         INSTRUCCIONES ULTRA-CRÍTICAS:
         1. NO uses títulos genéricos como "Análisis inicial", "Investigación", "Procesamiento", "Entrega"
         2. NO uses palabras como "información", "datos", "análisis", "documento", "informe" 
         3. Crea pasos ÚNICOS que solo apliquen a esta tarea específica
-        4. USA detalles concretos del tema (nombres, lugares, conceptos específicos)
+        4. USA elementos específicos del dominio (nombres técnicos, ubicaciones específicas, herramientas del sector)
         5. Cada paso debe ser imposible de reutilizar para otra tarea
 
-        EJEMPLOS DE PASOS ESPECÍFICOS CORRECTOS:
-        Para "bares Valencia": 
-        - "Mapear zonas Ruzafa, Carmen y Xàtiva para identificar bares locales"
-        - "Verificar horarios y terrazas en Google Maps de bares valencianos"
-        
-        Para "software 2025":
-        - "Analizar repositorios GitHub Trending en categoría AI/ML últimos 6 meses"
-        - "Revisar roadmaps de React, Vue y Angular para cambios 2025"
+        PROCESO DE ESPECIALIZACIÓN:
+        - Identifica el tipo de dominio de la tarea
+        - Extrae conceptos, nombres o términos específicos únicos
+        - Incorpora estos elementos específicos en cada paso
+        - Asegúrate de que cada paso sea altamente especializado para este dominio
 
         FORMATO REQUERIDO (JSON válido):
         {{
             "steps": [
                 {{
                     "id": "step_1",
-                    "title": "[TÍTULO ULTRA-ESPECÍFICO ÚNICO PARA ESTA TAREA]",
-                    "description": "[DESCRIPCIÓN DETALLADA CON ACCIONES CONCRETAS ESPECÍFICAS]",
+                    "title": "[TÍTULO ESPECIALIZADO CON ELEMENTOS ESPECÍFICOS DEL DOMINIO]",
+                    "description": "[DESCRIPCIÓN DETALLADA CON CONCEPTOS ÚNICOS Y ESPECÍFICOS]",
                     "tool": "web_search",
                     "estimated_time": "3-5 minutos",
                     "priority": "alta"
                 }},
                 {{
                     "id": "step_2", 
-                    "title": "[OTRO TÍTULO ÚNICO Y ESPECÍFICO]",
-                    "description": "[DESCRIPCIÓN ESPECÍFICA CON DETALLES ÚNICOS]",
+                    "title": "[OTRO TÍTULO ÚNICO CON ESPECIFICIDAD DEL TEMA]",
+                    "description": "[DESCRIPCIÓN CON ELEMENTOS TÉCNICOS O ESPECÍFICOS ÚNICOS]",
                     "tool": "analysis",
                     "estimated_time": "2-4 minutos",
                     "priority": "media"
                 }}
             ],
-            "task_type": "tipo_específico_único",
+            "task_type": "tipo_específico_del_dominio",
             "complexity": "media", 
             "estimated_total_time": "10-15 minutos"
         }}
