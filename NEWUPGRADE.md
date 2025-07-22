@@ -1,5 +1,3 @@
-# Plan de Mejora del Agente General: UPGRADE.md
-
 ## Introducción
 Este documento técnico detalla un plan de mejora integral para el agente general actual, abordando las inconsistencias y problemas de funcionalidad identificados. El objetivo es transformar el agente en una entidad autónoma y potente, capaz de procesar tareas de manera eficiente, ejecutar planes de acción de forma autónoma y comunicar el progreso y los resultados de manera clara y técnica al usuario. Se hará especial énfasis en el *porqué* de cada solución y se proporcionarán ejemplos de código concretos para facilitar la implementación por parte del equipo de desarrollo, **sin modificar la interfaz de usuario existente ni duplicar funcionalidades**.
 
