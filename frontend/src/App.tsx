@@ -532,32 +532,9 @@ export function App() {
                         onSendMessage={async (message) => {
                           console.log('🎯 Homepage: Creating task with initial message');
                           if (message.trim()) {
-                            // Crear tarea
-                            const newTask = await createTask(message.trim());
-                            
-                            // ✅ AGREGAR EL MENSAJE DEL USUARIO A LA TAREA
-                            const userMessage = {
-                              id: `msg-${Date.now()}`,
-                              content: message.trim(),
-                              sender: 'user' as const,
-                              timestamp: new Date()
-                            };
-                            
-                            // Actualizar la tarea CON el mensaje inicial
-                            const taskWithMessage = {
-                              ...newTask,
-                              messages: [userMessage], // ✅ AGREGAR MENSAJE INICIAL
-                              status: 'active' as const
-                            };
-                            
-                            setTasks(prev => prev.map(task => 
-                              task.id === newTask.id ? taskWithMessage : task
-                            ));
-                            
-                            // Activar TaskView
-                            setActiveTaskId(newTask.id);
-                            
-                            console.log('✅ Task created with initial message:', userMessage);
+                            // ✅ FIXED: Create task with message in one atomic operation
+                            const newTask = await createTaskWithMessage(message.trim());
+                            console.log('✅ Task created with initial message:', newTask.id);
                           }
                         }}
                         placeholder="Escribe tu tarea aquí..."
