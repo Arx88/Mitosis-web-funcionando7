@@ -593,28 +593,9 @@ export function App() {
                         onWebSearch={async (searchQuery) => {
                           console.log('🌐 WebSearch: Creating task with message');
                           if (searchQuery && searchQuery.trim().length > 0) {
-                            // Crear tarea
-                            const newTask = await createTask(searchQuery);
-                            
-                            // ✅ AGREGAR EL MENSAJE DEL USUARIO
-                            const userMessage = {
-                              id: `msg-${Date.now()}`,
-                              content: searchQuery,
-                              sender: 'user' as const,
-                              timestamp: new Date()
-                            };
-                            
-                            const taskWithMessage = {
-                              ...newTask,
-                              messages: [userMessage],
-                              status: 'active' as const
-                            };
-                            
-                            setTasks(prev => prev.map(task => 
-                              task.id === newTask.id ? taskWithMessage : task
-                            ));
-                            
-                            setActiveTaskId(newTask.id);
+                            // ✅ FIXED: Use consolidated function
+                            const newTask = await createTaskWithMessage(searchQuery);
+                            console.log('✅ WebSearch task created:', newTask.id);
                           }
                         }}
                         onDeepSearch={async (searchQuery) => {
