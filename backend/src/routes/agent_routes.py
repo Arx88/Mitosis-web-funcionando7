@@ -3629,6 +3629,7 @@ def generate_plan():
         return jsonify({
             'plan': dynamic_plan['steps'],
             'task_id': task_id,
+            'enhanced_title': enhanced_title,  # ✨ NUEVO: Título mejorado generado con LLM
             'total_steps': dynamic_plan['total_steps'],
             'estimated_total_time': dynamic_plan['estimated_total_time'],
             'task_type': dynamic_plan['task_type'],
