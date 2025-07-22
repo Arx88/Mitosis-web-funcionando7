@@ -164,7 +164,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         processedMessage = `[DeepResearch] ${message}`;
       }
 
-      // Crear mensaje del usuario INMEDIATAMENTE
+      // Crear mensaje del usuario (SOLO UNA VEZ)
       const userMessage: Message = {
         id: `msg-${Date.now()}-user`,
         content: message,
@@ -172,11 +172,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         timestamp: new Date()
       };
 
-      // Agregar mensaje del usuario inmediatamente
-      if (onUpdateMessages) {
-        const updatedMessages = [...messages, userMessage];
-        onUpdateMessages(updatedMessages);
-      }
+      // NO agregar aquí - se agregará después junto con la respuesta del agente
 
       // Llamar al callback original para mantener compatibilidad
       onSendMessage(processedMessage);
