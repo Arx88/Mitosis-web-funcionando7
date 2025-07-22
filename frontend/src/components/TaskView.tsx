@@ -774,6 +774,23 @@ export const TaskView: React.FC<TaskViewProps> = ({
                   logToTerminal(`📋 Plan generado: ${plan.total_steps} pasos definidos`, 'success');
                 }
               }}
+              onTitleGenerated={(enhancedTitle) => {
+                console.log('📝 TaskView: Enhanced title received from ChatInterface:', enhancedTitle);
+                
+                // Actualizar el título de la tarea con el título mejorado
+                const updatedTask = {
+                  ...task,
+                  title: enhancedTitle
+                };
+                
+                console.log('📝 TaskView: Updating task with enhanced title:', updatedTask);
+                onUpdateTask(updatedTask);
+                
+                // Log al terminal
+                if (logToTerminal) {
+                  logToTerminal(`📝 Título mejorado generado: "${enhancedTitle}"`, 'success');
+                }
+              }}
               onTaskReset={() => {
                 // Reset task-specific state when switching tasks - MORE COMPREHENSIVE RESET
                 console.log('🔄 Task reset triggered for task:', task.id);
