@@ -48,6 +48,7 @@ export interface ChatInterfaceProps {
   onUpdateMessages?: (messages: Message[]) => void;
   onLogToTerminal?: (message: string, type?: 'info' | 'success' | 'error') => void;
   onTaskPlanGenerated?: (plan: any) => void;
+  onTitleGenerated?: (title: string) => void; // ✨ NUEVO: Callback para título generado
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({
