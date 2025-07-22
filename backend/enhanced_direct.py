@@ -136,7 +136,7 @@ def generate_simple_plan(title, description):
     
     return plan
 
-async def execute_autonomous_task(task_id):
+def execute_autonomous_task(task_id):
     """Ejecuta tarea de forma autónoma simulada"""
     global autonomous_execution_active, current_autonomous_task_id
     
@@ -158,8 +158,8 @@ async def execute_autonomous_task(task_id):
                 {"step": i, "total_steps": len(steps)}
             )
             
-            # Simular trabajo
-            await asyncio.sleep(2)
+            # Simular trabajo con time.sleep
+            time.sleep(2)
             
             terminal_logger.info(f"✅ Paso completado: {step}")
         
