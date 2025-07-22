@@ -702,7 +702,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
         {/* Chat Interface - con altura completa disponible */}
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 min-h-0">
-            <ChatInterface 
+            <SimpleChatInterface 
               messages={task.messages.map(msg => ({
                 id: msg.id,
                 content: msg.content,
