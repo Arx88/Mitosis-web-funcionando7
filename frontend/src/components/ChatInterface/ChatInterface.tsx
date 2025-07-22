@@ -190,6 +190,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             const initData = await initResponse.json();
             console.log('✅ Plan generated with specific AI planning:', initData);
             
+            // ✨ NUEVA FUNCIONALIDAD: Usar título mejorado si está disponible
+            if (onTitleGenerated && initData.enhanced_title) {
+              console.log('📝 Updating task title with enhanced title:', initData.enhanced_title);
+              onTitleGenerated(initData.enhanced_title);
+            }
+            
             // Crear respuesta del agente indicando que el plan fue generado
             const agentMessage: Message = {
               id: `msg-${Date.now()}-agent`,
