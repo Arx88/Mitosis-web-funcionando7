@@ -427,6 +427,10 @@ export function App() {
         setTasks(prev => prev.map(task => 
           task.id === newTask.id ? updatedTask : task
         ));
+        
+        // ✅ CRITICAL FIX: Set activeTaskId to transition to TaskView
+        setActiveTaskId(newTask.id);
+        console.log('✅ File upload completed, TaskView activated:', newTask.id);
       } else {
         console.error('❌ File upload error response:', response.status, response.statusText);
         throw new Error(`HTTP error! status: ${response.status}`);
