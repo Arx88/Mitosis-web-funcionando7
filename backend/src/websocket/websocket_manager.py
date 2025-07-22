@@ -25,6 +25,8 @@ class UpdateType(Enum):
     STEP_STARTED = "step_started"
     STEP_COMPLETED = "step_completed"
     STEP_FAILED = "step_failed"
+    STEP_UPDATE = "step_update"  # Enhanced step updates
+    TOOL_EXECUTION_DETAIL = "tool_execution_detail"  # Detailed tool execution info
     PLAN_UPDATED = "plan_updated"
     ERROR = "error"
 
