@@ -153,18 +153,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const handleSendMessage = async (message: string) => {
     if (message.trim() && !isLoading) {
       setIsLoading(true);
-      // Reset active quick action when sending message
       setActiveQuickAction(null);
 
-      // Modificar el mensaje basado en el modo de búsqueda
-      let processedMessage = message;
-      if (searchMode === 'websearch') {
-        processedMessage = `[WebSearch] ${message}`;
-      } else if (searchMode === 'deepsearch') {
-        processedMessage = `[DeepResearch] ${message}`;
-      }
-
-      // Crear mensaje del usuario (SOLO UNA VEZ)
+      // Crear mensaje del usuario
       const userMessage: Message = {
         id: `msg-${Date.now()}-user`,
         content: message,
@@ -172,17 +163,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         timestamp: new Date()
       };
 
-      // NO agregar aquí - se agregará después junto con la respuesta del agente
-
-      // Llamar al callback original para mantener compatibilidad
-      onSendMessage(processedMessage);
+      // Llamar al callback original
+      onSendMessage(message);
 
       try {
-        // 🚀 LÓGICA UNIFICADA: Usar initialize-task que maneja automáticamente casual vs planes
-        console.log('🎯 UNIFIED LOGIC - Calling initialize-task for intelligent classification');
-        // Llamar al endpoint initialize-task que ya clasifica automáticamente
+        // 🚀 LÓGICA SIMPLE: Siempre llamar a initialize-task (maneja casual vs tareas automáticamente)
         const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
-        const initResponse = await fetch(`${backendUrl}/api/agent/initialize-task`, {
+        const response = await fetch(`${backendUrl}/api/agent/initialize-task`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -193,53 +180,35 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             auto_execute: true
           })
         });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ Response received:', data);
           
-          if (initResponse.ok) {
-            const initData = await initResponse.json();
-            console.log('✅ Plan generated with specific AI planning:', initData);
-            
-            // Crear respuesta del agente indicando que el plan fue generado
-            const agentMessage: Message = {
-              id: `msg-${Date.now()}-agent`,
-              content: `✅ Plan de acción específico generado. Ejecutando ${initData.plan?.length || initData.total_steps || 0} pasos personalizados para completar tu tarea.`,
-              sender: 'agent',
-              timestamp: new Date(),
-              plan: {
-                steps: initData.plan || [],
-                total_steps: initData.total_steps || initData.plan?.length || 0,
-                estimated_total_time: initData.estimated_total_time || '10-15 minutos',
-                task_type: initData.task_type || 'personalizada',
-                complexity: initData.complexity || 'media'
-              }
-            };
-            
-            // ÚNICA ACTUALIZACIÓN DE MENSAJES - consolidada
-            if (onUpdateMessages) {
-              const updatedMessages = [...messages, userMessage, agentMessage];
-              onUpdateMessages(updatedMessages);
-            }
-            
-            // ✅ CRITICAL FIX: Call onTaskPlanGenerated callback for plan display in TerminalView
-            if (onTaskPlanGenerated && initData.plan) {
-              console.log('📋 Calling onTaskPlanGenerated with specific AI plan:', agentMessage.plan);
-              onTaskPlanGenerated(agentMessage.plan);
-            }
-            
-          } else {
-            console.error('❌ Generate plan failed:', initResponse.status);
-            // Fallback al chat normal si falla
-            await sendRegularChatMessage(processedMessage, userMessage);
+          // Crear mensaje del agente
+          const agentMessage: Message = {
+            id: `msg-${Date.now()}-agent`,
+            content: data.response || data.message || 'Procesado correctamente',
+            sender: 'agent',
+            timestamp: new Date()
+          };
+          
+          // Actualizar mensajes
+          if (onUpdateMessages) {
+            onUpdateMessages([...messages, userMessage, agentMessage]);
+          }
+          
+          // Si hay plan, notificarlo
+          if (onTaskPlanGenerated && data.plan) {
+            onTaskPlanGenerated(data.plan);
           }
           
         } else {
-          // Para mensajes posteriores, usar el chat normal
-          await sendRegularChatMessage(processedMessage, userMessage);
+          console.error('❌ Request failed:', response.status);
         }
         
       } catch (error) {
-        console.error('❌ Error in handleSendMessage:', error);
-        // Fallback al chat normal si hay error
-        await sendRegularChatMessage(processedMessage, userMessage);
+        console.error('❌ Error:', error);
       } finally {
         setIsLoading(false);
       }
