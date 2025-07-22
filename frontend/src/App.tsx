@@ -138,8 +138,21 @@ export function App() {
       isFavorite: false,
       progress: 0 // Initialize progress at 0
     };
-    setTasks(prev => [newTask, ...prev]);
-    setActiveTaskId(newTask.id);
+    
+    // ✅ UPDATE: Usar callback para garantizar que ambos estados se actualicen juntos
+    setTasks(prev => {
+      const updatedTasks = [newTask, ...prev];
+      console.log('🎯 TASK CREATION - Tasks updated:', updatedTasks.length);
+      
+      // Forzar la activación inmediatamente después de actualizar tasks
+      setTimeout(() => {
+        setActiveTaskId(newTask.id);
+        console.log('🚀 CRITICAL FIX: ActiveTaskId set via setTimeout:', newTask.id);
+      }, 0);
+      
+      return updatedTasks;
+    });
+    
     setIsTaskCreating(false);
     
     // 🐛 DEBUG: Logging task creation state
