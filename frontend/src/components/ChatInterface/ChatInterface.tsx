@@ -49,6 +49,7 @@ export interface ChatInterfaceProps {
   onLogToTerminal?: (message: string, type?: 'info' | 'success' | 'error') => void;
   onTaskPlanGenerated?: (plan: any) => void;
   onTitleGenerated?: (title: string) => void; // ✨ NUEVO: Callback para título generado
+  hasExistingPlan?: boolean; // ✨ NUEVO: Indica si la tarea ya tiene plan generado
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({
