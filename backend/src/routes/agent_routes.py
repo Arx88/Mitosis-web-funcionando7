@@ -4741,114 +4741,25 @@ def emit_step_event(task_id: str, event_type: str, data: dict):
         logger.warning("⚠️ WebSocket manager not available")
 
 def generate_task_plan(title: str, task_id: str) -> Dict:
-    """Generar plan de tarea usando Ollama DIRECTAMENTE - NO MORE MOCKUPS"""
+    """
+    UPDATED: Ahora usa la función unificada generate_unified_ai_plan para eliminar duplicación
+    Generar plan de tarea usando Ollama DIRECTAMENTE - NO MORE MOCKUPS
+    """
     try:
-        logger.info(f"🚀 Starting generate_task_plan for task {task_id}: {title}")
+        logger.info(f"🚀 Starting generate_task_plan (unified) for task {task_id}: {title}")
         
-        # ✅ CRITICAL FIX: Use Ollama directly instead of enhanced_agent
-        ollama_service = getattr(current_app, 'ollama_service', None)
-        if not ollama_service:
-            logger.error("❌ Ollama service not available, falling back to basic plan")
-            return generate_basic_plan(title)
+        # ✅ CRITICAL FIX: Use unified AI plan generation instead of duplicated code
+        plan_result = generate_unified_ai_plan(title, task_id, attempt_retries=False)  # No retries para backward compatibility
         
-        # Verificar que Ollama esté saludable
-        if not ollama_service.is_healthy():
-            logger.error("❌ Ollama service not healthy, falling back to basic plan")
-            return generate_basic_plan(title)
+        if plan_result.get('plan_source') == 'fallback':
+            logger.warning(f"⚠️ Unified plan generation returned fallback for task {task_id}")
+        else:
+            logger.info(f"✅ Unified plan generation successful for task {task_id}")
         
-        logger.info("✅ Ollama service is healthy, generating AI plan")
-        
-        # Crear prompt genérico mejorado para generar plan ULTRA-ESPECÍFICO
-        plan_prompt = f"""
-        Eres un agente inteligente especializado en crear planes de acción ULTRA-ESPECÍFICOS.
-
-        TAREA A PLANIFICAR: "{title}"
-
-        METODOLOGÍA ADAPTATIVA:
-        1. Analiza el dominio específico de la tarea (tecnología, ubicación, negocio, etc.)
-        2. Identifica elementos únicos del dominio (nombres específicos, conceptos técnicos, ubicaciones)
-        3. Crea pasos que incorporen estos elementos específicos
-        4. Evita completamente términos genéricos
-
-        INSTRUCCIONES ULTRA-CRÍTICAS:
-        1. NO uses títulos genéricos como "Análisis inicial", "Investigación", "Procesamiento", "Entrega"
-        2. NO uses palabras como "información", "datos", "análisis", "documento", "informe" 
-        3. Crea pasos ÚNICOS que solo apliquen a esta tarea específica
-        4. USA elementos específicos del dominio (nombres técnicos, ubicaciones específicas, herramientas del sector)
-        5. Cada paso debe ser imposible de reutilizar para otra tarea
-
-        PROCESO DE ESPECIALIZACIÓN:
-        - Identifica el tipo de dominio de la tarea
-        - Extrae conceptos, nombres o términos específicos únicos
-        - Incorpora estos elementos específicos en cada paso
-        - Asegúrate de que cada paso sea altamente especializado para este dominio
-
-        FORMATO REQUERIDO (JSON válido):
-        {{
-            "steps": [
-                {{
-                    "id": "step_1",
-                    "title": "[TÍTULO ESPECIALIZADO CON ELEMENTOS ESPECÍFICOS DEL DOMINIO]",
-                    "description": "[DESCRIPCIÓN DETALLADA CON CONCEPTOS ÚNICOS Y ESPECÍFICOS]",
-                    "tool": "web_search",
-                    "estimated_time": "3-5 minutos",
-                    "priority": "alta"
-                }},
-                {{
-                    "id": "step_2", 
-                    "title": "[OTRO TÍTULO ÚNICO CON ESPECIFICIDAD DEL TEMA]",
-                    "description": "[DESCRIPCIÓN CON ELEMENTOS TÉCNICOS O ESPECÍFICOS ÚNICOS]",
-                    "tool": "analysis",
-                    "estimated_time": "2-4 minutos",
-                    "priority": "media"
-                }}
-            ],
-            "task_type": "tipo_específico_del_dominio",
-            "complexity": "media", 
-            "estimated_total_time": "10-15 minutos"
-        }}
-
-        HERRAMIENTAS DISPONIBLES: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
-
-        RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.
-        """
-        
-        # Llamar a Ollama directamente
-        try:
-            logger.info(f"📝 Calling Ollama for plan generation - task: {task_id}")
-            ollama_response = ollama_service.generate_response(plan_prompt)
-            
-            if ollama_response.get('error'):
-                logger.error(f"❌ Ollama error: {ollama_response['error']}")
-                return generate_basic_plan(title)
-                
-            response = ollama_response.get('response', '')
-            logger.info(f"🤖 Ollama response for plan generation: {response[:200]}...")
-            
-            # Limpiar respuesta y extraer JSON
-            clean_response = response.strip()
-            if '```json' in clean_response:
-                clean_response = clean_response.split('```json')[1].split('```')[0].strip()
-            elif '```' in clean_response:
-                clean_response = clean_response.split('```')[1].split('```')[0].strip()
-            
-            logger.info(f"🧹 Cleaned response: {clean_response[:200]}...")
-            
-            # Parsear JSON
-            plan_data = json.loads(clean_response)
-            logger.info(f"✅ Plan real generado exitosamente con {len(plan_data.get('steps', []))} pasos")
-            return plan_data
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"❌ JSON parsing error: {e}")
-            logger.error(f"❌ Raw response: {response}")
-            return generate_basic_plan(title)
-        except Exception as e:
-            logger.error(f"❌ Ollama generation error: {e}")
-            return generate_basic_plan(title)
+        return plan_result
             
     except Exception as e:
-        logger.error(f"❌ Error generating plan: {e}")
+        logger.error(f"❌ Error in unified generate_task_plan: {e}")
         return generate_basic_plan(title)
 
 def generate_basic_plan(title: str) -> Dict:
