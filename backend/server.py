@@ -53,8 +53,8 @@ CORS(app, resources={
     r"/*": {
         "origins": [
             "*",
-            "https://ace23635-be0d-454f-a15d-47822f64bf8b.preview.emergentagent.com",
-            "https://ace23635-be0d-454f-a15d-47822f64bf8b.preview.emergentagent.com"
+            "https://0eea585b-9491-4595-8054-818b778be2a7.preview.emergentagent.com",
+            "https://0eea585b-9491-4595-8054-818b778be2a7.preview.emergentagent.com"
         ],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],

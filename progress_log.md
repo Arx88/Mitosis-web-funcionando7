@@ -109,7 +109,7 @@ cd /app && bash start_mitosis.sh
 - ✅ **Health Check**: `{"services":{"database":true,"ollama":true,"tools":12},"status":"healthy"}`
 
 ### URLs Operativas:
-- 📍 **Frontend**: https://ace23635-be0d-454f-a15d-47822f64bf8b.preview.emergentagent.com
+- 📍 **Frontend**: https://0eea585b-9491-4595-8054-818b778be2a7.preview.emergentagent.com
 - 📍 **Backend API**: http://localhost:8001
 
 ## 🔧 CAMBIOS TÉCNICOS IMPLEMENTADOS

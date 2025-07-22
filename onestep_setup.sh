@@ -184,7 +184,7 @@ if verify_ollama; then ollama_ok=true; fi
 echo ""
 echo "🎉 MITOSIS ONE-STEP READY - REPORTE FINAL"
 echo "=============================================================="
-echo "📍 Frontend: https://ace23635-be0d-454f-a15d-47822f64bf8b.preview.emergentagent.com"
+echo "📍 Frontend: https://0eea585b-9491-4595-8054-818b778be2a7.preview.emergentagent.com"
 echo "📍 Backend API: http://localhost:8001"
 echo "=============================================================="
 
