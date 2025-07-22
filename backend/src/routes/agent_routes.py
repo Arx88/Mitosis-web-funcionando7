@@ -4343,6 +4343,7 @@ def initialize_task():
             'success': True,
             'plan': plan_response,
             'task_id': task_id,
+            'enhanced_title': enhanced_title,  # ✨ NUEVO: Título mejorado generado con LLM
             'auto_execute': auto_execute
         })
         
