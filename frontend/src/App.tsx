@@ -460,6 +460,10 @@ export function App() {
       setTasks(prev => prev.map(task => 
         task.id === newTask.id ? updatedTask : task
       ));
+      
+      // ✅ CRITICAL FIX: Set activeTaskId even on error to show error state
+      setActiveTaskId(newTask.id);
+      console.log('⚠️ File upload failed, but TaskView activated to show error:', newTask.id);
     }
     
     setShowFileUpload(false);
