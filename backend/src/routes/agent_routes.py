@@ -4450,42 +4450,54 @@ def generate_task_plan(title: str, task_id: str) -> Dict:
             logger.error("❌ Ollama service not available, falling back to basic plan")
             return generate_basic_plan(title)
         
-        # Crear prompt específico para generar plan real
+        # Crear prompt específico para generar plan ULTRA-ESPECÍFICO
         plan_prompt = f"""
-        Eres un agente inteligente especializado en crear planes de acción detallados y específicos.
+        Eres un agente inteligente especializado en crear planes de acción ULTRA-ESPECÍFICOS.
 
         TAREA A PLANIFICAR: "{title}"
 
-        INSTRUCCIONES CRÍTICAS:
+        INSTRUCCIONES ULTRA-CRÍTICAS:
         1. NO uses títulos genéricos como "Análisis inicial", "Investigación", "Procesamiento", "Entrega"
-        2. Crea pasos ESPECÍFICOS para esta tarea exacta
-        3. Cada paso debe ser accionable y claro
-        4. Usa herramientas apropiadas para cada paso
+        2. NO uses palabras como "información", "datos", "análisis", "documento", "informe" 
+        3. Crea pasos ÚNICOS que solo apliquen a esta tarea específica
+        4. USA detalles concretos del tema (nombres, lugares, conceptos específicos)
+        5. Cada paso debe ser imposible de reutilizar para otra tarea
+
+        EJEMPLOS DE PASOS ESPECÍFICOS CORRECTOS:
+        Para "bares Valencia": 
+        - "Mapear zonas Ruzafa, Carmen y Xàtiva para identificar bares locales"
+        - "Verificar horarios y terrazas en Google Maps de bares valencianos"
+        
+        Para "software 2025":
+        - "Analizar repositorios GitHub Trending en categoría AI/ML últimos 6 meses"
+        - "Revisar roadmaps de React, Vue y Angular para cambios 2025"
 
         FORMATO REQUERIDO (JSON válido):
         {{
             "steps": [
                 {{
                     "id": "step_1",
-                    "title": "[TÍTULO ESPECÍFICO PARA LA TAREA]",
-                    "description": "[DESCRIPCIÓN DETALLADA DE QUE HACER]",
+                    "title": "[TÍTULO ULTRA-ESPECÍFICO ÚNICO PARA ESTA TAREA]",
+                    "description": "[DESCRIPCIÓN DETALLADA CON ACCIONES CONCRETAS ESPECÍFICAS]",
                     "tool": "web_search",
                     "estimated_time": "3-5 minutos",
                     "priority": "alta"
                 }},
                 {{
                     "id": "step_2", 
-                    "title": "[OTRO TÍTULO ESPECÍFICO]",
-                    "description": "[DESCRIPCIÓN ESPECÍFICA]",
+                    "title": "[OTRO TÍTULO ÚNICO Y ESPECÍFICO]",
+                    "description": "[DESCRIPCIÓN ESPECÍFICA CON DETALLES ÚNICOS]",
                     "tool": "analysis",
                     "estimated_time": "2-4 minutos",
                     "priority": "media"
                 }}
             ],
-            "task_type": "investigación",
+            "task_type": "tipo_específico_único",
             "complexity": "media", 
             "estimated_total_time": "10-15 minutos"
         }}
+
+        HERRAMIENTAS DISPONIBLES: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
 
         RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.
         """
