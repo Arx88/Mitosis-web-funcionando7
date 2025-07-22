@@ -649,99 +649,38 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                     ) : (
                       <VanishInput
                         onSendMessage={async (message) => {
-                          console.log('🎯 App.tsx onSendMessage CALLED with:', message);
+                          console.log('🎯 Homepage: Creating task and calling initialize-task');
                           if (message.trim()) {
-                            console.log('🚀 Creating task with message:', message.trim());
-                            
-                            // PASO 1: Crear la tarea INMEDIATAMENTE
+                            // Crear la tarea
                             const newTask = await createTask(message.trim());
-                            console.log('✅ Task created successfully:', newTask.id);
                             
-                            // PASO 1.5: 🚀 ACTIVAR LA TAREA INMEDIATAMENTE PARA MOSTRAR TaskView
+                            // Activar TaskView inmediatamente
                             setActiveTaskId(newTask.id);
-                            console.log('🚀 CRITICAL FIX: Active task set immediately:', newTask.id);
                             
-                            // PASO 2: Crear solo el mensaje del usuario
-                            const userMessage = {
-                              id: `msg-${Date.now()}`,
-                              content: message.trim(),
-                              sender: 'user' as const,
-                              timestamp: new Date()
-                            };
-                            
-                            // PASO 3: Actualizar la tarea CON el mensaje del usuario
-                            const basicTaskUpdate = {
-                              ...newTask,
-                              messages: [userMessage],
-                              status: 'in-progress' as const,
-                              progress: 10
-                            };
-                            
-                            setTasks(prev => prev.map(task => 
-                              task.id === newTask.id ? basicTaskUpdate : task
-                            ));
-                            
-                            console.log('✅ Task updated in sidebar with user message');
-                            
-                            // PASO 4: Llamar al backend para procesar la tarea y generar el plan
+                            // Llamar al backend que ya maneja todo automáticamente
                             try {
                               const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
-                              console.log('🌐 Calling backend:', `${backendUrl}/api/agent/initialize-task`);
-                              
                               const response = await fetch(`${backendUrl}/api/agent/initialize-task`, {
                                 method: 'POST',
-                                headers: {
-                                  'Content-Type': 'application/json',
-                                },
+                                headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                   task_id: newTask.id,
                                   title: message.trim(),
-                                  auto_execute: true  // 🚀 ACTIVAR EJECUCIÓN AUTOMÁTICA
+                                  auto_execute: true
                                 })
                               });
                               
                               if (response.ok) {
-                                const initData = await response.json();
-                                console.log('✅ Task initialized with auto-execution:', initData);
+                                const data = await response.json();
+                                console.log('✅ Task initialized:', data);
                                 
-                                // PASO 5: Actualizar la tarea con el plan generado
-                                if (initData.plan && initData.plan.steps) {
-                                  const updatedTaskWithPlan = {
-                                    ...basicTaskUpdate,
-                                    plan: initData.plan.steps.map((step: any) => ({
-                                      id: step.id,
-                                      title: step.title,
-                                      description: step.description,
-                                      tool: step.tool,
-                                      estimated_time: step.estimated_time,
-                                      priority: step.priority,
-                                      completed: false,
-                                      active: false,
-                                      status: 'pending'
-                                    })),
-                                    status: 'in-progress' as const,
-                                    progress: 25
-                                  };
-                                  
-                                  setTasks(prev => prev.map(task => 
-                                    task.id === newTask.id ? updatedTaskWithPlan : task
-                                  ));
-                                  
-                                  // 🚀 CRUCIAL: Cambiar a la nueva tarea para mostrar TaskView
-                                  setActiveTaskId(updatedTaskWithPlan.id);
-                                  
-                                  console.log('✅ Task updated with generated plan:', initData.plan.steps.length, 'steps');
-                                }
+                                // El ChatInterface se encargará del resto
                               } else {
                                 console.error('❌ Initialize task failed:', response.status);
-                                // Fallback to chat endpoint if initialize fails
-                                await fallbackToChat(newTask, message, basicTaskUpdate, userMessage);
                               }
                               
                             } catch (error) {
-                              console.error('❌ Error initializing task:', error);
-                              // Fallback to chat endpoint if initialize fails
-                              await fallbackToChat(newTask, message, basicTaskUpdate, userMessage);
+                              console.error('❌ Error:', error);
                             }
                           }
                         }}
