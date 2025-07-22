@@ -565,23 +565,57 @@ export function App() {
                         showInternalButtons={true}
                         onAttachFiles={handleAttachFiles}
                         onWebSearch={async (searchQuery) => {
-                          console.log('🌐 WebSearch: Creating task only');
+                          console.log('🌐 WebSearch: Creating task with message');
                           if (searchQuery && searchQuery.trim().length > 0) {
-                            // SOLO crear la tarea y activar TaskView
+                            // Crear tarea
                             const newTask = await createTask(searchQuery);
-                            setActiveTaskId(newTask.id);
                             
-                            // ChatInterface se encargará del resto
+                            // ✅ AGREGAR EL MENSAJE DEL USUARIO
+                            const userMessage = {
+                              id: `msg-${Date.now()}`,
+                              content: searchQuery,
+                              sender: 'user' as const,
+                              timestamp: new Date()
+                            };
+                            
+                            const taskWithMessage = {
+                              ...newTask,
+                              messages: [userMessage],
+                              status: 'active' as const
+                            };
+                            
+                            setTasks(prev => prev.map(task => 
+                              task.id === newTask.id ? taskWithMessage : task
+                            ));
+                            
+                            setActiveTaskId(newTask.id);
                           }
                         }}
                         onDeepSearch={async (searchQuery) => {
-                          console.log('🔬 DeepSearch: Creating task only');
+                          console.log('🔬 DeepSearch: Creating task with message');
                           if (searchQuery && searchQuery.trim().length > 0) {
-                            // SOLO crear la tarea y activar TaskView
+                            // Crear tarea
                             const newTask = await createTask(searchQuery);
-                            setActiveTaskId(newTask.id);
                             
-                            // ChatInterface se encargará del resto
+                            // ✅ AGREGAR EL MENSAJE DEL USUARIO
+                            const userMessage = {
+                              id: `msg-${Date.now()}`,
+                              content: searchQuery,
+                              sender: 'user' as const,
+                              timestamp: new Date()
+                            };
+                            
+                            const taskWithMessage = {
+                              ...newTask,
+                              messages: [userMessage],
+                              status: 'active' as const
+                            };
+                            
+                            setTasks(prev => prev.map(task => 
+                              task.id === newTask.id ? taskWithMessage : task
+                            ));
+                            
+                            setActiveTaskId(newTask.id);
                           }
                         }}
                         onVoiceInput={() => console.log('Voice input clicked')}
