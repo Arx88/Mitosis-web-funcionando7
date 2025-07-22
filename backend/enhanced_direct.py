@@ -243,10 +243,7 @@ def initialize_task():
             # Ejecutar tarea en background
             def run_task_in_background():
                 try:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                    loop.run_until_complete(execute_autonomous_task(plan["task_id"]))
-                    loop.close()
+                    execute_autonomous_task(plan["task_id"])
                 except Exception as e:
                     terminal_logger.error(f"Error en tarea background: {e}")
             
