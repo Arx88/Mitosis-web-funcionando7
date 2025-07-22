@@ -407,21 +407,75 @@ def check_ollama_connection():
 # Ruta de health check
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
+    """Endpoint de health check mejorado"""
     try:
-        status = {
-            "status": "healthy",
-            "timestamp": datetime.now().isoformat(),
-            "services": {
-                "database": db is not None,
-                "ollama": True,  # Simplificado
-                "tools": 12     # Simplificado
-            }
+        # Verificar servicios principales
+        health_status = {
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'services': {
+                'database': False,
+                'ollama': False,
+                'tools': 0
+            },
+            'uptime': time.time() - app.config.get('START_TIME', time.time()),
+            'memory_usage': get_memory_usage(),
+            'active_connections': get_active_connections_count()
         }
-        return jsonify(status), 200
+        
+        # Verificar MongoDB
+        try:
+            from pymongo import MongoClient
+            client = MongoClient(os.getenv('MONGO_URL'))
+            client.admin.command('ping')
+            health_status['services']['database'] = True
+        except Exception as e:
+            logger.error(f"MongoDB health check failed: {e}")
+        
+        # Verificar Ollama
+        try:
+            if hasattr(app, 'ollama_service') and app.ollama_service:
+                health_status['services']['ollama'] = app.ollama_service.is_healthy()
+        except Exception as e:
+            logger.error(f"Ollama health check failed: {e}")
+        
+        # Verificar herramientas
+        try:
+            if hasattr(app, 'tool_manager') and app.tool_manager:
+                health_status['services']['tools'] = len(app.tool_manager.get_available_tools())
+        except Exception as e:
+            logger.error(f"Tools health check failed: {e}")
+        
+        return jsonify(health_status)
     except Exception as e:
-        logger.error(f"Health check error: {e}")
-        return jsonify({"status": "unhealthy", "error": str(e)}), 500
+        logger.error(f"Health check failed: {e}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+def get_memory_usage():
+    """Obtener uso de memoria del proceso"""
+    try:
+        import psutil
+        process = psutil.Process()
+        return {
+            'rss': process.memory_info().rss / 1024 / 1024,  # MB
+            'vms': process.memory_info().vms / 1024 / 1024,  # MB
+            'percent': process.memory_percent()
+        }
+    except:
+        return {'error': 'psutil not available'}
+
+def get_active_connections_count():
+    """Obtener número de conexiones WebSocket activas"""
+    try:
+        if hasattr(app, 'websocket_manager') and app.websocket_manager:
+            return len(app.websocket_manager.active_connections)
+        return 0
+    except:
+        return 0
 
 # Ruta básica de status API
 @app.route('/api/health', methods=['GET'])
