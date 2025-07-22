@@ -3352,6 +3352,10 @@ def chat():
             # PASO 2: Generar plan dinámico PRIMERO usando IA
             structured_plan = generate_dynamic_plan_with_ai(message, task_id)
             
+            # ✨ NUEVA FUNCIONALIDAD: Generar título mejorado con LLM
+            enhanced_title = generate_task_title_with_llm(message, task_id)
+            logger.info(f"📝 Enhanced title generated alongside plan: '{enhanced_title}'")
+            
             # PASO 3: Generar respuesta usando Ollama con contexto de herramientas
             ollama_response = ollama_service.generate_response(message, context, use_tools=True)
             
