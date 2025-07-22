@@ -379,15 +379,17 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
           }
         };
         
-        // Generar plan específico para archivos adjuntos
-        const fileAttachmentPlan = await generateDynamicTaskPlan('Archivos adjuntos');
-        
-        // Marcar pasos como completados para archivos adjuntos
-        const completedFileAttachmentPlan = fileAttachmentPlan.map((step, index) => ({
-          ...step,
-          completed: true,
-          active: false
-        }));
+        // Generar plan completado para archivos adjuntos (simple)
+        const completedFileAttachmentPlan = [
+          {
+            id: 'file-step-1',
+            title: 'Archivos procesados',
+            description: 'Archivos adjuntos listos para usar',
+            completed: true,
+            active: false,
+            tool: 'file_manager'
+          }
+        ];
         
         // Actualizar progreso en el backend
         const updateFileAttachmentProgress = async () => {
