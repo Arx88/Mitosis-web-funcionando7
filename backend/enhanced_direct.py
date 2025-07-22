@@ -582,8 +582,8 @@ def enhanced_chat():
         if should_execute_autonomously(message):
             terminal_logger.info("🎯 Mensaje detectado como tarea autónoma")
             
-            # Generar plan de acción
-            plan = generate_simple_plan(f"Tarea: {message[:50]}...", message)
+            # Generar plan inteligente usando LA MEJOR función  
+            plan = generate_intelligent_plan_or_fail(f"Tarea: {message[:50]}...", message)
             
             # Ejecutar tarea en background
             def run_task_in_background():
