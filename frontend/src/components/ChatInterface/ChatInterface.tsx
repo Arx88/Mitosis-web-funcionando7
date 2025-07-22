@@ -230,6 +230,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             await sendRegularChatMessage(message, userMessage);
           }
           
+        } else if (isFirstMessage && hasExistingPlan) {
+          console.log('🎯 FIRST MESSAGE - Task already has plan, using regular chat');
+          // Si ya hay plan, solo agregar mensaje y usar chat regular
+          await sendRegularChatMessage(message, userMessage);
+          
         } else {
           // Para mensajes posteriores, usar el chat normal
           await sendRegularChatMessage(message, userMessage);
