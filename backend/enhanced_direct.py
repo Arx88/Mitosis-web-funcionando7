@@ -240,7 +240,19 @@ def initialize_task():
         
         # Iniciar ejecución si se solicita
         if auto_execute:
-            asyncio.create_task(execute_autonomous_task(plan["task_id"]))
+            # Ejecutar tarea en background
+            def run_task_in_background():
+                try:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop.run_until_complete(execute_autonomous_task(plan["task_id"]))
+                    loop.close()
+                except Exception as e:
+                    terminal_logger.error(f"Error en tarea background: {e}")
+            
+            import threading
+            thread = threading.Thread(target=run_task_in_background, daemon=True)
+            thread.start()
         
         return jsonify({
             "success": True,
