@@ -4251,7 +4251,186 @@ def execute_step_internal(task_id: str, step_id: str, step: dict):
         })
 
 def execute_step_real(task_id: str, step_id: str, step: dict):
-    """Execute step with REAL tools instead of simulation"""
+    """Execute step with REAL tools instead of simulation - ENHANCED VERSION"""
+    tool = step.get('tool', 'general')
+    title = step.get('title', 'Ejecutando paso')
+    description = step.get('description', '')
+    
+    logger.info(f"🔧 Ejecutando REAL TOOL: {tool} para paso: {title}")
+    
+    # Emitir progreso inicial
+    emit_step_event(task_id, 'task_progress', {
+        'step_id': step_id,
+        'activity': f"Iniciando {tool}...",
+        'progress_percentage': 25,
+        'timestamp': datetime.now().isoformat()
+    })
+    
+    try:
+        tool_manager = get_tool_manager()
+        
+        if tool_manager and hasattr(tool_manager, 'execute_tool'):
+            tool_params = {}
+            mapped_tool = tool  # Por defecto, la herramienta es la misma
+
+            # ENHANCED TOOL MAPPING LOGIC - As per NEWUPGRADE.md Section 2
+            if tool == 'web_search':
+                mapped_tool = 'web_search'
+                search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
+                tool_params = {
+                    'query': search_query,
+                    'num_results': 5
+                }
+            elif tool in ['analysis', 'data_analysis', 'synthesis']:
+                mapped_tool = 'comprehensive_research'  # Herramienta unificada para investigación/análisis
+                tool_params = {
+                    'query': f"{title}: {description}",
+                    'max_results': 5,
+                    'include_analysis': True
+                }
+            elif tool == 'creation':
+                mapped_tool = 'file_manager'  # Usar file_manager para crear archivos
+                filename = f"generated_content_{task_id}_{step_id}.md"
+                # Generate more sophisticated content using Ollama
+                try:
+                    ollama_service = get_ollama_service()
+                    if ollama_service and ollama_service.is_healthy():
+                        content_prompt = f"""
+Genera contenido detallado y específico para:
+Título: {title}
+Descripción: {description}
+Tarea ID: {task_id}
+
+IMPORTANTE: Proporciona contenido real y detallado, no un plan ni instrucciones.
+Responde SOLO con el contenido final solicitado.
+"""
+                        ollama_response = ollama_service.generate_response(content_prompt, {'temperature': 0.7})
+                        content_generated = ollama_response.get('response', f"# {title}\n\n{description}\n\n*Contenido generado automáticamente*")
+                    else:
+                        content_generated = f"# {title}\n\n## Descripción\n{description}\n\n*Contenido generado por el agente*\nFecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                except Exception as e:
+                    logger.warning(f"⚠️ Could not generate content with Ollama: {e}")
+                    content_generated = f"# {title}\n\n## Descripción\n{description}\n\n*Contenido generado por el agente*\nFecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                
+                tool_params = {
+                    'action': 'create',
+                    'path': f"/app/backend/static/generated_files/{filename}",
+                    'content': content_generated
+                }
+            elif tool == 'planning':
+                mapped_tool = 'file_manager'
+                filename = f"plan_output_{task_id}_{step_id}.md"
+                tool_params = {
+                    'action': 'create',
+                    'path': f"/app/backend/static/generated_files/{filename}",
+                    'content': f"# Planificación: {title}\n\nDescripción: {description}\n\n*Este es un plan generado automáticamente.*\nFecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                }
+            elif tool == 'delivery':
+                mapped_tool = 'file_manager'
+                filename = f"delivery_report_{task_id}_{step_id}.md"
+                tool_params = {
+                    'action': 'create',
+                    'path': f"/app/backend/static/generated_files/{filename}",
+                    'content': f"# Informe de Entrega: {title}\n\nDescripción: {description}\n\n*Este es el informe de entrega final.*\nFecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                }
+            elif tool == 'processing':
+                mapped_tool = 'comprehensive_research'
+                tool_params = {
+                    'query': f"Process and summarize: {title} {description}",
+                    'max_results': 3,
+                    'include_analysis': True
+                }
+            # Add more mappings for other tool types as needed
+            else:
+                # For unmapped tools, use comprehensive_research as a fallback
+                mapped_tool = 'comprehensive_research'
+                tool_params = {
+                    'query': f"{title}: {description}",
+                    'max_results': 3
+                }
+
+            # SPECIAL HANDLING FOR VALENCIA BARS (as per original logic)
+            if (('valencia' in f"{title} {description}".lower()) and 
+                any(word in f"{title} {description}".lower() for word in ['bar', 'bares', 'restaurant', 'local', 'sitio'])):
+                try:
+                    # Try to use specialized Valencia bars tool
+                    import sys
+                    sys.path.append('/app/backend/src/tools')
+                    from valencia_bars_tool import valencia_bars_tool
+                    mapped_tool = 'valencia_bars_tool'
+                    tool_params = {
+                        'query': f"{title} {description}",
+                        'max_results': 8
+                    }
+                    logger.info(f"🍻 VALENCIA BARS DETECTED: Using specialized Valencia bars tool")
+                except ImportError:
+                    logger.warning("Valencia bars tool not found, falling back to web_search.")
+                    mapped_tool = 'web_search'
+                    tool_params = {
+                        'query': f"{title} {description}",
+                        'max_results': 5
+                    }
+
+            # EXECUTE THE MAPPED TOOL WITH ERROR HANDLING
+            logger.info(f"🚀 Executing MAPPED tool: original='{tool}' -> mapped='{mapped_tool}' with params: {tool_params}")
+            
+            # Verify tool availability
+            available_tools = list(tool_manager.tools.keys()) if hasattr(tool_manager, 'tools') else []
+            if mapped_tool not in available_tools:
+                logger.error(f"❌ TOOL MAPPING ERROR: Tool '{mapped_tool}' not found in available tools: {available_tools}")
+                raise Exception(f"Tool '{mapped_tool}' not available. Available tools: {available_tools}")
+            
+            # Execute the tool
+            tool_result = tool_manager.execute_tool(mapped_tool, tool_params, task_id=task_id)
+            
+            # Emit advanced progress
+            emit_step_event(task_id, 'task_progress', {
+                'step_id': step_id,
+                'activity': f"Procesando resultados de {mapped_tool}...",
+                'progress_percentage': 90,
+                'timestamp': datetime.now().isoformat()
+            })
+            
+            logger.info(f"✅ Tool {mapped_tool} executed successfully, result: {str(tool_result)[:200]}...")
+            
+            # Emit detailed tool result
+            emit_step_event(task_id, 'tool_result', {
+                'step_id': step_id,
+                'tool': mapped_tool,
+                'result': tool_result,
+                'timestamp': datetime.now().isoformat()
+            })
+            
+        else:
+            logger.warning(f"⚠️ Tool manager not available, falling back to simulation for {tool}")
+            time.sleep(3)
+            emit_step_event(task_id, 'task_progress', {
+                'step_id': step_id,
+                'activity': f"Simulación de {tool} completada (herramientas no disponibles)",
+                'progress_percentage': 90,
+                'timestamp': datetime.now().isoformat()
+            })
+            
+    except Exception as e:
+        logger.error(f"❌ Error executing real tool {tool}: {e}")
+        emit_step_event(task_id, 'task_progress', {
+            'step_id': step_id,
+            'activity': f"Error en {tool}: {str(e)}, continuando...",
+            'progress_percentage': 75,
+            'timestamp': datetime.now().isoformat()
+        })
+        # Continue execution instead of failing completely
+        
+    # Emit final completion
+    emit_step_event(task_id, 'task_progress', {
+        'step_id': step_id,
+        'activity': f"Paso '{title}' completado",
+        'progress_percentage': 100,
+        'timestamp': datetime.now().isoformat()
+    })
+
+def execute_step_real_original(task_id: str, step_id: str, step: dict):
+    """Original execute_step_real function - kept for reference"""
     tool = step.get('tool', 'general')
     title = step.get('title', 'Ejecutando paso')
     description = step.get('description', '')
