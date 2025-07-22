@@ -139,19 +139,16 @@ export function App() {
       progress: 0 // Initialize progress at 0
     };
     
-    // ✅ UPDATE: Usar callback para garantizar que ambos estados se actualicen juntos
+    // ✅ FIXED: Set activeTaskId immediately without setTimeout to prevent race conditions
     setTasks(prev => {
       const updatedTasks = [newTask, ...prev];
       console.log('🎯 TASK CREATION - Tasks updated:', updatedTasks.length);
-      
-      // Forzar la activación inmediatamente después de actualizar tasks
-      setTimeout(() => {
-        setActiveTaskId(newTask.id);
-        console.log('🚀 CRITICAL FIX: ActiveTaskId set via setTimeout:', newTask.id);
-      }, 0);
-      
       return updatedTasks;
     });
+    
+    // Set activeTaskId immediately after updating tasks
+    setActiveTaskId(newTask.id);
+    console.log('🚀 CRITICAL FIX: ActiveTaskId set immediately:', newTask.id);
     
     setIsTaskCreating(false);
     
