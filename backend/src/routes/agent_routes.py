@@ -4419,53 +4419,81 @@ def emit_step_event(task_id: str, event_type: str, data: dict):
         logger.warning("⚠️ WebSocket manager not available")
 
 def generate_task_plan(title: str, task_id: str) -> Dict:
-    """Generar plan de tarea usando el agente mejorado"""
+    """Generar plan de tarea usando Ollama DIRECTAMENTE - NO MORE MOCKUPS"""
     try:
-        enhanced_agent = getattr(current_app, 'enhanced_agent', None)
-        if not enhanced_agent:
-            # Fallback a generación básica
+        # ✅ CRITICAL FIX: Use Ollama directly instead of enhanced_agent
+        ollama_service = getattr(current_app, 'ollama_service', None)
+        if not ollama_service:
+            logger.error("❌ Ollama service not available, falling back to basic plan")
             return generate_basic_plan(title)
         
-        # Usar el agente mejorado para generar plan
+        # Crear prompt específico para generar plan real
         plan_prompt = f"""
-        Genera un plan detallado para la siguiente tarea: "{title}"
-        
-        El plan debe incluir:
-        1. Pasos específicos y accionables
-        2. Herramientas necesarias para cada paso
-        3. Estimación de tiempo
-        4. Descripción clara de cada paso
-        
-        Responde en formato JSON con la estructura:
+        Eres un agente inteligente especializado en crear planes de acción detallados y específicos.
+
+        TAREA A PLANIFICAR: "{title}"
+
+        INSTRUCCIONES CRÍTICAS:
+        1. NO uses títulos genéricos como "Análisis inicial", "Investigación", "Procesamiento", "Entrega"
+        2. Crea pasos ESPECÍFICOS para esta tarea exacta
+        3. Cada paso debe ser accionable y claro
+        4. Usa herramientas apropiadas para cada paso
+
+        FORMATO REQUERIDO (JSON válido):
         {{
             "steps": [
                 {{
                     "id": "step_1",
-                    "title": "Título del paso",
-                    "description": "Descripción detallada",
-                    "tool": "web_search|analysis|creation|planning|delivery",
-                    "estimated_time": "2-3 minutos",
-                    "priority": "alta|media|baja"
+                    "title": "[TÍTULO ESPECÍFICO PARA LA TAREA]",
+                    "description": "[DESCRIPCIÓN DETALLADA DE QUE HACER]",
+                    "tool": "web_search",
+                    "estimated_time": "3-5 minutos",
+                    "priority": "alta"
+                }},
+                {{
+                    "id": "step_2", 
+                    "title": "[OTRO TÍTULO ESPECÍFICO]",
+                    "description": "[DESCRIPCIÓN ESPECÍFICA]",
+                    "tool": "analysis",
+                    "estimated_time": "2-4 minutos",
+                    "priority": "media"
                 }}
             ],
-            "task_type": "investigación|análisis|creación|planificación",
-            "complexity": "baja|media|alta",
+            "task_type": "investigación",
+            "complexity": "media", 
             "estimated_total_time": "10-15 minutos"
         }}
+
+        RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.
         """
         
-        response = enhanced_agent.process_message(plan_prompt, task_id)
-        
-        # Parsear respuesta JSON
+        # Llamar a Ollama directamente
         try:
-            plan_data = json.loads(response)
+            response = ollama_service.generate_response(plan_prompt, model="llama3.2")
+            logger.info(f"🤖 Ollama response for plan generation: {response[:200]}...")
+            
+            # Limpiar respuesta y extraer JSON
+            clean_response = response.strip()
+            if '```json' in clean_response:
+                clean_response = clean_response.split('```json')[1].split('```')[0].strip()
+            elif '```' in clean_response:
+                clean_response = clean_response.split('```')[1].split('```')[0].strip()
+            
+            # Parsear JSON
+            plan_data = json.loads(clean_response)
+            logger.info(f"✅ Plan real generado exitosamente con {len(plan_data.get('steps', []))} pasos")
             return plan_data
-        except json.JSONDecodeError:
-            # Si no es JSON válido, generar plan básico
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"❌ JSON parsing error: {e}")
+            logger.error(f"❌ Raw response: {response}")
+            return generate_basic_plan(title)
+        except Exception as e:
+            logger.error(f"❌ Ollama generation error: {e}")
             return generate_basic_plan(title)
             
     except Exception as e:
-        logger.error(f"Error generating plan with enhanced agent: {e}")
+        logger.error(f"Error generating plan: {e}")
         return generate_basic_plan(title)
 
 def generate_basic_plan(title: str) -> Dict:
