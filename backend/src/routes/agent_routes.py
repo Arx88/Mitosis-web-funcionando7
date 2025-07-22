@@ -2327,17 +2327,43 @@ SOLO JSON, sin explicaciones adicionales.
 """
                 else:
                     # Tercera tentativa: prompt simplificado con plan de emergencia más robusto
-                    prompt = f"""
-URGENTE: Genera SOLO este JSON válido para: "{message}"
+                    prompt = f"""Genera un plan de acción en formato JSON válido para: "{message}"
 
-Usa ESTE TEMPLATE y personalizalo:
-{{"steps":[{{"title":"Procesar: {message[:30]}",...","description":"Completar la solicitud específica del usuario","tool":"processing","estimated_time":"2-5 minutos","priority":"media"}}],"task_type":"procesamiento_personalizado","complexity":"media","estimated_total_time":"2-5 minutos"}}
+Responde ÚNICAMENTE con este JSON (sin texto adicional, sin markdown, sin explicaciones):
 
-PERSONALIZA el título y descripción para la tarea específica.
-HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
+{{
+  "steps": [
+    {{
+      "title": "Investigar: {message[:50]}",
+      "description": "Buscar información relevante sobre la tarea solicitada",
+      "tool": "web_search",
+      "estimated_time": "2-3 minutos",
+      "priority": "alta"
+    }},
+    {{
+      "title": "Analizar información obtenida",
+      "description": "Procesar y analizar la información encontrada",
+      "tool": "analysis",
+      "estimated_time": "3-5 minutos", 
+      "priority": "alta"
+    }},
+    {{
+      "title": "Generar resultado final",
+      "description": "Crear y formatear el resultado final solicitado",
+      "tool": "creation",
+      "estimated_time": "2-4 minutos",
+      "priority": "media"
+    }}
+  ],
+  "task_type": "investigación_y_análisis",
+  "complexity": "media",
+  "estimated_total_time": "7-12 minutos"
+}}
 
-SOLO JSON válido, sin texto adicional.
-"""
+Personaliza los títulos y descripciones para que sean específicos a la tarea: "{message}"
+Herramientas válidas: web_search, analysis, creation, planning, delivery, processing, synthesis, research, investigation, data_analysis
+
+IMPORTANTE: Responde SOLO con el JSON, sin texto adicional."""
                 
                 # Llamar a Ollama con parámetros optimizados para JSON
                 response = ollama_service.generate_response(prompt, {
