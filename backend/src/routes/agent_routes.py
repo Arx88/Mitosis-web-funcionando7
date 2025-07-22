@@ -4321,6 +4321,7 @@ def initialize_task():
         task_data = {
             'task_id': task_id,
             'title': title,
+            'enhanced_title': enhanced_title,  # ✨ NUEVO: Título mejorado
             'message': title,  # Para compatibilidad
             'plan': plan_response.get('steps', []),
             'task_type': plan_response.get('task_type', 'general'),
