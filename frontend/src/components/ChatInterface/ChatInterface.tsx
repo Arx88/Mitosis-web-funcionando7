@@ -182,22 +182,21 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       onSendMessage(processedMessage);
 
       try {
-        // 🚀 LÓGICA MEJORADA: Si es el primer mensaje de la tarea, usar initialize-task para plan automático
+        // 🚀 LÓGICA MEJORADA: Si es el primer mensaje de la tarea, usar generate-plan para generar plan específico
         const isFirstMessage = messages.length === 0;
         
         if (isFirstMessage) {
-          console.log('🎯 FIRST MESSAGE - Calling initialize-task for automatic plan generation');
-          // Llamar al endpoint initialize-task para generar plan automático
+          console.log('🎯 FIRST MESSAGE - Calling generate-plan for specific plan generation');
+          // Llamar al endpoint generate-plan para generar plan específico
           const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
-          const initResponse = await fetch(`${backendUrl}/api/agent/initialize-task`, {
+          const initResponse = await fetch(`${backendUrl}/api/agent/generate-plan`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              task_id: dataId,
-              title: message.trim(),
-              auto_execute: true  // 🚀 ACTIVAR EJECUCIÓN AUTOMÁTICA
+              task_title: message.trim(),
+              task_id: dataId
             })
           });
           
