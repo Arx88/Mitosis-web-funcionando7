@@ -173,7 +173,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         // 🚀 LÓGICA MEJORADA: Si es el primer mensaje de la tarea, usar generate-plan para generar plan específico
         const isFirstMessage = messages.length === 0;
         
-        if (isFirstMessage) {
+        if (isFirstMessage && !hasExistingPlan) {
           console.log('🎯 FIRST MESSAGE - Calling generate-plan for specific plan generation');
           // Llamar al endpoint generate-plan para generar plan específico
           const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
