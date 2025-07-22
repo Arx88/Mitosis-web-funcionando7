@@ -166,6 +166,55 @@ export function App() {
     
     return newTask;
   };
+  // ✅ FIXED: Consolidated task creation with message to avoid race conditions
+  const createTaskWithMessage = async (messageContent: string) => {
+    setIsTaskCreating(true);
+    
+    // Reset any thinking state
+    setAppState(prev => ({
+      ...prev,
+      isThinking: false
+    }));
+    
+    // Create user message
+    const userMessage = {
+      id: `msg-${Date.now()}`,
+      content: messageContent,
+      sender: 'user' as const,
+      timestamp: new Date()
+    };
+    
+    // Create task with message already included
+    const newTask: Task = {
+      id: `task-${Date.now()}`,
+      title: messageContent,
+      createdAt: new Date(),
+      status: 'active', // Set as active since it has a message
+      messages: [userMessage], // Include message immediately
+      terminalCommands: [],
+      isFavorite: false,
+      progress: 0
+    };
+    
+    // ✅ ATOMIC OPERATION: Update tasks and activeTaskId together
+    setTasks(prev => [newTask, ...prev]);
+    setActiveTaskId(newTask.id);
+    
+    // Initialize task process
+    setInitializingTaskId(newTask.id);
+    setInitializationLogs([]);
+    
+    setIsTaskCreating(false);
+    
+    console.log('🚀 CONSOLIDATED TASK CREATION:', {
+      taskId: newTask.id,
+      hasMessage: true,
+      status: 'active',
+      activeTaskIdSet: true
+    });
+    
+    return newTask;
+  };
 
   // Función para manejar logs de inicialización
   const handleInitializationLog = useCallback((message: string, type: 'info' | 'success' | 'error') => {
