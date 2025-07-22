@@ -234,6 +234,7 @@ export function App() {
           
           // Update the newTask object for return
           newTask.title = initData.enhanced_title;
+          console.log('✅ Task title updated in state and returned object');
         }
       } else {
         console.warn('⚠️ Failed to generate enhanced title, using original message');
@@ -249,7 +250,8 @@ export function App() {
       hasMessage: true,
       status: 'active',
       activeTaskIdSet: true,
-      titleGenerated: true
+      titleGenerated: true,
+      finalTitle: newTask.title
     });
     
     return newTask;
