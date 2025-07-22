@@ -178,23 +178,21 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       onSendMessage(processedMessage);
 
       try {
-        // 🚀 LÓGICA MEJORADA: Si es el primer mensaje de la tarea, usar generate-plan para generar plan específico
-        const isFirstMessage = messages.length === 0;
-        
-        if (isFirstMessage) {
-          console.log('🎯 FIRST MESSAGE - Calling generate-plan for specific plan generation');
-          // Llamar al endpoint generate-plan para generar plan específico
-          const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
-          const initResponse = await fetch(`${backendUrl}/api/agent/generate-plan`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              task_title: message.trim(),
-              task_id: dataId
-            })
-          });
+        // 🚀 LÓGICA UNIFICADA: Usar initialize-task que maneja automáticamente casual vs planes
+        console.log('🎯 UNIFIED LOGIC - Calling initialize-task for intelligent classification');
+        // Llamar al endpoint initialize-task que ya clasifica automáticamente
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
+        const initResponse = await fetch(`${backendUrl}/api/agent/initialize-task`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            task_id: dataId || `task-${Date.now()}`,
+            title: message.trim(),
+            auto_execute: true
+          })
+        });
           
           if (initResponse.ok) {
             const initData = await initResponse.json();
