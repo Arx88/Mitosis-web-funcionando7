@@ -19,7 +19,7 @@ from typing import Dict, Any, List
 from datetime import datetime
 
 # Configuración
-BACKEND_URL = "https://0985e82d-0b00-4ff8-a718-81e33927dd33.preview.emergentagent.com"
+BACKEND_URL = "https://929fd28d-e48b-4d30-b963-581487842c96.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class WebBrowsingTester:
