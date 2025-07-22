@@ -253,14 +253,49 @@ def generate_detailed_specific_plan(title, description):
     return plan
 
 def generate_intelligent_plan_or_fail(title, description):
-    """Genera un plan inteligente usando LLM o falla explícitamente - NO fallbacks genéricos"""
+    """Genera un plan inteligente usando LA MEJOR función con LLM o falla explícitamente"""
     try:
-        # Intentar usar el plan detallado específico (que es la mejor función disponible)
-        return generate_detailed_specific_plan(title, description)
+        # Importar la función MEJOR (unified AI plan) desde agent_routes
+        import sys
+        sys.path.append('/app/backend/src')
+        from routes.agent_routes import generate_unified_ai_plan
+        
+        terminal_logger.info(f"🧠 Generando plan inteligente con LLM para: {title}")
+        
+        # Usar la función MEJOR que identificamos
+        task_id = f"task_{int(time.time())}"
+        plan_result = generate_unified_ai_plan(title, task_id)
+        
+        # Verificar que el plan sea válido y no sea fallback
+        if plan_result.get('plan_source') == 'fallback':
+            raise Exception("LLM no disponible - plan fallback rechazado")
+        
+        # Convertir a formato esperado por enhanced_direct
+        plan = {
+            "task_id": task_id,
+            "title": title,
+            "description": description,
+            "status": "pending",
+            "progress": 0,
+            "created_at": datetime.now().isoformat(),
+            "plan_type": "intelligent_llm_generated",
+            "steps": plan_result.get('steps', []),
+            "complexity": plan_result.get('complexity', 'media'),
+            "estimated_total_time": plan_result.get('estimated_total_time', '10-15 minutos'),
+            "metadata": {
+                "ai_generated": True,
+                "plan_source": plan_result.get('plan_source', 'unified_ai'),
+                "schema_validated": plan_result.get('schema_validated', False)
+            }
+        }
+        
+        terminal_logger.info(f"✅ Plan inteligente generado exitosamente con {len(plan['steps'])} pasos")
+        return plan
+        
     except Exception as e:
-        # Si falla, lanzar excepción explícita en lugar de usar fallback genérico
         terminal_logger.error(f"❌ Error generando plan inteligente: {e}")
-        raise Exception(f"No se pudo generar un plan inteligente para '{title}': {str(e)}")
+        raise Exception(f"❌ ERROR DE CONEXIÓN: No se pudo generar un plan inteligente para '{title}'. " + 
+                       f"Verifique que Ollama esté ejecutándose y conectado. Error: {str(e)}")
 
 def execute_autonomous_task(task_id):
     """Ejecuta tarea de forma autónoma REAL usando herramientas"""
