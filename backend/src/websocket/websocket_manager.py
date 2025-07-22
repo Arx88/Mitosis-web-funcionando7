@@ -49,7 +49,10 @@ class WebSocketManager:
             cors_allowed_origins="*",
             async_mode='eventlet',
             logger=False,
-            engineio_logger=False
+            engineio_logger=False,
+            ping_timeout=60,  # 60 segundos para ping timeout
+            ping_interval=25,  # 25 segundos entre pings
+            max_http_buffer_size=1000000  # 1MB buffer
         )
         self.setup_event_handlers()
         self.is_initialized = True
