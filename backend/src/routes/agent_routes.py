@@ -3452,6 +3452,7 @@ def chat():
                 'response': final_response,
                 'task_id': task_id,
                 'plan': structured_plan,  # PLAN ESTRUCTURADO PARA FRONTEND
+                'enhanced_title': enhanced_title,  # ✨ NUEVO: Título mejorado generado con LLM
                 'tool_calls': ollama_response.get('tool_calls', []),
                 'tool_results': tool_results,
                 'timestamp': datetime.now().isoformat(),
