@@ -707,7 +707,13 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 id: msg.id,
                 content: msg.content,
                 sender: msg.sender === 'agent' ? 'assistant' : msg.sender,
-                timestamp: msg.timestamp
+                timestamp: msg.timestamp,
+                attachments: msg.attachments,
+                status: msg.status,
+                toolResults: msg.toolResults,
+                searchData: msg.searchData,
+                uploadData: msg.uploadData,
+                links: msg.links
               }))} 
               onSendMessage={(message) => {
                 console.log('🚀 TaskView: Message received for processing:', message);
