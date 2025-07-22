@@ -202,15 +202,21 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           
           if (initResponse.ok) {
             const initData = await initResponse.json();
-            console.log('✅ Task initialized with automatic plan generation:', initData);
+            console.log('✅ Plan generated with specific AI planning:', initData);
             
             // Crear respuesta del agente indicando que el plan fue generado
             const agentMessage: Message = {
               id: `msg-${Date.now()}-agent`,
-              content: `✅ Plan de acción generado automáticamente. Ejecutando ${initData.plan?.steps?.length || 0} pasos para completar tu tarea.`,
+              content: `✅ Plan de acción específico generado. Ejecutando ${initData.plan?.length || initData.total_steps || 0} pasos personalizados para completar tu tarea.`,
               sender: 'agent',
               timestamp: new Date(),
-              plan: initData.plan
+              plan: {
+                steps: initData.plan || [],
+                total_steps: initData.total_steps || initData.plan?.length || 0,
+                estimated_total_time: initData.estimated_total_time || '10-15 minutos',
+                task_type: initData.task_type || 'personalizada',
+                complexity: initData.complexity || 'media'
+              }
             };
             
             if (onUpdateMessages) {
@@ -220,12 +226,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             
             // ✅ CRITICAL FIX: Call onTaskPlanGenerated callback for plan display in TerminalView
             if (onTaskPlanGenerated && initData.plan) {
-              console.log('📋 Calling onTaskPlanGenerated with initialize-task plan:', initData.plan);
-              onTaskPlanGenerated(initData.plan);
+              console.log('📋 Calling onTaskPlanGenerated with specific AI plan:', agentMessage.plan);
+              onTaskPlanGenerated(agentMessage.plan);
             }
             
           } else {
-            console.error('❌ Initialize task failed:', initResponse.status);
+            console.error('❌ Generate plan failed:', initResponse.status);
             // Fallback al chat normal si falla
             await sendRegularChatMessage(processedMessage, userMessage);
           }
