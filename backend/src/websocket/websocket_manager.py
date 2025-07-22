@@ -352,6 +352,63 @@ class WebSocketManager:
             'completion_callback': completion_callback,
             'error_callback': error_callback
         }
+    
+    # ENHANCED WEBSOCKET METHODS - As per NEWUPGRADE.md Section 3
+    def send_enhanced_step_update(self, task_id: str, step_data: Dict[str, Any]):
+        """Send enhanced step update with complete information"""
+        enhanced_data = {
+            'type': 'step_update',
+            'step_id': step_data.get('step_id'),
+            'status': step_data.get('status', 'unknown'),  # 'in-progress', 'completed_success', 'failed'
+            'title': step_data.get('title', ''),
+            'description': step_data.get('description', ''),
+            'result_summary': step_data.get('result_summary', ''),
+            'execution_time': step_data.get('execution_time', 0),
+            'progress': step_data.get('progress', 0),  # Overall task progress percentage
+            'current_step': step_data.get('current_step', 0),
+            'total_steps': step_data.get('total_steps', 0),
+            'validation_status': step_data.get('validation_status', ''),
+            'error': step_data.get('error', None),
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        self.emit_update(task_id, UpdateType.STEP_UPDATE, enhanced_data)
+        
+    def send_tool_execution_detail(self, task_id: str, tool_data: Dict[str, Any]):
+        """Send detailed tool execution information"""
+        tool_detail = {
+            'type': 'tool_execution_detail',
+            'tool_name': tool_data.get('tool_name', ''),
+            'input_params': tool_data.get('input_params', {}),
+            'message': tool_data.get('message', ''),
+            'level': tool_data.get('level', 'info'),  # 'info', 'warning', 'error'
+            'file_created': tool_data.get('file_created', None),
+            'download_url': tool_data.get('download_url', None),
+            'execution_status': tool_data.get('execution_status', 'running'),
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        self.emit_update(task_id, UpdateType.TOOL_EXECUTION_DETAIL, tool_detail)
+        
+    def send_enhanced_task_completed(self, task_id: str, completion_data: Dict[str, Any]):
+        """Send enhanced task completion with comprehensive information"""
+        completion_info = {
+            'type': 'task_completed',
+            'task_id': task_id,
+            'status': completion_data.get('status', 'success'),  # 'success' or 'completed_with_warnings'
+            'final_result': completion_data.get('final_result', ''),  # The final message for user
+            'final_task_status': completion_data.get('final_task_status', ''),
+            'total_steps': completion_data.get('total_steps', 0),
+            'completed_steps': completion_data.get('completed_steps', 0),
+            'failed_steps': completion_data.get('failed_steps', 0),
+            'execution_time': completion_data.get('execution_time', 0),
+            'files_generated': completion_data.get('files_generated', []),
+            'warnings': completion_data.get('warnings', []),
+            'message': completion_data.get('message', ''),
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        self.emit_update(task_id, UpdateType.TASK_COMPLETED, completion_info)
 
 # Global WebSocket manager instance
 websocket_manager = WebSocketManager()
