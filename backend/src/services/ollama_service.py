@@ -402,7 +402,7 @@ class OllamaService:
             response = requests.post(
                 f"{self.base_url}/api/generate",
                 json=payload,
-                timeout=request_timeout  # 🆕 Usar el timeout específico del modelo
+                timeout=min(request_timeout, 180)  # 🆕 Máximo 3 minutos para evitar cuelgues
             )
             
             if response.status_code == 200:
