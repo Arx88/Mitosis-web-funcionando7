@@ -252,6 +252,16 @@ def generate_detailed_specific_plan(title, description):
     
     return plan
 
+def generate_intelligent_plan_or_fail(title, description):
+    """Genera un plan inteligente usando LLM o falla explícitamente - NO fallbacks genéricos"""
+    try:
+        # Intentar usar el plan detallado específico (que es la mejor función disponible)
+        return generate_detailed_specific_plan(title, description)
+    except Exception as e:
+        # Si falla, lanzar excepción explícita en lugar de usar fallback genérico
+        terminal_logger.error(f"❌ Error generando plan inteligente: {e}")
+        raise Exception(f"No se pudo generar un plan inteligente para '{title}': {str(e)}")
+
 def execute_autonomous_task(task_id):
     """Ejecuta tarea de forma autónoma REAL usando herramientas"""
     global autonomous_execution_active, current_autonomous_task_id
