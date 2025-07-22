@@ -248,7 +248,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             
           } else {
             console.error('❌ Generate plan failed:', initResponse.status);
+            console.error('❌ Response details:', await initResponse.text());
             // Fallback al chat normal si falla
+            await sendRegularChatMessage(message, userMessage);
+          }
+          
+          } catch (fetchError) {
+            console.error('🐛 DEBUG - Fetch error:', fetchError);
+            console.error('🐛 DEBUG - Error type:', fetchError.name);
+            console.error('🐛 DEBUG - Error message:', fetchError.message);
+            // Fallback al chat normal si hay error de red
             await sendRegularChatMessage(message, userMessage);
           }
           
