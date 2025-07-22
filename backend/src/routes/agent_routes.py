@@ -3620,6 +3620,10 @@ def generate_plan():
         # Usar la nueva función de generación dinámica con IA
         dynamic_plan = generate_dynamic_plan_with_ai(task_title, task_id)
         
+        # ✨ NUEVA FUNCIONALIDAD: Generar título mejorado con LLM
+        enhanced_title = generate_task_title_with_llm(task_title, task_id)
+        logger.info(f"📝 Enhanced title generated for plan: '{enhanced_title}'")
+        
         logger.info(f"✅ Dynamic plan generated with {len(dynamic_plan['steps'])} steps")
         
         return jsonify({
