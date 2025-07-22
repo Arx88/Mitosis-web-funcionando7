@@ -2388,31 +2388,97 @@ IMPORTANTE: Responde SOLO con el JSON, sin texto adicional."""
                 # Estrategia 1: JSON limpio directo
                 try:
                     cleaned_response = response_text.replace('```json', '').replace('```', '').strip()
+                    # Remover cualquier texto antes del primer {
+                    if '{' in cleaned_response:
+                        start_idx = cleaned_response.find('{')
+                        cleaned_response = cleaned_response[start_idx:]
+                    # Remover cualquier texto después del último }
+                    if '}' in cleaned_response:
+                        end_idx = cleaned_response.rfind('}') + 1
+                        cleaned_response = cleaned_response[:end_idx]
+                    
                     if cleaned_response.startswith('{') and cleaned_response.endswith('}'):
                         plan_data = json.loads(cleaned_response)
                 except json.JSONDecodeError as e:
                     logger.debug(f"📝 JSON parsing strategy 1 failed: {str(e)}")
                 
-                # Estrategia 2: Buscar JSON en el texto
+                # Estrategia 2: Buscar JSON en el texto (mejorado)
                 if not plan_data:
                     try:
-                        json_match = re.search(r'\{[^}]*"steps"[^}]*\[.*?\][^}]*\}', response_text, re.DOTALL)
-                        if json_match:
-                            plan_data = json.loads(json_match.group())
+                        # Buscar patrón JSON completo más robusto
+                        json_patterns = [
+                            r'\{[^}]*"steps"[^}]*\[.*?\][^}]*\}',
+                            r'\{.*?"steps".*?\[.*?\].*?\}',
+                            r'(\{[^{}]*\{[^{}]*\}[^{}]*\})'
+                        ]
+                        
+                        for pattern in json_patterns:
+                            json_match = re.search(pattern, response_text, re.DOTALL)
+                            if json_match:
+                                plan_data = json.loads(json_match.group())
+                                break
                     except json.JSONDecodeError as e:
                         logger.debug(f"📝 JSON parsing strategy 2 failed: {str(e)}")
                 
-                # Estrategia 3: JSON con corrección de formato común
+                # Estrategia 3: JSON con corrección de formato común (mejorado)
                 if not plan_data:
                     try:
+                        # Limpiar markdown y texto extra
+                        corrected_text = response_text
+                        # Remover markdown
+                        corrected_text = re.sub(r'\*\*.*?\*\*', '', corrected_text)
+                        corrected_text = re.sub(r'\*.*?\*', '', corrected_text)
+                        corrected_text = re.sub(r'#.*?\n', '', corrected_text)
                         # Corregir comillas simples por dobles
-                        corrected_text = response_text.replace("'", '"')
-                        # Remover caracteres no JSON
-                        corrected_text = re.sub(r'^[^{]*', '', corrected_text)
-                        corrected_text = re.sub(r'[^}]*$', '', corrected_text)
+                        corrected_text = corrected_text.replace("'", '"')
+                        # Buscar solo el JSON
+                        if '{' in corrected_text and '}' in corrected_text:
+                            start_idx = corrected_text.find('{')
+                            end_idx = corrected_text.rfind('}') + 1
+                            corrected_text = corrected_text[start_idx:end_idx]
+                        
                         plan_data = json.loads(corrected_text)
                     except (json.JSONDecodeError, Exception) as e:
                         logger.debug(f"📝 JSON parsing strategy 3 failed: {str(e)}")
+                
+                # Estrategia 4: Crear JSON desde texto estructurado
+                if not plan_data:
+                    try:
+                        # Si hay listas numeradas, convertir a JSON
+                        if '1.' in response_text and ('2.' in response_text or '3.' in response_text):
+                            steps = []
+                            lines = response_text.split('\n')
+                            current_step = None
+                            
+                            for line in lines:
+                                line = line.strip()
+                                if re.match(r'^\d+\.', line):
+                                    if current_step:
+                                        steps.append(current_step)
+                                    title = re.sub(r'^\d+\.\s*\*\*?', '', line)
+                                    title = re.sub(r'\*\*?:.*', '', title).strip()
+                                    current_step = {
+                                        'title': title,
+                                        'description': f'Completar: {title}',
+                                        'tool': 'processing',
+                                        'estimated_time': '2-5 minutos',
+                                        'priority': 'media'
+                                    }
+                                elif current_step and line:
+                                    current_step['description'] = line
+                            
+                            if current_step:
+                                steps.append(current_step)
+                            
+                            if len(steps) > 0:
+                                plan_data = {
+                                    'steps': steps,
+                                    'task_type': 'análisis_estructurado',
+                                    'complexity': 'media',
+                                    'estimated_total_time': f'{len(steps) * 3}-{len(steps) * 6} minutos'
+                                }
+                    except Exception as e:
+                        logger.debug(f"📝 JSON parsing strategy 4 failed: {str(e)}")
                 
                 if not plan_data:
                     last_error = f"No se pudo parsear JSON válido. Respuesta: {response_text[:100]}..."
