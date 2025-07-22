@@ -2367,9 +2367,11 @@ IMPORTANTE: Responde SOLO con el JSON, sin texto adicional."""
                 
                 # Llamar a Ollama con parámetros optimizados para JSON
                 response = ollama_service.generate_response(prompt, {
-                    'temperature': 0.2,  # Baja para mayor consistencia
-                    'max_tokens': 1000,
-                    'response_format': 'json'
+                    'temperature': 0.1,  # Muy baja para mayor consistencia
+                    'max_tokens': 800,
+                    'response_format': 'json',
+                    'stop': ['```', 'json', '**', '#'],  # Evitar formato markdown
+                    'top_p': 0.9
                 })
                 
                 if response.get('error'):
