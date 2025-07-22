@@ -219,26 +219,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               onUpdateMessages(updatedMessages);
             }
             
-            // Actualizar la tarea con el plan generado si onUpdateTask está disponible
-            if (onUpdateTask && initData.plan) {
-              onUpdateTask({
-                ...task,
-                plan: initData.plan.steps?.map((step: any) => ({
-                  id: step.id,
-                  title: step.title,
-                  description: step.description,
-                  tool: step.tool,
-                  estimated_time: step.estimated_time,
-                  priority: step.priority,
-                  completed: false,
-                  active: false,
-                  status: 'pending'
-                })) || [],
-                status: 'in-progress',
-                progress: 25
-              });
-            }
-            
             // ✅ CRITICAL FIX: Call onTaskPlanGenerated callback for plan display in TerminalView
             if (onTaskPlanGenerated && initData.plan) {
               console.log('📋 Calling onTaskPlanGenerated with initialize-task plan:', initData.plan);
