@@ -582,10 +582,10 @@ export function App() {
   const activeTask = tasks.find(task => task.id === activeTaskId);
 
   // 🐛 DEBUG: Logging critical render state
-  console.log('🔍 RENDER DEBUG:', {
+  console.log('🔍 RENDER DEBUG - App.tsx render:', {
     activeTaskId,
     tasksLength: tasks.length,
-    activeTask: activeTask ? `Found: ${activeTask.id}` : 'Not found',
+    activeTask: activeTask ? `Found: ${activeTask.id} - "${activeTask.title}"` : 'Not found',
     condition: `activeTask=${!!activeTask}, activeTaskId=${!!activeTaskId}`,
     renderResult: activeTask && activeTaskId ? 'TaskView' : 'Homepage'
   });
