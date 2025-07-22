@@ -136,6 +136,122 @@ def generate_simple_plan(title, description):
     
     return plan
 
+def generate_detailed_specific_plan(title, description):
+    """Genera un plan específico y detallado usando el agente principal"""
+    task_id = f"task_{int(time.time())}"
+    
+    # Analizar la descripción para generar pasos más específicos
+    keywords = description.lower().split()
+    
+    # Determinar tipo de tarea y generar pasos específicos
+    steps = []
+    step_counter = 1
+    
+    # Paso de investigación específica
+    if any(word in keywords for word in ['buscar', 'investigar', 'información', 'datos']):
+        steps.append({
+            "id": f"step{step_counter}",
+            "title": f"Investigación específica: {title}",
+            "description": f"Realizar búsqueda web detallada sobre: {description}",
+            "tool": "tavily_search",
+            "status": "pending",
+            "estimated_time": 3,
+            "priority": "high",
+            "parameters": {
+                "query": f"{title} {description}",
+                "max_results": 10,
+                "include_answer": True
+            }
+        })
+        step_counter += 1
+    
+    # Paso de análisis profundo
+    steps.append({
+        "id": f"step{step_counter}",
+        "title": "Análisis profundo de datos",
+        "description": "Procesar, categorizar y analizar información recopilada",
+        "tool": "data_analysis",
+        "status": "pending",
+        "estimated_time": 4,
+        "priority": "high",
+        "parameters": {
+            "analysis_type": "comprehensive",
+            "output_format": "structured"
+        }
+    })
+    step_counter += 1
+    
+    # Paso de síntesis específica
+    if any(word in keywords for word in ['informe', 'reporte', 'documento', 'plan']):
+        steps.append({
+            "id": f"step{step_counter}",
+            "title": "Síntesis y estructuración",
+            "description": "Crear estructura detallada del documento final",
+            "tool": "content_synthesis",
+            "status": "pending",
+            "estimated_time": 3,
+            "priority": "normal",
+            "parameters": {
+                "structure_type": "formal_report",
+                "sections": ["introducción", "metodología", "resultados", "conclusiones"]
+            }
+        })
+        step_counter += 1
+    
+    # Paso de generación de contenido
+    steps.append({
+        "id": f"step{step_counter}",
+        "title": "Generación de contenido final",
+        "description": "Crear documento completo con toda la información procesada",
+        "tool": "file_manager",
+        "status": "pending",
+        "estimated_time": 4,
+        "priority": "normal",
+        "parameters": {
+            "file_type": "markdown",
+            "include_metadata": True,
+            "auto_format": True
+        }
+    })
+    step_counter += 1
+    
+    # Paso de validación y verificación
+    steps.append({
+        "id": f"step{step_counter}",
+        "title": "Validación y verificación",
+        "description": "Verificar calidad, completitud y precisión del resultado",
+        "tool": "quality_check",
+        "status": "pending",
+        "estimated_time": 2,
+        "priority": "low",
+        "parameters": {
+            "check_completeness": True,
+            "verify_sources": True,
+            "format_validation": True
+        }
+    })
+    
+    plan = {
+        "task_id": task_id,
+        "title": title,
+        "description": description,
+        "status": "pending",
+        "progress": 0,
+        "created_at": datetime.now().isoformat(),
+        "plan_type": "detailed_specific",
+        "estimated_total_time": sum(step.get("estimated_time", 0) for step in steps),
+        "complexity": "high" if len(steps) > 4 else "medium",
+        "steps": steps,
+        "metadata": {
+            "keywords_detected": keywords[:5],  # Primeras 5 palabras clave
+            "step_count": len(steps),
+            "auto_generated": True,
+            "agent_version": "enhanced_direct_v1"
+        }
+    }
+    
+    return plan
+
 def execute_autonomous_task(task_id):
     """Ejecuta tarea de forma autónoma REAL usando herramientas"""
     global autonomous_execution_active, current_autonomous_task_id
