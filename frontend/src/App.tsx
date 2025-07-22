@@ -166,7 +166,7 @@ export function App() {
     
     return newTask;
   };
-  // ✅ FIXED: Consolidated task creation with message to avoid race conditions
+  // ✅ FIXED: Consolidated task creation with message to avoid race conditions AND generate enhanced title
   const createTaskWithMessage = async (messageContent: string) => {
     setIsTaskCreating(true);
     
@@ -184,10 +184,10 @@ export function App() {
       timestamp: new Date()
     };
     
-    // Create task with message already included
+    // Create task with temporary title (will be enhanced)
     const newTask: Task = {
       id: `task-${Date.now()}`,
-      title: messageContent,
+      title: messageContent, // Temporary title, will be enhanced
       createdAt: new Date(),
       status: 'active', // Set as active since it has a message
       messages: [userMessage], // Include message immediately
@@ -204,13 +204,52 @@ export function App() {
     setInitializingTaskId(newTask.id);
     setInitializationLogs([]);
     
+    // 🚀 NEW: Generate enhanced title with backend API
+    try {
+      console.log('📝 Generating enhanced title for task:', newTask.id);
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
+      const initResponse = await fetch(`${backendUrl}/api/agent/generate-plan`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          task_title: messageContent.trim(),
+          task_id: newTask.id
+        })
+      });
+      
+      if (initResponse.ok) {
+        const initData = await initResponse.json();
+        console.log('✅ Backend response received:', initData);
+        
+        // ✨ Update task with enhanced title if available
+        if (initData.enhanced_title) {
+          console.log('📝 Updating task with enhanced title:', initData.enhanced_title);
+          setTasks(prev => prev.map(task => 
+            task.id === newTask.id 
+              ? { ...task, title: initData.enhanced_title }
+              : task
+          ));
+          
+          // Update the newTask object for return
+          newTask.title = initData.enhanced_title;
+        }
+      } else {
+        console.warn('⚠️ Failed to generate enhanced title, using original message');
+      }
+    } catch (error) {
+      console.error('❌ Error generating enhanced title:', error);
+    }
+    
     setIsTaskCreating(false);
     
     console.log('🚀 CONSOLIDATED TASK CREATION:', {
       taskId: newTask.id,
       hasMessage: true,
       status: 'active',
-      activeTaskIdSet: true
+      activeTaskIdSet: true,
+      titleGenerated: true
     });
     
     return newTask;
