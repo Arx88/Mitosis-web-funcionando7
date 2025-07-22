@@ -10,7 +10,7 @@ def test_frontend_ollama_config():
     print("🔍 Testing Frontend Ollama Configuration...")
     
     # URL del frontend
-    frontend_url = "https://491dc7aa-905c-4a31-b16f-f0eab23cf6e1.preview.emergentagent.com"
+    frontend_url = "https://ace23635-be0d-454f-a15d-47822f64bf8b.preview.emergentagent.com"
     
     try:
         # Hacer request al frontend
