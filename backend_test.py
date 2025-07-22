@@ -23,7 +23,7 @@ class MitosisBackendTester:
                     self.base_url = line.split('=')[1].strip()
                     break
             else:
-                self.base_url = "https://f4253cd9-5c25-43ad-a8ec-1103c797eb95.preview.emergentagent.com"
+                self.base_url = "https://88a3e6b4-ea85-4a85-afbf-1b6b5f983da0.preview.emergentagent.com"
         
         self.api_url = f"{self.base_url}/api"
         logger.info(f"🌐 Testing backend at: {self.api_url}")
