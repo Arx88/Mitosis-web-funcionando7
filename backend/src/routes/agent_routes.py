@@ -2332,6 +2332,7 @@ SOLO JSON, sin explicaciones adicionales.
 Responde ÚNICAMENTE con este JSON (sin texto adicional, sin markdown, sin explicaciones):
 
 {{
+  "title": "Título optimizado y descriptivo para la tarea",
   "steps": [
     {{
       "title": "Investigar: {message[:50]}",
@@ -2360,8 +2361,10 @@ Responde ÚNICAMENTE con este JSON (sin texto adicional, sin markdown, sin expli
   "estimated_total_time": "7-12 minutos"
 }}
 
-Personaliza los títulos y descripciones para que sean específicos a la tarea: "{message}"
-Herramientas válidas: web_search, analysis, creation, planning, delivery, processing, synthesis, research, investigation, data_analysis
+INSTRUCCIONES ESPECÍFICAS:
+1. Genera un "title" profesional y descriptivo basado en: "{message}"
+2. Personaliza los títulos y descripciones de los steps para que sean específicos a la tarea
+3. Herramientas válidas: web_search, analysis, creation, planning, delivery, processing, synthesis, research, investigation, data_analysis
 
 IMPORTANTE: Responde SOLO con el JSON, sin texto adicional."""
                 
