@@ -592,73 +592,23 @@ const generateDynamicTaskPlan = async (taskTitle: string) => {
                         showInternalButtons={true}
                         onAttachFiles={handleAttachFiles}
                         onWebSearch={async (searchQuery) => {
-                          console.log('🌐 WebSearch received query:', searchQuery);
+                          console.log('🌐 WebSearch: Creating task only');
                           if (searchQuery && searchQuery.trim().length > 0) {
-                            console.log('🌐 Creating WebSearch task with query:', searchQuery);
-                            
-                            // PASO 1: Crear la tarea INMEDIATAMENTE
+                            // SOLO crear la tarea y activar TaskView
                             const newTask = await createTask(searchQuery);
-                            console.log('✅ WebSearch task created:', newTask.id);
+                            setActiveTaskId(newTask.id);
                             
-                            // PASO 2: Crear mensaje del usuario INMEDIATAMENTE
-                            const userMessage = {
-                              id: `msg-${Date.now()}`,
-                              content: searchQuery,
-                              sender: 'user' as const,
-                              timestamp: new Date()
-                            };
-                            
-                            // PASO 3: Actualizar la tarea CON el mensaje del usuario
-                            const basicTaskUpdate = {
-                              ...newTask,
-                              messages: [userMessage],
-                              status: 'in-progress' as const,
-                              progress: 10
-                            };
-                            
-                            setTasks(prev => prev.map(task => 
-                              task.id === newTask.id ? basicTaskUpdate : task
-                            ));
-                            
-                            console.log('✅ WebSearch task updated in sidebar');
-                            
-                            // NOTA: El backend será llamado desde ChatInterface.tsx
-                            // NO duplicar la llamada aquí
+                            // ChatInterface se encargará del resto
                           }
                         }}
                         onDeepSearch={async (searchQuery) => {
-                          console.log('🔬 DeepSearch received query:', searchQuery);
+                          console.log('🔬 DeepSearch: Creating task only');
                           if (searchQuery && searchQuery.trim().length > 0) {
-                            console.log('🔬 Creating DeepSearch task with query:', searchQuery);
-                            
-                            // PASO 1: Crear la tarea INMEDIATAMENTE
+                            // SOLO crear la tarea y activar TaskView
                             const newTask = await createTask(searchQuery);
-                            console.log('✅ DeepSearch task created:', newTask.id);
+                            setActiveTaskId(newTask.id);
                             
-                            // PASO 2: Crear mensaje del usuario INMEDIATAMENTE
-                            const userMessage = {
-                              id: `msg-${Date.now()}`,
-                              content: searchQuery,
-                              sender: 'user' as const,
-                              timestamp: new Date()
-                            };
-                            
-                            // PASO 3: Actualizar la tarea CON el mensaje del usuario
-                            const basicTaskUpdate = {
-                              ...newTask,
-                              messages: [userMessage],
-                              status: 'in-progress' as const,
-                              progress: 10
-                            };
-                            
-                            setTasks(prev => prev.map(task => 
-                              task.id === newTask.id ? basicTaskUpdate : task
-                            ));
-                            
-                            console.log('✅ DeepSearch task updated in sidebar');
-                            
-                            // NOTA: El backend será llamado desde ChatInterface.tsx
-                            // NO duplicar la llamada aquí
+                            // ChatInterface se encargará del resto
                           }
                         }}
                         onVoiceInput={() => console.log('Voice input clicked')}
