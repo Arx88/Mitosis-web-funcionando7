@@ -530,13 +530,34 @@ export function App() {
                     ) : (
                       <VanishInput
                         onSendMessage={async (message) => {
-                          console.log('🎯 Homepage: Creating task only');
+                          console.log('🎯 Homepage: Creating task with initial message');
                           if (message.trim()) {
-                            // SOLO crear la tarea y activar TaskView
+                            // Crear tarea
                             const newTask = await createTask(message.trim());
+                            
+                            // ✅ AGREGAR EL MENSAJE DEL USUARIO A LA TAREA
+                            const userMessage = {
+                              id: `msg-${Date.now()}`,
+                              content: message.trim(),
+                              sender: 'user' as const,
+                              timestamp: new Date()
+                            };
+                            
+                            // Actualizar la tarea CON el mensaje inicial
+                            const taskWithMessage = {
+                              ...newTask,
+                              messages: [userMessage], // ✅ AGREGAR MENSAJE INICIAL
+                              status: 'active' as const
+                            };
+                            
+                            setTasks(prev => prev.map(task => 
+                              task.id === newTask.id ? taskWithMessage : task
+                            ));
+                            
+                            // Activar TaskView
                             setActiveTaskId(newTask.id);
                             
-                            // ChatInterface se encargará de todo lo demás (planes, backend calls)
+                            console.log('✅ Task created with initial message:', userMessage);
                           }
                         }}
                         placeholder="Escribe tu tarea aquí..."
