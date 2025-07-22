@@ -135,6 +135,25 @@ class EnhancedUnifiedMitosisAPI(UnifiedMitosisAPI):
 
     def _create_proper_config(self, config):
         """Crea configuración correcta desde variables de entorno"""
+        # Si se pasa un config simple, procesarlo
+        if config and isinstance(config, dict):
+            # Convertir dict a AgentConfig si es posible
+            if HAS_BASE_API:
+                try:
+                    from agent_core_real import AgentConfig
+                    agent_config = AgentConfig()
+                    agent_config.ollama_url = config.get('OLLAMA_URL', os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app'))
+                    agent_config.openrouter_api_key = config.get('OPENROUTER_API_KEY', os.getenv('OPENROUTER_API_KEY', ''))
+                    agent_config.prefer_local_models = config.get('PREFER_LOCAL_MODELS', True)
+                    agent_config.memory_db_path = config.get('MEMORY_DB_PATH', os.getenv('MEMORY_DB_PATH', 'mitosis_memory.db'))
+                    agent_config.debug_mode = config.get('DEBUG_MODE', os.getenv('DEBUG', 'true').lower() == 'true')
+                    return agent_config
+                except ImportError:
+                    pass
+            
+            # Usar el config dict tal como está
+            return config
+        
         if HAS_BASE_API:
             # Si tenemos la API base, crear AgentConfig apropiado
             try:
