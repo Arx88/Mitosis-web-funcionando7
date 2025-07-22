@@ -1217,37 +1217,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <Paperclip className="w-4 h-4" />
               </button>
               
-              {/* WebSearch and DeepResearch buttons */}
-              <div className="flex items-center bg-[rgba(255,255,255,0.08)] rounded-lg overflow-hidden">
-                <button 
-                  type="button" 
-                  onClick={() => setSearchMode(searchMode === 'websearch' ? null : 'websearch')}
-                  disabled={isLoading} 
-                  className={`p-2 transition-all duration-200 ${
-                    searchMode === 'websearch' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'hover:bg-[rgba(255,255,255,0.08)] text-[#DADADA]'
-                  } disabled:opacity-50`}
-                  title="WebSearch"
-                >
-                  <Search className="w-4 h-4" />
-                </button>
-                <div className="w-px h-6 bg-[rgba(255,255,255,0.08)]" />
-                <button 
-                  type="button" 
-                  onClick={() => setSearchMode(searchMode === 'deepsearch' ? null : 'deepsearch')}
-                  disabled={isLoading} 
-                  className={`p-2 transition-all duration-200 ${
-                    searchMode === 'deepsearch' 
-                      ? 'bg-purple-600 text-white' 
-                      : 'hover:bg-[rgba(255,255,255,0.08)] text-[#DADADA]'
-                  } disabled:opacity-50`}
-                  title="DeepResearch"
-                >
-                  <Layers className="w-4 h-4" />
-                </button>
-              </div>
-              
               {/* Voice input */}
               <button 
                 type="button" 
@@ -1261,15 +1230,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             
             {/* Status indicators */}
             <div className="flex items-center gap-3 text-xs text-[#7F7F7F]">
-              {/* Search mode indicator */}
-              {searchMode && (
-                <div className={`flex items-center gap-1 px-2 py-1 rounded ${
-                  searchMode === 'websearch' ? 'bg-blue-600/20 text-blue-400' : 'bg-purple-600/20 text-purple-400'
-                }`}>
-                  {searchMode === 'websearch' ? <Search className="w-3 h-3" /> : <Layers className="w-3 h-3" />}
-                  <span className="font-medium">{searchMode === 'websearch' ? 'WebSearch' : 'DeepResearch'}</span>
-                </div>
-              )}
               <div className="flex items-center gap-1">
                 <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-yellow-500' : 'bg-green-500'}`} />
                 <span>{isLoading ? 'Enviando...' : 'Listo'}</span>
