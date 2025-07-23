@@ -239,10 +239,26 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 timestamp: new Date()
               };
               
-              // ✅ FIXED: Update messages FIRST before title to avoid race condition
+              // ✅ FIXED: Add only agent message since user message was already added
               if (onUpdateMessages) {
-                const updatedMessages = [...messages, userMessage, agentMessage];
-                onUpdateMessages(updatedMessages);
+                // Get current messages (which should now include the user message added earlier)
+                const currentMessages = messages.length > 0 ? messages : [userMessage];
+                // Check if user message is already there
+                const hasUserMessage = currentMessages.some(msg => 
+                  msg.sender === 'user' && msg.content === message.trim()
+                );
+                
+                if (hasUserMessage) {
+                  // User message already exists, just add agent message
+                  const updatedMessages = [...currentMessages, agentMessage];
+                  onUpdateMessages(updatedMessages);
+                  console.log('✅ NUEVA TAREA FIX: Agent message added to existing chat with user message');
+                } else {
+                  // Fallback: add both messages (shouldn't happen with immediate user message fix)
+                  const updatedMessages = [...currentMessages, userMessage, agentMessage];
+                  onUpdateMessages(updatedMessages);
+                  console.log('✅ NUEVA TAREA FIX: Both messages added (fallback mode)');
+                }
               }
               
               // ✨ FIXED: Update title AFTER messages to ensure it doesn't get overwritten
