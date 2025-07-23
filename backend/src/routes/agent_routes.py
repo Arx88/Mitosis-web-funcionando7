@@ -87,14 +87,7 @@ PLAN_SCHEMA = {
         "suggested_icon": {
             "type": "string",
             "enum": [
-                "book", "image", "smartphone", "code", "database", "globe", "search", "file", 
-                "settings", "download", "upload", "server", "cloud", "shield", "key", "music", 
-                "video", "message", "mail", "chart", "shopping", "dollar", "calendar", "users", 
-                "monitor", "terminal", "zap", "briefcase", "lightbulb", "rocket", "star", "award",
-                "activity", "calculator", "layers", "package", "wrench", "workflow", "puzzle",
-                "building", "archive", "grid", "layout", "send", "share", "component", "target",
-                "flag", "edit", "camera", "mic", "headphones", "printer", "scan", "copy", "save",
-                "folder", "clock", "bell", "phone", "map", "compass", "navigation", "wifi", "lock"
+                "map", "code", "file", "chart", "search", "image", "music", "briefcase", "target"
             ]
         }
     },
