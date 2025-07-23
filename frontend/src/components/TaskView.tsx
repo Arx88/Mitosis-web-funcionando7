@@ -767,11 +767,12 @@ export const TaskView: React.FC<TaskViewProps> = ({
                     return currentTask; // Return unchanged for other tasks
                   }
                   
-                  console.log('📋 RACE CONDITION FIX - Using functional update to preserve enhanced title:', {
+                  console.log('📋 RACE CONDITION FIX - Using functional update to preserve enhanced title AND MESSAGES:', {
                     taskId: currentTask.id,
                     currentTitle: currentTask.title,
+                    currentMessagesCount: currentTask.messages?.length || 0,
                     planSteps: plan.steps?.length,
-                    fixApplied: 'Functional update preserves latest state'
+                    fixApplied: 'Functional update preserves latest state INCLUDING messages'
                   });
                   
                   // Convertir el plan del backend al formato del frontend
