@@ -25,7 +25,7 @@ from datetime import datetime
 from pathlib import Path
 
 # Configuration
-BASE_URL = "https://15c16a6c-c05b-4a8b-8862-e44571e2a1d6.preview.emergentagent.com"
+BASE_URL = "https://cbf52f8e-da52-4116-879a-a01d93879115.preview.emergentagent.com"
 API_PREFIX = "/api"
 AGENT_PREFIX = "/api/agent"
 GENERATED_FILES_PATH = "/app/backend/static/generated_files"
