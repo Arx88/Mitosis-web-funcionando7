@@ -239,12 +239,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               const initData = await initResponse.json();
               console.log('✅ Plan generated with specific AI planning:', initData);
               
-              // ✅ ENHANCED FIX: Ensure user message is always preserved during plan generation
+              // 🔧 CRITICAL FIX: Force message preservation during plan generation
               if (onUpdateMessages) {
-                // Always preserve the user message by ensuring it's included in all updates
-                const baseMessages = currentMessages.some(msg => 
-                  msg.sender === 'user' && msg.content === message.trim()
-                ) ? currentMessages : [...currentMessages, userMessage];
+                console.log('🔧 CRITICAL FIX: Forcing message preservation during plan generation');
+                console.log('🔧 Current messages before plan:', currentMessages.length);
+                console.log('🔧 User message to preserve:', userMessage.content);
+                
+                // FORCE preserve user message - no conditions, just ensure it exists
+                const preservedMessages = [userMessage];
                 
                 // Create agent response message
                 const agentMessage: Message = {
@@ -254,17 +256,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   timestamp: new Date()
                 };
                 
-                // Combine all messages ensuring user message persistence
-                const finalMessages = [...baseMessages, agentMessage];
+                // FINAL MESSAGES - user message MUST be first
+                const finalMessages = [userMessage, agentMessage];
+                
+                console.log('🔧 CRITICAL FIX: Calling onUpdateMessages with forced preservation');
+                console.log('🔧 Final messages:', finalMessages.map(m => ({ sender: m.sender, content: m.content.substring(0, 30) })));
+                
                 onUpdateMessages(finalMessages);
                 
-                console.log('✅ NUEVA TAREA FIX: Messages updated with guaranteed user message persistence');
-                console.log('✅ NUEVA TAREA DEBUG: Final message state:', {
-                  totalMessages: finalMessages.length,
-                  userMessages: finalMessages.filter(m => m.sender === 'user').length,
-                  agentMessages: finalMessages.filter(m => m.sender === 'agent').length,
-                  userMessagePreserved: finalMessages.some(m => m.sender === 'user' && m.content === message.trim())
-                });
+                console.log('✅ CRITICAL FIX: Messages forcefully preserved during plan generation');
               }
               
               // ✨ FIXED: Update title AFTER messages to ensure it doesn't get overwritten
