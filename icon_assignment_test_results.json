@@ -1,0 +1,374 @@
+[
+  {
+    "task": "Crear una aplicaci\u00f3n web con React",
+    "expected_category": "code/development",
+    "assigned_icon": "code",
+    "full_plan": {
+      "ai_generated": true,
+      "complexity": "alta",
+      "estimated_total_time": "145 minutos",
+      "plan_source": "unified_ai_generated",
+      "schema_validated": true,
+      "steps": [
+        {
+          "active": true,
+          "completed": false,
+          "description": "Usar la herramienta de creaci\u00f3n para crear un nuevo proyecto en React con el comando `npx create-react-app`.",
+          "estimated_time": "10 minutos",
+          "id": "step_1",
+          "priority": "alta",
+          "status": "pending",
+          "title": "Crear un nuevo proyecto en React",
+          "tool": "shell"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Usar la herramienta de creaci\u00f3n para instalar las dependencias necesarias y configurar el entorno de desarrollo.",
+          "estimated_time": "15 minutos",
+          "id": "step_2",
+          "priority": "media",
+          "status": "pending",
+          "title": "Instalar dependencias y configurar el entorno",
+          "tool": "creation"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Usar la herramienta de creaci\u00f3n para crear los componentes y estructura b\u00e1sica del proyecto.",
+          "estimated_time": "30 minutos",
+          "id": "step_3",
+          "priority": "media",
+          "status": "pending",
+          "title": "Crear componentes y estructura b\u00e1sica del proyecto",
+          "tool": "creation"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Usar la herramienta de creaci\u00f3n para implementar la funcionalidad y dise\u00f1o del proyecto.",
+          "estimated_time": "60 minutos",
+          "id": "step_4",
+          "priority": "alta",
+          "status": "pending",
+          "title": "Implementar funcionalidad y dise\u00f1o del proyecto",
+          "tool": "creation"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Usar la herramienta de creaci\u00f3n para probar y depurar el proyecto.",
+          "estimated_time": "30 minutos",
+          "id": "step_5",
+          "priority": "media",
+          "status": "pending",
+          "title": "Prueba y depuraci\u00f3n del proyecto",
+          "tool": "processing"
+        }
+      ],
+      "suggested_icon": "code",
+      "task_type": "Desarrollo/Tecnolog\u00eda",
+      "total_steps": 5
+    },
+    "coherent": true
+  },
+  {
+    "task": "Escribir un informe sobre marketing digital",
+    "expected_category": "document/writing",
+    "assigned_icon": "book",
+    "full_plan": {
+      "ai_generated": true,
+      "complexity": "media",
+      "estimated_total_time": "5 horas",
+      "plan_source": "unified_ai_generated",
+      "schema_validated": true,
+      "steps": [
+        {
+          "active": true,
+          "completed": false,
+          "description": "Identificar los objetivos y la audiencia objetivo para determinar el contenido del informe.",
+          "estimated_time": "30 minutos",
+          "id": "step_1",
+          "priority": "alta",
+          "status": "pending",
+          "title": "Definir el alcance del informe",
+          "tool": "planning"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Utilizar herramientas de b\u00fasqueda en l\u00ednea para recopilar datos y estad\u00edsticas sobre marketing digital.",
+          "estimated_time": "1 hora",
+          "id": "step_2",
+          "priority": "media",
+          "status": "pending",
+          "title": "Realizar una b\u00fasqueda de informaci\u00f3n relevante",
+          "tool": "web_search"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Organizar la informaci\u00f3n recopilada en una estructura l\u00f3gica y f\u00e1cil de seguir.",
+          "estimated_time": "30 minutos",
+          "id": "step_3",
+          "priority": "baja",
+          "status": "pending",
+          "title": "Crear un esquema del informe",
+          "tool": "mind_map"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Utilizar herramientas de escritura para crear un informe claro y conciso que cumpla con los objetivos establecidos.",
+          "estimated_time": "2 horas",
+          "id": "step_4",
+          "priority": "alta",
+          "status": "pending",
+          "title": "Escribir el informe",
+          "tool": "creation"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Verificar la precisi\u00f3n y coherencia del contenido, y realizar ajustes seg\u00fan sea necesario.",
+          "estimated_time": "1 hora",
+          "id": "step_5",
+          "priority": "media",
+          "status": "pending",
+          "title": "Revisar y editar el informe",
+          "tool": "analysis"
+        }
+      ],
+      "suggested_icon": "book",
+      "task_type": "Informe de marketing digital",
+      "total_steps": 5
+    },
+    "coherent": true
+  },
+  {
+    "task": "Buscar los mejores restaurantes en Valencia",
+    "expected_category": "search/location",
+    "assigned_icon": "globe",
+    "full_plan": {
+      "ai_generated": true,
+      "complexity": "media",
+      "estimated_total_time": "25 minutos",
+      "plan_source": "unified_ai_generated",
+      "schema_validated": true,
+      "steps": [
+        {
+          "active": true,
+          "completed": false,
+          "description": "Utilizar herramienta de b\u00fasqueda web para encontrar los mejores restaurantes en Valencia",
+          "estimated_time": "10 minutos",
+          "id": "step_1",
+          "priority": "alta",
+          "status": "pending",
+          "title": "Buscar restaurantes en Valencia",
+          "tool": "web_search"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Utilizar herramienta de an\u00e1lisis para filtrar los resultados por calificaci\u00f3n y distancia",
+          "estimated_time": "5 minutos",
+          "id": "step_2",
+          "priority": "media",
+          "status": "pending",
+          "title": "Filtrar resultados por calificaci\u00f3n y distancia",
+          "tool": "analysis"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Utilizar herramienta de creaci\u00f3n para crear una lista de los mejores restaurantes en Valencia",
+          "estimated_time": "10 minutos",
+          "id": "step_3",
+          "priority": "baja",
+          "status": "pending",
+          "title": "Crear lista de restaurantes recomendados",
+          "tool": "creation"
+        }
+      ],
+      "suggested_icon": "globe",
+      "task_type": "investigaci\u00f3n/b\u00fasqueda",
+      "total_steps": 3
+    },
+    "coherent": true
+  },
+  {
+    "task": "Analizar datos de ventas del \u00faltimo trimestre",
+    "expected_category": "analysis/data",
+    "assigned_icon": "chart",
+    "full_plan": {
+      "ai_generated": true,
+      "complexity": "media",
+      "estimated_total_time": "2 horas 15 minutos",
+      "plan_source": "unified_ai_generated",
+      "schema_validated": true,
+      "steps": [
+        {
+          "active": true,
+          "completed": false,
+          "description": "Utilizar herramienta web_search para buscar informaci\u00f3n relevante en internet",
+          "estimated_time": "30 minutos",
+          "id": "step_1",
+          "priority": "alta",
+          "status": "pending",
+          "title": "Buscar informaci\u00f3n sobre datos de ventas del \u00faltimo trimestre",
+          "tool": "web_search"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Utilizar herramienta analysis para analizar y sintetizar la informaci\u00f3n obtenida",
+          "estimated_time": "45 minutos",
+          "id": "step_2",
+          "priority": "media",
+          "status": "pending",
+          "title": "Analizar los resultados de la b\u00fasqueda",
+          "tool": "analysis"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Utilizar herramienta creation para crear un informe detallado y claro",
+          "estimated_time": "1 hora",
+          "id": "step_3",
+          "priority": "baja",
+          "status": "pending",
+          "title": "Crear un informe con los resultados del an\u00e1lisis",
+          "tool": "creation"
+        }
+      ],
+      "suggested_icon": "chart",
+      "task_type": "An\u00e1lisis de datos",
+      "total_steps": 3
+    },
+    "coherent": true
+  },
+  {
+    "task": "Crear un dise\u00f1o gr\u00e1fico para una campa\u00f1a",
+    "expected_category": "creative/design",
+    "assigned_icon": "image",
+    "full_plan": {
+      "ai_generated": true,
+      "complexity": "media",
+      "estimated_total_time": "4 horas 45 minutos",
+      "plan_source": "unified_ai_generated",
+      "schema_validated": true,
+      "steps": [
+        {
+          "active": true,
+          "completed": false,
+          "description": "Identificar el p\u00fablico objetivo y los objetivos de la campa\u00f1a para crear un dise\u00f1o gr\u00e1fico efectivo.",
+          "estimated_time": "30 minutos",
+          "id": "step_1",
+          "priority": "alta",
+          "status": "pending",
+          "title": "Definir el objetivo y la audiencia de la campa\u00f1a",
+          "tool": "planning"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Buscar inspiraci\u00f3n en sitios web, blogs y redes sociales para identificar los \u00faltimos estilos y tendencias en dise\u00f1o gr\u00e1fico.",
+          "estimated_time": "45 minutos",
+          "id": "step_2",
+          "priority": "media",
+          "status": "pending",
+          "title": "Investigar tendencias y estilos de dise\u00f1o relevantes",
+          "tool": "web_search"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Utilizar herramientas de dise\u00f1o como Adobe Illustrator o Canva para crear un boceto o prototipo del dise\u00f1o gr\u00e1fico.",
+          "estimated_time": "1 hora",
+          "id": "step_3",
+          "priority": "alta",
+          "status": "pending",
+          "title": "Crear un boceto o prototipo del dise\u00f1o gr\u00e1fico",
+          "tool": "creation"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Revisar y ajustar el dise\u00f1o gr\u00e1fico seg\u00fan las necesidades y preferencias de la audiencia objetivo.",
+          "estimated_time": "1 hora 30 minutos",
+          "id": "step_4",
+          "priority": "alta",
+          "status": "pending",
+          "title": "Refinar y perfeccionar el dise\u00f1o gr\u00e1fico",
+          "tool": "analysis"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Guardar el dise\u00f1o gr\u00e1fico en un formato adecuado para su uso en la campa\u00f1a.",
+          "estimated_time": "30 minutos",
+          "id": "step_5",
+          "priority": "baja",
+          "status": "pending",
+          "title": "Crear un archivo final del dise\u00f1o gr\u00e1fico",
+          "tool": "creation"
+        }
+      ],
+      "suggested_icon": "image",
+      "task_type": "Crear un dise\u00f1o gr\u00e1fico",
+      "total_steps": 5
+    },
+    "coherent": true
+  },
+  {
+    "task": "Hacer una investigaci\u00f3n sobre inteligencia artificial",
+    "expected_category": "research",
+    "assigned_icon": "search",
+    "full_plan": {
+      "ai_generated": true,
+      "complexity": "media",
+      "estimated_total_time": "2 horas 15 minutos",
+      "plan_source": "unified_ai_generated",
+      "schema_validated": true,
+      "steps": [
+        {
+          "active": true,
+          "completed": false,
+          "description": "Buscar informaci\u00f3n general y reciente sobre inteligencia artificial en internet.",
+          "estimated_time": "30 minutos",
+          "id": "step_1",
+          "priority": "alta",
+          "status": "pending",
+          "title": "Realizar b\u00fasqueda inicial sobre inteligencia artificial",
+          "tool": "web_search"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Evaluar la relevancia y confiabilidad de los resultados obtenidos.",
+          "estimated_time": "45 minutos",
+          "id": "step_2",
+          "priority": "media",
+          "status": "pending",
+          "title": "Analizar resultados de la b\u00fasqueda",
+          "tool": "analysis"
+        },
+        {
+          "active": false,
+          "completed": false,
+          "description": "Sintetizar la informaci\u00f3n relevante en un resumen claro y conciso.",
+          "estimated_time": "1 hora",
+          "id": "step_3",
+          "priority": "baja",
+          "status": "pending",
+          "title": "Crear un resumen de la informaci\u00f3n encontrada",
+          "tool": "creation"
+        }
+      ],
+      "suggested_icon": "search",
+      "task_type": "investigaci\u00f3n/b\u00fasqueda",
+      "total_steps": 3
+    },
+    "coherent": true
+  }
+]
