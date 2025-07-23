@@ -179,7 +179,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         
         // 🔧 ADDITIONAL FIX: Force a small delay to ensure message is fully rendered
         // This prevents race conditions in the message display
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise(resolve => setTimeout(resolve, 100));
         console.log('✅ NUEVA TAREA FIX: Message render delay completed');
       }
 
