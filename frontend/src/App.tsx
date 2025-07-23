@@ -359,33 +359,29 @@ export function App() {
       console.log('🚀 RACE CONDITION FIX - App.tsx updateTask called with FUNCTION (prevents stale state)');
       
       setTasks(prev => {
-        const taskToUpdate = prev.find(t => t.id === (prev.find(task => task.id) as Task)?.id);
-        if (!taskToUpdate) {
-          console.error('❌ Task not found for functional update');
-          return prev;
-        }
-        
-        // Find the task to update by checking which task is being modified
-        let updatedTaskId: string | null = null;
+        // 🔧 CRITICAL FIX: Apply functional update to all tasks and return updated array
         const newTasks = prev.map(task => {
           try {
             const potentialUpdate = updatedTaskOrFunction(task);
             if (potentialUpdate !== task) {
-              updatedTaskId = task.id;
               console.log('🚀 FUNCTIONAL UPDATE - Task updated:', {
                 taskId: task.id,
                 oldTitle: task.title,
                 newTitle: potentialUpdate.title,
+                oldMessagesCount: task.messages?.length || 0,
+                newMessagesCount: potentialUpdate.messages?.length || 0,
                 functionalUpdateApplied: true
               });
               return potentialUpdate;
             }
             return task;
           } catch (error) {
+            console.error('❌ Error applying functional update to task:', task.id, error);
             return task; // Skip this task if update function doesn't apply
           }
         });
         
+        console.log('🚀 FUNCTIONAL UPDATE COMPLETE - Total tasks:', newTasks.length);
         return newTasks;
       });
       return;
