@@ -822,6 +822,34 @@ export const TaskView: React.FC<TaskViewProps> = ({
                   logToTerminal(`📝 Título mejorado generado: "${enhancedTitle}"`, 'success');
                 }
               }}
+              onIconGenerated={(suggestedIcon) => {
+                console.log('🎯 TaskView: Icon suggestion received from ChatInterface:', suggestedIcon);
+                
+                // Actualizar el icono de la tarea con el icono sugerido por LLM
+                onUpdateTask((currentTask) => {
+                  if (currentTask.id !== task.id) {
+                    return currentTask;
+                  }
+                  
+                  const updatedTask = {
+                    ...currentTask,
+                    iconType: suggestedIcon // 🎯 ACTUALIZAR ICONO CON SUGERENCIA DEL LLM
+                  };
+                  
+                  console.log('🎯 TaskView: Updated task with LLM-suggested icon:', {
+                    taskId: updatedTask.id,
+                    newIcon: suggestedIcon,
+                    previousIcon: currentTask.iconType || 'none'
+                  });
+                  
+                  return updatedTask;
+                });
+                
+                // Log al terminal
+                if (logToTerminal) {
+                  logToTerminal(`🎯 Icono inteligente seleccionado: "${suggestedIcon}"`, 'success');
+                }
+              }}
               onTaskReset={() => {
                 // Reset task-specific state when switching tasks - MORE COMPREHENSIVE RESET
                 console.log('🔄 Task reset triggered for task:', task.id);
