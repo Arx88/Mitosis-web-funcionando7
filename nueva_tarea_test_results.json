@@ -1,0 +1,662 @@
+{
+  "timestamp": "2025-07-23T15:19:44.027631",
+  "backend_url": "https://431ff0b4-db79-4a78-a5cc-efec31358657.preview.emergentagent.com",
+  "test_summary": {
+    "overall_status": "FAILED",
+    "backend_health": "✅ HEALTHY",
+    "nueva_tarea_flow": "❌ FAILED",
+    "nueva_tarea_success_rate": "0.0%",
+    "total_scenarios_run": 3,
+    "total_scenarios_passed": 0
+  },
+  "detailed_results": {
+    "health": {
+      "backend_accessible": true,
+      "agent_health": true,
+      "endpoints_working": {
+        "/api/agent/status": true,
+        "/api/health": true,
+        "/api/agent/chat": true,
+        "/api/agent/generate-plan": true
+      },
+      "overall_health": true
+    },
+    "nueva_tarea_flow": {
+      "total_scenarios": 3,
+      "passed": 0,
+      "failed": 3,
+      "scenario_results": [
+        {
+          "scenario": {
+            "name": "Market Analysis Task",
+            "message": "Crear un análisis de mercado para productos de software en 2025",
+            "expected_plan_steps": 4,
+            "expected_enhanced_title": true
+          },
+          "chat_response": {
+            "enhanced_title": "Análisis de Mercado de Software 2025",
+            "execution_status": "executing",
+            "memory_used": true,
+            "mode": "agent_with_structured_plan",
+            "plan": {
+              "ai_generated": true,
+              "complexity": "alta",
+              "estimated_total_time": "12 horas",
+              "plan_source": "unified_ai_generated",
+              "schema_validated": true,
+              "steps": [
+                {
+                  "active": true,
+                  "completed": false,
+                  "description": "Identificar los productos de software relevantes y su impacto en el mercado en 2025.",
+                  "estimated_time": "2 horas",
+                  "id": "step_1",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Definir el alcance del análisis de mercado",
+                  "tool": "analysis"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Utilizar herramientas de web_search para identificar las últimas tendencias y predicciones en el sector de software.",
+                  "estimated_time": "1 hora",
+                  "id": "step_2",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Recopilar información sobre tendencias del mercado",
+                  "tool": "web_search"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Utilizar herramientas de creation para crear un modelo que permita analizar y visualizar los datos recopilados.",
+                  "estimated_time": "3 horas",
+                  "id": "step_3",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Crear un modelo de análisis de mercado",
+                  "tool": "creation"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Utilizar herramientas de analysis para analizar y sintetizar la información recopilada.",
+                  "estimated_time": "4 horas",
+                  "id": "step_4",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Analizar y sintetizar la información",
+                  "tool": "analysis"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Utilizar herramientas de delivery para presentar los resultados en un informe claro y conciso.",
+                  "estimated_time": "2 horas",
+                  "id": "step_5",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Presentar los resultados del análisis",
+                  "tool": "delivery"
+                }
+              ],
+              "suggested_icon": "chart",
+              "task_type": "análisis de mercado",
+              "total_steps": 5
+            },
+            "response": {
+              "deliverables_count": 0,
+              "error": null,
+              "files_generated": [],
+              "message": "ℹ️ Tu solicitud ha sido procesada.\n\n📋 **Información**: **PLAN DE ACCIÓN:**\n1. **Definir el alcance del análisis**: Identificar los productos de software relevantes y los mercados objetivo para 2025.\n2. **Recopilar información sobre tendencias y previsione...\n\n📊 **Estado**: plan_ready\n⏰ **Procesado**: 23/07/2025 15:20",
+              "raw_ollama_response": "**PLAN DE ACCIÓN:**\n1. **Definir el alcance del análisis**: Identificar los productos de software relevantes y los mercados objetivo para 2025.\n2. **Recopilar información sobre tendencias y previsiones**: Utilizar la herramienta **web_search** para buscar información sobre las tendencias actuales en el mercado de software y las previsiones para 2025.\n3. **Análisis de datos e información**: Utilizar la herramienta **analysis** para analizar los datos recopilados y identificar patrones y tendencias relevantes.\n4. **Identificar oportunidades y desafíos**: Utilizar la herramienta **synthesis** para sintetizar la información y identificar oportunidades y desafíos en el mercado de software para 2025.\n5. **Crear un informe de análisis**: Utilizar la herramienta **creation** para crear un informe detallado que incluya los resultados del análisis.\n**Herramientas a utilizar:**\n* **web_search**: Buscar información sobre tendencias y previsiones en el mercado de software.",
+              "status": "plan_ready",
+              "timestamp": "2025-07-23T15:20:06.916676",
+              "tool_results_count": 0,
+              "warnings": []
+            },
+            "task_id": "nueva-tarea-1753283995",
+            "timestamp": "2025-07-23T15:20:06.917520",
+            "tool_calls": [],
+            "tool_results": []
+          },
+          "message_persistence": {
+            "success": false,
+            "message_location": null,
+            "user_message": "Crear un análisis de mercado para productos de software en 2025",
+            "reason": "User message not found in response"
+          },
+          "plan_generation": {
+            "success": true,
+            "steps_count": 5,
+            "plan_title": "",
+            "plan_description": ""
+          },
+          "title_enhancement": {
+            "success": true,
+            "enhanced_title": "Análisis de Mercado de Software 2025",
+            "title_length": 36
+          },
+          "response_structure": {
+            "success": true,
+            "required_fields_present": [
+              "response",
+              "timestamp"
+            ],
+            "optional_fields_present": [
+              "plan",
+              "enhanced_title",
+              "task_id",
+              "memory_used"
+            ],
+            "response_keys": [
+              "enhanced_title",
+              "execution_status",
+              "memory_used",
+              "mode",
+              "plan",
+              "response",
+              "task_id",
+              "timestamp",
+              "tool_calls",
+              "tool_results"
+            ]
+          },
+          "plan_endpoint_test": {
+            "success": false,
+            "reason": "Generate-plan returned 0 steps, expected at least 3",
+            "response_data": {
+              "ai_generated": true,
+              "complexity": "media",
+              "enhanced_title": "Análisis de Mercado de Software 2025",
+              "estimated_total_time": "20 horas",
+              "plan": [
+                {
+                  "active": true,
+                  "completed": false,
+                  "description": "Identificar los productos de software relevantes para 2025 y determinar los criterios de evaluación.",
+                  "estimated_time": "2 horas",
+                  "id": "step_1",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Definir el alcance del análisis de mercado",
+                  "tool": "planning"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Utilizar herramientas de búsqueda para recopilar datos y estadísticas sobre la tendencia del mercado.",
+                  "estimated_time": "4 horas",
+                  "id": "step_2",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Realizar una búsqueda de información sobre el mercado de software en 2025",
+                  "tool": "web_search"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Utilizar herramientas de análisis para comprender la información recopilada y determinar las áreas de oportunidad.",
+                  "estimated_time": "6 horas",
+                  "id": "step_3",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Analizar los datos e identificar patrones y tendencias",
+                  "tool": "analysis"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Utilizar herramientas de creación para elaborar un informe claro y conciso que resuma los hallazgos del análisis.",
+                  "estimated_time": "8 horas",
+                  "id": "step_4",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Crear un informe detallado con recomendaciones y conclusiones",
+                  "tool": "creation"
+                }
+              ],
+              "status": "plan_generated",
+              "suggested_icon": "chart",
+              "task_id": "ce0dedd8-ba4a-4704-8943-0221d85136af",
+              "task_type": "análisis de mercado",
+              "timestamp": "2025-07-23T15:20:14.444098",
+              "total_steps": 4
+            }
+          },
+          "passed": false,
+          "failure_reason": "Message persistence: User message not found in response"
+        },
+        {
+          "scenario": {
+            "name": "AI Presentation Task",
+            "message": "Crear una presentación sobre inteligencia artificial",
+            "expected_plan_steps": 4,
+            "expected_enhanced_title": true
+          },
+          "chat_response": {
+            "enhanced_title": "Presentación sobre Inteligencia Artificial",
+            "execution_status": "executing",
+            "memory_used": true,
+            "mode": "agent_with_structured_plan",
+            "plan": {
+              "ai_generated": true,
+              "complexity": "media",
+              "estimated_total_time": "6 horas",
+              "plan_source": "unified_ai_generated",
+              "schema_validated": true,
+              "steps": [
+                {
+                  "active": true,
+                  "completed": false,
+                  "description": "Determinar el objetivo y el público objetivo de la presentación sobre inteligencia artificial.",
+                  "estimated_time": "30 minutos",
+                  "id": "step_1",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Definir el propósito de la presentación",
+                  "tool": "planning"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Buscar información sobre los conceptos clave de la inteligencia artificial, como aprendizaje automático y procesamiento de lenguaje natural.",
+                  "estimated_time": "1 hora",
+                  "id": "step_2",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Investigar temas relevantes",
+                  "tool": "web_search"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Diseñar un esquema que organice la información y ayude a mantener la atención del público.",
+                  "estimated_time": "1 hora",
+                  "id": "step_3",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Crear un esquema de presentación",
+                  "tool": "mind_map"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Diseñar gráficos, imágenes y otros elementos visuales que ilustren los conceptos clave de la inteligencia artificial.",
+                  "estimated_time": "2 horas",
+                  "id": "step_4",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Crear contenido visual",
+                  "tool": "creation"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Verificar que la información sea precisa y coherente, y hacer ajustes según sea necesario.",
+                  "estimated_time": "2 horas",
+                  "id": "step_5",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Revisar y editar la presentación",
+                  "tool": "processing"
+                }
+              ],
+              "suggested_icon": "target",
+              "task_type": "Crear una presentación sobre inteligencia artificial",
+              "total_steps": 5
+            },
+            "response": {
+              "deliverables_count": 0,
+              "error": null,
+              "files_generated": [],
+              "message": "ℹ️ Tu solicitud ha sido procesada.\n\n📋 **Información**: **PLAN DE ACCIÓN:**\n1. **Definir el objetivo y la audiencia**: Identificar el propósito de la presentación y quiénes serán los destinatarios.\n2. **Investigar temas clave**: Realizar una búsqueda exhau...\n\n📊 **Estado**: plan_ready\n⏰ **Procesado**: 23/07/2025 15:20",
+              "raw_ollama_response": "**PLAN DE ACCIÓN:**\n1. **Definir el objetivo y la audiencia**: Identificar el propósito de la presentación y quiénes serán los destinatarios.\n2. **Investigar temas clave**: Realizar una búsqueda exhaustiva sobre inteligencia artificial utilizando la herramienta **web_search** para recopilar información relevante.\n3. **Crear un esquema de presentación**: Utilizar la herramienta **creation** para diseñar un esquema claro y organizado que incluya secciones sobre definición, tipos, aplicaciones y futuros desafíos en el campo de la inteligencia artificial.\n4. **Crear contenido y agregar imágenes**: Utilizar la herramienta **creation** nuevamente para crear contenido detallado y atractivo para cada sección del esquema, incluyendo imágenes e ilustraciones relevantes.\n5. **Revisar y editar**: Revisar cuidadosamente el contenido y hacer ajustes necesarios antes de finalizar la presentación.\n**Explicación:** Crear una presentación sobre inteligencia artificial requiere investigar temas clave, organizar información de manera clara y atractiva, y asegurarse de que el contenido sea preciso y relevante para la audiencia. Utilizaré las herramientas **web_search**, **creation** y **planning** para completar esta tarea.\n**Herramientas utilizadas:**\n* **web_search**: Buscar información en internet sobre inteligencia artificial.\n* **creation**: Crear contenido, documentos o código para diseñar el esquema de presentación y agregar imágenes.\n* **planning**: Planificación y organización de tareas para asegurarme de que la presentación esté completa y revisada.",
+              "status": "plan_ready",
+              "timestamp": "2025-07-23T15:20:29.996340",
+              "tool_results_count": 0,
+              "warnings": []
+            },
+            "task_id": "nueva-tarea-1753284016",
+            "timestamp": "2025-07-23T15:20:29.997024",
+            "tool_calls": [],
+            "tool_results": []
+          },
+          "message_persistence": {
+            "success": false,
+            "message_location": null,
+            "user_message": "Crear una presentación sobre inteligencia artificial",
+            "reason": "User message not found in response"
+          },
+          "plan_generation": {
+            "success": true,
+            "steps_count": 5,
+            "plan_title": "",
+            "plan_description": ""
+          },
+          "title_enhancement": {
+            "success": true,
+            "enhanced_title": "Presentación sobre Inteligencia Artificial",
+            "title_length": 42
+          },
+          "response_structure": {
+            "success": true,
+            "required_fields_present": [
+              "response",
+              "timestamp"
+            ],
+            "optional_fields_present": [
+              "plan",
+              "enhanced_title",
+              "task_id",
+              "memory_used"
+            ],
+            "response_keys": [
+              "enhanced_title",
+              "execution_status",
+              "memory_used",
+              "mode",
+              "plan",
+              "response",
+              "task_id",
+              "timestamp",
+              "tool_calls",
+              "tool_results"
+            ]
+          },
+          "plan_endpoint_test": {
+            "success": false,
+            "reason": "Generate-plan returned 0 steps, expected at least 3",
+            "response_data": {
+              "ai_generated": true,
+              "complexity": "media",
+              "enhanced_title": "Presentación sobre Inteligencia Artificial",
+              "estimated_total_time": "6 horas",
+              "plan": [
+                {
+                  "active": true,
+                  "completed": false,
+                  "description": "Determinar el objetivo y el público objetivo de la presentación sobre inteligencia artificial.",
+                  "estimated_time": "30 minutos",
+                  "id": "step_1",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Definir el propósito de la presentación",
+                  "tool": "planning"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Buscar información sobre los conceptos clave de la inteligencia artificial, como aprendizaje automático y procesamiento de lenguaje natural.",
+                  "estimated_time": "1 hora",
+                  "id": "step_2",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Investigar temas relevantes",
+                  "tool": "web_search"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Diseñar un esquema que organice la información y ayude a mantener la atención del público.",
+                  "estimated_time": "1 hora",
+                  "id": "step_3",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Crear un esquema de presentación",
+                  "tool": "mind_map"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Crear gráficos, diagramas y otras imágenes que ilustren los conceptos clave de la inteligencia artificial.",
+                  "estimated_time": "2 horas",
+                  "id": "step_4",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Crear contenido visual",
+                  "tool": "creation"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Verificar que la información sea precisa y coherente, y hacer ajustes según sea necesario.",
+                  "estimated_time": "2 horas",
+                  "id": "step_5",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Revisar y editar la presentación",
+                  "tool": "analysis"
+                }
+              ],
+              "status": "plan_generated",
+              "suggested_icon": "target",
+              "task_id": "20bc70f0-c855-4a42-acaf-9a71f2433162",
+              "task_type": "Crear una presentación sobre inteligencia artificial",
+              "timestamp": "2025-07-23T15:20:37.246892",
+              "total_steps": 5
+            }
+          },
+          "passed": false,
+          "failure_reason": "Message persistence: User message not found in response"
+        },
+        {
+          "scenario": {
+            "name": "Marketing Strategy Task",
+            "message": "Desarrollar una estrategia de marketing digital para una startup",
+            "expected_plan_steps": 4,
+            "expected_enhanced_title": true
+          },
+          "chat_response": {
+            "enhanced_title": "Estrategia Digital para Startups",
+            "execution_status": "executing",
+            "memory_used": true,
+            "mode": "agent_with_structured_plan",
+            "plan": {
+              "ai_generated": true,
+              "complexity": "media",
+              "estimated_total_time": "13 horas",
+              "plan_source": "unified_ai_generated",
+              "schema_validated": true,
+              "steps": [
+                {
+                  "active": true,
+                  "completed": false,
+                  "description": "Identificar al público objetivo y determinar la estrategia de marketing digital adecuada para la startup.",
+                  "estimated_time": "2 horas",
+                  "id": "step_1",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Definir el público objetivo y la estrategia de marketing",
+                  "tool": "analysis"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Desarrollar un plan de contenido que incluya tipos de publicaciones, frecuencia y canales de distribución.",
+                  "estimated_time": "3 horas",
+                  "id": "step_2",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Crear un plan de contenido",
+                  "tool": "creation"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Crear perfiles en las redes sociales más relevantes para la startup y configurar la presencia de marca.",
+                  "estimated_time": "2 horas",
+                  "id": "step_3",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Establecer una presencia en redes sociales",
+                  "tool": "creation"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Crear un plan de publicidad digital que incluya objetivos, presupuesto y estrategias de publicidad.",
+                  "estimated_time": "4 horas",
+                  "id": "step_4",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Desarrollar un plan de publicidad digital",
+                  "tool": "planning"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Establecer indicadores clave de rendimiento (KPI) y monitorear el rendimiento del marketing digital.",
+                  "estimated_time": "2 horas",
+                  "id": "step_5",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Monitorear y evaluar el rendimiento del marketing digital",
+                  "tool": "data_analysis"
+                }
+              ],
+              "suggested_icon": "briefcase",
+              "task_type": "estrategia de marketing digital",
+              "total_steps": 5
+            },
+            "response": {
+              "deliverables_count": 0,
+              "error": null,
+              "files_generated": [],
+              "message": "ℹ️ Tu solicitud ha sido procesada.\n\n📋 **Información**: **PLAN DE ACCIÓN:**\n1. **Definir objetivos y público objetivo**: Utilizar la herramienta **planning** para identificar los objetivos clave de la startup y determinar el público objetivo.\n2. **Análisis...\n\n📊 **Estado**: plan_ready\n⏰ **Procesado**: 23/07/2025 15:20",
+              "raw_ollama_response": "**PLAN DE ACCIÓN:**\n1. **Definir objetivos y público objetivo**: Utilizar la herramienta **planning** para identificar los objetivos clave de la startup y determinar el público objetivo.\n2. **Análisis del mercado**: Realizar un análisis de competencia utilizando la herramienta **analysis**, con la siguiente llamada a herramientas:",
+              "status": "plan_ready",
+              "timestamp": "2025-07-23T15:20:51.436391",
+              "tool_results_count": 0,
+              "warnings": []
+            },
+            "task_id": "nueva-tarea-1753284039",
+            "timestamp": "2025-07-23T15:20:51.437120",
+            "tool_calls": [],
+            "tool_results": []
+          },
+          "message_persistence": {
+            "success": false,
+            "message_location": null,
+            "user_message": "Desarrollar una estrategia de marketing digital para una startup",
+            "reason": "User message not found in response"
+          },
+          "plan_generation": {
+            "success": true,
+            "steps_count": 5,
+            "plan_title": "",
+            "plan_description": ""
+          },
+          "title_enhancement": {
+            "success": true,
+            "enhanced_title": "Estrategia Digital para Startups",
+            "title_length": 32
+          },
+          "response_structure": {
+            "success": true,
+            "required_fields_present": [
+              "response",
+              "timestamp"
+            ],
+            "optional_fields_present": [
+              "plan",
+              "enhanced_title",
+              "task_id",
+              "memory_used"
+            ],
+            "response_keys": [
+              "enhanced_title",
+              "execution_status",
+              "memory_used",
+              "mode",
+              "plan",
+              "response",
+              "task_id",
+              "timestamp",
+              "tool_calls",
+              "tool_results"
+            ]
+          },
+          "plan_endpoint_test": {
+            "success": false,
+            "reason": "Generate-plan returned 0 steps, expected at least 3",
+            "response_data": {
+              "ai_generated": true,
+              "complexity": "media",
+              "enhanced_title": "Estrategia Digital para Startups",
+              "estimated_total_time": "17 horas",
+              "plan": [
+                {
+                  "active": true,
+                  "completed": false,
+                  "description": "Identificar audiencia objetivo y establecer metas claras para la estrategia de marketing digital.",
+                  "estimated_time": "2 horas",
+                  "id": "step_1",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Definir objetivos de marketing digital",
+                  "tool": "planning"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Investigar competidores y tendencias en el sector para entender oportunidades y desafíos.",
+                  "estimated_time": "4 horas",
+                  "id": "step_2",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Realizar análisis del mercado",
+                  "tool": "analysis"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Desarrollar estrategia de contenido que atraiga a la audiencia objetivo y se ajuste a las metas establecidas.",
+                  "estimated_time": "6 horas",
+                  "id": "step_3",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Crear contenido atractivo",
+                  "tool": "creation"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Crear perfiles en plataformas relevantes y configurar estrategia de publicación.",
+                  "estimated_time": "3 horas",
+                  "id": "step_4",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Establecer presencia en redes sociales",
+                  "tool": "delivery"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Analizar resultados y ajustar la estrategia según sea necesario para alcanzar los objetivos establecidos.",
+                  "estimated_time": "2 horas",
+                  "id": "step_5",
+                  "priority": "baja",
+                  "status": "pending",
+                  "title": "Monitorear y ajustar la estrategia",
+                  "tool": "processing"
+                }
+              ],
+              "status": "plan_generated",
+              "suggested_icon": "briefcase",
+              "task_id": "3815f41d-363d-46df-a88d-b665fa61f95f",
+              "task_type": "estrategia de marketing digital",
+              "timestamp": "2025-07-23T15:21:00.218696",
+              "total_steps": 5
+            }
+          },
+          "passed": false,
+          "failure_reason": "Message persistence: User message not found in response"
+        }
+      ],
+      "nueva_tarea_backend_working": false,
+      "success_rate": 0.0
+    }
+  }
+}
