@@ -10,8 +10,8 @@ sys.path.insert(0, '/app/backend')
 
 from server import app, socketio
 
-# Para gunicorn con eventlet
-application = socketio.wsgi_app
+# Para gunicorn con eventlet - SocketIO wraps the Flask app
+application = socketio
 
 if __name__ == '__main__':
     # Para testing directo
