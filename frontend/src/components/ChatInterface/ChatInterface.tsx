@@ -179,7 +179,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           hasExistingPlan,
           messagesLength: messages.length,
           dataId,
-          condition: isFirstMessage && !hasExistingPlan
+          condition: isFirstMessage && !hasExistingPlan,
+          TITLE_FIX: 'hasExistingPlan forced to false'
         });
         
         if (isFirstMessage && !hasExistingPlan) {
