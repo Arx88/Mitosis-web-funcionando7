@@ -231,8 +231,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               
               // ✨ FIXED: Update title AFTER messages to ensure it doesn't get overwritten
               if (onTitleGenerated && initData.enhanced_title) {
-                console.log('📝 Updating task title with enhanced title (AFTER messages):', initData.enhanced_title);
+                console.log('📝 NUEVA TAREA FIX - Updating task title with enhanced title (AFTER messages):', initData.enhanced_title);
+                console.log('📝 NUEVA TAREA FIX - onTitleGenerated callback exists:', !!onTitleGenerated);
+                console.log('📝 NUEVA TAREA FIX - Enhanced title exists:', !!initData.enhanced_title);
+                console.log('📝 NUEVA TAREA FIX - About to call onTitleGenerated...');
                 onTitleGenerated(initData.enhanced_title);
+                console.log('📝 NUEVA TAREA FIX - onTitleGenerated called successfully');
+              } else {
+                console.warn('⚠️ NUEVA TAREA ISSUE - Title generation skipped:', {
+                  onTitleGeneratedExists: !!onTitleGenerated,
+                  enhancedTitleExists: !!initData.enhanced_title,
+                  enhancedTitle: initData.enhanced_title
+                });
               }
               
               // ✅ CRITICAL FIX: Call onTaskPlanGenerated callback for plan display in TerminalView
