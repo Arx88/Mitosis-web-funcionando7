@@ -23,7 +23,7 @@ class TaskViewTransitionTester:
                     self.base_url = line.split('=')[1].strip()
                     break
             else:
-                self.base_url = "https://2919675b-54c0-45d9-b301-edd48bf0c00e.preview.emergentagent.com"
+                self.base_url = "https://74a5e33d-f0aa-4bdf-866a-560ce9007d4f.preview.emergentagent.com"
         
         self.api_url = f"{self.base_url}/api"
         logger.info(f"🌐 Testing TaskView transition fix at: {self.api_url}")
