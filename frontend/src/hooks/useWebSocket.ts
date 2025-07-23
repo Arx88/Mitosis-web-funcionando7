@@ -42,14 +42,18 @@ export const useWebSocket = (): UseWebSocketReturn => {
 
     console.log('🔌 Connecting to WebSocket:', backendUrl);
 
-    // Crear conexión WebSocket
+    // Crear conexión WebSocket con compatibilidad mejorada
     socketRef.current = io(backendUrl, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'], // Cambiar orden para usar polling primero
       timeout: 10000,
       forceNew: true,
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      upgrade: true, // Permitir upgrade automático
+      rememberUpgrade: false, // No recordar el upgrade
+      pingTimeout: 5000,
+      pingInterval: 10000
     });
 
     const socket = socketRef.current;
