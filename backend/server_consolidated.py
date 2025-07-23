@@ -239,7 +239,7 @@ class MitosisConsolidatedServer:
         # 5. Inicializar Task Manager
         try:
             from src.services.task_manager import TaskManager
-            self.task_manager_service = TaskManager(self.db if self.db else None)
+            self.task_manager_service = TaskManager(self.db if self.db is not None else None)
             self.app.task_manager = self.task_manager_service
             terminal_logger.info("✅ Task Manager inicializado")
         except Exception as e:
