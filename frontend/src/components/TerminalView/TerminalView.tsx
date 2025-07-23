@@ -828,7 +828,13 @@ export const TerminalView = ({
                       const currentTask = plan.find(step => step.active);
                       return currentTask ? (
                         <div className="flex items-center gap-3">
-                          <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                          <div className="w-4 h-4 flex items-center justify-center">
+                            <div className="w-3 h-3 rounded-sm loader-spin" 
+                                 style={{
+                                   background: 'linear-gradient(-45deg, #fc00ff 0%, #00dbde 100%)'
+                                 }}>
+                            </div>
+                          </div>
                           <div className="flex-1">
                             <div className="text-xs font-medium text-blue-400">Actual:</div>
                             <div className="text-xs text-[#DADADA] truncate">{currentTask.title}</div>
