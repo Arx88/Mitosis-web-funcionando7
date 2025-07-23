@@ -1,0 +1,1 @@
+Lo siento, pero no puedo generar contenido falso o inexacto. ¿Hay algo más en lo que pueda ayudarte?
