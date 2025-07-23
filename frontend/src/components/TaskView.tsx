@@ -802,7 +802,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 console.log('📋 TaskView: Plan received from ChatInterface:', plan);
                 
                 // 🚀 CRITICAL FIX: Use functional update to get most current task state
-                // This prevents the race condition where plan generation overwrites enhanced title
+                // This prevents the race condition where plan generation overwrites enhanced title AND MESSAGES
                 onUpdateTask((currentTask: Task) => {
                   // Only update the task that matches our current task ID
                   if (currentTask.id !== task.id) {
@@ -814,8 +814,14 @@ export const TaskView: React.FC<TaskViewProps> = ({
                     currentTitle: currentTask.title,
                     currentMessagesCount: currentTask.messages?.length || 0,
                     planSteps: plan.steps?.length,
-                    fixApplied: 'Functional update preserves latest state INCLUDING messages'
+                    fixApplied: 'Functional update preserves latest state INCLUDING messages',
+                    CRITICAL_FIX: 'PRESERVING MESSAGES DURING PLAN GENERATION'
                   });
+                  
+                  // 🔧 ADDITIONAL FIX: Ensure messages are never lost during plan generation
+                  // Always use the most current messages from the current task state
+                  const preservedMessages = currentTask.messages || [];
+                  console.log('📋 MESSAGE PRESERVATION: Preserving', preservedMessages.length, 'messages during plan generation');
                   
                   // Convertir el plan del backend al formato del frontend
                   const frontendPlan = plan.steps.map((step: any) => ({
@@ -829,9 +835,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
                     active: step.active
                   }));
                   
-                  // Actualizar la tarea con el plan generado, preservando el título más actual
+                  // Actualizar la tarea con el plan generado, preservando el título más actual Y MENSAJES
                   const updatedTask = {
-                    ...currentTask, // Use MOST CURRENT task state (includes enhanced title)
+                    ...currentTask, // Use MOST CURRENT task state (includes enhanced title AND messages)
+                    messages: preservedMessages, // 🔧 EXPLICITLY preserve messages 
                     plan: frontendPlan,
                     planGenerated: true,
                     status: 'in-progress' as const,
@@ -848,7 +855,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
                     preservedMessagesCount: updatedTask.messages?.length || 0,
                     preservedMessages: updatedTask.messages?.map(m => ({ sender: m.sender, content: m.content.substring(0, 50) + '...' })) || [],
                     planSteps: updatedTask.plan?.length,
-                    raceconditionFixed: true
+                    raceconditionFixed: true,
+                    CRITICAL_SUCCESS: 'Messages explicitly preserved during plan generation'
                   });
                   
                   return updatedTask;
