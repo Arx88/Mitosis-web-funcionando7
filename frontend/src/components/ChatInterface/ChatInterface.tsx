@@ -184,6 +184,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         
         if (isFirstMessage && !hasExistingPlan) {
           console.log('🎯 FIRST MESSAGE - Calling generate-plan for specific plan generation');
+          console.log('🔍 NUEVA TAREA DEBUG - Esta lógica DEBE ejecutarse para tareas desde botón NUEVA TAREA');
           
           // 🐛 DEBUG: Log backend URL and request details
           const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
