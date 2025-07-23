@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 # Configuración de la URL del backend
-BACKEND_URL = "https://c98456b8-1d6f-431b-a23f-52aa625cdad4.preview.emergentagent.com"
+BACKEND_URL = "https://33daae9e-0eef-4291-8c45-9b1f547b085b.preview.emergentagent.com"
 
 class IntentionClassificationTester:
     """Tester para el sistema de clasificación de intenciones"""
