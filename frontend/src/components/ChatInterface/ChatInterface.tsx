@@ -249,6 +249,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 });
               }
               
+              // 🎯 NUEVO: Update icon with LLM suggestion
+              if (onIconGenerated && initData.suggested_icon) {
+                console.log('🎯 ICON GENERATION - Updating task icon with LLM suggestion:', initData.suggested_icon);
+                onIconGenerated(initData.suggested_icon);
+              } else {
+                console.warn('⚠️ ICON GENERATION - Icon update skipped:', {
+                  onIconGeneratedExists: !!onIconGenerated,
+                  suggestedIconExists: !!initData.suggested_icon,
+                  suggestedIcon: initData.suggested_icon
+                });
+              }
+              
               // ✅ CRITICAL FIX: Call onTaskPlanGenerated callback for plan display in TerminalView
               if (onTaskPlanGenerated && initData.plan) {
                 console.log('📋 Calling onTaskPlanGenerated with specific AI plan:', initData);
@@ -256,10 +268,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   steps: initData.plan,
                   total_steps: initData.total_steps,
                   estimated_total_time: initData.estimated_total_time,
-                task_type: initData.task_type,
-                complexity: initData.complexity
-              });
-            }
+                  task_type: initData.task_type,
+                  complexity: initData.complexity,
+                  suggested_icon: initData.suggested_icon // 🎯 INCLUIR ICONO EN EL PLAN
+                });
+              }
             
           } else {
             console.error('❌ Generate plan failed:', initResponse.status);
