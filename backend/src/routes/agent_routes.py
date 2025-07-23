@@ -3014,7 +3014,8 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
             'steps': fallback_plan,
             'total_steps': 1,
             'estimated_total_time': '1 minuto',
-            'task_type': 'simple_execution'
+            'task_type': 'simple_execution',
+            'suggested_icon': 'target'  # Generic icon for simple execution
         }
 
 
