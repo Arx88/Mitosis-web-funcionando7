@@ -170,8 +170,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       // 🔧 FIX: Add user message immediately to chat before processing
       // This ensures the user's message is always visible, even if processing fails
+      let currentMessages = messages;
       if (onUpdateMessages) {
         const updatedMessages = [...messages, userMessage];
+        currentMessages = updatedMessages; // Update local reference
         onUpdateMessages(updatedMessages);
         console.log('✅ NUEVA TAREA FIX: User message added to chat immediately:', userMessage.content);
       }
@@ -184,6 +186,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         // Considerar como "primer mensaje" si:
         // 1. No hay mensajes en absoluto, o
         // 2. Solo hay mensajes del sistema/agente (no del usuario)
+        // 🔧 FIX: Use ORIGINAL messages (before user message) to determine if first message
         const userMessages = messages.filter(msg => msg.sender === 'user');
         const isFirstUserMessage = userMessages.length === 0;
         
