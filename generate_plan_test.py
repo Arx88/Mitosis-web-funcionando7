@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://fab19e87-e778-4d71-a546-9bf39b1246bd.preview.emergentagent.com"
+BACKEND_URL = "https://06e72bc6-45fa-4e2e-a398-71320846a996.preview.emergentagent.com"
 
 def test_health_endpoint():
     """Test the /api/health endpoint first"""

@@ -21,7 +21,7 @@ class FocusedMitosisTest:
                     self.base_url = line.split('=')[1].strip()
                     break
             else:
-                self.base_url = "https://fab19e87-e778-4d71-a546-9bf39b1246bd.preview.emergentagent.com"
+                self.base_url = "https://06e72bc6-45fa-4e2e-a398-71320846a996.preview.emergentagent.com"
         
         self.api_url = f"{self.base_url}/api"
         logger.info(f"🌐 Testing Mitosis at: {self.api_url}")
