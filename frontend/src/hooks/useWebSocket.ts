@@ -186,6 +186,9 @@ export const useWebSocket = (): UseWebSocketReturn => {
     if (events.task_progress) socket.off('task_progress');
     if (events.task_completed) socket.off('task_completed');
     if (events.task_failed) socket.off('task_failed');
+    if (events.step_started) socket.off('step_started');
+    if (events.step_completed) socket.off('step_completed');
+    if (events.step_failed) socket.off('step_failed');
     if (events.plan_updated) socket.off('plan_updated');
     if (events.context_changed) socket.off('context_changed');
 
