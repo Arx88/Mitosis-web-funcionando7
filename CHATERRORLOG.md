@@ -112,10 +112,36 @@ El problema puede estar en el orden de ejecución de los callbacks:
 - TaskView.tsx línea 755-797: `onUpdateMessages` functional update
 - TaskView.tsx línea 802-857: Plan generation callback
 
-### RESULTADO: EN PROCESO
-- **PROBLEMA**: Muy probablemente race condition en callbacks
-- **UBICACIÓN**: Entre ChatInterface y TaskView message state management
-- **PRÓXIMO PASO**: Probar el flujo específico y ver donde se pierden los mensajes
+### Intento #5 - CAUSA RAÍZ IDENTIFICADA (Julio 2025)
+**FECHA**: Julio 2025  
+**MÉTODO**: Testing automatizado con auto_frontend_testing_agent
+**RESULTADO**: ✅ **CAUSA RAÍZ IDENTIFICADA**
+
+#### 🔍 **HALLAZGO CRÍTICO**: 
+**EL PROBLEMA NO ES QUE LOS MENSAJES DESAPAREZCAN**
+
+**EL VERDADERO PROBLEMA**: El componente ChatInterface **NO SE ESTÁ RENDERIZANDO EN ABSOLUTO** cuando se crea una tarea desde el botón "Nueva Tarea".
+
+#### **EVIDENCIA ENCONTRADA**:
+1. **TaskView se carga correctamente**: Header "Tarea 1" visible ✅
+2. **Terminal/Monitor funciona**: Panel derecho se renderiza ✅  
+3. **Sidebar funciona**: La tarea aparece en el sidebar ✅
+4. **ChatInterface falla**: **Panel izquierdo completamente vacío** ❌
+5. **No hay input field**: Usuarios no pueden escribir mensajes ❌
+6. **No hay área de chat**: No se puede ver ningún mensaje ❌
+
+#### **POR QUÉ SE REPORTÓ COMO "MENSAJES DESAPARECEN"**:
+- Los usuarios asumían que el chat existía pero no podían verlo
+- El verdadero problema es que **el chat nunca aparece**
+- Esto explica por qué no se ven los mensajes: **no hay donde mostrarlos**
+
+#### **UBICACIÓN DEL PROBLEMA**:
+- Archivo: `/app/frontend/src/components/TaskView.tsx`
+- Líneas sospechosas: 705-931 (renderizado del ChatInterface)
+- Condición de renderizado que probablemente está fallando
+
+#### **PRÓXIMO PASO ESPECÍFICO**:
+Investigar por qué TaskView no renderiza ChatInterface para tareas creadas con "Nueva Tarea"
 
 ## NOTAS IMPORTANTES
 - Usuario ha reportado que las "soluciones" previas no funcionaron
