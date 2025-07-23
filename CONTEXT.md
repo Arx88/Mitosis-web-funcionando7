@@ -85,9 +85,9 @@ AGENT_LLM_PROVIDER=ollama
 MONGO_URL=mongodb://localhost:27017/task_manager
 ```
 
-### Frontend Analysis
+### Frontend Analysis - ACTUALIZADO
 
-#### App.tsx - Componente Principal (829 líneas)
+#### App.tsx - Componente Principal (829 líneas) - ANÁLISIS COMPLETO
 **COMPLEJIDAD EXTREMA**: Archivo demasiado grande con múltiples responsabilidades
 
 **FUNCIONALIDADES IDENTIFICADAS**:
@@ -98,13 +98,40 @@ MONGO_URL=mongodb://localhost:27017/task_manager
 5. **Dynamic Ideas**: Sugerencias dinámicas
 6. **WebSocket**: Comunicación tiempo real
 7. **Configuration**: Panel de configuración
+8. **NUEVA**: Dual task creation: `createTask()` vs `createTaskWithMessage()`
 
 **PROBLEMAS CRÍTICOS ENCONTRADOS**:
 ```typescript
-// LÍNEAS 213-285: Lógica compleja de creación de tareas
-// LÍNEAS 387-458: Sistema de actualización con race conditions
-// LÍNEAS 122-172: createTask vs createTaskWithMessage duplicado
+// LÍNEAS 174-302: createTaskWithMessage() - Lógica compleja con enhanced title
+// LÍNEAS 305-326: startTaskExecutionFromApp() - Auto-execution pipeline
+// LÍNEAS 387-458: updateTask() - Sistema con race conditions Y functional updates
+// LÍNEAS 122-172: createTask() vs createTaskWithMessage() - DUPLICACIÓN CONTROLADA
 ```
+
+#### TaskView.tsx - Vista Principal de Tarea (1030 líneas!)
+**ARCHIVO MASIVO**: Maneja toda la interfaz de tarea activa
+
+**CARACTERÍSTICAS PRINCIPALES**:
+1. **Dual Panel**: Chat (w-1/2) + Terminal (w-1/2) - CSS FIJO aplicado
+2. **ChatInterface Integration**: Manejo completo de mensajes
+3. **Plan Generation**: Integración con backend para planes
+4. **Race Condition Fixes**: Functional updates para prevenir pérdida de mensajes
+5. **Auto-execution**: Pipeline automático después de generar plan
+6. **File Management**: Sistema de archivos y modals
+7. **Terminal Integration**: TerminalView para ejecución en tiempo real
+
+**FIXES CRÍTICOS IMPLEMENTADOS**:
+- CSS fix: `md:w-1/2` → `w-1/2` para paneles siempre visibles
+- Functional updates para prevenir race conditions
+- Message persistence durante plan generation
+
+#### Sidebar.tsx - Navegación Principal (342 líneas)
+**FUNCIONALIDADES**:
+1. **Task Creation**: Botón "Nueva tarea" 
+2. **Search**: Búsqueda por título y contenido
+3. **Favorites**: Sistema de favoritos
+4. **Task Management**: Editar, eliminar, seleccionar
+5. **Collapsed Mode**: Interfaz compacta
 
 #### package.json Frontend
 - **Dependencias**: React 19.1.0, Socket.io, Tailwind, etc.
