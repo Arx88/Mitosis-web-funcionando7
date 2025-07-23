@@ -175,13 +175,13 @@ sudo supervisorctl update >/dev/null 2>&1
 sudo supervisorctl restart all >/dev/null 2>&1
 
 # ========================================================================
-# PASO 6: VERIFICACIÓN COMPLETA
+# PASO 6: VERIFICACIÓN COMPLETA DE SERVICIOS
 # ========================================================================
 
-echo "⏳ Esperando estabilización (15 segundos)..."
-sleep 15
+echo "⏳ Esperando estabilización de servicios (20 segundos)..."
+sleep 20
 
-# Funciones de verificación
+# Funciones de verificación mejoradas
 check_backend() {
     curl -s -f http://localhost:8001/api/health >/dev/null 2>&1
 }
@@ -195,29 +195,50 @@ check_mongodb() {
 }
 
 check_ollama() {
-    curl -s -f "https://bef4a4bb93d1.ngrok-free.app/api/tags" >/dev/null 2>&1
+    # Verificar ambos endpoints posibles
+    curl -s -f "https://bef4a4bb93d1.ngrok-free.app/api/tags" >/dev/null 2>&1 || \
+    curl -s -f "https://78d08925604a.ngrok-free.app/api/tags" >/dev/null 2>&1
 }
 
-# Verificar backend con reintentos
-echo "🔍 Verificando backend..."
+check_external_access() {
+    # Verificar acceso externo usando la URL del preview
+    curl -s -f "https://f06cad5e-e399-4742-870a-df7e66775bd4.preview.emergentagent.com" >/dev/null 2>&1
+}
+
+# Verificar backend con reintentos extendidos
+echo "🔍 Verificando backend (modo producción)..."
 backend_ok=false
-for i in {1..20}; do
+for i in {1..30}; do
     if check_backend; then
         backend_ok=true
         break
     fi
     if [ $((i % 5)) -eq 0 ]; then
-        echo "   Intento $i/20..."
+        echo "   Intento $i/30..."
     fi
     sleep 2
 done
 
-# Verificar frontend
-echo "🔍 Verificando frontend..."
+# Verificar frontend (archivos estáticos)
+echo "🔍 Verificando frontend (modo producción)..."
 frontend_ok=false
-for i in {1..10}; do
+for i in {1..15}; do
     if check_frontend; then
         frontend_ok=true
+        break
+    fi
+    if [ $((i % 3)) -eq 0 ]; then
+        echo "   Intento $i/15..."
+    fi
+    sleep 2
+done
+
+# Verificar acceso externo
+echo "🌐 Verificando acceso externo..."
+external_ok=false
+for i in {1..10}; do
+    if check_external_access; then
+        external_ok=true
         break
     fi
     sleep 2
