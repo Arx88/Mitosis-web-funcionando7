@@ -307,7 +307,7 @@ check_ollama
 echo ""
 echo "🎉 MITOSIS INICIADO CORRECTAMENTE"
 echo "============================================================="
-echo "Frontend: https://93c94e04-ef82-430e-9ba8-c966aaf65bb5.preview.emergentagent.com"
+echo "Frontend: https://431ff0b4-db79-4a78-a5cc-efec31358657.preview.emergentagent.com"
 echo "Backend API: http://localhost:8001"
 echo "============================================================="
 echo ""
