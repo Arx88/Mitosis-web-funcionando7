@@ -2704,6 +2704,38 @@ RESPONDE SOLO JSON - NO TEXTO ADICIONAL
                     logger.warning(f"❌ Failed to parse JSON on attempt {attempt}: {last_error}")
                     continue
                 
+                # 🎯 ICONO INTELIGENTE: Verificar y corregir iconos incoherentes ANTES de validar esquema
+                if 'suggested_icon' in plan_data and plan_data['suggested_icon']:
+                    current_icon = plan_data['suggested_icon']
+                    # Verificar si el icono actual es coherente, si no, usar el unificado
+                    unified_icon = determine_unified_icon(message)
+                    
+                    # Casos donde debemos sobrescribir el icono del LLM
+                    should_override = False
+                    
+                    # Si el LLM dio 'target' pero hay una categoría específica disponible
+                    if current_icon == 'target' and unified_icon != 'target':
+                        should_override = True
+                        logger.info(f"🔄 Overriding generic 'target' icon with specific '{unified_icon}' for task {task_id}")
+                    
+                    # Si hay palabras de ubicación pero no se asignó un icono de mapa
+                    location_words = ['restaurante', 'bar', 'comida', 'valencia', 'madrid', 'barcelona', 'lugar', 'ubicación']
+                    if any(word in message.lower() for word in location_words) and current_icon not in ['map', 'navigation', 'globe']:
+                        should_override = True
+                        unified_icon = 'map'
+                        logger.info(f"🗺️ Forcing location icon 'map' for location-based task {task_id}")
+                    
+                    if should_override:
+                        plan_data['suggested_icon'] = unified_icon
+                        logger.info(f"🎯 Corrected icon for task {task_id}: {current_icon} → {unified_icon}")
+                    else:
+                        logger.info(f"🎯 Keeping LLM-generated icon for task {task_id}: {current_icon}")
+                else:
+                    # Si no hay icono sugerido, usar función unificada
+                    fallback_icon = determine_unified_icon(message)
+                    plan_data['suggested_icon'] = fallback_icon
+                    logger.info(f"🎯 Unified fallback icon assigned for task {task_id}: {fallback_icon}")
+                
                 # Validar esquema
                 if not validate_plan_schema(plan_data):
                     last_error = "El JSON no cumple con el esquema requerido"
