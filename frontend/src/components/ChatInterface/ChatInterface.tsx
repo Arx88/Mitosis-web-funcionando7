@@ -242,7 +242,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 console.warn('⚠️ NUEVA TAREA ISSUE - Title generation skipped:', {
                   onTitleGeneratedExists: !!onTitleGenerated,
                   enhancedTitleExists: !!initData.enhanced_title,
-                  enhancedTitle: initData.enhanced_title
+                  enhancedTitle: initData.enhanced_title,
+                  ISSUE: 'This should not happen with hasExistingPlan=false fix'
                 });
               }
               
