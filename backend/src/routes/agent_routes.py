@@ -2735,6 +2735,7 @@ SOLO JSON, sin explicaciones adicionales.
             'estimated_total_time': plan_data.get('estimated_total_time', '2-5 minutos'),
             'task_type': plan_data.get('task_type', 'unified_ai_generated_dynamic'),
             'complexity': plan_data.get('complexity', 'media'),
+            'suggested_icon': plan_data.get('suggested_icon', 'target'), # 🎯 INCLUDE SUGGESTED ICON
             'ai_generated': True,
             'plan_source': 'unified_ai_generated',  # ✅ MEJORA: Indicar fuente del plan unificado
             'schema_validated': True  # ✅ MEJORA: Indicar que pasó validación
