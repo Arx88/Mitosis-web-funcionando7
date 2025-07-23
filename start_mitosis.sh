@@ -1,18 +1,19 @@
 #!/bin/bash
 ###############################################################################
-# 🚀 MITOSIS ONE-STEP READY - SCRIPT DEFINITIVO SOLUCIONADO
-# PROBLEMA CRÍTICO FLASK/SOCKETIO RESUELTO COMPLETAMENTE
+# 🚀 MITOSIS PRODUCTION READY - SCRIPT DEFINITIVO MODO PRODUCCIÓN
+# CONFIGURACIÓN COMPLETA PARA ACCESO EXTERNO CON PLAYWRIGHT
 ###############################################################################
 
 set -e
 
-echo "🚀 INICIANDO MITOSIS CON SOLUCIÓN DEFINITIVA..."
+echo "🚀 INICIANDO MITOSIS EN MODO PRODUCCIÓN..."
+echo "🎯 Configurando para acceso externo y modo serve..."
 
 # ========================================================================
-# PASO 1: INSTALAR DEPENDENCIAS NECESARIAS
+# PASO 1: INSTALAR DEPENDENCIAS BACKEND Y PLAYWRIGHT
 # ========================================================================
 
-echo "📦 Verificando e instalando dependencias..."
+echo "📦 Verificando e instalando dependencias backend..."
 cd /app/backend
 
 # Instalar gunicorn si no está
@@ -22,7 +23,25 @@ if ! pip list | grep -q "gunicorn"; then
     echo "gunicorn==21.2.0" >> requirements.txt
 fi
 
-echo "✅ Dependencias verificadas"
+# Instalar eventlet para SocketIO
+if ! pip list | grep -q "eventlet"; then
+    echo "⚡ Instalando eventlet para SocketIO..."
+    pip install eventlet==0.36.1
+    echo "eventlet==0.36.1" >> requirements.txt
+fi
+
+# Verificar e instalar Playwright
+echo "🎭 Verificando Playwright..."
+if ! pip list | grep -q "playwright"; then
+    echo "⚡ Instalando Playwright..."
+    pip install playwright==1.45.0
+fi
+
+# Instalar navegadores Playwright (Chrome principalmente)
+echo "🌐 Instalando navegadores Playwright..."
+python -m playwright install chromium --with-deps
+
+echo "✅ Dependencias backend y Playwright verificadas"
 
 # ========================================================================
 # PASO 2: CREAR WSGI SERVER SIMPLE Y FUNCIONAL
