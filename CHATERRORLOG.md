@@ -51,17 +51,17 @@
 ## PRÓXIMOS PASOS A INVESTIGAR
 
 ### 1. VERIFICAR ESTADO ACTUAL
-- [ ] Ejecutar start_mitosis.sh para instalación completa
-- [ ] Revisar estado actual de servicios
-- [ ] Verificar si existen dependencias faltantes
+- [x] Ejecutar start_mitosis.sh para instalación completa - COMPLETADO
+- [x] Revisar estado actual de servicios - BACKEND Y FRONTEND FUNCIONANDO
+- [x] Verificar si existen dependencias faltantes - NO HAY DEPENDENCIAS FALTANTES
 
 ### 2. INSPECCIONAR FRONTEND CHAT COMPONENT
-- [ ] Revisar ChatInterface component
-- [ ] Verificar message state management
+- [x] Revisar ChatInterface component - REVISADO
+- [x] Verificar message state management - IDENTIFICADO PROBLEMA POTENCIAL
 - [ ] Comprobar si messages se mantienen en state después del plan
 
 ### 3. REVISAR TASKVIEW INTEGRATION
-- [ ] Verificar TaskView component mount/unmount behavior
+- [x] Verificar TaskView component mount/unmount behavior - REVISADO
 - [ ] Comprobar si TaskView destruye/recrea chat state
 - [ ] Verificar message persistence durante plan generation
 
@@ -71,6 +71,51 @@
 - Debugging logs masivos sin dirección clara
 - Soluciones complejas que suman confusión al código
 - Approaches que no se enfocan en el problema específico
+
+## INVESTIGACIÓN REALIZADA
+
+### Intento #4 - Análisis de código frontend (Julio 2025)
+**FECHA**: Julio 2025
+**MÉTODO**: Análisis detallado del código de ChatInterface.tsx y TaskView.tsx
+**HALLAZGOS CRÍTICOS**:
+
+#### PROBLEMA IDENTIFICADO EN ChatInterface.tsx líneas 173-184:
+```javascript
+// 🔧 CRITICAL FIX: Add user message immediately to chat before processing
+let currentMessages = messages;
+if (onUpdateMessages) {
+  const updatedMessages = [...messages, userMessage];
+  currentMessages = updatedMessages; // Update local reference
+  onUpdateMessages(updatedMessages);
+  console.log('✅ NUEVA TAREA FIX: User message added to chat immediately:', userMessage.content);
+}
+```
+
+**ANÁLISIS DEL PROBLEMA**:
+1. El mensaje del usuario SE AGREGA INMEDIATAMENTE al chat (línea 175-177)
+2. Existe un sistema de callbacks complejos entre ChatInterface y TaskView
+3. HAY MÚLTIPLES PUNTOS donde el mensaje puede perderse:
+   - onUpdateMessages callback (línea 175)
+   - onTaskPlanGenerated callback (línea 300-316)
+   - onTitleGenerated callback (línea 271-277)
+   - Race conditions entre estos callbacks
+
+#### SOSPECHA PRINCIPAL:
+El problema puede estar en el orden de ejecución de los callbacks:
+1. Se agrega mensaje del usuario ✅
+2. Se genera el plan ✅  
+3. Se genera el título mejorado ✅
+4. **PERO**: Uno de estos callbacks puede estar sobrescribiendo el estado de mensajes
+
+#### LÍNEAS CRÍTICAS A INVESTIGAR:
+- ChatInterface.tsx línea 300-316: `onTaskPlanGenerated` callback
+- TaskView.tsx línea 755-797: `onUpdateMessages` functional update
+- TaskView.tsx línea 802-857: Plan generation callback
+
+### RESULTADO: EN PROCESO
+- **PROBLEMA**: Muy probablemente race condition en callbacks
+- **UBICACIÓN**: Entre ChatInterface y TaskView message state management
+- **PRÓXIMO PASO**: Probar el flujo específico y ver donde se pierden los mensajes
 
 ## NOTAS IMPORTANTES
 - Usuario ha reportado que las "soluciones" previas no funcionaron
