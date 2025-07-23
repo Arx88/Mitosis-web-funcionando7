@@ -354,6 +354,9 @@ export function App() {
   const updateTask = (updatedTask: Task) => {
     console.log('🐛 NUEVA TAREA FIX - App.tsx updateTask called with:', updatedTask.id, updatedTask.title);
     
+    // 🔍 STACK TRACE - Para encontrar qué está sobrescribiendo el título
+    console.trace('🕵️ WHO IS CALLING updateTask? Stack trace:');
+    
     setTasks(prev => {
       const newTasks = prev.map(task => 
         task.id === updatedTask.id ? updatedTask : task
