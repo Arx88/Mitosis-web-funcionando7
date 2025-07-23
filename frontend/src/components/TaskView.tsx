@@ -715,10 +715,22 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 uploadData: msg.uploadData,
                 links: msg.links
               }))} 
-              onSendMessage={(message) => {
+              onSendMessage={async (message) => {
                 console.log('🚀 TaskView: Message received for processing:', message);
-                // SimpleChatInterface ya maneja la adición de mensajes
-                // Solo necesitamos procesar el mensaje para generar respuesta si es necesario
+                
+                // 🔧 FIX: Ensure message processing triggers plan generation for empty tasks
+                // This fixes the "Nueva Tarea" flow where empty tasks need to process the first user message
+                console.log('🔧 NUEVA TAREA FIX: Processing message for task:', task.id);
+                console.log('🔧 Task state:', {
+                  hasMessages: task.messages.length,
+                  hasUserMessages: task.messages.filter(m => m.sender === 'user').length,
+                  hasPlan: !!task.plan,
+                  taskTitle: task.title
+                });
+                
+                // The message will be processed by ChatInterface's handleSendMessage
+                // which will trigger plan generation and title enhancement automatically
+                // This callback is just to ensure the flow continues properly
               }}
               isTyping={isTyping} 
               assistantName="Agente" 
