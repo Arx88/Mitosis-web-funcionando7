@@ -191,11 +191,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         console.log('✅ NUEVA TAREA FIX: Message render delay completed');
       }
 
-      // 🔧 CRITICAL FIX: Don't call TaskView's onSendMessage callback - process directly
-      // The original TaskView callback was blocking message processing
-      console.log('🔧 PROCESSING MESSAGE DIRECTLY - bypassing TaskView callback');
-      
-      // Process message directly without delegating to TaskView
+      // 🔧 CRITICAL FIX: Now call TaskView's onSendMessage for actual processing
+      console.log('🔥 CHATINTERFACE DEBUG: Calling TaskView onSendMessage callback...');
+      if (onSendMessage) {
+        try {
+          await onSendMessage(message);
+          console.log('🔥 CHATINTERFACE DEBUG: TaskView onSendMessage completed successfully');
+        } catch (error) {
+          console.error('🔥 CHATINTERFACE DEBUG: TaskView onSendMessage failed:', error);
+        }
+      } else {
+        console.error('🔥 CHATINTERFACE DEBUG: onSendMessage callback not available!');
+      }
 
       try {
         // 🚀 LÓGICA MEJORADA: Detectar primer mensaje del usuario para generar plan específico
