@@ -750,32 +750,53 @@ export const TaskView: React.FC<TaskViewProps> = ({
                   }))
                 });
                 
-                const updatedTask = {
-                  ...task,
-                  messages: messages.map(msg => ({
-                    id: msg.id,
-                    content: msg.content,
-                    sender: msg.sender === 'assistant' ? 'agent' : msg.sender,
-                    timestamp: msg.timestamp,
-                    attachments: msg.attachments,
-                    status: msg.status,
-                    toolResults: msg.toolResults,
-                    searchData: msg.searchData,
-                    uploadData: msg.uploadData,
-                    links: msg.links
-                  }))
-                };
-                
-                console.log('📨 TaskView: Updating task with messages:', {
-                  taskId: updatedTask.id,
-                  newMessagesCount: updatedTask.messages.length,
-                  BEFORE_UPDATE: task.messages?.length || 0,
-                  AFTER_UPDATE: updatedTask.messages.length
+                // 🚀 CRITICAL FIX: Use functional update to prevent race conditions
+                // This ensures we always get the most current task state
+                onUpdateTask((currentTask: Task) => {
+                  // Only update the task that matches our current task ID
+                  if (currentTask.id !== task.id) {
+                    return currentTask; // Return unchanged for other tasks
+                  }
+                  
+                  console.log('📨 RACE CONDITION FIX - Using functional update for messages:', {
+                    taskId: currentTask.id,
+                    currentTitle: currentTask.title,
+                    currentMessagesCount: currentTask.messages?.length || 0,
+                    newMessagesCount: messages.length,
+                    currentPlan: currentTask.plan?.length || 0,
+                    fixApplied: 'Functional update prevents message loss during plan generation'
+                  });
+                  
+                  const updatedTask = {
+                    ...currentTask, // Use MOST CURRENT task state (preserves title, plan, etc.)
+                    messages: messages.map(msg => ({
+                      id: msg.id,
+                      content: msg.content,
+                      sender: msg.sender === 'assistant' ? 'agent' : msg.sender,
+                      timestamp: msg.timestamp,
+                      attachments: msg.attachments,
+                      status: msg.status,
+                      toolResults: msg.toolResults,
+                      searchData: msg.searchData,
+                      uploadData: msg.uploadData,
+                      links: msg.links
+                    }))
+                  };
+                  
+                  console.log('📨 TaskView: Updated task with messages (PRESERVING ALL CURRENT STATE):', {
+                    taskId: updatedTask.id,
+                    preservedTitle: updatedTask.title,
+                    preservedPlan: updatedTask.plan?.length || 0,
+                    newMessagesCount: updatedTask.messages.length,
+                    BEFORE_UPDATE: currentTask.messages?.length || 0,
+                    AFTER_UPDATE: updatedTask.messages.length,
+                    raceconditionFixed: true
+                  });
+                  
+                  return updatedTask;
                 });
                 
-                onUpdateTask(updatedTask);
-                
-                console.log('📨 TaskView: onUpdateTask called successfully');
+                console.log('📨 TaskView: onUpdateTask called successfully with functional update');
               }}
               onTaskPlanGenerated={(plan) => {
                 console.log('📋 TaskView: Plan received from ChatInterface:', plan);
