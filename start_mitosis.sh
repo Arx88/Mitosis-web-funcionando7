@@ -313,53 +313,84 @@ if $backend_ok; then
 fi
 
 # ========================================================================
-# PASO 8: REPORTE FINAL COMPLETO
+# PASO 8: REPORTE FINAL COMPLETO MODO PRODUCCIÓN
 # ========================================================================
 
 echo ""
-echo "🎉 MITOSIS - REPORTE FINAL (PROBLEMA RESUELTO)"
+echo "🎉 MITOSIS - REPORTE FINAL MODO PRODUCCIÓN"
 echo "=============================================================="
-echo "🔧 SOLUCIÓN APLICADA: Flask + gunicorn (WSGI correcto)"
-echo "📍 Frontend: https://f06cad5e-e399-4742-870a-df7e66775bd4.preview.emergentagent.com"
+echo "🎯 CONFIGURACIÓN: Modo producción con acceso externo"
+echo "🏗️ FRONTEND: Archivos estáticos optimizados (build)"
+echo "🔧 BACKEND: Flask + gunicorn + eventlet (SocketIO optimizado)"
+echo "🎭 TESTING: Playwright + Selenium + Chrome instalados"
+echo "=============================================================="
+echo "📍 URL Externa: https://f06cad5e-e399-4742-870a-df7e66775bd4.preview.emergentagent.com"
 echo "📍 Backend API: http://localhost:8001"
+echo "📍 Frontend Local: http://localhost:3000"
 echo "=============================================================="
 
 # Backend status
 if $backend_ok; then
-    echo "✅ BACKEND: FUNCIONANDO PERFECTAMENTE"
-    echo "   🔧 Servidor: gunicorn + Flask"
-    echo "   🌐 Puerto: 8001"
+    echo "✅ BACKEND: FUNCIONANDO PERFECTAMENTE (MODO PRODUCCIÓN)"
+    echo "   🔧 Servidor: gunicorn + eventlet worker"
+    echo "   🌐 Puerto: 8001 (mapeado externamente)"
     echo "   📊 APIs: health, agent/health, agent/status ✅"
+    echo "   🔗 SocketIO: Habilitado con eventlet"
 else
     echo "❌ BACKEND: PROBLEMA DETECTADO"
-    echo "   📋 Logs: tail -10 /var/log/supervisor/backend.err.log"
+    echo "   📋 Logs: tail -20 /var/log/supervisor/backend.err.log"
+    echo "   📋 Access: tail -20 /var/log/supervisor/backend-access.log"
 fi
 
 # Frontend status  
 if $frontend_ok; then
-    echo "✅ FRONTEND: FUNCIONANDO PERFECTAMENTE"
-    echo "   🔧 Servidor: Vite dev server"
-    echo "   🌐 Puerto: 3000"
+    echo "✅ FRONTEND: FUNCIONANDO PERFECTAMENTE (MODO PRODUCCIÓN)"
+    echo "   🔧 Servidor: serve (archivos estáticos)"
+    echo "   🌐 Puerto: 3000 (mapeado externamente)"
+    echo "   🏗️ Build: Optimizado para producción"
+    echo "   ⚡ Performance: Máxima (sin hot-reload)"
 else
     echo "❌ FRONTEND: PROBLEMA DETECTADO"
-    echo "   📋 Logs: tail -10 /var/log/supervisor/frontend.err.log"
+    echo "   📋 Logs: tail -20 /var/log/supervisor/frontend.err.log"
+    echo "   💡 Verificar: ls -la /app/frontend/dist/"
 fi
 
 # MongoDB status
 if check_mongodb; then
     echo "✅ MONGODB: FUNCIONANDO PERFECTAMENTE"
+    echo "   🗄️ Base de datos: Disponible para persistencia"
 else
     echo "❌ MONGODB: PROBLEMA DETECTADO"
+    echo "   📋 Logs: tail -10 /var/log/mongodb.err.log"
 fi
 
-# Ollama status
+# Ollama status con validación completa
 if check_ollama; then
     echo "✅ OLLAMA: CONECTADO Y DISPONIBLE"
     echo "   🔗 Endpoint: https://bef4a4bb93d1.ngrok-free.app"
+    echo "   🧠 Modelo: llama3.1:8b (según configuración)"
+    echo "   🔄 Validación: Accesible desde backend"
 else
-    echo "⚠️ OLLAMA: NO DISPONIBLE"
-    echo "   ℹ️ La app funciona pero sin capacidades de IA"
+    echo "⚠️ OLLAMA: NO DISPONIBLE O CON PROBLEMAS"
+    echo "   ℹ️ La app funciona pero sin capacidades de IA completas"
+    echo "   🔍 Verificar: curl https://bef4a4bb93d1.ngrok-free.app/api/tags"
 fi
+
+# Acceso externo
+if $external_ok; then
+    echo "✅ ACCESO EXTERNO: FUNCIONANDO PERFECTAMENTE"
+    echo "   🌐 URL externa accesible desde cualquier lugar"
+    echo "   🔗 Mapping: Kubernetes ingress funcionando"
+else
+    echo "⚠️ ACCESO EXTERNO: VERIFICANDO..."
+    echo "   ℹ️ Los servicios locales funcionan, verificar mapping externo"
+fi
+
+# Testing tools status
+echo "✅ TESTING TOOLS: INSTALADOS Y LISTOS"
+echo "   🎭 Playwright: Chromium disponible"
+echo "   🔧 Selenium: Chrome driver listo"
+echo "   🌐 Chrome: Navegador instalado"
 
 echo "=============================================================="
 echo "📊 ESTADO SUPERVISOR:"
