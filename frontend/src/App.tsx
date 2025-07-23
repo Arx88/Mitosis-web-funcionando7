@@ -301,6 +301,30 @@ export function App() {
     return newTask;
   };
 
+  // 🚀 NEW: Function to start task execution from App.tsx
+  const startTaskExecutionFromApp = async (taskId: string) => {
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
+      
+      console.log('🚀 Starting task execution for:', taskId);
+      const response = await fetch(`${backendUrl}/api/agent/start-task-execution/${taskId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Task execution started successfully:', result);
+      } else {
+        console.error('❌ Failed to start task execution:', response.status);
+      }
+    } catch (error) {
+      console.error('💥 Error starting task execution:', error);
+    }
+  };
+
   // Función para manejar logs de inicialización
   const handleInitializationLog = useCallback((message: string, type: 'info' | 'success' | 'error') => {
     const logEntry = {
