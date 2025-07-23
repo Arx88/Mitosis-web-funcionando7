@@ -2566,15 +2566,16 @@ Formato JSON requerido:
 
 🎯 SELECCIÓN DE ICONO según tipo de tarea (usa EXACTAMENTE estos iconos):
 - Desarrollo/Programación → code, database, terminal
+- Lugares/Restaurantes/Ciudades → map, navigation, globe
 - Documentos/Textos → file, book, edit
-- Investigación/Análisis → search, chart, activity
+- Análisis/Datos → chart, calculator, activity
+- Investigación/Búsqueda → search, globe, compass
 - Multimedia/Creatividad → image, video, music, camera
 - Negocios/Comercial → briefcase, dollar, users
-- Lugares/Mapas → map, navigation, globe
 - Comunicación → message, mail, send
 - Genérico/Ambiguo → target, lightbulb
 
-⚠️ USA SOLO ESTOS ICONOS VÁLIDOS:
+⚠️ REGLA ESPECIAL: Si mencionas LUGARES, RESTAURANTES, CIUDADES (valencia, madrid, etc.) → USA 'map'
 
 HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
 
