@@ -2508,29 +2508,25 @@ Estructura del JSON requerida:
   "suggested_icon": "icono_apropiado"
 }}
 
-🎯 SELECCIÓN DE ICONO - Elige el más apropiado según el tipo de tarea:
+🎯 SELECCIÓN DE ICONO - Elige EXACTAMENTE uno de estos iconos según el tipo de tarea:
 
-**Desarrollo/Programación**: code, database, terminal, server
-**Lugares/Mapas**: map, navigation, compass, globe
-**Escritura/Documentos**: file, book, edit, folder
-**Análisis/Datos**: chart, calculator, activity, grid
-**Investigación/Búsqueda**: search, globe, compass, target
-**Creatividad/Diseño**: image, lightbulb, star, camera
-**Comunicación**: message, mail, send, phone
-**Negocios/Comercial**: briefcase, dollar, building, users
-**Multimedia**: music, video, camera, mic
-**Herramientas/Utilidades**: wrench, settings, package, workflow
+**Si menciona: código, programar, app, web, software** → USA: "code"
+**Si menciona: restaurante, bar, valencia, madrid, lugar, ubicación** → USA: "map" 
+**Si menciona: documento, informe, texto, escribir** → USA: "file"
+**Si menciona: analizar, datos, estadística, mercado** → USA: "chart"
+**Si menciona: buscar, investigar, research** → USA: "search"
+**Si menciona: imagen, diseño, crear visual** → USA: "image"
+**Si menciona: música, audio, sonido** → USA: "music"
+**Si menciona: negocio, empresa, comercial** → USA: "briefcase"
+**Para todo lo demás** → USA: "target"
 
-⚠️ PRIORIDADES DE SELECCIÓN (en orden de precedencia):
-1. Si hay DESARROLLO/PROGRAMACIÓN → usa 'code', 'database', 'terminal'
-2. Si hay LUGARES/UBICACIONES (restaurante, valencia, madrid, etc.) → usa 'map', 'navigation'
-3. Si hay ANÁLISIS/DATOS → usa 'chart', 'calculator', 'activity'  
-4. Si hay CREATIVIDAD/DISEÑO → usa 'image', 'lightbulb', 'star'
-5. Si hay BÚSQUEDA/INVESTIGACIÓN → usa 'search', 'globe', 'compass'
-6. Si hay ESCRITURA/DOCUMENTOS → usa 'file', 'book', 'edit'
-7. Si es genérico/ambiguo → usa 'target', 'lightbulb'
-
-🗺️ ESPECIAL: Para tareas sobre LUGARES, RESTAURANTES, CIUDADES → SIEMPRE usa 'map'
+🔥 REGLAS SIMPLES:
+- LUGARES/RESTAURANTES/CIUDADES → "map"  
+- PROGRAMACIÓN/DESARROLLO → "code"
+- DOCUMENTOS/INFORMES → "file"
+- ANÁLISIS/DATOS → "chart"
+- BÚSQUEDA/INVESTIGACIÓN → "search"
+- TODO LO DEMÁS → "target"
 
 HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
 
