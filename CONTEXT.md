@@ -165,20 +165,40 @@ MONGO_URL=mongodb://localhost:27017/task_manager
 
 ---
 
-## 📊 WORKFLOW ACTUAL (LO QUE HE DESCUBIERTO)
+## 📊 WORKFLOW ACTUAL - COMPLETAMENTE ANALIZADO
 
-### Flujo de Creación de Tareas:
+### Flujo de Creación de Tareas - REAL:
+
+#### DESDE HOMEPAGE:
 1. **Usuario**: Escribe en VanishInput (homepage)
-2. **Frontend**: `createTaskWithMessage()` se ejecuta
-3. **Backend**: Llamada a `/api/agent/generate-plan`
-4. **LLM**: Genera plan con Ollama
-5. **Frontend**: Actualiza task con plan
-6. **Auto-execution**: `startTaskExecutionFromApp()` se ejecuta
+2. **Frontend**: `createTaskWithMessage()` se ejecuta (App.tsx:174-302)
+3. **Backend**: Llamada a `/api/agent/generate-plan` (agent_routes.py:945+)
+4. **LLM Classification**: `is_casual_conversation()` determina si es casual o tarea
+5. **Plan Generation**: `generate_dynamic_plan_with_ai()` crea plan validado JSON
+6. **Frontend**: Enhanced title + plan actualiza task
+7. **Auto-execution**: `startTaskExecutionFromApp()` inicia pipeline automático
 
-### Problemas en el Workflow:
-- Race conditions en updates
-- Múltiples funciones duplicadas
-- Estado complejo con efectos secundarios
+#### DESDE SIDEBAR "NUEVA TAREA":
+1. **Usuario**: Click "Nueva tarea" en sidebar
+2. **Frontend**: `handleCreateTask()` ejecuta `createTask()` (Sidebar.tsx:43-59)
+3. **Task Creation**: Tarea vacía "Tarea X" se crea
+4. **TaskView**: Se activa automáticamente (`setActiveTaskId`)
+5. **Usuario**: Escribe primer mensaje en ChatInterface
+6. **Backend**: Similar pipeline que homepage pero en TaskView
+
+### Pipeline de Ejecución - REAL:
+1. **Plan Generated**: JSON schema validado (PLAN_SCHEMA)
+2. **Step Execution**: `execute_single_step_logic()` procesa cada paso
+3. **Tool Integration**: 12 herramientas disponibles (web_search, analysis, creation, etc.)
+4. **Real Files**: Se crean archivos reales en `/app/backend/static/generated_files/`
+5. **WebSocket Updates**: Tiempo real via WebSocketManager
+6. **MongoDB Persistence**: TaskManager guarda estado completo
+
+### Problemas en el Workflow - ACTUALIZADOS:
+- **CSS Issue**: Era `md:w-1/2` causing ChatInterface invisible - FIXED
+- **Race Conditions**: Functional updates implementados para message persistence
+- **Message Loss**: Durante plan generation - FIXED con functional updates
+- **Auto-execution**: Pipeline funcionando correctamente
 
 ---
 
