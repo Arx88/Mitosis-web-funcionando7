@@ -716,13 +716,63 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 links: msg.links
               }))} 
               onSendMessage={async (message) => {
-                console.log('🚀 TaskView: Message received for processing:', message);
+                console.log('🔥 TASKVIEW DEBUG: onSendMessage called with:', message);
+                console.log('🔥 TASKVIEW DEBUG: Current task state:', {
+                  taskId: task.id,
+                  title: task.title,
+                  messagesCount: task.messages?.length || 0,
+                  hasPlan: !!(task.plan && task.plan.length > 0)
+                });
                 
-                // 🔧 CRITICAL FIX: Process the message instead of just logging
-                // This was the root cause - TaskView was blocking message processing
-                
-                // Let ChatInterface handle the message processing internally
-                // Remove this callback blocking and allow normal flow
+                // 🔧 CRITICAL FIX: Actually process the message instead of just logging
+                try {
+                  console.log('🔥 TASKVIEW DEBUG: Starting message processing...');
+                  
+                  // Call the backend to process the message
+                  const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+                  console.log('🔥 TASKVIEW DEBUG: Backend URL:', backendUrl);
+                  
+                  const response = await fetch(`${backendUrl}/api/agent/generate-plan`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      message: message,
+                      task_id: task.id,
+                      context: 'nueva_tarea'
+                    })
+                  });
+                  
+                  console.log('🔥 TASKVIEW DEBUG: Backend response status:', response.status);
+                  
+                  if (response.ok) {
+                    const result = await response.json();
+                    console.log('🔥 TASKVIEW DEBUG: Backend result:', result);
+                    
+                    // Update the task with the generated plan
+                    if (result.plan) {
+                      console.log('🔥 TASKVIEW DEBUG: Updating task with plan:', result.plan);
+                      onUpdateTask((currentTask: Task) => ({
+                        ...currentTask,
+                        plan: result.plan,
+                        title: result.enhanced_title || `${currentTask.title}`,
+                        messages: [...(currentTask.messages || []), {
+                          id: `msg-${Date.now()}`,
+                          content: message,
+                          sender: 'user',
+                          timestamp: new Date()
+                        }]
+                      }));
+                    }
+                  } else {
+                    console.error('🔥 TASKVIEW ERROR: Backend response failed:', response.status);
+                  }
+                  
+                } catch (error) {
+                  console.error('🔥 TASKVIEW ERROR: Message processing failed:', error);
+                }
               }}
               isTyping={isTyping} 
               assistantName="Agente" 
