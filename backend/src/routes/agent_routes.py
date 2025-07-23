@@ -2384,16 +2384,31 @@ INSTRUCCIONES CRÍTICAS:
 - NO uses términos genéricos como "información", "análisis", "documento"
 - Identifica elementos específicos del dominio (nombres propios, conceptos técnicos, ubicaciones, etc.)
 - Cada paso debe ser imposible de reutilizar para otra tarea
+- 🎯 NUEVO: Selecciona el icono más apropiado para representar visualmente esta tarea
 
 METODOLOGÍA ADAPTATIVA:
 1. Identifica el dominio principal de la tarea
 2. Extrae elementos específicos únicos (nombres, lugares, conceptos)
 3. Crea pasos que incorporen estos elementos específicos
 4. Asegúrate que cada paso sea altamente especializado
+5. 🎯 SELECCIÓN DE ICONO: Elige el icono que mejor represente el tema y naturaleza de la tarea
 
 EJEMPLO DE TRANSFORMACIÓN:
 - En lugar de: "Buscar información sobre X"
 - Mejor: "Identificar [elementos específicos únicos de X] en [fuentes específicas del dominio]"
+
+🎯 GUÍA DE ICONOS POR CONTEXTO:
+- Escritura/Documentos → "book", "file", "edit"
+- Tecnología/Programación → "code", "terminal", "database"
+- Investigación/Búsqueda → "search", "globe", "activity"
+- Creatividad/Diseño → "image", "lightbulb", "star"
+- Análisis/Datos → "chart", "calculator", "activity"
+- Comunicación → "message", "mail", "send"
+- Negocios → "briefcase", "dollar", "building"
+- Multimedia → "music", "video", "camera"
+- Lugares/Viajes → "map", "navigation", "building"
+- Restaurantes/Comida → "utensils", "star", "map"
+- Informes/Reportes → "file", "chart", "activity"
 
 Responde ÚNICAMENTE con un objeto JSON válido siguiendo EXACTAMENTE este formato:
 
@@ -2409,7 +2424,8 @@ Responde ÚNICAMENTE con un objeto JSON válido siguiendo EXACTAMENTE este forma
   ],
   "task_type": "Tipo de tarea específico (mínimo 3 caracteres)",
   "complexity": "baja|media|alta", 
-  "estimated_total_time": "Tiempo total estimado"
+  "estimated_total_time": "Tiempo total estimado",
+  "suggested_icon": "icono_apropiado_para_esta_tarea"
 }}
 
 REGLAS ULTRA-CRÍTICAS:
@@ -2418,6 +2434,7 @@ REGLAS ULTRA-CRÍTICAS:
 - Adapta automáticamente al contexto específico de la tarea
 - Mínimo 3 pasos, máximo 6 pasos
 - HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
+- 🎯 ICONOS VÁLIDOS: book, image, smartphone, code, database, globe, search, file, settings, download, upload, server, cloud, shield, key, music, video, message, mail, chart, shopping, dollar, calendar, users, monitor, terminal, zap, briefcase, lightbulb, rocket, star, award, activity, calculator, layers, package, wrench, workflow, puzzle, building, archive, grid, layout, send, share, component, target, flag, edit, camera, mic, headphones, printer, scan, copy, save, folder, clock, bell, phone, map, compass, navigation, wifi, lock
 - NO agregues texto adicional, solo el JSON
 - Asegúrate de que sea JSON válido y parseable
 """
