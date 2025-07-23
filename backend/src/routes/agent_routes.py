@@ -2620,43 +2620,9 @@ RESPONDE SOLO JSON - NO TEXTO ADICIONAL
                 
                 # 🎯 FALLBACK ICON: Si no hay icono sugerido, generarlo basado en el contenido
                 if 'suggested_icon' not in plan_data or not plan_data['suggested_icon']:
-                    def determine_icon_from_task(task_message: str) -> str:
-                        """Determine appropriate icon based on task content"""
-                        content_lower = task_message.lower()
-                        
-                        # Icon mapping for common tasks
-                        if any(word in content_lower for word in ['código', 'programa', 'script', 'app', 'aplicación', 'desarrollo', 'programar']):
-                            return 'code'
-                        elif any(word in content_lower for word in ['documento', 'texto', 'informe', 'reporte', 'escribir', 'redactar']):
-                            return 'file'
-                        elif any(word in content_lower for word in ['imagen', 'diseño', 'gráfico', 'visual', 'foto']):
-                            return 'image'
-                        elif any(word in content_lower for word in ['buscar', 'investigar', 'analizar', 'estudiar', 'search']):
-                            return 'search'
-                        elif any(word in content_lower for word in ['restaurante', 'bar', 'comida', 'valencia', 'madrid', 'lugar', 'ubicación']):
-                            return 'map'
-                        elif any(word in content_lower for word in ['negocio', 'empresa', 'mercado', 'marketing', 'comercial']):
-                            return 'briefcase'
-                        elif any(word in content_lower for word in ['datos', 'estadística', 'análisis', 'reporte', 'chart']):
-                            return 'chart'
-                        elif any(word in content_lower for word in ['música', 'audio', 'sonido', 'music']):
-                            return 'music'
-                        elif any(word in content_lower for word in ['video', 'película', 'multimedia']):
-                            return 'video'
-                        elif any(word in content_lower for word in ['mensaje', 'chat', 'comunicar', 'correo', 'email']):
-                            return 'message'
-                        elif any(word in content_lower for word in ['web', 'sitio', 'página', 'website']):
-                            return 'globe'
-                        elif any(word in content_lower for word in ['base', 'datos', 'database', 'sql']):
-                            return 'database'
-                        elif any(word in content_lower for word in ['crear', 'generar', 'hacer', 'construir']):
-                            return 'lightbulb'
-                        else:
-                            return 'target'  # Generic task icon
-                    
-                    fallback_icon = determine_icon_from_task(message)
+                    fallback_icon = determine_unified_icon(message)
                     plan_data['suggested_icon'] = fallback_icon
-                    logger.info(f"🎯 Fallback icon assigned for task {task_id}: {fallback_icon}")
+                    logger.info(f"🎯 Unified fallback icon assigned for task {task_id}: {fallback_icon}")
                 
                 # Validar que el plan tenga la estructura esperada
                 if not isinstance(plan_data.get('steps'), list) or len(plan_data.get('steps', [])) == 0:
