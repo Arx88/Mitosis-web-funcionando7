@@ -2560,18 +2560,19 @@ Formato JSON requerido:
   "suggested_icon": "icono_apropiado"
 }}
 
-🎯 SELECCIÓN DE ICONO según tipo de tarea (usa EXACTAMENTE estos iconos):
-- Desarrollo/Programación → code, database, terminal
-- Lugares/Restaurantes/Ciudades → map, navigation, globe
-- Documentos/Textos → file, book, edit
-- Análisis/Datos → chart, calculator, activity
-- Investigación/Búsqueda → search, globe, compass
-- Multimedia/Creatividad → image, video, music, camera
-- Negocios/Comercial → briefcase, dollar, users
-- Comunicación → message, mail, send
-- Genérico/Ambiguo → target, lightbulb
+🎯 SELECCIÓN DE ICONO - USA EXACTAMENTE uno de estos iconos:
 
-⚠️ REGLA ESPECIAL: Si mencionas LUGARES, RESTAURANTES, CIUDADES (valencia, madrid, etc.) → USA 'map'
+**LUGARES/RESTAURANTES/CIUDADES** → "map"
+**DESARROLLO/CÓDIGO/PROGRAMACIÓN** → "code"  
+**DOCUMENTOS/INFORMES/TEXTO** → "file"
+**ANÁLISIS/DATOS/MERCADO** → "chart"
+**BÚSQUEDA/INVESTIGACIÓN** → "search"
+**IMÁGENES/DISEÑO** → "image"
+**MÚSICA/AUDIO** → "music"
+**NEGOCIOS/EMPRESA** → "briefcase"
+**TODO LO DEMÁS** → "target"
+
+⚠️ REGLA ESPECIAL: Si mencionas LUGARES, RESTAURANTES, CIUDADES (valencia, madrid, etc.) → USA "map"
 
 HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
 
