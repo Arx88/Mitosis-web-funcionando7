@@ -212,21 +212,98 @@ MONGO_URL=mongodb://localhost:27017/task_manager
 
 ---
 
-## 🎯 PRÓXIMOS PASOS DE ANÁLISIS
+## 🧠 ANÁLISIS PROFUNDO DE SERVICIOS
 
-### Pendiente por Revisar:
-1. **Estructura real de directorios backend/src**
-2. **Componentes frontend reales**
-3. **Conexión health Ollama/MongoDB**
-4. **Sistema de herramientas (12 tools)**
-5. **WebSocket implementation**
-6. **Plan execution pipeline**
+### OllamaService - SERVICIO COMPLEJO (702 líneas)
+**CARACTERÍSTICAS**:
+- **Endpoint Dinámico**: Puede cambiar endpoint en runtime
+- **Multi-Model Support**: Configuraciones específicas por modelo
+- **Robust JSON Parsing**: 4 estrategias diferentes para parsear respuestas
+- **Request Optimization**: Parámetros optimizados por modelo específico
+- **Casual vs Task Mode**: Diferentes system prompts
+- **Error Recovery**: Múltiples niveles de fallback
 
-### Archivos Críticos por Encontrar:
-- `/app/backend/src/routes/agent_routes.py`
-- `/app/frontend/src/components/`
-- Sistema de herramientas real
-- WebSocket manager
+**MODELOS CONFIGURADOS**:
+- `llama3.1:8b` (temperatura 0.15, timeout 180s)
+- `qwen3:32b` (temperatura 0.1, timeout 480s) 
+- `deepseek-r1:32b` (temperatura 0.12, timeout 420s)
+
+### TaskManager - PERSISTENCIA HÍBRIDA (424 líneas)
+**ARQUITECTURA**:
+- **MongoDB Primary**: Base de datos principal
+- **Memory Cache**: Cache activo para acceso rápido
+- **Recovery System**: Recuperación de tareas incompletas al startup
+- **Cleanup System**: Limpieza automática de tareas viejas
+- **Statistics**: Sistema completo de estadísticas
+
+**MÉTODOS CRÍTICOS**:
+1. `create_task()`: Persistencia completa en MongoDB
+2. `get_task()`: Cache-first, fallback a MongoDB
+3. `update_task_step_status()`: Actualizaciones granulares
+4. `recover_incomplete_tasks_on_startup()`: Recovery automático
+
+### ToolManager - ECOSISTEMA DE HERRAMIENTAS (502 líneas) 
+**12 HERRAMIENTAS DISPONIBLES**:
+1. **shell**: ShellTool - Comandos del sistema
+2. **web_search**: WebSearchTool - Búsqueda web real
+3. **file_manager**: FileManagerTool - Gestión de archivos
+4. **tavily_search**: TavilySearchTool - API Tavily
+5. **comprehensive_research**: ComprehensiveResearchTool
+6. **deep_research**: DeepResearchTool (opcional)
+7. **enhanced_web_search**: EnhancedWebSearchTool (opcional)
+8. **firecrawl**: FirecrawlTool (opcional)
+9. **qstash**: QStashTool (opcional) 
+10. **playwright**: PlaywrightTool (opcional)
+11. **autonomous_web_navigation**: AutonomousWebNavigation (opcional)
+12. **basic_web_search**: BasicWebSearchTool (opcional)
+
+**SEGURIDAD IMPLEMENTADA**:
+- Comandos bloqueados en shell
+- Paths permitidos/bloqueados para archivos
+- Timeouts por herramienta
+- Rate limiting y size limits
+- Container isolation (opcional)
+
+---
+
+## 📋 WORKFLOW COMPLETO DETALLADO - ANÁLISIS FINAL
+
+### ESTADO ACTUAL - VERDADERAMENTE FUNCIONAL:
+
+**EVIDENCIA DESDE EL CÓDIGO**:
+1. ✅ **Backend Robusto**: `agent_routes.py` tiene todo el pipeline implementado
+2. ✅ **LLM Integration**: OllamaService con 4 estrategias de parsing
+3. ✅ **Plan Generation**: Schema JSON validation completa
+4. ✅ **Step Execution**: Ejecución real con 12 herramientas
+5. ✅ **File Generation**: Archivos reales en `/app/backend/static/generated_files/`
+6. ✅ **MongoDB Persistence**: TaskManager híbrido con recovery
+7. ✅ **Frontend Integration**: TaskView con chat + terminal
+8. ✅ **Race condition fixes**: Functional updates implementados
+
+### WORKFLOW TÉCNICO REAL:
+
+#### 1. TASK CREATION:
+- **Homepage**: `createTaskWithMessage()` → plan generation inmediato
+- **Sidebar**: `createTask()` → task vacía → user input → plan generation
+
+#### 2. PLAN GENERATION: 
+- `is_casual_conversation()` → Clasifica mensaje (LLM + fallback)
+- `generate_dynamic_plan_with_ai()` → Genera plan JSON validado
+- **PLAN_SCHEMA validation** → 3-6 pasos, herramientas específicas
+- `determine_unified_icon()` → Icono inteligente basado en contenido
+
+#### 3. PLAN EXECUTION:
+- `execute_plan_with_real_tools()` → Pipeline completo de ejecución
+- `execute_single_step_logic()` → Cada paso con herramienta específica
+- **Real tool execution** → WebSearch, Analysis, Creation, etc.
+- **File generation** → Archivos reales con contenido generado
+- **MongoDB persistence** → Estado guardado paso a paso
+
+#### 4. FRONTEND INTEGRATION:
+- **TaskView** → Chat (w-1/2) + Terminal (w-1/2)
+- **Message persistence** → Functional updates previenen race conditions
+- **Real-time updates** → TerminalView muestra progreso
+- **Auto-execution** → Pipeline automático después de plan generation
 
 ---
 
