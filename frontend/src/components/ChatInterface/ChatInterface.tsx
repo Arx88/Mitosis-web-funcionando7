@@ -156,6 +156,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const handleSendMessage = async (message: string) => {
+    console.log('🔥 CHATINTERFACE DEBUG: handleSendMessage called with:', message);
+    console.log('🔥 CHATINTERFACE DEBUG: Current messages count:', messages.length);
+    console.log('🔥 CHATINTERFACE DEBUG: onSendMessage callback exists:', !!onSendMessage);
+    console.log('🔥 CHATINTERFACE DEBUG: onUpdateMessages callback exists:', !!onUpdateMessages);
+    
     if (message.trim() && !isLoading) {
       setIsLoading(true);
       setActiveQuickAction(null);
@@ -167,11 +172,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         sender: 'user',
         timestamp: new Date()
       };
+      
+      console.log('🔥 CHATINTERFACE DEBUG: Created user message:', userMessage);
 
       // 🔧 CRITICAL FIX: Add user message immediately to chat before processing
       // This ensures the user's message is always visible, even if processing fails
       let currentMessages = messages;
       if (onUpdateMessages) {
+        console.log('🔥 CHATINTERFACE DEBUG: Adding message to chat immediately...');
         const updatedMessages = [...messages, userMessage];
         currentMessages = updatedMessages; // Update local reference
         onUpdateMessages(updatedMessages);
