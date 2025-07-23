@@ -4344,53 +4344,8 @@ def validate_configuration():
             'error': str(e)
         }), 500
 
-@agent_bp.route('/execute-step/<task_id>/<step_id>', methods=['POST'])
-def execute_single_step(task_id: str, step_id: str):
-    """Ejecutar un paso específico con emisión de eventos WebSocket"""
-    try:
-        websocket_manager = getattr(current_app, 'websocket_manager', None)
-        step_data = request.json.get('step', {})
-        
-        # Emitir inicio de paso
-        if websocket_manager:
-            websocket_manager.emit_update(
-                task_id=task_id,
-                update_type=UpdateType.STEP_STARTED,
-                data={
-                    'step_id': step_id,
-                    'task_id': task_id,
-                    'title': step_data.get('title', 'Paso'),
-                    'timestamp': datetime.now().isoformat()
-                }
-            )
-        
-        # Ejecutar paso según herramienta
-        result = execute_single_step_logic(step_data, '', task_id)
-        
-        # Emitir finalización
-        if websocket_manager:
-            websocket_manager.emit_update(
-                task_id=task_id,
-                update_type=UpdateType.STEP_COMPLETED,
-                data={
-                    'step_id': step_id,
-                    'task_id': task_id,
-                    'title': step_data.get('title', 'Paso'),
-                    'result': result,
-                    'result_summary': result.get('summary', 'Completado'),
-                    'timestamp': datetime.now().isoformat()
-                }
-            )
-        
-        return jsonify({
-            'success': True,
-            'step_id': step_id,
-            'result': result
-        })
-        
-    except Exception as e:
-        logger.error(f"Error executing step {step_id}: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+# ✅ CONSOLIDADO: Este endpoint fue duplicado y se ha eliminado
+# La funcionalidad está en execute_step() línea 4489
 
 @agent_bp.route('/initialize-task', methods=['POST'])
 def initialize_task():
