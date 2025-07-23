@@ -717,6 +717,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
               }))} 
               onSendMessage={async (message) => {
                 console.log('🚀 TaskView: Message received for processing:', message);
+                console.log('🚀 TaskView: Current task messages count:', task.messages?.length || 0);
+                console.log('🚀 TaskView: Current task messages:', task.messages?.map(m => ({ sender: m.sender, content: m.content.substring(0, 30) + '...' })) || []);
                 
                 // 🔧 FIX: Ensure message processing triggers plan generation for empty tasks
                 // This fixes the "Nueva Tarea" flow where empty tasks need to process the first user message
