@@ -1,0 +1,6 @@
+# Planificación: Definir el propósito y alcance del documento técnico
+
+Descripción: Identificar la audiencia objetivo, los objetivos y las limitaciones del proyecto de IA.
+
+*Este es un plan generado automáticamente.*
+Fecha: 2025-07-23 13:29:20
