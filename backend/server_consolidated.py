@@ -267,7 +267,7 @@ class MitosisConsolidatedServer:
 ## Estado del Sistema
 - ✅ Servidor consolidado iniciado exitosamente
 - ✅ Puerto: {self.config.PORT}
-- ✅ Base de datos: {'✅ Conectada' if self.db else '❌ No disponible'}
+- ✅ Base de datos: {'✅ Conectada' if self.db is not None else '❌ No disponible'}
 - ✅ Ollama: {'✅ Conectado' if self.ollama_service else '❌ No disponible'}
 - ✅ Herramientas: {len(self.tool_manager.get_available_tools()) if self.tool_manager else 0} disponibles
 
