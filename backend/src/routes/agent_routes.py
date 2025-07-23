@@ -944,22 +944,13 @@ def determine_unified_icon(task_message: str) -> str:
             logger.info(f"🎯 Icon: 'image' (Creative/Design priority) for: {task_message[:50]}...")
             return 'image'
     
-    # 🎯 PRIORITY 4: MULTIMEDIA
+    # 🎯 PRIORITY 5: MULTIMEDIA
     elif any(word in content_lower for word in ['música', 'audio', 'sonido', 'music', 'canción']):
         logger.info(f"🎯 Icon: 'music' (Multimedia/Audio priority) for: {task_message[:50]}...")
         return 'music'
     elif any(word in content_lower for word in ['video', 'película', 'multimedia', 'grabación']):
         logger.info(f"🎯 Icon: 'video' (Multimedia/Video priority) for: {task_message[:50]}...")
         return 'video'
-    
-    # 🎯 PRIORITY 5: LOCATION/MAPS
-    elif any(word in content_lower for word in ['restaurante', 'bar', 'comida', 'valencia', 'madrid', 'barcelona', 'lugar', 'ubicación', 'dirección', 'mapa', 'localizar']):
-        if any(word in content_lower for word in ['navegar', 'navegación', 'ruta', 'dirección']):
-            logger.info(f"🎯 Icon: 'navigation' (Location/Navigation priority) for: {task_message[:50]}...")
-            return 'navigation'
-        else:
-            logger.info(f"🎯 Icon: 'map' (Location/Map priority) for: {task_message[:50]}...")
-            return 'map'
     
     # 🎯 PRIORITY 6: BUSINESS/COMMERCIAL
     elif any(word in content_lower for word in ['negocio', 'empresa', 'mercado', 'marketing', 'comercial', 'ventas', 'cliente']):
