@@ -11,7 +11,7 @@ echo "🚀 INICIANDO MITOSIS (ONE-STEP READY)..."
 # CONFIGURACIÓN SUPERVISOR DEFINITIVA (SIN PROBLEMAS UVICORN)
 cat > /etc/supervisor/conf.d/supervisord.conf << 'EOF'
 [program:backend]
-command=/root/.venv/bin/python server_consolidated.py
+command=/root/.venv/bin/python server.py
 directory=/app/backend
 autostart=true
 autorestart=true
