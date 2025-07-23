@@ -747,32 +747,45 @@ export const TaskView: React.FC<TaskViewProps> = ({
               onTaskPlanGenerated={(plan) => {
                 console.log('📋 TaskView: Plan received from ChatInterface:', plan);
                 
-                // Convertir el plan del backend al formato del frontend
-                const frontendPlan = plan.steps.map((step: any) => ({
-                  id: step.id,
-                  title: step.title,
-                  description: step.description,
-                  tool: step.tool,
-                  status: step.status,
-                  estimated_time: step.estimated_time,
-                  completed: step.completed,
-                  active: step.active
-                }));
-                
-                // Actualizar la tarea con el plan generado
-                const updatedTask = {
-                  ...task,
-                  plan: frontendPlan,
-                  status: 'in-progress' as const,
-                  progress: 0 // Iniciar con 0% ya que los pasos no están completados
+                // 🔍 Use a callback approach to ensure we get the most current task state
+                // This prevents stale closure issues when the task title might have been updated
+                const updateTaskWithPlan = (currentTask: Task) => {
+                  // Convertir el plan del backend al formato del frontend
+                  const frontendPlan = plan.steps.map((step: any) => ({
+                    id: step.id,
+                    title: step.title,
+                    description: step.description,
+                    tool: step.tool,
+                    status: step.status,
+                    estimated_time: step.estimated_time,
+                    completed: step.completed,
+                    active: step.active
+                  }));
+                  
+                  // Actualizar la tarea con el plan generado, preservando el título actual
+                  const updatedTask = {
+                    ...currentTask, // Use current task to preserve any recent updates (like title)
+                    plan: frontendPlan,
+                    planGenerated: true,
+                    status: 'in-progress' as const,
+                    totalSteps: plan.total_steps,
+                    estimatedTime: plan.estimated_total_time,
+                    taskType: plan.task_type,
+                    complexity: plan.complexity,
+                    progress: 0 // Iniciar con 0% ya que los pasos no están completados
+                  };
+                  
+                  console.log('📋 TaskView: Updating task with plan (PRESERVING CURRENT TITLE):', updatedTask);
+                  return updatedTask;
                 };
                 
-                console.log('📋 TaskView: Updating task with plan:', updatedTask);
+                // Apply the update using the current task state
+                const updatedTask = updateTaskWithPlan(task);
                 onUpdateTask(updatedTask);
                 
-                // Opcional: Log al terminal
-                if (logToTerminal) {
-                  logToTerminal(`📋 Plan generado: ${plan.total_steps} pasos definidos`, 'success');
+                // Log al terminal
+                if (logToTerminal && plan.steps?.length) {
+                  logToTerminal(`📋 Plan generado: ${plan.steps.length} pasos definidos`, 'success');
                 }
               }}
               onTitleGenerated={(enhancedTitle) => {
