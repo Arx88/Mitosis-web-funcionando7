@@ -66,6 +66,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onLogToTerminal,
   onTaskPlanGenerated,
   onTitleGenerated, // ✨ NUEVO: Callback para título generado
+  onIconGenerated, // 🎯 NUEVO: Callback para icono generado por LLM
   hasExistingPlan = false // ✨ NUEVO: Indica si ya hay plan
 }) => {
   const [inputValue, setInputValue] = useState('');
