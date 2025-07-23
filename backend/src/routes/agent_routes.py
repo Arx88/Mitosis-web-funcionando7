@@ -2433,16 +2433,24 @@ Estructura del JSON requerida:
 
 🎯 SELECCIÓN DE ICONO - Elige el más apropiado según el tipo de tarea:
 
-**Desarrollo/Tecnología**: code, database, terminal, server, smartphone
-**Escritura/Documentos**: book, file, edit, folder, archive
-**Investigación/Búsqueda**: search, globe, activity, target, compass
-**Creatividad/Diseño**: image, lightbulb, star, camera, video
-**Análisis/Datos**: chart, calculator, activity, layers, grid
-**Comunicación**: message, mail, send, phone, share
-**Negocios**: briefcase, dollar, building, users, award
-**Multimedia**: music, video, camera, mic, headphones
-**Lugares/Mapas**: map, navigation, building, compass, globe
-**Herramientas**: wrench, settings, package, component, workflow
+**Desarrollo/Programación**: code, database, terminal, server
+**Escritura/Documentos**: file, book, edit, folder
+**Investigación/Búsqueda**: search, globe, compass, target
+**Creatividad/Diseño**: image, lightbulb, star, camera
+**Análisis/Datos**: chart, calculator, activity, grid
+**Comunicación**: message, mail, send, phone
+**Negocios/Comercial**: briefcase, dollar, building, users
+**Multimedia**: music, video, camera, mic
+**Lugares/Mapas**: map, navigation, compass, globe
+**Herramientas/Utilidades**: wrench, settings, package, workflow
+
+⚠️ PRIORIDADES DE SELECCIÓN (en orden de precedencia):
+1. Si hay DESARROLLO/PROGRAMACIÓN → usa 'code', 'database', 'terminal'
+2. Si hay ANÁLISIS/DATOS → usa 'chart', 'calculator', 'activity'  
+3. Si hay CREATIVIDAD/DISEÑO → usa 'image', 'lightbulb', 'star'
+4. Si hay BÚSQUEDA/INVESTIGACIÓN → usa 'search', 'globe', 'compass'
+5. Si hay ESCRITURA/DOCUMENTOS → usa 'file', 'book', 'edit'
+6. Si es genérico/ambiguo → usa 'target', 'lightbulb'
 
 HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
 
