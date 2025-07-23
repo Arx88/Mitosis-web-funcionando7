@@ -303,6 +303,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 // 🔧 FIX: Small delay to ensure onUpdateMessages completes first
                 // This prevents race condition where plan generation overwrites messages
                 setTimeout(() => {
+                  console.log('📋 DELAYED PLAN GENERATION: Starting plan generation after message update completion');
                   onTaskPlanGenerated({
                     steps: initData.plan,
                     total_steps: initData.total_steps,
@@ -311,7 +312,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     complexity: initData.complexity,
                     suggested_icon: initData.suggested_icon // 🎯 INCLUIR ICONO EN EL PLAN
                   });
-                }, 100); // 100ms delay to ensure message update completes first
+                }, 200); // 200ms delay to ensure message update completes first
               }
             
           } else {
