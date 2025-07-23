@@ -300,9 +300,54 @@ El problema requiere una **investigación más profunda** o un **approach comple
 **FASE 4**: Identificar discrepancias específicas
 **FASE 5**: Solución basada en comprensión profunda
 
-## FASE 1: ANÁLISIS DEL OBJETIVO DEL AGENTE
-
 ### ¿CÓMO DEBERÍA FUNCIONAR LA "NUEVA TAREA"?
+
+#### **OBJETIVO DEL AGENTE SEGÚN DOCUMENTACIÓN**:
+Mitosis es un "agente de IA general autónomo" que debe:
+1. **Planificación Automática**: Descomposición inteligente de tareas complejas
+2. **Ejecución por Fases**: Seguimiento detallado del progreso  
+3. **Monitoreo Continuo**: Visualización en tiempo real del estado de las tareas
+4. **Adaptación Dinámica**: Ajuste de estrategias basado en resultados
+
+#### **FLUJO ESPERADO "NUEVA TAREA"**:
+1. Usuario hace clic en "Nueva Tarea" → Crea tarea vacía
+2. Usuario escribe mensaje en chat → **MENSAJE DEBE APARECER EN CHAT**
+3. Agente procesa mensaje → Genera PLAN DE ACCIÓN automáticamente
+4. **CRÍTICO**: Mensaje del usuario DEBE persistir durante toda la generación del plan
+5. Plan se muestra en terminal/monitor con pasos detallados
+6. Ejecución autónoma comienza (opcional)
+
+#### **PROBLEMA CONFIRMADO**:
+❌ **PASO 4 FALLA**: El mensaje del usuario DESAPARECE cuando el agente genera el plan de acción
+❌ **IMPACTO**: Usuarios no ven su mensaje en el historial, causa confusión
+
+## FASE 2: MAPEO ARQUITECTURAL ACTUAL VS ESPERADO
+
+### **ARQUITECTURA ACTUAL IDENTIFICADA**:
+```
+VanishInput (formulario) 
+    ↓ onSubmit
+ChatInterface.handleSendMessage 
+    ↓ onSendMessage callback  
+TaskView.onSendMessage (SOLO LOGGING)
+    ↓ ❌ TERMINA AQUÍ - NO PROCESA
+```
+
+### **ARQUITECTURA ESPERADA**:
+```
+VanishInput (formulario)
+    ↓ onSubmit  
+ChatInterface.handleSendMessage
+    ↓ 1. Agrega mensaje al chat INMEDIATAMENTE
+    ↓ 2. Llama al backend para procesar
+    ↓ 3. Mantiene mensaje visible durante processing
+    ↓ 4. Agrega respuesta del agente
+    ↓ 5. Actualiza UI con plan generado
+```
+
+### **DISCREPANCIA IDENTIFICADA**:
+❌ **CRÍTICA**: TaskView.onSendMessage solo hace logging, no procesa el mensaje
+❌ **RESULTADO**: El mensaje se agrega al chat pero luego desaparece porque no hay processing real
 
 ## ERRORES COMETIDOS
 ❌ **Error repetido**: Afirmar que el problema está solucionado cuando NO lo está
