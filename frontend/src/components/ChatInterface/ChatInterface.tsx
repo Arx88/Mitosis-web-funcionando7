@@ -269,14 +269,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               // ✅ CRITICAL FIX: Call onTaskPlanGenerated callback for plan display in TerminalView
               if (onTaskPlanGenerated && initData.plan) {
                 console.log('📋 Calling onTaskPlanGenerated with specific AI plan:', initData);
-                onTaskPlanGenerated({
-                  steps: initData.plan,
-                  total_steps: initData.total_steps,
-                  estimated_total_time: initData.estimated_total_time,
-                  task_type: initData.task_type,
-                  complexity: initData.complexity,
-                  suggested_icon: initData.suggested_icon // 🎯 INCLUIR ICONO EN EL PLAN
-                });
+                
+                // 🔧 FIX: Small delay to ensure onUpdateMessages completes first
+                // This prevents race condition where plan generation overwrites messages
+                setTimeout(() => {
+                  onTaskPlanGenerated({
+                    steps: initData.plan,
+                    total_steps: initData.total_steps,
+                    estimated_total_time: initData.estimated_total_time,
+                    task_type: initData.task_type,
+                    complexity: initData.complexity,
+                    suggested_icon: initData.suggested_icon // 🎯 INCLUIR ICONO EN EL PLAN
+                  });
+                }, 100); // 100ms delay to ensure message update completes first
               }
             
           } else {
