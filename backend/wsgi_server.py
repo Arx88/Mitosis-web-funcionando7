@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-WSGI Server para Flask + SocketIO - SOLUCIÓN DEFINITIVA
-Usa gunicorn con eventlet worker para compatibilidad completa
+WSGI Server para Flask + SocketIO - SOLUCIÓN DEFINITIVA CORRECTA
+Usa el middleware SocketIO correctamente
 """
 
 import os
@@ -10,8 +10,9 @@ sys.path.insert(0, '/app/backend')
 
 from server import app, socketio
 
-# Para gunicorn con eventlet - SocketIO wraps the Flask app
-application = socketio
+# Para gunicorn con eventlet - usar el middleware de SocketIO
+def application(environ, start_response):
+    return socketio.wsgi_app(environ, start_response)
 
 if __name__ == '__main__':
     # Para testing directo
