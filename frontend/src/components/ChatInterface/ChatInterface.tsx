@@ -168,7 +168,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         timestamp: new Date()
       };
 
-      // 🔧 FIX: Add user message immediately to chat before processing
+      // 🔧 CRITICAL FIX: Add user message immediately to chat before processing
       // This ensures the user's message is always visible, even if processing fails
       let currentMessages = messages;
       if (onUpdateMessages) {
@@ -176,6 +176,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         currentMessages = updatedMessages; // Update local reference
         onUpdateMessages(updatedMessages);
         console.log('✅ NUEVA TAREA FIX: User message added to chat immediately:', userMessage.content);
+        
+        // 🔧 ADDITIONAL FIX: Force a small delay to ensure message is fully rendered
+        // This prevents race conditions in the message display
+        await new Promise(resolve => setTimeout(resolve, 50));
+        console.log('✅ NUEVA TAREA FIX: Message render delay completed');
       }
 
       // Llamar al callback original
