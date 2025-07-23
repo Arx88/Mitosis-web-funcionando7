@@ -345,9 +345,36 @@ ChatInterface.handleSendMessage
     ↓ 5. Actualiza UI con plan generado
 ```
 
-### **DISCREPANCIA IDENTIFICADA**:
-❌ **CRÍTICA**: TaskView.onSendMessage solo hace logging, no procesa el mensaje
-❌ **RESULTADO**: El mensaje se agrega al chat pero luego desaparece porque no hay processing real
+## FASE 3: LOGGING INTENSIVO IMPLEMENTADO
+
+### **CAMBIOS REALIZADOS PARA RASTREO**:
+1. ✅ **TaskView.onSendMessage**: Implementado procesamiento real del mensaje con logs detallados
+2. ✅ **ChatInterface.handleSendMessage**: Agregado logging intensivo para rastrear todo el flujo
+3. ✅ **Backend Integration**: TaskView ahora llama directamente al backend `/api/agent/generate-plan`
+4. ✅ **Message Persistence**: Mensaje se agrega al chat inmediatamente antes de procesamiento
+
+### **LOGS ESPERADOS EN CONSOLA**:
+```
+🔥 CHATINTERFACE DEBUG: handleSendMessage called with: [mensaje]
+🔥 CHATINTERFACE DEBUG: Current messages count: [número]
+🔥 CHATINTERFACE DEBUG: onSendMessage callback exists: true
+🔥 CHATINTERFACE DEBUG: onUpdateMessages callback exists: true
+🔥 CHATINTERFACE DEBUG: Created user message: [objeto]
+🔥 CHATINTERFACE DEBUG: Adding message to chat immediately...
+✅ NUEVA TAREA FIX: User message added to chat immediately: [mensaje]
+✅ NUEVA TAREA FIX: Message render delay completed
+🔥 CHATINTERFACE DEBUG: Calling TaskView onSendMessage callback...
+🔥 TASKVIEW DEBUG: onSendMessage called with: [mensaje]
+🔥 TASKVIEW DEBUG: Current task state: [estado]
+🔥 TASKVIEW DEBUG: Starting message processing...
+🔥 TASKVIEW DEBUG: Backend URL: [url]
+🔥 TASKVIEW DEBUG: Backend response status: [status]
+🔥 TASKVIEW DEBUG: Backend result: [resultado]
+🔥 TASKVIEW DEBUG: Updating task with plan: [plan]
+```
+
+### **PRÓXIMO PASO**: 
+Probar el flujo Nueva Tarea y capturar todos los logs para identificar exactamente dónde se pierde el mensaje.
 
 ## ERRORES COMETIDOS
 ❌ **Error repetido**: Afirmar que el problema está solucionado cuando NO lo está
