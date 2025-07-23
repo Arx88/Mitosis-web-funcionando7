@@ -300,19 +300,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               if (onTaskPlanGenerated && initData.plan) {
                 console.log('📋 Calling onTaskPlanGenerated with specific AI plan:', initData);
                 
-                // 🔧 CRITICAL RACE CONDITION FIX: Pass current messages directly to prevent state timing issues
-                // React state updates are async, so currentTask.messages might still be empty when this executes
-                console.log('📋 IMMEDIATE PLAN GENERATION: Starting plan generation with preserved messages');
                 onTaskPlanGenerated({
                   steps: initData.plan,
                   total_steps: initData.total_steps,
                   estimated_total_time: initData.estimated_total_time,
                   task_type: initData.task_type,
                   complexity: initData.complexity,
-                  suggested_icon: initData.suggested_icon, // 🎯 INCLUIR ICONO EN EL PLAN
-                  preservedMessages: finalMessages // 🔧 PASS CURRENT MESSAGES DIRECTLY
+                  suggested_icon: initData.suggested_icon // 🎯 INCLUIR ICONO EN EL PLAN
                 });
-                console.log('📋 PLAN GENERATION COMPLETE: Plan callback executed with preserved messages');
+                console.log('📋 PLAN GENERATION COMPLETE: Plan callback executed');
               }
             
           } else {
