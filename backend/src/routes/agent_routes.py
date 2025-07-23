@@ -2948,34 +2948,8 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
                 }
             ]
         
-        # Determine fallback icon based on task content
-        def determine_fallback_icon(message_content: str) -> str:
-            """Determine appropriate icon for fallback plans based on message content"""
-            content_lower = message_content.lower()
-            
-            # Icon mapping for common tasks
-            if any(word in content_lower for word in ['crear', 'generar', 'escribir', 'desarrollar', 'hacer']):
-                if any(word in content_lower for word in ['código', 'programa', 'script', 'app']):
-                    return 'code'
-                elif any(word in content_lower for word in ['documento', 'texto', 'informe', 'reporte']):
-                    return 'file'
-                elif any(word in content_lower for word in ['imagen', 'diseño', 'gráfico']):
-                    return 'image'
-                else:
-                    return 'lightbulb'
-            elif any(word in content_lower for word in ['buscar', 'investigar', 'analizar', 'estudiar']):
-                return 'search'
-            elif any(word in content_lower for word in ['restaurante', 'bar', 'comida', 'valencia', 'madrid']):
-                return 'map'
-            elif any(word in content_lower for word in ['negocio', 'empresa', 'mercado', 'marketing']):
-                return 'briefcase'
-            elif any(word in content_lower for word in ['datos', 'estadística', 'análisis', 'reporte']):
-                return 'chart'
-            else:
-                return 'target'  # Generic task icon
-        
-        # Get appropriate icon for this task
-        suggested_icon = determine_fallback_icon(original_message)
+        # Get appropriate icon for this task using unified function
+        suggested_icon = determine_unified_icon(original_message)
         active_task_plans[task_id] = {
             'plan': plan_steps,
             'current_step': 0,
