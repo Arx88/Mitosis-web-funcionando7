@@ -747,9 +747,22 @@ export const TaskView: React.FC<TaskViewProps> = ({
               onTaskPlanGenerated={(plan) => {
                 console.log('📋 TaskView: Plan received from ChatInterface:', plan);
                 
-                // 🔍 Use a callback approach to ensure we get the most current task state
-                // This prevents stale closure issues when the task title might have been updated
-                const updateTaskWithPlan = (currentTask: Task) => {
+                // 🚀 CRITICAL FIX: Use setTasks callback to get most current task state
+                // This prevents the race condition where plan generation overwrites enhanced title
+                setTasks(prevTasks => {
+                  const currentTask = prevTasks.find(t => t.id === task.id);
+                  if (!currentTask) {
+                    console.error('❌ Task not found in current tasks, using fallback');
+                    return prevTasks;
+                  }
+                  
+                  console.log('📋 RACE CONDITION FIX - Using most current task state:', {
+                    taskId: currentTask.id,
+                    currentTitle: currentTask.title,
+                    planSteps: plan.steps?.length,
+                    fixApplied: 'Using latest task state from setTasks callback'
+                  });
+                  
                   // Convertir el plan del backend al formato del frontend
                   const frontendPlan = plan.steps.map((step: any) => ({
                     id: step.id,
@@ -762,9 +775,9 @@ export const TaskView: React.FC<TaskViewProps> = ({
                     active: step.active
                   }));
                   
-                  // Actualizar la tarea con el plan generado, preservando el título actual
+                  // Actualizar la tarea con el plan generado, preservando el título más actual
                   const updatedTask = {
-                    ...currentTask, // Use current task to preserve any recent updates (like title)
+                    ...currentTask, // Use MOST CURRENT task state (includes enhanced title)
                     plan: frontendPlan,
                     planGenerated: true,
                     status: 'in-progress' as const,
@@ -775,13 +788,16 @@ export const TaskView: React.FC<TaskViewProps> = ({
                     progress: 0 // Iniciar con 0% ya que los pasos no están completados
                   };
                   
-                  console.log('📋 TaskView: Updating task with plan (PRESERVING CURRENT TITLE):', updatedTask);
-                  return updatedTask;
-                };
-                
-                // Apply the update using the current task state
-                const updatedTask = updateTaskWithPlan(task);
-                onUpdateTask(updatedTask);
+                  console.log('📋 TaskView: Updating task with plan (PRESERVING ENHANCED TITLE):', {
+                    taskId: updatedTask.id,
+                    preservedTitle: updatedTask.title,
+                    planSteps: updatedTask.plan?.length,
+                    raceconditionFixed: true
+                  });
+                  
+                  // Return updated tasks array
+                  return prevTasks.map(t => t.id === task.id ? updatedTask : t);
+                });
                 
                 // Log al terminal
                 if (logToTerminal && plan.steps?.length) {
