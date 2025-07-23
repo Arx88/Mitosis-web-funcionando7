@@ -376,7 +376,7 @@ class MitosisConsolidatedServer:
                 services_status = {}
                 
                 # MongoDB
-                if self.db:
+                if self.db is not None:
                     try:
                         self.mongo_client.admin.command('ping')
                         services_status['mongodb'] = {'status': 'connected', 'details': 'Ping successful'}
