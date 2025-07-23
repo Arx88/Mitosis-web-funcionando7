@@ -747,14 +747,19 @@ export const TaskView: React.FC<TaskViewProps> = ({
               onTaskPlanGenerated={(plan) => {
                 console.log('📋 TaskView: Plan received from ChatInterface:', plan);
                 
-                // 🚀 CRITICAL FIX: Use functional setState to get most current task state
+                // 🚀 CRITICAL FIX: Use functional update to get most current task state
                 // This prevents the race condition where plan generation overwrites enhanced title
                 onUpdateTask((currentTask: Task) => {
-                  console.log('📋 RACE CONDITION FIX - Using functional setState to get current task:', {
+                  // Only update the task that matches our current task ID
+                  if (currentTask.id !== task.id) {
+                    return currentTask; // Return unchanged for other tasks
+                  }
+                  
+                  console.log('📋 RACE CONDITION FIX - Using functional update to preserve enhanced title:', {
                     taskId: currentTask.id,
                     currentTitle: currentTask.title,
                     planSteps: plan.steps?.length,
-                    fixApplied: 'Using functional setState callback'
+                    fixApplied: 'Functional update preserves latest state'
                   });
                   
                   // Convertir el plan del backend al formato del frontend
@@ -782,7 +787,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                     progress: 0 // Iniciar con 0% ya que los pasos no están completados
                   };
                   
-                  console.log('📋 TaskView: Updated task with plan (PRESERVING ENHANCED TITLE):', {
+                  console.log('📋 TaskView: Updated task with plan (ENHANCED TITLE PRESERVED):', {
                     taskId: updatedTask.id,
                     preservedTitle: updatedTask.title,
                     planSteps: updatedTask.plan?.length,
