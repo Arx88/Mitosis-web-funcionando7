@@ -2450,12 +2450,15 @@ METODOLOGÍA ADAPTATIVA MEJORADA:
 2. Identifica elementos únicos (términos técnicos, nombres, ubicaciones específicas)
 3. Crea pasos que incorporen estos elementos específicos del dominio
 4. Evita completamente palabras genéricas
+5. 🎯 Selecciona el icono más representativo para esta tarea específica
 
 PROCESO DE ESPECIALIZACIÓN AUTOMÁTICA:
-- Si es sobre tecnología → usa nombres específicos de tecnologías, versiones, plataformas
-- Si es sobre lugares → usa nombres específicos de ubicaciones, características locales
-- Si es sobre negocios → usa métricas específicas, herramientas del sector
-- Si es sobre investigación → usa fuentes específicas, metodologías del campo
+- Si es sobre tecnología → usa nombres específicos de tecnologías, versiones, plataformas (icono: code, terminal, database)
+- Si es sobre lugares → usa nombres específicos de ubicaciones, características locales (icono: map, navigation, building)
+- Si es sobre negocios → usa métricas específicas, herramientas del sector (icono: briefcase, dollar, chart)
+- Si es sobre investigación → usa fuentes específicas, metodologías del campo (icono: search, activity, book)
+- Si es sobre comida/restaurantes → (icono: star, map, building)
+- Si es sobre multimedia → (icono: music, video, camera)
 
 Responde SOLO con JSON válido usando EXACTAMENTE este formato:
 {{
@@ -2470,7 +2473,8 @@ Responde SOLO con JSON válido usando EXACTAMENTE este formato:
   ],
   "task_type": "string de mínimo 3 caracteres",
   "complexity": "media",
-  "estimated_total_time": "string"
+  "estimated_total_time": "string",
+  "suggested_icon": "icono_más_apropiado"
 }}
 
 REGLAS ULTRA-CRÍTICAS:
@@ -2479,6 +2483,7 @@ REGLAS ULTRA-CRÍTICAS:
 - Adapta automáticamente al contexto específico de la tarea
 - Mínimo 3 pasos, máximo 6 pasos
 - HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
+- 🎯 ICONOS VÁLIDOS: book, image, smartphone, code, database, globe, search, file, settings, download, upload, server, cloud, shield, key, music, video, message, mail, chart, shopping, dollar, calendar, users, monitor, terminal, zap, briefcase, lightbulb, rocket, star, award, activity, calculator, layers, package, wrench, workflow, puzzle, building, archive, grid, layout, send, share, component, target, flag, edit, camera, mic, headphones, printer, scan, copy, save, folder, clock, bell, phone, map, compass, navigation, wifi, lock
 
 SOLO JSON, sin explicaciones adicionales.
 """
