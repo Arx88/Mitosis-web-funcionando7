@@ -908,79 +908,103 @@ def determine_unified_icon(task_message: str) -> str:
     if any(word in content_lower for word in ['código', 'programa', 'script', 'app', 'aplicación', 'desarrollo', 'programar', 'web', 'software', 'javascript', 'python', 'react', 'backend', 'frontend', 'api', 'database', 'sql']):
         # Sub-categorize development tasks
         if any(word in content_lower for word in ['base', 'datos', 'database', 'sql', 'mongodb', 'mysql']):
+            logger.info(f"🎯 Icon: 'database' (Development/Database priority) for: {task_message[:50]}...")
             return 'database'
         elif any(word in content_lower for word in ['terminal', 'comando', 'shell', 'cli', 'script']):
+            logger.info(f"🎯 Icon: 'terminal' (Development/Terminal priority) for: {task_message[:50]}...")
             return 'terminal'
         else:
+            logger.info(f"🎯 Icon: 'code' (Development priority) for: {task_message[:50]}...")
             return 'code'
     
     # 🎯 PRIORITY 2: DATA ANALYSIS/CHARTS 
     elif any(word in content_lower for word in ['datos', 'estadística', 'análisis', 'analizar', 'chart', 'gráfico', 'estadísticas', 'métricas', 'dashboard', 'reporte', 'informe']) and any(word in content_lower for word in ['datos', 'ventas', 'números', 'estadística', 'métrica', 'análisis']):
         if any(word in content_lower for word in ['calcular', 'cálculo', 'matemática', 'números']):
+            logger.info(f"🎯 Icon: 'calculator' (Data Analysis/Calculator priority) for: {task_message[:50]}...")
             return 'calculator'
         else:
+            logger.info(f"🎯 Icon: 'chart' (Data Analysis priority) for: {task_message[:50]}...")
             return 'chart'
     
     # 🎯 PRIORITY 3: CREATIVE/DESIGN
     elif any(word in content_lower for word in ['imagen', 'diseño', 'gráfico', 'visual', 'foto', 'creative', 'creativo', 'diseñar', 'logo', 'arte']):
         if any(word in content_lower for word in ['foto', 'fotografía', 'camera']):
+            logger.info(f"🎯 Icon: 'camera' (Creative/Photography priority) for: {task_message[:50]}...")
             return 'camera'
         else:
+            logger.info(f"🎯 Icon: 'image' (Creative/Design priority) for: {task_message[:50]}...")
             return 'image'
     
     # 🎯 PRIORITY 4: MULTIMEDIA
     elif any(word in content_lower for word in ['música', 'audio', 'sonido', 'music', 'canción']):
+        logger.info(f"🎯 Icon: 'music' (Multimedia/Audio priority) for: {task_message[:50]}...")
         return 'music'
     elif any(word in content_lower for word in ['video', 'película', 'multimedia', 'grabación']):
+        logger.info(f"🎯 Icon: 'video' (Multimedia/Video priority) for: {task_message[:50]}...")
         return 'video'
     
     # 🎯 PRIORITY 5: LOCATION/MAPS
     elif any(word in content_lower for word in ['restaurante', 'bar', 'comida', 'valencia', 'madrid', 'barcelona', 'lugar', 'ubicación', 'dirección', 'mapa', 'localizar']):
         if any(word in content_lower for word in ['navegar', 'navegación', 'ruta', 'dirección']):
+            logger.info(f"🎯 Icon: 'navigation' (Location/Navigation priority) for: {task_message[:50]}...")
             return 'navigation'
         else:
+            logger.info(f"🎯 Icon: 'map' (Location/Map priority) for: {task_message[:50]}...")
             return 'map'
     
     # 🎯 PRIORITY 6: BUSINESS/COMMERCIAL
     elif any(word in content_lower for word in ['negocio', 'empresa', 'mercado', 'marketing', 'comercial', 'ventas', 'cliente']):
         if any(word in content_lower for word in ['dinero', 'precio', 'costo', 'facturación', 'pago']):
+            logger.info(f"🎯 Icon: 'dollar' (Business/Finance priority) for: {task_message[:50]}...")
             return 'dollar'
         elif any(word in content_lower for word in ['equipo', 'personas', 'usuarios', 'clientes']):
+            logger.info(f"🎯 Icon: 'users' (Business/People priority) for: {task_message[:50]}...")
             return 'users'
         else:
+            logger.info(f"🎯 Icon: 'briefcase' (Business priority) for: {task_message[:50]}...")
             return 'briefcase'
     
     # 🎯 PRIORITY 7: COMMUNICATION
     elif any(word in content_lower for word in ['mensaje', 'chat', 'comunicar', 'correo', 'email', 'enviar']):
         if any(word in content_lower for word in ['correo', 'email', 'mail']):
+            logger.info(f"🎯 Icon: 'mail' (Communication/Email priority) for: {task_message[:50]}...")
             return 'mail'
         elif any(word in content_lower for word in ['enviar', 'send']):
+            logger.info(f"🎯 Icon: 'send' (Communication/Send priority) for: {task_message[:50]}...")
             return 'send'
         else:
+            logger.info(f"🎯 Icon: 'message' (Communication priority) for: {task_message[:50]}...")
             return 'message'
     
     # 🎯 PRIORITY 8: RESEARCH/SEARCH
     elif any(word in content_lower for word in ['buscar', 'investigar', 'estudiar', 'search', 'investigación', 'research']):
         if any(word in content_lower for word in ['web', 'internet', 'online', 'sitio']):
+            logger.info(f"🎯 Icon: 'globe' (Research/Web priority) for: {task_message[:50]}...")
             return 'globe'
         else:
+            logger.info(f"🎯 Icon: 'search' (Research priority) for: {task_message[:50]}...")
             return 'search'
     
     # 🎯 PRIORITY 9: DOCUMENTS/WRITING
     elif any(word in content_lower for word in ['documento', 'texto', 'escribir', 'redactar', 'informe', 'reporte', 'libro', 'artículo']):
         if any(word in content_lower for word in ['libro', 'lectura', 'leer']):
+            logger.info(f"🎯 Icon: 'book' (Document/Book priority) for: {task_message[:50]}...")
             return 'book'
         elif any(word in content_lower for word in ['editar', 'modificar', 'corregir']):
+            logger.info(f"🎯 Icon: 'edit' (Document/Edit priority) for: {task_message[:50]}...")
             return 'edit'
         else:
+            logger.info(f"🎯 Icon: 'file' (Document priority) for: {task_message[:50]}...")
             return 'file'
     
     # 🎯 PRIORITY 10: CREATION/INNOVATION (for generic "crear", "hacer")
     elif any(word in content_lower for word in ['crear', 'generar', 'hacer', 'construir', 'innovar']):
+        logger.info(f"🎯 Icon: 'lightbulb' (Creation/Innovation priority) for: {task_message[:50]}...")
         return 'lightbulb'
     
     # 🎯 DEFAULT: Generic task icon
     else:
+        logger.info(f"🎯 Icon: 'target' (Default/Generic) for: {task_message[:50]}...")
         return 'target'
 
 def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
