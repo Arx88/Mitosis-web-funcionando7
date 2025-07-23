@@ -247,7 +247,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 timestamp: new Date()
               };
               
-              // ✅ FIXED: Add only agent message since user message was already added
+              // ✅ ENHANCED FIX: Ensure user message is always preserved
               if (onUpdateMessages) {
                 // Use currentMessages which includes the user message added immediately
                 const hasUserMessage = currentMessages.some(msg => 
@@ -260,11 +260,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   onUpdateMessages(updatedMessages);
                   console.log('✅ NUEVA TAREA FIX: Agent message added to existing chat with user message');
                 } else {
-                  // Fallback: add both messages (shouldn't happen with immediate user message fix)
+                  // 🔧 CRITICAL FALLBACK: Force add both messages to ensure user message is not lost
                   const updatedMessages = [...currentMessages, userMessage, agentMessage];
                   onUpdateMessages(updatedMessages);
-                  console.log('✅ NUEVA TAREA FIX: Both messages added (fallback mode)');
+                  console.log('✅ NUEVA TAREA FIX: Both messages added (fallback mode - user message preserved)');
                 }
+                
+                // 🔧 ADDITIONAL SAFETY: Log final message state for debugging
+                console.log('✅ NUEVA TAREA DEBUG: Final message state:', {
+                  totalMessages: currentMessages.length + 1,
+                  userMessageExists: hasUserMessage,
+                  userMessageContent: message.trim(),
+                  agentMessageContent: agentMessage.content.substring(0, 100) + '...'
+                });
               }
               
               // ✨ FIXED: Update title AFTER messages to ensure it doesn't get overwritten
