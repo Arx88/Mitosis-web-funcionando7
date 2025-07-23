@@ -897,6 +897,12 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 // Log al terminal
                 if (logToTerminal && plan.steps?.length) {
                   logToTerminal(`📋 Plan generado: ${plan.steps.length} pasos definidos`, 'success');
+                  
+                  // 🚀 CRITICAL FIX: Auto-start execution after plan generation
+                  console.log('🚀 Auto-starting task execution after plan generation in TaskView');
+                  setTimeout(() => {
+                    startTaskExecution(task.id);
+                  }, 2000); // Wait 2 seconds for UI to update
                 }
               }}
               onTitleGenerated={(enhancedTitle) => {
