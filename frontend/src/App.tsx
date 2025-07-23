@@ -197,7 +197,8 @@ export function App() {
       messages: [userMessage], // Include message immediately
       terminalCommands: [],
       isFavorite: false,
-      progress: 0
+      progress: 0,
+      iconType: undefined // 🎯 WILL BE SET BY LLM SUGGESTION
     };
     
     // ✅ ATOMIC OPERATION: Update tasks and activeTaskId together
