@@ -2484,14 +2484,17 @@ Formato JSON requerido:
   "suggested_icon": "icono_apropiado"
 }}
 
-🎯 SELECCIÓN DE ICONO según tipo de tarea:
-- Aplicaciones/Código → code, terminal, database
-- Documentos/Informes → book, file, edit
-- Investigación/Análisis → search, activity, chart
-- Multimedia/Video → video, music, camera
+🎯 SELECCIÓN DE ICONO según tipo de tarea (usa EXACTAMENTE estos iconos):
+- Desarrollo/Programación → code, database, terminal
+- Documentos/Textos → file, book, edit
+- Investigación/Análisis → search, chart, activity
+- Multimedia/Creatividad → image, video, music, camera
 - Negocios/Comercial → briefcase, dollar, users
-- Lugares/Restaurantes → map, building, navigation
-- Creatividad/Diseño → image, lightbulb, star
+- Lugares/Mapas → map, navigation, globe
+- Comunicación → message, mail, send
+- Genérico/Ambiguo → target, lightbulb
+
+⚠️ USA SOLO ESTOS ICONOS VÁLIDOS:
 
 HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
 
