@@ -44,10 +44,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     const taskNumber = tasks.length + 1;
     const defaultTitle = `Tarea ${taskNumber}`;
     
+    console.log('🔥 SIDEBAR: handleCreateTask called!');
+    console.log('🔥 SIDEBAR: taskNumber:', taskNumber);
+    console.log('🔥 SIDEBAR: defaultTitle:', defaultTitle);
+    console.log('🔥 SIDEBAR: onCreateTask function exists:', !!onCreateTask);
+    
     // Crear la nueva tarea - ya setea activeTaskId internamente
     const newTask = onCreateTask(defaultTitle);
     
-    console.log('🎯 SIDEBAR: Nueva tarea creada desde botón NUEVA TAREA:', newTask.id);
+    console.log('🎯 SIDEBAR: Nueva tarea creada desde botón NUEVA TAREA:', newTask?.id);
     console.log('⚠️ ISSUE: Esta tarea necesitará que el usuario escriba para generar título inteligente');
     
     // No necesitamos setTimeout ni setActiveTaskId adicional porque createTask ya lo hace
