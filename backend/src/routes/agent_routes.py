@@ -2982,6 +2982,7 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
             'total_steps': len(plan_steps),
             'estimated_total_time': '2-4 minutos',
             'task_type': 'adaptive_fallback_plan',
+            'suggested_icon': suggested_icon,
             'ai_generated': False
         }
         
