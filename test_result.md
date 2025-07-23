@@ -728,6 +728,12 @@ The Nueva Tarea backend functionality is working perfectly. User messages are pr
 
 ---
 
+agent_communication:
+    -agent: "main"  # or "testing"
+    -message: "Communication message between agents"
+    -agent: "testing"
+    -message: "✅ NUEVA TAREA BACKEND TESTING COMPLETED - ALL FIXES VERIFIED WORKING. Backend properly processes user messages, generates enhanced titles, creates detailed plans, and maintains proper response structure. All 3 test scenarios passed (100% success rate). The Nueva Tarea flow backend functionality is fully operational and ready for frontend integration. No backend issues found - any remaining issues are likely frontend-related."
+
 ## 🧪 **COMPREHENSIVE "NUEVA TAREA" FLOW TESTING COMPLETED** (January 2025) - TESTING AGENT REVIEW
 
 ### ✅ **TESTING REQUEST FULFILLED - NUEVA TAREA FLOW ANALYZED AND ROOT CAUSE IDENTIFIED**
