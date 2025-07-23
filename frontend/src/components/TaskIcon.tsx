@@ -179,6 +179,80 @@ export const TaskIcon: React.FC<TaskIconProps> = ({
   const getIcon = (taskType: string) => {
     const normalizedType = taskType.toLowerCase();
 
+    // 🎯 NUEVO: Mapeo directo de iconos del backend LLM
+    // Si el taskType es exactamente un nombre de icono válido, usar mapeo directo
+    const directIconMapping: { [key: string]: React.ReactElement } = {
+      // Desarrollo/Programación
+      'code': <Code className={iconClass} />,
+      'database': <Database className={iconClass} />,
+      'terminal': <Terminal className={iconClass} />,
+      'server': <Server className={iconClass} />,
+      
+      // Lugares/Mapas
+      'map': <Map className={iconClass} />,
+      'navigation': <Navigation className={iconClass} />,
+      'compass': <Compass className={iconClass} />,
+      'globe': <Globe className={iconClass} />,
+      
+      // Documentos/Archivos
+      'file': <FileText className={iconClass} />,
+      'book': <BookOpen className={iconClass} />,
+      'edit': <Edit className={iconClass} />,
+      'folder': <Folder className={iconClass} />,
+      
+      // Análisis/Datos
+      'chart': <BarChart className={iconClass} />,
+      'calculator': <Calculator className={iconClass} />,
+      'activity': <Activity className={iconClass} />,
+      'grid': <Grid3x3 className={iconClass} />,
+      
+      // Búsqueda/Investigación
+      'search': <Search className={iconClass} />,
+      
+      // Creatividad/Diseño
+      'image': <Image className={iconClass} />,
+      'lightbulb': <Lightbulb className={iconClass} />,
+      'star': <Star className={iconClass} />,
+      'camera': <Camera className={iconClass} />,
+      
+      // Comunicación
+      'message': <MessageSquare className={iconClass} />,
+      'mail': <Mail className={iconClass} />,
+      'send': <Send className={iconClass} />,
+      'phone': <Phone className={iconClass} />,
+      
+      // Negocios/Comercial
+      'briefcase': <Briefcase className={iconClass} />,
+      'dollar': <DollarSign className={iconClass} />,
+      'building': <Building className={iconClass} />,
+      'users': <Users className={iconClass} />,
+      
+      // Multimedia
+      'music': <Music className={iconClass} />,
+      'video': <Video className={iconClass} />,
+      'mic': <Mic className={iconClass} />,
+      'headphones': <Headphones className={iconClass} />,
+      
+      // Herramientas/Utilidades
+      'wrench': <Wrench className={iconClass} />,
+      'settings': <Settings className={iconClass} />,
+      'package': <Package className={iconClass} />,
+      'workflow': <Workflow className={iconClass} />,
+      
+      // Genérico
+      'target': <Target className={iconClass} />,
+      'flag': <Flag className={iconClass} />,
+      'rocket': <Rocket className={iconClass} />,
+      'zap': <Zap className={iconClass} />
+    };
+
+    // 🎯 PRIORIDAD 1: Si es un mapeo directo de icono del LLM, usarlo
+    if (directIconMapping[normalizedType]) {
+      console.log(`🎯 Direct icon mapping used: ${normalizedType}`);
+      return directIconMapping[normalizedType];
+    }
+
+    // 🎯 PRIORIDAD 2: Lógica heurística para compatibilidad con títulos de tareas
     // Lectura y escritura
     if (normalizedType.includes('lectura') || normalizedType.includes('leer') || 
         normalizedType.includes('escribir') || normalizedType.includes('redactar') ||
