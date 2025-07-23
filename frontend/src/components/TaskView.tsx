@@ -747,20 +747,14 @@ export const TaskView: React.FC<TaskViewProps> = ({
               onTaskPlanGenerated={(plan) => {
                 console.log('📋 TaskView: Plan received from ChatInterface:', plan);
                 
-                // 🚀 CRITICAL FIX: Use setTasks callback to get most current task state
+                // 🚀 CRITICAL FIX: Use functional setState to get most current task state
                 // This prevents the race condition where plan generation overwrites enhanced title
-                setTasks(prevTasks => {
-                  const currentTask = prevTasks.find(t => t.id === task.id);
-                  if (!currentTask) {
-                    console.error('❌ Task not found in current tasks, using fallback');
-                    return prevTasks;
-                  }
-                  
-                  console.log('📋 RACE CONDITION FIX - Using most current task state:', {
+                onUpdateTask((currentTask: Task) => {
+                  console.log('📋 RACE CONDITION FIX - Using functional setState to get current task:', {
                     taskId: currentTask.id,
                     currentTitle: currentTask.title,
                     planSteps: plan.steps?.length,
-                    fixApplied: 'Using latest task state from setTasks callback'
+                    fixApplied: 'Using functional setState callback'
                   });
                   
                   // Convertir el plan del backend al formato del frontend
@@ -788,15 +782,14 @@ export const TaskView: React.FC<TaskViewProps> = ({
                     progress: 0 // Iniciar con 0% ya que los pasos no están completados
                   };
                   
-                  console.log('📋 TaskView: Updating task with plan (PRESERVING ENHANCED TITLE):', {
+                  console.log('📋 TaskView: Updated task with plan (PRESERVING ENHANCED TITLE):', {
                     taskId: updatedTask.id,
                     preservedTitle: updatedTask.title,
                     planSteps: updatedTask.plan?.length,
                     raceconditionFixed: true
                   });
                   
-                  // Return updated tasks array
-                  return prevTasks.map(t => t.id === task.id ? updatedTask : t);
+                  return updatedTask;
                 });
                 
                 // Log al terminal
