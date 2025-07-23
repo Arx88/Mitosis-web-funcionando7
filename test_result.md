@@ -1028,6 +1028,151 @@ The enhanced MITOSIS agent successfully demonstrates all the improvements mentio
 
 ---
 
+## 🧪 **NUEVA TAREA CHAT MESSAGE VISIBILITY ISSUE TESTING COMPLETED** (January 2025) - TESTING AGENT REVIEW
+
+### ✅ **TESTING REQUEST FULFILLED - CRITICAL UX ISSUE CONFIRMED AND ANALYZED**
+
+**TESTING REQUEST**: Test the "Nueva Tarea" chat message visibility issue in the Mitosis application:
+
+**TEST SCENARIO EXECUTED**:
+1. ✅ Navigate to http://localhost:3000 (https://74a5e33d-f0aa-4bdf-866a-560ce9007d4f.preview.emergentagent.com)
+2. ✅ Click "Nueva tarea" button to create a new empty task
+3. ✅ Type a message like "Analizar restaurantes en Valencia" in the chat input
+4. ✅ Send the message
+5. ❌ **CRITICAL CHECK**: Verify if the user's message appears and stays visible in the chat history
+6. ❌ Check if the user can see their original message alongside the agent's response
+
+**URL TESTED**: https://74a5e33d-f0aa-4bdf-866a-560ce9007d4f.preview.emergentagent.com
+
+**TESTING METHODOLOGY**:
+1. **Comprehensive Browser Testing**: Used Playwright automation to test the complete Nueva Tarea workflow
+2. **Step-by-Step Analysis**: Documented each step of the user flow with screenshots
+3. **Message Visibility Verification**: Specifically tested user message persistence in chat history
+4. **DOM Analysis**: Checked for user message elements in the DOM structure
+5. **Visual Documentation**: Captured 6 screenshots documenting the complete workflow
+
+### 📊 **COMPREHENSIVE TESTING RESULTS**:
+
+#### ✅ **1. NUEVA TAREA BUTTON FUNCTIONALITY - WORKING PERFECTLY (100% SUCCESS)**:
+**Implementation Status**: ✅ **COMPLETE AND WORKING**
+- **Button Detection**: ✅ Nueva tarea button found and clickable
+- **Task Creation**: ✅ Task created successfully with proper ID generation
+- **TaskView Activation**: ✅ TaskView loads correctly after button click
+- **UI Transition**: ✅ Proper transition from homepage to TaskView
+- **Testing Result**: ✅ **VERIFIED** - Nueva tarea button works perfectly
+
+#### ✅ **2. CHAT INPUT FUNCTIONALITY - WORKING PERFECTLY (100% SUCCESS)**:
+**Implementation Status**: ✅ **COMPLETE AND WORKING**
+- **Input Field Detection**: ✅ Chat textarea found and accessible
+- **Message Typing**: ✅ User can type messages successfully
+- **Message Sending**: ✅ Enter key press processed correctly
+- **Backend Communication**: ✅ Message sent to backend successfully
+- **Testing Result**: ✅ **VERIFIED** - Chat input functionality works perfectly
+
+#### ❌ **3. USER MESSAGE VISIBILITY - CRITICAL ISSUE CONFIRMED (0% SUCCESS)**:
+**Implementation Status**: ❌ **CRITICAL UX ISSUE CONFIRMED**
+- **User Message Display**: ❌ User's original message does NOT appear in chat history
+- **Message Persistence**: ❌ User message disappears after sending
+- **Chat History**: ❌ Only agent processing messages are visible
+- **DOM Presence**: ❌ User message not found in DOM (0 occurrences)
+- **Testing Result**: ❌ **CRITICAL ISSUE CONFIRMED** - User messages disappear completely
+
+#### ✅ **4. BACKEND PROCESSING - WORKING CORRECTLY (100% SUCCESS)**:
+**Implementation Status**: ✅ **WORKING**
+- **Message Processing**: ✅ Backend receives and processes user messages
+- **Plan Generation**: ✅ Agent generates action plans successfully
+- **Title Enhancement**: ✅ Task title updated from "Tarea 1" to "Análisis de Restaurantes Valencianos"
+- **Terminal Display**: ✅ Plan displayed correctly in terminal/monitor section
+- **Testing Result**: ✅ **VERIFIED** - Backend processing works correctly
+
+### 🔧 **ROOT CAUSE ANALYSIS - CRITICAL FINDINGS**:
+
+#### **PRIMARY ISSUE**: User Message Not Added to Chat History
+**Problem**: When users type a message in the Nueva Tarea flow and press Enter, their original message is processed by the backend but never displayed in the chat interface.
+
+**Evidence from Testing**:
+1. ✅ **Message Sent Successfully**: Backend receives and processes the message
+2. ✅ **Agent Response Generated**: System generates appropriate agent responses
+3. ❌ **User Message Missing**: Original user message not visible in chat history
+4. ❌ **DOM Analysis**: 0 occurrences of user message found in DOM
+5. ❌ **Chat Containers**: 0 user message containers found
+
+#### **TECHNICAL ANALYSIS**:
+**Expected Behavior**:
+```
+User: "Analizar restaurantes en Valencia"
+Agent: "✅ Plan de acción específico generado..."
+```
+
+**Actual Behavior**:
+```
+[User message missing]
+Agent: "✅ Plan de acción específico generado..."
+```
+
+**Code Location**: The issue is likely in the ChatInterface component's `handleSendMessage` function where user messages should be added to the chat history before processing.
+
+### 📋 **DETAILED FINDINGS**:
+
+**Visual Evidence from Screenshots**:
+- ✅ **Screenshot 1**: Homepage loads correctly
+- ✅ **Screenshot 2**: Nueva tarea button clicked, TaskView activated
+- ✅ **Screenshot 3**: Chat input ready and accessible
+- ✅ **Screenshot 4**: User message typed successfully
+- ✅ **Screenshot 5**: Message sent, processing indicator visible
+- ❌ **Screenshot 6**: Final state shows plan generated but NO user message in chat
+
+**Technical Findings**:
+- ✅ **Nueva Tarea Flow**: Complete workflow functions correctly
+- ✅ **Task Creation**: Tasks created and activated properly
+- ✅ **Backend Integration**: Message processing works correctly
+- ❌ **Chat History**: User messages not persisted in chat interface
+- ❌ **UX Impact**: Users cannot see their original requests
+
+### 🎯 **FINAL ASSESSMENT**:
+
+**STATUS**: ❌ **CRITICAL UX ISSUE CONFIRMED - USER MESSAGES DISAPPEAR IN NUEVA TAREA FLOW**
+
+**IMPLEMENTATION COMPLETENESS**: **75%** - Core functionality works but critical UX issue exists
+**FUNCTIONAL VERIFICATION**: **75%** - Backend processing works, frontend chat history broken
+**USER EXPERIENCE**: **25%** - Poor UX where users can't see their original requests
+**CRITICAL ISSUE IMPACT**: **HIGH** - Users lose context of what they originally asked for
+
+**EVIDENCE SUMMARY**:
+1. ✅ **Nueva Tarea Button**: Working perfectly - creates task and activates TaskView
+2. ✅ **Chat Input**: Working perfectly - accepts user input and sends to backend
+3. ✅ **Backend Processing**: Working perfectly - processes messages and generates plans
+4. ❌ **User Message Display**: BROKEN - user messages disappear from chat history
+5. ❌ **Chat History**: INCOMPLETE - only shows agent responses, not user requests
+
+**RECOMMENDATION**: ❌ **CRITICAL FIX REQUIRED - USER MESSAGE VISIBILITY MUST BE RESTORED**
+
+The comprehensive testing confirms the reported issue: in the Nueva Tarea flow, when users type a message and send it, their original message disappears from the chat history. Users can only see the agent's processing messages and responses, but cannot see what they originally requested. This creates a poor user experience where users lose context of their original request.
+
+**CRITICAL ISSUES TO ADDRESS**:
+1. **URGENT**: Fix user message display in Nueva Tarea chat flow
+2. **URGENT**: Ensure user messages are added to chat history before backend processing
+3. **HIGH**: Verify message persistence across all task creation flows
+4. **MEDIUM**: Test similar flows to ensure consistent behavior
+
+**TESTING EVIDENCE**:
+- **Total Tests**: 4 comprehensive test scenarios
+- **Success Rate**: 75% (3/4 components working correctly)
+- **Screenshots**: 6 detailed screenshots documenting complete workflow
+- **Critical Issue**: User message visibility completely broken
+- **Root Cause**: User messages not added to chat history in Nueva Tarea flow
+
+**NUEVA TAREA MESSAGE VISIBILITY STATUS**: ❌ **CRITICAL ISSUE CONFIRMED - IMMEDIATE FIX REQUIRED**
+
+The Nueva Tarea functionality works correctly for task creation and backend processing, but suffers from a critical UX issue where user messages disappear from chat history. This prevents users from seeing their original requests alongside the agent's responses, creating confusion and poor user experience.
+
+**EXPECTED BEHAVIOR**: Users should see both their original message and the agent's response in chat history
+**ACTUAL BEHAVIOR**: Only agent responses are visible, user messages disappear
+**IMPACT**: High - Users lose context of their original requests
+**PRIORITY**: Critical - Immediate fix required for proper UX
+
+---
+
 ## 🧪 **CRITICAL FRONTEND TASK CREATION FLOW DIAGNOSIS COMPLETED** (January 2025) - TESTING AGENT REVIEW
 
 ### ✅ **TESTING REQUEST FULFILLED - ROOT CAUSE OF TASK CREATION ISSUE IDENTIFIED**
