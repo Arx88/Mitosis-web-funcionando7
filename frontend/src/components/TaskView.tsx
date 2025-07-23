@@ -800,9 +800,11 @@ export const TaskView: React.FC<TaskViewProps> = ({
                     progress: 0 // Iniciar con 0% ya que los pasos no están completados
                   };
                   
-                  console.log('📋 TaskView: Updated task with plan (ENHANCED TITLE PRESERVED):', {
+                  console.log('📋 TaskView: Updated task with plan (ENHANCED TITLE AND MESSAGES PRESERVED):', {
                     taskId: updatedTask.id,
                     preservedTitle: updatedTask.title,
+                    preservedMessagesCount: updatedTask.messages?.length || 0,
+                    preservedMessages: updatedTask.messages?.map(m => ({ sender: m.sender, content: m.content.substring(0, 50) + '...' })) || [],
                     planSteps: updatedTask.plan?.length,
                     raceconditionFixed: true
                   });
