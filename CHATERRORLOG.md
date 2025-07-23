@@ -313,6 +313,27 @@ const preservedMessages = plan.preservedMessages || currentTask.messages || [];
 #### EXPECTATIVA:
 Los mensajes NO deberían desaparecer porque ahora usamos los mensajes actuales directamente en lugar de depender del estado React asíncrono.
 
+### ❌ RESULTADO: SISTEMA ROTO COMPLETAMENTE
+**FECHA**: Julio 2025
+**PROBLEMA**: Los cambios causaron que la aplicación deje de funcionar - ya no se genera plan y aparece error de conexión
+
+#### REVERTED CHANGES:
+- Eliminé `preservedMessages` del callback - causaba errores de tipo
+- Volví a la versión funcional anterior
+- Sistema restaurado a estado funcional
+
+## ESTADO ACTUAL DEL PROBLEMA
+**PROBLEMA**: ❌ **SIGUE SIN RESOLVER - ANÁLISIS MÁS PROFUNDO REQUERIDO**
+**CAUSA RAÍZ**: **Estado asíncrono de React identificado como probable causa, pero solución causó otros errores**
+**ANÁLISIS NECESARIO**: **Encontrar forma de sincronizar estados sin romper el sistema**
+
+## LECCIONES CRÍTICAS
+❌ **Error crítico**: Cambios complejos sin testing pueden romper todo el sistema
+❌ **Problema persistente**: Cada intento de solución genera nuevos problemas
+❌ **Complejidad excesiva**: El sistema tiene demasiadas interdependencias frágiles
+
+**El problema original persiste**: Los mensajes siguen desapareciendo cuando se genera el plan de acción.
+
 #### VERIFICACIÓN EXITOSA:
 - ✅ **Message Persistence**: CONFIRMADO - mensajes del usuario permanecen visibles durante todo el proceso
 - ✅ **Race Condition Fix**: VERIFICADO - functional updates previenen pérdida de mensajes
