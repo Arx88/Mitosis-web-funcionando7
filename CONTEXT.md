@@ -140,28 +140,38 @@ MONGO_URL=mongodb://localhost:27017/task_manager
 
 ---
 
-## 🚨 PROBLEMAS IDENTIFICADOS HASTA AHORA
+## 🚨 PROBLEMAS IDENTIFICADOS - ACTUALIZADO
 
-### 1. Estructura de Archivos Inconsistente
-- **Backend**: `src/` no existe físicamente
-- **Frontend**: Componentes no encontrados
-- **Código**: Referencias a archivos inexistentes
+### 1. Over-Engineering Confirmado
+- **Backend**: agent_routes.py tiene 1658 líneas en un solo archivo
+- **Frontend**: App.tsx (829 líneas), TaskView.tsx (1030 líneas)
+- **Múltiples responsabilidades**: Archivos gigantes con lógica mezclada
+- **Duplicación**: Múltiples formas de hacer lo mismo (createTask vs createTaskWithMessage)
 
-### 2. Over-Engineering en App.tsx
-- 829 líneas en un solo archivo
-- Múltiples responsabilidades mezcladas
-- Lógica compleja de states y effects
-- Race conditions en updates
+### 2. Arquitectura Inconsistente
+- **Framework Mixing**: Se menciona FastAPI pero usa Flask + SocketIO
+- **Import Strategy**: Sistema defensivo con múltiples fallbacks
+- **Error Handling**: Over-defensive programming con try/catch masivo
 
-### 3. Importaciones Fallidas en Backend
-- Sistema defensivo con múltiples try/catch
-- Rutas principales no encontradas
-- Fallback a rutas básicas
+### 3. Race Conditions - PARCIALMENTE RESUELTO
+- **Message Loss**: Durante plan generation - FIXED con functional updates
+- **State Updates**: Múltiples updates simultáneos pueden causar inconsistencias
+- **Title Overwriting**: Enhanced title podía ser sobrescrito - FIXED
 
-### 4. Dependencias Excesivas
-- 123+ dependencias en backend
-- Posible conflicto Flask vs FastAPI
-- Paquetes no utilizados
+### 4. CSS/UI Issues - RESUELTO
+- **ChatInterface Invisible**: `md:w-1/2` → `w-1/2` - FIXED
+- **Panel Layout**: Ahora siempre visible independiente del screen size
+
+### 5. Dependencias Excesivas - CONFIRMADO
+- **123+ dependencias** en backend (requirements.txt)
+- **Paquetes AI/ML**: torch, transformers, sentence-transformers
+- **Vector DBs**: chromadb, faiss-cpu
+- **Over-kill**: Para un agente simple tiene demasiadas dependencias
+
+### 6. Código Legacy y Fallbacks
+- **TaskManager**: Sistema híbrido con MongoDB + memoria legacy
+- **Active Task Plans**: Diccionario en memoria como fallback
+- **Import Fallbacks**: Múltiples niveles de fallback por servicios no disponibles
 
 ---
 
