@@ -2419,51 +2419,43 @@ RESPONDE SOLO CON EL JSON - SIN TEXTO ADICIONAL
                 elif attempt == 2:
                     # Segunda tentativa: prompt con corrección específica y metodología adaptativa
                     prompt = f"""
-ATENCIÓN: El JSON anterior tuvo errores. GENERA UN PLAN ULTRA-ESPECÍFICO para: "{message}"
+ERROR: El JSON anterior falló. SOLO genera JSON válido para: "{message}"
 
-ERROR PREVIO: {last_error}
+Error previo: {last_error}
 
-METODOLOGÍA ADAPTATIVA MEJORADA:
-1. Analiza el dominio específico de la tarea
-2. Identifica elementos únicos (términos técnicos, nombres, ubicaciones específicas)
-3. Crea pasos que incorporen estos elementos específicos del dominio
-4. Evita completamente palabras genéricas
-5. 🎯 Selecciona el icono más representativo para esta tarea específica
+IMPORTANTE: Responde ÚNICAMENTE con JSON válido sin texto adicional.
 
-PROCESO DE ESPECIALIZACIÓN AUTOMÁTICA:
-- Si es sobre tecnología → usa nombres específicos de tecnologías, versiones, plataformas (icono: code, terminal, database)
-- Si es sobre lugares → usa nombres específicos de ubicaciones, características locales (icono: map, navigation, building)
-- Si es sobre negocios → usa métricas específicas, herramientas del sector (icono: briefcase, dollar, chart)
-- Si es sobre investigación → usa fuentes específicas, metodologías del campo (icono: search, activity, book)
-- Si es sobre comida/restaurantes → (icono: star, map, building)
-- Si es sobre multimedia → (icono: music, video, camera)
-
-Responde SOLO con JSON válido usando EXACTAMENTE este formato:
+Formato JSON requerido:
 {{
   "steps": [
     {{
-      "title": "Paso especializado con elementos específicos del dominio (5-100 caracteres)",
-      "description": "Acción concreta incorporando conceptos únicos de este tema (10-300 caracteres)", 
+      "title": "Título específico del paso",
+      "description": "Descripción concreta del paso", 
       "tool": "web_search",
-      "estimated_time": "string",
+      "estimated_time": "tiempo",
       "priority": "media"
     }}
   ],
-  "task_type": "string de mínimo 3 caracteres",
+  "task_type": "tipo de tarea",
   "complexity": "media",
-  "estimated_total_time": "string",
-  "suggested_icon": "icono_más_apropiado"
+  "estimated_total_time": "tiempo total",
+  "suggested_icon": "icono_apropiado"
 }}
 
-REGLAS ULTRA-CRÍTICAS:
-- CADA paso debe incorporar elementos específicos únicos del dominio
-- Evita completamente palabras genéricas
-- Adapta automáticamente al contexto específico de la tarea
-- Mínimo 3 pasos, máximo 6 pasos
-- HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
-- 🎯 ICONOS VÁLIDOS: book, image, smartphone, code, database, globe, search, file, settings, download, upload, server, cloud, shield, key, music, video, message, mail, chart, shopping, dollar, calendar, users, monitor, terminal, zap, briefcase, lightbulb, rocket, star, award, activity, calculator, layers, package, wrench, workflow, puzzle, building, archive, grid, layout, send, share, component, target, flag, edit, camera, mic, headphones, printer, scan, copy, save, folder, clock, bell, phone, map, compass, navigation, wifi, lock
+🎯 SELECCIÓN DE ICONO según tipo de tarea:
+- Aplicaciones/Código → code, terminal, database
+- Documentos/Informes → book, file, edit
+- Investigación/Análisis → search, activity, chart
+- Multimedia/Video → video, music, camera
+- Negocios/Comercial → briefcase, dollar, users
+- Lugares/Restaurantes → map, building, navigation
+- Creatividad/Diseño → image, lightbulb, star
 
-SOLO JSON, sin explicaciones adicionales.
+HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
+
+ICONOS VÁLIDOS: book, image, smartphone, code, database, globe, search, file, settings, download, upload, server, cloud, shield, key, music, video, message, mail, chart, shopping, dollar, calendar, users, monitor, terminal, zap, briefcase, lightbulb, rocket, star, award, activity, calculator, layers, package, wrench, workflow, puzzle, building, archive, grid, layout, send, share, component, target, flag, edit, camera, mic, headphones, printer, scan, copy, save, folder, clock, bell, phone, map, compass, navigation, wifi, lock
+
+RESPONDE SOLO JSON - NO TEXTO ADICIONAL
 """
                 
                 # Llamar a Ollama con parámetros optimizados para JSON
