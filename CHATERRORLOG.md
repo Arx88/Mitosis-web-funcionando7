@@ -175,9 +175,37 @@ Uno de estos callbacks está sobrescribiendo el estado de mensajes cuando se gen
 
 ## ESTADO ACTUAL DEL DIAGNÓSTICO
 **PROBLEMA**: ❌ **SIGUE SIN RESOLVER** 
-**CAUSA RAÍZ**: **AÚN DESCONOCIDA**
+**CAUSA RAÍZ**: ✅ **IDENTIFICADA - TASKVIEW SE CIERRA AUTOMÁTICAMENTE**
 **COMPLEJIDAD**: ALTA (múltiples intentos fallidos, problema persistente)
 **PRIORIDAD**: **CRÍTICA** (afecta UX principal de la aplicación)
+
+### Intento #11 - DESCUBRIMIENTO CRÍTICO (Julio 2025)
+**FECHA**: Julio 2025
+**MÉTODO**: Screenshot testing visual directo
+**RESULTADO**: ✅ **CAUSA RAÍZ REAL IDENTIFICADA**
+
+#### 🎯 **DESCUBRIMIENTO CRUCIAL**:
+**EL PROBLEMA NO ES QUE LOS MENSAJES DESAPAREZCAN DEL CHAT**
+
+**EL VERDADERO PROBLEMA**: TaskView se crea correctamente cuando se hace clic en "Nueva Tarea", PERO **la página automáticamente regresa al homepage después de unos segundos**.
+
+#### **EVIDENCIA VISUAL CAPTURADA**:
+1. ✅ **Homepage inicial**: Funciona normal
+2. ✅ **TaskView se crea**: Se ve "Tarea 1" con chat interface "Crea algo extraordinario..."
+3. ❌ **Auto-redirect**: La página regresa automáticamente al homepage "Bienvenido a Mitosis"
+
+#### **POR QUÉ ESTO EXPLICA TODO**:
+- ❌ **No se pueden enviar mensajes**: TaskView desaparece antes de que el usuario escriba
+- ❌ **No hay persistencia**: Si el usuario logra escribir rápido, TaskView se cierra durante el processing
+- ❌ **Testing automatizado falla**: Scripts no encuentran chat input porque TaskView ya se cerró
+
+#### **UBICACIÓN DEL PROBLEMA**:
+- Hay algo en el código que está desactivando TaskView automáticamente
+- Probablemente en App.tsx donde se maneja activeTaskId
+- Puede ser un timeout, useEffect, o condición que resetea el estado
+
+#### **PRÓXIMO PASO ESPECÍFICO**:
+Examinar App.tsx y TaskView.tsx para encontrar qué está causando que TaskView se cierre automáticamente después de crearse.
 
 ## ERRORES COMETIDOS
 ❌ **Error repetido**: Afirmar que el problema está solucionado cuando NO lo está
