@@ -2376,67 +2376,45 @@ def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool =
                 if attempt == 1:
                     # Primera tentativa: prompt específico dinámico
                     prompt = f"""
-GENERA UN PLAN DE ACCIÓN ULTRA-ESPECÍFICO para esta tarea: "{message}"
+Genera SOLO un objeto JSON válido para esta tarea: "{message}"
 
-INSTRUCCIONES CRÍTICAS:
-- Analiza el tipo de tarea y dominio específico
-- Crea pasos únicos que solo apliquen a esta tarea exacta
-- NO uses términos genéricos como "información", "análisis", "documento"
-- Identifica elementos específicos del dominio (nombres propios, conceptos técnicos, ubicaciones, etc.)
-- Cada paso debe ser imposible de reutilizar para otra tarea
-- 🎯 NUEVO: Selecciona el icono más apropiado para representar visualmente esta tarea
+IMPORTANTE: Responde ÚNICAMENTE con JSON válido. NO agregues texto, explicaciones o formato markdown.
 
-METODOLOGÍA ADAPTATIVA:
-1. Identifica el dominio principal de la tarea
-2. Extrae elementos específicos únicos (nombres, lugares, conceptos)
-3. Crea pasos que incorporen estos elementos específicos
-4. Asegúrate que cada paso sea altamente especializado
-5. 🎯 SELECCIÓN DE ICONO: Elige el icono que mejor represente el tema y naturaleza de la tarea
-
-EJEMPLO DE TRANSFORMACIÓN:
-- En lugar de: "Buscar información sobre X"
-- Mejor: "Identificar [elementos específicos únicos de X] en [fuentes específicas del dominio]"
-
-🎯 GUÍA DE ICONOS POR CONTEXTO:
-- Escritura/Documentos → "book", "file", "edit"
-- Tecnología/Programación → "code", "terminal", "database"
-- Investigación/Búsqueda → "search", "globe", "activity"
-- Creatividad/Diseño → "image", "lightbulb", "star"
-- Análisis/Datos → "chart", "calculator", "activity"
-- Comunicación → "message", "mail", "send"
-- Negocios → "briefcase", "dollar", "building"
-- Multimedia → "music", "video", "camera"
-- Lugares/Viajes → "map", "navigation", "building"
-- Restaurantes/Comida → "utensils", "star", "map"
-- Informes/Reportes → "file", "chart", "activity"
-
-Responde ÚNICAMENTE con un objeto JSON válido siguiendo EXACTAMENTE este formato:
-
+Estructura del JSON requerida:
 {{
   "steps": [
     {{
-      "title": "Paso ULTRA-ESPECÍFICO para esta tarea exacta (5-100 caracteres)",
-      "description": "Acción concreta con elementos únicos del dominio (10-300 caracteres)", 
-      "tool": "web_search",
-      "estimated_time": "Tiempo estimado como string",
+      "title": "Título específico del paso (5-100 caracteres)",
+      "description": "Descripción concreta del paso (10-300 caracteres)", 
+      "tool": "herramienta_válida",
+      "estimated_time": "tiempo estimado",
       "priority": "alta|media|baja"
     }}
   ],
-  "task_type": "Tipo de tarea específico (mínimo 3 caracteres)",
-  "complexity": "baja|media|alta", 
-  "estimated_total_time": "Tiempo total estimado",
-  "suggested_icon": "icono_apropiado_para_esta_tarea"
+  "task_type": "tipo de tarea específico",
+  "complexity": "baja|media|alta",
+  "estimated_total_time": "tiempo total estimado",
+  "suggested_icon": "icono_apropiado"
 }}
 
-REGLAS ULTRA-CRÍTICAS:
-- CADA paso debe incorporar elementos específicos únicos del dominio
-- Evita completamente palabras genéricas
-- Adapta automáticamente al contexto específico de la tarea
-- Mínimo 3 pasos, máximo 6 pasos
-- HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
-- 🎯 ICONOS VÁLIDOS: book, image, smartphone, code, database, globe, search, file, settings, download, upload, server, cloud, shield, key, music, video, message, mail, chart, shopping, dollar, calendar, users, monitor, terminal, zap, briefcase, lightbulb, rocket, star, award, activity, calculator, layers, package, wrench, workflow, puzzle, building, archive, grid, layout, send, share, component, target, flag, edit, camera, mic, headphones, printer, scan, copy, save, folder, clock, bell, phone, map, compass, navigation, wifi, lock
-- NO agregues texto adicional, solo el JSON
-- Asegúrate de que sea JSON válido y parseable
+🎯 SELECCIÓN DE ICONO - Elige el más apropiado según el tipo de tarea:
+
+**Desarrollo/Tecnología**: code, database, terminal, server, smartphone
+**Escritura/Documentos**: book, file, edit, folder, archive
+**Investigación/Búsqueda**: search, globe, activity, target, compass
+**Creatividad/Diseño**: image, lightbulb, star, camera, video
+**Análisis/Datos**: chart, calculator, activity, layers, grid
+**Comunicación**: message, mail, send, phone, share
+**Negocios**: briefcase, dollar, building, users, award
+**Multimedia**: music, video, camera, mic, headphones
+**Lugares/Mapas**: map, navigation, building, compass, globe
+**Herramientas**: wrench, settings, package, component, workflow
+
+HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
+
+ICONOS VÁLIDOS: book, image, smartphone, code, database, globe, search, file, settings, download, upload, server, cloud, shield, key, music, video, message, mail, chart, shopping, dollar, calendar, users, monitor, terminal, zap, briefcase, lightbulb, rocket, star, award, activity, calculator, layers, package, wrench, workflow, puzzle, building, archive, grid, layout, send, share, component, target, flag, edit, camera, mic, headphones, printer, scan, copy, save, folder, clock, bell, phone, map, compass, navigation, wifi, lock
+
+RESPONDE SOLO CON EL JSON - SIN TEXTO ADICIONAL
 """
                 elif attempt == 2:
                     # Segunda tentativa: prompt con corrección específica y metodología adaptativa
