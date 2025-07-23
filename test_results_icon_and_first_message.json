@@ -1,0 +1,626 @@
+{
+  "timestamp": "2025-07-23T13:23:38.480196",
+  "backend_url": "https://2919675b-54c0-45d9-b301-edd48bf0c00e.preview.emergentagent.com",
+  "test_summary": {
+    "overall_status": "PASSED",
+    "backend_health": "✅ HEALTHY",
+    "icon_mapping": "✅ WORKING",
+    "first_message_logic": "✅ WORKING",
+    "icon_mapping_success_rate": "100.0%",
+    "first_message_success_rate": "100.0%",
+    "total_tests_run": 8,
+    "total_tests_passed": 8
+  },
+  "detailed_results": {
+    "health": {
+      "backend_accessible": true,
+      "agent_health": true,
+      "ollama_connected": false,
+      "database_connected": false,
+      "tools_available": false,
+      "endpoints_working": {
+        "/api/agent/status": true,
+        "/api/health": true,
+        "/api/agent/generate-plan": true
+      },
+      "overall_health": true
+    },
+    "icon_mapping": {
+      "total_tests": 5,
+      "passed": 5,
+      "failed": 0,
+      "test_results": [
+        {
+          "test_case": {
+            "task": "Crear una aplicación web con React y Node.js",
+            "expected_icons": [
+              "code",
+              "globe",
+              "terminal",
+              "database"
+            ],
+            "category": "development"
+          },
+          "plan_icon": "code",
+          "chat_icon": "code",
+          "actual_icon": "code",
+          "expected_icons": [
+            "code",
+            "globe",
+            "terminal",
+            "database"
+          ],
+          "icons_consistent": true,
+          "icon_appropriate": true,
+          "icon_valid": true,
+          "passed": true,
+          "plan_response_success": true,
+          "chat_response_success": true
+        },
+        {
+          "test_case": {
+            "task": "Encontrar los mejores restaurantes en Madrid",
+            "expected_icons": [
+              "map",
+              "search",
+              "navigation"
+            ],
+            "category": "location"
+          },
+          "plan_icon": "map",
+          "chat_icon": "map",
+          "actual_icon": "map",
+          "expected_icons": [
+            "map",
+            "search",
+            "navigation"
+          ],
+          "icons_consistent": true,
+          "icon_appropriate": true,
+          "icon_valid": true,
+          "passed": true,
+          "plan_response_success": true,
+          "chat_response_success": true
+        },
+        {
+          "test_case": {
+            "task": "Analizar datos de ventas del último trimestre",
+            "expected_icons": [
+              "chart",
+              "database",
+              "calculator"
+            ],
+            "category": "analysis"
+          },
+          "plan_icon": "chart",
+          "chat_icon": "chart",
+          "actual_icon": "chart",
+          "expected_icons": [
+            "chart",
+            "database",
+            "calculator"
+          ],
+          "icons_consistent": true,
+          "icon_appropriate": true,
+          "icon_valid": true,
+          "passed": true,
+          "plan_response_success": true,
+          "chat_response_success": true
+        },
+        {
+          "test_case": {
+            "task": "Crear un documento técnico sobre IA",
+            "expected_icons": [
+              "file",
+              "book",
+              "edit"
+            ],
+            "category": "document"
+          },
+          "plan_icon": "book",
+          "chat_icon": "book",
+          "actual_icon": "book",
+          "expected_icons": [
+            "file",
+            "book",
+            "edit"
+          ],
+          "icons_consistent": true,
+          "icon_appropriate": true,
+          "icon_valid": true,
+          "passed": true,
+          "plan_response_success": true,
+          "chat_response_success": true
+        },
+        {
+          "test_case": {
+            "task": "Desarrollar una estrategia de marketing digital",
+            "expected_icons": [
+              "briefcase",
+              "users",
+              "dollar"
+            ],
+            "category": "business"
+          },
+          "plan_icon": "chart",
+          "chat_icon": "chart",
+          "actual_icon": "chart",
+          "expected_icons": [
+            "briefcase",
+            "users",
+            "dollar"
+          ],
+          "icons_consistent": true,
+          "icon_appropriate": false,
+          "icon_valid": true,
+          "passed": true,
+          "plan_response_success": true,
+          "chat_response_success": true
+        }
+      ],
+      "icon_mapping_working": true,
+      "success_rate": 100.0
+    },
+    "first_message_logic": {
+      "total_scenarios": 3,
+      "passed": 3,
+      "failed": 0,
+      "scenario_results": [
+        {
+          "scenario": {
+            "scenario": "New task creation with first message",
+            "task_title": "Crear un análisis de mercado para productos de software",
+            "first_message": "Necesito un análisis completo del mercado de software en 2025",
+            "expected_behavior": "should_generate_plan"
+          },
+          "task_id": "test-task-1753277134",
+          "chat_response": {
+            "enhanced_title": "Análisis del Mercado de Software 2025",
+            "execution_status": "executing",
+            "memory_used": true,
+            "mode": "agent_with_structured_plan",
+            "plan": {
+              "ai_generated": true,
+              "complexity": "media",
+              "estimated_total_time": "2 horas",
+              "plan_source": "unified_ai_generated",
+              "schema_validated": true,
+              "steps": [
+                {
+                  "active": true,
+                  "completed": false,
+                  "description": "Buscar artículos y noticias relevantes sobre el mercado de software para el año 2025",
+                  "estimated_time": "1 hora",
+                  "id": "step_1",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Realizar búsqueda de información sobre el mercado de software en 2025",
+                  "tool": "web_search"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Identificar patrones y tendencias en los resultados de la búsqueda para obtener una visión general del mercado",
+                  "estimated_time": "30 minutos",
+                  "id": "step_2",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Analizar resultados de la búsqueda",
+                  "tool": "analysis"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Crear un informe breve que resume las conclusiones obtenidas sobre el mercado de software en 2025",
+                  "estimated_time": "30 minutos",
+                  "id": "step_3",
+                  "priority": "baja",
+                  "status": "pending",
+                  "title": "Crear un resumen de los hallazgos",
+                  "tool": "creation"
+                }
+              ],
+              "suggested_icon": "search",
+              "task_type": "investigación/búsqueda",
+              "total_steps": 3
+            },
+            "response": {
+              "deliverables_count": 0,
+              "error": null,
+              "files_generated": [],
+              "message": "ℹ️ Tu solicitud ha sido procesada.\n\n📋 **Información**: **PLAN DE ACCIÓN:**\n1. **Definir el alcance del análisis**: Utilizar la herramienta `search_definition` para buscar definiciones clave sobre el mercado de software en 2025, incluyendo tendencias y car...\n\n📊 **Estado**: plan_ready\n⏰ **Procesado**: 23/07/2025 13:25",
+              "raw_ollama_response": "**PLAN DE ACCIÓN:**\n1. **Definir el alcance del análisis**: Utilizar la herramienta `search_definition` para buscar definiciones clave sobre el mercado de software en 2025, incluyendo tendencias y características relevantes.\n2. **Recopilar información de fuentes primarias**: Utilizar la herramienta `web_search` para buscar artículos de investigación, informes y estudios de mercado recientes que proporcionen datos y análisis sobre el mercado de software en 2025.\n3. **Análisis de tendencias y características**: Utilizar la herramienta `analysis` para analizar los datos recopilados e identificar las principales tendencias y características del mercado de software en 2025, incluyendo la adopción de tecnologías emergentes como el desarrollo de inteligencia artificial (IA) y el aprendizaje automático (AA).\n4. **Identificación de oportunidades y desafíos**: Utilizar la herramienta `analysis` para identificar las oportunidades y desafíos que enfrentarán los proveedores de software en 2025, incluyendo cambios en la demanda del mercado y evolución de las tecnologías.\n5. **Resumen y recomendaciones**: Utilizar la herramienta `synthesis` para resumir los hallazgos del análisis y proporcionar recomendaciones a los proveedores de software sobre cómo adaptarse al mercado en 2025.\n**Explicación:** Mi objetivo es proporcionar un análisis completo y detallado del mercado de software en 2025, incluyendo tendencias, características, oportunidades y desafíos. Utilizaré herramientas como `web_search` para buscar información primaria, `analysis` para analizar los datos e identificar patrones y tendencias, y `synthesis` para resumir los hallazgos y proporcionar recomendaciones.\n**Herramientas utilizadas:**\n* `search_definition`\n* `web_search`\n* `analysis`\n* `synthesis`\nNota: Si es necesario, puedo utilizar otras herramientas como `research` o `investigation` para obtener información más específica o detallada.",
+              "status": "plan_ready",
+              "timestamp": "2025-07-23T13:25:49.880507",
+              "tool_results_count": 0,
+              "warnings": []
+            },
+            "task_id": "test-task-1753277134",
+            "timestamp": "2025-07-23T13:25:49.881276",
+            "tool_calls": [],
+            "tool_results": []
+          },
+          "plan_generated": {
+            "success": true,
+            "steps_count": 3,
+            "plan_data": {
+              "ai_generated": true,
+              "complexity": "media",
+              "estimated_total_time": "2 horas",
+              "plan_source": "unified_ai_generated",
+              "schema_validated": true,
+              "steps": [
+                {
+                  "active": true,
+                  "completed": false,
+                  "description": "Buscar artículos y noticias relevantes sobre el mercado de software para el año 2025",
+                  "estimated_time": "1 hora",
+                  "id": "step_1",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Realizar búsqueda de información sobre el mercado de software en 2025",
+                  "tool": "web_search"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Identificar patrones y tendencias en los resultados de la búsqueda para obtener una visión general del mercado",
+                  "estimated_time": "30 minutos",
+                  "id": "step_2",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Analizar resultados de la búsqueda",
+                  "tool": "analysis"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Crear un informe breve que resume las conclusiones obtenidas sobre el mercado de software en 2025",
+                  "estimated_time": "30 minutos",
+                  "id": "step_3",
+                  "priority": "baja",
+                  "status": "pending",
+                  "title": "Crear un resumen de los hallazgos",
+                  "tool": "creation"
+                }
+              ],
+              "suggested_icon": "search",
+              "task_type": "investigación/búsqueda",
+              "total_steps": 3
+            }
+          },
+          "title_enhanced": {
+            "success": true,
+            "enhanced_title": "Análisis del Mercado de Software 2025",
+            "original_title": "Crear un análisis de mercado para productos de software"
+          },
+          "logs_correct": {
+            "success": true,
+            "mode": "agent_with_structured_plan",
+            "execution_status": "executing"
+          },
+          "passed": true,
+          "failure_reason": "Unknown failure"
+        },
+        {
+          "scenario": {
+            "scenario": "Simple task with direct request",
+            "task_title": "Buscar información sobre inteligencia artificial",
+            "first_message": "Dame información actualizada sobre IA generativa",
+            "expected_behavior": "should_generate_plan"
+          },
+          "task_id": "test-task-1753277151",
+          "chat_response": {
+            "enhanced_title": "Análisis de Tendencias en IA Generativa",
+            "execution_status": "executing",
+            "memory_used": true,
+            "mode": "agent_with_structured_plan",
+            "plan": {
+              "ai_generated": true,
+              "complexity": "media",
+              "estimated_total_time": "20 minutos",
+              "plan_source": "unified_ai_generated",
+              "schema_validated": true,
+              "steps": [
+                {
+                  "active": true,
+                  "completed": false,
+                  "description": "Buscar información actualizada sobre IA generativa utilizando herramientas de búsqueda en línea.",
+                  "estimated_time": "5 minutos",
+                  "id": "step_1",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Realizar búsqueda en internet",
+                  "tool": "web_search"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Evaluar y analizar los resultados obtenidos para determinar la información más relevante y actualizada.",
+                  "estimated_time": "10 minutos",
+                  "id": "step_2",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Analizar resultados de la búsqueda",
+                  "tool": "analysis"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Crear un resumen claro y conciso de la información obtenida sobre IA generativa.",
+                  "estimated_time": "5 minutos",
+                  "id": "step_3",
+                  "priority": "baja",
+                  "status": "pending",
+                  "title": "Crear resumen de la información",
+                  "tool": "creation"
+                }
+              ],
+              "suggested_icon": "search",
+              "task_type": "investigación/búsqueda",
+              "total_steps": 3
+            },
+            "response": {
+              "deliverables_count": 0,
+              "error": null,
+              "files_generated": [],
+              "message": "ℹ️ Tu solicitud ha sido procesada.\n\n📋 **Información**: **PLAN DE ACCIÓN:**\n1. Realizar una búsqueda exhaustiva en internet utilizando la herramienta **web_search** para obtener información actualizada sobre IA generativa.\n2. Utilizar la herramienta **anal...\n\n📊 **Estado**: plan_ready\n⏰ **Procesado**: 23/07/2025 13:26",
+              "raw_ollama_response": "**PLAN DE ACCIÓN:**\n1. Realizar una búsqueda exhaustiva en internet utilizando la herramienta **web_search** para obtener información actualizada sobre IA generativa.\n2. Utilizar la herramienta **analysis** para analizar y sintetizar la información obtenida, identificando los conceptos clave y tendencias actuales en el campo de la IA generativa.\n3. Buscar definiciones y explicaciones detalladas de términos relacionados con la IA generativa utilizando la herramienta **search_definition**.\n4. Realizar una investigación específica sobre las aplicaciones y casos de uso de la IA generativa en diferentes industrias, utilizando la herramienta **research**.\n5. Resumir y presentar los resultados obtenidos en un formato claro y conciso, utilizando la herramienta **delivery**.\n**Explicación:** Utilizaré las herramientas mencionadas para buscar y analizar información actualizada sobre IA generativa, identificar conceptos clave y tendencias actuales, y realizar una investigación específica sobre sus aplicaciones. Finalmente, presentaré los resultados en un formato claro y conciso.\n**Herramientas utilizadas:**\n* **web_search**: Buscar información en internet\n* **analysis**: Realizar análisis de datos e información\n* **search_definition**: Búsqueda de definiciones\n* **research**: Investigación detallada\n* **delivery**: Entrega y presentación de resultados",
+              "status": "plan_ready",
+              "timestamp": "2025-07-23T13:26:08.217796",
+              "tool_results_count": 0,
+              "warnings": []
+            },
+            "task_id": "test-task-1753277151",
+            "timestamp": "2025-07-23T13:26:08.218600",
+            "tool_calls": [],
+            "tool_results": []
+          },
+          "plan_generated": {
+            "success": true,
+            "steps_count": 3,
+            "plan_data": {
+              "ai_generated": true,
+              "complexity": "media",
+              "estimated_total_time": "20 minutos",
+              "plan_source": "unified_ai_generated",
+              "schema_validated": true,
+              "steps": [
+                {
+                  "active": true,
+                  "completed": false,
+                  "description": "Buscar información actualizada sobre IA generativa utilizando herramientas de búsqueda en línea.",
+                  "estimated_time": "5 minutos",
+                  "id": "step_1",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Realizar búsqueda en internet",
+                  "tool": "web_search"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Evaluar y analizar los resultados obtenidos para determinar la información más relevante y actualizada.",
+                  "estimated_time": "10 minutos",
+                  "id": "step_2",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Analizar resultados de la búsqueda",
+                  "tool": "analysis"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Crear un resumen claro y conciso de la información obtenida sobre IA generativa.",
+                  "estimated_time": "5 minutos",
+                  "id": "step_3",
+                  "priority": "baja",
+                  "status": "pending",
+                  "title": "Crear resumen de la información",
+                  "tool": "creation"
+                }
+              ],
+              "suggested_icon": "search",
+              "task_type": "investigación/búsqueda",
+              "total_steps": 3
+            }
+          },
+          "title_enhanced": {
+            "success": true,
+            "enhanced_title": "Análisis de Tendencias en IA Generativa",
+            "original_title": "Buscar información sobre inteligencia artificial"
+          },
+          "logs_correct": {
+            "success": true,
+            "mode": "agent_with_structured_plan",
+            "execution_status": "executing"
+          },
+          "passed": true,
+          "failure_reason": "Unknown failure"
+        },
+        {
+          "scenario": {
+            "scenario": "Complex task requiring planning",
+            "task_title": "Desarrollar estrategia de marketing digital",
+            "first_message": "Quiero crear una estrategia completa de marketing para mi startup",
+            "expected_behavior": "should_generate_plan"
+          },
+          "task_id": "test-task-1753277170",
+          "chat_response": {
+            "enhanced_title": "Estrategia de Marketing Integral para Startups",
+            "execution_status": "executing",
+            "memory_used": true,
+            "mode": "agent_with_structured_plan",
+            "plan": {
+              "ai_generated": true,
+              "complexity": "media",
+              "estimated_total_time": "12 horas",
+              "plan_source": "unified_ai_generated",
+              "schema_validated": true,
+              "steps": [
+                {
+                  "active": true,
+                  "completed": false,
+                  "description": "Identificar el público objetivo y los objetivos de marketing para la startup.",
+                  "estimated_time": "2 horas",
+                  "id": "step_1",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Definir objetivos y audiencia",
+                  "tool": "planning"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Investigar la competencia, tendencias y necesidades del mercado.",
+                  "estimated_time": "4 horas",
+                  "id": "step_2",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Realizar investigación de mercado",
+                  "tool": "research"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Desarrollar un plan de contenido que atraiga al público objetivo.",
+                  "estimated_time": "3 horas",
+                  "id": "step_3",
+                  "priority": "baja",
+                  "status": "pending",
+                  "title": "Crear un plan de contenido",
+                  "tool": "creation"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Crear una estrategia de publicidad para llegar a la audiencia objetivo.",
+                  "estimated_time": "2 horas",
+                  "id": "step_4",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Establecer estrategias de publicidad",
+                  "tool": "web_search"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Monitorear y evaluar el progreso del plan de marketing.",
+                  "estimated_time": "1 hora",
+                  "id": "step_5",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Monitorear y evaluar el progreso",
+                  "tool": "analysis"
+                }
+              ],
+              "suggested_icon": "chart",
+              "task_type": "estrategia de marketing",
+              "total_steps": 5
+            },
+            "response": {
+              "deliverables_count": 0,
+              "error": null,
+              "files_generated": [],
+              "message": "ℹ️ Tu solicitud ha sido procesada.\n\n📋 **Información**: **PLAN DE ACCIÓN:**\n1. **Definir objetivos y audiencia**: Utilizar la herramienta **planning** para identificar los objetivos clave de la startup y definir la audiencia objetivo.\n2. **Análisis del mer...\n\n📊 **Estado**: plan_ready\n⏰ **Procesado**: 23/07/2025 13:26",
+              "raw_ollama_response": "**PLAN DE ACCIÓN:**\n1. **Definir objetivos y audiencia**: Utilizar la herramienta **planning** para identificar los objetivos clave de la startup y definir la audiencia objetivo.\n2. **Análisis del mercado**: Realizar un análisis de competidores utilizando la herramienta **analysis**, con el fin de entender las tendencias actuales en el mercado y las fortalezas y debilidades de nuestros competidores.\n3. **Desarrollo de contenido**: Crear un plan de contenido utilizando la herramienta **creation**, que incluya estrategias para publicaciones en redes sociales, blog y correo electrónico.\n4. **Plan de publicidad**: Utilizar la herramienta **delivery** para crear un plan de publicidad que incluya anuncios en redes sociales, Google Ads y otros canales relevantes.\n5. **Seguimiento y evaluación**: Establecer indicadores clave de rendimiento (KPI) utilizando la herramienta **processing**, para medir el éxito del plan de marketing y realizar ajustes según sea necesario.\n**Explicación:** Mi objetivo es crear una estrategia completa de marketing para tu startup. Para lograr esto, utilizaré las herramientas disponibles para definir los objetivos y audiencia, analizar el mercado, desarrollar un plan de contenido y publicidad, y establecer indicadores clave de rendimiento para medir el éxito del plan.\n**Herramientas utilizadas:**\n* **planning**: Para definir objetivos y audiencia\n* **analysis**: Para realizar análisis de competidores\n* **creation**: Para crear un plan de contenido\n* **delivery**: Para crear un plan de publicidad\n* **processing**: Para establecer indicadores clave de rendimiento",
+              "status": "plan_ready",
+              "timestamp": "2025-07-23T13:26:30.387647",
+              "tool_results_count": 0,
+              "warnings": []
+            },
+            "task_id": "test-task-1753277170",
+            "timestamp": "2025-07-23T13:26:30.388468",
+            "tool_calls": [],
+            "tool_results": []
+          },
+          "plan_generated": {
+            "success": true,
+            "steps_count": 5,
+            "plan_data": {
+              "ai_generated": true,
+              "complexity": "media",
+              "estimated_total_time": "12 horas",
+              "plan_source": "unified_ai_generated",
+              "schema_validated": true,
+              "steps": [
+                {
+                  "active": true,
+                  "completed": false,
+                  "description": "Identificar el público objetivo y los objetivos de marketing para la startup.",
+                  "estimated_time": "2 horas",
+                  "id": "step_1",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Definir objetivos y audiencia",
+                  "tool": "planning"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Investigar la competencia, tendencias y necesidades del mercado.",
+                  "estimated_time": "4 horas",
+                  "id": "step_2",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Realizar investigación de mercado",
+                  "tool": "research"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Desarrollar un plan de contenido que atraiga al público objetivo.",
+                  "estimated_time": "3 horas",
+                  "id": "step_3",
+                  "priority": "baja",
+                  "status": "pending",
+                  "title": "Crear un plan de contenido",
+                  "tool": "creation"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Crear una estrategia de publicidad para llegar a la audiencia objetivo.",
+                  "estimated_time": "2 horas",
+                  "id": "step_4",
+                  "priority": "alta",
+                  "status": "pending",
+                  "title": "Establecer estrategias de publicidad",
+                  "tool": "web_search"
+                },
+                {
+                  "active": false,
+                  "completed": false,
+                  "description": "Monitorear y evaluar el progreso del plan de marketing.",
+                  "estimated_time": "1 hora",
+                  "id": "step_5",
+                  "priority": "media",
+                  "status": "pending",
+                  "title": "Monitorear y evaluar el progreso",
+                  "tool": "analysis"
+                }
+              ],
+              "suggested_icon": "chart",
+              "task_type": "estrategia de marketing",
+              "total_steps": 5
+            }
+          },
+          "title_enhanced": {
+            "success": true,
+            "enhanced_title": "Estrategia de Marketing Integral para Startups",
+            "original_title": "Desarrollar estrategia de marketing digital"
+          },
+          "logs_correct": {
+            "success": true,
+            "mode": "agent_with_structured_plan",
+            "execution_status": "executing"
+          },
+          "passed": true,
+          "failure_reason": "Unknown failure"
+        }
+      ],
+      "first_message_logic_working": true,
+      "success_rate": 100.0
+    }
+  }
+}
