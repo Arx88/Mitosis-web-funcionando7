@@ -47,19 +47,19 @@ fi
 
 # Instalar navegadores Playwright (Chrome principalmente)
 echo "🌐 Instalando navegadores Playwright..."
-python -m playwright install chromium --with-deps
+export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
+python -m playwright install chromium --with-deps 2>/dev/null || {
+    echo "   ⚠️ Playwright browser install falló, continuando sin navegadores adicionales..."
+}
 
-# Instalar Chrome para Selenium si no está disponible
+# Instalar Chrome para Selenium de forma simplificada
 echo "🌐 Verificando Google Chrome para Selenium..."
-if ! command -v google-chrome &> /dev/null; then
-    echo "⚡ Instalando Google Chrome..."
-    # Método actualizado sin apt-key deprecado
-    wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /usr/share/keyrings/google-chrome-keyring.gpg
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+if ! command -v google-chrome &> /dev/null && ! command -v chromium-browser &> /dev/null; then
+    echo "⚡ Instalando navegador para testing..."
+    # Método simplificado - usar chromium si está disponible
     apt-get update -qq 2>/dev/null || true
-    apt-get install -y google-chrome-stable 2>/dev/null || {
-        echo "   ⚠️ Chrome install falló, usando chromium como alternativa..."
-        apt-get install -y chromium-browser 2>/dev/null || true
+    apt-get install -y chromium-browser 2>/dev/null || {
+        echo "   ℹ️ Navegador no instalado, usando Playwright como alternativa"
     }
 fi
 
