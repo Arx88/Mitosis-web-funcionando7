@@ -875,7 +875,7 @@ class MitosisConsolidatedServer:
         terminal_logger.info("=" * 80)
         terminal_logger.info(f"🌐 Host: {self.config.HOST}:{self.config.PORT}")
         terminal_logger.info(f"🔧 Debug: {self.config.DEBUG}")
-        terminal_logger.info(f"🗄️ Database: {'✅ Connected' if self.db else '❌ Not available'}")
+        terminal_logger.info(f"🗄️ Database: {'✅ Connected' if self.db is not None else '❌ Not available'}")
         terminal_logger.info(f"🤖 Ollama: {'✅ Connected' if self.ollama_service else '❌ Not available'}")
         terminal_logger.info(f"🛠️ Tools: {len(self.tool_manager.get_available_tools()) if self.tool_manager else 0} available")
         terminal_logger.info("=" * 80)
