@@ -13,7 +13,7 @@ from datetime import datetime
 
 # Backend URL from environment - try local first, then external
 LOCAL_BACKEND_URL = "http://localhost:8001"
-EXTERNAL_BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://8ab15e24-ebb4-4b3b-b015-96c9e673d197.preview.emergentagent.com')
+EXTERNAL_BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://2919675b-54c0-45d9-b301-edd48bf0c00e.preview.emergentagent.com')
 
 # Test local first
 try:
