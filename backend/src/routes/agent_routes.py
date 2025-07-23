@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 # Mejora implementada según UPGRADE.md Sección 2: Validación de Esquemas JSON
 PLAN_SCHEMA = {
     "type": "object",
-    "required": ["steps", "task_type", "complexity", "suggested_icon"],
+    "required": ["steps", "task_type", "complexity"],
     "properties": {
         "steps": {
             "type": "array",
