@@ -5,7 +5,7 @@
 # Core Framework Dependencies
 flask==3.0.3
 flask-cors==4.0.1
-flask-socketio==4.3.4
+flask-socketio==4.3.2
 python-socketio==4.6.1
 python-engineio==4.8.0
 python-dotenv==1.0.1
