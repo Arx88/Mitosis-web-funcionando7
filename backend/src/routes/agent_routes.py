@@ -953,6 +953,7 @@ def determine_unified_icon(task_message: str) -> str:
         return 'video'
     
     # 🎯 PRIORITY 6: BUSINESS/COMMERCIAL
+    # 🎯 PRIORITY 6: BUSINESS/COMMERCIAL
     elif any(word in content_lower for word in ['negocio', 'empresa', 'mercado', 'marketing', 'comercial', 'ventas', 'cliente']):
         if any(word in content_lower for word in ['dinero', 'precio', 'costo', 'facturación', 'pago']):
             logger.info(f"🎯 Icon: 'dollar' (Business/Finance priority) for: {task_message[:50]}...")
