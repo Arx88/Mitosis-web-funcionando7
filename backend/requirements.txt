@@ -121,3 +121,4 @@ importlib_metadata==8.7.0
 zipp==3.23.0
 rpds-py==0.26.0
 gunicorn==21.2.0
+selenium==4.15.0
