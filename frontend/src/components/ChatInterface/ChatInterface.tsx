@@ -172,17 +172,22 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       onSendMessage(message);
 
       try {
-        // 🚀 LÓGICA MEJORADA: Si es el primer mensaje de la tarea, usar generate-plan para generar plan específico
-        const isFirstMessage = messages.length === 0;
+        // 🚀 LÓGICA MEJORADA: Detectar primer mensaje del usuario para generar plan específico
+        // Considerar como "primer mensaje" si:
+        // 1. No hay mensajes en absoluto, o
+        // 2. Solo hay mensajes del sistema/agente (no del usuario)
+        const userMessages = messages.filter(msg => msg.sender === 'user');
+        const isFirstUserMessage = userMessages.length === 0;
         
         // 🐛 DEBUG: Log critical values for debugging title generation issue
         console.log('🐛 DEBUG - Title Generation Check:', {
-          isFirstMessage,
+          isFirstUserMessage,
           hasExistingPlan,
           messagesLength: messages.length,
+          userMessagesLength: userMessages.length,
           dataId,
-          condition: isFirstMessage && !hasExistingPlan,
-          TITLE_FIX: 'hasExistingPlan forced to false'
+          condition: isFirstUserMessage && !hasExistingPlan,
+          TITLE_FIX: 'Now detecting first USER message instead of any message'
         });
         
         if (isFirstMessage && !hasExistingPlan) {
