@@ -190,7 +190,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           TITLE_FIX: 'Now detecting first USER message instead of any message'
         });
         
-        if (isFirstMessage && !hasExistingPlan) {
+        if (isFirstUserMessage && !hasExistingPlan) {
           console.log('🎯 FIRST MESSAGE - Calling generate-plan for specific plan generation');
           console.log('🔍 NUEVA TAREA DEBUG - Esta lógica DEBE ejecutarse para tareas desde botón NUEVA TAREA');
           
