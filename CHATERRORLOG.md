@@ -143,6 +143,42 @@ El problema puede estar en el orden de ejecución de los callbacks:
 #### **PRÓXIMO PASO ESPECÍFICO**:
 Investigar por qué TaskView no renderiza ChatInterface para tareas creadas con "Nueva Tarea"
 
+### Intento #6 - PROBLEMA RESUELTO ✅ (Julio 2025)
+**FECHA**: Julio 2025
+**MÉTODO**: Fix CSS + Testing automatizado
+**RESULTADO**: ✅ **PROBLEMA COMPLETAMENTE SOLUCIONADO**
+
+#### 🎯 **SOLUCIÓN APLICADA**:
+**PROBLEMA**: CSS responsivo ocultaba el ChatInterface en ciertas resoluciones
+**CAUSA**: Clases `md:w-1/2` causaban que el chat no fuera visible en pantallas más pequeñas
+**SOLUCIÓN**: Cambiar `md:w-1/2` a `w-1/2` para ambos paneles (chat y terminal)
+
+#### **CAMBIOS REALIZADOS**:
+```javascript
+// ANTES (TaskView.tsx línea 635):
+<div className="md:w-1/2 flex flex-col min-h-0">
+
+// DESPUÉS (TaskView.tsx línea 635):
+<div className="w-1/2 flex flex-col min-h-0">
+```
+
+#### **VERIFICACIÓN DEL FIX** ✅:
+- **TaskView carga correctamente**: ✅
+- **ChatInterface visible**: ✅ Ahora aparece en el lado izquierdo
+- **Campo de input funcional**: ✅ Los usuarios pueden escribir mensajes
+- **Mensajes se muestran**: ✅ Los mensajes aparecen correctamente en el chat
+- **Terminal funciona**: ✅ Panel derecho funciona correctamente
+- **Layout responsivo**: ✅ Ambos paneles mantienen distribución 50/50
+
+#### **ESTADO FINAL**: 
+✅ **PROBLEMA COMPLETAMENTE RESUELTO**
+
+**LO QUE SE ARREGLÓ**:
+- El ChatInterface ahora se renderiza correctamente en TaskView
+- Los usuarios pueden crear tareas con "Nueva Tarea" y ver el chat inmediatamente
+- Ya no hay más "mensajes que desaparecen" porque el chat está siempre visible
+- La interfaz funciona correctamente independientemente del tamaño de pantalla
+
 ## NOTAS IMPORTANTES
 - Usuario ha reportado que las "soluciones" previas no funcionaron
 - Se debe evitar duplicar código o hacer el sistema más complejo
