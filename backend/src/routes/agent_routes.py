@@ -897,6 +897,40 @@ def get_tool_manager():
         logger.error("Tool manager not available")
         return None
 
+def determine_unified_icon(task_message: str) -> str:
+    """Determine appropriate icon based on task content"""
+    content_lower = task_message.lower()
+    
+    # Icon mapping for common tasks
+    if any(word in content_lower for word in ['código', 'programa', 'script', 'app', 'aplicación', 'desarrollo', 'programar']):
+        return 'code'
+    elif any(word in content_lower for word in ['documento', 'texto', 'informe', 'reporte', 'escribir', 'redactar']):
+        return 'file'
+    elif any(word in content_lower for word in ['imagen', 'diseño', 'gráfico', 'visual', 'foto']):
+        return 'image'
+    elif any(word in content_lower for word in ['buscar', 'investigar', 'analizar', 'estudiar', 'search']):
+        return 'search'
+    elif any(word in content_lower for word in ['restaurante', 'bar', 'comida', 'valencia', 'madrid', 'lugar', 'ubicación']):
+        return 'map'
+    elif any(word in content_lower for word in ['negocio', 'empresa', 'mercado', 'marketing', 'comercial']):
+        return 'briefcase'
+    elif any(word in content_lower for word in ['datos', 'estadística', 'análisis', 'reporte', 'chart']):
+        return 'chart'
+    elif any(word in content_lower for word in ['música', 'audio', 'sonido', 'music']):
+        return 'music'
+    elif any(word in content_lower for word in ['video', 'película', 'multimedia']):
+        return 'video'
+    elif any(word in content_lower for word in ['mensaje', 'chat', 'comunicar', 'correo', 'email']):
+        return 'message'
+    elif any(word in content_lower for word in ['web', 'sitio', 'página', 'website']):
+        return 'globe'
+    elif any(word in content_lower for word in ['base', 'datos', 'database', 'sql']):
+        return 'database'
+    elif any(word in content_lower for word in ['crear', 'generar', 'hacer', 'construir']):
+        return 'lightbulb'
+    else:
+        return 'target'  # Generic task icon
+
 def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
     """
     Ejecuta REALMENTE los pasos del plan usando herramientas y entrega resultados finales
