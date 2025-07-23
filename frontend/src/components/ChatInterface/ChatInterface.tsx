@@ -168,6 +168,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         timestamp: new Date()
       };
 
+      // 🔧 FIX: Add user message immediately to chat before processing
+      // This ensures the user's message is always visible, even if processing fails
+      if (onUpdateMessages) {
+        const updatedMessages = [...messages, userMessage];
+        onUpdateMessages(updatedMessages);
+        console.log('✅ NUEVA TAREA FIX: User message added to chat immediately:', userMessage.content);
+      }
+
       // Llamar al callback original
       onSendMessage(message);
 
