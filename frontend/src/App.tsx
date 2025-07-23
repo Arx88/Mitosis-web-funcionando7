@@ -349,7 +349,7 @@ export function App() {
   };
 
   const updateTask = (updatedTask: Task) => {
-    console.log('🐛 DEBUG - App.tsx updateTask called with:', updatedTask.id, updatedTask.title);
+    console.log('🐛 NUEVA TAREA FIX - App.tsx updateTask called with:', updatedTask.id, updatedTask.title);
     
     setTasks(prev => {
       const newTasks = prev.map(task => 
@@ -360,11 +360,12 @@ export function App() {
       const originalTask = prev.find(t => t.id === updatedTask.id);
       const updatedTaskInArray = newTasks.find(t => t.id === updatedTask.id);
       
-      console.log('🐛 DEBUG - Task update comparison:', {
+      console.log('🐛 NUEVA TAREA FIX - Task update comparison:', {
         taskId: updatedTask.id,
         originalTitle: originalTask?.title,
         newTitle: updatedTaskInArray?.title,
-        titleChanged: originalTask?.title !== updatedTaskInArray?.title
+        titleChanged: originalTask?.title !== updatedTaskInArray?.title,
+        updateSource: 'updateTask function'
       });
       
       return newTasks;
