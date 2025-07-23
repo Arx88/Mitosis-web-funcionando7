@@ -631,8 +631,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
   return (
     <div className="flex h-full bg-[#272728] overflow-hidden relative">
-      {/* Chat Section with Header */}
-      <div className="md:w-1/2 flex flex-col min-h-0">
+      {/* Chat Section with Header - FIXED: Always visible with proper width */}
+      <div className="w-1/2 flex flex-col min-h-0">
         {/* Header de la tarea - solo para el chat */}
         <div className="border-b border-[rgba(255,255,255,0.08)] px-4 py-2.5 bg-[#383739] flex-shrink-0">
           <div className="flex items-center justify-between">
