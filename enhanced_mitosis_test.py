@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class EnhancedMitosisAgentTester:
     def __init__(self):
         # Get backend URL from environment
-        self.backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://74a5e33d-f0aa-4bdf-866a-560ce9007d4f.preview.emergentagent.com')
+        self.backend_url = os.getenv('REACT_APP_BACKEND_URL', 'https://93c94e04-ef82-430e-9ba8-c966aaf65bb5.preview.emergentagent.com')
         self.api_base = f"{self.backend_url}/api"
         
         # Test results storage
