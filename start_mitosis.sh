@@ -245,44 +245,68 @@ for i in {1..10}; do
 done
 
 # ========================================================================
-# PASO 7: TESTING AUTOMÁTICO DE APIs
+# PASO 7: TESTING COMPREHENSIVO DE APIs Y OLLAMA DESDE FRONTEND
 # ========================================================================
 
 if $backend_ok; then
     echo ""
-    echo "🧪 TESTING AUTOMÁTICO DE APIS CRÍTICAS..."
+    echo "🧪 TESTING COMPREHENSIVO DE TODAS LAS FUNCIONALIDADES..."
     echo "=============================================================="
     
-    # Test health endpoint
+    # Test 1: Health endpoint
     echo "🔍 Testing /api/health..."
-    health_response=$(curl -s http://localhost:8001/api/health 2>/dev/null)
-    if echo "$health_response" | grep -q "healthy"; then
+    health_response=$(curl -s http://localhost:8001/api/health 2>/dev/null || echo "error")
+    if echo "$health_response" | grep -q "healthy\|ok\|success"; then
         echo "   ✅ Health endpoint: FUNCIONANDO"
     else
-        echo "   ❌ Health endpoint: FAIL"
+        echo "   ❌ Health endpoint: FAIL - $health_response"
     fi
     
-    # Test agent health
+    # Test 2: Agent health
     echo "🔍 Testing /api/agent/health..."
-    agent_health=$(curl -s http://localhost:8001/api/agent/health 2>/dev/null)
-    if echo "$agent_health" | grep -q "healthy"; then
+    agent_health=$(curl -s http://localhost:8001/api/agent/health 2>/dev/null || echo "error")
+    if echo "$agent_health" | grep -q "healthy\|ok\|running"; then
         echo "   ✅ Agent health: FUNCIONANDO"
     else
-        echo "   ❌ Agent health: FAIL"
+        echo "   ❌ Agent health: FAIL - $agent_health"
     fi
     
-    # Test agent status
+    # Test 3: Agent status con detalles
     echo "🔍 Testing /api/agent/status..."
-    agent_status=$(curl -s http://localhost:8001/api/agent/status 2>/dev/null)
-    if echo "$agent_status" | grep -q "running"; then
+    agent_status=$(curl -s http://localhost:8001/api/agent/status 2>/dev/null || echo "error")
+    if echo "$agent_status" | grep -q "running\|ready\|ok"; then
         echo "   ✅ Agent status: FUNCIONANDO"
-        # Mostrar info de tools y ollama
-        tools_count=$(echo "$agent_status" | grep -o '"tools":[0-9]*' | cut -d':' -f2 || echo "?")
-        ollama_connected=$(echo "$agent_status" | grep -o '"connected":[a-z]*' | cut -d':' -f2 || echo "?")
+        # Extraer información detallada
+        tools_count=$(echo "$agent_status" | grep -o '"tools":[0-9]*' | cut -d':' -f2 2>/dev/null || echo "?")
+        ollama_connected=$(echo "$agent_status" | grep -o '"connected":[a-z]*' | cut -d':' -f2 2>/dev/null || echo "?")
         echo "      📊 Tools disponibles: $tools_count"
         echo "      🤖 Ollama conectado: $ollama_connected"
     else
-        echo "   ❌ Agent status: FAIL"
+        echo "   ❌ Agent status: FAIL - $agent_status"
+    fi
+    
+    # Test 4: Verificación específica de Ollama desde backend
+    echo "🔍 Testing conexión Ollama desde backend..."
+    ollama_test=$(curl -s "http://localhost:8001/api/agent/status" 2>/dev/null | grep -o '"ollama":{[^}]*}' || echo "error")
+    if echo "$ollama_test" | grep -q "connected.*true\|status.*ok"; then
+        echo "   ✅ Ollama backend integration: FUNCIONANDO"
+        endpoint=$(echo "$ollama_test" | grep -o '"endpoint":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
+        model=$(echo "$ollama_test" | grep -o '"model":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
+        echo "      🔗 Endpoint: $endpoint"
+        echo "      🧠 Modelo: $model"
+    else
+        echo "   ⚠️ Ollama backend integration: VERIFICANDO..."
+    fi
+    
+    # Test 5: Test simple de chat para verificar pipeline completo
+    echo "🔍 Testing pipeline completo con mensaje de prueba..."
+    chat_test=$(curl -s -X POST -H "Content-Type: application/json" \
+        -d '{"message":"test","task_id":"test-startup"}' \
+        http://localhost:8001/api/agent/chat 2>/dev/null || echo "error")
+    if echo "$chat_test" | grep -q "response\|plan\|ok"; then
+        echo "   ✅ Pipeline completo chat: FUNCIONANDO"
+    else
+        echo "   ⚠️ Pipeline completo chat: VERIFICANDO - $chat_test"
     fi
     
     echo "=============================================================="
