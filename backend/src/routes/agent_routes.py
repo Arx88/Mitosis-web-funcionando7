@@ -898,38 +898,90 @@ def get_tool_manager():
         return None
 
 def determine_unified_icon(task_message: str) -> str:
-    """Determine appropriate icon based on task content"""
+    """
+    Determine appropriate icon based on task content with clear priorities
+    Priority order: Development > Data Analysis > Creative/Design > Research > Documents > Generic
+    """
     content_lower = task_message.lower()
     
-    # Icon mapping for common tasks
-    if any(word in content_lower for word in ['código', 'programa', 'script', 'app', 'aplicación', 'desarrollo', 'programar']):
-        return 'code'
-    elif any(word in content_lower for word in ['documento', 'texto', 'informe', 'reporte', 'escribir', 'redactar']):
-        return 'file'
-    elif any(word in content_lower for word in ['imagen', 'diseño', 'gráfico', 'visual', 'foto']):
-        return 'image'
-    elif any(word in content_lower for word in ['buscar', 'investigar', 'analizar', 'estudiar', 'search']):
-        return 'search'
-    elif any(word in content_lower for word in ['restaurante', 'bar', 'comida', 'valencia', 'madrid', 'lugar', 'ubicación']):
-        return 'map'
-    elif any(word in content_lower for word in ['negocio', 'empresa', 'mercado', 'marketing', 'comercial']):
-        return 'briefcase'
-    elif any(word in content_lower for word in ['datos', 'estadística', 'análisis', 'reporte', 'chart']):
-        return 'chart'
-    elif any(word in content_lower for word in ['música', 'audio', 'sonido', 'music']):
+    # 🎯 PRIORITY 1: DEVELOPMENT/PROGRAMMING (highest priority)
+    if any(word in content_lower for word in ['código', 'programa', 'script', 'app', 'aplicación', 'desarrollo', 'programar', 'web', 'software', 'javascript', 'python', 'react', 'backend', 'frontend', 'api', 'database', 'sql']):
+        # Sub-categorize development tasks
+        if any(word in content_lower for word in ['base', 'datos', 'database', 'sql', 'mongodb', 'mysql']):
+            return 'database'
+        elif any(word in content_lower for word in ['terminal', 'comando', 'shell', 'cli', 'script']):
+            return 'terminal'
+        else:
+            return 'code'
+    
+    # 🎯 PRIORITY 2: DATA ANALYSIS/CHARTS 
+    elif any(word in content_lower for word in ['datos', 'estadística', 'análisis', 'analizar', 'chart', 'gráfico', 'estadísticas', 'métricas', 'dashboard', 'reporte', 'informe']) and any(word in content_lower for word in ['datos', 'ventas', 'números', 'estadística', 'métrica', 'análisis']):
+        if any(word in content_lower for word in ['calcular', 'cálculo', 'matemática', 'números']):
+            return 'calculator'
+        else:
+            return 'chart'
+    
+    # 🎯 PRIORITY 3: CREATIVE/DESIGN
+    elif any(word in content_lower for word in ['imagen', 'diseño', 'gráfico', 'visual', 'foto', 'creative', 'creativo', 'diseñar', 'logo', 'arte']):
+        if any(word in content_lower for word in ['foto', 'fotografía', 'camera']):
+            return 'camera'
+        else:
+            return 'image'
+    
+    # 🎯 PRIORITY 4: MULTIMEDIA
+    elif any(word in content_lower for word in ['música', 'audio', 'sonido', 'music', 'canción']):
         return 'music'
-    elif any(word in content_lower for word in ['video', 'película', 'multimedia']):
+    elif any(word in content_lower for word in ['video', 'película', 'multimedia', 'grabación']):
         return 'video'
-    elif any(word in content_lower for word in ['mensaje', 'chat', 'comunicar', 'correo', 'email']):
-        return 'message'
-    elif any(word in content_lower for word in ['web', 'sitio', 'página', 'website']):
-        return 'globe'
-    elif any(word in content_lower for word in ['base', 'datos', 'database', 'sql']):
-        return 'database'
-    elif any(word in content_lower for word in ['crear', 'generar', 'hacer', 'construir']):
+    
+    # 🎯 PRIORITY 5: LOCATION/MAPS
+    elif any(word in content_lower for word in ['restaurante', 'bar', 'comida', 'valencia', 'madrid', 'barcelona', 'lugar', 'ubicación', 'dirección', 'mapa', 'localizar']):
+        if any(word in content_lower for word in ['navegar', 'navegación', 'ruta', 'dirección']):
+            return 'navigation'
+        else:
+            return 'map'
+    
+    # 🎯 PRIORITY 6: BUSINESS/COMMERCIAL
+    elif any(word in content_lower for word in ['negocio', 'empresa', 'mercado', 'marketing', 'comercial', 'ventas', 'cliente']):
+        if any(word in content_lower for word in ['dinero', 'precio', 'costo', 'facturación', 'pago']):
+            return 'dollar'
+        elif any(word in content_lower for word in ['equipo', 'personas', 'usuarios', 'clientes']):
+            return 'users'
+        else:
+            return 'briefcase'
+    
+    # 🎯 PRIORITY 7: COMMUNICATION
+    elif any(word in content_lower for word in ['mensaje', 'chat', 'comunicar', 'correo', 'email', 'enviar']):
+        if any(word in content_lower for word in ['correo', 'email', 'mail']):
+            return 'mail'
+        elif any(word in content_lower for word in ['enviar', 'send']):
+            return 'send'
+        else:
+            return 'message'
+    
+    # 🎯 PRIORITY 8: RESEARCH/SEARCH
+    elif any(word in content_lower for word in ['buscar', 'investigar', 'estudiar', 'search', 'investigación', 'research']):
+        if any(word in content_lower for word in ['web', 'internet', 'online', 'sitio']):
+            return 'globe'
+        else:
+            return 'search'
+    
+    # 🎯 PRIORITY 9: DOCUMENTS/WRITING
+    elif any(word in content_lower for word in ['documento', 'texto', 'escribir', 'redactar', 'informe', 'reporte', 'libro', 'artículo']):
+        if any(word in content_lower for word in ['libro', 'lectura', 'leer']):
+            return 'book'
+        elif any(word in content_lower for word in ['editar', 'modificar', 'corregir']):
+            return 'edit'
+        else:
+            return 'file'
+    
+    # 🎯 PRIORITY 10: CREATION/INNOVATION (for generic "crear", "hacer")
+    elif any(word in content_lower for word in ['crear', 'generar', 'hacer', 'construir', 'innovar']):
         return 'lightbulb'
+    
+    # 🎯 DEFAULT: Generic task icon
     else:
-        return 'target'  # Generic task icon
+        return 'target'
 
 def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
     """
