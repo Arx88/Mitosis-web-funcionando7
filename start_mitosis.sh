@@ -53,10 +53,14 @@ python -m playwright install chromium --with-deps
 echo "🌐 Verificando Google Chrome para Selenium..."
 if ! command -v google-chrome &> /dev/null; then
     echo "⚡ Instalando Google Chrome..."
-    wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
-    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list
-    apt-get update -qq
-    apt-get install -y google-chrome-stable
+    # Método actualizado sin apt-key deprecado
+    wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /usr/share/keyrings/google-chrome-keyring.gpg
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+    apt-get update -qq 2>/dev/null || true
+    apt-get install -y google-chrome-stable 2>/dev/null || {
+        echo "   ⚠️ Chrome install falló, usando chromium como alternativa..."
+        apt-get install -y chromium-browser 2>/dev/null || true
+    }
 fi
 
 echo "✅ Dependencias backend, Playwright y Selenium verificadas"
