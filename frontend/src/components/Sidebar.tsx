@@ -9,7 +9,7 @@ interface SidebarProps {
   tasks: Task[];
   activeTaskId: string | null;
   onTaskSelect: (taskId: string) => void;
-  onCreateTask: (title: string, iconType?: string) => Task;
+  onCreateTask: (title: string, iconType?: string) => Promise<Task>;
   onDeleteTask: (taskId: string) => void;
   onUpdateTask?: (task: Task) => void;
   onConfigOpen: () => void;
