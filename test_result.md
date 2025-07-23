@@ -733,6 +733,8 @@ agent_communication:
     -message: "Communication message between agents"
     -agent: "testing"
     -message: "✅ NUEVA TAREA BACKEND TESTING COMPLETED - ALL FIXES VERIFIED WORKING. Backend properly processes user messages, generates enhanced titles, creates detailed plans, and maintains proper response structure. All 3 test scenarios passed (100% success rate). The Nueva Tarea flow backend functionality is fully operational and ready for frontend integration. No backend issues found - any remaining issues are likely frontend-related."
+    -agent: "testing"
+    -message: "❌ CRITICAL ISSUE CONFIRMED: Nueva Tarea message persistence is still broken. Despite extensive debugging logs showing the fix attempts are working (race condition fixes, functional updates, delayed plan generation), the user's message is NOT visible in the chat interface after plan generation completes. The backend processes everything correctly (plan generated, title enhanced, icon set), but the frontend chat interface shows NO messages at all. This is a critical UI issue where the ChatInterface component is not properly displaying the messages that are being stored in the task state. The debugging logs show messages are being added and preserved in the backend state, but they're not rendering in the UI."
 
 ## 🧪 **COMPREHENSIVE "NUEVA TAREA" FLOW TESTING COMPLETED** (January 2025) - TESTING AGENT REVIEW
 
