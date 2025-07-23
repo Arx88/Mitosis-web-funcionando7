@@ -2705,10 +2705,16 @@ RESPONDE SOLO JSON - NO TEXTO ADICIONAL
                     continue
                 
                 # 🎯 ICONO INTELIGENTE: Verificar y corregir iconos incoherentes ANTES de validar esquema
+                logger.info(f"🔍 DEBUG: Starting icon verification for task {task_id}")
+                logger.info(f"🔍 DEBUG: plan_data keys: {list(plan_data.keys()) if plan_data else 'None'}")
+                
                 if 'suggested_icon' in plan_data and plan_data['suggested_icon']:
                     current_icon = plan_data['suggested_icon']
+                    logger.info(f"🔍 DEBUG: Current icon from LLM: {current_icon}")
+                    
                     # Verificar si el icono actual es coherente, si no, usar el unificado
                     unified_icon = determine_unified_icon(message)
+                    logger.info(f"🔍 DEBUG: Unified function suggests: {unified_icon}")
                     
                     # Casos donde debemos sobrescribir el icono del LLM
                     should_override = False
@@ -2720,10 +2726,16 @@ RESPONDE SOLO JSON - NO TEXTO ADICIONAL
                     
                     # Si hay palabras de ubicación pero no se asignó un icono de mapa
                     location_words = ['restaurante', 'bar', 'comida', 'valencia', 'madrid', 'barcelona', 'lugar', 'ubicación']
-                    if any(word in message.lower() for word in location_words) and current_icon not in ['map', 'navigation', 'globe']:
+                    has_location = any(word in message.lower() for word in location_words)
+                    is_not_map = current_icon not in ['map', 'navigation', 'globe']
+                    logger.info(f"🔍 DEBUG: Has location words: {has_location}, Is not map icon: {is_not_map}")
+                    
+                    if has_location and is_not_map:
                         should_override = True
                         unified_icon = 'map'
                         logger.info(f"🗺️ Forcing location icon 'map' for location-based task {task_id}")
+                    
+                    logger.info(f"🔍 DEBUG: Should override: {should_override}")
                     
                     if should_override:
                         plan_data['suggested_icon'] = unified_icon
@@ -2731,6 +2743,7 @@ RESPONDE SOLO JSON - NO TEXTO ADICIONAL
                     else:
                         logger.info(f"🎯 Keeping LLM-generated icon for task {task_id}: {current_icon}")
                 else:
+                    logger.info(f"🔍 DEBUG: No suggested_icon found, using fallback")
                     # Si no hay icono sugerido, usar función unificada
                     fallback_icon = determine_unified_icon(message)
                     plan_data['suggested_icon'] = fallback_icon
