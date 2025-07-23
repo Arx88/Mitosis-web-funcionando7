@@ -11,7 +11,7 @@ interface SidebarProps {
   onTaskSelect: (taskId: string) => void;
   onCreateTask: (title: string, iconType?: string) => Promise<Task>;
   onDeleteTask: (taskId: string) => void;
-  onUpdateTask?: (task: Task) => void;
+  onUpdateTask?: (task: Task | ((currentTask: Task) => Task)) => void; // 🚀 Support functional updates
   onConfigOpen: () => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
