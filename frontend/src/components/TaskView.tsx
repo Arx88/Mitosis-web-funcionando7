@@ -776,7 +776,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
                 }
               }}
               onTitleGenerated={(enhancedTitle) => {
-                console.log('📝 TaskView: Enhanced title received from ChatInterface:', enhancedTitle);
+                console.log('📝 NUEVA TAREA FIX - TaskView: Enhanced title received from ChatInterface:', enhancedTitle);
+                console.log('📝 NUEVA TAREA FIX - TaskView: Current task:', task);
                 
                 // Actualizar el título de la tarea con el título mejorado
                 const updatedTask = {
@@ -784,8 +785,10 @@ export const TaskView: React.FC<TaskViewProps> = ({
                   title: enhancedTitle
                 };
                 
-                console.log('📝 TaskView: Updating task with enhanced title:', updatedTask);
+                console.log('📝 NUEVA TAREA FIX - TaskView: Updating task with enhanced title:', updatedTask);
+                console.log('📝 NUEVA TAREA FIX - TaskView: About to call onUpdateTask...');
                 onUpdateTask(updatedTask);
+                console.log('📝 NUEVA TAREA FIX - TaskView: onUpdateTask called successfully');
                 
                 // Log al terminal
                 if (logToTerminal) {
