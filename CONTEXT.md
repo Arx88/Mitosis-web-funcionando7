@@ -29,13 +29,13 @@
 
 ## 🔍 ANÁLISIS DETALLADO DEL CÓDIGO
 
-### Backend Analysis
+### Backend Analysis - ACTUALIZADO
 
-#### server.py - Servidor Principal
+#### server.py - Servidor Principal (526 líneas)
 ```python
 # CARACTERÍSTICAS ENCONTRADAS:
-- Flask + SocketIO (NO FastAPI)
-- Logging intensivo configurado
+- Flask + SocketIO (NO FastAPI como esperado)
+- Logging intensivo configurado (/var/log/mitosis_debug.log)
 - WebSocket Manager incluido
 - Ollama Service integrado
 - Tool Manager con 12 herramientas
@@ -46,9 +46,29 @@
 
 **PROBLEMAS IDENTIFICADOS**:
 1. **Importación Compleja**: Líneas 122-155 intentan importar rutas del agente con fallback
-2. **Rutas No Encontradas**: `src/routes/agent_routes.py` no existe físicamente
+2. **ACTUALIZACIÓN**: `src/routes/agent_routes.py` SÍ EXISTE - problema era en path de búsqueda
 3. **Inconsistencia**: Se menciona FastAPI pero usa Flask
 4. **Código Defensivo**: Múltiples try/catch por importaciones fallidas
+
+#### agent_routes.py - RUTAS PRINCIPALES DEL AGENTE (1658 líneas!)
+```python
+# ARCHIVO MASIVO CON TODA LA LÓGICA DEL AGENTE:
+- Sistema de clasificación LLM para casual vs tareas
+- Generación de planes con schema JSON validation
+- Ejecución de pasos individuales con herramientas
+- TaskManager con persistencia MongoDB
+- Plan execution pipeline completo
+- Sistema de archivos y carpetas compartidas
+- 12 tipos de herramientas (web_search, analysis, creation, etc.)
+```
+
+**FUNCIONALIDADES CRÍTICAS ENCONTRADAS**:
+1. **is_casual_conversation()**: Clasifica mensajes con Ollama + fallback heurístico
+2. **generate_dynamic_plan_with_ai()**: Genera planes JSON validados
+3. **execute_plan_with_real_tools()**: Ejecuta pasos con herramientas reales
+4. **get_task_data()**: Persistencia MongoDB + fallback memoria
+5. **determine_unified_icon()**: Sistema de iconos inteligente
+6. **PLAN_SCHEMA**: Validación JSON estricta para planes
 
 #### requirements.txt - Dependencias
 - **Total**: 123+ dependencias
