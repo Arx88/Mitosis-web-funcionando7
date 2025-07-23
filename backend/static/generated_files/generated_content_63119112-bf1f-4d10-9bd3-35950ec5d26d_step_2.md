@@ -1,0 +1,2 @@
+**CONTENIDO DETALLADO Y ESPECÍFICO**
+Estructurar el objeto JSON es crucial para garantizar que se transmita la información de manera correcta y eficiente. A continuación, te proporciono un ejemplo detallado de cómo estructurar un objeto JSON:
