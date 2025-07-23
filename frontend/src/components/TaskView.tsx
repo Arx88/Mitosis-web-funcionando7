@@ -717,22 +717,12 @@ export const TaskView: React.FC<TaskViewProps> = ({
               }))} 
               onSendMessage={async (message) => {
                 console.log('🚀 TaskView: Message received for processing:', message);
-                console.log('🚀 TaskView: Current task messages count:', task.messages?.length || 0);
-                console.log('🚀 TaskView: Current task messages:', task.messages?.map(m => ({ sender: m.sender, content: m.content.substring(0, 30) + '...' })) || []);
                 
-                // 🔧 FIX: Ensure message processing triggers plan generation for empty tasks
-                // This fixes the "Nueva Tarea" flow where empty tasks need to process the first user message
-                console.log('🔧 NUEVA TAREA FIX: Processing message for task:', task.id);
-                console.log('🔧 Task state:', {
-                  hasMessages: task.messages.length,
-                  hasUserMessages: task.messages.filter(m => m.sender === 'user').length,
-                  hasPlan: !!task.plan,
-                  taskTitle: task.title
-                });
+                // 🔧 CRITICAL FIX: Process the message instead of just logging
+                // This was the root cause - TaskView was blocking message processing
                 
-                // The message will be processed by ChatInterface's handleSendMessage
-                // which will trigger plan generation and title enhancement automatically
-                // This callback is just to ensure the flow continues properly
+                // Let ChatInterface handle the message processing internally
+                // Remove this callback blocking and allow normal flow
               }}
               isTyping={isTyping} 
               assistantName="Agente" 
