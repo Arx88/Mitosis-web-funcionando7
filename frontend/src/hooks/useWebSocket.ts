@@ -139,6 +139,27 @@ export const useWebSocket = (): UseWebSocketReturn => {
       });
     }
 
+    if (events.step_started) {
+      socket.on('step_started', (data) => {
+        console.log('🔧 Step started:', data);
+        events.step_started?.(data);
+      });
+    }
+
+    if (events.step_completed) {
+      socket.on('step_completed', (data) => {
+        console.log('✅ Step completed:', data);
+        events.step_completed?.(data);
+      });
+    }
+
+    if (events.step_failed) {
+      socket.on('step_failed', (data) => {
+        console.log('❌ Step failed:', data);
+        events.step_failed?.(data);
+      });
+    }
+
     if (events.plan_updated) {
       socket.on('plan_updated', (data) => {
         console.log('📋 Plan updated:', data);
