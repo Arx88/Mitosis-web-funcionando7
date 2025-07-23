@@ -37,11 +37,29 @@ if ! pip list | grep -q "playwright"; then
     pip install playwright==1.45.0
 fi
 
+# Verificar e instalar Selenium
+echo "🔧 Verificando Selenium..."
+if ! pip list | grep -q "selenium"; then
+    echo "⚡ Instalando Selenium..."
+    pip install selenium==4.15.0
+    echo "selenium==4.15.0" >> requirements.txt
+fi
+
 # Instalar navegadores Playwright (Chrome principalmente)
 echo "🌐 Instalando navegadores Playwright..."
 python -m playwright install chromium --with-deps
 
-echo "✅ Dependencias backend y Playwright verificadas"
+# Instalar Chrome para Selenium si no está disponible
+echo "🌐 Verificando Google Chrome para Selenium..."
+if ! command -v google-chrome &> /dev/null; then
+    echo "⚡ Instalando Google Chrome..."
+    wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list
+    apt-get update -qq
+    apt-get install -y google-chrome-stable
+fi
+
+echo "✅ Dependencias backend, Playwright y Selenium verificadas"
 
 # ========================================================================
 # PASO 2: CREAR WSGI SERVER SIMPLE Y FUNCIONAL
