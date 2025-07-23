@@ -814,17 +814,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                     currentTitle: currentTask.title,
                     currentMessagesCount: currentTask.messages?.length || 0,
                     planSteps: plan.steps?.length,
-                    fixApplied: 'Functional update preserves latest state INCLUDING messages',
-                    CRITICAL_FIX: 'PRESERVING MESSAGES DURING PLAN GENERATION'
-                  });
-                  
-                  // 🔧 CRITICAL FIX: Use messages passed from ChatInterface instead of currentTask.messages
-                  // This prevents the async state issue where currentTask.messages is still empty
-                  const preservedMessages = plan.preservedMessages || currentTask.messages || [];
-                  console.log('📋 MESSAGE PRESERVATION FIX: Using', {
-                    preservedMessagesCount: preservedMessages.length,
-                    source: plan.preservedMessages ? 'ChatInterface (direct)' : 'currentTask (fallback)',
-                    ASYNC_STATE_FIX: 'Using messages passed directly from ChatInterface to avoid React state timing issues'
+                    fixApplied: 'Functional update preserves latest state INCLUDING messages'
                   });
                   
                   // Convertir el plan del backend al formato del frontend
@@ -842,18 +832,6 @@ export const TaskView: React.FC<TaskViewProps> = ({
                   // Actualizar la tarea con el plan generado, preservando el título más actual Y MENSAJES
                   const updatedTask = {
                     ...currentTask, // Use MOST CURRENT task state (includes enhanced title AND messages)
-                    messages: preservedMessages.map(msg => ({
-                      id: msg.id,
-                      content: msg.content,
-                      sender: msg.sender === 'assistant' ? 'agent' : msg.sender,
-                      timestamp: msg.timestamp,
-                      attachments: msg.attachments,
-                      status: msg.status,
-                      toolResults: msg.toolResults,
-                      searchData: msg.searchData,
-                      uploadData: msg.uploadData,
-                      links: msg.links
-                    })), // 🔧 EXPLICITLY preserve messages from ChatInterface
                     plan: frontendPlan,
                     planGenerated: true,
                     status: 'in-progress' as const,
@@ -870,8 +848,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                     preservedMessagesCount: updatedTask.messages?.length || 0,
                     preservedMessages: updatedTask.messages?.map(m => ({ sender: m.sender, content: m.content.substring(0, 50) + '...' })) || [],
                     planSteps: updatedTask.plan?.length,
-                    raceconditionFixed: true,
-                    CRITICAL_SUCCESS: 'Messages explicitly preserved from ChatInterface during plan generation'
+                    raceconditionFixed: true
                   });
                   
                   return updatedTask;
