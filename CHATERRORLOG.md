@@ -204,8 +204,36 @@ Uno de estos callbacks está sobrescribiendo el estado de mensajes cuando se gen
 - Probablemente en App.tsx donde se maneja activeTaskId
 - Puede ser un timeout, useEffect, o condición que resetea el estado
 
-#### **PRÓXIMO PASO ESPECÍFICO**:
-Examinar App.tsx y TaskView.tsx para encontrar qué está causando que TaskView se cierre automáticamente después de crearse.
+### Intento #12 - PROBLEMA CONFIRMADO VISUALMENTE (Julio 2025)
+**FECHA**: Julio 2025
+**MÉTODO**: Screenshot testing secuencial con mensaje real
+**RESULTADO**: ✅ **PROBLEMA CONFIRMADO AL 100%**
+
+#### 🎯 **EVIDENCIA VISUAL DEFINITIVA**:
+**EL PROBLEMA ES REAL Y CONFIRMADO**: El mensaje del usuario **NUNCA aparece en el chat** después de presionar Enter en el flujo "Nueva Tarea".
+
+#### **SECUENCIA CAPTURADA PASO A PASO**:
+1. ✅ Usuario escribe mensaje en input field
+2. ✅ Presiona Enter para enviar
+3. ❌ **MENSAJE DESAPARECE INMEDIATAMENTE** - nunca aparece en el chat
+4. ❌ Input field vuelve al placeholder original
+5. ❌ Durante 16 segundos de monitoreo: mensaje NUNCA visible en chat
+
+#### **EVIDENCIA TÉCNICA**:
+- **Sidebar muestra procesamiento**: Aparece filtro de búsqueda con "a productos de software en 2025"
+- **Backend recibe mensaje**: El sistema procesa parcialmente el mensaje
+- **Frontend NO muestra mensaje**: Chat interface permanece vacío
+- **Logs confirman**: 8 verificaciones consecutivas - mensaje no visible en ningún momento
+
+#### **UBICACIÓN EXACTA DEL PROBLEMA**:
+En el flujo "Nueva Tarea" → Envío de mensaje → el mensaje se envía al backend pero **NO se agrega al chat interface**.
+
+#### **DIFERENCIA CON HOMEPAGE**:
+- **Homepage**: Mensaje aparece en chat y se mantiene visible ✅
+- **Nueva Tarea**: Mensaje NUNCA aparece en chat ❌
+
+#### **PRÓXIMA ACCIÓN ESPECÍFICA**:
+Examinar el código de ChatInterface y TaskView para encontrar por qué los mensajes no se muestran en el flujo "Nueva Tarea".
 
 ## ERRORES COMETIDOS
 ❌ **Error repetido**: Afirmar que el problema está solucionado cuando NO lo está
