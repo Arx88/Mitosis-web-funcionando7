@@ -270,6 +270,14 @@ export function App() {
           task.id === newTask.id ? updatedTask : task
         ));
         
+        // 🚀 CRITICAL FIX: Auto-start execution after plan generation
+        if (initData.plan && initData.plan.length > 0) {
+          console.log('🚀 Auto-starting task execution after plan generation');
+          setTimeout(() => {
+            startTaskExecutionFromApp(newTask.id);
+          }, 2000); // Wait 2 seconds for UI to update
+        }
+        
         console.log('✅ Task updated with enhanced title and plan');
       } else {
         console.warn('⚠️ Failed to generate enhanced title and plan, using original message');
