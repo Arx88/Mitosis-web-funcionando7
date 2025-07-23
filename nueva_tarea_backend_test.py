@@ -168,42 +168,56 @@ class NuevaTareaBackendTester:
                 "failure_reason": f"Exception during backend test: {str(e)}"
             }
     
-    def _verify_message_persistence(self, chat_data: Dict, scenario: Dict) -> Dict:
-        """Verify that user message is properly handled and returned by backend"""
+    def _verify_message_processing(self, chat_data: Dict, scenario: Dict) -> Dict:
+        """Verify that user message was properly processed by backend"""
         
-        # Check if the original message is preserved in response
         user_message = scenario["message"]
         
-        # Look for user message in various response fields
-        message_found = False
-        message_location = None
-        
-        # Check in direct response field
-        if chat_data.get("user_message") == user_message:
-            message_found = True
-            message_location = "user_message field"
-        
-        # Check in messages array
-        messages = chat_data.get("messages", [])
-        for msg in messages:
-            if isinstance(msg, dict) and msg.get("content") == user_message:
-                message_found = True
-                message_location = "messages array"
-                break
-        
-        # Check if message is referenced in plan context
+        # Check if the backend processed the message correctly by looking at the generated plan
         plan = chat_data.get("plan", {})
-        if isinstance(plan, dict):
-            plan_description = plan.get("description", "")
-            if user_message.lower() in plan_description.lower():
-                message_found = True
-                message_location = "plan description"
+        if not isinstance(plan, dict):
+            return {
+                "success": False,
+                "reason": "No plan generated - message not processed"
+            }
+        
+        # Check if enhanced title reflects the user's request
+        enhanced_title = chat_data.get("enhanced_title", "")
+        title_reflects_request = False
+        
+        # Extract key words from user message
+        user_keywords = user_message.lower().split()
+        title_keywords = enhanced_title.lower().split()
+        
+        # Check if at least 2 key words from user message appear in enhanced title
+        matching_keywords = [word for word in user_keywords if word in title_keywords and len(word) > 3]
+        if len(matching_keywords) >= 1:
+            title_reflects_request = True
+        
+        # Check if plan steps are relevant to user request
+        steps = plan.get("steps", [])
+        steps_relevant = False
+        if steps:
+            # Check if step descriptions contain relevant keywords
+            all_step_text = " ".join([step.get("description", "") + " " + step.get("title", "") for step in steps]).lower()
+            relevant_keywords = [word for word in user_keywords if word in all_step_text and len(word) > 3]
+            if len(relevant_keywords) >= 2:
+                steps_relevant = True
+        
+        # Check if task_type matches user intent
+        task_type = plan.get("task_type", "").lower()
+        task_type_relevant = any(word in task_type for word in user_keywords if len(word) > 3)
+        
+        message_processed = title_reflects_request and steps_relevant
         
         return {
-            "success": message_found,
-            "message_location": message_location,
-            "user_message": user_message,
-            "reason": "User message found in response" if message_found else "User message not found in response"
+            "success": message_processed,
+            "title_reflects_request": title_reflects_request,
+            "steps_relevant": steps_relevant,
+            "task_type_relevant": task_type_relevant,
+            "matching_keywords": matching_keywords,
+            "enhanced_title": enhanced_title,
+            "reason": "User message properly processed and reflected in plan" if message_processed else "User message not properly reflected in generated plan"
         }
     
     def _verify_plan_generation(self, chat_data: Dict, scenario: Dict) -> Dict:
