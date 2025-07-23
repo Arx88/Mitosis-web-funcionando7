@@ -724,7 +724,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
               assistantName="Agente" 
               placeholder="Describe tu tarea..." 
               data-id={task.id}
-              hasExistingPlan={!!task.plan && task.plan.length > 0}
+              hasExistingPlan={false}
               onLogToTerminal={logToTerminal}
               onUpdateMessages={(messages) => {
                 const updatedTask = {
