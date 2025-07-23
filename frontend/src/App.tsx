@@ -351,7 +351,46 @@ export function App() {
     }));
   };
 
-  const updateTask = (updatedTask: Task) => {
+  const updateTask = (updatedTaskOrFunction: Task | ((currentTask: Task) => Task)) => {
+    // 🚀 RACE CONDITION FIX: Support functional updates to prevent stale state issues
+    if (typeof updatedTaskOrFunction === 'function') {
+      console.log('🚀 RACE CONDITION FIX - App.tsx updateTask called with FUNCTION (prevents stale state)');
+      
+      setTasks(prev => {
+        const taskToUpdate = prev.find(t => t.id === (prev.find(task => task.id) as Task)?.id);
+        if (!taskToUpdate) {
+          console.error('❌ Task not found for functional update');
+          return prev;
+        }
+        
+        // Find the task to update by checking which task is being modified
+        let updatedTaskId: string | null = null;
+        const newTasks = prev.map(task => {
+          try {
+            const potentialUpdate = updatedTaskOrFunction(task);
+            if (potentialUpdate !== task) {
+              updatedTaskId = task.id;
+              console.log('🚀 FUNCTIONAL UPDATE - Task updated:', {
+                taskId: task.id,
+                oldTitle: task.title,
+                newTitle: potentialUpdate.title,
+                functionalUpdateApplied: true
+              });
+              return potentialUpdate;
+            }
+            return task;
+          } catch (error) {
+            return task; // Skip this task if update function doesn't apply
+          }
+        });
+        
+        return newTasks;
+      });
+      return;
+    }
+    
+    // Original behavior for direct Task objects
+    const updatedTask = updatedTaskOrFunction as Task;
     console.log('🐛 NUEVA TAREA FIX - App.tsx updateTask called with:', updatedTask.id, updatedTask.title);
     
     // 🔍 STACK TRACE - Para encontrar qué está sobrescribiendo el título
