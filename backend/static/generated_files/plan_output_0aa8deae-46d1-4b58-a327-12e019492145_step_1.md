@@ -1,0 +1,6 @@
+# Planificación: Definir el objetivo del proyecto
+
+Descripción: Identificar la misión y los objetivos principales del proyecto
+
+*Este es un plan generado automáticamente.*
+Fecha: 2025-07-23 11:52:02
