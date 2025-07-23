@@ -300,19 +300,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               if (onTaskPlanGenerated && initData.plan) {
                 console.log('📋 Calling onTaskPlanGenerated with specific AI plan:', initData);
                 
-                // 🔧 FIX: Small delay to ensure onUpdateMessages completes first
-                // This prevents race condition where plan generation overwrites messages
-                setTimeout(() => {
-                  console.log('📋 DELAYED PLAN GENERATION: Starting plan generation after message update completion');
-                  onTaskPlanGenerated({
-                    steps: initData.plan,
-                    total_steps: initData.total_steps,
-                    estimated_total_time: initData.estimated_total_time,
-                    task_type: initData.task_type,
-                    complexity: initData.complexity,
-                    suggested_icon: initData.suggested_icon // 🎯 INCLUIR ICONO EN EL PLAN
-                  });
-                }, 200); // 200ms delay to ensure message update completes first
+                // 🔧 RACE CONDITION FIX: Remove setTimeout to prevent message overwriting
+                // Plan generation callback should execute immediately after message update
+                console.log('📋 IMMEDIATE PLAN GENERATION: Starting plan generation without delay to prevent race condition');
+                onTaskPlanGenerated({
+                  steps: initData.plan,
+                  total_steps: initData.total_steps,
+                  estimated_total_time: initData.estimated_total_time,
+                  task_type: initData.task_type,
+                  complexity: initData.complexity,
+                  suggested_icon: initData.suggested_icon // 🎯 INCLUIR ICONO EN EL PLAN
+                });
+                console.log('📋 PLAN GENERATION COMPLETE: Plan callback executed immediately');
               }
             
           } else {
