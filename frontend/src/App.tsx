@@ -120,6 +120,9 @@ export function App() {
   }, [activeTaskId, dynamicIdeas.length]);
   
   const createTask = async (title: string) => {
+    console.log('🔥 APP.TSX: createTask called with title:', title);
+    console.log('🔥 APP.TSX: current tasks length:', tasks.length);
+    
     setIsTaskCreating(true);
     
     // Reset any thinking state
