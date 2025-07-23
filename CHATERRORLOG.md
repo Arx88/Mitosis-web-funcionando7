@@ -232,8 +232,32 @@ En el flujo "Nueva Tarea" → Envío de mensaje → el mensaje se envía al back
 - **Homepage**: Mensaje aparece en chat y se mantiene visible ✅
 - **Nueva Tarea**: Mensaje NUNCA aparece en chat ❌
 
-#### **PRÓXIMA ACCIÓN ESPECÍFICA**:
-Examinar el código de ChatInterface y TaskView para encontrar por qué los mensajes no se muestran en el flujo "Nueva Tarea".
+### Intento #13 - CAUSA RAÍZ REAL ENCONTRADA (Julio 2025)
+**FECHA**: Julio 2025
+**MÉTODO**: Console logs monitoring con debugging específico
+**RESULTADO**: ✅ **CAUSA RAÍZ IDENTIFICADA DEFINITIVAMENTE**
+
+#### 🎯 **CAUSA RAÍZ CONFIRMADA**:
+**EL INPUT EN TASKVIEW (NUEVA TAREA) NO ESTÁ USANDO CHATINTERFACE.handleSendMessage**
+
+#### **EVIDENCIA TÉCNICA DEFINITIVA**:
+- ❌ **0 logs de "NUEVA TAREA FIX"** - ChatInterface.handleSendMessage nunca ejecuta
+- ❌ **0 logs de "onUpdateMessages"** - El callback nunca se llama  
+- ✅ **Sidebar procesa mensaje** - Backend SÍ recibe el mensaje (aparece en búsqueda)
+- ❌ **Mensaje nunca aparece en chat** - ChatInterface no procesa el mensaje
+
+#### **DIAGNÓSTICO TÉCNICO**:
+El input en TaskView está usando **un componente diferente** (probablemente VanishInput directamente) que:
+1. ✅ Envía mensaje al backend correctamente
+2. ❌ **NO llama a ChatInterface.handleSendMessage**
+3. ❌ **NO agrega mensaje al chat interface**  
+4. ❌ **NO ejecuta el mecanismo de persistencia de mensajes**
+
+#### **UBICACIÓN EXACTA DEL PROBLEMA**:
+En TaskView.tsx, el componente de input NO está conectado correctamente al ChatInterface.
+
+#### **SOLUCIÓN REQUERIDA**:
+Verificar y corregir la configuración del input en TaskView para asegurar que use ChatInterface.handleSendMessage en lugar de otro mecanismo.
 
 ## ERRORES COMETIDOS
 ❌ **Error repetido**: Afirmar que el problema está solucionado cuando NO lo está
