@@ -244,9 +244,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               
               // ✅ FIXED: Add only agent message since user message was already added
               if (onUpdateMessages) {
-                // Get current messages (which should now include the user message added earlier)
-                const currentMessages = messages.length > 0 ? messages : [userMessage];
-                // Check if user message is already there
+                // Use currentMessages which includes the user message added immediately
                 const hasUserMessage = currentMessages.some(msg => 
                   msg.sender === 'user' && msg.content === message.trim()
                 );
