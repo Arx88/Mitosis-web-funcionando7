@@ -741,6 +741,15 @@ export const TaskView: React.FC<TaskViewProps> = ({
               hasExistingPlan={!!(task.plan && task.plan.length > 0)}
               onLogToTerminal={logToTerminal}
               onUpdateMessages={(messages) => {
+                console.log('📨 TaskView: onUpdateMessages called with:', {
+                  messagesCount: messages.length,
+                  messages: messages.map(m => ({ 
+                    id: m.id, 
+                    sender: m.sender, 
+                    content: m.content.substring(0, 50) + '...' 
+                  }))
+                });
+                
                 const updatedTask = {
                   ...task,
                   messages: messages.map(msg => ({
@@ -756,7 +765,17 @@ export const TaskView: React.FC<TaskViewProps> = ({
                     links: msg.links
                   }))
                 };
+                
+                console.log('📨 TaskView: Updating task with messages:', {
+                  taskId: updatedTask.id,
+                  newMessagesCount: updatedTask.messages.length,
+                  BEFORE_UPDATE: task.messages?.length || 0,
+                  AFTER_UPDATE: updatedTask.messages.length
+                });
+                
                 onUpdateTask(updatedTask);
+                
+                console.log('📨 TaskView: onUpdateTask called successfully');
               }}
               onTaskPlanGenerated={(plan) => {
                 console.log('📋 TaskView: Plan received from ChatInterface:', plan);
