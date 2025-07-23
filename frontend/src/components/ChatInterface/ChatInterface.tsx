@@ -239,39 +239,31 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               const initData = await initResponse.json();
               console.log('✅ Plan generated with specific AI planning:', initData);
               
-              // Crear respuesta del agente indicando que el plan fue generado
-              const agentMessage: Message = {
-                id: `msg-${Date.now()}-agent`,
-                content: `✅ Plan de acción específico generado. Ejecutando ${initData.plan?.length || initData.total_steps || 0} pasos personalizados para completar tu tarea.`,
-                sender: 'agent',
-                timestamp: new Date()
-              };
-              
-              // ✅ ENHANCED FIX: Ensure user message is always preserved
+              // ✅ ENHANCED FIX: Ensure user message is always preserved during plan generation
               if (onUpdateMessages) {
-                // Use currentMessages which includes the user message added immediately
-                const hasUserMessage = currentMessages.some(msg => 
+                // Always preserve the user message by ensuring it's included in all updates
+                const baseMessages = currentMessages.some(msg => 
                   msg.sender === 'user' && msg.content === message.trim()
-                );
+                ) ? currentMessages : [...currentMessages, userMessage];
                 
-                if (hasUserMessage) {
-                  // User message already exists, just add agent message
-                  const updatedMessages = [...currentMessages, agentMessage];
-                  onUpdateMessages(updatedMessages);
-                  console.log('✅ NUEVA TAREA FIX: Agent message added to existing chat with user message');
-                } else {
-                  // 🔧 CRITICAL FALLBACK: Force add both messages to ensure user message is not lost
-                  const updatedMessages = [...currentMessages, userMessage, agentMessage];
-                  onUpdateMessages(updatedMessages);
-                  console.log('✅ NUEVA TAREA FIX: Both messages added (fallback mode - user message preserved)');
-                }
+                // Create agent response message
+                const agentMessage: Message = {
+                  id: `msg-${Date.now()}-agent`,
+                  content: `✅ Plan de acción específico generado. Ejecutando ${initData.plan?.length || initData.total_steps || 0} pasos personalizados para completar tu tarea.`,
+                  sender: 'agent',
+                  timestamp: new Date()
+                };
                 
-                // 🔧 ADDITIONAL SAFETY: Log final message state for debugging
+                // Combine all messages ensuring user message persistence
+                const finalMessages = [...baseMessages, agentMessage];
+                onUpdateMessages(finalMessages);
+                
+                console.log('✅ NUEVA TAREA FIX: Messages updated with guaranteed user message persistence');
                 console.log('✅ NUEVA TAREA DEBUG: Final message state:', {
-                  totalMessages: currentMessages.length + 1,
-                  userMessageExists: hasUserMessage,
-                  userMessageContent: message.trim(),
-                  agentMessageContent: agentMessage.content.substring(0, 100) + '...'
+                  totalMessages: finalMessages.length,
+                  userMessages: finalMessages.filter(m => m.sender === 'user').length,
+                  agentMessages: finalMessages.filter(m => m.sender === 'agent').length,
+                  userMessagePreserved: finalMessages.some(m => m.sender === 'user' && m.content === message.trim())
                 });
               }
               
