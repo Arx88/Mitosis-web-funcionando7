@@ -126,13 +126,13 @@ fi
 echo "✅ Frontend construido para producción"
 
 # ========================================================================
-# PASO 3: CONFIGURACIÓN SUPERVISOR CORREGIDA Y FUNCIONAL
+# PASO 4: CONFIGURACIÓN SUPERVISOR PARA MODO PRODUCCIÓN
 # ========================================================================
 
-echo "⚙️ Configurando supervisor con Flask+gunicorn..."
+echo "⚙️ Configurando supervisor para modo producción..."
 cat > /etc/supervisor/conf.d/supervisord.conf << 'EOF'
 [program:backend]
-command=/root/.venv/bin/gunicorn -w 1 -k sync -b 0.0.0.0:8001 simple_wsgi:application --timeout 120 --log-level info
+command=/root/.venv/bin/gunicorn -w 1 -k eventlet -b 0.0.0.0:8001 production_wsgi:application --timeout 120 --log-level info --access-logfile /var/log/supervisor/backend-access.log
 directory=/app/backend
 autostart=true
 autorestart=true
@@ -142,11 +142,10 @@ stopsignal=TERM
 stopwaitsecs=15
 stopasgroup=true
 killasgroup=true
-environment=PYTHONPATH="/app/backend",FLASK_ENV="production"
+environment=PYTHONPATH="/app/backend",FLASK_ENV="production",FLASK_DEBUG="False"
 
 [program:frontend]
-command=yarn start
-environment=HOST="0.0.0.0",PORT="3000"
+command=serve -s dist -l 3000 -n
 directory=/app/frontend
 autostart=true
 autorestart=true
@@ -156,6 +155,7 @@ stopsignal=TERM
 stopwaitsecs=10
 stopasgroup=true
 killasgroup=true
+environment=HOST="0.0.0.0",PORT="3000"
 
 [program:mongodb]
 command=/usr/bin/mongod --bind_ip_all --quiet --logpath /var/log/mongodb.log
@@ -166,22 +166,10 @@ stdout_logfile=/var/log/mongodb.out.log
 EOF
 
 # ========================================================================
-# PASO 4: VERIFICAR DEPENDENCIAS FRONTEND
+# PASO 5: REINICIAR SERVICIOS CON CONFIGURACIÓN DE PRODUCCIÓN
 # ========================================================================
 
-echo "📦 Verificando dependencias frontend..."
-cd /app/frontend
-
-if [ ! -d "node_modules" ]; then
-    echo "⚡ Instalando dependencias frontend..."
-    yarn install --frozen-lockfile
-fi
-
-# ========================================================================
-# PASO 5: REINICIAR SERVICIOS
-# ========================================================================
-
-echo "🔄 Reiniciando servicios con configuración corregida..."
+echo "🔄 Reiniciando servicios en modo producción..."
 sudo supervisorctl reread >/dev/null 2>&1
 sudo supervisorctl update >/dev/null 2>&1
 sudo supervisorctl restart all >/dev/null 2>&1
