@@ -2710,7 +2710,7 @@ RESPONDE SOLO JSON - NO TEXTO ADICIONAL
                     logger.warning(f"❌ Schema validation failed on attempt {attempt}")
                     continue
                 
-                # 🎯 ICONO INTELIGENTE: Verificar y corregir iconos incoherentes
+                # 🎯 ICONO INTELIGENTE: Verificar y corregir iconos incoherentes ANTES de continuar
                 if 'suggested_icon' in plan_data and plan_data['suggested_icon']:
                     current_icon = plan_data['suggested_icon']
                     # Verificar si el icono actual es coherente, si no, usar el unificado
