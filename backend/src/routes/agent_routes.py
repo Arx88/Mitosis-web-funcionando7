@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 # Mejora implementada según UPGRADE.md Sección 2: Validación de Esquemas JSON
 PLAN_SCHEMA = {
     "type": "object",
-    "required": ["steps", "task_type", "complexity"],
+    "required": ["steps", "task_type", "complexity", "suggested_icon"],
     "properties": {
         "steps": {
             "type": "array",
@@ -83,9 +83,22 @@ PLAN_SCHEMA = {
         },
         "estimated_total_time": {
             "type": "string"
+        },
+        "suggested_icon": {
+            "type": "string",
+            "enum": [
+                "book", "image", "smartphone", "code", "database", "globe", "search", "file", 
+                "settings", "download", "upload", "server", "cloud", "shield", "key", "music", 
+                "video", "message", "mail", "chart", "shopping", "dollar", "calendar", "users", 
+                "monitor", "terminal", "zap", "briefcase", "lightbulb", "rocket", "star", "award",
+                "activity", "calculator", "layers", "package", "wrench", "workflow", "puzzle",
+                "building", "archive", "grid", "layout", "send", "share", "component", "target",
+                "flag", "edit", "camera", "mic", "headphones", "printer", "scan", "copy", "save",
+                "folder", "clock", "bell", "phone", "map", "compass", "navigation", "wifi", "lock"
+            ]
         }
     },
-    "additionalProperties": False
+   "additionalProperties": False
 }
 
 agent_bp = Blueprint('agent', __name__)
