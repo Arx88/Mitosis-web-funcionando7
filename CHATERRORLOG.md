@@ -280,6 +280,39 @@ Screenshot tomado muestra que el chat está **COMPLETAMENTE VACÍO** después de
 - Plan se genera correctamente en panel derecho
 - **CONFIRMADO: Los mensajes del usuario SÍ desaparecen**
 
+#### CAUSA RAÍZ REAL IDENTIFICADA:
+**PROBLEMA DE ESTADO ASÍNCRONO DE REACT**:
+1. `onUpdateMessages(finalMessages)` actualiza los mensajes (línea 259)
+2. `onTaskPlanGenerated()` se ejecuta inmediatamente después (línea 306)  
+3. **React state updates son asíncronos** - cuando `onTaskPlanGenerated` ejecuta, `currentTask.messages` todavía refleja el estado anterior (vacío)
+4. TaskView preserva `currentTask.messages` que está vacío, borrando los mensajes
+
+### Intento #10 - SOLUCIÓN REAL AL PROBLEMA DE ESTADO ASÍNCRONO (Julio 2025)
+**FECHA**: Julio 2025
+**MÉTODO**: Pasar mensajes directamente en lugar de depender del estado React
+**CAMBIOS IMPLEMENTADOS**:
+
+#### 1. ✅ PASAR MENSAJES DIRECTAMENTE EN ChatInterface.tsx
+**PROBLEMA**: React state updates son asíncronos
+**SOLUCIÓN**: Pasar `finalMessages` directamente al callback `onTaskPlanGenerated`
+```javascript
+onTaskPlanGenerated({
+  steps: initData.plan,
+  // ... otras propiedades
+  preservedMessages: finalMessages // 🔧 PASS CURRENT MESSAGES DIRECTLY
+});
+```
+
+#### 2. ✅ USAR MENSAJES PASADOS EN TaskView.tsx  
+**PROBLEMA**: `currentTask.messages` refleja estado anterior (vacío)
+**SOLUCIÓN**: Usar `plan.preservedMessages` pasados desde ChatInterface
+```javascript
+const preservedMessages = plan.preservedMessages || currentTask.messages || [];
+```
+
+#### EXPECTATIVA:
+Los mensajes NO deberían desaparecer porque ahora usamos los mensajes actuales directamente en lugar de depender del estado React asíncrono.
+
 #### VERIFICACIÓN EXITOSA:
 - ✅ **Message Persistence**: CONFIRMADO - mensajes del usuario permanecen visibles durante todo el proceso
 - ✅ **Race Condition Fix**: VERIFICADO - functional updates previenen pérdida de mensajes
