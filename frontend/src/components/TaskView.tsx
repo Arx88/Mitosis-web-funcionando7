@@ -12,7 +12,7 @@ import { Star } from 'lucide-react';
 
 interface TaskViewProps {
   task: Task;
-  onUpdateTask: (task: Task) => void;
+  onUpdateTask: (task: Task | ((currentTask: Task) => Task)) => void; // 🚀 Support functional updates
   onUpdateTaskProgress?: (taskId: string) => void;
   isThinking: boolean;
   onTerminalResize?: (height: number) => void;
