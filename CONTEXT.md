@@ -1,0 +1,165 @@
+# CONTEXT.md - Análisis Completo del Proyecto Mitosis
+
+## 📋 RESUMEN EJECUTIVO
+
+**ESTADO GENERAL**: Aplicación de agente general con múltiples refactorings, backend funcional pero con problemas de integración frontend.
+
+**TECNOLOGÍAS**: FastAPI + React + MongoDB + Ollama + WebSocket
+
+**PROBLEMA REPORTADO**: App inestable, necesita revisión completa del workflow y limpieza de código.
+
+---
+
+## 🏗️ ARQUITECTURA ACTUAL
+
+### Backend (/app/backend/)
+- **Server Principal**: `server.py` (526 líneas)
+- **Framework**: Flask + SocketIO (no FastAPI como esperado)
+- **Puerto**: 8001 (0.0.0.0)
+- **Base de Datos**: MongoDB (localhost:27017)
+- **LLM**: Ollama (https://bef4a4bb93d1.ngrok-free.app)
+
+### Frontend (/app/frontend/)
+- **Framework**: React + TypeScript (Vite)
+- **Puerto**: 3000
+- **Estado**: App.tsx (829 líneas) - MUY COMPLEJO
+- **Backend URL**: Variables de entorno configuradas
+
+---
+
+## 🔍 ANÁLISIS DETALLADO DEL CÓDIGO
+
+### Backend Analysis
+
+#### server.py - Servidor Principal
+```python
+# CARACTERÍSTICAS ENCONTRADAS:
+- Flask + SocketIO (NO FastAPI)
+- Logging intensivo configurado
+- WebSocket Manager incluido
+- Ollama Service integrado
+- Tool Manager con 12 herramientas
+- Sistema de configuración dinámica
+- Health checks implementados
+- Fallback routes por si fallan las rutas principales
+```
+
+**PROBLEMAS IDENTIFICADOS**:
+1. **Importación Compleja**: Líneas 122-155 intentan importar rutas del agente con fallback
+2. **Rutas No Encontradas**: `src/routes/agent_routes.py` no existe físicamente
+3. **Inconsistencia**: Se menciona FastAPI pero usa Flask
+4. **Código Defensivo**: Múltiples try/catch por importaciones fallidas
+
+#### requirements.txt - Dependencias
+- **Total**: 123+ dependencias
+- **Categorías**: Flask, MongoDB, AI/ML, WebSocket, Tools
+- **Estado**: Muy pesado, posible over-engineering
+- **Crítico**: `rpds-py==0.26.0` (mencionado en tests como fix)
+
+#### .env Backend
+```bash
+# CONFIGURACIÓN ENCONTRADA:
+OLLAMA_BASE_URL=https://bef4a4bb93d1.ngrok-free.app
+OLLAMA_DEFAULT_MODEL=llama3.1:8b
+AGENT_LLM_PROVIDER=ollama
+MONGO_URL=mongodb://localhost:27017/task_manager
+```
+
+### Frontend Analysis
+
+#### App.tsx - Componente Principal (829 líneas)
+**COMPLEJIDAD EXTREMA**: Archivo demasiado grande con múltiples responsabilidades
+
+**FUNCIONALIDADES IDENTIFICADAS**:
+1. **Task Management**: Crear, actualizar, eliminar tareas
+2. **Chat Interface**: Mensajes y comunicación
+3. **Plan Generation**: Generación automática de planes
+4. **File Upload**: Sistema de archivos adjuntos
+5. **Dynamic Ideas**: Sugerencias dinámicas
+6. **WebSocket**: Comunicación tiempo real
+7. **Configuration**: Panel de configuración
+
+**PROBLEMAS CRÍTICOS ENCONTRADOS**:
+```typescript
+// LÍNEAS 213-285: Lógica compleja de creación de tareas
+// LÍNEAS 387-458: Sistema de actualización con race conditions
+// LÍNEAS 122-172: createTask vs createTaskWithMessage duplicado
+```
+
+#### package.json Frontend
+- **Dependencias**: React 19.1.0, Socket.io, Tailwind, etc.
+- **Scripts**: Desarrollo y producción configurados
+- **Estado**: Dependencias actualizadas
+
+---
+
+## 🚨 PROBLEMAS IDENTIFICADOS HASTA AHORA
+
+### 1. Estructura de Archivos Inconsistente
+- **Backend**: `src/` no existe físicamente
+- **Frontend**: Componentes no encontrados
+- **Código**: Referencias a archivos inexistentes
+
+### 2. Over-Engineering en App.tsx
+- 829 líneas en un solo archivo
+- Múltiples responsabilidades mezcladas
+- Lógica compleja de states y effects
+- Race conditions en updates
+
+### 3. Importaciones Fallidas en Backend
+- Sistema defensivo con múltiples try/catch
+- Rutas principales no encontradas
+- Fallback a rutas básicas
+
+### 4. Dependencias Excesivas
+- 123+ dependencias en backend
+- Posible conflicto Flask vs FastAPI
+- Paquetes no utilizados
+
+---
+
+## 📊 WORKFLOW ACTUAL (LO QUE HE DESCUBIERTO)
+
+### Flujo de Creación de Tareas:
+1. **Usuario**: Escribe en VanishInput (homepage)
+2. **Frontend**: `createTaskWithMessage()` se ejecuta
+3. **Backend**: Llamada a `/api/agent/generate-plan`
+4. **LLM**: Genera plan con Ollama
+5. **Frontend**: Actualiza task con plan
+6. **Auto-execution**: `startTaskExecutionFromApp()` se ejecuta
+
+### Problemas en el Workflow:
+- Race conditions en updates
+- Múltiples funciones duplicadas
+- Estado complejo con efectos secundarios
+
+---
+
+## 🎯 PRÓXIMOS PASOS DE ANÁLISIS
+
+### Pendiente por Revisar:
+1. **Estructura real de directorios backend/src**
+2. **Componentes frontend reales**
+3. **Conexión health Ollama/MongoDB**
+4. **Sistema de herramientas (12 tools)**
+5. **WebSocket implementation**
+6. **Plan execution pipeline**
+
+### Archivos Críticos por Encontrar:
+- `/app/backend/src/routes/agent_routes.py`
+- `/app/frontend/src/components/`
+- Sistema de herramientas real
+- WebSocket manager
+
+---
+
+## 📝 NOTAS DE ANÁLISIS
+
+**TIMESTAMP**: Enero 2025
+**ANÁLISIS**: 20% completado
+**ESTADO**: Backend parcialmente analizado, frontend estructura identificada
+**CRÍTICO**: Necesito encontrar los archivos src/ reales para continuar
+
+---
+
+*Este archivo se actualiza conforme avanzo en el análisis del código*
