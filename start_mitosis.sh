@@ -62,34 +62,68 @@ fi
 echo "✅ Dependencias backend, Playwright y Selenium verificadas"
 
 # ========================================================================
-# PASO 2: CREAR WSGI SERVER SIMPLE Y FUNCIONAL
+# PASO 2: CREAR SERVIDOR WSGI OPTIMIZADO PARA PRODUCCIÓN
 # ========================================================================
 
-echo "📝 Creando servidor WSGI simple..."
-cat > /app/backend/simple_wsgi.py << 'EOF'
+echo "📝 Creando servidor WSGI para modo producción..."
+cat > /app/backend/production_wsgi.py << 'EOF'
 #!/usr/bin/env python3
 """
-Simple Flask WSGI Server - SOLUCIÓN DEFINITIVA FUNCIONAL
-Usa Flask app directamente con gunicorn
+Production WSGI Server - OPTIMIZADO PARA MODO PRODUCCIÓN
+Usa Flask app con gunicorn + eventlet para máxima compatibilidad SocketIO
 """
 
 import os
 import sys
 sys.path.insert(0, '/app/backend')
 
-# Importar la Flask app
-from server import app
+# Configurar variables de entorno para producción
+os.environ['FLASK_ENV'] = 'production'
+os.environ['FLASK_DEBUG'] = 'False'
 
-# Para gunicorn - simplemente la Flask app
-application = app
+# Importar la Flask app
+from server import app, socketio
+
+# Para gunicorn con eventlet - mejor para SocketIO
+application = socketio.wsgi_app
 
 if __name__ == '__main__':
     # Para testing directo con SocketIO
-    from server import socketio
     socketio.run(app, host='0.0.0.0', port=8001, debug=False)
 EOF
 
-chmod +x /app/backend/simple_wsgi.py
+chmod +x /app/backend/production_wsgi.py
+
+# ========================================================================
+# PASO 3: CONSTRUIR FRONTEND EN MODO PRODUCCIÓN
+# ========================================================================
+
+echo "🏗️ Construyendo frontend en modo producción..."
+cd /app/frontend
+
+# Instalar dependencias si no existen
+if [ ! -d "node_modules" ]; then
+    echo "⚡ Instalando dependencias frontend..."
+    yarn install --frozen-lockfile
+fi
+
+# Verificar serve si no está instalado
+if ! npm list -g serve &> /dev/null; then
+    echo "⚡ Instalando serve globalmente..."
+    npm install -g serve
+fi
+
+# Construir para producción
+echo "🏗️ Construyendo build de producción..."
+yarn build
+
+# Verificar que el build fue exitoso
+if [ ! -d "dist" ]; then
+    echo "❌ Error: Build de producción falló"
+    exit 1
+fi
+
+echo "✅ Frontend construido para producción"
 
 # ========================================================================
 # PASO 3: CONFIGURACIÓN SUPERVISOR CORREGIDA Y FUNCIONAL
