@@ -190,3 +190,40 @@ Uno de estos callbacks está sobrescribiendo el estado de mensajes cuando se gen
 2. **Verificar directamente** el problema con herramientas manuales
 3. **Obtener evidencia visual real** del estado actual
 4. **Preguntarle al usuario específicamente** qué ve cuando hace el flujo
+
+## NUEVO ANÁLISIS (Julio 2025)
+
+### Intento #8 - Análisis detallado del código fuente
+**FECHA**: Julio 2025
+**MÉTODO**: Revisión exhaustiva del código ChatInterface.tsx y TaskView.tsx
+**HALLAZGO CRÍTICO**:
+
+#### PROBLEMA IDENTIFICADO: Race Condition en Callbacks
+**UBICACIÓN**: TaskView.tsx líneas 802-857 y ChatInterface.tsx líneas 300-316
+
+**EVIDENCIA DEL PROBLEMA**:
+1. **ChatInterface.tsx (línea 175)**: Usuario message se agrega inmediatamente ✅
+2. **ChatInterface.tsx (línea 305-316)**: Plan generation callback con setTimeout de 200ms 
+3. **TaskView.tsx (línea 755-797)**: onUpdateMessages con functional update
+4. **TaskView.tsx (línea 804-855)**: onTaskPlanGenerated también con functional update
+
+**RACE CONDITION DETECTADA**:
+El setTimeout de 200ms en ChatInterface (línea 305) se está ejecutando DESPUÉS de que TaskView actualiza los mensajes, causando que el plan generation callback sobrescriba el estado de mensajes.
+
+**SECUENCIA PROBLEMÁTICA**:
+1. Usuario envía mensaje → Mensaje aparece ✅
+2. Backend genera plan → Título se actualiza ✅  
+3. setTimeout(200ms) ejecuta plan generation callback ❌
+4. Plan generation callback puede estar sobrescribiendo mensajes ❌
+
+#### SOLUCIÓN PROPUESTA:
+**ELIMINAR** el setTimeout en ChatInterface línea 305 y asegurar que los functional updates preserven mensajes SIEMPRE.
+
+**ARCHIVOS A MODIFICAR**:
+- `/app/frontend/src/components/ChatInterface/ChatInterface.tsx` (línea 305)
+- `/app/frontend/src/components/TaskView.tsx` (verificar que functional updates no sobrescriban mensajes)
+
+#### CAMBIOS ESPECÍFICOS NECESARIOS:
+1. Remover setTimeout de línea 305 en ChatInterface.tsx
+2. Asegurar que onTaskPlanGenerated preserve mensajes existentes
+3. Verificar orden de ejecución de callbacks
