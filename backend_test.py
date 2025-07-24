@@ -314,19 +314,18 @@ class MitosisAgentTester:
                 data = response.json()
                 
                 success = data.get('success', False)
-                step_result = data.get('step_result', {})
-                step_completed = data.get('step_completed', False)
+                result = data.get('result', {})
                 
-                if success and step_completed and step_result:
-                    result_type = step_result.get('type', 'unknown')
-                    result_summary = step_result.get('summary', 'No summary')
+                if success and result:
+                    result_output = result.get('output', 'No output')
+                    result_tool = result.get('tool', 'unknown')
                     
                     self.log_test("Step Execution", True, 
-                                f"Step executed successfully - Type: {result_type}, Summary: {result_summary}")
+                                f"Step executed successfully - Tool: {result_tool}, Output: {result_output[:100]}...")
                     return True
                 else:
                     self.log_test("Step Execution", False, 
-                                f"Step execution incomplete - success: {success}, completed: {step_completed}, result: {bool(step_result)}", data)
+                                f"Step execution incomplete - success: {success}, result: {bool(result)}", data)
                     return False
             else:
                 self.log_test("Step Execution", False, 
