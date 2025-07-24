@@ -1,7 +1,7 @@
 {
   "total_tests": 9,
-  "passed_tests": 1,
-  "success_rate": 11.11111111111111,
+  "passed_tests": 2,
+  "success_rate": 22.22222222222222,
   "overall_status": "\u274c CRITICAL - System has major issues preventing proper operation",
   "critical_passed": 0,
   "critical_total": 4,
@@ -10,16 +10,16 @@
       "test_name": "Backend Health Check",
       "success": true,
       "details": "All services healthy - DB: True, Ollama: True, Tools: 12",
-      "timestamp": "2025-07-24T09:11:24.394174",
+      "timestamp": "2025-07-24T09:35:38.820320",
       "response_data": null
     },
     {
       "test_name": "Agent Status Check",
       "success": false,
       "details": "Agent not ready - Ollama connected: True, Tools: 0",
-      "timestamp": "2025-07-24T09:11:26.404646",
+      "timestamp": "2025-07-24T09:35:40.863417",
       "response_data": {
-        "active_tasks": 0,
+        "active_tasks": 1,
         "memory": {
           "enabled": true,
           "initialized": true
@@ -30,59 +30,114 @@
           "model": "llama3.1:8b"
         },
         "status": "running",
-        "timestamp": "2025-07-24T09:11:26.401410",
+        "timestamp": "2025-07-24T09:35:40.858362",
         "tools": 12
       }
     },
     {
       "test_name": "Plan Generation",
       "success": false,
-      "details": "HTTP 400: {\"error\":\"task_title is required\"}\n",
-      "timestamp": "2025-07-24T09:11:28.418300",
+      "details": "Plan is not a dictionary or missing",
+      "timestamp": "2025-07-24T09:35:49.748970",
       "response_data": {
-        "error": "task_title is required"
+        "ai_generated": true,
+        "complexity": "media",
+        "enhanced_title": "An\u00e1lisis de Mercado Tecnol\u00f3gico 2025",
+        "estimated_total_time": "20 horas",
+        "plan": [
+          {
+            "active": true,
+            "completed": false,
+            "description": "Identificar los productos de tecnolog\u00eda que se van a analizar y determinar la regi\u00f3n geogr\u00e1fica de inter\u00e9s.",
+            "estimated_time": "2 horas",
+            "id": "step_1",
+            "priority": "alta",
+            "status": "pending",
+            "title": "Definir el alcance del an\u00e1lisis de mercado",
+            "tool": "planning"
+          },
+          {
+            "active": false,
+            "completed": false,
+            "description": "Utilizar herramientas de b\u00fasqueda en internet para obtener datos y estad\u00edsticas sobre el mercado de productos de tecnolog\u00eda en 2025.",
+            "estimated_time": "4 horas",
+            "id": "step_2",
+            "priority": "media",
+            "status": "pending",
+            "title": "Recopilar informaci\u00f3n sobre el mercado actual",
+            "tool": "web_search"
+          },
+          {
+            "active": false,
+            "completed": false,
+            "description": "Utilizar herramientas de an\u00e1lisis para identificar tendencias y patrones en el mercado de productos de tecnolog\u00eda.",
+            "estimated_time": "6 horas",
+            "id": "step_3",
+            "priority": "alta",
+            "status": "pending",
+            "title": "Analizar los datos recopilados",
+            "tool": "analysis"
+          },
+          {
+            "active": false,
+            "completed": false,
+            "description": "Utilizar herramientas de creaci\u00f3n para generar un informe detallado sobre el mercado de productos de tecnolog\u00eda en 2025.",
+            "estimated_time": "8 horas",
+            "id": "step_4",
+            "priority": "alta",
+            "status": "pending",
+            "title": "Crear un informe con los resultados del an\u00e1lisis",
+            "tool": "creation"
+          }
+        ],
+        "status": "plan_generated",
+        "suggested_icon": "chart",
+        "task_id": "d1963d12-e3e9-4e9f-91c5-07f2f0a7466b",
+        "task_type": "an\u00e1lisis de mercado",
+        "timestamp": "2025-07-24T09:35:49.746032",
+        "total_steps": 4
       }
     },
     {
       "test_name": "Task Initialization",
       "success": false,
       "details": "No task_id available from plan generation",
-      "timestamp": "2025-07-24T09:11:30.418515",
+      "timestamp": "2025-07-24T09:35:51.749276",
       "response_data": null
     },
     {
       "test_name": "Task Plan Retrieval",
       "success": false,
       "details": "No task_id available",
-      "timestamp": "2025-07-24T09:11:32.418687",
+      "timestamp": "2025-07-24T09:35:53.749430",
       "response_data": null
     },
     {
       "test_name": "Task Execution Start",
       "success": false,
       "details": "No task_id available",
-      "timestamp": "2025-07-24T09:11:34.418828",
+      "timestamp": "2025-07-24T09:35:55.749587",
       "response_data": null
     },
     {
       "test_name": "Step Execution",
       "success": false,
       "details": "No task_id available",
-      "timestamp": "2025-07-24T09:11:36.419012",
+      "timestamp": "2025-07-24T09:35:57.749736",
       "response_data": null
     },
     {
       "test_name": "Document Generation",
       "success": false,
       "details": "No task_id available",
-      "timestamp": "2025-07-24T09:11:38.419164",
+      "timestamp": "2025-07-24T09:35:59.749909",
       "response_data": null
     },
     {
       "test_name": "Integration Flow",
-      "success": false,
-      "details": "Plan generation failed in integration test",
-      "timestamp": "2025-07-24T09:11:40.432277",
+      "success": true,
+      "details": "Complete integration flow successful - Task status: pending",
+      "timestamp": "2025-07-24T09:36:13.395357",
       "response_data": null
     }
   ],
