@@ -60,9 +60,6 @@ CORS(app, resources={
     }
 })
 
-# Inicializar SocketIO para WebSocket
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
-
 # Configurar MongoDB
 try:
     mongo_url = os.getenv('MONGO_URL', 'mongodb://localhost:27017/')
@@ -76,12 +73,32 @@ except Exception as e:
 # Añadir el directorio src al path para importar las rutas del agente
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
-# Inicializar WebSocket Manager
+# Inicializar WebSocket Manager con configuración optimizada
 try:
-    from src.websocket.websocket_manager import initialize_websocket
-    websocket_manager = initialize_websocket(app)
+    from src.websocket.websocket_manager import WebSocketManager
+    websocket_manager = WebSocketManager()
+    
+    # Configurar SocketIO con compatibilidad mejorada
+    socketio = SocketIO(
+        app, 
+        cors_allowed_origins="*",
+        async_mode='eventlet',
+        logger=False,
+        engineio_logger=False,
+        ping_timeout=60,
+        ping_interval=25,
+        transport=['polling', 'websocket'],
+        allow_upgrades=True,
+        json=json
+    )
+    
+    websocket_manager.socketio = socketio
+    websocket_manager.app = app
+    websocket_manager.setup_event_handlers()
+    websocket_manager.is_initialized = True
+    
     app.websocket_manager = websocket_manager
-    logger.info("✅ WebSocket Manager inicializado exitosamente")
+    logger.info("✅ WebSocket Manager inicializado exitosamente con SocketIO")
 except Exception as e:
     logger.error(f"❌ Error inicializando WebSocket Manager: {e}")
 
