@@ -2606,7 +2606,7 @@ def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool =
     ollama_service = get_ollama_service()
     if not ollama_service:
         logger.error("❌ Ollama service not available for unified plan generation")
-        return generate_fallback_plan_with_notification(message, task_id, "Ollama service not available")
+        return generate_fallback_plan(message, task_id)
     
     # Verificar que Ollama esté saludable
     if not ollama_service.is_healthy():
