@@ -126,24 +126,23 @@ class MitosisAgentTester:
                 data = response.json()
                 
                 # Check plan structure
-                plan = data.get('plan', {})
-                if isinstance(plan, dict):
-                    steps = plan.get('steps', [])
-                    task_type = plan.get('task_type', '')
-                    complexity = plan.get('complexity', '')
+                plan = data.get('plan', [])  # Fixed: plan is a list, not dict
+                if isinstance(plan, list) and len(plan) > 0:
+                    task_type = data.get('task_type', '')
+                    complexity = data.get('complexity', '')
                     enhanced_title = data.get('enhanced_title', '')
                     
-                    if len(steps) >= 3 and task_type and complexity:
+                    if len(plan) >= 3 and task_type and complexity:
                         # Validate step structure
                         valid_steps = True
-                        for step in steps:
+                        for step in plan:
                             if not all(key in step for key in ['title', 'description', 'tool']):
                                 valid_steps = False
                                 break
                         
                         if valid_steps:
                             self.log_test("Plan Generation", True, 
-                                        f"Valid plan generated - {len(steps)} steps, type: {task_type}, complexity: {complexity}, title: {enhanced_title}")
+                                        f"Valid plan generated - {len(plan)} steps, type: {task_type}, complexity: {complexity}, title: {enhanced_title}")
                             
                             # Store task_id for later tests
                             self.task_id = data.get('task_id')
@@ -154,11 +153,11 @@ class MitosisAgentTester:
                             return False
                     else:
                         self.log_test("Plan Generation", False, 
-                                    f"Incomplete plan structure - steps: {len(steps)}, type: {task_type}, complexity: {complexity}", data)
+                                    f"Incomplete plan structure - steps: {len(plan)}, type: {task_type}, complexity: {complexity}", data)
                         return False
                 else:
                     self.log_test("Plan Generation", False, 
-                                "Plan is not a dictionary or missing", data)
+                                "Plan is not a list or empty", data)
                     return False
             else:
                 self.log_test("Plan Generation", False, 
