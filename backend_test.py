@@ -91,7 +91,7 @@ class MitosisAgentTester:
                 ollama_model = ollama_info.get('model', '')
                 
                 # Check tools
-                tools_count = data.get('tools_count', 0)
+                tools_count = data.get('tools', 0)  # Fixed: 'tools' not 'tools_count'
                 
                 if ollama_connected and tools_count >= 10:  # Expecting 12 tools
                     self.log_test("Agent Status Check", True, 
