@@ -78,17 +78,18 @@ try:
     from src.websocket.websocket_manager import WebSocketManager
     websocket_manager = WebSocketManager()
     
-    # Configurar SocketIO con compatibilidad mejorada
+    # Configurar SocketIO SOLO CON POLLING para evitar problemas de WebSocket upgrade
+    # Esto evita el problema de "server error" en Kubernetes/Nginx sin configuración WebSocket
     socketio = SocketIO(
         app, 
         cors_allowed_origins="*",
         async_mode='eventlet',
-        logger=False,
-        engineio_logger=False,
+        logger=True,           # Habilitar logs para debugging
+        engineio_logger=True,  # Logs detallados de engine.io
         ping_timeout=60,
         ping_interval=25,
-        transports=['polling', 'websocket'],
-        allow_upgrades=True,
+        transports=['polling'],    # SOLO POLLING - no WebSocket
+        allow_upgrades=False,      # No permitir upgrade a WebSocket
         json=json
     )
     
