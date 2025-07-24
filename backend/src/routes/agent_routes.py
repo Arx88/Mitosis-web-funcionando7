@@ -2522,87 +2522,408 @@ Tu respuesta debe ser ÚNICAMENTE el título:
         logger.error(f"❌ Error generating title with LLM: {str(e)}")
         return message.strip()
 
+def detect_task_category(message: str) -> str:
+    """Detectar la categoría de la tarea para generar planes específicos"""
+    message_lower = message.lower()
+    
+    # Categorías específicas con palabras clave
+    if any(word in message_lower for word in ['investigar', 'buscar', 'información', 'datos', 'tendencias', 'mercado', 'análisis de mercado']):
+        return 'investigacion'
+    elif any(word in message_lower for word in ['crear', 'generar', 'desarrollar', 'escribir', 'diseñar', 'documento', 'informe', 'reporte']):
+        return 'creacion'
+    elif any(word in message_lower for word in ['analizar', 'evaluar', 'comparar', 'estudiar', 'revisar', 'examinar']):
+        return 'analisis'
+    elif any(word in message_lower for word in ['planificar', 'estrategia', 'plan', 'roadmap', 'cronograma']):
+        return 'planificacion'
+    elif any(word in message_lower for word in ['código', 'programa', 'app', 'aplicación', 'web', 'software', 'development']):
+        return 'desarrollo'
+    elif any(word in message_lower for word in ['presentación', 'pitch', 'exposición', 'conferencia']):
+        return 'presentacion'
+    else:
+        return 'general'
+
+def generate_intelligent_fallback_plan(message: str, task_id: str, category: str = None) -> dict:
+    """
+    🚀 SISTEMA DE FALLBACK INTELIGENTE Y COMPLEJO
+    Genera planes específicos y detallados según la categoría de la tarea
+    """
+    if not category:
+        category = detect_task_category(message)
+    
+    logger.info(f"🧠 Generating intelligent fallback plan for category: {category}")
+    
+    # Planes específicos por categoría
+    if category == 'investigacion':
+        steps = [
+            {
+                "id": "research-1",
+                "title": f"Definición de objetivos de investigación",
+                "description": f"Definir claramente qué se busca investigar sobre '{message}', establecer preguntas clave y delimitar el alcance de la investigación",
+                "tool": "analysis",
+                "estimated_time": "3-5 minutos",
+                "complexity": "media"
+            },
+            {
+                "id": "research-2", 
+                "title": "Búsqueda comprehensiva en múltiples fuentes",
+                "description": "Realizar búsquedas sistemáticas en fuentes académicas, industriales, noticias recientes y bases de datos especializadas",
+                "tool": "web_search",
+                "estimated_time": "8-12 minutos",
+                "complexity": "alta"
+            },
+            {
+                "id": "research-3",
+                "title": "Análisis comparativo y síntesis de información",
+                "description": "Comparar y contrastar información de diferentes fuentes, identificar patrones, tendencias y discrepancias",
+                "tool": "analysis", 
+                "estimated_time": "10-15 minutos",
+                "complexity": "alta"
+            },
+            {
+                "id": "research-4",
+                "title": "Generación de insights y recomendaciones",
+                "description": "Crear un informe estructurado con hallazgos clave, insights únicos y recomendaciones accionables",
+                "tool": "creation",
+                "estimated_time": "5-8 minutos",
+                "complexity": "media"
+            }
+        ]
+        return {
+            "steps": steps,
+            "task_type": "investigación comprehensiva",
+            "complexity": "alta",
+            "estimated_total_time": "26-40 minutos"
+        }
+    
+    elif category == 'creacion':
+        steps = [
+            {
+                "id": "create-1",
+                "title": "Planificación y estructura del contenido",
+                "description": f"Definir estructura, objetivos, audiencia objetivo y elementos clave para '{message}'",
+                "tool": "planning",
+                "estimated_time": "4-6 minutos",
+                "complexity": "media"
+            },
+            {
+                "id": "create-2",
+                "title": "Investigación de contexto y referencias",
+                "description": "Recopilar información relevante, ejemplos, mejores prácticas y referencias del tema",
+                "tool": "web_search",
+                "estimated_time": "6-10 minutos", 
+                "complexity": "media"
+            },
+            {
+                "id": "create-3",
+                "title": "Desarrollo del contenido principal",
+                "description": "Crear el contenido siguiendo la estructura planificada, con enfoque en originalidad y valor",
+                "tool": "creation",
+                "estimated_time": "15-25 minutos",
+                "complexity": "alta"
+            },
+            {
+                "id": "create-4",
+                "title": "Revisión, optimización y formato final",
+                "description": "Revisar, mejorar la redacción, aplicar formato profesional y asegurar calidad",
+                "tool": "analysis",
+                "estimated_time": "5-8 minutos",
+                "complexity": "media"
+            }
+        ]
+        return {
+            "steps": steps,
+            "task_type": "creación de contenido",
+            "complexity": "alta", 
+            "estimated_total_time": "30-49 minutos"
+        }
+    
+    elif category == 'analisis':
+        steps = [
+            {
+                "id": "analysis-1",
+                "title": "Recopilación y preparación de datos",
+                "description": f"Identificar y recopilar todos los datos relevantes para analizar '{message}'",
+                "tool": "web_search",
+                "estimated_time": "5-8 minutos",
+                "complexity": "media"
+            },
+            {
+                "id": "analysis-2",
+                "title": "Análisis cuantitativo y cualitativo",
+                "description": "Aplicar métodos de análisis estadístico, comparativo y tendencial a los datos",
+                "tool": "analysis",
+                "estimated_time": "12-18 minutos",
+                "complexity": "alta"
+            },
+            {
+                "id": "analysis-3",
+                "title": "Identificación de patrones e insights",
+                "description": "Detectar patrones, correlaciones, anomalías y generar insights significativos",
+                "tool": "analysis",
+                "estimated_time": "8-12 minutos",
+                "complexity": "alta"
+            },
+            {
+                "id": "analysis-4",
+                "title": "Reporte ejecutivo con recomendaciones",
+                "description": "Crear reporte detallado con conclusiones, recomendaciones estratégicas y siguientes pasos",
+                "tool": "creation",
+                "estimated_time": "6-10 minutos",
+                "complexity": "media"
+            }
+        ]
+        return {
+            "steps": steps,
+            "task_type": "análisis profundo",
+            "complexity": "alta",
+            "estimated_total_time": "31-48 minutos"
+        }
+    
+    elif category == 'desarrollo':
+        steps = [
+            {
+                "id": "dev-1",
+                "title": "Análisis de requirements y arquitectura",
+                "description": f"Analizar requisitos técnicos, definir arquitectura y tecnologías para '{message}'",
+                "tool": "analysis",
+                "estimated_time": "6-10 minutos",
+                "complexity": "alta"
+            },
+            {
+                "id": "dev-2",
+                "title": "Investigación de mejores prácticas",
+                "description": "Buscar patrones de diseño, librerías, frameworks y mejores prácticas aplicables",
+                "tool": "web_search", 
+                "estimated_time": "8-12 minutos",
+                "complexity": "media"
+            },
+            {
+                "id": "dev-3",
+                "title": "Implementación y desarrollo",
+                "description": "Desarrollar la solución siguiendo estándares de calidad y buenas prácticas",
+                "tool": "creation",
+                "estimated_time": "20-35 minutos",
+                "complexity": "alta"
+            },
+            {
+                "id": "dev-4",
+                "title": "Testing y documentación",
+                "description": "Realizar pruebas, crear documentación técnica y guías de uso",
+                "tool": "analysis",
+                "estimated_time": "8-15 minutos",
+                "complexity": "media"
+            }
+        ]
+        return {
+            "steps": steps,
+            "task_type": "desarrollo de software",
+            "complexity": "alta",
+            "estimated_total_time": "42-72 minutos"
+        }
+    
+    elif category == 'planificacion':
+        steps = [
+            {
+                "id": "plan-1",
+                "title": "Análisis de situación actual y objetivos",
+                "description": f"Evaluar el estado actual y definir objetivos específicos para '{message}'",
+                "tool": "analysis",
+                "estimated_time": "5-8 minutos",
+                "complexity": "media"
+            },
+            {
+                "id": "plan-2",
+                "title": "Investigación de estrategias y benchmarking",
+                "description": "Investigar estrategias exitosas, casos de estudio y mejores prácticas del sector",
+                "tool": "web_search",
+                "estimated_time": "8-15 minutos",
+                "complexity": "media"
+            },
+            {
+                "id": "plan-3",
+                "title": "Desarrollo de estrategia y cronograma",
+                "description": "Crear plan estratégico detallado con cronograma, recursos y métricas de éxito",
+                "tool": "planning",
+                "estimated_time": "15-25 minutos",
+                "complexity": "alta"
+            },
+            {
+                "id": "plan-4",
+                "title": "Plan de implementación y seguimiento",
+                "description": "Definir plan de implementación, KPIs, milestones y sistema de seguimiento",
+                "tool": "creation",
+                "estimated_time": "6-12 minutos",
+                "complexity": "media"
+            }
+        ]
+        return {
+            "steps": steps,
+            "task_type": "planificación estratégica",
+            "complexity": "alta",
+            "estimated_total_time": "34-60 minutos"
+        }
+    
+    else:  # general
+        steps = [
+            {
+                "id": "general-1",
+                "title": f"Análisis comprehensivo del objetivo",
+                "description": f"Analizar en profundidad qué se requiere para '{message}', identificar componentes clave y establecer criterios de éxito",
+                "tool": "analysis",
+                "estimated_time": "4-7 minutos",
+                "complexity": "media"
+            },
+            {
+                "id": "general-2",
+                "title": "Investigación contextual y de referencia",
+                "description": "Buscar información relevante, casos similares, mejores prácticas y recursos necesarios",
+                "tool": "web_search",
+                "estimated_time": "8-15 minutos",
+                "complexity": "media"
+            },
+            {
+                "id": "general-3",
+                "title": "Desarrollo y procesamiento de la solución",
+                "description": "Desarrollar la solución integrando la investigación con metodología sistemática",
+                "tool": "creation",
+                "estimated_time": "12-20 minutos",
+                "complexity": "alta"
+            },
+            {
+                "id": "general-4",
+                "title": "Refinamiento y entrega final optimizada",
+                "description": "Refinar resultados, optimizar presentación y asegurar cumplimiento de objetivos",
+                "tool": "analysis",
+                "estimated_time": "5-10 minutos",
+                "complexity": "media"
+            }
+        ]
+        return {
+            "steps": steps,
+            "task_type": "tarea general",
+            "complexity": "media",
+            "estimated_total_time": "29-52 minutos"
+        }
+
 def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool = True) -> dict:
     """
-    Función UNIFICADA para generación de planes usando Ollama con robustecimiento y validación de esquemas
-    Consolidación de generate_dynamic_plan_with_ai y generate_task_plan para eliminar duplicación
+    🚀 SISTEMA ROBUSTO DE GENERACIÓN DE PLANES CON MÚLTIPLES FALLBACKS
+    Función UNIFICADA con robustecimiento completo y fallbacks inteligentes
     """
-    logger.info(f"🧠 Generating unified AI-powered plan for task {task_id} - Message: {message[:50]}...")
+    logger.info(f"🧠 Generating robust unified AI-powered plan for task {task_id} - Message: {message[:50]}...")
+    
+    # Detectar categoría de la tarea para contexto
+    task_category = detect_task_category(message)
+    logger.info(f"📋 Task category detected: {task_category}")
     
     # Obtener servicio de Ollama
     ollama_service = get_ollama_service()
     if not ollama_service:
-        logger.error("❌ Ollama service not available for unified plan generation")
-        return generate_fallback_plan(message, task_id)
+        logger.warning("⚠️ Ollama service not available, using intelligent fallback")
+        return generate_intelligent_fallback_plan(message, task_id, task_category)
     
     # Verificar que Ollama esté saludable
     if not ollama_service.is_healthy():
-        logger.error("❌ Ollama service not healthy for unified plan generation")
-        return generate_fallback_plan(message, task_id)
+        logger.warning("⚠️ Ollama service not healthy, using intelligent fallback")
+        return generate_intelligent_fallback_plan(message, task_id, task_category)
     
-    def validate_plan_schema(plan_data: dict) -> bool:
-        """Validar que el plan cumple con el esquema requerido"""
-        try:
-            jsonschema.validate(plan_data, PLAN_SCHEMA)
-            return True
-        except jsonschema.ValidationError as e:
-            logger.warning(f"❌ Plan schema validation failed for task {task_id}: {e.message}")
-            return False
-    
-    def generate_plan_with_retries() -> dict:
-        """Generar plan con reintentos y retroalimentación específica a Ollama"""
-        max_attempts = 2 if attempt_retries else 1
-        last_error = None
+    def generate_robust_plan_with_retries() -> dict:
+        """🔄 Generar plan con múltiples estrategias de reintentos"""
+        max_attempts = 3 if attempt_retries else 1
         
         for attempt in range(1, max_attempts + 1):
             try:
-                logger.info(f"🔄 Unified plan generation attempt {attempt}/{max_attempts} for task {task_id}")
+                logger.info(f"🔄 Robust plan generation attempt {attempt}/{max_attempts} for task {task_id}")
                 
-                # Construir prompt específico mejorado para generación de JSON estructurado
+                # Prompts progresivamente más específicos
                 if attempt == 1:
-                    # Prompt mejorado para generar plans específicos
-                    plan_prompt = f"""Crea un plan detallado y específico para: {message}
+                    # Prompt optimizado con contexto de categoría
+                    plan_prompt = f"""Eres un planificador experto. Crea un plan detallado y específico para la siguiente tarea de categoría "{task_category}":
 
-Diseña 3-4 pasos ESPECÍFICOS y ORIENTADOS AL VALOR que superen las expectativas.
+TAREA: {message}
 
-Para investigación: múltiples fuentes, análisis comparativo, tendencias
-Para creación: estructura profesional, contenido original, ejemplos
-Para análisis: datos cuantitativos, insights profundos, recomendaciones
+Genera 4-5 pasos ESPECÍFICOS, DETALLADOS y ORIENTADOS AL VALOR que superen las expectativas del usuario.
 
-RESPONDE SOLO con JSON válido:
+CONTEXTO DE CATEGORÍA "{task_category.upper()}":
+- Si es investigación: incluye múltiples fuentes, análisis comparativo, validación cruzada
+- Si es creación: incluye planificación, investigación, desarrollo iterativo, refinamiento
+- Si es análisis: incluye recopilación de datos, análisis multi-dimensional, insights profundos
+- Si es desarrollo: incluye análisis técnico, diseño, implementación, testing
+- Si es planificación: incluye análisis situacional, benchmarking, estrategia, implementación
+
+HERRAMIENTAS DISPONIBLES: web_search, analysis, creation, planning, delivery, processing
+
+RESPONDE EXACTAMENTE en este formato JSON (sin texto adicional):
 {{
   "steps": [
     {{
       "id": "step-1",
-      "title": "Título específico orientado al valor para esta tarea",
-      "description": "Metodología detallada con entregables específicos", 
-      "tool": "web_search"
+      "title": "Título específico y accionable del primer paso",
+      "description": "Descripción detallada con metodología y entregables específicos para esta tarea exacta",
+      "tool": "herramienta_apropiada",
+      "estimated_time": "tiempo realista en minutos",
+      "complexity": "baja|media|alta"
     }},
     {{
-      "id": "step-2",
+      "id": "step-2", 
       "title": "Segundo paso que construya sobre el anterior",
-      "description": "Análisis avanzado que genere insights únicos",
-      "tool": "analysis"
+      "description": "Descripción específica que integre resultados del paso anterior",
+      "tool": "herramienta_apropiada",
+      "estimated_time": "tiempo realista",
+      "complexity": "baja|media|alta"
     }},
     {{
-      "id": "step-3", 
-      "title": "Entrega de resultados profesionales",
-      "description": "Síntesis con formato accionable y recomendaciones",
-      "tool": "creation"
+      "id": "step-3",
+      "title": "Tercer paso con valor agregado",
+      "description": "Metodología avanzada que genere insights únicos o valor diferencial",
+      "tool": "herramienta_apropiada", 
+      "estimated_time": "tiempo realista",
+      "complexity": "baja|media|alta"
+    }},
+    {{
+      "id": "step-4",
+      "title": "Cuarto paso de refinamiento y optimización",
+      "description": "Proceso de mejora, validación y optimización de resultados",
+      "tool": "herramienta_apropiada",
+      "estimated_time": "tiempo realista", 
+      "complexity": "baja|media|alta"
     }}
   ],
-  "task_type": "tipo específico para esta tarea",
+  "task_type": "tipo específico basado en la tarea real",
   "complexity": "baja|media|alta",
-  "estimated_total_time": "tiempo realista"
+  "estimated_total_time": "suma realista de todos los pasos"
 }}
 
-Los pasos deben ser específicos para "{message}", no genéricos.
-HERRAMIENTAS: web_search, analysis, creation, planning, delivery
+IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Cada paso debe tener valor único."""
 
-RESPONDE SOLO JSON:"""
+                elif attempt == 2:
+                    # Prompt simplificado para segundo intento
+                    plan_prompt = f"""Crea un plan JSON para: {message}
+
+{{
+  "steps": [
+    {{"id": "step-1", "title": "Paso 1 específico", "description": "Descripción detallada", "tool": "web_search"}},
+    {{"id": "step-2", "title": "Paso 2 específico", "description": "Descripción detallada", "tool": "analysis"}},
+    {{"id": "step-3", "title": "Paso 3 específico", "description": "Descripción detallada", "tool": "creation"}}
+  ],
+  "task_type": "tipo de tarea",
+  "complexity": "media",
+  "estimated_total_time": "30 minutos"
+}}
+
+Solo JSON, sin texto adicional:"""
+
+                else:
+                    # Prompt mínimo para tercer intento
+                    plan_prompt = f"Plan JSON para '{message}': {{'steps': [{{'id':'step-1','title':'Investigar {message[:20]}','description':'Buscar información','tool':'web_search'}},{{'id':'step-2','title':'Procesar información','description':'Analizar datos','tool':'analysis'}},{{'id':'step-3','title':'Crear resultado','description':'Generar entregable','tool':'creation'}}],'task_type':'general','complexity':'media','estimated_total_time':'25 minutos'}}"
                 
-                # Generar plan con Ollama
-                result = ollama_service.generate_response(plan_prompt, {'temperature': 0.3})
+                # Generar plan con Ollama usando diferentes parámetros según el intento
+                ollama_params = {
+                    'temperature': 0.2 if attempt == 1 else 0.1,
+                    'max_tokens': 1500 if attempt == 1 else 800,
+                }
+                
+                result = ollama_service.generate_response(plan_prompt, ollama_params)
                 
                 if result.get('error'):
                     logger.error(f"❌ Ollama error: {result['error']}")
