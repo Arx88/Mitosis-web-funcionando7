@@ -274,8 +274,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   timestamp: new Date()
                 };
                 
-                // FINAL MESSAGES - user message MUST be first
-                const finalMessages = [userMessage, agentMessage];
+                // FINAL MESSAGES - preserve all existing messages + new agent message
+                const finalMessages = [...currentMessages, agentMessage];
                 
                 console.log('🔧 CRITICAL FIX: Calling onUpdateMessages with forced preservation');
                 console.log('🔧 Final messages:', finalMessages.map(m => ({ sender: m.sender, content: m.content.substring(0, 30) })));
