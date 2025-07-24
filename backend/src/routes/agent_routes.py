@@ -3133,8 +3133,8 @@ Solo JSON, sin texto adicional:"""
                 continue
         
         # Si llegamos aquí, todos los intentos fallaron
-        logger.error(f"❌ All plan generation attempts failed. Last error: {last_error}")
-        return generate_fallback_plan(message, task_id)
+        logger.error(f"❌ All plan generation attempts failed. Using intelligent fallback")
+        return generate_intelligent_fallback_plan(message, task_id, task_category)
     
     # Llamar a la función interna
     try:
