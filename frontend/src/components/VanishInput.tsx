@@ -168,7 +168,7 @@ export const VanishInput: React.FC<VanishInputProps> = ({
     };
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('🔥 VANISHINPUT DEBUG: handleSubmit called with:', inputValue.trim());
     console.log('🔥 VANISHINPUT DEBUG: disabled:', disabled, 'onSendMessage exists:', !!onSendMessage);
@@ -185,7 +185,7 @@ export const VanishInput: React.FC<VanishInputProps> = ({
     } else {
       console.log('🔥 VANISHINPUT DEBUG: handleSubmit blocked:', { inputValue: inputValue.trim(), disabled });
     }
-  };
+  }, [inputValue, disabled, onSendMessage]);
 
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
