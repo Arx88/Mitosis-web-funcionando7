@@ -2657,7 +2657,7 @@ RESPONDE SOLO JSON:"""
                     logger.error(f"❌ Response was: {response_text[:200]}...")
                     
                     # Plan de fallback simple
-            fallback_steps = [
+                    fallback_steps = [
                 {
                     "id": "step-1",
                     "title": f"Investigar sobre: {message[:30]}",
