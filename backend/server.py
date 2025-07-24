@@ -250,8 +250,8 @@ except Exception as e:
             logger.error(f"Status error: {e}")
             return jsonify({"error": "Internal server error"}), 500
     
-    app.register_blueprint(agent_bp, url_prefix='/api/agent')
-    logger.info("⚠️ Usando rutas de agente básicas de fallback")
+    # Blueprint ya registrado anteriormente en la línea 150
+    logger.info("⚠️ Blueprint agent ya registrado anteriormente")
 
 # Endpoints de configuración dinámica
 @app.route('/api/agent/config/current', methods=['GET'])
