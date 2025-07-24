@@ -3817,7 +3817,7 @@ def test_plan_generation():
         logger.info(f"🧪 Testing AI plan generation for: {message}")
         
         # Probar generación con IA
-        ai_plan = generate_dynamic_plan_with_ai(message, task_id)
+        ai_plan = generate_unified_ai_plan(message, task_id)
         
         # También generar plan de fallback para comparación
         fallback_task_id = f'fallback-{uuid.uuid4()}'
