@@ -319,6 +319,9 @@ export function App() {
       const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
       
       console.log('🚀 Starting task execution for:', taskId);
+      console.log('🔗 Backend URL:', backendUrl);
+      console.log('📡 Full URL:', `${backendUrl}/api/agent/start-task-execution/${taskId}`);
+      
       const response = await fetch(`${backendUrl}/api/agent/start-task-execution/${taskId}`, {
         method: 'POST',
         headers: {
@@ -326,14 +329,33 @@ export function App() {
         }
       });
       
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response ok:', response.ok);
+      
       if (response.ok) {
         const result = await response.json();
         console.log('✅ Task execution started successfully:', result);
+        
+        // Log success message to terminal if possible
+        if (logToTerminal) {
+          logToTerminal('🚀 Ejecución automática iniciada', 'success');
+        }
       } else {
-        console.error('❌ Failed to start task execution:', response.status);
+        const errorText = await response.text();
+        console.error('❌ Failed to start task execution:', response.status, errorText);
+        
+        // Log error message to terminal if possible
+        if (logToTerminal) {
+          logToTerminal(`❌ Error iniciando ejecución: ${response.status}`, 'error');
+        }
       }
     } catch (error) {
       console.error('💥 Error starting task execution:', error);
+      
+      // Log error message to terminal if possible  
+      if (logToTerminal) {
+        logToTerminal(`💥 Error de red: ${error.message}`, 'error');
+      }
     }
   };
 
