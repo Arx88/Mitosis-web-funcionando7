@@ -902,7 +902,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                   console.log('🚀 Auto-starting task execution after plan generation in TaskView');
                   setTimeout(() => {
                     startTaskExecution(task.id);
-                  }, 2000); // Wait 2 seconds for UI to update
+                  }, 500); // Wait 500ms for UI to update - faster response
                 }
               }}
               onTitleGenerated={(enhancedTitle) => {
