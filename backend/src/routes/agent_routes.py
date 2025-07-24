@@ -3737,11 +3737,11 @@ def generate_plan():
     """
     try:
         data = request.get_json() or {}
-        task_title = data.get('task_title', '')
+        task_title = data.get('task_title', '') or data.get('message', '')
         task_id = data.get('task_id', str(uuid.uuid4()))
         
         if not task_title:
-            return jsonify({'error': 'task_title is required'}), 400
+            return jsonify({'error': 'task_title or message is required'}), 400
         
         logger.info(f"🚀 Generating dynamic plan for: {task_title}")
         
