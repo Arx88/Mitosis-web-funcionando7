@@ -3044,15 +3044,22 @@ Solo JSON, sin texto adicional:"""
                     
                     logger.info(f"✅ Plan generated with {len(plan_data['steps'])} steps")
                     
-                    return jsonify({
-                        'plan': plan_data['steps'],
-                        'enhanced_title': f"Plan: {message[:50]}...",
-                        'task_id': task_id,
-                        'total_steps': len(plan_data['steps']),
-                        'estimated_total_time': plan_data.get('estimated_total_time'),
-                        'task_type': plan_data.get('task_type'),
-                        'complexity': plan_data.get('complexity')
-                    })
+                    # 🎯 MARCAR EL PRIMER PASO COMO ACTIVO
+                    if plan_data['steps']:
+                        plan_data['steps'][0]['active'] = True
+                        plan_data['steps'][0]['status'] = 'active'
+                        logger.info(f"✅ First step marked as active: {plan_data['steps'][0]['title']}")
+                    
+                    result = {
+                        'steps': plan_data['steps'],
+                        'task_type': plan_data.get('task_type', 'general'),
+                        'complexity': plan_data.get('complexity', 'media'),
+                        'estimated_total_time': plan_data.get('estimated_total_time', '30 minutos'),
+                        'plan_source': 'ai_generated'
+                    }
+                    
+                    logger.info(f"✅ Returning AI-generated plan with {len(plan_data['steps'])} steps")
+                    return result
                     
                 except (json.JSONDecodeError, ValueError) as parse_error:
                     logger.error(f"❌ JSON parse error: {parse_error}")
