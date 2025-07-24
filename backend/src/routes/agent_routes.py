@@ -2607,9 +2607,9 @@ RESPONDE SOLO JSON:"""
                 if result.get('error'):
                     logger.error(f"❌ Ollama error: {result['error']}")
                     return {'error': f'Plan generation failed: {result["error"]}', 'success': False}
-        
-        # Parsear respuesta JSON
-        response_text = result.get('response', '').strip()
+                
+                # Parsear respuesta JSON
+                response_text = result.get('response', '').strip()
         
         try:
             # Limpiar respuesta
