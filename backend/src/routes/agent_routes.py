@@ -1967,12 +1967,20 @@ Formato: Profesional, estructurado y completo.
             
             logger.info(f"🎉 Task {task_id} completed successfully with REAL execution and final delivery!")
         
+        # 🚨 PASO 1: LOGGING AGRESIVO ANTES DE CREAR THREAD 🚨
+        print(f"🧵 About to create execution thread for task {task_id}")
+        print(f"🧵 Target function: execute_steps")
+        print(f"🧵 Thread will be daemon: True")
+        
         # Ejecutar en hilo separado
         thread = threading.Thread(target=execute_steps)
         thread.daemon = True
+        print(f"🧵 Thread created successfully, starting thread...")
         thread.start()
+        print(f"🧵 Thread started! Thread is alive: {thread.is_alive()}")
         
         logger.info(f"🚀 Started REAL plan execution for task {task_id}")
+        print(f"✅ execute_plan_with_real_tools completed - thread is running")
         
     except Exception as e:
         logger.error(f"Error in real plan execution: {str(e)}")
