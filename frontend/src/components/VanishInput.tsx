@@ -194,7 +194,7 @@ export const VanishInput: React.FC<VanishInputProps> = ({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     console.log('🔥 VANISHINPUT DEBUG: Key pressed:', e.key, 'shiftKey:', e.shiftKey, 'inputValue:', inputValue);
     console.log('🔥 VANISHINPUT DEBUG: disabled:', disabled, 'onSendMessage exists:', !!onSendMessage);
     console.log('🔥 VANISHINPUT DEBUG: Event target:', e.target);
@@ -206,7 +206,7 @@ export const VanishInput: React.FC<VanishInputProps> = ({
       e.stopPropagation(); // Add this to prevent any parent event handling
       handleSubmit(e as any); // Cast to form event for compatibility
     }
-  };
+  }, [inputValue, disabled, onSendMessage, handleSubmit]);
 
   const handleWebSearch = async () => {
     console.log('🌐 handleWebSearch called with inputValue:', inputValue.trim());
