@@ -1002,7 +1002,12 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                     logger.warning(f"⚠️ WebSocket update failed: {e}")
         
         def execute_steps():
+            # 🚨 PASO 1: LOGGING AGRESIVO EN EXECUTE_STEPS 🚨
+            print(f"🚀 execute_steps thread function STARTED for task_id: {task_id}")
+            print(f"📋 Thread is running in daemon mode")
+            
             logger.info(f"🔍 DEBUG: execute_steps iniciado para task_id: {task_id}")
+            print(f"🔍 About to call get_task_data for task_id: {task_id}")
             
             # Usar TaskManager en lugar de active_task_plans
             task_data = get_task_data(task_id)
