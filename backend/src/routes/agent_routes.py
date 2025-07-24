@@ -2858,6 +2858,7 @@ def generate_intelligent_fallback_plan(message: str, task_id: str, category: str
                 "complexity": "media"
             }
         ]
+        steps = mark_first_step_active(steps)
         return {
             "steps": steps,
             "task_type": "planificación estratégica",
@@ -2900,6 +2901,7 @@ def generate_intelligent_fallback_plan(message: str, task_id: str, category: str
                 "complexity": "media"
             }
         ]
+        steps = mark_first_step_active(steps)
         return {
             "steps": steps,
             "task_type": "tarea general",
