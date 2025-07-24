@@ -1,0 +1,90 @@
+{
+  "total_tests": 9,
+  "passed_tests": 1,
+  "success_rate": 11.11111111111111,
+  "overall_status": "\u274c CRITICAL - System has major issues preventing proper operation",
+  "critical_passed": 0,
+  "critical_total": 4,
+  "test_results": [
+    {
+      "test_name": "Backend Health Check",
+      "success": true,
+      "details": "All services healthy - DB: True, Ollama: True, Tools: 12",
+      "timestamp": "2025-07-24T09:11:24.394174",
+      "response_data": null
+    },
+    {
+      "test_name": "Agent Status Check",
+      "success": false,
+      "details": "Agent not ready - Ollama connected: True, Tools: 0",
+      "timestamp": "2025-07-24T09:11:26.404646",
+      "response_data": {
+        "active_tasks": 0,
+        "memory": {
+          "enabled": true,
+          "initialized": true
+        },
+        "ollama": {
+          "connected": true,
+          "endpoint": "https://bef4a4bb93d1.ngrok-free.app",
+          "model": "llama3.1:8b"
+        },
+        "status": "running",
+        "timestamp": "2025-07-24T09:11:26.401410",
+        "tools": 12
+      }
+    },
+    {
+      "test_name": "Plan Generation",
+      "success": false,
+      "details": "HTTP 400: {\"error\":\"task_title is required\"}\n",
+      "timestamp": "2025-07-24T09:11:28.418300",
+      "response_data": {
+        "error": "task_title is required"
+      }
+    },
+    {
+      "test_name": "Task Initialization",
+      "success": false,
+      "details": "No task_id available from plan generation",
+      "timestamp": "2025-07-24T09:11:30.418515",
+      "response_data": null
+    },
+    {
+      "test_name": "Task Plan Retrieval",
+      "success": false,
+      "details": "No task_id available",
+      "timestamp": "2025-07-24T09:11:32.418687",
+      "response_data": null
+    },
+    {
+      "test_name": "Task Execution Start",
+      "success": false,
+      "details": "No task_id available",
+      "timestamp": "2025-07-24T09:11:34.418828",
+      "response_data": null
+    },
+    {
+      "test_name": "Step Execution",
+      "success": false,
+      "details": "No task_id available",
+      "timestamp": "2025-07-24T09:11:36.419012",
+      "response_data": null
+    },
+    {
+      "test_name": "Document Generation",
+      "success": false,
+      "details": "No task_id available",
+      "timestamp": "2025-07-24T09:11:38.419164",
+      "response_data": null
+    },
+    {
+      "test_name": "Integration Flow",
+      "success": false,
+      "details": "Plan generation failed in integration test",
+      "timestamp": "2025-07-24T09:11:40.432277",
+      "response_data": null
+    }
+  ],
+  "task_id": null
+}
