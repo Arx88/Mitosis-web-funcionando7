@@ -3868,37 +3868,52 @@ def generate_plan():
             logger.error("❌ Ollama service not available")
             return jsonify({'error': 'Ollama service not available'}), 500
         
-        # Prompt simple para generar plan
-        plan_prompt = f"""Crea un plan de 3-4 pasos para: {message}
+        # Prompt mejorado para generar plan específico
+        plan_prompt = f"""Crea un plan detallado de 3-4 pasos específicos para: {message}
+
+Cada paso debe ser específico para esta tarea, no genérico. Analiza qué se necesita hacer realmente.
 
 Responde SOLO con JSON válido en este formato:
 {{
   "steps": [
     {{
       "id": "step-1",
-      "title": "Título del paso 1",
-      "description": "Descripción detallada",
+      "title": "Título específico del paso 1 para esta tarea",
+      "description": "Descripción detallada de qué se va a hacer exactamente",
       "tool": "web_search"
     }},
     {{
       "id": "step-2", 
-      "title": "Título del paso 2",
-      "description": "Descripción detallada",
+      "title": "Título específico del paso 2 para esta tarea",
+      "description": "Descripción detallada de qué se va a hacer exactamente",
       "tool": "analysis"
     }},
     {{
       "id": "step-3",
-      "title": "Título del paso 3", 
-      "description": "Descripción detallada",
+      "title": "Título específico del paso 3 para esta tarea", 
+      "description": "Descripción detallada de qué se va a hacer exactamente",
       "tool": "creation"
     }}
   ],
-  "task_type": "tipo de tarea",
-  "complexity": "media",
-  "estimated_total_time": "30-45 minutos"
+  "task_type": "tipo específico de tarea",
+  "complexity": "baja|media|alta",
+  "estimated_total_time": "tiempo estimado realista"
 }}
 
-Herramientas disponibles: web_search, analysis, creation, planning, delivery"""
+EJEMPLOS DE BUENOS PASOS:
+Para "Crear informe sobre restaurantes de Madrid":
+- "Buscar los mejores restaurantes de Madrid en 2025"
+- "Analizar reseñas y clasificar por categorías gastronómicas"  
+- "Redactar informe detallado con recomendaciones específicas"
+
+Para "Analizar mercado de criptomonedas":
+- "Investigar precios actuales de Bitcoin, Ethereum y altcoins principales"
+- "Analizar tendencias del mercado y factores que afectan precios"
+- "Generar análisis técnico con predicciones y recomendaciones"
+
+Herramientas disponibles: web_search, analysis, creation, planning, delivery
+
+IMPORTANTE: Los títulos y descripciones deben ser específicos para "{message}", no genéricos."""
         
         # Generar plan con Ollama
         result = ollama_service.generate_response(plan_prompt, {'temperature': 0.3})
