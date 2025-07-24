@@ -3394,6 +3394,43 @@ def initialize_task():
         logger.error(f"❌ Error initializing task: {e}")
         return jsonify({'error': str(e)}), 500
 
+@agent_bp.route('/generate-plan', methods=['POST'])
+def generate_plan():
+    """Generate a plan for a task - Compatible with frontend expectations"""
+    try:
+        data = request.get_json()
+        task_title = data.get('task_title', '')
+        task_id = data.get('task_id')
+        
+        if not task_title:
+            return jsonify({'error': 'task_title is required'}), 400
+        
+        logger.info(f"📋 Generating plan for task: {task_title}")
+        
+        # Generar plan usando la función existente
+        plan_response = generate_task_plan(task_title, task_id)
+        
+        # Generar título mejorado
+        enhanced_title = generate_task_title_with_llm(task_title, task_id)
+        
+        # Formatear respuesta para el frontend
+        response = {
+            'success': True,
+            'enhanced_title': enhanced_title,
+            'plan': plan_response.get('steps', []),
+            'task_type': plan_response.get('task_type', 'general'),
+            'complexity': plan_response.get('complexity', 'media'),
+            'estimated_total_time': plan_response.get('estimated_total_time', '10-15 minutos'),
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        logger.info(f"✅ Plan generated successfully: {len(response['plan'])} steps")
+        return jsonify(response)
+        
+    except Exception as e:
+        logger.error(f"❌ Error generating plan: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @agent_bp.route('/execute-step/<task_id>/<step_id>', methods=['POST'])
 def execute_step(task_id: str, step_id: str):
     """Execute a specific step and emit real-time updates"""
