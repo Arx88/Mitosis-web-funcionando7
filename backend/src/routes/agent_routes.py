@@ -222,6 +222,61 @@ def execute_single_step_detailed(task_id: str, step_id: str):
         
     except Exception as e:
         logger.error(f"❌ Error ejecutando paso {step_id}: {str(e)}")
+@agent_bp.route('/get-task-status/<task_id>', methods=['GET'])
+def get_task_status(task_id: str):
+    """
+    CRITICAL FIX: Endpoint para HTTP polling del frontend
+    Obtener el estado actual de una tarea para polling frontend
+    """
+    try:
+        task_data = get_task_data(task_id)
+        if not task_data:
+            return jsonify({'error': f'Task {task_id} not found'}), 404
+        
+        steps = task_data.get('plan', [])
+        
+        # Calcular estadísticas del plan
+        completed_steps = sum(1 for step in steps if step.get('completed', False))
+        in_progress_steps = sum(1 for step in steps if step.get('status') == 'in-progress')
+        active_steps = sum(1 for step in steps if step.get('active', False))
+        
+        # Determinar estado de ejecución
+        task_status = 'pending'
+        if completed_steps == len(steps) and len(steps) > 0:
+            task_status = 'completed'
+        elif in_progress_steps > 0 or active_steps > 0:
+            task_status = 'executing'  # Frontend espera 'executing' no 'in_progress'
+        elif completed_steps > 0:
+            task_status = 'partially_completed'
+        elif len(steps) > 0:
+            task_status = 'plan_generated'  # Indica que el plan está listo para ejecutar
+        
+        # Calcular progreso
+        progress = (completed_steps / len(steps) * 100) if len(steps) > 0 else 0
+        
+        return jsonify({
+            'task_id': task_id,
+            'status': task_status,
+            'plan': steps,
+            'progress': progress,
+            'stats': {
+                'total_steps': len(steps),
+                'completed_steps': completed_steps,
+                'in_progress_steps': in_progress_steps,
+                'active_steps': active_steps,
+                'remaining_steps': len(steps) - completed_steps
+            },
+            'current_step': next((i for i, step in enumerate(steps) if step.get('active', False)), None),
+            'message': task_data.get('message', ''),
+            'task_type': task_data.get('task_type', ''),
+            'complexity': task_data.get('complexity', ''),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo status para task {task_id}: {str(e)}")
+        return jsonify({'error': f'Error getting task status: {str(e)}'}), 500
+
 @agent_bp.route('/get-task-plan/<task_id>', methods=['GET'])
 def get_task_plan(task_id: str):
     """
