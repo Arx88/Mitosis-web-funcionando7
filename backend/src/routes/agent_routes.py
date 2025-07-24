@@ -4502,7 +4502,7 @@ def start_task_execution(task_id: str):
         # Emitir evento de inicio de tarea
         emit_step_event(task_id, 'task_started', {
             'task_id': task_id,
-            'total_steps': len(task_plan.get('steps', [])),
+            'total_steps': len(task_plan.get('plan', [])),
             'timestamp': datetime.now().isoformat()
         })
         
@@ -4512,7 +4512,7 @@ def start_task_execution(task_id: str):
         
         def execute_with_context():
             with app.app_context():
-                execute_task_steps_sequentially(task_id, task_plan.get('steps', []))
+                execute_task_steps_sequentially(task_id, task_plan.get('plan', []))
         
         execution_thread = threading.Thread(target=execute_with_context)
         execution_thread.daemon = True
