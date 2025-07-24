@@ -2953,7 +2953,7 @@ RESPONDE SOLO JSON - NO TEXTO ADICIONAL
         
         if len(plan_steps) == 0:
             logger.error(f"❌ No valid steps created for task {task_id}")
-            return generate_fallback_plan_with_notification(message, task_id, "No se pudieron crear pasos válidos")
+            return generate_fallback_plan(message, task_id)
             
         # Guardar plan con TaskManager (persistencia MongoDB)
         task_data = {
