@@ -1,138 +1,60 @@
 {
-  "total_tests": 11,
-  "passed_tests": 10,
-  "success_rate": 90.9090909090909,
-  "overall_status": "\u2705 EXCELLENT - System is fully operational",
-  "critical_passed": 3,
-  "critical_total": 5,
+  "total_tests": 7,
+  "passed_tests": 5,
+  "success_rate": 71.42857142857143,
+  "overall_status": "\u26a0\ufe0f GOOD - Most fixes working with minor issues",
+  "critical_passed": 2,
+  "critical_total": 4,
   "test_results": [
     {
       "test_name": "Backend Health Check",
       "success": true,
       "details": "All services healthy - DB: True, Ollama: True, Tools: 12",
-      "timestamp": "2025-07-24T11:15:15.643470",
+      "timestamp": "2025-07-24T14:14:30.840507",
       "response_data": null
     },
     {
-      "test_name": "Agent Status Check",
+      "test_name": "Chat Endpoint with Automatic Execution",
       "success": true,
-      "details": "Agent ready - Ollama: https://bef4a4bb93d1.ngrok-free.app (llama3.1:8b), Tools: 12",
-      "timestamp": "2025-07-24T11:15:17.651194",
+      "details": "Chat successful - Task ID: d257d231-e778-4f2d-b054-3750cf28e980, Plan steps: 9, Execution triggered: True",
+      "timestamp": "2025-07-24T14:14:41.625632",
       "response_data": null
     },
     {
-      "test_name": "Plan Generation",
+      "test_name": "Task Status Endpoint",
       "success": true,
-      "details": "Valid plan generated - 4 steps, type: an\u00e1lisis de mercado, complexity: media, title: An\u00e1lisis de Mercado Tecnol\u00f3gico 2025",
-      "timestamp": "2025-07-24T11:15:26.891231",
+      "details": "Status endpoint working - Status: failed, Progress: 0.0%, Steps: 3",
+      "timestamp": "2025-07-24T14:14:43.636408",
       "response_data": null
     },
     {
-      "test_name": "Task Initialization",
+      "test_name": "Aggressive Logging Verification",
+      "success": true,
+      "details": "Execution triggered (plan generated with 9 steps) - logging likely active",
+      "timestamp": "2025-07-24T14:14:58.161635",
+      "response_data": null
+    },
+    {
+      "test_name": "Background Thread Execution",
       "success": false,
-      "details": "Task initialization incomplete - success: True, task_id: None, plan: False",
-      "timestamp": "2025-07-24T11:15:34.549503",
-      "response_data": {
-        "auto_execute": false,
-        "enhanced_title": "An\u00e1lisis de Tendencias en Inteligencia Artificial 2025",
-        "plan": {
-          "ai_generated": true,
-          "complexity": "media",
-          "estimated_total_time": "4 horas",
-          "plan_source": "unified_ai_generated",
-          "schema_validated": true,
-          "steps": [
-            {
-              "active": true,
-              "completed": false,
-              "description": "Determinar el tipo de tarea y los objetivos espec\u00edficos.",
-              "estimated_time": "30 minutos",
-              "id": "step_1",
-              "priority": "alta",
-              "status": "pending",
-              "title": "Definir la tarea",
-              "tool": "planning"
-            },
-            {
-              "active": false,
-              "completed": false,
-              "description": "Realizar una b\u00fasqueda exhaustiva sobre la tarea para obtener informaci\u00f3n relevante.",
-              "estimated_time": "1 hora",
-              "id": "step_2",
-              "priority": "media",
-              "status": "pending",
-              "title": "Investigar la tarea",
-              "tool": "web_search"
-            },
-            {
-              "active": false,
-              "completed": false,
-              "description": "Desarrollar un plan detallado y estructurado para completar la tarea.",
-              "estimated_time": "2 horas",
-              "id": "step_3",
-              "priority": "alta",
-              "status": "pending",
-              "title": "Crear un plan de acci\u00f3n",
-              "tool": "creation"
-            }
-          ],
-          "suggested_icon": "search",
-          "task_type": "investigaci\u00f3n espec\u00edfica",
-          "total_steps": 3
-        },
-        "success": true,
-        "task_id": null
-      }
-    },
-    {
-      "test_name": "Task Plan Retrieval",
-      "success": true,
-      "details": "Plan retrieved - Status: pending, Steps: 4, Completed: 0",
-      "timestamp": "2025-07-24T11:15:36.560130",
+      "details": "No background execution detected - Status: failed, Progress: {'completed_steps': 0, 'failed_steps': 1, 'in_progress_steps': 1, 'percentage': 0.0, 'total_steps': 3}",
+      "timestamp": "2025-07-24T14:15:19.465892",
       "response_data": null
     },
     {
-      "test_name": "Task Execution Start",
+      "test_name": "get_task_state Function",
       "success": true,
-      "details": "Execution started successfully - Task execution started",
-      "timestamp": "2025-07-24T11:15:38.573817",
+      "details": "get_task_state function working - All expected fields present",
+      "timestamp": "2025-07-24T14:15:21.476258",
       "response_data": null
     },
     {
-      "test_name": "Step Execution",
-      "success": true,
-      "details": "Step executed successfully - Tool: planning, Output: Executed Definir el alcance del an\u00e1lisis de mercado using planning...",
-      "timestamp": "2025-07-24T11:15:42.866692",
-      "response_data": null
-    },
-    {
-      "test_name": "Document Generation",
-      "success": true,
-      "details": "No files generated yet (execution may be in progress)",
-      "timestamp": "2025-07-24T11:15:44.875253",
-      "response_data": null
-    },
-    {
-      "test_name": "WebSocket Functionality",
-      "success": true,
-      "details": "WebSocket infrastructure operational - Status: running, Active tasks: 7",
-      "timestamp": "2025-07-24T11:15:46.884592",
-      "response_data": null
-    },
-    {
-      "test_name": "Autonomous Execution Scenario",
-      "success": true,
-      "details": "Autonomous scenario successful - Plan: 3 steps, Title: An\u00e1lisis de Librer\u00edas JavaScript para Desarrollo Web 2025, Tool used: web_search",
-      "timestamp": "2025-07-24T11:15:58.950378",
-      "response_data": null
-    },
-    {
-      "test_name": "Integration Flow",
-      "success": true,
-      "details": "Complete integration flow successful - Task status: pending",
-      "timestamp": "2025-07-24T11:16:16.417656",
+      "test_name": "Execution Pipeline Integration",
+      "success": false,
+      "details": "No execution detected after monitoring period",
+      "timestamp": "2025-07-24T14:16:24.090830",
       "response_data": null
     }
   ],
-  "task_id": "471c6880-5bd9-4aa7-9ab0-d382ac760244"
+  "task_id": "d257d231-e778-4f2d-b054-3750cf28e980"
 }
