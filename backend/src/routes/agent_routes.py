@@ -4702,37 +4702,79 @@ def execute_step(task_id: str, step_id: str):
 
 @agent_bp.route('/start-task-execution/<task_id>', methods=['POST'])
 def start_task_execution(task_id: str):
-    """Start automatic execution of all task steps"""
+    """ARREGLADO: Start REAL step-by-step execution"""
     try:
-        # Obtener plan de la tarea
-        task_plan = get_task_plan_data(task_id)
+        logger.info(f"🚀 STARTING REAL EXECUTION for task: {task_id}")
         
-        # Emitir evento de inicio de tarea
-        emit_step_event(task_id, 'task_started', {
-            'task_id': task_id,
-            'total_steps': len(task_plan.get('plan', [])),
-            'timestamp': datetime.now().isoformat()
-        })
+        # Obtener datos de la tarea
+        task_data = get_task_data(task_id)
+        if not task_data or 'plan' not in task_data:
+            return jsonify({'error': f'Task {task_id} or plan not found'}), 404
         
-        # Ejecutar pasos secuencialmente en un hilo separado
+        steps = task_data['plan']
+        message = task_data.get('message', '')
+        
+        logger.info(f"📋 Task has {len(steps)} steps to execute")
+        
+        # Ejecutar pasos en hilo separado
         import threading
-        app = current_app._get_current_object()  # Get the actual app instance
+        app = current_app._get_current_object()
         
-        def execute_with_context():
+        def execute_real_steps():
             with app.app_context():
-                execute_task_steps_sequentially(task_id, task_plan.get('plan', []))
+                logger.info(f"🔄 Thread started for task {task_id}")
+                
+                for i, step in enumerate(steps):
+                    try:
+                        logger.info(f"🔄 Executing step {i+1}/{len(steps)}: {step['title']}")
+                        
+                        # Marcar paso como activo
+                        step['active'] = True
+                        step['status'] = 'in-progress'
+                        update_task_data(task_id, {'plan': steps})
+                        
+                        # EJECUTAR EL PASO REAL
+                        step_result = execute_single_step_logic(step, message, task_id)
+                        
+                        # Marcar paso como completado
+                        step['active'] = False
+                        step['completed'] = True
+                        step['status'] = 'completed'
+                        step['result'] = step_result
+                        step['completed_time'] = datetime.now().isoformat()
+                        
+                        # Actualizar tarea
+                        update_task_data(task_id, {'plan': steps})
+                        
+                        logger.info(f"✅ Step {i+1} completed: {step['title']}")
+                        
+                        # Pequeña pausa entre pasos
+                        time.sleep(2)
+                        
+                    except Exception as step_error:
+                        logger.error(f"❌ Error in step {i+1}: {step_error}")
+                        step['status'] = 'failed'
+                        step['active'] = False
+                        step['error'] = str(step_error)
+                        update_task_data(task_id, {'plan': steps})
+                        continue
+                
+                # Marcar tarea como completada
+                update_task_data(task_id, {'status': 'completed'})
+                logger.info(f"🎉 Task {task_id} execution completed")
         
-        execution_thread = threading.Thread(target=execute_with_context)
+        execution_thread = threading.Thread(target=execute_real_steps)
         execution_thread.daemon = True
         execution_thread.start()
         
         return jsonify({
             'success': True,
-            'message': 'Task execution started',
+            'message': 'Real task execution started',
             'task_id': task_id
         })
         
     except Exception as e:
+        logger.error(f"❌ Error starting execution: {e}")
         return jsonify({'error': str(e)}), 500
 
 def get_step_data(task_id: str, step_id: str) -> dict:
