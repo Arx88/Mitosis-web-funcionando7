@@ -1,37 +1,37 @@
 {
-  "total_tests": 9,
-  "passed_tests": 7,
-  "success_rate": 77.77777777777779,
-  "overall_status": "\u26a0\ufe0f GOOD - System is mostly operational with minor issues",
-  "critical_passed": 2,
-  "critical_total": 4,
+  "total_tests": 11,
+  "passed_tests": 10,
+  "success_rate": 90.9090909090909,
+  "overall_status": "\u2705 EXCELLENT - System is fully operational",
+  "critical_passed": 3,
+  "critical_total": 5,
   "test_results": [
     {
       "test_name": "Backend Health Check",
       "success": true,
       "details": "All services healthy - DB: True, Ollama: True, Tools: 12",
-      "timestamp": "2025-07-24T11:13:08.668102",
+      "timestamp": "2025-07-24T11:15:15.643470",
       "response_data": null
     },
     {
       "test_name": "Agent Status Check",
       "success": true,
       "details": "Agent ready - Ollama: https://bef4a4bb93d1.ngrok-free.app (llama3.1:8b), Tools: 12",
-      "timestamp": "2025-07-24T11:13:10.679998",
+      "timestamp": "2025-07-24T11:15:17.651194",
       "response_data": null
     },
     {
       "test_name": "Plan Generation",
       "success": true,
-      "details": "Valid plan generated - 4 steps, type: an\u00e1lisis de mercado, complexity: alta, title: An\u00e1lisis de Mercado T\u00e9cnico 2025",
-      "timestamp": "2025-07-24T11:13:19.249281",
+      "details": "Valid plan generated - 4 steps, type: an\u00e1lisis de mercado, complexity: media, title: An\u00e1lisis de Mercado Tecnol\u00f3gico 2025",
+      "timestamp": "2025-07-24T11:15:26.891231",
       "response_data": null
     },
     {
       "test_name": "Task Initialization",
       "success": false,
       "details": "Task initialization incomplete - success: True, task_id: None, plan: False",
-      "timestamp": "2025-07-24T11:13:26.492930",
+      "timestamp": "2025-07-24T11:15:34.549503",
       "response_data": {
         "auto_execute": false,
         "enhanced_title": "An\u00e1lisis de Tendencias en Inteligencia Artificial 2025",
@@ -56,7 +56,7 @@
             {
               "active": false,
               "completed": false,
-              "description": "Buscar informaci\u00f3n relevante sobre la tarea en internet.",
+              "description": "Realizar una b\u00fasqueda exhaustiva sobre la tarea para obtener informaci\u00f3n relevante.",
               "estimated_time": "1 hora",
               "id": "step_2",
               "priority": "media",
@@ -67,7 +67,7 @@
             {
               "active": false,
               "completed": false,
-              "description": "Desarrollar un plan detallado para completar la tarea.",
+              "description": "Desarrollar un plan detallado y estructurado para completar la tarea.",
               "estimated_time": "2 horas",
               "id": "step_3",
               "priority": "alta",
@@ -88,47 +88,51 @@
       "test_name": "Task Plan Retrieval",
       "success": true,
       "details": "Plan retrieved - Status: pending, Steps: 4, Completed: 0",
-      "timestamp": "2025-07-24T11:13:28.505340",
+      "timestamp": "2025-07-24T11:15:36.560130",
       "response_data": null
     },
     {
       "test_name": "Task Execution Start",
       "success": true,
       "details": "Execution started successfully - Task execution started",
-      "timestamp": "2025-07-24T11:13:30.519880",
+      "timestamp": "2025-07-24T11:15:38.573817",
       "response_data": null
     },
     {
       "test_name": "Step Execution",
-      "success": false,
-      "details": "Step execution incomplete - success: True, completed: False, result: False",
-      "timestamp": "2025-07-24T11:13:34.787327",
-      "response_data": {
-        "result": {
-          "output": "Executed Definir el alcance del an\u00e1lisis de mercado using planning",
-          "success": true,
-          "timestamp": "2025-07-24T11:13:32.782865",
-          "title": "Definir el alcance del an\u00e1lisis de mercado",
-          "tool": "planning"
-        },
-        "step_id": "step_1",
-        "success": true
-      }
+      "success": true,
+      "details": "Step executed successfully - Tool: planning, Output: Executed Definir el alcance del an\u00e1lisis de mercado using planning...",
+      "timestamp": "2025-07-24T11:15:42.866692",
+      "response_data": null
     },
     {
       "test_name": "Document Generation",
       "success": true,
       "details": "No files generated yet (execution may be in progress)",
-      "timestamp": "2025-07-24T11:13:36.796998",
+      "timestamp": "2025-07-24T11:15:44.875253",
+      "response_data": null
+    },
+    {
+      "test_name": "WebSocket Functionality",
+      "success": true,
+      "details": "WebSocket infrastructure operational - Status: running, Active tasks: 7",
+      "timestamp": "2025-07-24T11:15:46.884592",
+      "response_data": null
+    },
+    {
+      "test_name": "Autonomous Execution Scenario",
+      "success": true,
+      "details": "Autonomous scenario successful - Plan: 3 steps, Title: An\u00e1lisis de Librer\u00edas JavaScript para Desarrollo Web 2025, Tool used: web_search",
+      "timestamp": "2025-07-24T11:15:58.950378",
       "response_data": null
     },
     {
       "test_name": "Integration Flow",
       "success": true,
       "details": "Complete integration flow successful - Task status: pending",
-      "timestamp": "2025-07-24T11:13:53.823561",
+      "timestamp": "2025-07-24T11:16:16.417656",
       "response_data": null
     }
   ],
-  "task_id": "cf60746c-9d27-4e9c-996e-74b2ef225d78"
+  "task_id": "471c6880-5bd9-4aa7-9ab0-d382ac760244"
 }
