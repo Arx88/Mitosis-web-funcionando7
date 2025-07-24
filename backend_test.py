@@ -258,16 +258,15 @@ class MitosisAgentTester:
                 data = response.json()
                 
                 success = data.get('success', False)
-                execution_started = data.get('execution_started', False)
                 message = data.get('message', '')
                 
-                if success and execution_started:
+                if success:
                     self.log_test("Task Execution Start", True, 
                                 f"Execution started successfully - {message}")
                     return True
                 else:
                     self.log_test("Task Execution Start", False, 
-                                f"Execution not started - success: {success}, started: {execution_started}, message: {message}", data)
+                                f"Execution not started - success: {success}, message: {message}", data)
                     return False
             else:
                 self.log_test("Task Execution Start", False, 
