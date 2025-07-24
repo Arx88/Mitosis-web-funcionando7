@@ -2615,7 +2615,7 @@ RESPONDE SOLO JSON:"""
                     # Limpiar respuesta
                     cleaned_response = response_text.replace('```json', '').replace('```', '').strip()
                     plan_data = json.loads(cleaned_response)
-            
+                    
                     # Validar estructura básica
                     if not plan_data.get('steps') or not isinstance(plan_data['steps'], list):
                         raise ValueError("Invalid plan structure")
