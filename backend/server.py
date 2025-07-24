@@ -87,7 +87,7 @@ try:
         engineio_logger=False,
         ping_timeout=60,
         ping_interval=25,
-        transport=['polling', 'websocket'],
+        transports=['polling', 'websocket'],
         allow_upgrades=True,
         json=json
     )
