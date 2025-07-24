@@ -2560,55 +2560,74 @@ def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool =
                 
                 # Construir prompt específico mejorado para generación de JSON estructurado
                 if attempt == 1:
-                    # Primera tentativa: prompt específico dinámico
-                    prompt = f"""
-Genera SOLO un objeto JSON válido para esta tarea: "{message}"
+                    # 🧠 PROMPT INTELIGENTE NIVEL EXPERTO - PRIMERA TENTATIVA
+                    prompt = f"""🎯 MISIÓN CRÍTICA: {message}
 
-IMPORTANTE: Responde ÚNICAMENTE con JSON válido. NO agregues texto, explicaciones o formato markdown.
+Como AGENTE EXPERTO de élite, tu objetivo es crear un plan que NO SOLO resuelva la tarea, sino que EXCEDA todas las expectativas del usuario.
 
-Estructura del JSON requerida:
+🔥 PRINCIPIOS FUNDAMENTALES:
+1. **ANÁLISIS MULTIDIMENSIONAL**: Examina la tarea desde ángulos que el usuario no consideró
+2. **VALOR EXPONENCIAL**: Cada paso debe multiplicar el valor del resultado final
+3. **ANTICIPACIÓN INTELIGENTE**: Incluye elementos que el usuario necesitará pero no pidió explícitamente
+4. **INNOVACIÓN METODOLÓGICA**: Usa enfoques creativos y eficientes únicos
+5. **COMPLETITUD PROFESIONAL**: Entrega resultados de calidad consultora/experto
+
+🧠 METODOLOGÍA INTELIGENTE POR TIPO DE TAREA:
+
+📊 **INVESTIGACIÓN/ANÁLISIS**: 
+- Fuentes primarias + secundarias + datos en tiempo real
+- Análisis comparativo, tendencias, insights únicos
+- Perspectivas múltiples, datos cuantitativos + cualitativos
+
+📝 **CREACIÓN/DESARROLLO**:
+- Estructura profesional, contenido original y único
+- Ejemplos prácticos, casos de uso reales
+- Formatos múltiples, recursos adicionales
+
+💼 **CONSULTORÍA/NEGOCIOS**:
+- Análisis FODA, benchmarking competitivo
+- Recomendaciones accionables con ROI estimado
+- Estrategias a corto, medio y largo plazo
+
+🔧 **TÉCNICO/DESARROLLO**:
+- Mejores prácticas industry-standard
+- Código optimizado, documentación completa
+- Testing, escalabilidad, mantenibilidad
+
+RESPONDE ÚNICAMENTE con JSON válido sin texto adicional:
+
 {{
   "steps": [
     {{
-      "title": "Título específico del paso (5-100 caracteres)",
-      "description": "Descripción concreta del paso (10-300 caracteres)", 
+      "title": "Título específico y orientado al valor máximo",
+      "description": "Descripción detallada de metodología avanzada y entregables específicos",
       "tool": "herramienta_válida",
-      "estimated_time": "tiempo estimado",
+      "estimated_time": "tiempo realista",
       "priority": "alta|media|baja"
     }}
   ],
-  "task_type": "tipo de tarea específico",
-  "complexity": "baja|media|alta",
-  "estimated_total_time": "tiempo total estimado",
+  "task_type": "clasificación específica y profesional",
+  "complexity": "evaluación realista: baja|media|alta",
+  "estimated_total_time": "tiempo total considerando calidad profesional",
   "suggested_icon": "icono_apropiado"
 }}
 
-🎯 SELECCIÓN DE ICONO - Elige EXACTAMENTE uno de estos iconos según el tipo de tarea:
+🎯 SELECCIÓN INTELIGENTE DE ICONOS:
+- **UBICACIONES/RESTAURANTES/CIUDADES** → "map"
+- **PROGRAMACIÓN/DESARROLLO/TECH** → "code"
+- **DOCUMENTOS/INFORMES/ESCRITURA** → "file"  
+- **ANÁLISIS/DATOS/FINANZAS** → "chart"
+- **INVESTIGACIÓN/BÚSQUEDA** → "search"
+- **DISEÑO/CREATIVIDAD/VISUAL** → "image"
+- **AUDIO/MÚSICA/SONIDO** → "music"
+- **NEGOCIOS/EMPRESARIAL** → "briefcase"
+- **GENERAL/OTROS** → "target"
 
-**Si menciona: código, programar, app, web, software** → USA: "code"
-**Si menciona: restaurante, bar, valencia, madrid, lugar, ubicación** → USA: "map" 
-**Si menciona: documento, informe, texto, escribir** → USA: "file"
-**Si menciona: analizar, datos, estadística, mercado** → USA: "chart"
-**Si menciona: buscar, investigar, research** → USA: "search"
-**Si menciona: imagen, diseño, crear visual** → USA: "image"
-**Si menciona: música, audio, sonido** → USA: "music"
-**Si menciona: negocio, empresa, comercial** → USA: "briefcase"
-**Para todo lo demás** → USA: "target"
+⚡ HERRAMIENTAS DISPONIBLES: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
 
-🔥 REGLAS SIMPLES:
-- LUGARES/RESTAURANTES/CIUDADES → "map"  
-- PROGRAMACIÓN/DESARROLLO → "code"
-- DOCUMENTOS/INFORMES → "file"
-- ANÁLISIS/DATOS → "chart"
-- BÚSQUEDA/INVESTIGACIÓN → "search"
-- TODO LO DEMÁS → "target"
+🚀 IMPORTANTE: Crea un plan que haga que el usuario diga "¡WOW, esto es exactamente lo que necesitaba y mucho más!"
 
-HERRAMIENTAS VÁLIDAS: web_search, analysis, creation, planning, delivery, processing, synthesis, search_definition, data_analysis, shell, research, investigation, web_scraping, search, mind_map, spreadsheets, database
-
-ICONOS VÁLIDOS: map, code, file, chart, search, image, music, briefcase, target
-
-RESPONDE SOLO CON EL JSON - SIN TEXTO ADICIONAL
-"""
+TAREA ESPECÍFICA: "{message}" """
                 elif attempt == 2:
                     # Segunda tentativa: prompt con corrección específica y metodología adaptativa
                     prompt = f"""
