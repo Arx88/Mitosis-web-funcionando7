@@ -2658,58 +2658,58 @@ RESPONDE SOLO JSON:"""
                     
                     # Plan de fallback simple
                     fallback_steps = [
-                {
-                    "id": "step-1",
-                    "title": f"Investigar sobre: {message[:30]}",
-                    "description": "Buscar información relevante",
-                    "tool": "web_search",
-                    "completed": False,
-                    "active": False,
-                    "status": "pending"
-                },
-                {
-                    "id": "step-2", 
-                    "title": "Analizar información",
-                    "description": "Procesar y analizar los datos encontrados",
-                    "tool": "analysis",
-                    "completed": False,
-                    "active": False,
-                    "status": "pending" 
-                },
-                {
-                    "id": "step-3",
-                    "title": "Crear resultado final",
-                    "description": "Generar el producto final solicitado", 
-                    "tool": "creation",
-                    "completed": False,
-                    "active": False,
-                    "status": "pending"
-                }
-            ]
-            
-            # Guardar plan de fallback
-            task_data = {
-                'id': task_id,
-                'message': message,
-                'plan': fallback_steps,
-                'task_type': 'general',
-                'complexity': 'media',
-                'estimated_total_time': '30 minutos',
-                'created_at': datetime.now().isoformat(),
-                'status': 'plan_generated'
-            }
-            
-            save_task_data(task_id, task_data)
-            
-            return jsonify({
-                'plan': fallback_steps,
-                'enhanced_title': f"Plan: {message[:50]}...",
-                'task_id': task_id,
-                'total_steps': len(fallback_steps),
-                'estimated_total_time': '30 minutos',
-                'task_type': 'general',
-                'complexity': 'media'
-            })
+                        {
+                            "id": "step-1",
+                            "title": f"Investigar sobre: {message[:30]}",
+                            "description": "Buscar información relevante",
+                            "tool": "web_search",
+                            "completed": False,
+                            "active": False,
+                            "status": "pending"
+                        },
+                        {
+                            "id": "step-2", 
+                            "title": "Analizar información",
+                            "description": "Procesar y analizar los datos encontrados",
+                            "tool": "analysis",
+                            "completed": False,
+                            "active": False,
+                            "status": "pending" 
+                        },
+                        {
+                            "id": "step-3",
+                            "title": "Crear resultado final",
+                            "description": "Generar el producto final solicitado", 
+                            "tool": "creation",
+                            "completed": False,
+                            "active": False,
+                            "status": "pending"
+                        }
+                    ]
+                    
+                    # Guardar plan de fallback
+                    task_data = {
+                        'id': task_id,
+                        'message': message,
+                        'plan': fallback_steps,
+                        'task_type': 'general',
+                        'complexity': 'media',
+                        'estimated_total_time': '30 minutos',
+                        'created_at': datetime.now().isoformat(),
+                        'status': 'plan_generated'
+                    }
+                    
+                    save_task_data(task_id, task_data)
+                    
+                    return jsonify({
+                        'plan': fallback_steps,
+                        'enhanced_title': f"Plan: {message[:50]}...",
+                        'task_id': task_id,
+                        'total_steps': len(fallback_steps),
+                        'estimated_total_time': '30 minutos',
+                        'task_type': 'general',
+                        'complexity': 'media'
+                    })
             
     except Exception as e:
         logger.error(f"❌ Plan generation error: {e}")
