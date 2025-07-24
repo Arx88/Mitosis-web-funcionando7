@@ -25,6 +25,13 @@ export const VanishInput: React.FC<VanishInputProps> = ({
   onDeepSearch,
   onVoiceInput
 }) => {
+  // 🔥 URGENT DEBUG: Add component lifecycle logging
+  console.log('🟢 VANISHINPUT: Component rendering with props:', { 
+    onSendMessage: !!onSendMessage, 
+    disabled, 
+    placeholder 
+  });
+
   const [inputValue, setInputValue] = useState('');
   const [currentPlaceholder, setCurrentPlaceholder] = useState('');
   const [isTyping, setIsTyping] = useState(false);
