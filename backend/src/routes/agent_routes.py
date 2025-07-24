@@ -4572,6 +4572,11 @@ def execute_step_by_tool(step_data: dict) -> dict:
 
 def execute_task_steps_sequentially(task_id: str, steps: list):
     """Execute task steps one by one with delays and enhanced logging"""
+    # 🚨 PASO 1: LOGGING AGRESIVO IMPLEMENTADO 🚨
+    print(f"🚀 STARTING execute_task_steps_sequentially for task_id: {task_id}")
+    print(f"📋 Total steps to execute: {len(steps)}")
+    print(f"🔍 Steps details: {json.dumps(steps, indent=2, default=str)}")
+    
     # Log directo a archivo para debugging
     log_file = f"/tmp/mitosis_execution_{task_id}.log"
     
@@ -4584,28 +4589,38 @@ def execute_task_steps_sequentially(task_id: str, steps: list):
             f.write("="*50 + "\n")
         
         logger.info(f"🚀 AUTONOMOUS EXECUTION STARTED - Logging to {log_file}")
+        print(f"📝 Logging execution details to: {log_file}")
         
         for i, step in enumerate(steps):
             try:
                 step_id = step.get('id', f'step-{i+1}')
+                
+                print(f"⚡ EXECUTING STEP {i+1}/{len(steps)}: {step.get('title', 'Unnamed')}")
+                print(f"   Tool: {step.get('tool', 'unknown')}")
+                print(f"   Description: {step.get('description', 'N/A')[:100]}...")
                 
                 with open(log_file, "a") as f:
                     f.write(f"\n⚡ EXECUTING STEP {i+1}: {step.get('title', 'Unnamed')}\n")
                     f.write(f"   Tool: {step.get('tool', 'unknown')}\n")
                     f.write(f"   Description: {step.get('description', 'N/A')}\n")
                 
-                # Ejecutar el paso
+                # 🚨 LOGGING: Ejecutar el paso con logging agresivo
+                print(f"🔧 About to call execute_step_internal with step_id: {step_id}")
                 execute_step_internal(task_id, step_id, step)
+                print(f"✅ execute_step_internal completed for step {i+1}")
                 
                 with open(log_file, "a") as f:
                     f.write(f"✅ STEP {i+1} COMPLETED\n")
                 
                 # Pausa entre pasos para visualización
+                print(f"⏱️  Waiting 2 seconds before next step...")
                 time.sleep(2)
                 
             except Exception as e:
                 error_msg = f"❌ Error executing step {step_id}: {e}"
                 logger.error(error_msg)
+                print(f"❌ CRITICAL ERROR in step {i+1}: {str(e)}")
+                print(f"❌ Exception type: {type(e).__name__}")
                 
                 with open(log_file, "a") as f:
                     f.write(f"\n❌ ERROR IN STEP {i+1}: {str(e)}\n")
