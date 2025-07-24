@@ -2611,7 +2611,7 @@ def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool =
     # Verificar que Ollama esté saludable
     if not ollama_service.is_healthy():
         logger.error("❌ Ollama service not healthy for unified plan generation")
-        return generate_fallback_plan_with_notification(message, task_id, "Ollama service not healthy")
+        return generate_fallback_plan(message, task_id)
     
     def validate_plan_schema(plan_data: dict) -> bool:
         """Validar que el plan cumple con el esquema requerido"""
