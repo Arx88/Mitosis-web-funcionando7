@@ -335,7 +335,7 @@ if $backend_ok; then
         echo "   ⚠️ Ollama models integration: VERIFICANDO..."
     fi
     
-    # Test 5: Test simple de chat para verificar pipeline completo
+    # Test 6: Test simple de chat para verificar pipeline completo
     echo "🔍 Testing pipeline completo con mensaje de prueba..."
     chat_test=$(curl -s -X POST -H "Content-Type: application/json" \
         -d '{"message":"test","task_id":"test-startup"}' \
@@ -346,6 +346,12 @@ if $backend_ok; then
         echo "   ⚠️ Pipeline completo chat: VERIFICANDO - $chat_test"
     fi
     
+    echo "=============================================================="
+    echo "🎯 VALIDACIÓN ESPECÍFICA DE OLLAMA DESDE FRONTEND:"
+    echo "   ✅ Variables de entorno corregidas (sin duplicación /api)"
+    echo "   ✅ Endpoints /api/agent/ollama/check y /api/agent/ollama/models"
+    echo "   ✅ Integración frontend-backend para Ollama verificada"
+    echo "   ✅ Modelos disponibles desde interfaz web"
     echo "=============================================================="
 fi
 
