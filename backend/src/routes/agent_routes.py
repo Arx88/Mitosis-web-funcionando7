@@ -2560,48 +2560,46 @@ def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool =
                 
                 # Construir prompt específico mejorado para generación de JSON estructurado
                 if attempt == 1:
-                    # 🧠 PROMPT INTELIGENTE SIMPLIFICADO - AGENTE EXCEPCIONAL
-        plan_prompt = f"""Crea un plan excepcional de 3-4 pasos para: {message}
+                    # Prompt mejorado para generar plans específicos
+                    plan_prompt = f"""Crea un plan detallado y específico para: {message}
 
-Como agente experto, diseña pasos ESPECÍFICOS y DETALLADOS que superen expectativas del usuario.
+Diseña 3-4 pasos ESPECÍFICOS y ORIENTADOS AL VALOR que superen las expectativas.
 
-METODOLOGÍA INTELIGENTE:
-- Si es investigación: Incluye fuentes múltiples, análisis comparativo, tendencias actuales
-- Si es creación: Estructura profesional, contenido original, ejemplos prácticos  
-- Si es análisis: Datos cuantitativos, insights profundos, recomendaciones accionables
-- Si es técnico: Mejores prácticas, código optimizado, documentación clara
+Para investigación: múltiples fuentes, análisis comparativo, tendencias
+Para creación: estructura profesional, contenido original, ejemplos
+Para análisis: datos cuantitativos, insights profundos, recomendaciones
 
-RESPONDE SOLO con JSON válido en este formato:
+RESPONDE SOLO con JSON válido:
 {{
   "steps": [
     {{
       "id": "step-1",
-      "title": "Título específico orientado al valor máximo para esta tarea",
-      "description": "Metodología detallada con entregables específicos y fuentes concretas", 
+      "title": "Título específico orientado al valor para esta tarea",
+      "description": "Metodología detallada con entregables específicos", 
       "tool": "web_search"
     }},
     {{
       "id": "step-2",
-      "title": "Segundo paso que construya sobre el anterior y amplifique el valor",
-      "description": "Proceso de análisis avanzado que genere insights únicos y útiles",
+      "title": "Segundo paso que construya sobre el anterior",
+      "description": "Análisis avanzado que genere insights únicos",
       "tool": "analysis"
     }},
     {{
       "id": "step-3", 
-      "title": "Paso final que consolide y entregue resultados profesionales",
-      "description": "Síntesis y entrega con formato accionable y recomendaciones específicas",
+      "title": "Entrega de resultados profesionales",
+      "description": "Síntesis con formato accionable y recomendaciones",
       "tool": "creation"
     }}
   ],
-  "task_type": "clasificación profesional específica para esta tarea",
-  "complexity": "evaluación realista: baja|media|alta",
-  "estimated_total_time": "tiempo realista considerando calidad profesional"
+  "task_type": "tipo específico para esta tarea",
+  "complexity": "baja|media|alta",
+  "estimated_total_time": "tiempo realista"
 }}
 
-IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos.
-HERRAMIENTAS: web_search, analysis, creation, planning, delivery, processing, synthesis, data_analysis, research
+Los pasos deben ser específicos para "{message}", no genéricos.
+HERRAMIENTAS: web_search, analysis, creation, planning, delivery
 
-CREA UN PLAN QUE SUPERE LAS EXPECTATIVAS - RESPONDE SOLO JSON:"""
+RESPONDE SOLO JSON:"""
         
         # Generar plan con Ollama
         result = ollama_service.generate_response(plan_prompt, {'temperature': 0.3})
