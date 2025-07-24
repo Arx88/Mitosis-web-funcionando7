@@ -16,7 +16,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment
-BACKEND_URL = "https://a2591ea8-af30-4651-939c-c5501b752459.preview.emergentagent.com"
+BACKEND_URL = "https://06bbab4c-624f-4007-bbcb-d738ef75c7a4.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class AutonomousAgentTester:
