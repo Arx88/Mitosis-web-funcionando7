@@ -2669,6 +2669,22 @@ def generate_intelligent_fallback_plan(message: str, task_id: str, category: str
                 "complexity": "media"
             }
         ]
+        
+        # 🎯 MARCAR EL PRIMER PASO COMO ACTIVO
+        if steps:
+            steps[0]['completed'] = False
+            steps[0]['active'] = True
+            steps[0]['status'] = 'active'
+            logger.info(f"✅ First step marked as active: {steps[0]['title']}")
+            
+            # Asegurar que el resto de los pasos estén pending
+            for i, step in enumerate(steps):
+                if i == 0:
+                    continue
+                step['completed'] = False
+                step['active'] = False
+                step['status'] = 'pending'
+        
         return {
             "steps": steps,
             "task_type": "investigación comprehensiva",
