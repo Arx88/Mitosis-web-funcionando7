@@ -3529,10 +3529,24 @@ def chat():
                                                     failed_step_title=None, 
                                                     error_message=None)
             
-            # MODIFICACIÓN: NO ejecutar automáticamente - dejar que el usuario controle la ejecución paso a paso
-            # execute_plan_with_real_tools(task_id, structured_plan['steps'], message)
+            # 🚨 PASO 1: LOGGING AGRESIVO - Re-enabling automatic execution with detailed logging
+            print(f"🚀 ABOUT TO START AUTOMATIC EXECUTION for task_id: {task_id}")
+            print(f"📋 Plan contains {len(structured_plan['steps'])} steps")
+            print(f"💬 Original message: {message}")
             
-            logger.info(f"✅ Plan generated successfully - ready for step-by-step execution")
+            # MODIFICACIÓN: RE-HABILITAMOS la ejecución automática con logging agresivo
+            logger.info(f"🚀 Starting automatic execution for task {task_id}")
+            
+            try:
+                print(f"🔧 Calling execute_plan_with_real_tools...")
+                execute_plan_with_real_tools(task_id, structured_plan['steps'], message)
+                print(f"✅ execute_plan_with_real_tools call completed successfully")
+            except Exception as e:
+                print(f"❌ CRITICAL ERROR in execute_plan_with_real_tools: {str(e)}")
+                print(f"❌ Exception type: {type(e).__name__}")
+                logger.error(f"❌ Failed to start automatic execution: {e}")
+            
+            logger.info(f"✅ Plan generated successfully - automatic execution initiated")
             
             # 🚀 Emitir evento WebSocket de plan actualizado
             websocket_manager = getattr(current_app, 'websocket_manager', None)
