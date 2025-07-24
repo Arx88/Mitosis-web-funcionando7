@@ -979,7 +979,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
       </div>
 
       {/* Terminal Section - FIXED: Always visible with proper width */}
-      <div className="w-1/2 flex flex-col min-h-0">
+      <div className="w-1/2 flex flex-col min-h-0" style={{minWidth: '50%', maxWidth: '50%'}}>
         <div className="flex-1 min-h-0">
           <TerminalView 
             title="Ejecución de comandos" 
