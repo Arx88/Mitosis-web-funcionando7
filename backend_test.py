@@ -15,7 +15,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment
-BACKEND_URL = "https://06bbab4c-624f-4007-bbcb-d738ef75c7a4.preview.emergentagent.com"
+BACKEND_URL = "https://a11d73e5-b96c-4682-9ade-226b30fa2882.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class MitosisAgentTester:
