@@ -275,7 +275,7 @@ export function App() {
           console.log('🚀 Auto-starting task execution after plan generation');
           setTimeout(() => {
             startTaskExecutionFromApp(newTask.id);
-          }, 2000); // Wait 2 seconds for UI to update
+          }, 500); // Wait 500ms for UI to update - faster response
         }
         
         console.log('✅ Task updated with enhanced title and plan');
