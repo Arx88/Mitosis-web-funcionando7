@@ -222,6 +222,8 @@ def execute_single_step_detailed(task_id: str, step_id: str):
         
     except Exception as e:
         logger.error(f"❌ Error ejecutando paso {step_id}: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 @agent_bp.route('/get-task-status/<task_id>', methods=['GET'])
 def get_task_status(task_id: str):
     """
