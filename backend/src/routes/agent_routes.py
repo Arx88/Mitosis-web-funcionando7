@@ -4728,6 +4728,21 @@ def execute_task_steps_sequentially(task_id: str, steps: list):
 def execute_step_internal(task_id: str, step_id: str, step: dict):
     """Execute a single step internally with progress updates"""
     try:
+        # ✅ CRITICAL FIX: Actualizar estado del paso en persistencia ANTES de ejecutar
+        task_data = get_task_data(task_id)
+        if task_data and 'plan' in task_data:
+            steps = task_data['plan']
+            for step_item in steps:
+                if step_item.get('id') == step_id:
+                    step_item['active'] = True
+                    step_item['status'] = 'in-progress'
+                    step_item['start_time'] = datetime.now().isoformat()
+                    break
+            
+            # Guardar inmediatamente el cambio de estado
+            update_task_data(task_id, {'plan': steps})
+            logger.info(f"🔄 Step {step_id} marked as in-progress in database")
+        
         # Emitir inicio de paso
         emit_step_event(task_id, 'step_started', {
             'step_id': step_id,
@@ -4740,6 +4755,23 @@ def execute_step_internal(task_id: str, step_id: str, step: dict):
         # Ejecutar paso con herramientas REALES (no simulación)
         execute_step_real(task_id, step_id, step)
         
+        # ✅ CRITICAL FIX: Actualizar estado del paso en persistencia DESPUÉS de ejecutar
+        task_data = get_task_data(task_id)
+        if task_data and 'plan' in task_data:
+            steps = task_data['plan']
+            for step_item in steps:
+                if step_item.get('id') == step_id:
+                    step_item['active'] = False
+                    step_item['completed'] = True
+                    step_item['status'] = 'completed'
+                    step_item['completed_time'] = datetime.now().isoformat()
+                    step_item['result'] = f"Completado: {step.get('title', 'Paso')}"
+                    break
+            
+            # Guardar inmediatamente el cambio de estado
+            update_task_data(task_id, {'plan': steps})
+            logger.info(f"✅ Step {step_id} marked as completed in database")
+        
         # Emitir completado
         emit_step_event(task_id, 'step_completed', {
             'step_id': step_id,
@@ -4750,6 +4782,24 @@ def execute_step_internal(task_id: str, step_id: str, step: dict):
         
     except Exception as e:
         logger.error(f"❌ Error executing step {step_id}: {e}")
+        
+        # ✅ CRITICAL FIX: Marcar paso como fallido en persistencia
+        task_data = get_task_data(task_id)
+        if task_data and 'plan' in task_data:
+            steps = task_data['plan']
+            for step_item in steps:
+                if step_item.get('id') == step_id:
+                    step_item['active'] = False
+                    step_item['completed'] = False
+                    step_item['status'] = 'failed'
+                    step_item['error'] = str(e)
+                    step_item['error_time'] = datetime.now().isoformat()
+                    break
+            
+            # Guardar inmediatamente el cambio de estado
+            update_task_data(task_id, {'plan': steps})
+            logger.info(f"❌ Step {step_id} marked as failed in database")
+        
         emit_step_event(task_id, 'step_failed', {
             'step_id': step_id,
             'error': str(e),
