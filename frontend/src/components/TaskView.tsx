@@ -153,7 +153,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
             // NUEVA FUNCIONALIDAD: Auto-iniciar ejecución
             setTimeout(() => {
               startTaskExecution(task.id);
-            }, 2000); // Esperar 2 segundos antes de iniciar
+            }, 500); // Esperar 500ms antes de iniciar - respuesta más rápida
           }
         },
 
