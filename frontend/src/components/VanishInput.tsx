@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, Paperclip, Mic, Globe, Layers, Zap } from 'lucide-react';
 import { Button } from './MovingBorder';
 
