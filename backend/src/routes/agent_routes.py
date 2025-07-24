@@ -3124,7 +3124,7 @@ Solo JSON, sin texto adicional:"""
     
     # Llamar a la función interna
     try:
-        return generate_plan_with_retries()
+        return generate_robust_plan_with_retries()
     except Exception as e:
         logger.error(f"❌ Plan generation error: {e}")
         return generate_fallback_plan(message, task_id)
