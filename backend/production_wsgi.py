@@ -16,8 +16,9 @@ os.environ['FLASK_DEBUG'] = 'False'
 from server import app, socketio
 
 # CONFIGURACIÓN CORRECTA PARA FLASK-SOCKETIO CON GUNICORN + EVENTLET
-# Usar socketio.wsgi_app para que funcione correctamente con WebSockets
-application = socketio.wsgi_app
+# Para gunicorn con eventlet, simplemente exportar el app de Flask
+# SocketIO se maneja automáticamente cuando está integrado en el app
+application = app
 
 if __name__ == '__main__':
     # Para testing directo con SocketIO
