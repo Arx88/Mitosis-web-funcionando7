@@ -3692,7 +3692,7 @@ def chat():
             logger.info(f"🤖 Detected task mode - generating structured plan")
             
             # PASO 2: Generar plan dinámico PRIMERO usando IA
-            structured_plan = generate_dynamic_plan_with_ai(message, task_id)
+            structured_plan = generate_unified_ai_plan(message, task_id)
             
             # ✨ NUEVA FUNCIONALIDAD: Generar título mejorado con LLM
             enhanced_title = generate_task_title_with_llm(message, task_id)
