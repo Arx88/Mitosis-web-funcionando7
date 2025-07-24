@@ -3940,47 +3940,171 @@ def list_generated_files():
 
 @agent_bp.route('/generate-plan', methods=['POST'])
 def generate_plan():
-    """
-    Genera un plan de acción dinámico usando IA mejorada
-    """
+    """ARREGLADO: Generate simple plan from user task"""
     try:
-        data = request.get_json() or {}
-        task_title = data.get('task_title', '') or data.get('message', '')
-        task_id = data.get('task_id', str(uuid.uuid4()))
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
         
-        if not task_title:
-            return jsonify({'error': 'task_title or message is required'}), 400
+        message = data.get('message', '') or data.get('task_title', '')
+        task_id = data.get('task_id', f'task-{int(time.time())}')
         
-        logger.info(f"🚀 Generating dynamic plan for: {task_title}")
+        if not message:
+            return jsonify({'error': 'Message or task_title required'}), 400
         
-        # Usar la nueva función de generación dinámica con IA
-        dynamic_plan = generate_dynamic_plan_with_ai(task_title, task_id)
+        logger.info(f"📋 Generating plan for: {message[:50]}...")
         
-        # ✨ NUEVA FUNCIONALIDAD: Generar título mejorado con LLM
-        enhanced_title = generate_task_title_with_llm(task_title, task_id)
-        logger.info(f"📝 Enhanced title generated for plan: '{enhanced_title}'")
+        # Obtener servicio Ollama
+        ollama_service = get_ollama_service()
+        if not ollama_service or not ollama_service.is_healthy():
+            logger.error("❌ Ollama service not available")
+            return jsonify({'error': 'Ollama service not available'}), 500
         
-        logger.info(f"✅ Dynamic plan generated with {len(dynamic_plan['steps'])} steps")
+        # Prompt simple para generar plan
+        plan_prompt = f"""Crea un plan de 3-4 pasos para: {message}
+
+Responde SOLO con JSON válido en este formato:
+{{
+  "steps": [
+    {{
+      "id": "step-1",
+      "title": "Título del paso 1",
+      "description": "Descripción detallada",
+      "tool": "web_search"
+    }},
+    {{
+      "id": "step-2", 
+      "title": "Título del paso 2",
+      "description": "Descripción detallada",
+      "tool": "analysis"
+    }},
+    {{
+      "id": "step-3",
+      "title": "Título del paso 3", 
+      "description": "Descripción detallada",
+      "tool": "creation"
+    }}
+  ],
+  "task_type": "tipo de tarea",
+  "complexity": "media",
+  "estimated_total_time": "30-45 minutos"
+}}
+
+Herramientas disponibles: web_search, analysis, creation, planning, delivery"""
         
-        return jsonify({
-            'plan': dynamic_plan['steps'],
-            'task_id': task_id,
-            'enhanced_title': enhanced_title,  # ✨ NUEVO: Título mejorado generado con LLM
-            'suggested_icon': dynamic_plan.get('suggested_icon', 'target'), # 🎯 NUEVO: Icono sugerido por LLM
-            'total_steps': dynamic_plan['total_steps'],
-            'estimated_total_time': dynamic_plan['estimated_total_time'],
-            'task_type': dynamic_plan['task_type'],
-            'complexity': dynamic_plan.get('complexity', 'media'),
-            'timestamp': datetime.now().isoformat(),
-            'status': 'plan_generated',
-            'ai_generated': dynamic_plan.get('ai_generated', False)
-        })
-    
+        # Generar plan con Ollama
+        result = ollama_service.generate_response(plan_prompt, {'temperature': 0.3})
+        
+        if result.get('error'):
+            logger.error(f"❌ Ollama error: {result['error']}")
+            return jsonify({'error': f'Plan generation failed: {result["error"]}'}), 500
+        
+        # Parsear respuesta JSON
+        response_text = result.get('response', '').strip()
+        
+        try:
+            # Limpiar respuesta
+            cleaned_response = response_text.replace('```json', '').replace('```', '').strip()
+            plan_data = json.loads(cleaned_response)
+            
+            # Validar estructura básica
+            if not plan_data.get('steps') or not isinstance(plan_data['steps'], list):
+                raise ValueError("Invalid plan structure")
+            
+            # Agregar campos faltantes a los pasos
+            for step in plan_data['steps']:
+                step['completed'] = False
+                step['active'] = False
+                step['status'] = 'pending'
+            
+            # Guardar plan en task data
+            task_data = {
+                'id': task_id,
+                'message': message,
+                'plan': plan_data['steps'],
+                'task_type': plan_data.get('task_type', 'general'),
+                'complexity': plan_data.get('complexity', 'media'),
+                'estimated_total_time': plan_data.get('estimated_total_time', '30 minutos'),
+                'created_at': datetime.now().isoformat(),
+                'status': 'plan_generated'
+            }
+            
+            save_task_data(task_id, task_data)
+            
+            logger.info(f"✅ Plan generated with {len(plan_data['steps'])} steps")
+            
+            return jsonify({
+                'plan': plan_data['steps'],
+                'enhanced_title': f"Plan: {message[:50]}...",
+                'task_id': task_id,
+                'total_steps': len(plan_data['steps']),
+                'estimated_total_time': plan_data.get('estimated_total_time'),
+                'task_type': plan_data.get('task_type'),
+                'complexity': plan_data.get('complexity')
+            })
+            
+        except (json.JSONDecodeError, ValueError) as parse_error:
+            logger.error(f"❌ JSON parse error: {parse_error}")
+            logger.error(f"❌ Response was: {response_text[:200]}...")
+            
+            # Plan de fallback simple
+            fallback_steps = [
+                {
+                    "id": "step-1",
+                    "title": f"Investigar sobre: {message[:30]}",
+                    "description": "Buscar información relevante",
+                    "tool": "web_search",
+                    "completed": False,
+                    "active": False,
+                    "status": "pending"
+                },
+                {
+                    "id": "step-2", 
+                    "title": "Analizar información",
+                    "description": "Procesar y analizar los datos encontrados",
+                    "tool": "analysis",
+                    "completed": False,
+                    "active": False,
+                    "status": "pending" 
+                },
+                {
+                    "id": "step-3",
+                    "title": "Crear resultado final",
+                    "description": "Generar el producto final solicitado", 
+                    "tool": "creation",
+                    "completed": False,
+                    "active": False,
+                    "status": "pending"
+                }
+            ]
+            
+            # Guardar plan de fallback
+            task_data = {
+                'id': task_id,
+                'message': message,
+                'plan': fallback_steps,
+                'task_type': 'general',
+                'complexity': 'media',
+                'estimated_total_time': '30 minutos',
+                'created_at': datetime.now().isoformat(),
+                'status': 'plan_generated'
+            }
+            
+            save_task_data(task_id, task_data)
+            
+            return jsonify({
+                'plan': fallback_steps,
+                'enhanced_title': f"Plan: {message[:50]}...",
+                'task_id': task_id,
+                'total_steps': len(fallback_steps),
+                'estimated_total_time': '30 minutos',
+                'task_type': 'general',
+                'complexity': 'media'
+            })
+            
     except Exception as e:
-        logger.error(f"Error generating dynamic plan: {str(e)}")
-        return jsonify({
-            'error': f'Error generando plan: {str(e)}'
-        }), 500
+        logger.error(f"❌ Plan generation error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @agent_bp.route('/update-task-progress', methods=['POST'])
 def update_task_progress():
