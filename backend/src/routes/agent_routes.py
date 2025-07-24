@@ -2610,11 +2610,11 @@ RESPONDE SOLO JSON:"""
                 
                 # Parsear respuesta JSON
                 response_text = result.get('response', '').strip()
-        
-        try:
-            # Limpiar respuesta
-            cleaned_response = response_text.replace('```json', '').replace('```', '').strip()
-            plan_data = json.loads(cleaned_response)
+                
+                try:
+                    # Limpiar respuesta
+                    cleaned_response = response_text.replace('```json', '').replace('```', '').strip()
+                    plan_data = json.loads(cleaned_response)
             
             # Validar estructura básica
             if not plan_data.get('steps') or not isinstance(plan_data['steps'], list):
