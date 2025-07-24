@@ -544,6 +544,64 @@ class MitosisAgentTester:
             self.log_test("Integration Flow", False, f"Exception: {str(e)}")
             return False
     
+    def test_integration_flow(self) -> bool:
+        """Test 12: Complete Integration Flow (End-to-End)"""
+        try:
+            # Test the complete workflow with a new task
+            test_message = "Crear un informe sobre las mejores prácticas de desarrollo de software en 2025"
+            
+            print("\n🔄 Testing complete integration flow...")
+            
+            # Step 1: Generate plan
+            plan_payload = {"message": test_message}
+            plan_response = self.session.post(f"{API_BASE}/agent/generate-plan", 
+                                            json=plan_payload, timeout=30)
+            
+            if plan_response.status_code != 200:
+                self.log_test("Integration Flow", False, "Plan generation failed in integration test")
+                return False
+                
+            plan_data = plan_response.json()
+            integration_task_id = plan_data.get('task_id')
+            
+            if not integration_task_id:
+                self.log_test("Integration Flow", False, "No task_id returned from plan generation")
+                return False
+            
+            # Step 2: Initialize task
+            init_response = self.session.post(f"{API_BASE}/agent/initialize-task", 
+                                            json=plan_payload, timeout=20)
+            
+            if init_response.status_code != 200:
+                self.log_test("Integration Flow", False, "Task initialization failed in integration test")
+                return False
+            
+            # Step 3: Start execution
+            exec_response = self.session.post(f"{API_BASE}/agent/start-task-execution/{integration_task_id}", 
+                                            json={}, timeout=30)
+            
+            if exec_response.status_code != 200:
+                self.log_test("Integration Flow", False, "Task execution start failed in integration test")
+                return False
+            
+            # Step 4: Check task status
+            status_response = self.session.get(f"{API_BASE}/agent/get-task-plan/{integration_task_id}", timeout=15)
+            
+            if status_response.status_code == 200:
+                status_data = status_response.json()
+                task_status = status_data.get('status', '')
+                
+                self.log_test("Integration Flow", True, 
+                            f"Complete integration flow successful - Task status: {task_status}")
+                return True
+            else:
+                self.log_test("Integration Flow", False, "Task status check failed in integration test")
+                return False
+                
+        except Exception as e:
+            self.log_test("Integration Flow", False, f"Exception: {str(e)}")
+            return False
+    
     def run_all_tests(self) -> Dict[str, Any]:
         """Run all tests and return comprehensive results"""
         print("🧪 STARTING COMPREHENSIVE MITOSIS AGENT AUTONOMOUS FUNCTIONALITY TESTING")
