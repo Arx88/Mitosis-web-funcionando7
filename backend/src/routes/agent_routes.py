@@ -2651,8 +2651,8 @@ RESPONDE SOLO JSON:"""
                         'task_type': plan_data.get('task_type'),
                         'complexity': plan_data.get('complexity')
                     })
-            
-        except (json.JSONDecodeError, ValueError) as parse_error:
+                    
+                except (json.JSONDecodeError, ValueError) as parse_error:
             logger.error(f"❌ JSON parse error: {parse_error}")
             logger.error(f"❌ Response was: {response_text[:200]}...")
             
