@@ -1011,15 +1011,23 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
             
             # Usar TaskManager en lugar de active_task_plans
             task_data = get_task_data(task_id)
+            print(f"🔍 get_task_data result: {task_data is not None}")
+            if task_data:
+                print(f"📋 Task data keys: {task_data.keys() if isinstance(task_data, dict) else 'Not dict'}")
+            
             logger.info(f"🔍 DEBUG: task_data obtenida: {task_data is not None}")
             
             if not task_data:
+                print(f"❌ Task {task_id} not found in TaskManager, trying fallback...")
                 logger.error(f"❌ Task {task_id} not found, cannot execute - Fallback a active_task_plans")
                 # Fallback a memoria legacy
+                print(f"🔍 Checking active_task_plans, keys: {list(active_task_plans.keys())}")
                 if task_id in active_task_plans:
                     task_data = active_task_plans[task_id]
+                    print(f"✅ Found task in active_task_plans")
                     logger.info(f"🔍 DEBUG: Encontrada en active_task_plans")
                 else:
+                    print(f"❌ Task {task_id} not found in active_task_plans either!")
                     logger.error(f"❌ Task {task_id} no existe ni en TaskManager ni en active_task_plans")
                     return
                 
