@@ -4957,14 +4957,10 @@ Responde SOLO con el contenido final solicitado.
             })
             
         else:
-            logger.warning(f"⚠️ Tool manager not available, falling back to simulation for {tool}")
-            time.sleep(3)
-            emit_step_event(task_id, 'task_progress', {
-                'step_id': step_id,
-                'activity': f"Simulación de {tool} completada (herramientas no disponibles)",
-                'progress_percentage': 90,
-                'timestamp': datetime.now().isoformat()
-            })
+            # ❌ CRITICAL FIX: If tool manager not available, this is a REAL ERROR, not simulation
+            error_msg = f"❌ CRITICAL: Tool manager not available for {tool}. Cannot execute real tools."
+            logger.error(error_msg)
+            raise Exception(f"Tool manager not available - cannot execute {tool} properly")
             
     except Exception as e:
         logger.error(f"❌ Error executing real tool {tool}: {e}")
