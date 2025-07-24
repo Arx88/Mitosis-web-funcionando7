@@ -2600,13 +2600,13 @@ Los pasos deben ser específicos para "{message}", no genéricos.
 HERRAMIENTAS: web_search, analysis, creation, planning, delivery
 
 RESPONDE SOLO JSON:"""
-        
-        # Generar plan con Ollama
-        result = ollama_service.generate_response(plan_prompt, {'temperature': 0.3})
-        
-        if result.get('error'):
-            logger.error(f"❌ Ollama error: {result['error']}")
-            return jsonify({'error': f'Plan generation failed: {result["error"]}'}), 500
+                
+                # Generar plan con Ollama
+                result = ollama_service.generate_response(plan_prompt, {'temperature': 0.3})
+                
+                if result.get('error'):
+                    logger.error(f"❌ Ollama error: {result['error']}")
+                    return {'error': f'Plan generation failed: {result["error"]}', 'success': False}
         
         # Parsear respuesta JSON
         response_text = result.get('response', '').strip()
