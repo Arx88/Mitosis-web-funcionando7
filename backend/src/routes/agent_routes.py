@@ -225,8 +225,8 @@ def execute_single_step_detailed(task_id: str, step_id: str):
 @agent_bp.route('/get-task-status/<task_id>', methods=['GET'])
 def get_task_status(task_id: str):
     """
-    CRITICAL FIX: Endpoint para HTTP polling del frontend
-    Obtener el estado actual de una tarea para polling frontend
+    CRITICAL FIX: Endpoint para HTTP polling del frontend con executionData incluido
+    Obtener el estado actual de una tarea para polling frontend incluyendo executed_tools
     """
     try:
         task_data = get_task_data(task_id)
@@ -254,6 +254,49 @@ def get_task_status(task_id: str):
         # Calcular progreso
         progress = (completed_steps / len(steps) * 100) if len(steps) > 0 else 0
         
+        # CRITICAL FIX: Extraer herramientas ejecutadas de los pasos completados
+        executed_tools = []
+        for step in steps:
+            if step.get('completed', False) and step.get('result'):
+                # Extraer información de la herramienta ejecutada
+                step_result = step.get('result', {})
+                
+                # Crear entrada de herramienta ejecutada para el frontend
+                tool_execution = {
+                    'tool': step.get('tool', 'unknown'),
+                    'step_id': step.get('id', ''),
+                    'step_title': step.get('title', ''),
+                    'success': step_result.get('success', True),
+                    'timestamp': step.get('completed_time', datetime.now().isoformat()),
+                    'parameters': {
+                        'step_description': step.get('description', ''),
+                        'step_title': step.get('title', '')
+                    },
+                    'result': {
+                        'type': step_result.get('type', 'generic'),
+                        'summary': step_result.get('summary', 'Paso completado'),
+                        'content': step_result.get('content', ''),
+                        'execution_time': step_result.get('execution_time', 0),
+                        'data': step_result.get('data', {}),
+                        'file_created': step_result.get('file_created', False),
+                        'file_name': step_result.get('file_name', ''),
+                        'file_size': step_result.get('file_size', 0),
+                        'download_url': step_result.get('download_url', ''),
+                        'query': step_result.get('query', ''),
+                        'results_count': step_result.get('results_count', 0)
+                    }
+                }
+                
+                executed_tools.append(tool_execution)
+        
+        # CRITICAL FIX: Agregar executionData que el frontend espera
+        execution_data = {
+            'executed_tools': executed_tools,
+            'tool_executions_count': len(executed_tools),
+            'has_results': len(executed_tools) > 0,
+            'last_tool_execution': executed_tools[-1] if executed_tools else None
+        }
+        
         return jsonify({
             'task_id': task_id,
             'status': task_status,
@@ -270,6 +313,7 @@ def get_task_status(task_id: str):
             'message': task_data.get('message', ''),
             'task_type': task_data.get('task_type', ''),
             'complexity': task_data.get('complexity', ''),
+            'executionData': execution_data,  # CRITICAL FIX: Datos de ejecución para TerminalView
             'timestamp': datetime.now().isoformat()
         })
         
