@@ -605,7 +605,7 @@ class MitosisAgentTester:
         print(f"   Overall Status: {overall_status}")
         
         # Critical findings
-        critical_tests = ["Backend Health", "Agent Status", "Plan Generation", "Task Execution Start"]
+        critical_tests = ["Backend Health", "Agent Status", "Plan Generation", "Task Execution Start", "Autonomous Execution Scenario"]
         critical_passed = sum(1 for result in self.test_results 
                             if result['test_name'] in critical_tests and result['success'])
         
