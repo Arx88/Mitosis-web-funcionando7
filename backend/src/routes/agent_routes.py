@@ -335,6 +335,91 @@ def get_task_plan(task_id: str):
         logger.error(f"❌ Error obteniendo plan para task {task_id}: {str(e)}")
         return jsonify({'error': f'Error getting task plan: {str(e)}'}), 500
 
+@agent_bp.route('/get-task-execution-results/<task_id>', methods=['GET'])
+def get_task_execution_results(task_id: str):
+    """
+    CRITICAL FIX: Endpoint para obtener resultados de ejecución con herramientas ejecutadas
+    Obtener los datos de ejecución con executed_tools para el frontend polling
+    """
+    try:
+        task_data = get_task_data(task_id)
+        if not task_data:
+            return jsonify({'error': f'Task {task_id} not found'}), 404
+        
+        steps = task_data.get('plan', [])
+        
+        # Extraer herramientas ejecutadas de los pasos completados
+        executed_tools = []
+        for step in steps:
+            if step.get('completed', False) and step.get('result'):
+                # Extraer información de la herramienta ejecutada
+                step_result = step.get('result', {})
+                
+                # Crear entrada de herramienta ejecutada
+                tool_execution = {
+                    'tool': step.get('tool', 'unknown'),
+                    'step_id': step.get('id', ''),
+                    'step_title': step.get('title', ''),
+                    'success': step_result.get('success', True),
+                    'timestamp': step.get('completed_time', datetime.now().isoformat()),
+                    'parameters': {
+                        'step_description': step.get('description', ''),
+                        'step_title': step.get('title', '')
+                    },
+                    'result': {
+                        'type': step_result.get('type', 'generic'),
+                        'summary': step_result.get('summary', 'Paso completado'),
+                        'content': step_result.get('content', ''),
+                        'execution_time': step_result.get('execution_time', 0),
+                        'data': step_result.get('data', {}),
+                        'file_created': step_result.get('file_created', False),
+                        'file_name': step_result.get('file_name', ''),
+                        'file_size': step_result.get('file_size', 0),
+                        'download_url': step_result.get('download_url', ''),
+                        'query': step_result.get('query', ''),
+                        'results_count': step_result.get('results_count', 0)
+                    }
+                }
+                
+                executed_tools.append(tool_execution)
+        
+        # Calcular estadísticas
+        completed_steps = sum(1 for step in steps if step.get('completed', False))
+        progress = (completed_steps / len(steps) * 100) if len(steps) > 0 else 0
+        
+        # Determinar estado de ejecución
+        task_status = 'pending'
+        if completed_steps == len(steps) and len(steps) > 0:
+            task_status = 'completed'
+        elif any(step.get('active', False) for step in steps):
+            task_status = 'executing'
+        elif completed_steps > 0:
+            task_status = 'in_progress'
+        
+        return jsonify({
+            'task_id': task_id,
+            'status': task_status,
+            'progress': progress,
+            'execution_data': {
+                'executed_tools': executed_tools,
+                'total_tools': len(executed_tools),
+                'execution_started': len(executed_tools) > 0,
+                'execution_completed': task_status == 'completed'
+            },
+            'plan': steps,
+            'stats': {
+                'total_steps': len(steps),
+                'completed_steps': completed_steps,
+                'remaining_steps': len(steps) - completed_steps,
+                'tools_executed': len(executed_tools)
+            },
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo resultados de ejecución para task {task_id}: {str(e)}")
+        return jsonify({'error': f'Error getting execution results: {str(e)}'}), 500
+
 def execute_single_step_logic(step: dict, original_message: str, task_id: str) -> dict:
     """
     Lógica de ejecución para un paso individual con manejo de errores robusto
