@@ -2989,7 +2989,7 @@ RESPONDE SOLO JSON - NO TEXTO ADICIONAL
             
     except Exception as e:
         logger.error(f"❌ All retries failed for unified AI plan generation task {task_id}: {str(e)}")
-        return generate_fallback_plan_with_notification(message, task_id, f"Error en generación IA unificada: {str(e)}")
+        return generate_fallback_plan(message, task_id)
 
 def generate_dynamic_plan_with_ai(message: str, task_id: str) -> dict:
     """
