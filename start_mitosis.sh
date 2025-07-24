@@ -306,17 +306,33 @@ if $backend_ok; then
         echo "   ❌ Agent status: FAIL - $agent_status"
     fi
     
-    # Test 4: Verificación específica de Ollama desde backend
-    echo "🔍 Testing conexión Ollama desde backend..."
-    ollama_test=$(curl -s "http://localhost:8001/api/agent/status" 2>/dev/null | grep -o '"ollama":{[^}]*}' || echo "error")
-    if echo "$ollama_test" | grep -q "connected.*true\|status.*ok"; then
-        echo "   ✅ Ollama backend integration: FUNCIONANDO"
-        endpoint=$(echo "$ollama_test" | grep -o '"endpoint":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
-        model=$(echo "$ollama_test" | grep -o '"model":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
+    # Test 4: Verificación específica de Ollama desde frontend
+    echo "🔍 Testing conexión Ollama desde frontend..."
+    ollama_check_test=$(curl -s -X POST -H "Content-Type: application/json" \
+        -d '{"endpoint":"https://bef4a4bb93d1.ngrok-free.app"}' \
+        http://localhost:8001/api/agent/ollama/check 2>/dev/null || echo "error")
+    if echo "$ollama_check_test" | grep -q "is_connected.*true\|connected.*true"; then
+        echo "   ✅ Ollama frontend integration: FUNCIONANDO"
+        endpoint=$(echo "$ollama_check_test" | grep -o '"endpoint":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
         echo "      🔗 Endpoint: $endpoint"
-        echo "      🧠 Modelo: $model"
     else
-        echo "   ⚠️ Ollama backend integration: VERIFICANDO..."
+        echo "   ⚠️ Ollama frontend integration: VERIFICANDO..."
+    fi
+    
+    # Test 5: Verificación de modelos desde frontend
+    echo "🔍 Testing modelos Ollama desde frontend..."
+    ollama_models_test=$(curl -s -X POST -H "Content-Type: application/json" \
+        -d '{"endpoint":"https://bef4a4bb93d1.ngrok-free.app"}' \
+        http://localhost:8001/api/agent/ollama/models 2>/dev/null || echo "error")
+    if echo "$ollama_models_test" | grep -q "models.*llama3.1:8b\|count.*[0-9]"; then
+        echo "   ✅ Ollama models integration: FUNCIONANDO"
+        model_count=$(echo "$ollama_models_test" | grep -o '"count":[0-9]*' | cut -d':' -f2 || echo "?")
+        echo "      📊 Modelos disponibles: $model_count"
+        if echo "$ollama_models_test" | grep -q "llama3.1:8b"; then
+            echo "      🧠 Modelo llama3.1:8b: DISPONIBLE"
+        fi
+    else
+        echo "   ⚠️ Ollama models integration: VERIFICANDO..."
     fi
     
     # Test 5: Test simple de chat para verificar pipeline completo
