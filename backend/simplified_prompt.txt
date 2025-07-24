@@ -1,0 +1,42 @@
+        # 🧠 PROMPT INTELIGENTE SIMPLIFICADO - AGENTE EXCEPCIONAL
+        plan_prompt = f"""Crea un plan excepcional de 3-4 pasos para: {message}
+
+Como agente experto, diseña pasos ESPECÍFICOS y DETALLADOS que superen expectativas del usuario.
+
+METODOLOGÍA INTELIGENTE:
+- Si es investigación: Incluye fuentes múltiples, análisis comparativo, tendencias actuales
+- Si es creación: Estructura profesional, contenido original, ejemplos prácticos  
+- Si es análisis: Datos cuantitativos, insights profundos, recomendaciones accionables
+- Si es técnico: Mejores prácticas, código optimizado, documentación clara
+
+RESPONDE SOLO con JSON válido en este formato:
+{{
+  "steps": [
+    {{
+      "id": "step-1",
+      "title": "Título específico orientado al valor máximo para esta tarea",
+      "description": "Metodología detallada con entregables específicos y fuentes concretas", 
+      "tool": "web_search"
+    }},
+    {{
+      "id": "step-2",
+      "title": "Segundo paso que construya sobre el anterior y amplifique el valor",
+      "description": "Proceso de análisis avanzado que genere insights únicos y útiles",
+      "tool": "analysis"
+    }},
+    {{
+      "id": "step-3", 
+      "title": "Paso final que consolide y entregue resultados profesionales",
+      "description": "Síntesis y entrega con formato accionable y recomendaciones específicas",
+      "tool": "creation"
+    }}
+  ],
+  "task_type": "clasificación profesional específica para esta tarea",
+  "complexity": "evaluación realista: baja|media|alta",
+  "estimated_total_time": "tiempo realista considerando calidad profesional"
+}}
+
+IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos.
+HERRAMIENTAS: web_search, analysis, creation, planning, delivery, processing, synthesis, data_analysis, research
+
+CREA UN PLAN QUE SUPERE LAS EXPECTATIVAS - RESPONDE SOLO JSON:"""
