@@ -107,11 +107,20 @@ EOF
 chmod +x /app/backend/production_wsgi.py
 
 # ========================================================================
-# PASO 3: CONSTRUIR FRONTEND EN MODO PRODUCCIÓN
+# PASO 3: CONSTRUIR FRONTEND EN MODO PRODUCCIÓN Y CORREGIR CONFIG
 # ========================================================================
 
 echo "🏗️ Construyendo frontend en modo producción..."
 cd /app/frontend
+
+# CRÍTICO: Corregir variables de entorno para evitar duplicación /api
+echo "🔧 Corrigiendo variables de entorno del frontend..."
+cat > /app/frontend/.env << 'EOF'
+VITE_BACKEND_URL=https://f06cad5e-e399-4742-870a-df7e66775bd4.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://f06cad5e-e399-4742-870a-df7e66775bd4.preview.emergentagent.com
+EOF
+
+echo "✅ Variables de entorno corregidas (eliminada duplicación /api)"
 
 # Instalar dependencias si no existen
 if [ ! -d "node_modules" ]; then
@@ -135,7 +144,7 @@ if [ ! -d "dist" ]; then
     exit 1
 fi
 
-echo "✅ Frontend construido para producción"
+echo "✅ Frontend construido para producción con variables corregidas"
 
 # ========================================================================
 # PASO 4: CONFIGURACIÓN SUPERVISOR PARA MODO PRODUCCIÓN
