@@ -3138,10 +3138,15 @@ Solo JSON, sin texto adicional:"""
     
     # Llamar a la función interna
     try:
-        return generate_robust_plan_with_retries()
+        result = generate_robust_plan_with_retries()
+        # Asegurar que el primer paso esté activo
+        if result.get('steps') and len(result['steps']) > 0:
+            result['steps'][0]['active'] = True
+            result['steps'][0]['status'] = 'active'
+        return result
     except Exception as e:
         logger.error(f"❌ Plan generation error: {e}")
-        return generate_fallback_plan(message, task_id)
+        return generate_intelligent_fallback_plan(message, task_id, task_category)
 
 @agent_bp.route('/update-task-progress', methods=['POST'])
 def update_task_progress():
