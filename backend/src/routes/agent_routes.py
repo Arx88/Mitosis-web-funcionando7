@@ -2710,10 +2710,22 @@ RESPONDE SOLO JSON:"""
                         'task_type': 'general',
                         'complexity': 'media'
                     })
-            
+                    
+            except Exception as attempt_error:
+                logger.error(f"❌ Attempt {attempt} failed: {attempt_error}")
+                last_error = attempt_error
+                continue
+        
+        # Si llegamos aquí, todos los intentos fallaron
+        logger.error(f"❌ All plan generation attempts failed. Last error: {last_error}")
+        return generate_fallback_plan(message, task_id)
+    
+    # Llamar a la función interna
+    try:
+        return generate_plan_with_retries()
     except Exception as e:
         logger.error(f"❌ Plan generation error: {e}")
-        return jsonify({'error': str(e)}), 500
+        return generate_fallback_plan(message, task_id)
 
 @agent_bp.route('/update-task-progress', methods=['POST'])
 def update_task_progress():
