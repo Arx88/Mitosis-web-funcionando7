@@ -2579,6 +2579,12 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
         }
     ]
     
+    # 🎯 MARCAR EL PRIMER PASO COMO ACTIVO EN FALLBACK BÁSICO
+    if fallback_steps:
+        fallback_steps[0]['active'] = True
+        fallback_steps[0]['status'] = 'active'
+        logger.info(f"✅ First fallback step marked as active: {fallback_steps[0]['title']}")
+    
     # Guardar plan de fallback
     task_data = {
         'id': task_id,
@@ -2594,13 +2600,11 @@ def generate_fallback_plan(message: str, task_id: str) -> dict:
     save_task_data(task_id, task_data)
     
     return {
-        'plan': fallback_steps,
-        'enhanced_title': f"Plan básico: {message[:50]}...",
-        'task_id': task_id,
-        'total_steps': len(fallback_steps),
-        'estimated_total_time': '25 minutos',
+        'steps': fallback_steps,  # 🎯 FIXED: Return 'steps' instead of 'plan' for consistency
         'task_type': 'general',
-        'complexity': 'media'
+        'complexity': 'media',
+        'estimated_total_time': '25 minutos',
+        'plan_source': 'basic_fallback'
     }
 
 def detect_task_category(message: str) -> str:
