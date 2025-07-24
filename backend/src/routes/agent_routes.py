@@ -2522,6 +2522,87 @@ Tu respuesta debe ser ÚNICAMENTE el título:
         logger.error(f"❌ Error generating title with LLM: {str(e)}")
         return message.strip()
 
+def extract_search_query_from_message(message: str, step_title: str) -> str:
+    """Extraer query de búsqueda optimizada del mensaje y título del paso"""
+    # Combinar mensaje original con título del paso para contexto
+    combined_text = f"{message} {step_title}"
+    
+    # Limpiar texto común
+    query = combined_text.replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
+    
+    # Limitar longitud para búsquedas efectivas
+    if len(query) > 100:
+        query = query[:100]
+    
+    return query
+
+def generate_clean_response(content: str, response_type: str = "text") -> dict:
+    """Generar respuesta limpia y estructurada"""
+    return {
+        'response': content,
+        'type': response_type,
+        'timestamp': datetime.now().isoformat(),
+        'success': True
+    }
+
+def generate_fallback_plan(message: str, task_id: str) -> dict:
+    """Plan de fallback básico cuando todo falla"""
+    logger.info(f"🔄 Generating basic fallback plan for task {task_id}")
+    
+    fallback_steps = [
+        {
+            "id": "step-1",
+            "title": f"Investigar: {message[:40]}...",
+            "description": "Buscar información relevante sobre el tema solicitado",
+            "tool": "web_search",
+            "completed": False,
+            "active": False,
+            "status": "pending"
+        },
+        {
+            "id": "step-2",
+            "title": "Analizar información encontrada",
+            "description": "Procesar y analizar los datos recopilados",
+            "tool": "analysis",
+            "completed": False,
+            "active": False,
+            "status": "pending"
+        },
+        {
+            "id": "step-3",
+            "title": "Generar resultado final",
+            "description": "Crear el producto final basado en el análisis",
+            "tool": "creation",
+            "completed": False,
+            "active": False,
+            "status": "pending"
+        }
+    ]
+    
+    # Guardar plan de fallback
+    task_data = {
+        'id': task_id,
+        'message': message,
+        'plan': fallback_steps,
+        'task_type': 'general',
+        'complexity': 'media',
+        'estimated_total_time': '25 minutos',
+        'created_at': datetime.now().isoformat(),
+        'status': 'plan_generated'
+    }
+    
+    save_task_data(task_id, task_data)
+    
+    return {
+        'plan': fallback_steps,
+        'enhanced_title': f"Plan básico: {message[:50]}...",
+        'task_id': task_id,
+        'total_steps': len(fallback_steps),
+        'estimated_total_time': '25 minutos',
+        'task_type': 'general',
+        'complexity': 'media'
+    }
+
 def detect_task_category(message: str) -> str:
     """Detectar la categoría de la tarea para generar planes específicos"""
     message_lower = message.lower()
