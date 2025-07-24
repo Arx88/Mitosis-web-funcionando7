@@ -187,12 +187,12 @@ export const VanishInput: React.FC<VanishInputProps> = ({
     }
   }, [inputValue, disabled, onSendMessage]);
 
-  const adjustTextareaHeight = () => {
+  const adjustTextareaHeight = useCallback(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`;
     }
-  };
+  }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     console.log('🔥 VANISHINPUT DEBUG: Key pressed:', e.key, 'shiftKey:', e.shiftKey, 'inputValue:', inputValue);
