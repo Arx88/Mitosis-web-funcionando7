@@ -197,10 +197,14 @@ export const VanishInput: React.FC<VanishInputProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     console.log('🔥 VANISHINPUT DEBUG: Key pressed:', e.key, 'shiftKey:', e.shiftKey, 'inputValue:', inputValue);
     console.log('🔥 VANISHINPUT DEBUG: disabled:', disabled, 'onSendMessage exists:', !!onSendMessage);
+    console.log('🔥 VANISHINPUT DEBUG: Event target:', e.target);
+    console.log('🔥 VANISHINPUT DEBUG: Event currentTarget:', e.currentTarget);
+    
     if (e.key === 'Enter' && !e.shiftKey) {
       console.log('🔥 VanishInput Enter without shift detected - calling handleSubmit');
       e.preventDefault();
-      handleSubmit(e);
+      e.stopPropagation(); // Add this to prevent any parent event handling
+      handleSubmit(e as any); // Cast to form event for compatibility
     }
   };
 
