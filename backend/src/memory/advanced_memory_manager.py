@@ -1334,3 +1334,98 @@ class AdvancedMemoryManager:
             return str(obj)
         return None
     
+    def get_task_state(self, task_id: str) -> Dict[str, Any]:
+        """
+        🚨 PASO 3: CREAR EL CANAL DE COMUNICACIÓN - get_task_state function
+        Obtiene el estado actual de una tarea específica
+        
+        Args:
+            task_id: ID de la tarea
+            
+        Returns:
+            Diccionario con el estado de la tarea
+        """
+        try:
+            # 🚨 LOGGING AGRESIVO EN GET_TASK_STATE
+            print(f"🔍 get_task_state called for task_id: {task_id}")
+            
+            # Importar las funciones necesarias
+            from ..routes.agent_routes import get_task_data, active_task_plans
+            
+            # Intentar obtener datos de la tarea
+            task_data = get_task_data(task_id)
+            print(f"🔍 Task data from get_task_data: {task_data is not None}")
+            
+            if not task_data:
+                # Fallback a active_task_plans
+                print(f"🔍 Checking active_task_plans for task_id: {task_id}")
+                if task_id in active_task_plans:
+                    task_data = active_task_plans[task_id]
+                    print(f"✅ Found task in active_task_plans")
+                else:
+                    print(f"❌ Task {task_id} not found anywhere")
+                    return {
+                        'task_id': task_id,
+                        'status': 'not_found',
+                        'message': f'Task {task_id} not found',
+                        'timestamp': datetime.now().isoformat()
+                    }
+            
+            # Extraer información del estado
+            plan_steps = task_data.get('plan', [])
+            current_step = task_data.get('current_step', 0)
+            completed_steps = [step for step in plan_steps if step.get('status') == 'completed']
+            failed_steps = [step for step in plan_steps if step.get('status') == 'failed']
+            in_progress_steps = [step for step in plan_steps if step.get('status') == 'in-progress']
+            
+            # Calcular progreso
+            total_steps = len(plan_steps)
+            completed_count = len(completed_steps)
+            progress_percentage = (completed_count / total_steps * 100) if total_steps > 0 else 0
+            
+            # Determinar estado general
+            if len(failed_steps) > 0:
+                overall_status = 'failed'
+            elif len(in_progress_steps) > 0:
+                overall_status = 'running'
+            elif completed_count == total_steps and total_steps > 0:
+                overall_status = 'completed'
+            elif total_steps > 0:
+                overall_status = 'pending'
+            else:
+                overall_status = 'initialized'
+            
+            task_state = {
+                'task_id': task_id,
+                'status': overall_status,
+                'progress': {
+                    'total_steps': total_steps,
+                    'completed_steps': completed_count,
+                    'failed_steps': len(failed_steps),
+                    'in_progress_steps': len(in_progress_steps),
+                    'percentage': round(progress_percentage, 2)
+                },
+                'current_step': current_step,
+                'steps': plan_steps,
+                'metadata': {
+                    'created_at': task_data.get('created_at', datetime.now().isoformat()),
+                    'last_updated': task_data.get('last_updated', datetime.now().isoformat()),
+                    'title': task_data.get('title', f'Task {task_id}'),
+                    'description': task_data.get('description', 'No description available')
+                },
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            print(f"✅ Task state generated successfully: {overall_status}, {progress_percentage}% complete")
+            return task_state
+            
+        except Exception as e:
+            logger.error(f"Error getting task state for {task_id}: {e}")
+            print(f"❌ Error in get_task_state: {str(e)}")
+            return {
+                'task_id': task_id,
+                'status': 'error',
+                'error': str(e),
+                'timestamp': datetime.now().isoformat()
+            }
+    
