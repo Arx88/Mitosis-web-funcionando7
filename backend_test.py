@@ -559,6 +559,8 @@ class MitosisAgentTester:
             ("Task Execution Start", self.test_task_execution_start),
             ("Step Execution", self.test_step_execution),
             ("Document Generation", self.test_document_generation),
+            ("WebSocket Functionality", self.test_websocket_functionality),
+            ("Autonomous Execution Scenario", self.test_autonomous_execution_scenario),
             ("Integration Flow", self.test_integration_flow)
         ]
         
