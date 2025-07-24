@@ -2991,35 +2991,16 @@ RESPONDE SOLO JSON - NO TEXTO ADICIONAL
         logger.error(f"❌ All retries failed for unified AI plan generation task {task_id}: {str(e)}")
         return generate_fallback_plan(message, task_id)
 
-def generate_dynamic_plan_with_ai(message: str, task_id: str) -> dict:
-    """
-    DEPRECATED: Usar generate_unified_ai_plan en su lugar
-    Mantenido temporalmente para compatibilidad con código existente
-    """
-    logger.warning(f"⚠️ Using deprecated generate_dynamic_plan_with_ai, consider migrating to generate_unified_ai_plan")
-    return generate_unified_ai_plan(message, task_id, attempt_retries=True)
+# FUNCIONES HELPER SIMPLIFICADAS
 
-def generate_fallback_plan_with_notification(message: str, task_id: str, error_reason: str = None) -> dict:
-    """
-    Genera un plan de fallback con notificación explícita al usuario
-    Mejora implementada según UPGRADE.md Sección 2: Manejo Explícito de Fallback
-    """
-    logger.warning(f"🔄 Generating fallback plan for task {task_id} - Reason: {error_reason or 'AI not available'}")
-    
-    fallback_plan = generate_fallback_plan(message, task_id)
-    
-    # Agregar información de fallback
-    fallback_plan['plan_source'] = 'fallback'
-    fallback_plan['fallback_reason'] = error_reason or 'AI generation failed'
-    fallback_plan['warning'] = 'Plan generado por contingencia - precisión limitada'
-    
-    # Marcar en memoria global que es fallback
-    if task_id in active_task_plans:
-        active_task_plans[task_id]['plan_source'] = 'fallback'
-        active_task_plans[task_id]['fallback_reason'] = error_reason
-        active_task_plans[task_id]['warning'] = 'Plan generado por contingencia'
-    
-    return fallback_plan
+def extract_search_query_from_message(message: str, step_title: str) -> str:
+    """Extract search query from message and step"""
+    # Simple extraction - just combine message and step title
+    combined = f"{message} {step_title}".lower()
+    # Remove common words
+    for word in ['crear', 'generar', 'hacer', 'buscar', 'sobre', 'información', 'para', 'de']:
+        combined = combined.replace(word, ' ')
+    return combined.strip()[:100]  # Limit length
 
 def generate_fallback_plan(message: str, task_id: str) -> dict:
     """
