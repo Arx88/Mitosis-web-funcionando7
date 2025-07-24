@@ -4688,12 +4688,11 @@ def execute_task_steps_sequentially(task_id: str, steps: list):
                 execute_step_internal(task_id, step_id, step)
                 print(f"✅ execute_step_internal completed for step {i+1}")
                 
+                # ✅ CRITICAL FIX: NO artificial delays - let real execution determine timing
+                logger.info(f"✅ Step {i+1} completed, moving to next step...")
+                
                 with open(log_file, "a") as f:
                     f.write(f"✅ STEP {i+1} COMPLETED\n")
-                
-                # Pausa entre pasos para visualización
-                print(f"⏱️  Waiting 2 seconds before next step...")
-                time.sleep(2)
                 
             except Exception as e:
                 error_msg = f"❌ Error executing step {step_id}: {e}"
