@@ -3110,15 +3110,22 @@ Solo JSON, sin texto adicional:"""
                     
                     save_task_data(task_id, task_data)
                     
-                    return jsonify({
-                        'plan': fallback_steps,
-                        'enhanced_title': f"Plan: {message[:50]}...",
-                        'task_id': task_id,
-                        'total_steps': len(fallback_steps),
-                        'estimated_total_time': '30 minutos',
+                    # 🎯 MARCAR EL PRIMER PASO COMO ACTIVO
+                    if fallback_steps:
+                        fallback_steps[0]['active'] = True
+                        fallback_steps[0]['status'] = 'active'
+                        logger.info(f"✅ First fallback step marked as active: {fallback_steps[0]['title']}")
+                    
+                    result = {
+                        'steps': fallback_steps,
                         'task_type': 'general',
-                        'complexity': 'media'
-                    })
+                        'complexity': 'media',
+                        'estimated_total_time': '30 minutos',
+                        'plan_source': 'json_parse_fallback'
+                    }
+                    
+                    logger.info(f"✅ Returning JSON parse fallback plan with {len(fallback_steps)} steps")
+                    return result
                     
             except Exception as attempt_error:
                 logger.error(f"❌ Attempt {attempt} failed: {attempt_error}")
