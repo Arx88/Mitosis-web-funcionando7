@@ -3868,52 +3868,86 @@ def generate_plan():
             logger.error("❌ Ollama service not available")
             return jsonify({'error': 'Ollama service not available'}), 500
         
-        # Prompt mejorado para generar plan específico
-        plan_prompt = f"""Crea un plan detallado de 3-4 pasos específicos para: {message}
+        # 🧠 PROMPT INTELIGENTE Y SOFISTICADO - AGENTE EXCEPCIONAL
+        plan_prompt = f"""🎯 TAREA: {message}
 
-Cada paso debe ser específico para esta tarea, no genérico. Analiza qué se necesita hacer realmente.
+Como un AGENTE EXPERTO EXCEPCIONAL, crea un plan que SUPERE LAS EXPECTATIVAS del usuario.
 
-Responde SOLO con JSON válido en este formato:
+🔥 INSTRUCCIONES CRÍTICAS:
+1. **ANÁLISIS PROFUNDO**: Analiza la tarea desde múltiples ángulos
+2. **VALOR AGREGADO**: Cada paso debe aportar valor real y tangible  
+3. **ANTICIPACIÓN**: Piensa en lo que el usuario realmente necesita, incluso lo que no pidió
+4. **INNOVACIÓN**: Propón enfoques creativos y eficientes
+5. **COMPLETITUD**: Asegúrate de que el resultado sea comprehensivo y útil
+
+🧠 METODOLOGÍA INTELIGENTE:
+- Si es investigación → Incluye fuentes múltiples, análisis comparativo, tendencias actuales
+- Si es creación → Estructura profesional, contenido original, ejemplos prácticos
+- Si es análisis → Datos cuantitativos, insights profundos, recomendaciones accionables
+- Si es técnico → Mejores prácticas, código optimizado, documentación clara
+
+📊 EJEMPLOS DE PLANES EXCEPCIONALES:
+
+🍽️ Para "Análisis de restaurantes Madrid":
 {{
   "steps": [
     {{
       "id": "step-1",
-      "title": "Título específico del paso 1 para esta tarea",
-      "description": "Descripción detallada de qué se va a hacer exactamente",
+      "title": "Investigación exhaustiva multi-fuente de restaurantes madrileños 2025",
+      "description": "Recopilar datos de TripAdvisor, Google Reviews, Michelin, TimeOut Madrid, blogs especializados y redes sociales para identificar tendencias gastronómicas actuales, restaurantes emergentes y establecidos con mejor reputación",
       "tool": "web_search"
     }},
     {{
       "id": "step-2", 
-      "title": "Título específico del paso 2 para esta tarea",
-      "description": "Descripción detallada de qué se va a hacer exactamente",
+      "title": "Análisis estratificado por categorías gastronómicas y rangos de precio",
+      "description": "Clasificar restaurantes por cocina (tradicional española, internacional, fusión), rango de precios (económico <25€, medio 25-50€, premium >50€), y análisis de satisfacción por zona geográfica de Madrid",
       "tool": "analysis"
     }},
     {{
       "id": "step-3",
-      "title": "Título específico del paso 3 para esta tarea", 
-      "description": "Descripción detallada de qué se va a hacer exactamente",
+      "title": "Creación de guía interactiva con mapas, recomendaciones personalizadas y datos exclusivos",
+      "description": "Desarrollar informe completo con mapa interactivo, recomendaciones por ocasión (cita romántica, cena familiar, eventos de negocios), horarios optimizados, reservas recomendadas y análisis de tendencias gastronómicas 2025",
       "tool": "creation"
     }}
   ],
-  "task_type": "tipo específico de tarea",
-  "complexity": "baja|media|alta",
-  "estimated_total_time": "tiempo estimado realista"
+  "task_type": "investigación gastronómica especializada",
+  "complexity": "alta",
+  "estimated_total_time": "45-60 minutos"
 }}
 
-EJEMPLOS DE BUENOS PASOS:
-Para "Crear informe sobre restaurantes de Madrid":
-- "Buscar los mejores restaurantes de Madrid en 2025"
-- "Analizar reseñas y clasificar por categorías gastronómicas"  
-- "Redactar informe detallado con recomendaciones específicas"
+💰 Para "Análisis mercado criptomonedas":
+{{
+  "steps": [
+    {{
+      "id": "step-1",
+      "title": "Análisis técnico multi-exchange de criptomonedas principales y emergentes",
+      "description": "Recopilar datos en tiempo real de Binance, Coinbase, Kraken sobre BTC, ETH, altcoins prometedoras, análisis de volúmenes, patrones técnicos, indicadores RSI, MACD, soporte/resistencia y sentiment del mercado",
+      "tool": "web_search"
+    }},
+    {{
+      "id": "step-2",
+      "title": "Evaluación de factores macro-económicos y análisis predictivo avanzado",
+      "description": "Analizar impacto de políticas gubernamentales, adopción institucional, desarrollos tecnológicos (ETFs, Layer 2, DeFi), correlaciones con mercados tradicionales y modelos predictivos basados en patrones históricos",
+      "tool": "analysis"
+    }},
+    {{
+      "id": "step-3",
+      "title": "Informe estratégico con recomendaciones de inversión y gestión de riesgo",
+      "description": "Generar análisis profesional con estrategias de diversificación, puntos de entrada/salida optimizados, gestión de riesgo, alertas de precio, calendario de eventos relevantes y proyecciones a corto/medio plazo",
+      "tool": "creation"
+    }}
+  ],
+  "task_type": "análisis financiero especializado",
+  "complexity": "alta", 
+  "estimated_total_time": "50-70 minutos"
+}}
 
-Para "Analizar mercado de criptomonedas":
-- "Investigar precios actuales de Bitcoin, Ethereum y altcoins principales"
-- "Analizar tendencias del mercado y factores que afectan precios"
-- "Generar análisis técnico con predicciones y recomendaciones"
+🎯 RESPONDE SOLO CON JSON VÁLIDO siguiendo esta estructura inteligente.
+Los pasos deben ser ESPECÍFICOS, DETALLADOS y ORIENTADOS AL VALOR para: "{message}"
 
-Herramientas disponibles: web_search, analysis, creation, planning, delivery
+Herramientas disponibles: web_search, analysis, creation, planning, delivery, processing, synthesis, data_analysis, research
 
-IMPORTANTE: Los títulos y descripciones deben ser específicos para "{message}", no genéricos."""
+CREA UN PLAN EXCEPCIONAL QUE SUPERE EXPECTATIVAS 🚀"""
         
         # Generar plan con Ollama
         result = ollama_service.generate_response(plan_prompt, {'temperature': 0.3})
