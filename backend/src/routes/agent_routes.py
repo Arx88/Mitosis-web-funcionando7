@@ -2616,41 +2616,41 @@ RESPONDE SOLO JSON:"""
                     cleaned_response = response_text.replace('```json', '').replace('```', '').strip()
                     plan_data = json.loads(cleaned_response)
             
-            # Validar estructura básica
-            if not plan_data.get('steps') or not isinstance(plan_data['steps'], list):
-                raise ValueError("Invalid plan structure")
-            
-            # Agregar campos faltantes a los pasos
-            for step in plan_data['steps']:
-                step['completed'] = False
-                step['active'] = False
-                step['status'] = 'pending'
-            
-            # Guardar plan en task data
-            task_data = {
-                'id': task_id,
-                'message': message,
-                'plan': plan_data['steps'],
-                'task_type': plan_data.get('task_type', 'general'),
-                'complexity': plan_data.get('complexity', 'media'),
-                'estimated_total_time': plan_data.get('estimated_total_time', '30 minutos'),
-                'created_at': datetime.now().isoformat(),
-                'status': 'plan_generated'
-            }
-            
-            save_task_data(task_id, task_data)
-            
-            logger.info(f"✅ Plan generated with {len(plan_data['steps'])} steps")
-            
-            return jsonify({
-                'plan': plan_data['steps'],
-                'enhanced_title': f"Plan: {message[:50]}...",
-                'task_id': task_id,
-                'total_steps': len(plan_data['steps']),
-                'estimated_total_time': plan_data.get('estimated_total_time'),
-                'task_type': plan_data.get('task_type'),
-                'complexity': plan_data.get('complexity')
-            })
+                    # Validar estructura básica
+                    if not plan_data.get('steps') or not isinstance(plan_data['steps'], list):
+                        raise ValueError("Invalid plan structure")
+                    
+                    # Agregar campos faltantes a los pasos
+                    for step in plan_data['steps']:
+                        step['completed'] = False
+                        step['active'] = False
+                        step['status'] = 'pending'
+                    
+                    # Guardar plan en task data
+                    task_data = {
+                        'id': task_id,
+                        'message': message,
+                        'plan': plan_data['steps'],
+                        'task_type': plan_data.get('task_type', 'general'),
+                        'complexity': plan_data.get('complexity', 'media'),
+                        'estimated_total_time': plan_data.get('estimated_total_time', '30 minutos'),
+                        'created_at': datetime.now().isoformat(),
+                        'status': 'plan_generated'
+                    }
+                    
+                    save_task_data(task_id, task_data)
+                    
+                    logger.info(f"✅ Plan generated with {len(plan_data['steps'])} steps")
+                    
+                    return jsonify({
+                        'plan': plan_data['steps'],
+                        'enhanced_title': f"Plan: {message[:50]}...",
+                        'task_id': task_id,
+                        'total_steps': len(plan_data['steps']),
+                        'estimated_total_time': plan_data.get('estimated_total_time'),
+                        'task_type': plan_data.get('task_type'),
+                        'complexity': plan_data.get('complexity')
+                    })
             
         except (json.JSONDecodeError, ValueError) as parse_error:
             logger.error(f"❌ JSON parse error: {parse_error}")
