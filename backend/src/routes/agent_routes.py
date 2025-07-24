@@ -947,10 +947,19 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
     Ejecuta REALMENTE los pasos del plan usando herramientas y entrega resultados finales
     Mejora implementada según UPGRADE.md Sección 3: WebSockets para Comunicación en Tiempo Real
     """
+    # 🚨 PASO 1: LOGGING AGRESIVO EN EXECUTE_PLAN_WITH_REAL_TOOLS 🚨
+    print(f"🚀 execute_plan_with_real_tools CALLED!")
+    print(f"📋 Task ID: {task_id}")
+    print(f"📋 Message: {message}")
+    print(f"📋 Plan steps count: {len(plan_steps)}")
+    print(f"🔍 Plan steps details: {json.dumps(plan_steps, indent=2, default=str)}")
+    
     try:
         import threading
         import time
         from datetime import datetime
+        
+        print(f"🔨 Importing dependencies completed")
         
         # Obtener servicios ANTES de crear el hilo
         ollama_service = get_ollama_service()
