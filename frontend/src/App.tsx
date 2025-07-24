@@ -273,9 +273,21 @@ export function App() {
         // 🚀 CRITICAL FIX: Auto-start execution after plan generation
         if (initData.plan && initData.plan.length > 0) {
           console.log('🚀 Auto-starting task execution after plan generation');
-          setTimeout(() => {
-            startTaskExecutionFromApp(newTask.id);
-          }, 500); // Wait 500ms for UI to update - faster response
+          console.log('🔍 Plan details:', initData.plan);
+          console.log('🔍 Task ID for execution:', newTask.id);
+          
+          // Increase delay to ensure backend persistence is complete
+          setTimeout(async () => {
+            console.log('🚀 EXECUTING: About to call startTaskExecutionFromApp');
+            try {
+              await startTaskExecutionFromApp(newTask.id);
+              console.log('✅ startTaskExecutionFromApp completed');
+            } catch (error) {
+              console.error('❌ Error in startTaskExecutionFromApp:', error);
+            }
+          }, 1000); // Increased to 1000ms for better reliability
+        } else {
+          console.warn('⚠️ No plan generated or plan is empty, skipping auto-execution');
         }
         
         console.log('✅ Task updated with enhanced title and plan');
