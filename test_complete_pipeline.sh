@@ -141,7 +141,7 @@ if curl -s -X POST -H "Content-Type: application/json" \
     echo "   4. Verificar que lleguen responses del backend"
     echo ""
     echo "🔧 Para probar manualmente:"
-    echo "   - Ir a: https://6ee2e21c-5039-4a9c-b6a1-65b8314cfbff.preview.emergentagent.com"
+    echo "   - Ir a: https://97773dcb-feef-40e5-8609-a38b4eb2495f.preview.emergentagent.com"
     echo "   - Escribir: 'Crea un plan para aprender JavaScript'"
     echo "   - Debería generar un plan detallado en segundos"
     
