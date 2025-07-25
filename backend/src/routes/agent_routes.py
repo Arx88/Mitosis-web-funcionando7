@@ -1939,9 +1939,11 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                         
                         try:
                             # Usar ejecución con reintentos automáticos
-                            result = execute_tool_with_retries('web_search', {
+                            result = execute_tool_with_retries('playwright_web_search', {
                                 'query': search_query,
-                                'num_results': 5
+                                'max_results': 5,
+                                'search_engine': 'bing',
+                                'extract_content': True
                             }, step['title'])
                             
                             step_result = {
