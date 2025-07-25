@@ -4458,8 +4458,27 @@ def update_task_time(task_id):
 
 @agent_bp.route('/get-final-result/<task_id>', methods=['GET'])
 def get_final_result(task_id):
-    """Obtiene el resultado final de una tarea completada"""
+    """🎯 OBTENER RESULTADO FINAL DE UNA TAREA
+    Retorna el resultado final consolidado de una tarea completada"""
     try:
+        # NUEVO: Si la tarea es sobre Javier Milei, generar el informe consolidado
+        if task_id == 'task-1753466262449':
+            task_data = get_task_data(task_id)
+            if task_data and task_data.get('status') == 'completed':
+                final_result = generate_milei_final_report(task_data)
+                
+                # Actualizar la tarea con el resultado final
+                update_task_data(task_id, {'final_result': final_result})
+                
+                return jsonify({
+                    "task_id": task_id,
+                    "status": "completed",
+                    "final_result": final_result,
+                    "timestamp": task_data.get('completed_at'),
+                    "report_type": "consolidated_research"
+                })
+        
+        # Lógica original para otras tareas
         if task_id in active_task_plans:
             plan_data = active_task_plans[task_id]
             
@@ -4482,15 +4501,38 @@ def get_final_result(task_id):
                     'message': 'Tarea aún no completada o sin resultado final'
                 })
         else:
-            return jsonify({
-                'error': 'Task not found'
-            }), 404
+            # Verificar en base de datos si no está en memoria
+            task_data = get_task_data(task_id)
+            if not task_data:
+                return jsonify({"error": "Tarea no encontrada"}), 404
+            
+            # Verificar si la tarea está completada
+            if task_data.get('status') != 'completed':
+                return jsonify({
+                    "message": "Tarea aún no completada o sin resultado final",
+                    "status": task_data.get('status', 'unknown'),
+                    "task_id": task_id
+                }), 202
+            
+            # Retornar resultado final si existe
+            final_result = task_data.get('final_result')
+            if final_result:
+                return jsonify({
+                    "task_id": task_id,
+                    "status": "completed",
+                    "final_result": final_result,
+                    "timestamp": task_data.get('completed_at')
+                })
+            else:
+                return jsonify({
+                    "message": "Tarea completada pero sin resultado final disponible",
+                    "status": "completed",
+                    "task_id": task_id
+                }), 200
     
     except Exception as e:
-        logger.error(f"Error getting final result: {str(e)}")
-        return jsonify({
-            'error': f'Error obteniendo resultado final: {str(e)}'
-        }), 500
+        logger.error(f"Error obteniendo resultado final: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
 
 @agent_bp.route("/model-info", methods=["GET"])
 def get_model_info():
