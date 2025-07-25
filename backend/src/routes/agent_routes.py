@@ -909,7 +909,12 @@ def combine_tool_results(results: list, step_title: str, step_description: str, 
             result = result_info.get('result', {})
             tool_name = result_info.get('tool', 'unknown')
             
-            combined_content += f"--- RESULTADO {i+1} ({tool_name.upper()}) ---\n"
+            # Fix: Asegurarse de que tool_name sea una cadena
+            if isinstance(tool_name, dict):
+                tool_name = tool_name.get('tool', 'unknown')
+            tool_name_str = str(tool_name)
+            
+            combined_content += f"--- RESULTADO {i+1} ({tool_name_str.upper()}) ---\n"
             combined_content += result.get('summary', 'Sin resumen') + "\n"
             
             if result.get('content'):
