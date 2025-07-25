@@ -3031,21 +3031,19 @@ JSON de respuesta (SOLO JSON, sin explicaciones):
 IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Cada paso debe tener valor único."""
 
                 elif attempt == 2:
-                    # Prompt simplificado para segundo intento
-                    plan_prompt = f"""Crea un plan JSON para: {message}
+                    # Prompt simplificado pero más directo para JSON
+                    plan_prompt = f"""Responde SOLO con JSON válido para: {message}
 
 {{
   "steps": [
-    {{"id": "step-1", "title": "Paso 1 específico", "description": "Descripción detallada", "tool": "web_search"}},
-    {{"id": "step-2", "title": "Paso 2 específico", "description": "Descripción detallada", "tool": "analysis"}},
-    {{"id": "step-3", "title": "Paso 3 específico", "description": "Descripción detallada", "tool": "creation"}}
+    {{"id": "step-1", "title": "Investigación especializada: {message[:30]}", "description": "Búsqueda exhaustiva de información actualizada y específica", "tool": "web_search", "estimated_time": "10 minutos", "complexity": "media"}},
+    {{"id": "step-2", "title": "Análisis profesional de datos", "description": "Procesamiento analítico profundo de la información recopilada", "tool": "analysis", "estimated_time": "15 minutos", "complexity": "alta"}},
+    {{"id": "step-3", "title": "Creación del entregable final", "description": "Desarrollo completo del resultado solicitado con calidad profesional", "tool": "creation", "estimated_time": "20 minutos", "complexity": "alta"}}
   ],
-  "task_type": "tipo de tarea",
-  "complexity": "media",
-  "estimated_total_time": "30 minutos"
-}}
-
-Solo JSON, sin texto adicional:"""
+  "task_type": "{task_category}",
+  "complexity": "alta",
+  "estimated_total_time": "45 minutos"
+}}"""
 
                 else:
                     # Prompt mínimo para tercer intento
