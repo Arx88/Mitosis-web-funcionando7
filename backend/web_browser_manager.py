@@ -327,7 +327,7 @@ class WebBrowserManager:
                 )
             
             # Extraer URLs de resultados (simulación simple)
-            # En implementación real, parsearía los resultados de DuckDuckGo
+            # En implementación real, parsearía los resultados de Bing
             result_urls = self._extract_search_results(search_page.html, max_results)
             
             if not result_urls:
