@@ -4626,6 +4626,14 @@ Responde SOLO con el contenido final solicitado.
             
             logger.info(f"✅ Tool {mapped_tool} executed successfully, result: {str(tool_result)[:200]}...")
             
+            # Actualizar resultado exitoso
+            step_result.update({
+                'success': True,
+                'summary': f"Ejecutado exitosamente: {title}",
+                'content': tool_result,
+                'tool_result': tool_result
+            })
+            
             # Emit detailed tool result
             emit_step_event(task_id, 'tool_result', {
                 'step_id': step_id,
