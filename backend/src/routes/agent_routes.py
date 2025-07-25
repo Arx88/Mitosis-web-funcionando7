@@ -983,23 +983,29 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
         }
 
 def execute_analysis_step(title: str, description: str, ollama_service, original_message: str) -> dict:
-    """Ejecutar paso de análisis"""
+    """Ejecutar paso de análisis - GENERA CONTENIDO REAL"""
     try:
         if not ollama_service or not ollama_service.is_healthy():
             raise Exception("Servicio Ollama no disponible")
         
         analysis_prompt = f"""
-Realiza un análisis detallado para la tarea: {original_message}
+IMPORTANTE: Genera el CONTENIDO REAL solicitado, NO un plan de cómo hacerlo.
 
+Tarea original: {original_message}
 Paso específico: {title}
 Descripción: {description}
 
-Proporciona:
-1. Análisis específico del contexto
-2. Hallazgos principales  
-3. Recomendaciones
-4. Conclusiones
+GENERA DIRECTAMENTE el análisis detallado y específico que se está solicitando.
+NO escribas "utilizaré herramientas" o "plan de acción".
+NO listes pasos de cómo hacer el trabajo.
 
+Proporciona DIRECTAMENTE:
+1. El análisis específico del contexto (con datos reales si los conoces)
+2. Los hallazgos principales concretos
+3. Las recomendaciones específicas y accionables
+4. Las conclusiones fundamentadas
+
+Responde SOLO con el contenido analítico real, completo y detallado.
 Formato: Respuesta estructurada y profesional en español.
 """
         
