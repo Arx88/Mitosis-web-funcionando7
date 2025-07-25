@@ -47,6 +47,12 @@ except ImportError:
     HAS_PLAYWRIGHT = False
 
 try:
+    from .playwright_web_search_tool import PlaywrightWebSearchTool
+    HAS_PLAYWRIGHT_SEARCH = True
+except ImportError:
+    HAS_PLAYWRIGHT_SEARCH = False
+
+try:
     from .container_manager import ContainerManager
     HAS_CONTAINER = True
 except ImportError:
