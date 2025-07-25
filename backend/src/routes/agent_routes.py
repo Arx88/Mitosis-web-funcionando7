@@ -1590,9 +1590,9 @@ def evaluate_step_completion_with_agent(step: dict, step_result: dict, original_
                 'reason': 'Ollama no disponible - asumiendo completado'
             }
         
-        # Construir prompt para evaluación del agente - VERSIÓN MEJORADA
+        # 🔧 FIX: Construir prompt mejorado para evaluación del agente
         evaluation_prompt = f"""
-Eres un agente evaluador ESTRICTO. Analiza si el siguiente paso de una tarea está REALMENTE completado o necesita trabajo adicional.
+Eres un agente evaluador INTELIGENTE. Analiza si el siguiente paso de una tarea está completado.
 
 TAREA ORIGINAL: {original_message}
 
@@ -1605,33 +1605,39 @@ RESULTADO OBTENIDO:
 - Tipo: {step_result.get('type', '')}
 - Éxito: {step_result.get('success', True)}
 - Resumen: {step_result.get('summary', '')}
-- Contenido: {str(step_result.get('content', ''))[:500]}
 - Cantidad de resultados: {step_result.get('count', 0)}
 - Cantidad de fuentes: {len(step_result.get('results', []))}
 
-CRITERIOS ESTRICTOS DE EVALUACIÓN:
-1. ¿El resultado tiene contenido REAL y ÚTIL (más de 100 caracteres)?
-2. ¿Se obtuvieron al menos 1-2 fuentes/resultados válidos cuando se requiere investigación?
-3. ¿La búsqueda/investigación proporcionó información específica y relevante?
-4. ¿El contenido responde DIRECTAMENTE a la pregunta/objetivo del paso?
-5. **CRÍTICO**: ¿El resultado es CONTENIDO REAL o solo un PLAN de cómo hacer el trabajo?
+CONTENIDO REAL OBTENIDO:
+{str(step_result.get('results', []))[:2000] if step_result.get('results') else 'No results'}
 
-REGLAS IMPORTANTES:
-- Si el resultado dice "0 resultados analizados" → step_completed: false
-- Si el contenido es muy corto (< 200 chars) → step_completed: false  
-- Si no hay información específica útil → step_completed: false
-- Si la herramienta falló o devolvió error → step_completed: false
-- **Si el contenido es solo un PLAN DE ACCIÓN en lugar de trabajo real → step_completed: false**
-- **Si dice "utilizaré herramientas", "plan de acción", "herramientas a utilizar" → step_completed: false**
-- Solo aprobar si hay contenido real, específico y completado
+CRITERIOS INTELIGENTES DE EVALUACIÓN:
+
+**PARA BÚSQUEDAS WEB/INVESTIGACIÓN:**
+- ✅ Si tool='web_search' Y success=True Y count>0 → COMPLETADO
+- ✅ Si hay resultados reales con URLs y contenido → COMPLETADO
+- ✅ Si la información es específica y relevante → COMPLETADO
+
+**PARA OTRAS HERRAMIENTAS:**
+- ✅ Si success=True Y hay contenido útil → COMPLETADO
+- ✅ Si el resultado responde al objetivo → COMPLETADO
+
+**SOLO MARCAR INCOMPLETO SI:**
+- ❌ success=False (herramienta falló completamente)
+- ❌ count=0 o results=[] (búsqueda sin resultados)
+- ❌ contenido completamente vacío o irrelevante
+
+**IMPORTANTE:**
+- NO confundir "descripción de la herramienta" con "plan de acción"
+- NO rechazar resultados válidos por criterios demasiado estrictos
+- La búsqueda web que devuelve resultados reales ES trabajo completado
 
 Responde ÚNICAMENTE con un JSON válido:
 {{
     "step_completed": true/false,
     "should_continue": true/false,
     "reason": "explicación breve de por qué está o no completado",
-    "feedback": "comentarios específicos si se necesita más trabajo",
-    "additional_actions": ["acción1", "acción2"] // solo si should_continue es true
+    "feedback": "comentarios específicos si se necesita más trabajo"
 }}
 """
         
