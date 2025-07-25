@@ -214,13 +214,13 @@ export const TerminalView = ({
       setMonitorPages([todoPage]);
       setPaginationStats(prev => ({ ...prev, totalPages: 1 }));
       
-      // Si todos los pasos están completados y es la tarea de Milei, cargar informe final
+      // Si todos los pasos están completados, cargar informe final para cualquier tarea
       const allCompleted = plan.every(step => step.completed);
-      if (allCompleted && taskId === 'task-1753466262449') {
+      if (allCompleted && taskId) {
         setTimeout(() => {
           const finalReportPage: MonitorPage = {
             id: 'final-report',
-            title: '📄 INFORME FINAL - Javier Milei',
+            title: '📄 INFORME FINAL - Tarea Completada',
             content: 'Cargando informe final...',
             type: 'report',
             timestamp: new Date(),
