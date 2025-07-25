@@ -1221,9 +1221,9 @@ def evaluate_step_completion_with_agent(step: dict, step_result: dict, original_
                 'reason': 'Ollama no disponible - asumiendo completado'
             }
         
-        # Construir prompt para evaluación del agente
+        # Construir prompt para evaluación del agente - VERSIÓN MEJORADA
         evaluation_prompt = f"""
-Eres un agente evaluador experto. Analiza si el siguiente paso de una tarea está REALMENTE completado o necesita trabajo adicional.
+Eres un agente evaluador ESTRICTO. Analiza si el siguiente paso de una tarea está REALMENTE completado o necesita trabajo adicional.
 
 TAREA ORIGINAL: {original_message}
 
@@ -1236,18 +1236,28 @@ RESULTADO OBTENIDO:
 - Tipo: {step_result.get('type', '')}
 - Éxito: {step_result.get('success', True)}
 - Resumen: {step_result.get('summary', '')}
-- Contenido: {str(step_result.get('content', ''))[:200]}...
+- Contenido: {str(step_result.get('content', ''))[:500]}
+- Cantidad de resultados: {step_result.get('count', 0)}
+- Cantidad de fuentes: {len(step_result.get('results', []))}
 
-EVALÚA:
-1. ¿El resultado cumple completamente con el objetivo del paso?
-2. ¿La calidad del resultado es suficiente?
-3. ¿Se necesita trabajo adicional, refinamiento o correcciones?
+CRITERIOS ESTRICTOS DE EVALUACIÓN:
+1. ¿El resultado tiene contenido REAL y ÚTIL (más de 50 caracteres)?
+2. ¿Se obtuvieron al menos 1-2 fuentes/resultados válidos?
+3. ¿La búsqueda/investigación proporcionó información específica y relevante?
+4. ¿El contenido responde a la pregunta/objetivo del paso?
+
+REGLAS IMPORTANTES:
+- Si el resultado dice "0 resultados analizados" → step_completed: false
+- Si el contenido es muy corto (< 100 chars) → step_completed: false  
+- Si no hay información específica útil → step_completed: false
+- Si la herramienta falló o devolvió error → step_completed: false
+- Solo aprobar si hay contenido real y suficiente
 
 Responde ÚNICAMENTE con un JSON válido:
 {{
     "step_completed": true/false,
     "should_continue": true/false,
-    "reason": "explicación breve",
+    "reason": "explicación breve de por qué está o no completado",
     "feedback": "comentarios específicos si se necesita más trabajo",
     "additional_actions": ["acción1", "acción2"] // solo si should_continue es true
 }}
