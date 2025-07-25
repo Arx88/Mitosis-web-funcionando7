@@ -298,44 +298,7 @@ class PlaywrightWebSearchTool:
         print(f"✅ Total {len(results)} resultados válidos extraídos de Bing")
         return results
     
-    async def _extract_duckduckgo_results(self, page, max_results: int) -> List[Dict[str, Any]]:
-        """Extraer resultados de DuckDuckGo"""
-        results = []
-        
-        # Esperar que carguen los resultados
-        await page.wait_for_timeout(3000)
-        
-        # Selectores para resultados de DuckDuckGo
-        result_selector = 'article[data-testid="result"]'
-        
-        # Obtener elementos de resultados
-        result_elements = await page.query_selector_all(result_selector)
-        
-        for element in result_elements[:max_results]:
-            try:
-                # Extraer título
-                title_element = await element.query_selector('h2 a')
-                title = await title_element.text_content() if title_element else ''
-                
-                # Extraer URL
-                url = await title_element.get_attribute('href') if title_element else ''
-                
-                # Extraer snippet
-                snippet_element = await element.query_selector('[data-result="snippet"]')
-                snippet = await snippet_element.text_content() if snippet_element else ''
-                
-                if title and url and url.startswith('http'):
-                    results.append({
-                        'title': title.strip(),
-                        'url': url.strip(),
-                        'snippet': snippet.strip(),
-                        'source': 'duckduckgo'
-                    })
-                    
-            except Exception as e:
-                continue
-        
-        return results
+    # MÉTODO DUCKDUCKGO ELIMINADO - SOLO BING SOPORTADO
     
     async def _extract_page_content(self, page, url: str) -> str:
         """Extraer contenido de una página específica"""
