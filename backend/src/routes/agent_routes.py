@@ -1864,10 +1864,13 @@ Durante la investigación se consultaron {len(search_results)} fuentes verificad
 
 """
         
-        # Conclusiones y recomendaciones
+        # Conclusiones y recomendaciones con datos reales
+        steps_count = len(executed_tools) if executed_tools else len(completed_steps)
+        total_steps = len(steps) if steps else steps_count
+        
         consolidated_report += f"""## **🚀 CONCLUSIONES**
 
-1. **Investigación Completada:** Se ejecutaron exitosamente {len(completed_steps)} pasos de investigación
+1. **Investigación Completada:** Se ejecutaron exitosamente {steps_count} pasos de investigación
 2. **Fuentes Consultadas:** Se analizaron {len(search_results)} fuentes de información
 3. **Calidad de Datos:** La información recopilada es actual y relevante
 4. **Objetivos Cumplidos:** Se completaron todos los objetivos planteados inicialmente
@@ -1885,7 +1888,7 @@ Durante la investigación se consultaron {len(search_results)} fuentes verificad
 **📅 Fecha de generación:** {current_date} a las {current_time}  
 **🔄 Versión:** 1.0 - Consolidado Final  
 **📊 Fuentes analizadas:** {len(search_results)} fuentes  
-**⚡ Pasos completados:** {len(completed_steps)} de {len(steps)}  
+**⚡ Pasos completados:** {steps_count} de {total_steps}  
 **⏱️ Tiempo de procesamiento:** Completado exitosamente
 """
         
