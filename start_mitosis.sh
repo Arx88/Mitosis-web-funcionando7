@@ -210,7 +210,7 @@ stdout_logfile=/var/log/mongodb.out.log
 EOF
 
 # ========================================================================
-# PASO 5: REINICIAR SERVICIOS CON CONFIGURACIÓN DE PRODUCCIÓN
+# PASO 6: REINICIAR SERVICIOS CON CONFIGURACIÓN DE PRODUCCIÓN
 # ========================================================================
 
 echo "🔄 Reiniciando servicios en modo producción..."
