@@ -951,9 +951,11 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
         search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
         
         if tool_manager and hasattr(tool_manager, 'execute_tool'):
-            result = tool_manager.execute_tool('web_search', {
+            result = tool_manager.execute_tool('playwright_web_search', {
                 'query': search_query,
-                'num_results': 5
+                'max_results': 5,
+                'search_engine': 'bing',
+                'extract_content': True
             }, task_id=task_id)
             
             return {
