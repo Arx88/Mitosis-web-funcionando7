@@ -358,7 +358,25 @@ if $backend_ok; then
         echo "   ⚠️ Ollama models integration: VERIFICANDO..."
     fi
     
-    # Test 6: Test simple de chat para verificar pipeline completo
+    # Test 6: Verificación de Tavily API
+    echo "🔍 Testing Tavily API key configuration..."
+    tavily_test=$(curl -s -X POST -H "Content-Type: application/json" \
+        -d '{"query":"test query","num_results":1}' \
+        http://localhost:8001/api/tools/tavily_search 2>/dev/null || echo "error")
+    if echo "$tavily_test" | grep -q "success.*true\|results.*\[\]"; then
+        echo "   ✅ Tavily API: FUNCIONANDO CORRECTAMENTE"
+        echo "      🔑 API Key: Configurada y válida"
+    else
+        echo "   ⚠️ Tavily API: VERIFICANDO CONFIGURACIÓN..."
+        # Verificar si la API key está en el .env
+        if grep -q "TAVILY_API_KEY=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" /app/backend/.env; then
+            echo "      ✅ API Key: Presente en configuración"
+        else
+            echo "      ❌ API Key: Faltante en configuración"
+        fi
+    fi
+    
+    # Test 7: Test simple de chat para verificar pipeline completo
     echo "🔍 Testing pipeline completo con mensaje de prueba..."
     chat_test=$(curl -s -X POST -H "Content-Type: application/json" \
         -d '{"message":"test","task_id":"test-startup"}' \
