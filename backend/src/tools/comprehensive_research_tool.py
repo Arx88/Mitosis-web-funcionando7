@@ -215,34 +215,13 @@ class ComprehensiveResearchTool:
                     print(f"Error extrayendo contenido de {source['url']}: {e}")
                     continue
         
-        # FASE 4: Búsqueda de imágenes
-        print(f"🔍 FASE 4: Búsqueda de imágenes")
+        # FASE 4: Búsqueda de imágenes - DESHABILITADA (DuckDuckGo eliminado)
+        print(f"🔍 FASE 4: Búsqueda de imágenes - DESHABILITADA")
         images = []
         if include_images:
-            try:
-                # Inicializar DDGS aquí para evitar errores
-                if self.ddgs is None:
-                    self.ddgs = DDGS()
-                
-                image_results = list(self.ddgs.images(
-                    keywords=query,
-                    max_results=max_images,
-                    safesearch="moderate"
-                ))
-                
-                for img in image_results:
-                    images.append({
-                        'title': img.get('title', ''),
-                        'url': img.get('image', ''),
-                        'thumbnail': img.get('thumbnail', ''),
-                        'source': img.get('source', ''),
-                        'width': img.get('width', 0),
-                        'height': img.get('height', 0)
-                    })
-                    
-            except Exception as e:
-                print(f"Error en búsqueda de imágenes: {e}")
-                images = []
+            # DUCKDUCKGO ELIMINADO - Solo Bing soportado en el futuro
+            print("⚠️  Búsqueda de imágenes deshabilitada - DuckDuckGo eliminado")
+            images = []
         
         # FASE 5: Análisis y generación del informe
         print(f"🔍 FASE 5: Generación del informe")
