@@ -1786,12 +1786,28 @@ Durante la ejecución de esta tarea se utilizaron las siguientes herramientas y 
 
 """
         
-        # Agregar información de cada paso completado
-        for i, step in enumerate(completed_steps, 1):
-            step_result = step.get('result', {})
-            tool_used = step.get('tool', 'unknown')
-            
-            consolidated_report += f"""### **Paso {i}: {step.get('title', 'Sin título')}**
+        # Agregar información de cada paso completado usando datos reales
+        steps_to_process = executed_tools if executed_tools else completed_steps
+        
+        for i, step in enumerate(steps_to_process, 1):
+            if executed_tools:
+                # Datos de herramientas ejecutadas
+                step_result = step.get('result', {})
+                tool_used = step.get('tool', 'unknown')
+                step_title = step.get('step_title', step.get('parameters', {}).get('step_title', f'Paso {i}'))
+                step_description = step.get('step_description', step.get('parameters', {}).get('step_description', 'Sin descripción'))
+                
+                consolidated_report += f"""### **Paso {i}: {step_title}**
+- **Herramienta:** {tool_used}
+- **Estado:** {'✅ Completado' if step.get('success', True) else '❌ Error'}
+- **Descripción:** {step_description}
+"""
+            else:
+                # Datos del plan (fallback)
+                step_result = step.get('result', {})
+                tool_used = step.get('tool', 'unknown')
+                
+                consolidated_report += f"""### **Paso {i}: {step.get('title', 'Sin título')}**
 - **Herramienta:** {tool_used}
 - **Estado:** {'✅ Completado' if step_result.get('success') else '❌ Error'}
 - **Descripción:** {step.get('description', 'Sin descripción')}
