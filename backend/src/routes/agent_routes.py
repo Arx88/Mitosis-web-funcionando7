@@ -503,6 +503,304 @@ def execute_single_step_logic(step: dict, original_message: str, task_id: str) -
             'summary': f'❌ Error al ejecutar: {str(e)}'
         }
 
+def execute_comprehensive_research_step(title: str, description: str, tool_manager, task_id: str, original_message: str) -> dict:
+    """🔍 INVESTIGACIÓN COMPREHENSIVA - Combina múltiples fuentes"""
+    try:
+        logger.info(f"🔍 Ejecutando investigación comprehensiva: {title}")
+        
+        # Extraer query de búsqueda
+        search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
+        
+        if tool_manager and hasattr(tool_manager, 'execute_tool'):
+            result = tool_manager.execute_tool('web_search', {
+                'query': search_query,
+                'num_results': 8  # Más resultados para investigación comprehensiva
+            }, task_id=task_id)
+            
+            return {
+                'success': True,
+                'type': 'comprehensive_research',
+                'query': search_query,
+                'results_count': len(result.get('search_results', [])),
+                'summary': f"✅ Investigación comprehensiva completada: {len(result.get('search_results', []))} fuentes analizadas",
+                'content': f"Investigación detallada sobre: {search_query}\n\nResultados encontrados: {len(result.get('search_results', []))} fuentes",
+                'data': result.get('search_results', [])
+            }
+        else:
+            raise Exception("Tool manager no disponible")
+            
+    except Exception as e:
+        logger.error(f"❌ Comprehensive research error: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'comprehensive_research_error',
+            'summary': f'❌ Error en investigación: {str(e)}'
+        }
+
+def execute_tavily_search_step(title: str, description: str, tool_manager, task_id: str, original_message: str) -> dict:
+    """🌐 BÚSQUEDA TAVILY - Búsqueda especializada"""
+    try:
+        logger.info(f"🌐 Ejecutando búsqueda Tavily: {title}")
+        
+        # Extraer query de búsqueda
+        search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
+        
+        if tool_manager and hasattr(tool_manager, 'execute_tool'):
+            # Intentar usar Tavily si está disponible, sino fallback a web_search
+            try:
+                result = tool_manager.execute_tool('tavily_search', {
+                    'query': search_query,
+                    'num_results': 6
+                }, task_id=task_id)
+            except:
+                # Fallback a web_search normal
+                result = tool_manager.execute_tool('web_search', {
+                    'query': search_query,
+                    'num_results': 6
+                }, task_id=task_id)
+            
+            return {
+                'success': True,
+                'type': 'tavily_search',
+                'query': search_query,
+                'results_count': len(result.get('search_results', [])),
+                'summary': f"✅ Búsqueda Tavily completada: {len(result.get('search_results', []))} resultados especializados",
+                'content': f"Búsqueda especializada sobre: {search_query}\n\nResultados: {len(result.get('search_results', []))} fuentes",
+                'data': result.get('search_results', [])
+            }
+        else:
+            raise Exception("Tool manager no disponible")
+            
+    except Exception as e:
+        logger.error(f"❌ Tavily search error: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'tavily_search_error',
+            'summary': f'❌ Error en búsqueda Tavily: {str(e)}'
+        }
+
+def execute_enhanced_web_search_step(title: str, description: str, tool_manager, task_id: str, original_message: str) -> dict:
+    """🔍 BÚSQUEDA WEB MEJORADA - Búsqueda web con análisis mejorado"""
+    try:
+        logger.info(f"🔍 Ejecutando búsqueda web mejorada: {title}")
+        
+        # Extraer query de búsqueda
+        search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
+        
+        if tool_manager and hasattr(tool_manager, 'execute_tool'):
+            result = tool_manager.execute_tool('web_search', {
+                'query': search_query,
+                'num_results': 7
+            }, task_id=task_id)
+            
+            return {
+                'success': True,
+                'type': 'enhanced_web_search',
+                'query': search_query,
+                'results_count': len(result.get('search_results', [])),
+                'summary': f"✅ Búsqueda web mejorada completada: {len(result.get('search_results', []))} resultados analizados",
+                'content': f"Búsqueda web mejorada sobre: {search_query}\n\nAnálisis de {len(result.get('search_results', []))} fuentes",
+                'data': result.get('search_results', [])
+            }
+        else:
+            raise Exception("Tool manager no disponible")
+            
+    except Exception as e:
+        logger.error(f"❌ Enhanced web search error: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'enhanced_web_search_error',
+            'summary': f'❌ Error en búsqueda mejorada: {str(e)}'
+        }
+
+def execute_enhanced_analysis_step(title: str, description: str, ollama_service, original_message: str, previous_results: list) -> dict:
+    """📊 ANÁLISIS MEJORADO - Análisis con contexto de resultados previos"""
+    try:
+        logger.info(f"📊 Ejecutando análisis mejorado: {title}")
+        
+        if not ollama_service or not ollama_service.is_healthy():
+            raise Exception("Servicio Ollama no disponible")
+        
+        # Construir contexto con resultados previos
+        context = ""
+        if previous_results:
+            context = "\n\nCONTEXTO DE RESULTADOS PREVIOS:\n"
+            for i, prev_result in enumerate(previous_results[-3:]):  # Últimos 3 resultados
+                if prev_result.get('success'):
+                    context += f"- Herramienta {prev_result.get('tool', 'unknown')}: {prev_result.get('result', {}).get('summary', 'Sin resumen')}\n"
+        
+        analysis_prompt = f"""
+Realiza un análisis MEJORADO y detallado para la tarea: {original_message}
+
+Paso específico: {title}
+Descripción: {description}
+
+{context}
+
+Proporciona un análisis PROFUNDO que incluya:
+1. Análisis específico del contexto y datos disponibles
+2. Hallazgos principales basados en la información previa
+3. Recomendaciones estratégicas
+4. Conclusiones fundamentadas
+5. Próximos pasos sugeridos
+
+Formato: Respuesta estructurada, profesional y detallada en español.
+"""
+        
+        result = ollama_service.generate_response(analysis_prompt, {'temperature': 0.7})
+        
+        if result.get('error'):
+            raise Exception(f"Error Ollama: {result['error']}")
+        
+        analysis_content = result.get('response', 'Análisis mejorado completado')
+        
+        return {
+            'success': True,
+            'type': 'enhanced_analysis',
+            'content': analysis_content,
+            'length': len(analysis_content),
+            'context_used': len(previous_results),
+            'summary': f"✅ Análisis mejorado completado - {len(analysis_content)} caracteres con contexto de {len(previous_results)} resultados previos"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Enhanced analysis error: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'enhanced_analysis_error',
+            'summary': f'❌ Error en análisis mejorado: {str(e)}'
+        }
+
+def execute_multi_source_research_step(title: str, description: str, tool_manager, task_id: str, original_message: str) -> dict:
+    """🔍 INVESTIGACIÓN MULTI-FUENTE - Combina múltiples herramientas de búsqueda"""
+    try:
+        logger.info(f"🔍 Ejecutando investigación multi-fuente: {title}")
+        
+        # Extraer query de búsqueda
+        search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
+        
+        if tool_manager and hasattr(tool_manager, 'execute_tool'):
+            # Intentar múltiples herramientas de búsqueda
+            all_results = []
+            
+            # Búsqueda web estándar
+            try:
+                web_result = tool_manager.execute_tool('web_search', {
+                    'query': search_query,
+                    'num_results': 5
+                }, task_id=task_id)
+                all_results.extend(web_result.get('search_results', []))
+            except Exception as e:
+                logger.warning(f"Web search falló: {e}")
+            
+            return {
+                'success': True,
+                'type': 'multi_source_research',
+                'query': search_query,
+                'results_count': len(all_results),
+                'summary': f"✅ Investigación multi-fuente completada: {len(all_results)} resultados de múltiples fuentes",
+                'content': f"Investigación multi-fuente sobre: {search_query}\n\nResultados combinados: {len(all_results)} fuentes",
+                'data': all_results
+            }
+        else:
+            raise Exception("Tool manager no disponible")
+            
+    except Exception as e:
+        logger.error(f"❌ Multi-source research error: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'multi_source_research_error',
+            'summary': f'❌ Error en investigación multi-fuente: {str(e)}'
+        }
+
+def combine_tool_results(results: list, step_title: str, step_description: str, ollama_service) -> dict:
+    """🔄 COMBINADOR DE RESULTADOS - Combina resultados de múltiples herramientas"""
+    try:
+        logger.info(f"🔄 Combinando resultados de {len(results)} herramientas")
+        
+        # Extraer los mejores resultados
+        successful_results = [r for r in results if r.get('success', False)]
+        
+        if not successful_results:
+            # Si no hay resultados exitosos, devolver el último intento
+            last_result = results[-1] if results else {}
+            return {
+                'success': False,
+                'error': 'Ninguna herramienta produjo resultados exitosos',
+                'type': 'combined_failure',
+                'summary': f'❌ Falló la combinación de {len(results)} herramientas',
+                'attempts': len(results)
+            }
+        
+        # Combinar contenido de resultados exitosos
+        combined_content = f"RESULTADOS COMBINADOS PARA: {step_title}\n\n"
+        combined_data = []
+        
+        for i, result_info in enumerate(successful_results):
+            result = result_info.get('result', {})
+            tool_name = result_info.get('tool', 'unknown')
+            
+            combined_content += f"--- RESULTADO {i+1} ({tool_name.upper()}) ---\n"
+            combined_content += result.get('summary', 'Sin resumen') + "\n"
+            
+            if result.get('content'):
+                combined_content += result.get('content')[:200] + "...\n"
+            
+            if result.get('data'):
+                combined_data.extend(result.get('data', []))
+            
+            combined_content += "\n"
+        
+        # Si tenemos Ollama disponible, generar un resumen inteligente
+        if ollama_service and ollama_service.is_healthy():
+            try:
+                summary_prompt = f"""
+Genera un resumen inteligente combinando los siguientes resultados para la tarea: {step_title}
+
+Descripción: {step_description}
+
+RESULTADOS A COMBINAR:
+{combined_content[:1000]}
+
+Proporciona:
+1. Resumen ejecutivo de todos los resultados
+2. Hallazgos principales combinados
+3. Conclusiones integradas
+
+Formato: Respuesta clara y estructurada en español.
+"""
+                
+                summary_result = ollama_service.generate_response(summary_prompt, {'temperature': 0.6})
+                
+                if not summary_result.get('error'):
+                    combined_content = summary_result.get('response', combined_content)
+                    
+            except Exception as e:
+                logger.warning(f"No se pudo generar resumen inteligente: {e}")
+        
+        return {
+            'success': True,
+            'type': 'combined_results',
+            'content': combined_content,
+            'data': combined_data,
+            'tools_combined': len(successful_results),
+            'summary': f"✅ Resultados combinados de {len(successful_results)} herramientas exitosas"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error combinando resultados: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'combination_error',
+            'summary': f'❌ Error combinando resultados: {str(e)}'
+        }
+
 def execute_web_search_step(title: str, description: str, tool_manager, task_id: str) -> dict:
     """Ejecutar paso de búsqueda web"""
     try:
