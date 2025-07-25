@@ -379,7 +379,7 @@ if $backend_ok; then
 fi
 
 # ========================================================================
-# PASO 8: REPORTE FINAL COMPLETO MODO PRODUCCIÓN
+# PASO 9: REPORTE FINAL COMPLETO MODO PRODUCCIÓN
 # ========================================================================
 
 echo ""
