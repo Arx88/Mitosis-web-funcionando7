@@ -649,9 +649,11 @@ def execute_comprehensive_research_step(title: str, description: str, tool_manag
         search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
         
         if tool_manager and hasattr(tool_manager, 'execute_tool'):
-            result = tool_manager.execute_tool('web_search', {
+            result = tool_manager.execute_tool('playwright_web_search', {
                 'query': search_query,
-                'num_results': 8  # Más resultados para investigación comprehensiva
+                'max_results': 8,  # Más resultados para investigación comprehensiva
+                'search_engine': 'bing',  # Usar Bing que está funcionando
+                'extract_content': True
             }, task_id=task_id)
             
             return {
