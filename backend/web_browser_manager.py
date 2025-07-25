@@ -311,10 +311,10 @@ class WebBrowserManager:
             )
 
     async def search_web(self, query: str, max_results: int = 10) -> ScrapingResult:
-        """Busca en web usando DuckDuckGo y scraping de resultados"""
+        """Busca en web usando Bing y scraping de resultados"""
         
-        # Construir URL de búsqueda de DuckDuckGo
-        search_url = f"https://duckduckgo.com/?q={query.replace(' ', '+')}"
+        # Construir URL de búsqueda de Bing
+        search_url = f"https://www.bing.com/search?q={query.replace(' ', '+')}"
         
         try:
             # Primero obtener página de resultados de búsqueda
