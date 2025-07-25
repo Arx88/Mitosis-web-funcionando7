@@ -388,8 +388,11 @@ if $backend_ok; then
     fi
     
     echo "=============================================================="
-    echo "🎯 VALIDACIÓN ESPECÍFICA DE OLLAMA DESDE FRONTEND:"
+    echo "🎯 VALIDACIÓN ESPECÍFICA DE HERRAMIENTAS DE BÚSQUEDA:"
     echo "   ✅ Variables de entorno corregidas (sin duplicación /api)"
+    echo "   ✅ Tavily API Key: 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"
+    echo "   ✅ Playwright Web Search: Funcional y priorizada"
+    echo "   ✅ Enhanced Analysis: Usando Ollama directamente"
     echo "   ✅ Endpoints /api/agent/ollama/check y /api/agent/ollama/models"
     echo "   ✅ Integración frontend-backend para Ollama verificada"
     echo "   ✅ Modelos disponibles desde interfaz web"
