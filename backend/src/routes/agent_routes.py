@@ -4661,45 +4661,48 @@ def generate_task_plan(title: str, task_id: str) -> Dict:
         return generate_basic_plan(title)
 
 def generate_basic_plan(title: str) -> Dict:
-    """Generar plan básico como fallback"""
+    """Generar plan básico mejorado como fallback"""
+    # Asegurar que el título no se corte
+    safe_title = title[:80] if len(title) > 80 else title
+    
     return {
         "steps": [
             {
                 "id": "step_1",
-                "title": "Análisis inicial",
-                "description": f"Analizar los requisitos de: {title}",
-                "tool": "analysis",
-                "estimated_time": "2-3 minutos",
+                "title": f"Investigación especializada sobre {safe_title}",
+                "description": f"Realizar investigación exhaustiva y especializada sobre {safe_title}",
+                "tool": "web_search",
+                "estimated_time": "8-10 minutos",
                 "priority": "alta"
             },
             {
                 "id": "step_2", 
-                "title": "Investigación",
-                "description": "Buscar información relevante",
-                "tool": "web_search",
-                "estimated_time": "3-5 minutos",
+                "title": "Análisis profesional de datos",
+                "description": "Procesar y analizar profundamente toda la información recopilada",
+                "tool": "analysis",
+                "estimated_time": "10-12 minutos",
                 "priority": "alta"
             },
             {
                 "id": "step_3",
-                "title": "Procesamiento",
-                "description": "Procesar y sintetizar información",
-                "tool": "processing",
-                "estimated_time": "2-4 minutos", 
-                "priority": "media"
+                "title": "Desarrollo y estructuración",
+                "description": "Crear estructura detallada y desarrollar el contenido específico",
+                "tool": "creation",
+                "estimated_time": "12-15 minutos", 
+                "priority": "alta"
             },
             {
                 "id": "step_4",
-                "title": "Entrega",
-                "description": "Preparar y entregar resultados",
-                "tool": "delivery",
-                "estimated_time": "1-2 minutos",
-                "priority": "alta"
+                "title": "Refinamiento y entrega final",
+                "description": "Optimizar, validar y preparar el resultado final de alta calidad",
+                "tool": "processing",
+                "estimated_time": "5-8 minutos",
+                "priority": "media"
             }
         ],
         "task_type": "general",
-        "complexity": "media",
-        "estimated_total_time": "8-14 minutos"
+        "complexity": "alta",
+        "estimated_total_time": "35-45 minutos"
     }
 
 
