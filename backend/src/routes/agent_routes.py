@@ -4172,12 +4172,38 @@ def start_task_execution(task_id: str):
                         # EJECUTAR EL PASO REAL
                         step_result = execute_single_step_logic(step, message, task_id)
                         
-                        # Marcar paso como completado
-                        step['active'] = False
-                        step['completed'] = True
-                        step['status'] = 'completed'
-                        step['result'] = step_result
-                        step['completed_time'] = datetime.now().isoformat()
+                        # 🧠 NUEVO: EL AGENTE EVALÚA SI EL PASO ESTÁ REALMENTE COMPLETADO
+                        agent_evaluation = evaluate_step_completion_with_agent(
+                            step, step_result, message, task_id
+                        )
+                        
+                        if agent_evaluation.get('should_continue', False):
+                            # El agente decide continuar con más trabajo en este paso
+                            logger.info(f"🔄 Agent decided to continue working on step {i+1}: {agent_evaluation.get('reason', '')}")
+                            
+                            # Ejecutar trabajo adicional si el agente lo solicita
+                            if agent_evaluation.get('additional_actions'):
+                                for action in agent_evaluation['additional_actions']:
+                                    additional_result = execute_additional_step_work(action, step, message, task_id)
+                                    step_result['additional_work'] = step_result.get('additional_work', [])
+                                    step_result['additional_work'].append(additional_result)
+                        
+                        # Solo marcar como completado si el agente aprueba
+                        if agent_evaluation.get('step_completed', True):
+                            step['active'] = False
+                            step['completed'] = True
+                            step['status'] = 'completed'
+                            step['result'] = step_result
+                            step['agent_evaluation'] = agent_evaluation
+                            step['completed_time'] = datetime.now().isoformat()
+                            
+                            logger.info(f"✅ Agent approved completion of step {i+1}: {step['title']}")
+                        else:
+                            # El agente requiere más trabajo - no avanzar
+                            step['status'] = 'requires_more_work'
+                            step['agent_feedback'] = agent_evaluation.get('feedback', '')
+                            logger.info(f"⏸️ Agent requires more work on step {i+1}: {agent_evaluation.get('feedback', '')}")
+                            break  # No continuar con siguientes pasos
                         
                         # Actualizar tarea
                         update_task_data(task_id, {'plan': steps})
