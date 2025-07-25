@@ -641,10 +641,25 @@ def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
     
     # Si necesita datos reales, verificar que tenga información específica
     if task_analysis.get('needs_real_data', False):
-        real_data_indicators = ['2024', '2025', 'estadística', 'jugador', 'equipo', 'resultado', 'dato']
-        if not any(indicator in content.lower() for indicator in real_data_indicators):
-            logger.warning("❌ Resultado rechazado: sin datos reales específicos")
+        real_data_indicators = [
+            # Indicadores temporales
+            '2024', '2025', '2023', '2022', 
+            # Indicadores de datos
+            'estadística', 'dato', 'resultado', 'cifra', 'número',
+            # Indicadores deportivos
+            'jugador', 'equipo', 'partido', 'torneo',
+            # Indicadores políticos/gubernamentales 🔥 FIX: Agregados para contenido político
+            'presidente', 'gobierno', 'argentina', 'política', 'milei', 'congreso', 'ley',
+            'decreto', 'ministro', 'diputado', 'senador', 'reforma', 'economía', 'inflación',
+            # Indicadores de actualidad
+            'actualidad', 'reciente', 'nuevo', 'última', 'últimas'
+        ]
+        found_indicators = [indicator for indicator in real_data_indicators if indicator in content.lower()]
+        if not found_indicators:
+            logger.warning(f"❌ Resultado rechazado: sin datos reales específicos - contenido analizado: {content[:200]}...")
             return False
+        else:
+            logger.info(f"✅ Datos reales encontrados: {found_indicators}")
     
     # Si es análisis, verificar que tenga estructura analítica - PERO NO PARA BÚSQUEDA WEB
     analysis_indicators = ['análisis', 'conclusión', 'recomendación', 'hallazgo', 'evaluación']
