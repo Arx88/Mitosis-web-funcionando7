@@ -206,8 +206,31 @@ export const TerminalView = ({
       
       setMonitorPages([todoPage]);
       setPaginationStats(prev => ({ ...prev, totalPages: 1 }));
+      
+      // Si todos los pasos están completados y es la tarea de Milei, cargar informe final
+      const allCompleted = plan.every(step => step.completed);
+      if (allCompleted && taskId === 'task-1753466262449') {
+        setTimeout(() => {
+          const finalReportPage: MonitorPage = {
+            id: 'final-report',
+            title: '📄 INFORME FINAL - Javier Milei',
+            content: 'Cargando informe final...',
+            type: 'report',
+            timestamp: new Date(),
+            metadata: {
+              lineCount: 1,
+              status: 'success',
+              fileSize: 0
+            }
+          };
+          
+          setMonitorPages(prev => [...prev, finalReportPage]);
+          setPaginationStats(prev => ({ ...prev, totalPages: prev.totalPages + 1 }));
+          loadFinalReport(taskId);
+        }, 1000);
+      }
     }
-  }, [plan, monitorPages.length, dataId]); // Agregar dataId como dependencia para evitar conflictos
+  }, [plan, monitorPages.length, dataId, taskId]); // Agregar taskId como dependencia
 
   // Procesar herramientas y crear páginas
   useEffect(() => {
