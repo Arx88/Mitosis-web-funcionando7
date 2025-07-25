@@ -34,8 +34,8 @@ class PlaywrightWebSearchTool:
                 "name": "search_engine",
                 "type": "string",
                 "required": False,
-                "description": "Motor de búsqueda: 'google', 'bing', 'duckduckgo'",
-                "default": "google"
+                "description": "Motor de búsqueda: SOLO 'bing' (DuckDuckGo eliminado)",
+                "default": "bing"
             },
             {
                 "name": "max_results",
