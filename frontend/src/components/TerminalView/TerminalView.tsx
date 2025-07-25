@@ -83,29 +83,36 @@ export const TerminalView = ({
   const loadFinalReport = async (taskId: string) => {
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-      const response = await fetch(`${backendUrl}/api/agent/get-final-result/${taskId}`);
+      const response = await fetch(`${backendUrl}/api/agent/add-final-report-page/${taskId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
       
       if (response.ok) {
         const result = await response.json();
-        const finalResult = result.final_result;
+        const reportPage = result.page;
         
-        // Actualizar la página del informe final con el contenido real
-        setMonitorPages(prev => prev.map(page => {
-          if (page.id === 'final-report') {
-            return {
-              ...page,
-              content: finalResult,
-              metadata: {
-                ...page.metadata,
-                lineCount: finalResult.split('\n').length,
-                fileSize: finalResult.length
-              }
-            };
+        // Actualizar o agregar la página del informe final
+        setMonitorPages(prev => {
+          const existingIndex = prev.findIndex(page => page.id === 'final-report');
+          if (existingIndex >= 0) {
+            // Actualizar página existente
+            const updated = [...prev];
+            updated[existingIndex] = reportPage;
+            return updated;
+          } else {
+            // Agregar nueva página
+            setPaginationStats(prevStats => ({ 
+              ...prevStats, 
+              totalPages: prevStats.totalPages + 1 
+            }));
+            return [...prev, reportPage];
           }
-          return page;
-        }));
+        });
         
-        console.log('📄 Informe final cargado exitosamente');
+        console.log('📄 Informe final cargado exitosamente en la terminal');
       } else {
         console.error('Error cargando informe final:', response.status);
       }
