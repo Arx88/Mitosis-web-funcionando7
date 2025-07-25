@@ -1649,10 +1649,13 @@ Responde ÚNICAMENTE con un JSON válido:
             
     except Exception as e:
         logger.error(f"❌ Error en evaluate_step_completion_with_agent: {str(e)}")
+        # 🔥 BUG FIX: NO asumir completado cuando hay error - requiere re-evaluación
         return {
-            'step_completed': True,
-            'should_continue': False,
-            'reason': f'Error en evaluación: {str(e)}'
+            'step_completed': False,
+            'should_continue': True,
+            'reason': f'Error en evaluación: {str(e)} - requiere trabajo adicional',
+            'feedback': 'Hubo un error en la evaluación del agente. El paso debe ser re-ejecutado.',
+            'additional_actions': ['re_execute_step', 'use_different_evaluation_method']
         }
 
 def execute_additional_step_work(action: str, step: dict, original_message: str, task_id: str) -> dict:
