@@ -761,6 +761,166 @@ Responde de manera clara y profesional.
             'summary': f'❌ Error en paso: {str(e)}'
         }
 
+def evaluate_step_completion_with_agent(step: dict, step_result: dict, original_message: str, task_id: str) -> dict:
+    """
+    🧠 NUEVA FUNCIONALIDAD: El agente evalúa si un paso está realmente completado
+    y decide si necesita trabajo adicional
+    """
+    try:
+        ollama_service = get_ollama_service()
+        if not ollama_service or not ollama_service.is_healthy():
+            # Si Ollama no está disponible, asumir que el paso está completado
+            return {
+                'step_completed': True,
+                'should_continue': False,
+                'reason': 'Ollama no disponible - asumiendo completado'
+            }
+        
+        # Construir prompt para evaluación del agente
+        evaluation_prompt = f"""
+Eres un agente evaluador experto. Analiza si el siguiente paso de una tarea está REALMENTE completado o necesita trabajo adicional.
+
+TAREA ORIGINAL: {original_message}
+
+PASO EJECUTADO:
+- Título: {step.get('title', '')}
+- Descripción: {step.get('description', '')}
+- Herramienta usada: {step.get('tool', '')}
+
+RESULTADO OBTENIDO:
+- Tipo: {step_result.get('type', '')}
+- Éxito: {step_result.get('success', True)}
+- Resumen: {step_result.get('summary', '')}
+- Contenido: {str(step_result.get('content', ''))[:200]}...
+
+EVALÚA:
+1. ¿El resultado cumple completamente con el objetivo del paso?
+2. ¿La calidad del resultado es suficiente?
+3. ¿Se necesita trabajo adicional, refinamiento o correcciones?
+
+Responde ÚNICAMENTE con un JSON válido:
+{{
+    "step_completed": true/false,
+    "should_continue": true/false,
+    "reason": "explicación breve",
+    "feedback": "comentarios específicos si se necesita más trabajo",
+    "additional_actions": ["acción1", "acción2"] // solo si should_continue es true
+}}
+"""
+        
+        result = ollama_service.generate_response(evaluation_prompt, {
+            'temperature': 0.3,  # Baja temperatura para evaluaciones consistentes
+            'response_format': 'json'
+        })
+        
+        if result.get('error'):
+            logger.warning(f"⚠️ Error en evaluación del agente: {result['error']}")
+            return {
+                'step_completed': True,
+                'should_continue': False,
+                'reason': 'Error en evaluación - asumiendo completado'
+            }
+        
+        # Parsear respuesta JSON
+        response_text = result.get('response', '').strip()
+        
+        try:
+            # Limpiar respuesta
+            cleaned_response = response_text.replace('```json', '').replace('```', '').strip()
+            if cleaned_response.startswith('{') and cleaned_response.endswith('}'):
+                evaluation_data = json.loads(cleaned_response)
+            else:
+                # Buscar JSON en el texto
+                json_match = re.search(r'\{[^{}]*"step_completed"[^{}]*\}', response_text)
+                if json_match:
+                    evaluation_data = json.loads(json_match.group())
+                else:
+                    raise json.JSONDecodeError("No JSON found", response_text, 0)
+            
+            # Validar estructura
+            if 'step_completed' in evaluation_data and 'should_continue' in evaluation_data:
+                logger.info(f"🧠 Evaluación del agente: {evaluation_data.get('reason', '')}")
+                return evaluation_data
+            else:
+                raise ValueError("Missing required fields")
+                
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.warning(f"⚠️ No se pudo parsear evaluación del agente: {e}")
+            return {
+                'step_completed': True,
+                'should_continue': False,
+                'reason': 'Error parseando evaluación - asumiendo completado'
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ Error en evaluate_step_completion_with_agent: {str(e)}")
+        return {
+            'step_completed': True,
+            'should_continue': False,
+            'reason': f'Error en evaluación: {str(e)}'
+        }
+
+def execute_additional_step_work(action: str, step: dict, original_message: str, task_id: str) -> dict:
+    """
+    🔧 NUEVA FUNCIONALIDAD: Ejecuta trabajo adicional en un paso según lo solicite el agente
+    """
+    try:
+        logger.info(f"🔧 Ejecutando trabajo adicional: {action}")
+        
+        ollama_service = get_ollama_service()
+        if not ollama_service or not ollama_service.is_healthy():
+            return {
+                'success': False,
+                'error': 'Ollama no disponible para trabajo adicional',
+                'action': action
+            }
+        
+        # Construir prompt para trabajo adicional
+        additional_work_prompt = f"""
+Realiza trabajo adicional específico para mejorar el resultado del paso actual.
+
+TAREA ORIGINAL: {original_message}
+
+PASO ACTUAL:
+- Título: {step.get('title', '')}
+- Descripción: {step.get('description', '')}
+- Resultado previo: {step.get('result', {}).get('summary', '')}
+
+ACCIÓN SOLICITADA: {action}
+
+Ejecuta la acción solicitada y proporciona un resultado mejorado, refinado o corregido.
+Responde de manera específica y práctica.
+"""
+        
+        result = ollama_service.generate_response(additional_work_prompt, {
+            'temperature': 0.7
+        })
+        
+        if result.get('error'):
+            return {
+                'success': False,
+                'error': f"Error en Ollama: {result['error']}",
+                'action': action
+            }
+        
+        additional_content = result.get('response', 'Trabajo adicional completado')
+        
+        return {
+            'success': True,
+            'action': action,
+            'content': additional_content,
+            'summary': f"Trabajo adicional completado: {action}",
+            'type': 'additional_work'
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error en execute_additional_step_work: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'action': action
+        }
+
 # Importar nuevo TaskManager para persistencia
 from ..services.task_manager import get_task_manager
 
