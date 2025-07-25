@@ -792,21 +792,24 @@ def execute_enhanced_analysis_step(title: str, description: str, ollama_service,
                     context += f"- Herramienta {prev_result.get('tool', 'unknown')}: {prev_result.get('result', {}).get('summary', 'Sin resumen')}\n"
         
         analysis_prompt = f"""
-Realiza un análisis MEJORADO y detallado para la tarea: {original_message}
+EJECUTA el análisis específico solicitado para: {original_message}
 
-Paso específico: {title}
+Paso a EJECUTAR: {title}
 Descripción: {description}
 
 {context}
 
-Proporciona un análisis PROFUNDO que incluya:
-1. Análisis específico del contexto y datos disponibles
-2. Hallazgos principales basados en la información previa
-3. Recomendaciones estratégicas
-4. Conclusiones fundamentadas
-5. Próximos pasos sugeridos
+GENERA DIRECTAMENTE el análisis completado que incluya:
+1. Análisis específico del contexto con datos concretos
+2. Hallazgos principales identificados
+3. Evaluación detallada de la información disponible
+4. Conclusiones específicas y fundamentadas
 
-Formato: Respuesta estructurada, profesional y detallada en español.
+NO generes "próximos pasos" o "plan de acción".
+NO escribas "utilizaré herramientas" o "realizaré búsquedas".
+EJECUTA y COMPLETA el análisis ahora mismo.
+
+Formato: Análisis ejecutado, completo y detallado en español.
 """
         
         result = ollama_service.generate_response(analysis_prompt, {'temperature': 0.7})
