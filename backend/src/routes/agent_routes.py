@@ -4475,6 +4475,8 @@ def execute_step_internal(task_id: str, step_id: str, step: dict):
             'error': str(e),
             'timestamp': datetime.now().isoformat()
         })
+        
+        return {'success': False, 'agent_approved': False, 'error': str(e), 'reason': 'Execution error'}
 
 def execute_step_real(task_id: str, step_id: str, step: dict):
     """Execute step with REAL tools instead of simulation - ENHANCED VERSION"""
