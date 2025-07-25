@@ -1644,12 +1644,14 @@ Responde ÚNICAMENTE con un JSON válido:
         if result.get('error'):
             logger.warning(f"⚠️ Error en evaluación del agente: {result['error']}")
             return {
-                'step_completed': True,
-                'should_continue': False,
-                'reason': 'Error en evaluación - asumiendo completado'
+                'step_completed': False,  # 🔥 BUG FIX: NO asumir completado cuando hay error
+                'should_continue': True,
+                'reason': f'Error Ollama en evaluación: {result["error"]} - requiere re-intento',
+                'feedback': 'Hubo un error en Ollama durante la evaluación. El paso debe ser re-ejecutado.',
+                'additional_actions': ['re_execute_step', 'retry_evaluation']
             }
         
-        # Parsear respuesta JSON
+        # Parsear respuesta JSON - 🔧 FIX: Usar 'response' de la respuesta cruda de Ollama
         response_text = result.get('response', '').strip()
         
         try:
