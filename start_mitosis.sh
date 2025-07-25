@@ -464,7 +464,7 @@ sudo supervisorctl status
 echo ""
 
 # ========================================================================
-# PASO 9: RESULTADO FINAL Y VALIDACIÓN COMPLETA
+# PASO 10: RESULTADO FINAL Y VALIDACIÓN COMPLETA
 # ========================================================================
 
 # Crear resumen de funcionalidades verificadas
