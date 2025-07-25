@@ -4650,13 +4650,17 @@ Responde SOLO con el contenido final solicitado.
             
     except Exception as e:
         logger.error(f"❌ Error executing real tool {tool}: {e}")
+        step_result.update({
+            'success': False,
+            'summary': f"Error ejecutando {title}: {str(e)}",
+            'error': str(e)
+        })
         emit_step_event(task_id, 'task_progress', {
             'step_id': step_id,
             'activity': f"Error en {tool}: {str(e)}, continuando...",
             'progress_percentage': 75,
             'timestamp': datetime.now().isoformat()
         })
-        # Continue execution instead of failing completely
         
     # Emit final completion
     emit_step_event(task_id, 'task_progress', {
@@ -4665,6 +4669,9 @@ Responde SOLO con el contenido final solicitado.
         'progress_percentage': 100,
         'timestamp': datetime.now().isoformat()
     })
+    
+    # Devolver resultado para evaluación del agente
+    return step_result
 
 def execute_step_real_original(task_id: str, step_id: str, step: dict):
     """Original execute_step_real function - kept for reference"""
