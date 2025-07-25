@@ -106,6 +106,8 @@ class ToolManager:
             self.tools['qstash'] = QStashTool()
         if HAS_PLAYWRIGHT:
             self.tools['playwright'] = PlaywrightTool()
+        if HAS_PLAYWRIGHT_SEARCH:
+            self.tools['playwright_web_search'] = PlaywrightWebSearchTool()
         if HAS_AUTO_NAV:
             self.tools['autonomous_web_navigation'] = AutonomousWebNavigation()
         
