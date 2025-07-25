@@ -330,6 +330,11 @@ export const TerminalView = ({
           totalPages: allPages.length
         }));
         
+        // Mantener en modo Live y ir a la última página automáticamente
+        if (isLiveMode && allPages.length > 0) {
+          setCurrentPageIndex(allPages.length - 1);
+        }
+        
         return allPages;
       });
       
