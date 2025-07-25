@@ -255,7 +255,7 @@ export const TerminalView = ({
         }
       }
     }
-  }, [plan, monitorPages.length, dataId, taskId]); // Agregar taskId como dependencia
+  }, [plan, dataId, taskId]); // Remover monitorPages.length para evitar loops
 
   // Procesar herramientas y crear páginas
   useEffect(() => {
