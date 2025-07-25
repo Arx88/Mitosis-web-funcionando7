@@ -2474,8 +2474,14 @@ Output: Informe de Rendimiento de Ventas Q1 2025
 Input: "analizar el mercado"
 Output: Estudio de Análisis de Mercado Sectorial
 
-Input: "GENERA UN INFORME SOBRE LA selección Argentina de futbol en 2025"
-Output: Informe Selección Argentina de Fútbol 2025
+Input: "crear un análisis de tecnologías emergentes"
+Output: Análisis de Tecnologías Emergentes 2025
+
+Input: "desarrollar una estrategia de marketing digital"
+Output: Estrategia de Marketing Digital Integral
+
+Input: "investigar sobre inteligencia artificial"
+Output: Investigación Avanzada en Inteligencia Artificial
 
 Tu respuesta debe ser ÚNICAMENTE el título:
 """
