@@ -1,17 +1,19 @@
 """
-Herramienta de investigación comprehensiva - Multi-sitio con imágenes
-Combina Tavily para contenido y DuckDuckGo para imágenes
+Herramienta de investigación comprehensiva - SOLO BING (DuckDuckGo eliminado)
+Combina Tavily para contenido y Bing para búsquedas
 """
 
 import os
 import requests
 from typing import Dict, Any, List
 from tavily import TavilyClient
-try:
-    from duckduckgo_search import DDGS
-except ImportError:
-    print("Warning: duckduckgo_search not available, using fallback")
-    DDGS = None
+
+# DUCKDUCKGO ELIMINADO - SOLO BING SOPORTADO
+# try:
+#     from duckduckgo_search import DDGS
+# except ImportError:
+#     print("Warning: duckduckgo_search not available, using fallback")
+#     DDGS = None
 from bs4 import BeautifulSoup
 import time
 from urllib.parse import urljoin, urlparse
