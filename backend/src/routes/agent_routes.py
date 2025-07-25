@@ -781,6 +781,8 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
                 'type': 'enhanced_web_search',
                 'query': search_query,
                 'results_count': len(result.get('search_results', [])),
+                'count': len(result.get('search_results', [])),  # 🔥 FIX: Agregar count para compatibilidad
+                'results': result.get('search_results', []),    # 🔥 FIX: Agregar results para compatibilidad
                 'summary': f"✅ Búsqueda web mejorada completada: {len(result.get('search_results', []))} resultados analizados",
                 'content': f"Búsqueda web mejorada sobre: {search_query}\n\nAnálisis de {len(result.get('search_results', []))} fuentes",
                 'data': result.get('search_results', [])
