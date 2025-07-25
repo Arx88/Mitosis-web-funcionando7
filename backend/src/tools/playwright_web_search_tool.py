@@ -365,7 +365,7 @@ class PlaywrightWebSearchTool:
                 'User agent real',
                 'Resultados más actualizados'
             ],
-            'supported_engines': ['google', 'bing', 'duckduckgo'],
+            'supported_engines': ['bing'],  # SOLO BING SOPORTADO
             'playwright_required': True,
             'playwright_available': self.playwright_available
         }
