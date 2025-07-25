@@ -646,12 +646,19 @@ def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
             logger.warning("❌ Resultado rechazado: sin datos reales específicos")
             return False
     
-    # Si es análisis, verificar que tenga estructura analítica
+    # Si es análisis, verificar que tenga estructura analítica - PERO NO PARA BÚSQUEDA WEB
     analysis_indicators = ['análisis', 'conclusión', 'recomendación', 'hallazgo', 'evaluación']
     if task_analysis.get('needs_deep_research', False):
-        if not any(indicator in content.lower() for indicator in analysis_indicators):
-            logger.warning("❌ Resultado rechazado: sin estructura analítica")
-            return False
+        # 🔥 FIX: No aplicar criterio de "estructura analítica" para herramientas de búsqueda web
+        result_type = result.get('type', '')
+        if result_type in ['web_search', 'enhanced_web_search', 'playwright_web_search']:
+            # Para búsqueda web, si tiene resultados válidos, es suficiente
+            logger.info("✅ Búsqueda web con resultados válidos - omitiendo criterio de estructura analítica")
+        else:
+            # Para análisis y procesamiento, sí verificar estructura analítica
+            if not any(indicator in content.lower() for indicator in analysis_indicators):
+                logger.warning("❌ Resultado rechazado: sin estructura analítica")
+                return False
     
     logger.info("✅ Resultado aprobado: cumple criterios de calidad")
     return True
