@@ -1710,7 +1710,11 @@ def generate_consolidated_final_report(task: dict) -> str:
         task_message = task.get('message', 'Tarea sin descripción')
         task_type = task.get('task_type', 'general')
         
-        # Obtener datos de los pasos completados
+        # Obtener datos de los pasos completados desde executionData
+        execution_data = task.get('executionData', {})
+        executed_tools = execution_data.get('executed_tools', [])
+        
+        # También obtener información del plan si existe
         steps = task.get('plan', [])
         completed_steps = [step for step in steps if step.get('completed', False)]
         
@@ -1718,22 +1722,43 @@ def generate_consolidated_final_report(task: dict) -> str:
         search_results = []
         analysis_content = []
         
-        for step in completed_steps:
-            step_result = step.get('result', {})
-            if step_result.get('success'):
+        # Procesar herramientas ejecutadas (datos reales)
+        for tool in executed_tools:
+            tool_result = tool.get('result', {})
+            if tool_result.get('success', True):  # Asumimos éxito si no hay campo success
                 # Recopilar datos de búsqueda
-                if step_result.get('data'):
-                    data = step_result.get('data', [])
+                if tool_result.get('data'):
+                    data = tool_result.get('data', [])
                     if isinstance(data, list):
                         search_results.extend(data)
                 
                 # Recopilar contenido de análisis
-                if step_result.get('content'):
+                if tool_result.get('content'):
                     analysis_content.append({
-                        'step_title': step.get('title', ''),
-                        'content': step_result.get('content', ''),
-                        'type': step_result.get('type', 'generic')
+                        'step_title': tool.get('step_title', tool.get('parameters', {}).get('step_title', 'Paso de investigación')),
+                        'content': tool_result.get('content', ''),
+                        'type': tool_result.get('type', 'generic'),
+                        'tool': tool.get('tool', 'unknown')
                     })
+        
+        # Fallback: usar plan si no hay datos de ejecución
+        if not executed_tools:
+            for step in completed_steps:
+                step_result = step.get('result', {})
+                if step_result.get('success'):
+                    # Recopilar datos de búsqueda
+                    if step_result.get('data'):
+                        data = step_result.get('data', [])
+                        if isinstance(data, list):
+                            search_results.extend(data)
+                    
+                    # Recopilar contenido de análisis
+                    if step_result.get('content'):
+                        analysis_content.append({
+                            'step_title': step.get('title', ''),
+                            'content': step_result.get('content', ''),
+                            'type': step_result.get('type', 'generic')
+                        })
         
         current_date = datetime.now().strftime('%d de %B de %Y')
         current_time = datetime.now().strftime('%H:%M:%S')
