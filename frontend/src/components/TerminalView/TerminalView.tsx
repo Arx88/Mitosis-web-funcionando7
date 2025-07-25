@@ -214,27 +214,45 @@ export const TerminalView = ({
       setMonitorPages([todoPage]);
       setPaginationStats(prev => ({ ...prev, totalPages: 1 }));
       
-      // Si todos los pasos están completados, cargar informe final para cualquier tarea
+      // SOLUCIÓN: Verificar si todos los pasos están completados
       const allCompleted = plan.every(step => step.completed);
-      if (allCompleted && taskId) {
-        setTimeout(() => {
-          const finalReportPage: MonitorPage = {
-            id: 'final-report',
-            title: '📄 INFORME FINAL - Tarea Completada',
-            content: 'Cargando informe final...',
-            type: 'report',
-            timestamp: new Date(),
-            metadata: {
-              lineCount: 1,
-              status: 'success',
-              fileSize: 0
-            }
-          };
-          
-          setMonitorPages(prev => [...prev, finalReportPage]);
-          setPaginationStats(prev => ({ ...prev, totalPages: prev.totalPages + 1 }));
-          loadFinalReport(taskId);
-        }, 1000);
+      const completedCount = plan.filter(s => s.completed).length;
+      
+      console.log('🔍 [DEBUG] Plan estado:', {
+        totalSteps: plan.length,
+        completedSteps: completedCount,
+        allCompleted,
+        taskId,
+        planSteps: plan.map(s => ({ id: s.id, title: s.title, completed: s.completed }))
+      });
+      
+      // Cargar informe final si la tarea está completada
+      if (allCompleted && taskId && completedCount > 0) {
+        console.log('🎯 [DEBUG] Todos los pasos completados, cargando informe final para tarea:', taskId);
+        
+        // Verificar que no se haya cargado ya el informe final
+        const hasReportPage = monitorPages.some(page => page.id === 'final-report');
+        if (!hasReportPage) {
+          setTimeout(() => {
+            const finalReportPage: MonitorPage = {
+              id: 'final-report',
+              title: '📄 INFORME FINAL - Tarea Completada',
+              content: 'Cargando informe final...',
+              type: 'report',
+              timestamp: new Date(),
+              metadata: {
+                lineCount: 1,
+                status: 'success',
+                fileSize: 0
+              }
+            };
+            
+            console.log('📄 [DEBUG] Añadiendo página de informe final');
+            setMonitorPages(prev => [...prev, finalReportPage]);
+            setPaginationStats(prev => ({ ...prev, totalPages: prev.totalPages + 1 }));
+            loadFinalReport(taskId);
+          }, 1000);
+        }
       }
     }
   }, [plan, monitorPages.length, dataId, taskId]); // Agregar taskId como dependencia
