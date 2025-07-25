@@ -116,8 +116,8 @@ cd /app/frontend
 # CRÍTICO: Corregir variables de entorno para evitar duplicación /api
 echo "🔧 Corrigiendo variables de entorno del frontend..."
 cat > /app/frontend/.env << 'EOF'
-VITE_BACKEND_URL=https://d9630745-6f04-488f-9a79-4371e7d82d7b.preview.emergentagent.com
-REACT_APP_BACKEND_URL=https://d9630745-6f04-488f-9a79-4371e7d82d7b.preview.emergentagent.com
+VITE_BACKEND_URL=https://3cc280b6-b757-4483-b434-d97500ad1aa1.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://3cc280b6-b757-4483-b434-d97500ad1aa1.preview.emergentagent.com
 EOF
 
 echo "✅ Variables de entorno corregidas (eliminada duplicación /api)"
@@ -223,7 +223,7 @@ check_ollama() {
 
 check_external_access() {
     # Verificar acceso externo usando la URL del preview
-    curl -s -f "https://d9630745-6f04-488f-9a79-4371e7d82d7b.preview.emergentagent.com" >/dev/null 2>&1
+    curl -s -f "https://3cc280b6-b757-4483-b434-d97500ad1aa1.preview.emergentagent.com" >/dev/null 2>&1
 }
 
 # Verificar backend con reintentos extendidos
@@ -367,7 +367,7 @@ echo "🏗️ FRONTEND: Archivos estáticos optimizados (build)"
 echo "🔧 BACKEND: Flask + gunicorn + eventlet (SocketIO optimizado)"
 echo "🎭 TESTING: Playwright + Selenium + Chrome instalados"
 echo "=============================================================="
-echo "📍 URL Externa: https://d9630745-6f04-488f-9a79-4371e7d82d7b.preview.emergentagent.com"
+echo "📍 URL Externa: https://3cc280b6-b757-4483-b434-d97500ad1aa1.preview.emergentagent.com"
 echo "📍 Backend API: http://localhost:8001"
 echo "📍 Frontend Local: http://localhost:3000"
 echo "=============================================================="
@@ -498,7 +498,7 @@ if $backend_ok && $frontend_ok; then
     echo "✅ WEBSOCKETS: SocketIO habilitado para tiempo real"
     echo ""
     echo "🚀 APLICACIÓN 100% LISTA PARA PRODUCCIÓN"
-    echo "🌐 URL: https://d9630745-6f04-488f-9a79-4371e7d82d7b.preview.emergentagent.com"
+    echo "🌐 URL: https://3cc280b6-b757-4483-b434-d97500ad1aa1.preview.emergentagent.com"
     echo ""
     echo "🎉 AGENTE GENERAL MITOSIS COMPLETAMENTE OPERATIVO"
     echo "   📱 Accesible desde cualquier dispositivo"
@@ -525,7 +525,7 @@ else
     echo "   ls -la /app/frontend/dist/"
     echo ""
     echo "🌐 Para probar acceso externo:"
-    echo "   curl https://d9630745-6f04-488f-9a79-4371e7d82d7b.preview.emergentagent.com"
+    echo "   curl https://3cc280b6-b757-4483-b434-d97500ad1aa1.preview.emergentagent.com"
     echo "=============================================================="
     
     # Crear archivo de debugging
