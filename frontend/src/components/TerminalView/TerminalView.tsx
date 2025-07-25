@@ -101,6 +101,9 @@ export const TerminalView = ({
             // Actualizar página existente
             const updated = [...prev];
             updated[existingIndex] = reportPage;
+            // Navegar automáticamente a la página del informe final
+            setCurrentPageIndex(existingIndex);
+            setIsLiveMode(false);
             return updated;
           } else {
             // Agregar nueva página
@@ -108,7 +111,11 @@ export const TerminalView = ({
               ...prevStats, 
               totalPages: prevStats.totalPages + 1 
             }));
-            return [...prev, reportPage];
+            const newPages = [...prev, reportPage];
+            // Navegar automáticamente a la página del informe final (última página)
+            setCurrentPageIndex(newPages.length - 1);
+            setIsLiveMode(false);
+            return newPages;
           }
         });
         
