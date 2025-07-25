@@ -219,7 +219,7 @@ sudo supervisorctl update >/dev/null 2>&1
 sudo supervisorctl restart all >/dev/null 2>&1
 
 # ========================================================================
-# PASO 6: VERIFICACIÓN COMPLETA DE SERVICIOS
+# PASO 7: VERIFICACIÓN COMPLETA DE SERVICIOS
 # ========================================================================
 
 echo "⏳ Esperando estabilización de servicios (20 segundos)..."
