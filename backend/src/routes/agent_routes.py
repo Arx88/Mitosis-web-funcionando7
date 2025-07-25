@@ -616,7 +616,7 @@ def execute_step_with_intelligent_tool_selection(step: dict, task_analysis: dict
 
 def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
     """
-    🎯 EVALUADOR DE CALIDAD DE RESULTADOS
+    🎯 EVALUADOR DE CALIDAD DE RESULTADOS - FIXED BUG
     Determina si un resultado es lo suficientemente bueno
     """
     if not result.get('success', False):
@@ -624,22 +624,36 @@ def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
     
     content = result.get('content', '') or result.get('summary', '')
     
+    # 🔥 BUG FIX: Verificar si hay 0 resultados ANTES que longitud
+    if result.get('results_count', 0) == 0:
+        logger.warning("❌ Resultado rechazado: 0 resultados encontrados")
+        return False
+    
+    # Si dice "0 resultados" en el contenido o resumen
+    if '0 resultados' in content.lower() or '0 fuentes' in content.lower():
+        logger.warning("❌ Resultado rechazado: contenido indica 0 resultados")
+        return False
+    
     # Criterios de calidad básicos
     if len(content) < 100:  # Muy corto
+        logger.warning("❌ Resultado rechazado: contenido muy corto")
         return False
     
     # Si necesita datos reales, verificar que tenga información específica
     if task_analysis.get('needs_real_data', False):
         real_data_indicators = ['2024', '2025', 'estadística', 'jugador', 'equipo', 'resultado', 'dato']
         if not any(indicator in content.lower() for indicator in real_data_indicators):
+            logger.warning("❌ Resultado rechazado: sin datos reales específicos")
             return False
     
     # Si es análisis, verificar que tenga estructura analítica
     analysis_indicators = ['análisis', 'conclusión', 'recomendación', 'hallazgo', 'evaluación']
     if task_analysis.get('needs_deep_research', False):
         if not any(indicator in content.lower() for indicator in analysis_indicators):
+            logger.warning("❌ Resultado rechazado: sin estructura analítica")
             return False
     
+    logger.info("✅ Resultado aprobado: cumple criterios de calidad")
     return True
 
 def execute_comprehensive_research_step(title: str, description: str, tool_manager, task_id: str, original_message: str) -> dict:
