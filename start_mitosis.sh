@@ -66,7 +66,30 @@ fi
 echo "✅ Dependencias backend, Playwright y Selenium verificadas"
 
 # ========================================================================
-# PASO 2: CREAR SERVIDOR WSGI OPTIMIZADO PARA PRODUCCIÓN
+# PASO 2: CONFIGURAR API KEYS Y VARIABLES DE ENTORNO
+# ========================================================================
+
+echo "🔑 Configurando API keys y variables de entorno..."
+
+# Actualizar TAVILY_API_KEY en el archivo .env del backend
+echo "   ⚡ Actualizando Tavily API Key..."
+sed -i 's/TAVILY_API_KEY=.*/TAVILY_API_KEY=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/' /app/backend/.env
+
+# Verificar que se actualizó correctamente
+if grep -q "TAVILY_API_KEY=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" /app/backend/.env; then
+    echo "   ✅ Tavily API Key configurada correctamente"
+else
+    echo "   ⚠️ Agregando Tavily API Key al archivo .env..."
+    echo "" >> /app/backend/.env
+    echo "# Configuración de APIs externas" >> /app/backend/.env
+    echo "TAVILY_API_KEY=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" >> /app/backend/.env
+    echo "   ✅ Tavily API Key agregada exitosamente"
+fi
+
+echo "✅ API keys configuradas correctamente"
+
+# ========================================================================
+# PASO 3: CREAR SERVIDOR WSGI OPTIMIZADO PARA PRODUCCIÓN
 # ========================================================================
 
 echo "📝 Creando servidor WSGI para modo producción..."
