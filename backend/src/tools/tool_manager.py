@@ -72,10 +72,10 @@ except ImportError:
 
 class ToolManager:
     def __init__(self):
-        # Inicializar herramientas con versiones REALES (no simuladas)
+        # Inicializar herramientas con SOLO Playwright + Bing
         self.tools = {
             'shell': ShellTool(),
-            'web_search': WebSearchTool(),  # USAR HERRAMIENTA REAL
+            'web_search': WebSearchTool(),  # PLAYWRIGHT + BING ÚNICAMENTE
             'file_manager': FileManagerTool(),
             'tavily_search': TavilySearchTool(),
             'comprehensive_research': ComprehensiveResearchTool()
