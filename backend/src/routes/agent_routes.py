@@ -2951,33 +2951,53 @@ def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool =
                 
                 # Prompts progresivamente más específicos
                 if attempt == 1:
-                    # Prompt optimizado con contexto de categoría
-                    plan_prompt = f"""Eres un planificador experto. Crea un plan detallado y específico para la siguiente tarea de categoría "{task_category}":
+                    # Prompt optimizado y mejorado para generar JSON correcto
+                    plan_prompt = f"""INSTRUCCIÓN: Responde ÚNICAMENTE con JSON válido, sin texto adicional.
 
-TAREA: {message}
+Crea un plan específico para: {message}
 
-Genera 4-5 pasos ESPECÍFICOS, DETALLADOS y ORIENTADOS AL VALOR que superen las expectativas del usuario.
+Categoría detectada: {task_category}
 
-CONTEXTO DE CATEGORÍA "{task_category.upper()}":
-- Si es investigación: incluye múltiples fuentes, análisis comparativo, validación cruzada
-- Si es creación: incluye planificación, investigación, desarrollo iterativo, refinamiento
-- Si es análisis: incluye recopilación de datos, análisis multi-dimensional, insights profundos
-- Si es desarrollo: incluye análisis técnico, diseño, implementación, testing
-- Si es planificación: incluye análisis situacional, benchmarking, estrategia, implementación
-
-HERRAMIENTAS DISPONIBLES: web_search, analysis, creation, planning, delivery, processing
-
-RESPONDE EXACTAMENTE en este formato JSON (sin texto adicional):
+JSON de respuesta (SOLO JSON, sin explicaciones):
 {{
   "steps": [
     {{
       "id": "step-1",
-      "title": "Título específico y accionable del primer paso",
-      "description": "Descripción detallada con metodología y entregables específicos para esta tarea exacta",
-      "tool": "herramienta_apropiada",
-      "estimated_time": "tiempo realista en minutos",
-      "complexity": "baja|media|alta"
+      "title": "Investigación profunda sobre {message[:50]}",
+      "description": "Realizar investigación exhaustiva con múltiples fuentes especializadas sobre {message}",
+      "tool": "web_search",
+      "estimated_time": "8-10 minutos",
+      "complexity": "media"
     }},
+    {{
+      "id": "step-2",
+      "title": "Análisis técnico detallado",
+      "description": "Analizar información recopilada aplicando metodologías específicas para {task_category}",
+      "tool": "analysis", 
+      "estimated_time": "10-12 minutos",
+      "complexity": "alta"
+    }},
+    {{
+      "id": "step-3",
+      "title": "Desarrollo y estructuración",
+      "description": "Crear estructura detallada y desarrollar componentes específicos del proyecto",
+      "tool": "creation",
+      "estimated_time": "12-15 minutos", 
+      "complexity": "alta"
+    }},
+    {{
+      "id": "step-4",
+      "title": "Refinamiento y optimización",
+      "description": "Optimizar, validar y refinar el resultado final para máxima calidad",
+      "tool": "processing",
+      "estimated_time": "5-8 minutos",
+      "complexity": "media"
+    }}
+  ],
+  "task_type": "{task_category}",
+  "complexity": "alta",
+  "estimated_total_time": "35-45 minutos"
+}}
     {{
       "id": "step-2", 
       "title": "Segundo paso que construya sobre el anterior",
