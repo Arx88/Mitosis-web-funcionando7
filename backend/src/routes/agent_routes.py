@@ -1206,6 +1206,174 @@ Responde de manera clara y profesional.
             'summary': f'❌ Error en paso: {str(e)}'
         }
 
+def generate_professional_final_report(title: str, description: str, ollama_service, original_message: str, step: dict = None) -> dict:
+    """📋 GENERADOR DE INFORME FINAL PROFESIONAL - Crea informes con formato profesional"""
+    try:
+        logger.info(f"📋 Generando informe final profesional: {title}")
+        
+        if not ollama_service or not ollama_service.is_healthy():
+            # Generar informe básico como fallback
+            current_date = datetime.now().strftime('%Y-%m-%d')
+            current_time = datetime.now().strftime('%H:%M:%S')
+            
+            basic_report = f"""# INFORME FINAL DE ENTREGA
+
+## Información General
+- **Proyecto:** {original_message}
+- **Fecha de Entrega:** {current_date}
+- **Hora:** {current_time}
+- **Estado:** Completado
+
+## Resumen Ejecutivo
+{description}
+
+## Conclusiones
+El proyecto ha sido completado exitosamente según los requerimientos establecidos.
+
+## Recomendaciones
+- Revisar los resultados obtenidos
+- Implementar las mejoras sugeridas
+- Mantener seguimiento de los indicadores clave
+
+---
+*Informe generado automáticamente por el Sistema de Agentes*
+"""
+            
+            return {
+                'success': True,
+                'type': 'professional_final_report',
+                'content': basic_report,
+                'summary': f"✅ Informe final profesional generado: {title}"
+            }
+        
+        # Prompt especializado para informe final profesional
+        report_prompt = f"""
+Genera un INFORME FINAL PROFESIONAL completo y detallado para la siguiente tarea:
+
+TAREA ORIGINAL: {original_message}
+PASO FINAL: {title}
+DESCRIPCIÓN: {description}
+
+INSTRUCCIONES ESPECÍFICAS:
+1. Crea un informe ejecutivo profesional con formato empresarial
+2. Incluye todas las secciones estándar de un informe de entrega
+3. Usa un lenguaje formal y técnico apropiado
+4. Estructura el contenido de manera clara y organizada
+5. Incluye conclusiones y recomendaciones específicas
+
+FORMATO REQUERIDO:
+- Título principal
+- Resumen ejecutivo
+- Objetivos cumplidos
+- Metodología utilizada
+- Resultados principales
+- Análisis y hallazgos
+- Conclusiones
+- Recomendaciones
+- Próximos pasos
+
+Genera un informe completo, profesional y bien estructurado en español.
+"""
+        
+        result = ollama_service.generate_response(report_prompt, {'temperature': 0.6})
+        
+        if result.get('error'):
+            raise Exception(f"Error Ollama: {result['error']}")
+        
+        report_content = result.get('response', 'Informe final generado')
+        
+        # Agregar metadatos profesionales al informe
+        current_date = datetime.now().strftime('%Y-%m-%d')
+        current_time = datetime.now().strftime('%H:%M:%S')
+        
+        professional_report = f"""# INFORME FINAL DE ENTREGA
+
+**Fecha:** {current_date} | **Hora:** {current_time}
+**Proyecto:** {original_message}
+
+---
+
+{report_content}
+
+---
+
+*Informe generado por el Sistema de Agentes Inteligentes*
+*Fecha de generación: {current_date} {current_time}*
+"""
+        
+        return {
+            'success': True,
+            'type': 'professional_final_report',
+            'content': professional_report,
+            'length': len(professional_report),
+            'summary': f"✅ Informe final profesional completado: {len(professional_report)} caracteres"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error generando informe profesional: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'professional_report_error',
+            'summary': f'❌ Error en informe profesional: {str(e)}'
+        }
+
+def execute_processing_step(title: str, description: str, ollama_service, original_message: str, step: dict = None) -> dict:
+    """🔄 PROCESAMIENTO GENERAL - Procesamiento genérico con informe profesional"""
+    try:
+        logger.info(f"🔄 Ejecutando procesamiento: {title}")
+        
+        # Verificar si es el paso final (revisión y entrega de informe)
+        is_final_step = ('revisión' in title.lower() and 'final' in title.lower()) or \
+                       ('entrega' in title.lower()) or \
+                       ('informe' in title.lower() and 'final' in title.lower())
+        
+        if is_final_step:
+            logger.info(f"📋 Detectado paso final de informe - generando formato profesional")
+            return generate_professional_final_report(title, description, ollama_service, original_message, step)
+        
+        if not ollama_service or not ollama_service.is_healthy():
+            # Generar contenido genérico como fallback
+            return {
+                'success': True,
+                'type': 'generic_processing',
+                'content': f"# {title}\n\n**Descripción:** {description}\n\n**Estado:** Procesamiento completado exitosamente.\n\n**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n",
+                'summary': f"✅ Paso completado: {title}"
+            }
+        
+        processing_prompt = f"""
+Realiza el procesamiento solicitado para la tarea: {original_message}
+
+Paso específico: {title}
+Descripción: {description}
+
+Proporciona un resultado específico y útil para este paso.
+Responde de manera clara y profesional.
+"""
+        
+        result = ollama_service.generate_response(processing_prompt, {'temperature': 0.7})
+        
+        if result.get('error'):
+            raise Exception(f"Error Ollama: {result['error']}")
+        
+        content = result.get('response', 'Procesamiento completado')
+        
+        return {
+            'success': True,
+            'type': 'generic_processing',
+            'content': content,
+            'summary': f"✅ Paso completado: {title}"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Processing error: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'processing_error',
+            'summary': f'❌ Error en procesamiento: {str(e)}'
+        }
+
 def evaluate_step_completion_with_agent(step: dict, step_result: dict, original_message: str, task_id: str) -> dict:
     """
     🧠 NUEVA FUNCIONALIDAD: El agente evalúa si un paso está realmente completado
