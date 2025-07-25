@@ -75,7 +75,7 @@ class PlaywrightWebSearchTool:
         
         return {'valid': True}
     
-    def execute(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def execute(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
         """Ejecutar búsqueda web con Playwright"""
         if config is None:
             config = {}
@@ -91,16 +91,9 @@ class PlaywrightWebSearchTool:
         extract_content = parameters.get('extract_content', True)
         
         try:
-            # Ejecutar búsqueda usando asyncio
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                result = loop.run_until_complete(
-                    self._search_with_playwright(query, search_engine, max_results, extract_content)
-                )
-                return result
-            finally:
-                loop.close()
+            # Ejecutar búsqueda directamente con async/await
+            result = await self._search_with_playwright(query, search_engine, max_results, extract_content)
+            return result
                 
         except Exception as e:
             return {
