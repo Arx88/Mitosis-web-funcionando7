@@ -170,7 +170,7 @@ fi
 echo "✅ Frontend construido para producción con variables corregidas"
 
 # ========================================================================
-# PASO 4: CONFIGURACIÓN SUPERVISOR PARA MODO PRODUCCIÓN
+# PASO 5: CONFIGURACIÓN SUPERVISOR PARA MODO PRODUCCIÓN
 # ========================================================================
 
 echo "⚙️ Configurando supervisor para modo producción..."
