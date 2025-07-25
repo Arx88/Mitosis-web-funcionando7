@@ -1638,10 +1638,13 @@ Responde ÚNICAMENTE con un JSON válido:
                 
         except (json.JSONDecodeError, ValueError) as e:
             logger.warning(f"⚠️ No se pudo parsear evaluación del agente: {e}")
+            # 🔥 BUG FIX: NO asumir completado cuando falla - requiere re-evaluación
             return {
-                'step_completed': True,
-                'should_continue': False,
-                'reason': 'Error parseando evaluación - asumiendo completado'
+                'step_completed': False,
+                'should_continue': True,
+                'reason': 'Error parseando evaluación - requiere trabajo adicional para verificar',
+                'feedback': 'La evaluación del agente falló. El paso necesita ser re-ejecutado con criterios más claros.',
+                'additional_actions': ['re_execute_step_with_different_approach', 'verify_actual_content_generated']
             }
             
     except Exception as e:
