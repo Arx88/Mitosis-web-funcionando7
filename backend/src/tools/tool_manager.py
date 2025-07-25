@@ -193,6 +193,13 @@ class ToolManager:
                 'viewport_width': 1920,
                 'viewport_height': 1080
             },
+            'playwright_web_search': {
+                'enabled': True,
+                'max_results': 10,
+                'timeout': 30,
+                'extract_content': True,
+                'search_engine': 'google'
+            },
             'autonomous_web_navigation': {
                 'enabled': True,
                 'headless': False,  # Navegación visible
