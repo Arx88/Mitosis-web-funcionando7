@@ -173,6 +173,7 @@ class PlaywrightWebSearchTool:
                     'search_url': search_url,
                     'results': results,
                     'count': len(results),
+                    'results_count': len(results),  # 🔥 FIX: Agregar results_count para compatibility
                     'success': True,
                     'timestamp': datetime.now().isoformat(),
                     'search_results': results  # Para compatibilidad con otras herramientas
