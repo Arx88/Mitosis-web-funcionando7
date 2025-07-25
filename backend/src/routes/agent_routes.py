@@ -1578,17 +1578,20 @@ RESULTADO OBTENIDO:
 - Cantidad de fuentes: {len(step_result.get('results', []))}
 
 CRITERIOS ESTRICTOS DE EVALUACIÓN:
-1. ¿El resultado tiene contenido REAL y ÚTIL (más de 50 caracteres)?
-2. ¿Se obtuvieron al menos 1-2 fuentes/resultados válidos?
+1. ¿El resultado tiene contenido REAL y ÚTIL (más de 100 caracteres)?
+2. ¿Se obtuvieron al menos 1-2 fuentes/resultados válidos cuando se requiere investigación?
 3. ¿La búsqueda/investigación proporcionó información específica y relevante?
-4. ¿El contenido responde a la pregunta/objetivo del paso?
+4. ¿El contenido responde DIRECTAMENTE a la pregunta/objetivo del paso?
+5. **CRÍTICO**: ¿El resultado es CONTENIDO REAL o solo un PLAN de cómo hacer el trabajo?
 
 REGLAS IMPORTANTES:
 - Si el resultado dice "0 resultados analizados" → step_completed: false
-- Si el contenido es muy corto (< 100 chars) → step_completed: false  
+- Si el contenido es muy corto (< 200 chars) → step_completed: false  
 - Si no hay información específica útil → step_completed: false
 - Si la herramienta falló o devolvió error → step_completed: false
-- Solo aprobar si hay contenido real y suficiente
+- **Si el contenido es solo un PLAN DE ACCIÓN en lugar de trabajo real → step_completed: false**
+- **Si dice "utilizaré herramientas", "plan de acción", "herramientas a utilizar" → step_completed: false**
+- Solo aprobar si hay contenido real, específico y completado
 
 Responde ÚNICAMENTE con un JSON válido:
 {{
