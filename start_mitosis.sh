@@ -130,7 +130,7 @@ EOF
 chmod +x /app/backend/production_wsgi.py
 
 # ========================================================================
-# PASO 3: CONSTRUIR FRONTEND EN MODO PRODUCCIÓN Y CORREGIR CONFIG
+# PASO 4: CONSTRUIR FRONTEND EN MODO PRODUCCIÓN Y CORREGIR CONFIG
 # ========================================================================
 
 echo "🏗️ Construyendo frontend en modo producción..."
