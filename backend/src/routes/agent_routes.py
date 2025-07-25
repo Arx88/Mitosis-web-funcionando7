@@ -4472,7 +4472,7 @@ def get_final_result(task_id):
             if task_data and task_data.get('status') == 'completed':
                 final_result = generate_milei_final_report(task_data)
                 
-                # Actualizar la tarea con el resultado final
+                # Actualizar la tarea con el resultado final en la base de datos
                 update_task_data(task_id, {'final_result': final_result})
                 
                 return jsonify({
