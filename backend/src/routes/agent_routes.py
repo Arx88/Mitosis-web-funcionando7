@@ -4490,6 +4490,15 @@ def execute_step_real(task_id: str, step_id: str, step: dict):
         'timestamp': datetime.now().isoformat()
     })
     
+    # Inicializar resultado por defecto
+    step_result = {
+        'success': False,
+        'type': tool,
+        'summary': 'Paso en progreso',
+        'content': '',
+        'tool_used': tool
+    }
+    
     try:
         tool_manager = get_tool_manager()
         
