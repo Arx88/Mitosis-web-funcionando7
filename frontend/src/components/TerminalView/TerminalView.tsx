@@ -449,6 +449,13 @@ export const TerminalView = ({
     }
   }, [executionData, taskId]);
 
+  // Efecto para mantener el modo Live siempre en la última página
+  useEffect(() => {
+    if (isLiveMode && monitorPages.length > 0) {
+      setCurrentPageIndex(monitorPages.length - 1);
+    }
+  }, [monitorPages.length, isLiveMode]);
+
   const generateBackendToolPageContent = (tool: any): string => {
     const timestamp = tool.timestamp || new Date().toISOString();
     let content = `# Ejecución Backend: ${tool.tool.toUpperCase()}\n\n`;
