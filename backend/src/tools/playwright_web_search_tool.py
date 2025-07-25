@@ -75,7 +75,7 @@ class PlaywrightWebSearchTool:
         
         return {'valid': True}
     
-    async def execute(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
+    def execute(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
         """Ejecutar búsqueda web con Playwright"""
         if config is None:
             config = {}
@@ -86,18 +86,26 @@ class PlaywrightWebSearchTool:
             return {'error': validation['error'], 'success': False}
         
         query = parameters['query'].strip()
-        search_engine = parameters.get('search_engine', 'google').lower()
+        search_engine = parameters.get('search_engine', 'bing').lower()  # Cambiar default a bing
         max_results = min(parameters.get('max_results', 8), config.get('max_results', 15))
         extract_content = parameters.get('extract_content', True)
         
         try:
-            # Ejecutar búsqueda directamente con async/await
-            result = await self._search_with_playwright(query, search_engine, max_results, extract_content)
-            return result
+            # Ejecutar búsqueda usando asyncio con event loop
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                result = loop.run_until_complete(
+                    self._search_with_playwright(query, search_engine, max_results, extract_content)
+                )
+                return result
+            finally:
+                loop.close()
                 
         except Exception as e:
             return {
                 'query': query,
+                'search_engine': search_engine,
                 'error': str(e),
                 'success': False
             }
