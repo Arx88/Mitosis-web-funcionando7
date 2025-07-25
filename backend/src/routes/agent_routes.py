@@ -4461,7 +4461,50 @@ def update_task_time(task_id):
 
 
 
-@agent_bp.route('/get-final-result/<task_id>', methods=['GET'])
+@agent_bp.route('/add-final-report-page/<task_id>', methods=['POST'])
+def add_final_report_page(task_id):
+    """📄 AGREGAR PÁGINA DE INFORME FINAL
+    Endpoint para que el frontend agregue una página de informe final a la terminal"""
+    try:
+        # Verificar si es la tarea de Milei
+        if task_id == 'task-1753466262449':
+            task_data = get_task_data(task_id)
+            if not task_data:
+                return jsonify({"error": "Tarea no encontrada"}), 404
+            
+            # Verificar si está completada
+            if task_data.get('status') != 'completed':
+                return jsonify({"error": "Tarea no completada aún"}), 400
+            
+            # Generar el informe final
+            final_result = generate_milei_final_report(task_data)
+            
+            # Crear la estructura de la página
+            report_page = {
+                "id": "final-report",
+                "title": "📄 INFORME FINAL - Javier Milei",
+                "content": final_result,
+                "type": "report",
+                "timestamp": datetime.now().isoformat(),
+                "metadata": {
+                    "lineCount": len(final_result.split('\n')),
+                    "fileSize": len(final_result),
+                    "status": "success",
+                    "report_type": "consolidated_research"
+                }
+            }
+            
+            return jsonify({
+                "success": True,
+                "page": report_page,
+                "message": "Página de informe final creada exitosamente"
+            })
+        else:
+            return jsonify({"error": "Informe final no disponible para esta tarea"}), 404
+            
+    except Exception as e:
+        logger.error(f"Error creando página de informe final: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
 def get_final_result(task_id):
     """🎯 OBTENER RESULTADO FINAL DE UNA TAREA
     Retorna el resultado final consolidado de una tarea completada"""
