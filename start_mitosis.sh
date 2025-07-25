@@ -289,7 +289,7 @@ for i in {1..10}; do
 done
 
 # ========================================================================
-# PASO 7: TESTING COMPREHENSIVO DE APIs Y OLLAMA DESDE FRONTEND
+# PASO 8: TESTING COMPREHENSIVO DE APIs Y OLLAMA DESDE FRONTEND
 # ========================================================================
 
 if $backend_ok; then
