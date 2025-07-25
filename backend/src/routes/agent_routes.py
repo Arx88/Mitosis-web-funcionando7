@@ -832,9 +832,11 @@ def execute_multi_source_research_step(title: str, description: str, tool_manage
             
             # Búsqueda web estándar
             try:
-                web_result = tool_manager.execute_tool('web_search', {
+                web_result = tool_manager.execute_tool('playwright_web_search', {
                     'query': search_query,
-                    'num_results': 5
+                    'max_results': 5,
+                    'search_engine': 'bing',
+                    'extract_content': True
                 }, task_id=task_id)
                 all_results.extend(web_result.get('search_results', []))
             except Exception as e:
