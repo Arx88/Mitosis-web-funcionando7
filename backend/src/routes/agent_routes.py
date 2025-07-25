@@ -531,16 +531,16 @@ def analyze_step_requirements(title: str, description: str, original_message: st
         analysis['needs_web_search'] = True
         analysis['needs_deep_research'] = True
     
-    # Seleccionar herramientas óptimas basadas en el análisis
+    # Seleccionar herramientas óptimas basadas en el análisis - PRIORIDAD A LAS QUE FUNCIONAN
     if analysis['needs_real_data']:
-        analysis['optimal_tools'] = ['playwright_web_search', 'comprehensive_research', 'web_search']
-        analysis['fallback_tools'] = ['enhanced_analysis', 'tavily_search']
+        analysis['optimal_tools'] = ['web_search', 'enhanced_analysis']  # FUNCIONA - playwright_web_search usando playwright
+        analysis['fallback_tools'] = ['comprehensive_research', 'tavily_search', 'multi_source_research']  # Fallback - puede fallar
     elif analysis['needs_web_search']:
-        analysis['optimal_tools'] = ['playwright_web_search', 'web_search']
-        analysis['fallback_tools'] = ['comprehensive_research', 'tavily_search']
+        analysis['optimal_tools'] = ['web_search', 'enhanced_analysis']  # FUNCIONA
+        analysis['fallback_tools'] = ['comprehensive_research', 'tavily_search']  # Fallback - puede fallar
     else:
-        analysis['optimal_tools'] = ['analysis']
-        analysis['fallback_tools'] = ['web_search', 'comprehensive_research']
+        analysis['optimal_tools'] = ['enhanced_analysis']  # Usando Ollama - FUNCIONA
+        analysis['fallback_tools'] = ['web_search', 'comprehensive_research']  # Fallback - puede fallar
     
     return analysis
 
