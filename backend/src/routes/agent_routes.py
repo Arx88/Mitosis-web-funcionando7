@@ -4385,32 +4385,68 @@ def execute_step_internal(task_id: str, step_id: str, step: dict):
         })
         
         # Ejecutar paso con herramientas REALES (no simulación)
-        execute_step_real(task_id, step_id, step)
+        step_result = execute_step_real(task_id, step_id, step)
         
-        # ✅ CRITICAL FIX: Actualizar estado del paso en persistencia DESPUÉS de ejecutar
+        # 🧠 NUEVO: EL AGENTE EVALÚA SI EL PASO ESTÁ REALMENTE COMPLETADO
+        task_data = get_task_data(task_id)
+        original_message = task_data.get('message', '') if task_data else ''
+        
+        agent_evaluation = evaluate_step_completion_with_agent(
+            step, step_result, original_message, task_id
+        )
+        
+        if agent_evaluation.get('should_continue', False):
+            # El agente decide continuar con más trabajo en este paso
+            logger.info(f"🔄 Agent decided to continue working on step {step_id}: {agent_evaluation.get('reason', '')}")
+            
+            # Ejecutar trabajo adicional si el agente lo solicita
+            if agent_evaluation.get('additional_actions'):
+                for action in agent_evaluation['additional_actions']:
+                    additional_result = execute_additional_step_work(action, step, original_message, task_id)
+                    if not isinstance(step_result, dict):
+                        step_result = {'summary': str(step_result)}
+                    step_result['additional_work'] = step_result.get('additional_work', [])
+                    step_result['additional_work'].append(additional_result)
+        
+        # ✅ CRITICAL FIX: Solo actualizar estado si el agente aprueba
         task_data = get_task_data(task_id)
         if task_data and 'plan' in task_data:
             steps = task_data['plan']
             for step_item in steps:
                 if step_item.get('id') == step_id:
-                    step_item['active'] = False
-                    step_item['completed'] = True
-                    step_item['status'] = 'completed'
-                    step_item['completed_time'] = datetime.now().isoformat()
-                    step_item['result'] = f"Completado: {step.get('title', 'Paso')}"
+                    if agent_evaluation.get('step_completed', True):
+                        step_item['active'] = False
+                        step_item['completed'] = True
+                        step_item['status'] = 'completed'
+                        step_item['completed_time'] = datetime.now().isoformat()
+                        step_item['result'] = step_result
+                        step_item['agent_evaluation'] = agent_evaluation
+                        logger.info(f"✅ Agent approved completion of step {step_id}")
+                    else:
+                        step_item['status'] = 'requires_more_work'
+                        step_item['agent_feedback'] = agent_evaluation.get('feedback', '')
+                        logger.info(f"⏸️ Agent requires more work on step {step_id}: {agent_evaluation.get('feedback', '')}")
                     break
             
             # Guardar inmediatamente el cambio de estado
             update_task_data(task_id, {'plan': steps})
-            logger.info(f"✅ Step {step_id} marked as completed in database")
         
-        # Emitir completado
-        emit_step_event(task_id, 'step_completed', {
-            'step_id': step_id,
-            'title': step.get('title', 'Paso completado'),
-            'result': f"Completado: {step.get('title', 'Paso')}",
-            'timestamp': datetime.now().isoformat()
-        })
+        # Emitir evento según evaluación del agente
+        if agent_evaluation.get('step_completed', True):
+            emit_step_event(task_id, 'step_completed', {
+                'step_id': step_id,
+                'title': step.get('title', 'Paso completado'),
+                'result': step_result,
+                'agent_evaluation': agent_evaluation,
+                'timestamp': datetime.now().isoformat()
+            })
+        else:
+            emit_step_event(task_id, 'step_needs_more_work', {
+                'step_id': step_id,
+                'title': step.get('title', 'Paso requiere más trabajo'),
+                'feedback': agent_evaluation.get('feedback', ''),
+                'timestamp': datetime.now().isoformat()
+            })
         
     except Exception as e:
         logger.error(f"❌ Error executing step {step_id}: {e}")
