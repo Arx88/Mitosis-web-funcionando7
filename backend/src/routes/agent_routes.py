@@ -3065,8 +3065,30 @@ IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Ca
                 response_text = result.get('response', '').strip()
                 
                 try:
-                    # Limpiar respuesta
-                    cleaned_response = response_text.replace('```json', '').replace('```', '').strip()
+                    # Múltiples estrategias de limpieza de respuesta
+                    cleaned_response = response_text
+                    
+                    # Estrategia 1: Limpiar bloques de código
+                    cleaned_response = cleaned_response.replace('```json', '').replace('```', '').strip()
+                    
+                    # Estrategia 2: Buscar JSON entre llaves {}
+                    import re
+                    json_match = re.search(r'\{.*\}', cleaned_response, re.DOTALL)
+                    if json_match:
+                        cleaned_response = json_match.group(0)
+                    
+                    # Estrategia 3: Remover texto antes del primer {
+                    first_brace = cleaned_response.find('{')
+                    if first_brace > 0:
+                        cleaned_response = cleaned_response[first_brace:]
+                    
+                    # Estrategia 4: Remover texto después del último }
+                    last_brace = cleaned_response.rfind('}')
+                    if last_brace > 0:
+                        cleaned_response = cleaned_response[:last_brace + 1]
+                    
+                    logger.debug(f"🧽 Cleaned response: {cleaned_response[:200]}...")
+                    
                     plan_data = json.loads(cleaned_response)
                     
                     # Validar estructura básica
