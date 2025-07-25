@@ -660,10 +660,10 @@ def execute_comprehensive_research_step(title: str, description: str, tool_manag
                 'success': True,
                 'type': 'comprehensive_research',
                 'query': search_query,
-                'results_count': len(result.get('search_results', [])),
-                'summary': f"✅ Investigación comprehensiva completada: {len(result.get('search_results', []))} fuentes analizadas",
-                'content': f"Investigación detallada sobre: {search_query}\n\nResultados encontrados: {len(result.get('search_results', []))} fuentes",
-                'data': result.get('search_results', [])
+                'results_count': len(result.get('results', [])),
+                'summary': f"✅ Investigación comprehensiva completada: {len(result.get('results', []))} fuentes analizadas",
+                'content': f"Investigación detallada sobre: {search_query}\n\nResultados encontrados: {len(result.get('results', []))} fuentes",
+                'data': result.get('results', [])
             }
         else:
             raise Exception("Tool manager no disponible")
