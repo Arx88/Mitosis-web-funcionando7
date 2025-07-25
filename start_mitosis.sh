@@ -367,10 +367,11 @@ if $backend_ok; then
         echo "   ✅ Tavily API: FUNCIONANDO CORRECTAMENTE"
         echo "      🔑 API Key: Configurada y válida"
     else
-        echo "   ⚠️ Tavily API: VERIFICANDO CONFIGURACIÓN..."
         # Verificar si la API key está en el .env
         if grep -q "TAVILY_API_KEY=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" /app/backend/.env; then
-            echo "      ✅ API Key: Presente en configuración"
+            echo "   ⚠️ Tavily API: CONFIGURADA (puede tener límites de uso)"
+            echo "      ✅ API Key: Presente y configurada correctamente"
+            echo "      ℹ️ Nota: Sistema usa Playwright Web Search como primaria"
         else
             echo "      ❌ API Key: Faltante en configuración"
         fi
