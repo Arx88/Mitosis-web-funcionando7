@@ -580,6 +580,8 @@ def execute_step_with_intelligent_tool_selection(step: dict, task_analysis: dict
                 result = execute_multi_source_research_step(step_title, step_description, tool_manager, task_id, original_message)
             elif tool_name in ['analysis', 'data_analysis']:
                 result = execute_analysis_step(step_title, step_description, ollama_service, original_message)
+            elif tool_name == 'processing':
+                result = execute_processing_step(step_title, step_description, ollama_service, original_message, step)
             else:
                 result = execute_generic_step(step_title, step_description, ollama_service, original_message)
             
