@@ -924,19 +924,23 @@ def combine_tool_results(results: list, step_title: str, step_description: str, 
         if ollama_service and ollama_service.is_healthy():
             try:
                 summary_prompt = f"""
-Genera un resumen inteligente combinando los siguientes resultados para la tarea: {step_title}
+COMBINA y RESUME los siguientes resultados reales encontrados para: {step_title}
 
 Descripción: {step_description}
 
 RESULTADOS A COMBINAR:
 {combined_content[:1000]}
 
-Proporciona:
-1. Resumen ejecutivo de todos los resultados
-2. Hallazgos principales combinados
-3. Conclusiones integradas
+GENERA DIRECTAMENTE un resumen combinado que incluya:
+1. La información específica encontrada en los resultados
+2. Los datos concretos y hechos identificados
+3. Un resumen consolidado de toda la información
 
-Formato: Respuesta clara y estructurada en español.
+NO generes "próximos pasos" o "plan de acción".
+NO escribas "utilizaré herramientas" o "se puede concluir que".
+COMBINA y PRESENTA la información real encontrada.
+
+Formato: Información combinada clara y directa en español.
 """
                 
                 summary_result = ollama_service.generate_response(summary_prompt, {'temperature': 0.6})
