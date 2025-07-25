@@ -533,11 +533,11 @@ def analyze_step_requirements(title: str, description: str, original_message: st
     
     # Seleccionar herramientas óptimas basadas en el análisis
     if analysis['needs_real_data']:
-        analysis['optimal_tools'] = ['comprehensive_research', 'tavily_search', 'web_search']
-        analysis['fallback_tools'] = ['enhanced_analysis', 'multi_source_research']
+        analysis['optimal_tools'] = ['playwright_web_search', 'comprehensive_research', 'web_search']
+        analysis['fallback_tools'] = ['enhanced_analysis', 'tavily_search']
     elif analysis['needs_web_search']:
-        analysis['optimal_tools'] = ['web_search', 'tavily_search']
-        analysis['fallback_tools'] = ['comprehensive_research']
+        analysis['optimal_tools'] = ['playwright_web_search', 'web_search']
+        analysis['fallback_tools'] = ['comprehensive_research', 'tavily_search']
     else:
         analysis['optimal_tools'] = ['analysis']
         analysis['fallback_tools'] = ['web_search', 'comprehensive_research']
