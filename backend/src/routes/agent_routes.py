@@ -693,10 +693,12 @@ def execute_tavily_search_step(title: str, description: str, tool_manager, task_
                     'num_results': 6
                 }, task_id=task_id)
             except:
-                # Fallback a web_search normal
-                result = tool_manager.execute_tool('web_search', {
+                # Fallback a playwright_web_search
+                result = tool_manager.execute_tool('playwright_web_search', {
                     'query': search_query,
-                    'num_results': 6
+                    'max_results': 6,
+                    'search_engine': 'bing',
+                    'extract_content': True
                 }, task_id=task_id)
             
             return {
