@@ -213,8 +213,12 @@ export const TerminalView = ({
       
       setMonitorPages([todoPage]);
       setPaginationStats(prev => ({ ...prev, totalPages: 1 }));
-      
-      // SOLUCIÓN: Verificar si todos los pasos están completados
+    }
+  }, [plan, dataId, monitorPages.length]); // Solo para cargar TODO.md inicial
+
+  // SEPARAR: Verificar completación y cargar informe final
+  useEffect(() => {
+    if (plan && plan.length > 0 && taskId) {
       const allCompleted = plan.every(step => step.completed);
       const completedCount = plan.filter(s => s.completed).length;
       
@@ -227,7 +231,7 @@ export const TerminalView = ({
       });
       
       // Cargar informe final si la tarea está completada
-      if (allCompleted && taskId && completedCount > 0) {
+      if (allCompleted && completedCount > 0) {
         console.log('🎯 [DEBUG] Todos los pasos completados, cargando informe final para tarea:', taskId);
         
         // Verificar que no se haya cargado ya el informe final
@@ -255,7 +259,7 @@ export const TerminalView = ({
         }
       }
     }
-  }, [plan, dataId, taskId]); // Remover monitorPages.length para evitar loops
+  }, [plan, taskId, monitorPages]); // Separado para detectar cambios en completación
 
   // Procesar herramientas y crear páginas
   useEffect(() => {
