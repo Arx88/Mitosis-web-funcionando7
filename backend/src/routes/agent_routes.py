@@ -4318,14 +4318,34 @@ def execute_task_steps_sequentially(task_id: str, steps: list):
                 
                 # 🚨 LOGGING: Ejecutar el paso con logging agresivo
                 print(f"🔧 About to call execute_step_internal with step_id: {step_id}")
-                execute_step_internal(task_id, step_id, step)
-                print(f"✅ execute_step_internal completed for step {i+1}")
+                execution_result = execute_step_internal(task_id, step_id, step)
+                print(f"🔧 execute_step_internal returned: {execution_result}")
                 
-                # ✅ CRITICAL FIX: NO artificial delays - let real execution determine timing
-                logger.info(f"✅ Step {i+1} completed, moving to next step...")
-                
-                with open(log_file, "a") as f:
-                    f.write(f"✅ STEP {i+1} COMPLETED\n")
+                # 🧠 NUEVA LÓGICA: Verificar si el agente aprobó el paso
+                if execution_result and execution_result.get('agent_approved', False):
+                    print(f"✅ execute_step_internal completed for step {i+1} - AGENT APPROVED")
+                    logger.info(f"✅ Step {i+1} approved by agent, moving to next step...")
+                    
+                    with open(log_file, "a") as f:
+                        f.write(f"✅ STEP {i+1} COMPLETED - AGENT APPROVED\n")
+                elif execution_result and not execution_result.get('agent_approved', True):
+                    print(f"⏸️ Agent requires more work on step {i+1} - STOPPING EXECUTION")
+                    logger.info(f"⏸️ Agent requires more work on step {i+1}, stopping execution")
+                    
+                    with open(log_file, "a") as f:
+                        f.write(f"⏸️ STEP {i+1} REQUIRES MORE WORK - AGENT FEEDBACK: {execution_result.get('evaluation', {}).get('feedback', 'No specific feedback')}\n")
+                        f.write(f"🛑 EXECUTION STOPPED - Agent requires more work\n")
+                    
+                    break  # Parar la ejecución de pasos subsecuentes
+                else:
+                    # Error en la ejecución
+                    print(f"❌ Error in step {i+1}: {execution_result.get('error', 'Unknown error')}")
+                    logger.error(f"❌ Error in step {i+1}: {execution_result.get('error', 'Unknown error')}")
+                    
+                    with open(log_file, "a") as f:
+                        f.write(f"❌ STEP {i+1} FAILED: {execution_result.get('error', 'Unknown error')}\n")
+                    
+                    break  # Parar en caso de error
                 
             except Exception as e:
                 error_msg = f"❌ Error executing step {step_id}: {e}"
