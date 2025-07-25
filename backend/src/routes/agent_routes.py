@@ -4187,8 +4187,15 @@ def start_task_execution(task_id: str):
                                     additional_result = execute_additional_step_work(action, step, message, task_id)
                                     step_result['additional_work'] = step_result.get('additional_work', [])
                                     step_result['additional_work'].append(additional_result)
+                                
+                                # 🧠 RE-EVALUAR después del trabajo adicional
+                                logger.info(f"🔄 Re-evaluating step {i+1} after additional work")
+                                agent_evaluation = evaluate_step_completion_with_agent(
+                                    step, step_result, message, task_id
+                                )
+                                logger.info(f"🧠 Re-evaluation result: {agent_evaluation.get('reason', '')}")
                         
-                        # Solo marcar como completado si el agente aprueba
+                        # Solo marcar como completado si el agente aprueba (evaluación final)
                         if agent_evaluation.get('step_completed', True):
                             step['active'] = False
                             step['completed'] = True
