@@ -744,6 +744,8 @@ def execute_tavily_search_step(title: str, description: str, tool_manager, task_
                 'type': 'tavily_search',
                 'query': search_query,
                 'results_count': len(result.get('search_results', [])),
+                'count': len(result.get('search_results', [])),  # 🔥 FIX: Agregar count para compatibilidad
+                'results': result.get('search_results', []),    # 🔥 FIX: Agregar results para compatibilidad
                 'summary': f"✅ Búsqueda Tavily completada: {len(result.get('search_results', []))} resultados especializados",
                 'content': f"Búsqueda especializada sobre: {search_query}\n\nResultados: {len(result.get('search_results', []))} fuentes",
                 'data': result.get('search_results', [])
