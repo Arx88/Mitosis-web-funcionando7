@@ -1818,16 +1818,37 @@ Durante la ejecución de esta tarea se utilizaron las siguientes herramientas y 
             
             consolidated_report += "\n"
         
-        # Agregar sección de hallazgos si hay contenido de análisis
-        if analysis_content:
+        # Agregar sección de hallazgos con información real extraída
+        if analysis_content or search_results:
             consolidated_report += """## **💡 HALLAZGOS PRINCIPALES**
 
 """
-            for analysis in analysis_content:
-                if len(analysis['content']) > 200:  # Solo incluir análisis sustanciales
-                    consolidated_report += f"""### **{analysis['step_title']}**
+            
+            # Agregar información específica de búsquedas web
+            if search_results:
+                consolidated_report += """### **Información Recopilada**
 
-{analysis['content'][:500]}{'...' if len(analysis['content']) > 500 else ''}
+"""
+                # Extraer información clave de los primeros resultados
+                for i, result in enumerate(search_results[:3], 1):
+                    if result.get('content') and len(result.get('content', '')) > 100:
+                        title = result.get('title', f'Fuente {i}')
+                        content = result.get('content', '')[:800]
+                        source = result.get('source', 'web')
+                        
+                        consolidated_report += f"""#### **{title}**
+**Fuente:** {source}
+**Contenido:** {content}{'...' if len(result.get('content', '')) > 800 else ''}
+
+"""
+                
+            # Agregar contenido de análisis
+            for analysis in analysis_content:
+                if len(analysis['content']) > 100:  # Solo incluir análisis sustanciales
+                    consolidated_report += f"""### **{analysis['step_title']}**
+**Herramienta:** {analysis.get('tool', 'analysis')}
+
+{analysis['content'][:1000]}{'...' if len(analysis['content']) > 1000 else ''}
 
 """
         
