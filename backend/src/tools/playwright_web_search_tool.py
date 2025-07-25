@@ -187,15 +187,16 @@ class PlaywrightWebSearchTool:
         import urllib.parse
         encoded_query = urllib.parse.quote_plus(query)
         
+        # FORZAR SOLO BING - ELIMINAR DUCKDUCKGO
+        search_engine = "bing"  # SOLO BING PERMITIDO
+        
         if search_engine == 'google':
-            return f"https://www.google.com/search?q={encoded_query}&num=20"
+            return f"https://www.google.com/search?q={encoded_query}"
         elif search_engine == 'bing':
             return f"https://www.bing.com/search?q={encoded_query}&count=20"
-        elif search_engine == 'duckduckgo':
-            return f"https://duckduckgo.com/?q={encoded_query}"
         else:
-            # Default to Google
-            return f"https://www.google.com/search?q={encoded_query}&num=20"
+            # DEFAULT: USAR BING
+            return f"https://www.bing.com/search?q={encoded_query}&count=20"
     
     async def _extract_search_results(self, page, search_engine: str, max_results: int) -> List[Dict[str, Any]]:
         """Extraer resultados de búsqueda según el motor"""
