@@ -168,7 +168,7 @@ if $backend_ok && $frontend_ok && $mongodb_ok; then
     echo "✅ Supervisor: SERVICIOS ESTABLES"
     echo ""
     echo "🚀 MITOSIS ESTÁ COMPLETAMENTE OPERATIVO"
-    echo "🌐 URL: https://3429dc86-c2fa-40c9-a0b7-a7f989d08a8b.preview.emergentagent.com"
+    echo "🌐 URL: https://5e08108d-ad79-45c0-b63a-a46ab8b63d57.preview.emergentagent.com"
     echo ""
     echo "🎉 PROBLEMA FLASK/SOCKETIO COMPLETAMENTE RESUELTO"
     echo "🔧 Solución aplicada: Flask + gunicorn (WSGI correcto)"
