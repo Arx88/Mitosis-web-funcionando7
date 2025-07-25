@@ -1540,7 +1540,7 @@ GENERA UN INFORME COMPLETO DE MÍNIMO 1000 PALABRAS CON EL FORMATO MARKDOWN PROF
             'summary': f'❌ Error en informe profesional: {str(e)}'
         }
 
-def generate_milei_final_report(task: dict) -> dict:
+def generate_milei_final_report(task: dict) -> str:
     """🇦🇷 GENERADOR DE INFORME CONSOLIDADO SOBRE JAVIER MILEI
     Genera un informe final consolidado específico para la tarea sobre Javier Milei"""
     try:
