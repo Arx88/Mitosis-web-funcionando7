@@ -468,31 +468,29 @@ def get_task_execution_results(task_id: str):
 
 def execute_single_step_logic(step: dict, original_message: str, task_id: str) -> dict:
     """
-    Lógica de ejecución para un paso individual con manejo de errores robusto
+    🧠 SISTEMA INTELIGENTE DE EJECUCIÓN DE PASOS
+    Lógica avanzada que puede cambiar de herramientas automáticamente y combinar múltiples herramientas
     """
     try:
         step_tool = step.get('tool', 'processing')
         step_title = step.get('title', 'Paso sin título')
         step_description = step.get('description', 'Sin descripción')
         
-        logger.info(f"⚡ Ejecutando herramienta '{step_tool}' para paso: {step_title}")
+        logger.info(f"🧠 Ejecutando PASO INTELIGENTE: {step_title}")
+        logger.info(f"🛠️ Herramienta inicial: {step_tool}")
         
         # Obtener servicios necesarios
         ollama_service = get_ollama_service()
         tool_manager = get_tool_manager()
         
-        # Ejecutar según el tipo de herramienta
-        if step_tool == 'web_search':
-            return execute_web_search_step(step_title, step_description, tool_manager, task_id)
-        elif step_tool in ['analysis', 'data_analysis']:
-            return execute_analysis_step(step_title, step_description, ollama_service, original_message)
-        elif step_tool == 'creation':
-            return execute_creation_step(step_title, step_description, ollama_service, original_message, task_id)
-        elif step_tool in ['planning', 'delivery']:
-            return execute_planning_delivery_step(step_tool, step_title, step_description, ollama_service, original_message)
-        else:
-            # Herramienta genérica
-            return execute_generic_step(step_title, step_description, ollama_service, original_message)
+        # 🧠 SISTEMA INTELIGENTE: Analizar qué tipo de tarea es realmente
+        task_analysis = analyze_step_requirements(step_title, step_description, original_message)
+        logger.info(f"🔍 Análisis de tarea: {task_analysis}")
+        
+        # 🚀 EJECUTOR INTELIGENTE CON FALLBACK AUTOMÁTICO
+        return execute_step_with_intelligent_tool_selection(
+            step, task_analysis, ollama_service, tool_manager, task_id, original_message
+        )
             
     except Exception as e:
         logger.error(f"❌ Error en ejecución de paso: {str(e)}")
@@ -502,6 +500,145 @@ def execute_single_step_logic(step: dict, original_message: str, task_id: str) -
             'type': 'execution_error',
             'summary': f'❌ Error al ejecutar: {str(e)}'
         }
+
+def analyze_step_requirements(title: str, description: str, original_message: str) -> dict:
+    """
+    🔍 ANALIZADOR INTELIGENTE DE TAREAS
+    Determina qué tipo de herramientas son realmente necesarias para una tarea
+    """
+    content = f"{title} {description} {original_message}".lower()
+    
+    analysis = {
+        'needs_real_data': False,
+        'needs_web_search': False,
+        'needs_deep_research': False,
+        'needs_current_info': False,
+        'complexity': 'basic',
+        'optimal_tools': [],
+        'fallback_tools': []
+    }
+    
+    # Detectar necesidad de datos reales
+    real_data_keywords = ['2025', '2024', 'actual', 'reciente', 'último', 'selección', 'argentina', 'datos', 'estadísticas', 'jugadores']
+    if any(keyword in content for keyword in real_data_keywords):
+        analysis['needs_real_data'] = True
+        analysis['needs_current_info'] = True
+        analysis['complexity'] = 'high'
+    
+    # Detectar necesidad de investigación web
+    research_keywords = ['investigar', 'buscar', 'información', 'análisis', 'informe', 'sobre', 'detallado']
+    if any(keyword in content for keyword in research_keywords):
+        analysis['needs_web_search'] = True
+        analysis['needs_deep_research'] = True
+    
+    # Seleccionar herramientas óptimas basadas en el análisis
+    if analysis['needs_real_data']:
+        analysis['optimal_tools'] = ['comprehensive_research', 'tavily_search', 'web_search']
+        analysis['fallback_tools'] = ['enhanced_analysis', 'multi_source_research']
+    elif analysis['needs_web_search']:
+        analysis['optimal_tools'] = ['web_search', 'tavily_search']
+        analysis['fallback_tools'] = ['comprehensive_research']
+    else:
+        analysis['optimal_tools'] = ['analysis']
+        analysis['fallback_tools'] = ['web_search', 'comprehensive_research']
+    
+    return analysis
+
+def execute_step_with_intelligent_tool_selection(step: dict, task_analysis: dict, ollama_service, tool_manager, task_id: str, original_message: str) -> dict:
+    """
+    🚀 EJECUTOR INTELIGENTE CON SELECCIÓN AUTOMÁTICA DE HERRAMIENTAS
+    Prueba múltiples herramientas hasta encontrar una que funcione bien
+    """
+    step_title = step.get('title', 'Paso sin título')
+    step_description = step.get('description', 'Sin descripción')
+    original_tool = step.get('tool', 'processing')
+    
+    # Lista de herramientas a probar en orden de prioridad
+    tools_to_try = task_analysis['optimal_tools'] + task_analysis['fallback_tools']
+    
+    # Agregar la herramienta original si no está en la lista
+    if original_tool not in tools_to_try:
+        tools_to_try.insert(0, original_tool)
+    
+    results = []
+    best_result = None
+    
+    for i, tool_name in enumerate(tools_to_try):
+        try:
+            logger.info(f"🔄 Intentando herramienta {i+1}/{len(tools_to_try)}: {tool_name}")
+            
+            # Ejecutar herramienta específica
+            if tool_name == 'comprehensive_research':
+                result = execute_comprehensive_research_step(step_title, step_description, tool_manager, task_id, original_message)
+            elif tool_name == 'tavily_search':
+                result = execute_tavily_search_step(step_title, step_description, tool_manager, task_id, original_message)
+            elif tool_name == 'web_search':
+                result = execute_enhanced_web_search_step(step_title, step_description, tool_manager, task_id, original_message)
+            elif tool_name == 'enhanced_analysis':
+                result = execute_enhanced_analysis_step(step_title, step_description, ollama_service, original_message, results)
+            elif tool_name == 'multi_source_research':
+                result = execute_multi_source_research_step(step_title, step_description, tool_manager, task_id, original_message)
+            elif tool_name in ['analysis', 'data_analysis']:
+                result = execute_analysis_step(step_title, step_description, ollama_service, original_message)
+            else:
+                result = execute_generic_step(step_title, step_description, ollama_service, original_message)
+            
+            results.append({
+                'tool': tool_name,
+                'result': result,
+                'success': result.get('success', False)
+            })
+            
+            # Si el resultado es exitoso y de buena calidad, usarlo
+            if result.get('success', False) and evaluate_result_quality(result, task_analysis):
+                logger.info(f"✅ Herramienta exitosa: {tool_name}")
+                best_result = result
+                best_result['tool_used'] = tool_name
+                best_result['tools_tried'] = len(results)
+                break
+                
+        except Exception as e:
+            logger.warning(f"⚠️ Herramienta {tool_name} falló: {str(e)}")
+            results.append({
+                'tool': tool_name,
+                'result': {'success': False, 'error': str(e)},
+                'success': False
+            })
+    
+    # Si no encontramos un resultado satisfactorio, combinar los mejores resultados
+    if not best_result:
+        logger.info(f"🔄 Combinando resultados de {len(results)} herramientas")
+        best_result = combine_tool_results(results, step_title, step_description, ollama_service)
+    
+    return best_result
+
+def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
+    """
+    🎯 EVALUADOR DE CALIDAD DE RESULTADOS
+    Determina si un resultado es lo suficientemente bueno
+    """
+    if not result.get('success', False):
+        return False
+    
+    content = result.get('content', '') or result.get('summary', '')
+    
+    # Criterios de calidad básicos
+    if len(content) < 100:  # Muy corto
+        return False
+    
+    # Si necesita datos reales, verificar que tenga información específica
+    if task_analysis.get('needs_real_data', False):
+        real_data_indicators = ['2024', '2025', 'estadística', 'jugador', 'equipo', 'resultado', 'dato']
+        if not any(indicator in content.lower() for indicator in real_data_indicators):
+            return False
+    
+    # Si es análisis, verificar que tenga estructura analítica
+    analysis_indicators = ['análisis', 'conclusión', 'recomendación', 'hallazgo', 'evaluación']
+    if task_analysis.get('needs_deep_research', False):
+        if not any(indicator in content.lower() for indicator in analysis_indicators):
+            return False
+    
+    return True
 
 def execute_comprehensive_research_step(title: str, description: str, tool_manager, task_id: str, original_message: str) -> dict:
     """🔍 INVESTIGACIÓN COMPREHENSIVA - Combina múltiples fuentes"""
