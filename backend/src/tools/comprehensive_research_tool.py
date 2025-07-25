@@ -22,8 +22,7 @@ class ComprehensiveResearchTool:
         self.description = "Realiza investigación profunda multi-sitio con contenido e imágenes, generando un informe consolidado"
         self.tavily_api_key = os.getenv('TAVILY_API_KEY')
         self.tavily_client = TavilyClient(api_key=self.tavily_api_key) if self.tavily_api_key else None
-        # Inicializar DDGS cuando se necesite para evitar errores de init
-        self.ddgs = None
+        # DDGS ELIMINADO - Solo Bing soportado
         self.parameters = [
             {
                 "name": "query",
