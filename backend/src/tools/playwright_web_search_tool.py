@@ -254,36 +254,42 @@ class PlaywrightWebSearchTool:
         """Extraer resultados de Bing"""
         results = []
         
-        # Selectores para resultados de Bing
-        result_selector = '.b_algo'
+        # Selectores actualizados para resultados de Bing
+        result_selector = 'li.b_algo'
         
         # Obtener elementos de resultados
         result_elements = await page.query_selector_all(result_selector)
+        print(f"🔍 Encontrados {len(result_elements)} elementos de resultado en Bing")
         
         for element in result_elements[:max_results]:
             try:
                 # Extraer título
-                title_element = await element.query_selector('h2 a')
+                title_element = await element.query_selector('h2')
                 title = await title_element.text_content() if title_element else ''
                 
-                # Extraer URL
-                url = await title_element.get_attribute('href') if title_element else ''
+                # Extraer URL del enlace en el título
+                link_element = await element.query_selector('h2 a')
+                url = await link_element.get_attribute('href') if link_element else ''
                 
                 # Extraer snippet
-                snippet_element = await element.query_selector('.b_caption p')
+                snippet_element = await element.query_selector('.b_caption')
                 snippet = await snippet_element.text_content() if snippet_element else ''
                 
                 if title and url and url.startswith('http'):
-                    results.append({
+                    result_data = {
                         'title': title.strip(),
                         'url': url.strip(),
                         'snippet': snippet.strip(),
                         'source': 'bing'
-                    })
+                    }
+                    results.append(result_data)
+                    print(f"   ✅ Resultado: {title.strip()[:50]}...")
                     
             except Exception as e:
+                print(f"   ⚠️ Error procesando resultado: {str(e)}")
                 continue
         
+        print(f"✅ Total {len(results)} resultados válidos extraídos de Bing")
         return results
     
     async def _extract_duckduckgo_results(self, page, max_results: int) -> List[Dict[str, Any]]:
