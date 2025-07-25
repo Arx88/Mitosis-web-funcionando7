@@ -199,7 +199,10 @@ class PlaywrightWebSearchTool:
             return f"https://www.bing.com/search?q={encoded_query}&count=20"
     
     async def _extract_search_results(self, page, search_engine: str, max_results: int) -> List[Dict[str, Any]]:
-        """Extraer resultados de búsqueda según el motor"""
+        """Extraer resultados de búsqueda - SOLO BING SOPORTADO"""
+        # FORZAR SOLO BING - ELIMINAR DUCKDUCKGO
+        search_engine = "bing"  # SOLO BING PERMITIDO
+        
         results = []
         
         try:
@@ -207,8 +210,9 @@ class PlaywrightWebSearchTool:
                 results = await self._extract_google_results(page, max_results)
             elif search_engine == 'bing':
                 results = await self._extract_bing_results(page, max_results)
-            elif search_engine == 'duckduckgo':
-                results = await self._extract_duckduckgo_results(page, max_results)
+            else:
+                # DEFAULT: USAR BING
+                results = await self._extract_bing_results(page, max_results)
                 
         except Exception as e:
             print(f"❌ Error extrayendo resultados de {search_engine}: {str(e)}")
