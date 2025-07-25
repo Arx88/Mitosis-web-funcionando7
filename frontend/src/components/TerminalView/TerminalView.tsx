@@ -79,6 +79,41 @@ export const TerminalView = ({
   });
   const monitorRef = useRef<HTMLDivElement>(null);
 
+  // Función para cargar el informe final
+  const loadFinalReport = async (taskId: string) => {
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      const response = await fetch(`${backendUrl}/api/agent/get-final-result/${taskId}`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        const finalResult = result.final_result;
+        
+        // Actualizar la página del informe final con el contenido real
+        setMonitorPages(prev => prev.map(page => {
+          if (page.id === 'final-report') {
+            return {
+              ...page,
+              content: finalResult,
+              metadata: {
+                ...page.metadata,
+                lineCount: finalResult.split('\n').length,
+                fileSize: finalResult.length
+              }
+            };
+          }
+          return page;
+        }));
+        
+        console.log('📄 Informe final cargado exitosamente');
+      } else {
+        console.error('Error cargando informe final:', response.status);
+      }
+    } catch (error) {
+      console.error('Error loading final report:', error);
+    }
+  };
+
   // Define initialization steps as constant to avoid infinite re-renders
   const initializationSteps = [
     { id: 'env', title: 'Setting up environment', duration: 1500 },
