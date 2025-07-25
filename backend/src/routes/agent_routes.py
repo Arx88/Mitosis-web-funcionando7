@@ -1635,9 +1635,10 @@ Responde ÚNICAMENTE con un JSON válido:
 }}
 """
         
-        result = ollama_service.generate_response(evaluation_prompt, {
+        # 🔧 FIX: Usar _call_ollama_api directamente para evitar problemas con parsing de tool calls
+        result = ollama_service._call_ollama_api(evaluation_prompt, {
             'temperature': 0.3,  # Baja temperatura para evaluaciones consistentes
-            'response_format': 'json'
+            'top_p': 0.5
         })
         
         if result.get('error'):
