@@ -1487,10 +1487,15 @@ def execute_processing_step(title: str, description: str, ollama_service, origin
     try:
         logger.info(f"🔄 Ejecutando procesamiento: {title}")
         
-        # Verificar si es el paso final (revisión y entrega de informe)
-        is_final_step = ('revisión' in title.lower() and 'final' in title.lower()) or \
+        # Verificar si es el paso final (revisión, refinamiento, optimización, entrega)
+        is_final_step = ('revisión' in title.lower()) or \
+                       ('refinamiento' in title.lower()) or \
+                       ('optimización' in title.lower()) or \
                        ('entrega' in title.lower()) or \
-                       ('informe' in title.lower() and 'final' in title.lower())
+                       ('informe' in title.lower() and 'final' in title.lower()) or \
+                       ('validar' in title.lower()) or \
+                       ('final' in title.lower()) or \
+                       (step and step.get('id') == 'step-4')  # Siempre tratar paso 4 como final
         
         if is_final_step:
             logger.info(f"📋 Detectado paso final de informe - generando formato profesional")
