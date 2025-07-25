@@ -4434,6 +4434,13 @@ def execute_step_internal(task_id: str, step_id: str, step: dict):
                         step_result = {'summary': str(step_result)}
                     step_result['additional_work'] = step_result.get('additional_work', [])
                     step_result['additional_work'].append(additional_result)
+                
+                # 🧠 RE-EVALUAR después del trabajo adicional
+                logger.info(f"🔄 Re-evaluating step {step_id} after additional work")
+                agent_evaluation = evaluate_step_completion_with_agent(
+                    step, step_result, original_message, task_id
+                )
+                logger.info(f"🧠 Re-evaluation result: {agent_evaluation.get('reason', '')}")
         
         # ✅ CRITICAL FIX: Solo actualizar estado si el agente aprueba
         task_data = get_task_data(task_id)
