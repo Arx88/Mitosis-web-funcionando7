@@ -461,7 +461,7 @@ class WebBrowserManager:
             # Buscar enlaces de resultados (patrón genérico)
             for link in soup.find_all('a', href=True):
                 href = link['href']
-                if href.startswith('http') and 'duckduckgo' not in href:
+                if href.startswith('http') and 'bing' not in href and 'microsoft' not in href:
                     urls.append(href)
                     if len(urls) >= max_results:
                         break
