@@ -1578,128 +1578,96 @@ Responde de manera clara y profesional.
 def evaluate_step_completion_with_agent(step: dict, step_result: dict, original_message: str, task_id: str) -> dict:
     """
     🧠 NUEVA FUNCIONALIDAD: El agente evalúa si un paso está realmente completado
-    y decide si necesita trabajo adicional
+    VERSIÓN SIMPLIFICADA CON LÓGICA DETERMINÍSTICA
     """
     try:
-        ollama_service = get_ollama_service()
-        if not ollama_service or not ollama_service.is_healthy():
-            # Si Ollama no está disponible, asumir que el paso está completado
-            return {
-                'step_completed': True,
-                'should_continue': False,
-                'reason': 'Ollama no disponible - asumiendo completado'
-            }
+        # 🔧 NUEVA IMPLEMENTACIÓN: Evaluación determinística inteligente
+        tool_name = step.get('tool', '')
+        success = step_result.get('success', False)
+        count = step_result.get('count', 0)
+        results = step_result.get('results', [])
+        content = step_result.get('content', '')
         
-        # 🔧 FIX: Construir prompt mejorado para evaluación del agente
-        evaluation_prompt = f"""
-Eres un agente evaluador INTELIGENTE. Analiza si el siguiente paso de una tarea está completado.
-
-TAREA ORIGINAL: {original_message}
-
-PASO EJECUTADO:
-- Título: {step.get('title', '')}
-- Descripción: {step.get('description', '')}
-- Herramienta usada: {step.get('tool', '')}
-
-RESULTADO OBTENIDO:
-- Tipo: {step_result.get('type', '')}
-- Éxito: {step_result.get('success', True)}
-- Resumen: {step_result.get('summary', '')}
-- Cantidad de resultados: {step_result.get('count', 0)}
-- Cantidad de fuentes: {len(step_result.get('results', []))}
-
-CONTENIDO REAL OBTENIDO:
-{str(step_result.get('results', []))[:2000] if step_result.get('results') else 'No results'}
-
-CRITERIOS INTELIGENTES DE EVALUACIÓN:
-
-**PARA BÚSQUEDAS WEB/INVESTIGACIÓN:**
-- ✅ Si tool='web_search' Y success=True Y count>0 → COMPLETADO
-- ✅ Si hay resultados reales con URLs y contenido → COMPLETADO
-- ✅ Si la información es específica y relevante → COMPLETADO
-
-**PARA OTRAS HERRAMIENTAS:**
-- ✅ Si success=True Y hay contenido útil → COMPLETADO
-- ✅ Si el resultado responde al objetivo → COMPLETADO
-
-**SOLO MARCAR INCOMPLETO SI:**
-- ❌ success=False (herramienta falló completamente)
-- ❌ count=0 o results=[] (búsqueda sin resultados)
-- ❌ contenido completamente vacío o irrelevante
-
-**IMPORTANTE:**
-- NO confundir "descripción de la herramienta" con "plan de acción"
-- NO rechazar resultados válidos por criterios demasiado estrictos
-- La búsqueda web que devuelve resultados reales ES trabajo completado
-
-Responde ÚNICAMENTE con un JSON válido:
-{{
-    "step_completed": true/false,
-    "should_continue": true/false,
-    "reason": "explicación breve de por qué está o no completado",
-    "feedback": "comentarios específicos si se necesita más trabajo"
-}}
-"""
+        logger.info(f"🧠 Evaluando paso: tool={tool_name}, success={success}, count={count}, results={len(results)}")
         
-        # 🔧 FIX: Usar _call_ollama_api directamente para evitar problemas con parsing de tool calls
-        result = ollama_service._call_ollama_api(evaluation_prompt, {
-            'temperature': 0.3,  # Baja temperatura para evaluaciones consistentes
-            'top_p': 0.5
-        })
-        
-        if result.get('error'):
-            logger.warning(f"⚠️ Error en evaluación del agente: {result['error']}")
-            return {
-                'step_completed': False,  # 🔥 BUG FIX: NO asumir completado cuando hay error
-                'should_continue': True,
-                'reason': f'Error Ollama en evaluación: {result["error"]} - requiere re-intento',
-                'feedback': 'Hubo un error en Ollama durante la evaluación. El paso debe ser re-ejecutado.',
-                'additional_actions': ['re_execute_step', 'retry_evaluation']
-            }
-        
-        # Parsear respuesta JSON - 🔧 FIX: Usar 'response' de la respuesta cruda de Ollama
-        response_text = result.get('response', '').strip()
-        
-        try:
-            # Limpiar respuesta
-            cleaned_response = response_text.replace('```json', '').replace('```', '').strip()
-            if cleaned_response.startswith('{') and cleaned_response.endswith('}'):
-                evaluation_data = json.loads(cleaned_response)
+        # REGLAS DETERMINÍSTICAS INTELIGENTES
+        if tool_name == 'web_search':
+            # Para búsquedas web: success=True Y count>0 Y hay resultados → COMPLETADO
+            if success and count > 0 and results:
+                return {
+                    'step_completed': True,
+                    'should_continue': False,
+                    'reason': f'Búsqueda web exitosa: {count} resultados obtenidos con contenido real',
+                    'feedback': 'Búsqueda completada correctamente'
+                }
             else:
-                # Buscar JSON en el texto
-                json_match = re.search(r'\{[^{}]*"step_completed"[^{}]*\}', response_text)
-                if json_match:
-                    evaluation_data = json.loads(json_match.group())
-                else:
-                    raise json.JSONDecodeError("No JSON found", response_text, 0)
-            
-            # Validar estructura
-            if 'step_completed' in evaluation_data and 'should_continue' in evaluation_data:
-                logger.info(f"🧠 Evaluación del agente: {evaluation_data.get('reason', '')}")
-                return evaluation_data
+                return {
+                    'step_completed': False,
+                    'should_continue': True,
+                    'reason': f'Búsqueda web incompleta: success={success}, count={count}, results={len(results)}',
+                    'feedback': 'La búsqueda web necesita obtener resultados válidos'
+                }
+        
+        elif tool_name in ['comprehensive_research', 'enhanced_web_search']:
+            # Para investigación comprehensiva: success=True Y hay contenido → COMPLETADO
+            if success and (results or (content and len(str(content)) > 100)):
+                return {
+                    'step_completed': True,
+                    'should_continue': False,
+                    'reason': 'Investigación completada con contenido suficiente',
+                    'feedback': 'Investigación exitosa'
+                }
             else:
-                raise ValueError("Missing required fields")
-                
-        except (json.JSONDecodeError, ValueError) as e:
-            logger.warning(f"⚠️ No se pudo parsear evaluación del agente: {e}")
-            # 🔥 BUG FIX: NO asumir completado cuando falla - requiere re-evaluación
-            return {
-                'step_completed': False,
-                'should_continue': True,
-                'reason': 'Error parseando evaluación - requiere trabajo adicional para verificar',
-                'feedback': 'La evaluación del agente falló. El paso necesita ser re-ejecutado con criterios más claros.',
-                'additional_actions': ['re_execute_step_with_different_approach', 'verify_actual_content_generated']
-            }
+                return {
+                    'step_completed': False,
+                    'should_continue': True,
+                    'reason': 'Investigación incompleta o sin contenido suficiente',
+                    'feedback': 'Se necesita más investigación o contenido más completo'
+                }
+        
+        elif tool_name in ['analysis', 'processing', 'creation']:
+            # Para análisis/procesamiento: success=True Y hay contenido → COMPLETADO
+            if success and content and len(str(content)) > 50:
+                return {
+                    'step_completed': True,
+                    'should_continue': False,
+                    'reason': 'Análisis/procesamiento completado con contenido válido',
+                    'feedback': 'Paso completado correctamente'
+                }
+            else:
+                return {
+                    'step_completed': False,
+                    'should_continue': True,
+                    'reason': 'Análisis/procesamiento incompleto o sin contenido',
+                    'feedback': 'Se necesita generar contenido válido'
+                }
+        
+        else:
+            # Para herramientas genéricas: success=True → COMPLETADO
+            if success:
+                return {
+                    'step_completed': True,
+                    'should_continue': False,
+                    'reason': f'Herramienta {tool_name} ejecutada exitosamente',
+                    'feedback': 'Paso completado'
+                }
+            else:
+                return {
+                    'step_completed': False,
+                    'should_continue': True,
+                    'reason': f'Herramienta {tool_name} falló o no completó correctamente',
+                    'feedback': 'La herramienta necesita ejecutarse correctamente'
+                }
             
     except Exception as e:
         logger.error(f"❌ Error en evaluate_step_completion_with_agent: {str(e)}")
-        # 🔥 BUG FIX: NO asumir completado cuando hay error - requiere re-evaluación
+        # En caso de error, usar fallback conservador
         return {
             'step_completed': False,
             'should_continue': True,
             'reason': f'Error en evaluación: {str(e)} - requiere trabajo adicional',
             'feedback': 'Hubo un error en la evaluación del agente. El paso debe ser re-ejecutado.',
-            'additional_actions': ['re_execute_step', 'use_different_evaluation_method']
+            'additional_actions': ['re_execute_step']
         }
 
 def execute_additional_step_work(action: str, step: dict, original_message: str, task_id: str) -> dict:
