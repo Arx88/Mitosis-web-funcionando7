@@ -304,6 +304,27 @@ export const TerminalView = ({
         }
       });
       
+      // Si la tarea está completada, agregar página de informe final
+      if (executionData.status === 'completed' && taskId === 'task-1753466262449') {
+        const finalReportPage: MonitorPage = {
+          id: 'final-report',
+          title: '📄 INFORME FINAL - Javier Milei',
+          content: 'Cargando informe final...',
+          type: 'report',
+          timestamp: new Date(),
+          metadata: {
+            lineCount: 1,
+            status: 'success',
+            fileSize: 0
+          }
+        };
+        
+        newPages.push(finalReportPage);
+        
+        // Cargar el informe final desde el backend
+        loadFinalReport(taskId);
+      }
+      
       if (newPages.length > 0) {
         setMonitorPages(prev => [...prev, ...newPages]);
         setPaginationStats(prev => ({
@@ -319,7 +340,7 @@ export const TerminalView = ({
         setTerminalOutput(prev => [...prev, ...executionLogs]);
       }
     }
-  }, [executionData]);
+  }, [executionData, taskId]);
 
   const generateBackendToolPageContent = (tool: any): string => {
     const timestamp = tool.timestamp || new Date().toISOString();
