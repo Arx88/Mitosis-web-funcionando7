@@ -112,8 +112,8 @@ class ReplanningEngine:
         
         # Mapeo de herramientas alternativas
         self.tool_alternatives = {
-            'web_search': ['enhanced_web_search', 'duckduckgo_search', 'comprehensive_research'],
-            'enhanced_web_search': ['web_search', 'duckduckgo_search', 'comprehensive_research'],
+            'web_search': ['playwright_web_search', 'comprehensive_research'],  # SOLO BING
+            'enhanced_web_search': ['web_search', 'comprehensive_research'],  # SOLO BING
             'file_manager': ['shell', 'python_executor'],
             'shell': ['python_executor', 'file_manager'],
             'python_executor': ['shell', 'file_manager'],
