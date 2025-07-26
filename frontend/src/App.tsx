@@ -77,41 +77,31 @@ DynamicIdeaButton.displayName = 'DynamicIdeaButton';
 
 export function App() {
   // Context hooks - eliminan props drilling
-  try {
-    const appContext = useAppContext();
-    const { getActiveTask } = appContext;
-    const {
-      tasks,
-      activeTaskId,
-      isTaskCreating,
-      createTask,
-      createTaskWithMessage,
-      updateTask,
-      deleteTask,
-      setActiveTask,
-      updateTaskProgress,
-      uploadFilesForTask
-    } = useTaskManagement();
-  } catch (error) {
-    console.error('❌ CRITICAL APP ERROR:', error);
-    return (
-      <div className="flex h-screen w-full bg-red-900 text-white items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Error de Aplicación</h1>
-          <p className="mb-4">Ha ocurrido un error crítico en la aplicación:</p>
-          <pre className="bg-black p-4 rounded text-left text-sm overflow-auto max-w-2xl">
-            {error instanceof Error ? error.message : String(error)}
-          </pre>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded"
-          >
-            Recargar Página
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const { getActiveTask } = useAppContext();
+  const {
+    tasks,
+    activeTaskId,
+    isTaskCreating,
+    createTask,
+    createTaskWithMessage,
+    updateTask,
+    deleteTask,
+    setActiveTask,
+    updateTaskProgress,
+    uploadFilesForTask
+  } = useTaskManagement();
+  
+  const {
+    sidebarCollapsed,
+    isThinking,
+    showFilesModal,
+    toggleSidebar,
+    setThinking,
+    openFilesModal,
+    closeFilesModal
+  } = useUIState();
+  
+  const { config, updateConfig } = useConfigManagement();
   
   // Estado local mínimo - solo para datos que NO se comparten
   const [dynamicIdeas, setDynamicIdeas] = React.useState<any[]>([]);
