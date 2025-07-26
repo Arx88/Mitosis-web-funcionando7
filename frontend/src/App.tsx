@@ -211,8 +211,7 @@ export function App() {
     // 🚀 NEW: Generate enhanced title AND plan with backend API
     try {
       console.log('📝 Generating enhanced title and plan for task:', newTask.id);
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
-      const initResponse = await fetch(`${backendUrl}/api/agent/generate-plan`, {
+      const initResponse = await fetch(`${API_CONFIG.backend.url}/api/agent/generate-plan`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
