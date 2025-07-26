@@ -483,22 +483,52 @@ export const useAppContext = (): AppContextType => {
   const context = useContext(AppContext);
   if (context === undefined) {
     console.error('❌ useAppContext called outside of AppContextProvider');
-    // Return a default context to prevent crashes during development
+    console.error('Stack trace:', new Error().stack);
+    
+    // Return a safe default context instead of throwing to prevent app crashes
+    console.warn('🔄 Providing default context to prevent crash - THIS IS A FALLBACK');
+    
     return {
       state: initialState,
-      dispatch: () => {},
-      createTask: () => ({ id: '', title: '', createdAt: new Date(), status: 'pending', messages: [], terminalCommands: [], isFavorite: false, progress: 0 }),
-      updateTask: () => {},
-      deleteTask: () => {},
-      setActiveTask: () => {},
-      addTerminalLog: () => {},
-      updateTaskProgress: () => {},
-      getActiveTask: () => undefined,
-      getTaskFiles: () => [],
-      getTerminalLogs: () => [],
-      isTaskTyping: () => false
+      dispatch: () => console.warn('dispatch called with default context'),
+      createTask: (title: string) => {
+        console.warn('createTask called with default context');
+        return {
+          id: `default-${Date.now()}`,
+          title,
+          createdAt: new Date(),
+          status: 'pending',
+          messages: [],
+          terminalCommands: [],
+          isFavorite: false,
+          progress: 0
+        };
+      },
+      updateTask: () => console.warn('updateTask called with default context'),
+      deleteTask: () => console.warn('deleteTask called with default context'),
+      setActiveTask: () => console.warn('setActiveTask called with default context'),
+      addTerminalLog: () => console.warn('addTerminalLog called with default context'),
+      updateTaskProgress: () => console.warn('updateTaskProgress called with default context'),
+      getActiveTask: () => {
+        console.warn('getActiveTask called with default context');
+        return undefined;
+      },
+      getTaskFiles: () => {
+        console.warn('getTaskFiles called with default context');
+        return [];
+      },
+      getTerminalLogs: () => {
+        console.warn('getTerminalLogs called with default context');
+        return [];
+      },
+      isTaskTyping: () => {
+        console.warn('isTaskTyping called with default context');
+        return false;
+      }
     };
   }
+  
+  console.log('✅ useAppContext: Context accessed successfully');
   return context;
 };
 
