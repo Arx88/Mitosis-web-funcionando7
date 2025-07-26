@@ -146,8 +146,6 @@ export const TerminalView = ({
       });
     };
   }, [plan]);
-
-  const [isPlanExpanded, setIsPlanExpanded] = useState(true);
   const [currentExecutingTool, setCurrentExecutingTool] = useState<ToolResult | null>(null);
   const [monitorPages, setMonitorPages] = useState<MonitorPage[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
