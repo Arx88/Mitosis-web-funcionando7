@@ -37,6 +37,7 @@ export interface TerminalViewProps {
   toolResults?: ToolResult[];
   plan?: TaskStep[];
   onToggleTaskStep?: (stepId: string) => void;
+  onPlanUpdate?: (plan: any[]) => void; // ✨ NEW: Callback for plan updates
   externalLogs?: Array<{message: string, type: 'info' | 'success' | 'error', timestamp: Date}>;
   isInitializing?: boolean;
   onInitializationComplete?: () => void;
