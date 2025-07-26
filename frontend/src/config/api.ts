@@ -49,8 +49,8 @@ function getBackendUrl(): string {
 
 function getWebSocketUrl(): string {
   const backendUrl = getBackendUrl();
-  // Convertir HTTP URL a WebSocket URL
-  return backendUrl.replace(/^https?:\/\//, 'ws://').replace(/^ws:\/\//, 'ws://');
+  // Para WebSocket, usar la misma URL pero agregar el path de socket.io
+  return `${backendUrl}/socket.io/`;
 }
 
 export const API_CONFIG: ApiConfig = {
