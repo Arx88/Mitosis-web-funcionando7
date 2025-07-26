@@ -73,6 +73,26 @@ export const TaskView: React.FC<TaskViewProps> = ({
         task_completed: (data) => {
           console.log('✅ Task completed:', data);
           logToTerminal('✅ Tarea completada exitosamente', 'success');
+          
+          // ✨ NEW: Add success completion message to chat
+          const completionMessage = {
+            id: `msg-${Date.now()}-completion`,
+            content: `🎉 **¡Tarea completada exitosamente!**\n\nTu tarea "${task.title}" ha sido finalizada. Todos los pasos se ejecutaron correctamente.\n\n¿Te gustaría que te ayude con alguna otra cosa?`,
+            sender: 'assistant' as const,
+            timestamp: new Date(),
+            status: {
+              type: 'success' as const,
+              message: 'Tarea finalizada exitosamente'
+            }
+          };
+
+          // Add completion message to chat
+          onUpdateTask((currentTask) => ({
+            ...currentTask,
+            messages: [...(currentTask.messages || []), completionMessage],
+            status: 'completed' as const
+          }));
+
           // Reload task data to get final results
           if (onTaskUpdate) {
             onTaskUpdate();
