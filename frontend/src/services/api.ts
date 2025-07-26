@@ -240,7 +240,7 @@ class AgentAPI {
 
   async sendMessage(message: string, context: any = {}): Promise<ChatResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/chat`, {
+      const response = await fetch(`${this.baseUrl}${API_CONFIG.endpoints.chat}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
