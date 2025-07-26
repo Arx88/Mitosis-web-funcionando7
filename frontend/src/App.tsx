@@ -314,13 +314,11 @@ export function App() {
   // 🚀 NEW: Function to start task execution from App.tsx
   const startTaskExecutionFromApp = async (taskId: string) => {
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
-      
       console.log('🚀 Starting task execution for:', taskId);
-      console.log('🔗 Backend URL:', backendUrl);
-      console.log('📡 Full URL:', `${backendUrl}/api/agent/start-task-execution/${taskId}`);
+      console.log('🔗 Backend URL:', API_CONFIG.backend.url);
+      console.log('📡 Full URL:', `${API_CONFIG.backend.url}/api/agent/start-task-execution/${taskId}`);
       
-      const response = await fetch(`${backendUrl}/api/agent/start-task-execution/${taskId}`, {
+      const response = await fetch(`${API_CONFIG.backend.url}/api/agent/start-task-execution/${taskId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
