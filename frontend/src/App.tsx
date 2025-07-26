@@ -476,7 +476,7 @@ export function App() {
     }
   };
 
-  // Nueva función específica para actualizar el progreso basado en el plan
+  // Nueva función específica para actualizar el progreso basado en el plan - FIXED: Real-time progress updates
   const updateTaskProgress = (taskId: string) => {
     setTasks(prev => prev.map(task => {
       if (task.id !== taskId || !task.plan || task.plan.length === 0) {
@@ -495,6 +495,8 @@ export function App() {
         newStatus = 'in-progress';
       }
       
+      console.log(`🔄 Progress updated for task ${taskId}: ${planProgress}% (${completedSteps}/${totalSteps} steps)`);
+      
       return {
         ...task,
         progress: planProgress,
@@ -502,6 +504,15 @@ export function App() {
       };
     }));
   };
+
+  // ✨ NEW: Force progress update when plan changes - FIXED: Circular loader updates
+  useEffect(() => {
+    tasks.forEach(task => {
+      if (task.plan && task.plan.length > 0) {
+        updateTaskProgress(task.id);
+      }
+    });
+  }, [tasks.map(t => t.plan?.map(step => step.completed).join(',') || '').join('|')]);
 
   const handleDynamicIdea = (idea: any) => {
     // ✅ FIXED: Use consolidated function for task creation
