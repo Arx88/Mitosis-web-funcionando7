@@ -3,6 +3,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { AppContextProvider } from "./context/AppContext";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 // Debugging para producción
 console.log("🚀 Starting React application mounting...");
@@ -27,9 +28,11 @@ try {
   console.log("🎨 Rendering React app...");
   root.render(
     <React.StrictMode>
-      <AppContextProvider>
-        <App />
-      </AppContextProvider>
+      <ErrorBoundary>
+        <AppContextProvider>
+          <App />
+        </AppContextProvider>
+      </ErrorBoundary>
     </React.StrictMode>
   );
   
@@ -45,6 +48,11 @@ try {
         <h2>React Mounting Error</h2>
         <p>Error: ${error.message}</p>
         <p>Check browser console for more details.</p>
+        <p>Environment: ${JSON.stringify({
+          VITE_BACKEND_URL: '${import.meta.env.VITE_BACKEND_URL}',
+          MODE: '${import.meta.env.MODE}',
+          PROD: '${import.meta.env.PROD}'
+        })}</p>
       </div>
     `;
   }
