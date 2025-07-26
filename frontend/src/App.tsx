@@ -338,23 +338,19 @@ export function App() {
             {taskView || homepage}
           </div>
 
-          {/* Lazy loaded modals con Suspense optimizado */}
-          <LazyWrapper fallback={<ModalLoadingFallback />}>
-            <ConfigPanel
-              config={config}
-              onConfigChange={handleConfigChange}
-              onClose={() => setIsConfigOpen(false)}
-              isOpen={isConfigOpen}
-            />
-          </LazyWrapper>
+          {/* Direct components - NO LAZY LOADING */}
+          <ConfigPanel
+            config={config}
+            onConfigChange={handleConfigChange}
+            onClose={() => setIsConfigOpen(false)}
+            isOpen={isConfigOpen}
+          />
 
-          <LazyWrapper fallback={<ModalLoadingFallback />}>
-            <FileUploadModal
-              isOpen={showFileUpload}
-              onClose={() => setShowFileUpload(false)}
-              onFilesUploaded={handleFilesUploaded}
-            />
-          </LazyWrapper>
+          <FileUploadModal
+            isOpen={showFileUpload}
+            onClose={() => setShowFileUpload(false)}
+            onFilesUploaded={handleFilesUploaded}
+          />
         </>
       )}
     </div>
