@@ -78,7 +78,8 @@ DynamicIdeaButton.displayName = 'DynamicIdeaButton';
 export function App() {
   // Context hooks - eliminan props drilling
   try {
-    const { getActiveTask } = useAppContext();
+    const appContext = useAppContext();
+    const { getActiveTask } = appContext;
     const {
       tasks,
       activeTaskId,
