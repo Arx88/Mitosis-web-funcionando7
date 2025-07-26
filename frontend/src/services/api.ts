@@ -1,11 +1,7 @@
 // Servicio para comunicación con el backend del agente
-const getBackendUrl = () => {
-  return import.meta.env.VITE_BACKEND_URL || 
-         import.meta.env.REACT_APP_BACKEND_URL || 
-         process.env.REACT_APP_BACKEND_URL;
-};
+import { API_CONFIG, getApiUrl } from '../config/api';
 
-const API_BASE_URL = `${getBackendUrl()}/api/agent`;
+const API_BASE_URL = `${API_CONFIG.backend.url}/api/agent`;
 
 export interface ChatMessage {
   id: string;
