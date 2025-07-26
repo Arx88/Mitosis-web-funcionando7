@@ -214,143 +214,266 @@ Real-time progress display
 - Falta de abstracción común
 - Manejo de errores heterogéneo
 
-## 3. AUDITORÍA DE CÓDIGO DETALLADA
+## 3. AUDITORÍA DE CÓDIGO DETALLADA - ANÁLISIS EXHAUSTIVO
 
-### Inconsistencias y Malas Prácticas
+### A. Inconsistencias y Malas Prácticas Críticas
 
-#### A. Inconsistencias en el Manejo de Estado
-
-**Problema**: Patrones inconsistentes para actualizaciones de estado
+#### A1. **Comunicación en Tiempo Real Deteriorada**
+**Problema Crítico**: WebSocket reemplazado por HTTP Polling
 ```typescript
-// En App.tsx - Patrón directo
-setTasks(prev => prev.map(task => 
-  task.id === updatedTask.id ? updatedTask : task
-));
-
-// En TaskView.tsx - Función callback
-onUpdateTask((currentTask) => ({
-  ...currentTask,
-  messages: [...currentTask.messages, completionMessage]
-}));
+// useWebSocket.ts - Hook que simula WebSocket pero usa HTTP
+export const useWebSocket = (): UseWebSocketReturn => {
+  const [isConnected, setIsConnected] = useState(false);
+  // ... pero realmente hace HTTP polling cada 2 segundos
+  pollingIntervalRef.current = setInterval(async () => {
+    const response = await fetch(`${backendUrl}/api/agent/get-task-status/${taskId}`);
+  }, 2000);
+};
 ```
 
-**Impacto**: Dificulta el mantenimiento y puede causar race conditions
+**Problema**: Latencia aumentada, uso excesivo de recursos, UX deteriorada
+**Ubicación**: `/app/frontend/src/hooks/useWebSocket.ts`
 
-#### B. Duplicación de Lógica de API
-
-**Problema**: Múltiples patrones para llamadas a API
+#### A2. **Gestión de URLs Fragmentada y Inconsistente**
+**Problema**: Múltiples formas de obtener la URL del backend
 ```typescript
-// Patrón 1: En App.tsx
-const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
-const response = await fetch(`${backendUrl}/api/agent/generate-plan`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(data)
-});
+// En api.ts
+const API_BASE_URL = `${getBackendUrl()}/api/agent`;
+const getBackendUrl = () => {
+  return import.meta.env.VITE_BACKEND_URL || 
+         import.meta.env.REACT_APP_BACKEND_URL || 
+         process.env.REACT_APP_BACKEND_URL;
+};
 
-// Patrón 2: En TaskView.tsx
-const response = await agentAPI.generatePlan(data);
+// En ChatInterface.tsx
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 
+                  import.meta.env.REACT_APP_BACKEND_URL || 
+                  process.env.REACT_APP_BACKEND_URL ||
+                  'http://localhost:8001';
+
+// En useWebSocket.ts
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 
+                  import.meta.env.REACT_APP_BACKEND_URL || 
+                  process.env.REACT_APP_BACKEND_URL ||
+                  'http://localhost:8001';
 ```
 
-**Impacto**: Inconsistencia y duplicación de código
+**Problema**: Duplicación de lógica, inconsistencia en fallbacks, hardcoded URLs
+**Ubicación**: 8+ archivos diferentes
 
-#### C. Configuración Fragmentada
-
-**Problema**: Variables de entorno manejadas de forma inconsistente
+#### A3. **Gestión de Estado Fragmentada**
+**Problema**: Estado duplicado entre TaskView y ChatInterface
 ```typescript
-// Múltiples formas de acceder a la misma variable
-import.meta.env.VITE_BACKEND_URL
-process.env.REACT_APP_BACKEND_URL
+// TaskView.tsx
+const [messages, setMessages] = useState<Message[]>([]);
+const [plan, setPlan] = useState<any>(null);
+const [isExecuting, setIsExecuting] = useState(false);
+
+// ChatInterface.tsx
+const [messages, setMessages] = useState<Message[]>([]);
+const [isLoading, setIsLoading] = useState(false);
+const [showQuickActions, setShowQuickActions] = useState(false);
 ```
 
-#### D. Manejo de Errores Inconsistente
+**Problema**: Sincronización compleja, bugs de estado, props drilling excesivo
+**Ubicación**: `/app/frontend/src/components/TaskView.tsx`, `/app/frontend/src/components/ChatInterface/ChatInterface.tsx`
 
-**Problema**: Diferentes estrategias de error handling
+#### A4. **Validación de Datos Inconsistente**
+**Problema**: Validación implementada de forma diferente en cada herramienta
 ```python
-# Backend - Algunos endpoints retornan diferentes formatos
-return jsonify({"error": "Message"}), 400  # Formato 1
-return {"success": False, "error": "Message"}  # Formato 2
+# En web_search_tool.py
+def validate_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(parameters, dict):
+        return {'valid': False, 'error': 'Parameters must be a dictionary'}
+    if 'query' not in parameters:
+        return {'valid': False, 'error': 'query parameter is required'}
+
+# En file_manager_tool.py
+def validate_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(parameters, dict):
+        return {'valid': False, 'error': 'Parameters must be a dictionary'}
+    if 'action' not in parameters:
+        return {'valid': False, 'error': 'action parameter is required'}
 ```
 
-### Duplicación de Código (Oportunidades DRY)
+**Problema**: Código duplicado, inconsistencia en mensajes de error, falta de abstracción
+**Ubicación**: 15+ archivos de herramientas
 
-#### A. Lógica de Validación Duplicada
+### B. Duplicación de Código (Oportunidades DRY) - Análisis Detallado
+
+#### B1. **Lógica de Configuración de Backend URL**
+**Duplicación**: Aparece en 8+ archivos
+```typescript
+// Patrón duplicado en múltiples archivos
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 
+                  import.meta.env.REACT_APP_BACKEND_URL || 
+                  process.env.REACT_APP_BACKEND_URL ||
+                  'http://localhost:8001';
+```
+
+**Oportunidad**: Crear función utilitaria centralizada
+**Archivos Afectados**: 
+- `/app/frontend/src/services/api.ts`
+- `/app/frontend/src/hooks/useWebSocket.ts`
+- `/app/frontend/src/components/ChatInterface/ChatInterface.tsx`
+- `/app/frontend/src/components/TaskView.tsx`
+- [4+ archivos más]
+
+#### B2. **Validación de Parámetros en Herramientas**
+**Duplicación**: Lógica similar en 15+ herramientas
 ```python
-# En múltiples rutas
-if not data or 'message' not in data:
-    return jsonify({"error": "Message is required"}), 400
+# Patrón repetido en todas las herramientas
+def validate_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(parameters, dict):
+        return {'valid': False, 'error': 'Parameters must be a dictionary'}
+    # ... validaciones específicas
 ```
 
-#### B. Configuración de WebSocket Repetida
-```typescript
-// En múltiples componentes
-const {
-  socket,
-  isConnected,
-  joinTaskRoom,
-  leaveTaskRoom,
-  addEventListeners
-} = useWebSocket();
-```
+**Oportunidad**: Clase base abstracta para herramientas
+**Archivos Afectados**: Todas las herramientas en `/app/backend/src/tools/`
 
-#### C. Formateo de Fechas Duplicado
+#### B3. **Formateo de Fechas y Timestamps**
+**Duplicación**: Múltiples formas de formatear timestamps
 ```typescript
-// En múltiples lugares
+// Patrón 1
 timestamp: new Date().toISOString()
-created_at: datetime.now().isoformat()
+
+// Patrón 2
+timestamp: new Date().toLocaleString()
+
+// Patrón 3
+timestamp: datetime.now().isoformat()  // Python
 ```
 
-### Posibles Errores y Code Smells
+**Oportunidad**: Utilidades de fecha centralizadas
+**Archivos Afectados**: 20+ archivos en frontend y backend
 
-#### A. Race Conditions Potenciales
-
-**Problema**: Updates concurrentes de estado
+#### B4. **Manejo de Errores en Componentes React**
+**Duplicación**: Try-catch patterns similares
 ```typescript
-// Puede causar pérdida de estado
-setTasks(prev => [...prev, newTask]);
-setActiveTaskId(newTask.id);
+// Patrón repetido en múltiples componentes
+try {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const data = await response.json();
+  // ... procesamiento
+} catch (error) {
+  console.error('Error:', error);
+  // ... manejo de error
+}
 ```
 
-**Solución**: Usar functional updates o useCallback
+**Oportunidad**: Hook personalizado para API calls
+**Archivos Afectados**: 10+ componentes React
 
-#### B. Memory Leaks en WebSocket
+### C. Posibles Errores y Code Smells - Análisis Profundo
 
-**Problema**: Event listeners no limpiados
+#### C1. **Race Conditions Críticas**
+**Problema**: Updates concurrentes de estado en TaskView
 ```typescript
+// TaskView.tsx - Potencial race condition
+const handleSendMessage = async (message: string) => {
+  setIsExecuting(true);
+  // ... operación asíncrona
+  setMessages(prev => [...prev, newMessage]);
+  setIsExecuting(false);
+};
+
+// Si se llama rápidamente, puede causar estado inconsistente
+```
+
+**Ubicación**: `/app/frontend/src/components/TaskView.tsx:350-400`
+**Impacto**: Estado inconsistente, mensajes perdidos, bugs de UI
+
+#### C2. **Memory Leaks en HTTP Polling**
+**Problema**: Event listeners y timers no limpiados
+```typescript
+// useWebSocket.ts - Potential memory leak
 useEffect(() => {
-  addEventListeners(handlers);
-  // Falta cleanup
-}, []);
+  pollingIntervalRef.current = setInterval(async () => {
+    // ... polling logic
+  }, 2000);
+  
+  // Cleanup solo en unmount, no en cambios de dependencias
+  return () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+  };
+}, []); // Dependencies array vacío - problema
 ```
 
-#### C. Hardcoded Values
+**Ubicación**: `/app/frontend/src/hooks/useWebSocket.ts:42-118`
+**Impacto**: Memory leaks, degradación de performance
 
-**Problema**: Valores mágicos en el código
+#### C3. **Hardcoded Values y Magic Numbers**
+**Problema**: Valores mágicos dispersos por el código
 ```python
+# backend/src/tools/playwright_tool.py
+'timeout': 30000,  # 30 segundos
+'viewport': {'width': 1920, 'height': 1080},
+
+# backend/src/orchestration/task_orchestrator.py
 ping_timeout=60,
 ping_interval=25,
-max_file_size=100 * 1024 * 1024
+max_file_size=100 * 1024 * 1024  # 100MB
 ```
 
-#### D. Inconsistent Error Boundaries
+**Ubicación**: 25+ archivos
+**Impacto**: Mantenimiento difícil, configuración inflexible
 
+#### C4. **Inconsistent Error Boundaries**
 **Problema**: Falta de error boundaries en React
 ```typescript
-// No hay error boundaries para capturar errores
-<TaskView task={activeTask} />
+// App.tsx - Sin error boundary
+<div className="flex h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+  <Sidebar />
+  <div className="flex-1 flex flex-col">
+    <TaskView /> {/* Puede fallar sin captura */}
+  </div>
+</div>
 ```
 
-### Manejo de Asincronía y Efectos Secundarios
+**Ubicación**: Componentes principales
+**Impacto**: Crashes no controlados, mala UX
 
-#### A. Promises Sin Manejo de Errores
-```typescript
-// Potencial unhandled promise rejection
-createTaskWithMessage(message.trim());
+#### C5. **Async/Await Inconsistencias**
+**Problema**: Mezcla de patrones async
+```python
+# agent_unified.py - Inconsistent async patterns
+async def _execute_task_async(self, task_id: str):
+    # Código async
+    await self._execute_step_async(step, task)
+    # Pero también llamadas síncronas
+    self._update_task_progress(task)  # Debería ser await
 ```
 
-#### B. useEffect Dependencies Inconsistentes
+**Ubicación**: `/app/backend/src/core/agent_unified.py`
+**Impacto**: Bloqueo del event loop, performance degradada
+
+### D. Manejo de Asincronía y Efectos Secundarios - Análisis Específico
+
+#### D1. **Promises Sin Manejo de Errores**
+**Problema**: Unhandled promise rejections
 ```typescript
-// Dependencias potencialmente incorrectas
+// ChatInterface.tsx - Promises sin catch
+const handleSendMessage = async (message: string) => {
+  onSendMessage(message); // No await, no catch
+  
+  // Más adelante...
+  createTaskWithMessage(message.trim()); // Unhandled promise
+};
+```
+
+**Ubicación**: `/app/frontend/src/components/ChatInterface/ChatInterface.tsx:158-206`
+**Impacto**: Errores silenciosos, debugging difícil
+
+#### D2. **useEffect Dependencies Incorrectas**
+**Problema**: Dependencias que causan loops infinitos
+```typescript
+// TaskView.tsx - Dependencia problemática
 useEffect(() => {
   tasks.forEach(task => {
     if (task.plan && task.plan.length > 0) {
@@ -360,15 +483,111 @@ useEffect(() => {
 }, [tasks.map(t => t.plan?.map(step => step.completed).join(',') || '').join('|')]);
 ```
 
-#### C. Async/Await Inconsistente
+**Ubicación**: `/app/frontend/src/components/TaskView.tsx:120-135`
+**Impacto**: Re-renders excesivos, performance degradada
+
+#### D3. **Concurrent Operations Sin Sincronización**
+**Problema**: Operaciones concurrentes en backend
 ```python
-# Mezcla de async/await y callbacks
-async def _execute_task_async(self, task_id: str):
-    # Código async
-    await self._execute_step_async(step, task)
-    # Pero también callbacks síncronos
-    self._update_task_progress(task)
+# task_manager.py - Concurrent access without locks
+def execute_task(self, task_id: str):
+    task = self.get_task(task_id)  # Read
+    task.status = 'executing'      # Write
+    self.save_task(task)           # Save
+    # Si otra operación modifica task entre read y save, se pierde
 ```
+
+**Ubicación**: `/app/backend/src/services/task_manager.py`
+**Impacto**: Condiciones de carrera, datos inconsistentes
+
+#### D4. **Event Listeners Acumulativos**
+**Problema**: Event listeners no removidos correctamente
+```typescript
+// useWebSocket.ts - Listeners acumulativos
+const addEventListeners = (events: Partial<HttpPollingEvents>) => {
+  eventListenersRef.current = events; // Sobrescribe, no limpia anteriores
+};
+```
+
+**Ubicación**: `/app/frontend/src/hooks/useWebSocket.ts:132-140`
+**Impacto**: Memory leaks, comportamiento impredecible
+
+### E. Problemas de Performance Identificados
+
+#### E1. **Excessive Re-renders**
+**Problema**: Components re-rendering innecesariamente
+```typescript
+// TaskView.tsx - Re-renders excesivos
+const TaskView = ({ task }: TaskViewProps) => {
+  // Sin React.memo, re-renderiza con cada cambio del padre
+  
+  const [messages, setMessages] = useState<Message[]>([]);
+  // Estado que cambia frecuentemente dispara re-renders
+};
+```
+
+**Impacto**: Performance degradada, UI lenta
+
+#### E2. **Large Bundle Size**
+**Problema**: Bundle size grande por imports innecesarios
+```typescript
+// Imports completos en lugar de específicos
+import * as React from 'react';
+import { agentAPI } from '../../services/api'; // Import completo
+```
+
+**Impacto**: Carga inicial lenta, más ancho de banda
+
+#### E3. **Memory Usage Excesivo**
+**Problema**: Objetos grandes en memoria
+```python
+# advanced_memory_manager.py - Objetos grandes en memoria
+self.episodic_memory.episodes = {}  # Puede crecer indefinidamente
+self.semantic_memory.concepts = {}   # Sin límite de tamaño
+```
+
+**Impacto**: Uso de memoria creciente, degradación de performance
+
+### F. Problemas de Seguridad Identificados
+
+#### F1. **Exposure de Información Sensible**
+**Problema**: API keys y configuración expuesta
+```typescript
+// Configuración expuesta en frontend
+const API_BASE_URL = `${getBackendUrl()}/api/agent`;
+// Backend URL expuesta en bundle
+```
+
+**Impacto**: Información sensible visible al cliente
+
+#### F2. **Falta de Validación de Input**
+**Problema**: Inputs no validados en frontend
+```typescript
+// VanishInput.tsx - Input sin validación
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (value.trim()) {
+    onSubmit(value.trim()); // No hay validación adicional
+  }
+};
+```
+
+**Impacto**: Posibles ataques de injection, datos corruptos
+
+#### F3. **CORS Configuration Insegura**
+**Problema**: Configuración CORS permisiva
+```python
+# server.py - CORS muy permisivo
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Muy permisivo
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+**Impacto**: Vulnerabilidades de seguridad, ataques CSRF
 
 ## 4. PLAN DE REFACTORIZACIÓN PROPUESTO
 
