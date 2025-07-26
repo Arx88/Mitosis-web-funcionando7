@@ -1,11 +1,14 @@
 /**
- * Hook personalizado para manejar comunicación en tiempo real con el backend
- * SOLUCIÓN HTTP POLLING - Reemplaza WebSocket completamente para evitar "server error"
+ * Hook personalizado para manejar comunicación WebSocket real en tiempo real
+ * SOLUCIÓN WEBSOCKET REAL - Reemplaza HTTP Polling con conexión WebSocket auténtica
+ * Incluye fallback automático a HTTP Polling si WebSocket falla
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { io, Socket } from 'socket.io-client';
+import { API_CONFIG, getWebSocketConfig } from '../config/api';
 
-interface HttpPollingEvents {
+interface WebSocketEvents {
   task_started: (data: any) => void;
   task_progress: (data: any) => void;
   task_completed: (data: any) => void;
@@ -19,48 +22,114 @@ interface HttpPollingEvents {
 }
 
 interface UseWebSocketReturn {
-  socket: null; // No socket - usar HTTP polling
+  socket: Socket | null;
   isConnected: boolean;
+  connectionType: 'websocket' | 'polling' | 'disconnected';
   joinTaskRoom: (taskId: string) => void;
   leaveTaskRoom: (taskId: string) => void;
-  addEventListeners: (events: Partial<HttpPollingEvents>) => void;
+  addEventListeners: (events: Partial<WebSocketEvents>) => void;
   removeEventListeners: () => void;
 }
 
 export const useWebSocket = (): UseWebSocketReturn => {
+  const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [connectionType, setConnectionType] = useState<'websocket' | 'polling' | 'disconnected'>('disconnected');
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
-  const eventListenersRef = useRef<Partial<HttpPollingEvents>>({});
+  const eventListenersRef = useRef<Partial<WebSocketEvents>>({});
+  
+  // Fallback HTTP Polling (mantener por si WebSocket falla)
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [isPollingFallback, setIsPollingFallback] = useState(false);
 
-  // Obtener URL del backend
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 
-                    import.meta.env.REACT_APP_BACKEND_URL || 
-                    process.env.REACT_APP_BACKEND_URL ||
-                    'http://localhost:8001';
+  useEffect(() => {
+    console.log('🔌 Initializing WebSocket connection...');
+    const wsConfig = getWebSocketConfig();
+    
+    const newSocket = io(wsConfig.url, wsConfig.options);
+    
+    // Connection event handlers
+    newSocket.on('connect', () => {
+      console.log('✅ WebSocket connected successfully');
+      console.log('🔗 Transport:', newSocket.io.engine.transport.name);
+      setIsConnected(true);
+      setConnectionType(newSocket.io.engine.transport.name as 'websocket' | 'polling');
+      setIsPollingFallback(false);
+      
+      // Stop HTTP polling fallback if it was running
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    });
+    
+    newSocket.on('connect_error', (error) => {
+      console.error('❌ WebSocket connection error:', error);
+      setIsConnected(false);
+      setConnectionType('disconnected');
+      
+      // Start HTTP Polling fallback after 3 failed attempts
+      if (!isPollingFallback && currentTaskId) {
+        console.log('🔄 Starting HTTP Polling fallback...');
+        setIsPollingFallback(true);
+        startHttpPollingFallback(currentTaskId);
+      }
+    });
+    
+    newSocket.on('disconnect', (reason) => {
+      console.log('📡 WebSocket disconnected:', reason);
+      setIsConnected(false);
+      setConnectionType('disconnected');
+      
+      // Auto-reconnect unless manually disconnected
+      if (reason === 'io server disconnect') {
+        newSocket.connect();
+      }
+    });
+    
+    // Transport upgrade events
+    newSocket.io.on('upgrade', () => {
+      console.log('🚀 Transport upgraded to:', newSocket.io.engine.transport.name);
+      setConnectionType(newSocket.io.engine.transport.name as 'websocket' | 'polling');
+    });
+    
+    newSocket.io.on('upgradeError', (error) => {
+      console.warn('⚠️ Transport upgrade failed:', error);
+    });
+    
+    setSocket(newSocket);
+    
+    // Cleanup on unmount
+    return () => {
+      console.log('🧹 Cleaning up WebSocket connection');
+      newSocket.close();
+      
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, []);
 
-  const startPolling = (taskId: string) => {
+  // HTTP Polling fallback implementation
+  const startHttpPollingFallback = useCallback((taskId: string) => {
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
     }
 
-    console.log('🔄 Starting HTTP polling for task:', taskId);
-    setIsConnected(true);
-
+    console.log('🔄 HTTP Polling fallback active for task:', taskId);
+    
     pollingIntervalRef.current = setInterval(async () => {
       try {
-        // Polling endpoint para obtener actualizaciones de tarea
-        const response = await fetch(`${backendUrl}/api/agent/get-task-status/${taskId}`, {
+        const response = await fetch(`${API_CONFIG.backend.url}/api/agent/get-task-status/${taskId}`, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
         });
 
         if (response.ok) {
           const data = await response.json();
           
-          // Simular eventos WebSocket basados en el status de la tarea
+          // Simulate WebSocket events based on task status
           if (data.status && eventListenersRef.current) {
             switch (data.status) {
               case 'plan_generated':
@@ -78,70 +147,78 @@ export const useWebSocket = (): UseWebSocketReturn => {
             }
           }
 
-          // Polling de progreso de steps
+          // Handle step progress
           if (data.plan && Array.isArray(data.plan)) {
             data.plan.forEach((step: any) => {
               if (step.status === 'completed' && eventListenersRef.current.step_completed) {
-                console.log('✅ Step completed:', step);
                 eventListenersRef.current.step_completed(step);
               } else if (step.status === 'in_progress' && eventListenersRef.current.step_started) {
-                console.log('🔧 Step started:', step);
                 eventListenersRef.current.step_started(step);
               }
             });
           }
         }
       } catch (error) {
-        console.error('❌ HTTP Polling error:', error);
-        // No desconectar por un error, seguir intentando
+        console.error('❌ HTTP Polling fallback error:', error);
       }
-    }, 2000); // Polling cada 2 segundos
-  };
+    }, 3000); // Poll every 3 seconds (slower than original 2s to reduce load)
+  }, [eventListenersRef.current]);
 
-  const stopPolling = () => {
+  const joinTaskRoom = useCallback((taskId: string) => {
+    console.log('🏠 Joining task room:', taskId);
+    setCurrentTaskId(taskId);
+    
+    if (socket && isConnected) {
+      socket.emit('join_task', { task_id: taskId });
+      
+      // Setup WebSocket event listeners for real-time updates
+      socket.on('task_update', (data) => {
+        console.log('📡 WebSocket task update received:', data);
+        
+        const eventType = data.type;
+        if (eventListenersRef.current[eventType]) {
+          eventListenersRef.current[eventType](data.data);
+        }
+      });
+      
+    } else if (isPollingFallback) {
+      // Use HTTP Polling fallback
+      startHttpPollingFallback(taskId);
+    }
+  }, [socket, isConnected, isPollingFallback, startHttpPollingFallback]);
+
+  const leaveTaskRoom = useCallback((taskId: string) => {
+    console.log('🚪 Leaving task room:', taskId);
+    setCurrentTaskId(null);
+    
+    if (socket) {
+      socket.emit('leave_task', { task_id: taskId });
+      socket.off('task_update'); // Remove listeners
+    }
+    
+    // Stop HTTP Polling fallback
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
     }
-    setIsConnected(false);
-    console.log('⏹️ HTTP polling stopped');
-  };
-
-  useEffect(() => {
-    // Simular conexión exitosa
-    console.log('✅ HTTP Polling connection established (no WebSocket)');
     
-    // Cleanup al desmontar
-    return () => {
-      stopPolling();
-    };
+    setIsPollingFallback(false);
+  }, [socket]);
+
+  const addEventListeners = useCallback((events: Partial<WebSocketEvents>) => {
+    console.log('📡 Adding WebSocket/Polling event listeners');
+    eventListenersRef.current = { ...eventListenersRef.current, ...events };
   }, []);
 
-  const joinTaskRoom = (taskId: string) => {
-    console.log('🏠 Joining task room (HTTP Polling):', taskId);
-    setCurrentTaskId(taskId);
-    startPolling(taskId);
-  };
-
-  const leaveTaskRoom = (taskId: string) => {
-    console.log('🚪 Leaving task room (HTTP Polling):', taskId);
-    setCurrentTaskId(null);
-    stopPolling();
-  };
-
-  const addEventListeners = (events: Partial<HttpPollingEvents>) => {
-    console.log('📡 Adding HTTP polling event listeners');
-    eventListenersRef.current = events;
-  };
-
-  const removeEventListeners = () => {
-    console.log('🗑️ Removing HTTP polling event listeners');
+  const removeEventListeners = useCallback(() => {
+    console.log('🗑️ Removing WebSocket/Polling event listeners');
     eventListenersRef.current = {};
-  };
+  }, []);
 
   return {
-    socket: null, // No socket - usando HTTP polling
+    socket,
     isConnected,
+    connectionType,
     joinTaskRoom,
     leaveTaskRoom,
     addEventListeners,
