@@ -118,7 +118,7 @@ export const TerminalView = ({
     }
   };
 
-  // ✨ NEW: Effect to manage step timers
+  // ✨ NEW: Effect to manage step timers - FIXED: Don't stop timer when step completes
   useEffect(() => {
     if (!plan) return;
 
@@ -126,15 +126,17 @@ export const TerminalView = ({
     plan.forEach(step => {
       if (step.active && !stepTimers[step.id]) {
         startStepTimer(step.id);
-      } else if (!step.active && stepTimers[step.id]) {
+      } else if (!step.active && !step.completed && stepTimers[step.id]) {
+        // Only stop timer if step becomes inactive AND not completed
+        // This prevents timer from disappearing when step completes
         stopStepTimer(step.id);
       }
     });
 
-    // Cleanup timers for completed or inactive steps
+    // Only cleanup timers for steps that no longer exist in plan
     Object.keys(stepTimers).forEach(stepId => {
       const step = plan.find(s => s.id === stepId);
-      if (!step || step.completed || !step.active) {
+      if (!step) {
         stopStepTimer(stepId);
       }
     });
