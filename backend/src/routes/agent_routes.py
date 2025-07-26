@@ -6315,6 +6315,17 @@ def chat():
     """Chat endpoint - Compatible with frontend expectations"""
     try:
         data = request.get_json()
+        logger.info(f"🔍 DEBUG: Raw request data: {data}, type: {type(data)}")
+        
+        # Verificar si data es None o no es un diccionario
+        if data is None:
+            logger.error("❌ No JSON data received")
+            return jsonify({'error': 'No JSON data provided'}), 400
+            
+        if not isinstance(data, dict):
+            logger.error(f"❌ Expected dict, got {type(data)}: {data}")
+            return jsonify({'error': 'Invalid data format - expected JSON object'}), 400
+            
         message = data.get('message', '')
         context = data.get('context', {})
         task_id = context.get('task_id') or f"chat-{int(time.time())}"
