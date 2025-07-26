@@ -77,19 +77,20 @@ DynamicIdeaButton.displayName = 'DynamicIdeaButton';
 
 export function App() {
   // Context hooks - eliminan props drilling
-  const { getActiveTask } = useAppContext();
-  const {
-    tasks,
-    activeTaskId,
-    isTaskCreating,
-    createTask,
-    createTaskWithMessage,
-    updateTask,
-    deleteTask,
-    setActiveTask,
-    updateTaskProgress,
-    uploadFilesForTask
-  } = useTaskManagement();
+  try {
+    const { getActiveTask } = useAppContext();
+    const {
+      tasks,
+      activeTaskId,
+      isTaskCreating,
+      createTask,
+      createTaskWithMessage,
+      updateTask,
+      deleteTask,
+      setActiveTask,
+      updateTaskProgress,
+      uploadFilesForTask
+    } = useTaskManagement();
   
   const {
     sidebarCollapsed,
