@@ -612,7 +612,7 @@ La tarea se ejecutó correctamente y finalizó sin errores.
 """
         
         # Guardar el informe como archivo en la base de datos
-        if client and db:
+        if client is not None and db is not None:
             try:
                 file_data = {
                     "id": f"final-report-{task_id}",
