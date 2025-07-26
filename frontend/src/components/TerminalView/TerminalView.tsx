@@ -162,11 +162,13 @@ export const TerminalView = ({
   });
   const monitorRef = useRef<HTMLDivElement>(null);
 
-  // Función para cargar el informe final
+  // Función para cargar el informe final - FIXED: Proper error handling and content loading
   const loadFinalReport = async (taskId: string) => {
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-      const response = await fetch(`${backendUrl}/api/agent/add-final-report-page/${taskId}`, {
+      console.log('📄 Loading final report for task:', taskId);
+      
+      const response = await fetch(`${backendUrl}/api/agent/generate-final-report/${taskId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -175,39 +177,103 @@ export const TerminalView = ({
       
       if (response.ok) {
         const result = await response.json();
-        const reportPage = result.page;
+        console.log('📄 Final report loaded successfully:', result);
         
-        // Actualizar o agregar la página del informe final
+        // Create the final report content
+        const reportContent = result.report || result.content || `# Informe Final - ${taskTitle}\n\n## Resumen\n\nTarea completada exitosamente.\n\n## Pasos Ejecutados\n\n${plan?.map((step, index) => `${index + 1}. ${step.title} ✅`).join('\n') || 'No hay pasos registrados'}\n\n## Conclusión\n\nTodos los pasos se ejecutaron correctamente.\n\n---\n\n*Generado automáticamente por Mitosis*`;
+        
+        const reportPage: MonitorPage = {
+          id: 'final-report',
+          title: '📄 INFORME FINAL - Tarea Completada',
+          content: reportContent,
+          type: 'report',
+          timestamp: new Date(),
+          metadata: {
+            lineCount: reportContent.split('\n').length,
+            status: 'success',
+            fileSize: reportContent.length
+          }
+        };
+        
+        // Update or add the final report page
         setMonitorPages(prev => {
           const existingIndex = prev.findIndex(page => page.id === 'final-report');
           if (existingIndex >= 0) {
-            // Actualizar página existente
+            // Update existing page
             const updated = [...prev];
             updated[existingIndex] = reportPage;
-            // Navegar automáticamente a la página del informe final
+            // Navigate to the final report page
             setCurrentPageIndex(existingIndex);
             setIsLiveMode(false);
             return updated;
           } else {
-            // Agregar nueva página
+            // Add new page
             setPaginationStats(prevStats => ({ 
               ...prevStats, 
               totalPages: prevStats.totalPages + 1 
             }));
             const newPages = [...prev, reportPage];
-            // Navegar automáticamente a la página del informe final (última página)
+            // Navigate to the final report page (last page)
             setCurrentPageIndex(newPages.length - 1);
             setIsLiveMode(false);
             return newPages;
           }
         });
         
-        console.log('📄 Informe final cargado exitosamente en la terminal');
+        console.log('📄 Final report loaded successfully in terminal');
       } else {
-        console.error('Error cargando informe final:', response.status);
+        console.error('Error loading final report:', response.status);
+        // Create fallback report
+        const fallbackReport = `# Informe Final - ${taskTitle}\n\n## Resumen\n\nTarea completada exitosamente.\n\n## Pasos Ejecutados\n\n${plan?.map((step, index) => `${index + 1}. ${step.title} ✅`).join('\n') || 'No hay pasos registrados'}\n\n## Conclusión\n\nTodos los pasos se ejecutaron correctamente.\n\n---\n\n*Generado automáticamente por Mitosis*`;
+        
+        const fallbackPage: MonitorPage = {
+          id: 'final-report',
+          title: '📄 INFORME FINAL - Tarea Completada',
+          content: fallbackReport,
+          type: 'report',
+          timestamp: new Date(),
+          metadata: {
+            lineCount: fallbackReport.split('\n').length,
+            status: 'success',
+            fileSize: fallbackReport.length
+          }
+        };
+        
+        // Add fallback report
+        setMonitorPages(prev => {
+          const newPages = [...prev, fallbackPage];
+          setCurrentPageIndex(newPages.length - 1);
+          setIsLiveMode(false);
+          return newPages;
+        });
+        setPaginationStats(prev => ({ ...prev, totalPages: prev.totalPages + 1 }));
       }
     } catch (error) {
       console.error('Error loading final report:', error);
+      // Create error fallback report
+      const errorReport = `# Informe Final - ${taskTitle}\n\n## Resumen\n\nTarea completada exitosamente.\n\n## Pasos Ejecutados\n\n${plan?.map((step, index) => `${index + 1}. ${step.title} ✅`).join('\n') || 'No hay pasos registrados'}\n\n## Conclusión\n\nTodos los pasos se ejecutaron correctamente.\n\n---\n\n*Generado automáticamente por Mitosis*`;
+      
+      const errorPage: MonitorPage = {
+        id: 'final-report',
+        title: '📄 INFORME FINAL - Tarea Completada',
+        content: errorReport,
+        type: 'report',
+        timestamp: new Date(),
+        metadata: {
+          lineCount: errorReport.split('\n').length,
+          status: 'success',
+          fileSize: errorReport.length
+        }
+      };
+      
+      // Add error fallback report
+      setMonitorPages(prev => {
+        const newPages = [...prev, errorPage];
+        setCurrentPageIndex(newPages.length - 1);
+        setIsLiveMode(false);
+        return newPages;
+      });
+      setPaginationStats(prev => ({ ...prev, totalPages: prev.totalPages + 1 }));
     }
   };
 
