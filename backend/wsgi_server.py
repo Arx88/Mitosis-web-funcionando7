@@ -12,8 +12,8 @@ sys.path.insert(0, '/app/backend')
 from server import app, socketio
 
 # Para gunicorn, necesitamos el objeto de la aplicación WSGI
-# socketio envuelve el app de Flask y es WSGI-compatible
-application = socketio
+# Usar app de Flask directamente ya que socketio se maneja internamente
+application = app
 
 if __name__ == '__main__':
     # Para testing directo
