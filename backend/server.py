@@ -539,7 +539,7 @@ def generate_final_report(task_id):
         
         # Buscar la tarea en la base de datos
         task = None
-        if client and db:
+        if client is not None and db is not None:
             try:
                 task = db.tasks.find_one({"id": task_id})
                 logger.info(f"📄 Task found in database: {task is not None}")
