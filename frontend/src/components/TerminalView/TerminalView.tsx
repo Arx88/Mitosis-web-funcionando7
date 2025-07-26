@@ -896,12 +896,11 @@ export const TerminalView = ({
                   {plan.map((step, index) => (
                     <div 
                       key={step.id} 
-                      className={`group flex items-center space-x-3 cursor-pointer hover:bg-[rgba(255,255,255,0.05)] px-3 py-2 rounded-lg transition-all duration-200 ${
+                      className={`group flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 ${
                         step.active ? 'bg-[rgba(59,130,246,0.1)] border border-[rgba(59,130,246,0.3)]' : 
                         step.completed ? 'bg-[rgba(34,197,94,0.08)] border border-[rgba(34,197,94,0.2)]' : 
-                        'border border-transparent hover:border-[rgba(255,255,255,0.1)]'
+                        'border border-transparent'
                       }`}
-                      onClick={() => onToggleTaskStep?.(step.id)}
                     >
                       <div className={`flex-shrink-0 w-5 h-5 flex items-center justify-center text-xs font-bold transition-all duration-200 ${
                         step.completed ? '' :
