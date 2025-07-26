@@ -1006,6 +1006,13 @@ export const TaskView: React.FC<TaskViewProps> = ({
             isLive={task.status === 'in-progress'}
             plan={task.plan}
             onToggleTaskStep={toggleTaskStep}
+            onPlanUpdate={(updatedPlan) => {
+              // Update the task with the updated plan
+              onUpdateTask((currentTask) => ({
+                ...currentTask,
+                plan: updatedPlan
+              }));
+            }}
             externalLogs={[...terminalLogs, ...externalLogs]}
             isInitializing={isInitializing}
             onInitializationComplete={onInitializationComplete}
