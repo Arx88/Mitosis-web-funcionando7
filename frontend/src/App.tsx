@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { VanishInput } from './components/VanishInput';
-import { TaskView } from './components/TaskView_Optimized';
+import { TaskView } from './components/TaskView';
 import { LoadingPlaceholder } from './components/LoadingPlaceholder';
 import { generateRandomIcon } from './components/TaskIcon';
 import { Globe, FileText, Presentation, Smartphone, Search, Gamepad2 } from 'lucide-react';
