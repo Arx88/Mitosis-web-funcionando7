@@ -8,6 +8,7 @@ import { LoadingPlaceholder, MessageLoadingPlaceholder } from './components/Load
 import { Task, Message, AppState, AgentConfig } from './types';
 import { generateRandomIcon } from './components/TaskIcon';
 import { Globe, FileText, Presentation, Smartphone, Search, Gamepad2 } from 'lucide-react';
+import { API_CONFIG } from './config/api';
 
 // Configuración por defecto del agente
 const defaultConfig: AgentConfig = {
