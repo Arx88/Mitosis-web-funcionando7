@@ -5,17 +5,20 @@
 ### Descripción de la Aplicación
 Mitosis es una aplicación de agente general inteligente que combina un backend FastAPI con un frontend React para proporcionar un sistema completo de automatización de tareas. La aplicación permite a los usuarios crear tareas, generar planes de acción automáticos, y ejecutar herramientas de forma autónoma con retroalimentación en tiempo real.
 
-### Stack Tecnológico
-- **Backend**: FastAPI (Python) con MongoDB como base de datos
-- **Frontend**: React con TypeScript, Vite como bundler
-- **Comunicación en Tiempo Real**: WebSocket (Socket.IO)
-- **Integración IA**: Ollama para modelos LLM locales
-- **Herramientas**: Sistema extensible de 12+ herramientas especializadas
+### Stack Tecnológico Detallado
+- **Backend**: FastAPI (Python 3.9+) con MongoDB como base de datos
+- **Frontend**: React 18 con TypeScript, Vite como bundler
+- **Comunicación en Tiempo Real**: HTTP Polling (WebSocket reemplazado por problemas de "server error")
+- **Integración IA**: Ollama para modelos LLM locales (llama3.1, qwen2.5, gemma2)
+- **Herramientas**: Sistema extensible de 15+ herramientas especializadas
 - **Persistencia**: MongoDB para tareas y archivos
 - **Monitoreo**: Sistema de logs y métricas detallado
+- **Automatización Web**: Playwright para navegación y scraping
+- **Búsqueda Web**: Tavily, Bing Search, Firecrawl para investigación
+- **Memoria Avanzada**: Sistema de memoria episódica, semántica y procedimental
 
-### Estado Actual
-La aplicación ha pasado por múltiples refactorizaciones exitosas, reduciendo significativamente la duplicación de código (de 120+ archivos a ~30 archivos esenciales) y mejorando la estabilidad. El sistema está funcionalmente completo con capacidades autónomas verificadas.
+### Estado Actual - Análisis Post-Refactorización
+La aplicación ha pasado por múltiples refactorizaciones exitosas, reduciendo significativamente la duplicación de código (de 120+ archivos a ~30 archivos esenciales) y mejorando la estabilidad. El sistema está funcionalmente completo con capacidades autónomas verificadas, pero presenta problemas críticos de arquitectura que requieren atención inmediata.
 
 ## 2. ARQUITECTURA Y FLUJO DE DATOS
 
