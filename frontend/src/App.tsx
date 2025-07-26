@@ -69,9 +69,7 @@ Siempre explica lo que estás haciendo y por qué, para que el usuario pueda ent
 // Función para generar ideas dinámicas basadas en contexto
 const generateDynamicIdeas = async () => {
   try {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
-    
-    const response = await fetch(`${backendUrl}/api/agent/generate-suggestions`, {
+    const response = await fetch(`${API_CONFIG.backend.url}/api/agent/generate-suggestions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
