@@ -1,0 +1,60 @@
+{
+  "total_tests": 7,
+  "passed_tests": 2,
+  "success_rate": 28.57142857142857,
+  "overall_status": "\u274c CRITICAL - Major issues with final report generation and backend",
+  "critical_passed": 0,
+  "critical_total": 3,
+  "test_results": [
+    {
+      "test_name": "Health Endpoints",
+      "success": false,
+      "details": "Some health endpoints failing - Main Health Check: \u274c Exception: Expecting value: line 1 column 1 (char 0), API Health Check: \u2705 healthy, Agent Status Check: \u2705 running",
+      "timestamp": "2025-07-26T01:45:50.029266",
+      "response_data": null
+    },
+    {
+      "test_name": "Final Report Generation (Valid Task)",
+      "success": false,
+      "details": "Could not create sample task for testing",
+      "timestamp": "2025-07-26T01:45:52.060011",
+      "response_data": null
+    },
+    {
+      "test_name": "Final Report Generation (Invalid Task)",
+      "success": true,
+      "details": "Proper error handling for invalid task - HTTP 500",
+      "timestamp": "2025-07-26T01:45:54.071107",
+      "response_data": null
+    },
+    {
+      "test_name": "Report Database Persistence",
+      "success": false,
+      "details": "No task_id available for testing",
+      "timestamp": "2025-07-26T01:45:56.071307",
+      "response_data": null
+    },
+    {
+      "test_name": "Report Markdown Format",
+      "success": false,
+      "details": "No task_id available for testing",
+      "timestamp": "2025-07-26T01:45:58.071468",
+      "response_data": null
+    },
+    {
+      "test_name": "Backend Agent Endpoints",
+      "success": true,
+      "details": "All agent endpoints working - Agent Status: \u2705, Generate Suggestions: \u2705, Current Configuration: \u2705, Ollama Connection Check: \u2705",
+      "timestamp": "2025-07-26T01:46:01.084708",
+      "response_data": null
+    },
+    {
+      "test_name": "Chat Endpoint Functionality",
+      "success": false,
+      "details": "Chat endpoint issues - 'Hello, how are you?...': \u274c HTTP 404, 'Create a simple task...': \u274c HTTP 404, 'What can you help me...': \u274c HTTP 404",
+      "timestamp": "2025-07-26T01:46:06.116940",
+      "response_data": null
+    }
+  ],
+  "task_id": null
+}
