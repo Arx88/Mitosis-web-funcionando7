@@ -361,6 +361,10 @@ interface AppContextProviderProps {
 
 export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  console.log('🚀 AppContextProvider: Initializing with state:', { 
+    tasksCount: state.tasks.length, 
+    activeTaskId: state.activeTaskId 
+  });
   
   // Helper functions
   const createTask = useCallback((title: string, iconType?: string): Task => {
@@ -436,9 +440,11 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
     });
   }, []);
   
-  // Getters
+  // Getters - memoizados para evitar re-renders innecesarios
   const getActiveTask = useCallback(() => {
-    return state.tasks.find(task => task.id === state.activeTaskId);
+    const activeTask = state.tasks.find(task => task.id === state.activeTaskId);
+    console.log('🔍 getActiveTask called:', { activeTaskId: state.activeTaskId, found: !!activeTask });
+    return activeTask;
   }, [state.tasks, state.activeTaskId]);
   
   const getTaskFiles = useCallback((taskId: string) => {
@@ -453,7 +459,26 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
     return state.typingState[taskId] || false;
   }, [state.typingState]);
   
-  const contextValue: AppContextType = {
+  // Crear el valor del contexto de forma memoizada para evitar re-renders
+  const contextValue = React.useMemo<AppContextType>(() => {
+    const value = {
+      state,
+      dispatch,
+      createTask,
+      updateTask,
+      deleteTask,
+      setActiveTask,
+      addTerminalLog,
+      updateTaskProgress,
+      getActiveTask,
+      getTaskFiles,
+      getTerminalLogs,
+      isTaskTyping
+    };
+    
+    console.log('🔄 AppContext: Context value created/updated');
+    return value;
+  }, [
     state,
     dispatch,
     createTask,
@@ -466,7 +491,9 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
     getTaskFiles,
     getTerminalLogs,
     isTaskTyping
-  };
+  ]);
+  
+  console.log('✅ AppContextProvider: Rendering with context value ready');
   
   return (
     <AppContext.Provider value={contextValue}>
