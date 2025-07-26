@@ -1024,11 +1024,13 @@ export const TerminalView = ({
                         )}
                         {step.elapsed_time && (
                           <span className={`block text-xs mt-0.5 transition-all duration-200 ${
-                            step.completed ? 'line-through text-[#5f5f5f]' : 
+                            step.completed ? 'text-green-400 font-medium' : 
                             step.active ? 'text-blue-200 font-medium' : 
                             'text-[#7f7f7f] group-hover:text-[#ACACAC]'
                           }`}>
-                            {step.active ? '⏱️ ' + step.elapsed_time + ' Ejecutando' : '⏰ ' + step.elapsed_time}
+                            {step.completed ? '✅ Completado en ' + step.elapsed_time : 
+                             step.active ? '⏱️ ' + step.elapsed_time + ' (En progreso)' : 
+                             '⏰ ' + step.elapsed_time}
                           </span>
                         )}
                       </div>
