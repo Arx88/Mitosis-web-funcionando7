@@ -20,73 +20,199 @@ Mitosis es una aplicación de agente general inteligente que combina un backend 
 ### Estado Actual - Análisis Post-Refactorización
 La aplicación ha pasado por múltiples refactorizaciones exitosas, reduciendo significativamente la duplicación de código (de 120+ archivos a ~30 archivos esenciales) y mejorando la estabilidad. El sistema está funcionalmente completo con capacidades autónomas verificadas, pero presenta problemas críticos de arquitectura que requieren atención inmediata.
 
-## 2. ARQUITECTURA Y FLUJO DE DATOS
+## 2. ARQUITECTURA Y FLUJO DE DATOS - ANÁLISIS COMPLETO
 
-### Arquitectura General
+### Arquitectura General - Estructura Detallada
 
-#### Backend (FastAPI)
+#### Backend (FastAPI) - Estructura Completa
 ```
 /app/backend/
-├── server.py                    # Servidor principal con rutas básicas
+├── server.py                    # Servidor principal WSGI
 ├── src/
-│   ├── routes/                  # Rutas de la API
-│   │   ├── agent_routes.py      # Rutas principales del agente
-│   │   └── memory_routes.py     # Rutas de memoria
-│   ├── services/                # Servicios de negocio
-│   │   ├── ollama_service.py    # Integración con Ollama
-│   │   ├── task_manager.py      # Gestión de tareas
-│   │   └── database.py          # Servicios de base de datos
-│   ├── core/                    # Lógica central
-│   │   └── agent_unified.py     # Agente unificado consolidado
-│   ├── tools/                   # Herramientas especializadas
-│   │   ├── tool_manager.py      # Gestor de herramientas
-│   │   ├── web_search_tool.py   # Búsqueda web
-│   │   ├── file_manager_tool.py # Gestión de archivos
-│   │   └── [10+ herramientas más]
-│   ├── websocket/               # Comunicación en tiempo real
-│   │   └── websocket_manager.py # Manager de WebSocket
-│   └── memory/                  # Sistema de memoria avanzado
-│       └── advanced_memory_manager.py
+│   ├── routes/                  # Rutas de la API (2 archivos)
+│   │   ├── agent_routes.py      # 30+ endpoints principales
+│   │   └── memory_routes.py     # Rutas de memoria avanzada
+│   ├── services/                # Servicios de negocio (4 archivos)
+│   │   ├── ollama_service.py    # Integración con Ollama LLM
+│   │   ├── task_manager.py      # Gestión de tareas y persistencia
+│   │   ├── database.py          # Servicios de MongoDB
+│   │   └── automatic_execution_orchestrator.py # Orquestación
+│   ├── core/                    # Lógica central (1 archivo)
+│   │   └── agent_unified.py     # Agente unificado (1,200+ líneas)
+│   ├── tools/                   # Herramientas especializadas (20+ archivos)
+│   │   ├── tool_manager.py      # Gestor central de herramientas
+│   │   ├── web_search_tool.py   # Búsqueda web con Playwright
+│   │   ├── file_manager_tool.py # Gestión de archivos completa
+│   │   ├── tavily_search_tool.py # Búsqueda con Tavily API
+│   │   ├── deep_research_tool.py # Investigación profunda
+│   │   ├── comprehensive_research_tool.py # Investigación multi-fuente
+│   │   ├── firecrawl_tool.py    # Web scraping avanzado
+│   │   ├── playwright_tool.py   # Automatización de navegadores
+│   │   ├── shell_tool.py        # Comandos de terminal
+│   │   ├── task_planner.py      # Planificación inteligente
+│   │   ├── execution_engine.py  # Motor de ejecución (1,000+ líneas)
+│   │   └── [15+ herramientas más]
+│   ├── websocket/               # Comunicación en tiempo real (DESHABILITADO)
+│   │   └── websocket_manager.py # Manager WebSocket (NO USADO)
+│   ├── memory/                  # Sistema de memoria avanzado (8 archivos)
+│   │   ├── advanced_memory_manager.py # Gestor principal (1,400+ líneas)
+│   │   ├── working_memory_store.py # Memoria de trabajo
+│   │   ├── episodic_memory_store.py # Memoria episódica
+│   │   ├── semantic_memory_store.py # Memoria semántica
+│   │   ├── procedural_memory_store.py # Memoria procedimental
+│   │   ├── embedding_service.py # Embeddings para búsqueda
+│   │   └── semantic_indexer.py  # Indexación semántica
+│   ├── orchestration/           # Orquestación de tareas (8 archivos)
+│   │   ├── task_orchestrator.py # Orquestador principal
+│   │   ├── planning_algorithms.py # Algoritmos de planificación
+│   │   ├── hierarchical_planning_engine.py # Planificación jerárquica
+│   │   ├── adaptive_execution_engine.py # Ejecución adaptativa
+│   │   ├── resource_manager.py  # Gestión de recursos
+│   │   └── dependency_resolver.py # Resolución de dependencias
+│   ├── context/                 # Gestión de contexto (6 archivos)
+│   │   ├── intelligent_context_manager.py # Gestor inteligente
+│   │   └── strategies/          # Estrategias de contexto
+│   ├── validation/              # Validación de resultados (1 archivo)
+│   │   └── result_validators.py # Validadores de pasos
+│   ├── analysis/                # Análisis de errores (1 archivo)
+│   │   └── error_analyzer.py    # Análisis de errores
+│   ├── agents/                  # Agentes especializados (2 archivos)
+│   │   ├── self_reflection_engine.py # Auto-reflexión
+│   │   └── replanning_engine.py # Re-planificación
+│   ├── planning/                # Planificación dinámica (1 archivo)
+│   │   └── dynamic_task_planner.py # Planificador dinámico
+│   └── utils/                   # Utilidades (3 archivos)
+│       ├── json_encoder.py      # Codificador JSON
+│       └── json_encoder_fixed.py # Codificador JSON corregido
+├── static/generated_files/      # Archivos generados dinámicamente
+└── [15+ archivos de configuración y testing]
 ```
 
-#### Frontend (React)
+#### Frontend (React) - Estructura Completa
 ```
 /app/frontend/src/
-├── App.tsx                      # Componente principal
-├── components/
-│   ├── TaskView.tsx            # Vista de tareas
+├── App.tsx                      # Componente principal (500+ líneas)
+├── index.tsx                    # Punto de entrada
+├── components/                  # Componentes UI (55+ archivos)
+│   ├── TaskView.tsx            # Vista de tareas principal (800+ líneas)
+│   ├── Sidebar.tsx             # Barra lateral (400+ líneas)
 │   ├── ChatInterface/          # Interfaz de chat
+│   │   ├── ChatInterface.tsx   # Componente principal (1,150+ líneas)
+│   │   └── index.tsx           # Exportación
 │   ├── TerminalView/           # Vista de terminal
-│   ├── Sidebar.tsx             # Barra lateral
-│   └── [30+ componentes más]
-├── services/
-│   └── api.ts                  # Cliente de API
-├── hooks/
-│   ├── useWebSocket.ts         # Hook para WebSocket
-│   └── useMemoryManager.ts     # Hook para memoria
-└── types.ts                    # Tipos TypeScript
+│   │   ├── TerminalView.tsx    # Terminal principal (600+ líneas)
+│   │   └── index.tsx           # Exportación
+│   ├── VanishInput.tsx         # Input animado personalizado
+│   ├── ThinkingAnimation.tsx   # Animación de pensamiento
+│   ├── TaskCompletedUI.tsx     # UI de tarea completada
+│   ├── AgentStatusBar.tsx      # Barra de estado del agente
+│   ├── ConfigPanel.tsx         # Panel de configuración
+│   ├── MemoryManager.tsx       # Gestor de memoria
+│   ├── MemoryTab.tsx           # Tab de memoria
+│   ├── ToolExecutionDetails.tsx # Detalles de ejecución
+│   ├── SearchResults.tsx       # Resultados de búsqueda
+│   ├── FileAttachment.tsx      # Archivos adjuntos
+│   ├── FileUploadModal.tsx     # Modal de subida de archivos
+│   ├── DeepResearchReport.tsx  # Reportes de investigación
+│   ├── ExecutionEngine/        # Motor de ejecución
+│   │   ├── TaskAnalysisPanel.tsx # Panel de análisis
+│   │   └── ExecutionControlPanel.tsx # Control de ejecución
+│   ├── ContextManager/         # Gestión de contexto
+│   │   ├── ContextVariablesPanel.tsx # Variables de contexto
+│   │   └── ContextCheckpointsPanel.tsx # Checkpoints
+│   ├── ui/                     # Componentes UI base
+│   │   ├── CustomSelect.tsx    # Select personalizado
+│   │   ├── NumberInput.tsx     # Input numérico
+│   │   ├── ConnectionStatus.tsx # Estado de conexión
+│   │   ├── link-preview.tsx    # Preview de enlaces
+│   │   ├── hover-border-gradient.tsx # Gradiente hover
+│   │   └── moving-border.tsx   # Borde animado
+│   └── [40+ componentes más]
+├── services/                   # Servicios del frontend (1 archivo)
+│   └── api.ts                  # Cliente de API (870+ líneas)
+├── hooks/                      # Hooks personalizados (5 archivos)
+│   ├── useWebSocket.ts         # Hook WebSocket (150+ líneas)
+│   ├── useMemoryManager.ts     # Hook de memoria (225+ líneas)
+│   ├── useThinkingTimer.ts     # Hook de timer de pensamiento
+│   ├── useOllamaConnection.ts  # Hook de conexión Ollama
+│   └── useConsoleReportFormatter.ts # Hook de formato de consola
+├── utils/                      # Utilidades (4 archivos)
+│   ├── pdfGenerator.ts         # Generador de PDF
+│   ├── academicReportUtils.ts  # Utilidades de reportes
+│   └── markdownConsoleFormatter.ts # Formateador Markdown
+├── lib/                        # Librerías (1 archivo)
+│   └── utils.ts                # Utilidades generales
+└── types.ts                    # Tipos TypeScript (50+ interfaces)
 ```
 
-### Flujo de Datos Principal
+### Flujo de Datos Principal - Análisis Detallado
 
-1. **Creación de Tarea**: Usuario → VanishInput → App.tsx → Backend API
-2. **Generación de Plan**: Backend → Ollama → Plan estructurado → Frontend
-3. **Ejecución Autónoma**: Backend → Tool Manager → Herramientas → WebSocket → Frontend
-4. **Retroalimentación**: Terminal/Chat → WebSocket → Updates en tiempo real
+#### 1. **Creación de Tarea** (Flujo Completo)
+```
+Usuario → VanishInput → ChatInterface.tsx → TaskView.tsx → 
+Backend /api/agent/generate-plan → Ollama LLM → Plan estructurado → 
+MongoDB persistencia → Frontend actualización
+```
 
-### Gestión del Estado
+#### 2. **Generación de Plan** (Proceso Inteligente)
+```
+Backend → TaskPlanner.analyze_task() → Ollama prompt específico → 
+JSON Schema validation → Plan steps creation → 
+MongoDB storage → Frontend plan display
+```
 
-#### Frontend State Management
-- **React State**: Manejo local de componentes
-- **Custom Hooks**: `useWebSocket`, `useMemoryManager`
-- **Context**: Configuración global del agente
-- **Props Drilling**: Comunicación entre componentes
+#### 3. **Ejecución Autónoma** (Sistema Complejo)
+```
+Backend → TaskOrchestrator → ExecutionEngine → ToolManager → 
+Herramientas específicas → HTTP Polling updates → 
+TerminalView updates → Progress tracking
+```
 
-#### Backend State Management
-- **MongoDB**: Persistencia de tareas y archivos
-- **Memory Cache**: Caché en memoria para acceso rápido
-- **Task Manager**: Gestión centralizada de tareas
-- **WebSocket Manager**: Estado de conexiones
+#### 4. **Retroalimentación** (Comunicación Bidireccional)
+```
+Terminal/Chat → HTTP Polling (NO WebSocket) → 
+Frontend useWebSocket hook → TaskView updates → 
+Real-time progress display
+```
+
+### Gestión del Estado - Análisis Profundo
+
+#### Frontend State Management (Problemas Identificados)
+- **React State**: Manejo local disperso en 55+ componentes
+- **Custom Hooks**: `useWebSocket` (simulado), `useMemoryManager` (localStorage)
+- **No Context API**: Ausencia de estado global centralizado
+- **Props Drilling**: Comunicación excesiva entre componentes (6+ niveles)
+- **State Inconsistencies**: Estados duplicados entre TaskView y ChatInterface
+
+#### Backend State Management (Arquitectura Compleja)
+- **MongoDB**: Persistencia principal con 5+ colecciones
+- **Memory Cache**: Caché en memoria no persistente
+- **Task Manager**: Gestión centralizada con active_cache
+- **HTTP Polling**: Reemplazo de WebSocket para estado en tiempo real
+- **Context Manager**: Gestión de contexto de ejecución
+- **Orchestration State**: Estado de orquestación distribuido
+
+### Problemas Críticos de Arquitectura Identificados
+
+#### 1. **Comunicación en Tiempo Real Deteriorada**
+- WebSocket reemplazado por HTTP Polling debido a "server error"
+- useWebSocket hook simula conexión WebSocket pero usa HTTP
+- Latencia aumentada y uso excesivo de recursos
+
+#### 2. **Inconsistencia en URLs y Configuración**
+- Múltiples formas de obtener backend URL
+- Hardcoded URLs en varios lugares
+- Configuración de entorno fragmentada
+
+#### 3. **Gestión de Estado Fragmentada**
+- Estado duplicado entre componentes
+- Falta de single source of truth
+- Props drilling excesivo
+
+#### 4. **Complejidad de Herramientas**
+- 20+ herramientas con APIs inconsistentes
+- Falta de abstracción común
+- Manejo de errores heterogéneo
 
 ## 3. AUDITORÍA DE CÓDIGO DETALLADA
 
