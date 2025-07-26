@@ -7,14 +7,24 @@ import { generateRandomIcon } from './components/TaskIcon';
 import { Globe, FileText, Presentation, Smartphone, Search, Gamepad2 } from 'lucide-react';
 import { useTaskManagement, useUIState, useConfigManagement } from './hooks/useTaskManagement';
 import { useAppContext } from './context/AppContext';
-import { 
-  LazyWrapper, 
-  ConfigPanel, 
-  FilesModal, 
-  FileUploadModal, 
-  ModalLoadingFallback,
-  preloadCriticalComponents 
-} from './components/LazyComponents';
+// Temporalmente deshabilitar lazy loading para debug
+// import { 
+//   LazyWrapper, 
+//   ConfigPanel, 
+//   FilesModal, 
+//   FileUploadModal, 
+//   ModalLoadingFallback,
+//   preloadCriticalComponents 
+// } from './components/LazyComponents';
+
+// Importaciones directas para debug
+import { ConfigPanel } from './components/ConfigPanel';
+import { FilesModal } from './components/FilesModal';
+import { FileUploadModal } from './components/FileUploadModal';
+// Componente simple de loading
+const ModalLoadingFallback = () => <div>Loading...</div>;
+const LazyWrapper = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+const preloadCriticalComponents = () => {};
 
 // ========================================================================
 // OPTIMIZACIONES DE PERFORMANCE - FASE 5
