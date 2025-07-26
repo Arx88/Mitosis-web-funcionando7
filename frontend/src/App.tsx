@@ -12,6 +12,11 @@ import { ConfigPanel } from './components/ConfigPanel';
 import { FilesModal } from './components/FilesModal';
 import { FileUploadModal } from './components/FileUploadModal';
 
+// Componentes simples de fallback - SIN LAZY LOADING
+const ModalLoadingFallback = () => <div>Loading...</div>;
+const LazyWrapper = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+const preloadCriticalComponents = () => {};
+
 // ========================================================================
 // OPTIMIZACIONES DE PERFORMANCE - FASE 5
 // ========================================================================
