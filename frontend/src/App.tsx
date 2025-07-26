@@ -529,8 +529,7 @@ export function App() {
     
     // Upload files to the backend and get file information
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '';
-      console.log('🔗 Backend URL for file upload:', backendUrl);
+      console.log('🔗 Backend URL for file upload:', API_CONFIG.backend.url);
       console.log('📤 Uploading files to backend');
       
       const formData = new FormData();
@@ -541,7 +540,7 @@ export function App() {
         console.log(`📄 Adding file ${i + 1}: ${files[i].name}`);
       }
 
-      const response = await fetch(`${backendUrl}/api/agent/upload-files`, {
+      const response = await fetch(`${API_CONFIG.backend.url}/api/agent/upload-files`, {
         method: 'POST',
         body: formData
       });
