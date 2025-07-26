@@ -30,8 +30,10 @@
 - /app/BACKUP_REGISTRY.md: CREADO - Registro de backups
 
 ## FUNCIONALIDAD VERIFICADA
-- [ ] Aplicación básica funcionando (pendiente verificación inicial)
-- [ ] WebSocket connectivity (roto según análisis)
+- [x] Aplicación básica funcionando (frontend y backend operativos)
+- [x] Backend health check respondiendo correctamente
+- [x] Frontend serving página principal
+- [ ] WebSocket connectivity (pendiente diagnóstico)
 - [ ] Task creation flow (pendiente verificación)
 - [ ] Step execution flow (pendiente verificación)
 - [ ] Memory management (pendiente verificación)
