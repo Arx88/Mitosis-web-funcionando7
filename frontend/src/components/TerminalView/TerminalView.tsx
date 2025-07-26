@@ -56,6 +56,7 @@ export const TerminalView = ({
   toolResults = [],
   plan = [],
   onToggleTaskStep,
+  onPlanUpdate, // ✨ NEW: Add onPlanUpdate prop
   externalLogs = [],
   isInitializing = false,
   onInitializationComplete,
