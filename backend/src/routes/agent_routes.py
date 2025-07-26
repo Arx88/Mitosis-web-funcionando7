@@ -6310,4 +6310,103 @@ def generate_basic_plan(title: str) -> Dict:
     }
 
 
+@agent_bp.route('/chat', methods=['POST'])
+def chat():
+    """Chat endpoint - Compatible with frontend expectations"""
+    try:
+        data = request.get_json()
+        message = data.get('message', '')
+        context = data.get('context', {})
+        task_id = context.get('task_id') or f"chat-{int(time.time())}"
+        
+        if not message:
+            return jsonify({'error': 'message is required'}), 400
+        
+        logger.info(f"💬 Chat request received: {message[:100]}...")
+        
+        # Determine if this is a casual conversation or a task request
+        is_casual = is_casual_conversation(message)
+        
+        if is_casual:
+            # Handle casual conversation
+            logger.info(f"💬 Detected casual conversation")
+            try:
+                ollama_service = get_ollama_service()
+                if ollama_service and ollama_service.is_healthy():
+                    casual_response = ollama_service.generate_response(
+                        f"Responde de manera amigable y conversacional a este mensaje: {message}",
+                        {'temperature': 0.8, 'max_tokens': 150}
+                    )
+                    response_text = casual_response.get('response', 'Hola! ¿En qué puedo ayudarte hoy?')
+                else:
+                    response_text = 'Hola! ¿En qué puedo ayudarte hoy?'
+            except Exception as e:
+                logger.warning(f"Error generating casual response: {e}")
+                response_text = 'Hola! ¿En qué puedo ayudarte hoy?'
+            
+            return jsonify({
+                'response': response_text,
+                'task_id': task_id,
+                'memory_used': True,
+                'timestamp': datetime.now().isoformat()
+            })
+        else:
+            # Handle task request - generate plan
+            logger.info(f"💬 Detected task request, generating plan")
+            
+            # Generate plan for the task
+            plan_response = generate_task_plan(message, task_id)
+            
+            # Generate enhanced title
+            enhanced_title = generate_task_title_with_llm(message, task_id)
+            
+            # Format response compatible with frontend expectations
+            response = {
+                'response': f"He generado un plan para tu tarea: {enhanced_title}",
+                'plan': plan_response.get('steps', []),
+                'enhanced_title': enhanced_title,
+                'task_type': plan_response.get('task_type', 'general'),
+                'complexity': plan_response.get('complexity', 'media'),
+                'estimated_total_time': plan_response.get('estimated_total_time', '10-15 minutos'),
+                'task_id': task_id,
+                'memory_used': True,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            logger.info(f"✅ Chat response with plan generated: {len(response['plan'])} steps")
+            return jsonify(response)
+        
+    except Exception as e:
+        logger.error(f"❌ Error in chat endpoint: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+def is_casual_conversation(message: str) -> bool:
+    """Determine if a message is casual conversation or a task request"""
+    casual_patterns = [
+        'hola', 'hello', 'hi', 'hey', 'saludos', 'buenos días', 'buenas tardes',
+        'buenas noches', 'qué tal', 'cómo estás', 'gracias', 'thank you',
+        'adiós', 'goodbye', 'bye', 'hasta luego'
+    ]
+    
+    message_lower = message.lower().strip()
+    
+    # Check if message is short and matches casual patterns
+    if len(message_lower) < 50 and any(pattern in message_lower for pattern in casual_patterns):
+        return True
+    
+    # Check for task indicators
+    task_patterns = [
+        'crear', 'crear un', 'hacer', 'generar', 'desarrollar', 'analizar',
+        'create', 'make', 'generate', 'develop', 'analyze', 'write',
+        'necesito', 'quiero', 'puedes', 'ayúdame', 'help me', 'can you'
+    ]
+    
+    if any(pattern in message_lower for pattern in task_patterns):
+        return False
+    
+    # Default to task if uncertain and message is substantial
+    return len(message_lower) < 20
+
+
 # FIN del archivo - función duplicada removida
