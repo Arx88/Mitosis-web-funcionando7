@@ -1,7 +1,8 @@
 // Servicio para comunicación con el backend del agente
 import { API_CONFIG, getApiUrl } from '../config/api';
 
-const API_BASE_URL = `${API_CONFIG.backend.url}/api/agent`;
+// Usar directamente la URL base sin duplicar /api/agent
+const API_BASE_URL = API_CONFIG.backend.url;
 
 export interface ChatMessage {
   id: string;
