@@ -53,46 +53,36 @@
 
 #### 2.1 Diagnóstico WebSocket (Estimado: 4 horas)
 **Archivos a Analizar**:
-- `/app/backend/src/websocket/websocket_manager.py` (417 líneas)
-- `/app/backend/server.py` (configuración SocketIO)
-- `/app/frontend/src/hooks/useWebSocket.ts` (150 líneas)
+- [x] `/app/backend/src/websocket/websocket_manager.py` (417 líneas)
+- [x] `/app/backend/server.py` (configuración SocketIO)
+- [x] `/app/frontend/src/hooks/useWebSocket.ts` (150 líneas)
 
 **Acciones Específicas**:
-```bash
-# Verificar logs de WebSocket
-tail -f /var/log/supervisor/backend.*.log | grep -i websocket
+- [x] Verificar logs de WebSocket
+- [x] Probar conexión WebSocket directa
+- [x] Diagnosticar CORS y middleware
 
-# Probar conexión WebSocket directa
-curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" \
-     -H "Sec-WebSocket-Key: test" -H "Sec-WebSocket-Version: 13" \
-     http://localhost:8001/socket.io/
-
-# Diagnosticar CORS y middleware
-grep -r "CORS\|cors" /app/backend/
-```
-
-**Problemas Esperados**:
-- CORS configuration incorrecta
-- SocketIO version mismatch
-- Event handler registration issues
-- Room management problems
+**Problema Encontrado**: SocketIO configurado SOLO con polling (`transports=['polling']`)
+**Solución Aplicada**: Habilitado WebSocket real con fallback (`transports=['websocket', 'polling']`)
 
 #### 2.2 Crear Nueva Implementación WebSocket (Estimado: 6 horas)
-**Archivo Nuevo**: `/app/frontend/src/config/websocket.ts`
-```typescript
-// Configuración centralizada WebSocket
-export const WEBSOCKET_CONFIG = {
-  url: API_CONFIG.getWebSocketUrl(),
-  options: {
-    transports: ['websocket', 'polling'], // Fallback automático
-    upgrade: true,
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionAttempts: 5,
-    timeout: 20000
-  }
-};
-```
+**Archivo Nuevo**: ✅ `/app/frontend/src/config/api.ts` - Configuración centralizada
+**Archivo Modificado**: ✅ `/app/frontend/src/hooks/useWebSocket.ts` - WebSocket real implementado
+**Features Implementadas**:
+- [x] Socket.io-client real con fallback automático
+- [x] Reconnection logic robusto
+- [x] Transport upgrade detection
+- [x] HTTP Polling fallback si WebSocket falla
+- [x] Event listeners para task updates en tiempo real
+
+#### 2.3 Unificar Configuración URLs (Estimado: 3 horas)
+**Archivo Nuevo**: ✅ `/app/frontend/src/config/api.ts`
+**Archivos Refactorizados**: 
+- [x] `/app/frontend/src/services/api.ts` (URL duplicada eliminada)
+- [x] `/app/frontend/src/App.tsx` (4 ocurrencias de backendUrl reemplazadas)
+- [ ] `/app/frontend/src/components/TaskView.tsx` (pendiente)
+- [ ] `/app/frontend/src/components/ChatInterface/ChatInterface.tsx` (pendiente)
+- [ ] +4 archivos más (pendiente)
 
 **Modificar**: `/app/frontend/src/hooks/useWebSocket.ts`
 ```typescript
