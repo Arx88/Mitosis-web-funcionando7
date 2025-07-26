@@ -482,7 +482,22 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
 export const useAppContext = (): AppContextType => {
   const context = useContext(AppContext);
   if (context === undefined) {
-    throw new Error('useAppContext must be used within an AppContextProvider');
+    console.error('❌ useAppContext called outside of AppContextProvider');
+    // Return a default context to prevent crashes during development
+    return {
+      state: initialState,
+      dispatch: () => {},
+      createTask: () => ({ id: '', title: '', createdAt: new Date(), status: 'pending', messages: [], terminalCommands: [], isFavorite: false, progress: 0 }),
+      updateTask: () => {},
+      deleteTask: () => {},
+      setActiveTask: () => {},
+      addTerminalLog: () => {},
+      updateTaskProgress: () => {},
+      getActiveTask: () => undefined,
+      getTaskFiles: () => [],
+      getTerminalLogs: () => [],
+      isTaskTyping: () => false
+    };
   }
   return context;
 };
