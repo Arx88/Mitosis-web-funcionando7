@@ -7,14 +7,10 @@ import { generateRandomIcon } from './components/TaskIcon';
 import { Globe, FileText, Presentation, Smartphone, Search, Gamepad2 } from 'lucide-react';
 import { useTaskManagement, useUIState, useConfigManagement } from './hooks/useTaskManagement';
 import { useAppContext } from './context/AppContext';
-import { 
-  LazyWrapper, 
-  ConfigPanel, 
-  FilesModal, 
-  FileUploadModal, 
-  ModalLoadingFallback,
-  preloadCriticalComponents 
-} from './components/LazyComponents';
+// Importaciones directas - SOLUCIÓN DEFINITIVA para evitar React Error #306
+import { ConfigPanel } from './components/ConfigPanel';
+import { FilesModal } from './components/FilesModal';
+import { FileUploadModal } from './components/FileUploadModal';
 
 // ========================================================================
 // OPTIMIZACIONES DE PERFORMANCE - FASE 5
