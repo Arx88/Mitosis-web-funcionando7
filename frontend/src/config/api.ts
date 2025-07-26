@@ -36,10 +36,14 @@ function getBackendUrl(): string {
   const productionUrl = 'https://c831651b-a7e8-429e-abcb-944983407842.preview.emergentagent.com';
   
   // En desarrollo, intentar usar variables de entorno
-  if (typeof import !== 'undefined' && import.meta?.env?.MODE === 'development') {
-    return import.meta.env.VITE_BACKEND_URL || 
-           import.meta.env.REACT_APP_BACKEND_URL || 
-           'http://localhost:8001';
+  try {
+    if (import.meta.env?.MODE === 'development') {
+      return import.meta.env.VITE_BACKEND_URL || 
+             import.meta.env.REACT_APP_BACKEND_URL || 
+             'http://localhost:8001';
+    }
+  } catch (e) {
+    // En caso de error (producción), continuar
   }
   
   // En producción, usar URL fija
