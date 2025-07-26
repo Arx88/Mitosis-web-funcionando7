@@ -98,6 +98,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
           
           // ✨ NEW: Reload task files to show generated report in FILES section
           console.log('📁 [DEBUG] Reloading task files to show generated report');
+          getTaskFiles();
           
           // ✨ NEW: Trigger file reload after a delay to ensure backend processes the file
           setTimeout(() => {
