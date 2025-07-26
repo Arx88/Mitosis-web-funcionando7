@@ -9,7 +9,11 @@
     "build": "npx vite build",
     "production": "npm run build && serve -s dist -l 3000",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "preview": "npx vite preview"
+    "preview": "npx vite preview",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage"
   },
   "dependencies": {
     "@radix-ui/react-hover-card": "^1.1.14",
