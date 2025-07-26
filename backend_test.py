@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """
-MITOSIS AGENT DEBUG AND EXECUTION FIXES TESTING
-Testing the debug and execution fixes implemented for the Mitosis agent:
+MITOSIS AGENT FINAL REPORT GENERATION AND BACKEND FUNCTIONALITY TESTING
+Testing the new final report generation endpoint and other backend functionality:
 
-1. Re-enabled automatic execution with aggressive logging
-2. Added aggressive logging throughout execution pipeline  
-3. Created task status endpoint /api/agent/task/{task_id}/status
-4. Added get_task_state function in advanced_memory_manager.py
+1. Test all health endpoints are working properly
+2. Test the new `/api/agent/generate-final-report/<task_id>` endpoint with a sample task_id
+3. Verify the endpoint returns proper JSON response with report content
+4. Test that the report is being saved to the database properly
+5. Check if the generated report follows the expected markdown format
+6. Verify error handling for non-existent task IDs
 
-CRITICAL OBJECTIVE: Verify that the agent no longer stalls and executes plans automatically with proper logging.
+CRITICAL OBJECTIVE: Ensure the new final report generation functionality works correctly before user tests it.
 """
 
 import requests
