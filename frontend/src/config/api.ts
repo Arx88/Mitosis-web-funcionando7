@@ -31,14 +31,34 @@ interface ApiConfig {
 }
 
 function getBackendUrl(): string {
-  const url = import.meta.env.VITE_BACKEND_URL || 
-              import.meta.env.REACT_APP_BACKEND_URL || 
-              process.env.REACT_APP_BACKEND_URL;
+  // Priorizar process.env en producción (cuando se sirve con 'serve')
+  // import.meta.env solo funciona con Vite dev server
+  let url;
   
+  // Verificar si estamos en producción (NODE_ENV o modo de construcción)
+  const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+  
+  if (isProduction || typeof process !== 'undefined') {
+    // En producción, usar process.env
+    url = process.env.REACT_APP_BACKEND_URL || 
+          (typeof window !== 'undefined' && (window as any).__REACT_APP_BACKEND_URL__);
+  } else {
+    // En desarrollo, usar import.meta.env
+    url = import.meta.env.VITE_BACKEND_URL || 
+          import.meta.env.REACT_APP_BACKEND_URL || 
+          process.env.REACT_APP_BACKEND_URL;
+  }
+  
+  // Fallback para asegurar que siempre tenemos una URL
   if (!url) {
     console.error('Backend URL not configured in environment variables');
-    // Fallback para desarrollo local
-    return 'http://localhost:8001';
+    console.log('🔍 Environment check:', {
+      isProduction,
+      processEnv: typeof process !== 'undefined' ? process.env.REACT_APP_BACKEND_URL : 'undefined',
+      importMetaEnv: typeof import.meta !== 'undefined' ? (import.meta.env?.VITE_BACKEND_URL || import.meta.env?.REACT_APP_BACKEND_URL) : 'undefined'
+    });
+    // Usar URL externa como fallback
+    return 'https://c831651b-a7e8-429e-abcb-944983407842.preview.emergentagent.com';
   }
   
   return url;
