@@ -5,7 +5,7 @@
  */
 
 import { useCallback } from 'react';
-import { useAppContext } from './AppContext';
+import { useAppContext } from '../context/AppContext';
 import { API_CONFIG } from '../config/api';
 import { Task, Message } from '../types';
 
