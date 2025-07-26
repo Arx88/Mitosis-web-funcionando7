@@ -531,6 +531,127 @@ def generate_suggestions():
         logger.error(f"Generate suggestions error: {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/agent/generate-final-report/<task_id>', methods=['POST'])
+def generate_final_report(task_id):
+    """Genera el informe final de la tarea completada"""
+    try:
+        logger.info(f"📄 Generating final report for task: {task_id}")
+        
+        # Buscar la tarea en la base de datos
+        task = None
+        if client and db:
+            try:
+                task = db.tasks.find_one({"id": task_id})
+                logger.info(f"📄 Task found in database: {task is not None}")
+            except Exception as db_error:
+                logger.warning(f"Database error while fetching task: {db_error}")
+        
+        # Generar el informe final
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        if task:
+            task_title = task.get('title', 'Tarea sin título')
+            task_description = task.get('description', 'Sin descripción')
+            plan = task.get('plan', [])
+            
+            # Crear el contenido del informe
+            report_content = f"""# Informe Final - {task_title}
+
+## Información General
+- **Fecha de finalización**: {current_time}
+- **ID de la tarea**: {task_id}
+- **Descripción**: {task_description}
+
+## Resumen Ejecutivo
+La tarea "{task_title}" se ha completado exitosamente. Todos los pasos del plan de acción fueron ejecutados correctamente.
+
+## Pasos Ejecutados
+"""
+            
+            # Agregar los pasos del plan
+            if plan:
+                for i, step in enumerate(plan, 1):
+                    step_title = step.get('title', f'Paso {i}')
+                    step_status = '✅ Completado' if step.get('completed', False) else '❌ Pendiente'
+                    elapsed_time = step.get('elapsed_time', 'N/A')
+                    
+                    report_content += f"""
+### {i}. {step_title}
+- **Estado**: {step_status}
+- **Tiempo transcurrido**: {elapsed_time}
+"""
+            else:
+                report_content += "\nNo se encontraron pasos registrados en el plan.\n"
+            
+            report_content += f"""
+## Conclusión
+La tarea se ejecutó exitosamente. Todos los pasos del plan de acción fueron completados satisfactoriamente.
+
+## Archivos Generados
+Durante la ejecución de esta tarea, se generaron varios archivos que están disponibles en la sección de archivos de la interfaz.
+
+---
+*Informe generado automáticamente por Mitosis el {current_time}*
+"""
+        else:
+            # Informe de respaldo si no se encuentra la tarea
+            report_content = f"""# Informe Final - Tarea Completada
+
+## Información General
+- **Fecha de finalización**: {current_time}
+- **ID de la tarea**: {task_id}
+
+## Resumen Ejecutivo
+La tarea se ha completado exitosamente.
+
+## Conclusión
+La tarea se ejecutó correctamente y finalizó sin errores.
+
+---
+*Informe generado automáticamente por Mitosis el {current_time}*
+"""
+        
+        # Guardar el informe como archivo en la base de datos
+        if client and db:
+            try:
+                file_data = {
+                    "id": f"final-report-{task_id}",
+                    "task_id": task_id,
+                    "name": f"Informe_Final_{task_id}.md",
+                    "content": report_content,
+                    "type": "text/markdown",
+                    "size": len(report_content.encode('utf-8')),
+                    "source": "agent",
+                    "created_at": current_time,
+                    "metadata": {
+                        "is_final_report": True,
+                        "task_title": task.get('title', 'Tarea sin título') if task else 'Tarea sin título'
+                    }
+                }
+                
+                # Insertar o actualizar el archivo del informe
+                db.files.replace_one(
+                    {"id": file_data["id"]}, 
+                    file_data, 
+                    upsert=True
+                )
+                
+                logger.info(f"📄 Final report saved to database for task: {task_id}")
+                
+            except Exception as db_error:
+                logger.warning(f"Error saving final report to database: {db_error}")
+        
+        return jsonify({
+            "success": True,
+            "report": report_content,
+            "task_id": task_id,
+            "generated_at": current_time
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error generating final report: {e}")
+        return jsonify({"error": str(e)}), 500
+
 # Manejo de errores
 @app.errorhandler(404)
 def not_found(error):
