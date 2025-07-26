@@ -78,8 +78,8 @@ try:
     from src.websocket.websocket_manager import WebSocketManager
     websocket_manager = WebSocketManager()
     
-    # Configurar SocketIO SOLO CON POLLING para evitar problemas de WebSocket upgrade
-    # Esto evita el problema de "server error" en Kubernetes/Nginx sin configuración WebSocket
+    # Configurar SocketIO CON WEBSOCKET Y FALLBACK POLLING
+    # Habilitar WebSocket real pero mantener polling como fallback
     socketio = SocketIO(
         app, 
         cors_allowed_origins="*",
@@ -88,8 +88,8 @@ try:
         engineio_logger=True,  # Logs detallados de engine.io
         ping_timeout=60,
         ping_interval=25,
-        transports=['polling'],    # SOLO POLLING - no WebSocket
-        allow_upgrades=False,      # No permitir upgrade a WebSocket
+        transports=['websocket', 'polling'],    # WebSocket PRIMERO, polling fallback
+        allow_upgrades=True,      # Permitir upgrade a WebSocket
         json=json
     )
     
