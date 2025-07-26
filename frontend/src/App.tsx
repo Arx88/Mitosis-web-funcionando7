@@ -566,7 +566,7 @@ export function App() {
             name: file.name,
             size: String(file.size),
             type: file.mime_type,
-            url: `${backendUrl}/api/agent/download/${file.id}`
+            url: `${API_CONFIG.backend.url}/api/agent/download/${file.id}`
           }))
         };
         
