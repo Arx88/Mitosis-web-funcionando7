@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 """
-MITOSIS AGENT FINAL REPORT GENERATION AND BACKEND FUNCTIONALITY TESTING
-Testing the new final report generation endpoint and other backend functionality:
+MITOSIS BACKEND HEALTH AND FUNCTIONALITY TESTING
+Testing backend health and functionality to resolve React Error #306 and frontend blank page issue:
 
-1. Test all health endpoints are working properly
-2. Test the new `/api/agent/generate-final-report/<task_id>` endpoint with a sample task_id
-3. Verify the endpoint returns proper JSON response with report content
-4. Test that the report is being saved to the database properly
-5. Check if the generated report follows the expected markdown format
-6. Verify error handling for non-existent task IDs
+1. Test all /api/agent/ endpoints are working correctly
+2. Verify the /api/health endpoint returns correct status
+3. Test that CORS is configured correctly for the frontend domain
+4. Verify that WebSocket endpoint /socket.io/ is accessible
+5. Test a simple chat request to /api/agent/chat to ensure backend processing is working
 
-CRITICAL OBJECTIVE: Ensure the new final report generation functionality works correctly before user tests it.
+CRITICAL OBJECTIVE: Identify and resolve backend communication issues preventing React from completing its render cycle.
 """
 
 import requests
