@@ -65,6 +65,87 @@ export const TerminalView = ({
 }: TerminalViewProps) => {
   const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
   const [isPlanExpanded, setIsPlanExpanded] = useState(true);
+
+  // ✨ NEW: Time tracking for steps
+  const [stepTimers, setStepTimers] = useState<{ [stepId: string]: { startTime: Date, interval: NodeJS.Timeout } }>({});
+
+  // ✨ NEW: Function to format elapsed time
+  const formatElapsedTime = (startTime: Date): string => {
+    const now = new Date();
+    const diffMs = now.getTime() - startTime.getTime();
+    const diffSeconds = Math.floor(diffMs / 1000);
+    const minutes = Math.floor(diffSeconds / 60);
+    const seconds = diffSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // ✨ NEW: Start timer for active step
+  const startStepTimer = (stepId: string) => {
+    if (stepTimers[stepId]) return; // Already has timer
+    
+    const startTime = new Date();
+    const interval = setInterval(() => {
+      const elapsedTime = formatElapsedTime(startTime);
+      
+      // Update the plan with elapsed time
+      if (plan) {
+        const updatedPlan = plan.map(step => 
+          step.id === stepId 
+            ? { ...step, elapsed_time: elapsedTime, start_time: startTime }
+            : step
+        );
+        onPlanUpdate?.(updatedPlan);
+      }
+    }, 1000);
+
+    setStepTimers(prev => ({
+      ...prev,
+      [stepId]: { startTime, interval }
+    }));
+  };
+
+  // ✨ NEW: Stop timer for step
+  const stopStepTimer = (stepId: string) => {
+    if (stepTimers[stepId]) {
+      clearInterval(stepTimers[stepId].interval);
+      setStepTimers(prev => {
+        const newTimers = { ...prev };
+        delete newTimers[stepId];
+        return newTimers;
+      });
+    }
+  };
+
+  // ✨ NEW: Effect to manage step timers
+  useEffect(() => {
+    if (!plan) return;
+
+    // Start timer for active steps
+    plan.forEach(step => {
+      if (step.active && !stepTimers[step.id]) {
+        startStepTimer(step.id);
+      } else if (!step.active && stepTimers[step.id]) {
+        stopStepTimer(step.id);
+      }
+    });
+
+    // Cleanup timers for completed or inactive steps
+    Object.keys(stepTimers).forEach(stepId => {
+      const step = plan.find(s => s.id === stepId);
+      if (!step || step.completed || !step.active) {
+        stopStepTimer(stepId);
+      }
+    });
+
+    // Cleanup all timers on unmount
+    return () => {
+      Object.values(stepTimers).forEach(timer => {
+        clearInterval(timer.interval);
+      });
+    };
+  }, [plan]);
+
+  const [isPlanExpanded, setIsPlanExpanded] = useState(true);
   const [currentExecutingTool, setCurrentExecutingTool] = useState<ToolResult | null>(null);
   const [monitorPages, setMonitorPages] = useState<MonitorPage[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
