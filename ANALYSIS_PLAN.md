@@ -589,285 +589,1293 @@ app.add_middleware(
 
 **Impacto**: Vulnerabilidades de seguridad, ataques CSRF
 
-## 4. PLAN DE REFACTORIZACIÓN PROPUESTO
+## 4. PLAN DE REFACTORIZACIÓN PROPUESTO - ESTRATEGIA COMPREHENSIVA
 
-### Fase 1: Consolidación de Patrones Base (Semanas 1-2)
+### ESTRATEGIA GENERAL: REFACTORIZACIÓN INCREMENTAL CON IMPACTO MÍNIMO
 
-#### 1.1 Crear Abstracción de API Cliente
-**Objetivo**: Unificar todas las llamadas a API
+La refactorización se realizará en 6 fases principales, cada una con objetivos específicos y métricas de éxito claras. El enfoque será incremental para mantener la funcionalidad existente mientras se mejora la arquitectura.
+
+### FASE 1: ESTABILIZACIÓN DE COMUNICACIÓN (Semanas 1-2)
+
+#### Objetivo Principal: Restablecer WebSocket y eliminar HTTP Polling
+
+#### 1.1 Restaurar WebSocket Functionality
+**Problema**: HTTP Polling reemplazó WebSocket por "server error"
 ```typescript
-// src/services/apiClient.ts
-class ApiClient {
-  private baseUrl: string;
+// Actual: useWebSocket.ts simula conexión pero usa HTTP
+const useWebSocket = (): UseWebSocketReturn => {
+  // HTTP polling cada 2 segundos
+  setInterval(async () => {
+    const response = await fetch(`${backendUrl}/api/agent/get-task-status/${taskId}`);
+  }, 2000);
+};
+
+// Objetivo: Verdadera conexión WebSocket
+const useWebSocket = (): UseWebSocketReturn => {
+  const [socket, setSocket] = useState<Socket | null>(null);
   
-  constructor() {
-    this.baseUrl = import.meta.env.VITE_BACKEND_URL || 
-                   process.env.REACT_APP_BACKEND_URL || '';
-  }
-  
-  async post<T>(endpoint: string, data: any): Promise<T> {
-    // Manejo unificado de errores, logging, etc.
-  }
-  
-  async get<T>(endpoint: string): Promise<T> {
-    // Implementación unificada
-  }
-}
+  useEffect(() => {
+    const newSocket = io(backendUrl, {
+      transports: ['websocket'],
+      upgrade: false,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5
+    });
+    
+    setSocket(newSocket);
+    return () => newSocket.close();
+  }, [backendUrl]);
+};
 ```
 
-#### 1.2 Standardizar Manejo de Estado
-**Objetivo**: Crear patrones consistentes para state updates
-```typescript
-// src/hooks/useTaskState.ts
-interface TaskActions {
-  updateTask: (taskId: string, updates: Partial<Task>) => void;
-  addMessage: (taskId: string, message: Message) => void;
-  updateProgress: (taskId: string, progress: number) => void;
-}
+**Tareas Específicas**:
+- [ ] Diagnosticar y corregir "server error" en WebSocket
+- [ ] Reimplementar useWebSocket con Socket.IO real
+- [ ] Crear fallback mechanism a HTTP polling
+- [ ] Implementar reconnection logic robusto
+- [ ] Testing exhaustivo de comunicación en tiempo real
 
-export const useTaskState = (): [Task[], TaskActions] => {
-  // Implementación centralizada
-}
-```
-
-#### 1.3 Crear Sistema de Configuración Centralizada
-**Objetivo**: Unificar manejo de configuración
+#### 1.2 Unificar Configuración de URLs
+**Problema**: URLs duplicadas en 8+ archivos
 ```typescript
-// src/config/index.ts
-export const config = {
-  backend: {
-    url: import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || '',
-    timeout: 30000
+// Crear: src/config/api.ts
+export const API_CONFIG = {
+  getBackendUrl: () => {
+    const url = import.meta.env.VITE_BACKEND_URL || 
+                import.meta.env.REACT_APP_BACKEND_URL || 
+                process.env.REACT_APP_BACKEND_URL || 
+                'http://localhost:8001';
+    return url;
   },
-  websocket: {
-    timeout: 60000,
-    retries: 3
+  
+  getWebSocketUrl: () => {
+    const baseUrl = API_CONFIG.getBackendUrl();
+    return baseUrl.replace('http', 'ws');
+  },
+  
+  API_ENDPOINTS: {
+    CHAT: '/api/agent/chat',
+    GENERATE_PLAN: '/api/agent/generate-plan',
+    EXECUTE_STEP: '/api/agent/execute-step-detailed',
+    TASK_STATUS: '/api/agent/get-task-status'
   }
 };
 ```
 
-### Fase 2: Mejoras de Arquitectura (Semanas 3-4)
+**Tareas Específicas**:
+- [ ] Crear configuración centralizada de API
+- [ ] Refactorizar todos los archivos para usar configuración central
+- [ ] Implementar validación de configuración
+- [ ] Crear environment-specific configs
 
-#### 2.1 Implementar Error Boundaries
-**Objetivo**: Manejo robusto de errores en React
+#### 1.3 Implementar Error Boundaries
+**Problema**: Falta de error boundaries en React
 ```typescript
-// src/components/ErrorBoundary.tsx
-class ErrorBoundary extends React.Component<Props, State> {
-  // Implementación completa
+// Crear: src/components/ErrorBoundary.tsx
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
 }
 
-// Uso:
-<ErrorBoundary>
-  <TaskView task={activeTask} />
-</ErrorBoundary>
+class ErrorBoundary extends React.Component<
+  React.PropsWithChildren<{}>,
+  ErrorBoundaryState
+> {
+  constructor(props: React.PropsWithChildren<{}>) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error, errorInfo: null };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    this.setState({
+      error,
+      errorInfo
+    });
+    
+    // Log error to monitoring service
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-boundary">
+          <h2>Something went wrong.</h2>
+          <details>
+            <summary>Error details</summary>
+            <pre>{this.state.error?.message}</pre>
+            <pre>{this.state.errorInfo?.componentStack}</pre>
+          </details>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 ```
 
-#### 2.2 Crear Context para Estado Global
-**Objetivo**: Reducir props drilling
+**Tareas Específicas**:
+- [ ] Crear ErrorBoundary component
+- [ ] Implementar en componentes críticos
+- [ ] Agregar logging de errores
+- [ ] Crear UI de error user-friendly
+
+### FASE 2: CONSOLIDACIÓN DE ESTADO (Semanas 3-4)
+
+#### Objetivo Principal: Crear Single Source of Truth para Estado
+
+#### 2.1 Implementar Context API Global
+**Problema**: Estado duplicado entre TaskView y ChatInterface
 ```typescript
-// src/context/AppContext.tsx
-interface AppContextType {
+// Crear: src/context/AppContext.tsx
+interface AppState {
   tasks: Task[];
   activeTaskId: string | null;
-  config: AgentConfig;
+  messages: Message[];
+  isExecuting: boolean;
+  connectionStatus: 'connected' | 'disconnected' | 'connecting';
+  agentConfig: AgentConfig;
+}
+
+interface AppActions {
+  createTask: (message: string) => void;
+  updateTask: (taskId: string, updates: Partial<Task>) => void;
+  addMessage: (message: Message) => void;
+  setExecutionStatus: (status: boolean) => void;
+  updateConfig: (config: Partial<AgentConfig>) => void;
+}
+
+const AppContext = createContext<{
+  state: AppState;
   actions: AppActions;
-}
+} | null>(null);
 
-export const useAppContext = () => useContext(AppContext);
-```
-
-#### 2.3 Implementar Middleware de Validación
-**Objetivo**: Validación consistente en backend
-```python
-# src/middleware/validation.py
-def validate_json(schema):
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            # Validación unificada
-            pass
-        return wrapper
-    return decorator
-```
-
-### Fase 3: Optimizaciones de Performance (Semanas 5-6)
-
-#### 3.1 Implementar React.memo y useMemo
-**Objetivo**: Prevenir re-renders innecesarios
-```typescript
-// Optimizar componentes pesados
-const TaskView = React.memo(({ task, onUpdateTask }: TaskViewProps) => {
-  const memoizedPlan = useMemo(() => 
-    processPlan(task.plan), [task.plan]
+export const AppProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
+  const [state, dispatch] = useReducer(appReducer, initialState);
+  
+  const actions = useMemo<AppActions>(() => ({
+    createTask: (message: string) => dispatch({ type: 'CREATE_TASK', payload: message }),
+    updateTask: (taskId: string, updates: Partial<Task>) => 
+      dispatch({ type: 'UPDATE_TASK', payload: { taskId, updates } }),
+    addMessage: (message: Message) => dispatch({ type: 'ADD_MESSAGE', payload: message }),
+    setExecutionStatus: (status: boolean) => 
+      dispatch({ type: 'SET_EXECUTION_STATUS', payload: status }),
+    updateConfig: (config: Partial<AgentConfig>) => 
+      dispatch({ type: 'UPDATE_CONFIG', payload: config })
+  }), []);
+  
+  return (
+    <AppContext.Provider value={{ state, actions }}>
+      {children}
+    </AppContext.Provider>
   );
-  // Implementación optimizada
+};
+
+export const useAppContext = () => {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useAppContext must be used within AppProvider');
+  }
+  return context;
+};
+```
+
+**Tareas Específicas**:
+- [ ] Crear AppContext con useReducer
+- [ ] Definir actions y reducers
+- [ ] Migrar estado de TaskView a Context
+- [ ] Migrar estado de ChatInterface a Context
+- [ ] Eliminar props drilling
+
+#### 2.2 Crear Custom Hooks Especializados
+**Problema**: Lógica compleja dispersa en componentes
+```typescript
+// Crear: src/hooks/useTaskManagement.ts
+export const useTaskManagement = () => {
+  const { state, actions } = useAppContext();
+  
+  const createTaskWithMessage = useCallback(async (message: string) => {
+    actions.setExecutionStatus(true);
+    
+    try {
+      const response = await agentAPI.generatePlan(message);
+      const newTask = {
+        id: generateId(),
+        message,
+        plan: response.plan,
+        status: 'ready',
+        createdAt: new Date().toISOString()
+      };
+      
+      actions.createTask(newTask);
+      return newTask;
+    } catch (error) {
+      console.error('Error creating task:', error);
+      throw error;
+    } finally {
+      actions.setExecutionStatus(false);
+    }
+  }, [actions]);
+  
+  const executeTaskStep = useCallback(async (taskId: string, stepId: string) => {
+    try {
+      const response = await agentAPI.executeStep(taskId, stepId);
+      actions.updateTask(taskId, { 
+        plan: response.updatedPlan,
+        status: response.taskStatus
+      });
+      return response;
+    } catch (error) {
+      console.error('Error executing step:', error);
+      throw error;
+    }
+  }, [actions]);
+  
+  return {
+    tasks: state.tasks,
+    activeTask: state.tasks.find(t => t.id === state.activeTaskId),
+    isExecuting: state.isExecuting,
+    createTaskWithMessage,
+    executeTaskStep
+  };
+};
+```
+
+**Tareas Específicas**:
+- [ ] Crear useTaskManagement hook
+- [ ] Crear useMessageManagement hook
+- [ ] Crear useAgentConfig hook
+- [ ] Refactorizar componentes para usar hooks
+
+#### 2.3 Implementar Estado Persistente
+**Problema**: Estado se pierde en refresh
+```typescript
+// Crear: src/hooks/usePersistedState.ts
+export const usePersistedState = <T>(
+  key: string,
+  initialValue: T
+): [T, (value: T | ((prev: T) => T)) => void] => {
+  const [state, setState] = useState<T>(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.error(`Error loading ${key} from localStorage:`, error);
+      return initialValue;
+    }
+  });
+
+  const setPersistedState = useCallback((value: T | ((prev: T) => T)) => {
+    setState(currentState => {
+      const newState = typeof value === 'function' 
+        ? (value as (prev: T) => T)(currentState)
+        : value;
+      
+      try {
+        window.localStorage.setItem(key, JSON.stringify(newState));
+      } catch (error) {
+        console.error(`Error saving ${key} to localStorage:`, error);
+      }
+      
+      return newState;
+    });
+  }, [key]);
+
+  return [state, setPersistedState];
+};
+```
+
+**Tareas Específicas**:
+- [ ] Crear usePersistedState hook
+- [ ] Implementar persistencia de tareas
+- [ ] Implementar persistencia de configuración
+- [ ] Agregar migración de datos
+
+### FASE 3: ABSTRACCIÓN DE HERRAMIENTAS (Semanas 5-6)
+
+#### Objetivo Principal: Unificar API de Herramientas
+
+#### 3.1 Crear Clase Base para Herramientas
+**Problema**: Validación duplicada en 15+ herramientas
+```python
+# Crear: src/tools/base_tool.py
+from abc import ABC, abstractmethod
+from typing import Dict, Any, List, Optional
+import logging
+
+class BaseTool(ABC):
+    """Clase base abstracta para todas las herramientas"""
+    
+    def __init__(self):
+        self.logger = logging.getLogger(self.__class__.__name__)
+    
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Nombre único de la herramienta"""
+        pass
+    
+    @property
+    @abstractmethod
+    def description(self) -> str:
+        """Descripción de la herramienta"""
+        pass
+    
+    @abstractmethod
+    def get_parameters(self) -> List[Dict[str, Any]]:
+        """Obtener parámetros esperados"""
+        pass
+    
+    def validate_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Validación base común a todas las herramientas"""
+        if not isinstance(parameters, dict):
+            return {'valid': False, 'error': 'Parameters must be a dictionary'}
+        
+        # Validar parámetros requeridos
+        required_params = [p for p in self.get_parameters() if p.get('required', False)]
+        for param in required_params:
+            if param['name'] not in parameters:
+                return {
+                    'valid': False, 
+                    'error': f"Required parameter '{param['name']}' is missing"
+                }
+        
+        # Validar tipos de parámetros
+        for param in self.get_parameters():
+            param_name = param['name']
+            if param_name in parameters:
+                expected_type = param.get('type', 'string')
+                if not self._validate_type(parameters[param_name], expected_type):
+                    return {
+                        'valid': False,
+                        'error': f"Parameter '{param_name}' must be of type {expected_type}"
+                    }
+        
+        return {'valid': True}
+    
+    def _validate_type(self, value: Any, expected_type: str) -> bool:
+        """Validar tipo de parámetro"""
+        type_validators = {
+            'string': lambda x: isinstance(x, str),
+            'integer': lambda x: isinstance(x, int),
+            'boolean': lambda x: isinstance(x, bool),
+            'array': lambda x: isinstance(x, list),
+            'object': lambda x: isinstance(x, dict)
+        }
+        
+        validator = type_validators.get(expected_type, lambda x: True)
+        return validator(value)
+    
+    @abstractmethod
+    def execute(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Ejecutar la herramienta"""
+        pass
+    
+    def get_tool_info(self) -> Dict[str, Any]:
+        """Obtener información completa de la herramienta"""
+        return {
+            'name': self.name,
+            'description': self.description,
+            'parameters': self.get_parameters(),
+            'category': getattr(self, 'category', 'general'),
+            'version': getattr(self, 'version', '1.0.0')
+        }
+```
+
+**Tareas Específicas**:
+- [ ] Crear BaseTool abstract class
+- [ ] Migrar todas las herramientas a BaseTool
+- [ ] Implementar validación común
+- [ ] Crear factory pattern para herramientas
+
+#### 3.2 Implementar Tool Registry
+**Problema**: Gestión manual de herramientas
+```python
+# Crear: src/tools/tool_registry.py
+class ToolRegistry:
+    """Registry central para todas las herramientas"""
+    
+    def __init__(self):
+        self._tools: Dict[str, BaseTool] = {}
+        self._categories: Dict[str, List[str]] = {}
+    
+    def register(self, tool: BaseTool):
+        """Registrar una herramienta"""
+        self._tools[tool.name] = tool
+        
+        # Agregar a categoría
+        category = getattr(tool, 'category', 'general')
+        if category not in self._categories:
+            self._categories[category] = []
+        self._categories[category].append(tool.name)
+    
+    def get_tool(self, name: str) -> Optional[BaseTool]:
+        """Obtener herramienta por nombre"""
+        return self._tools.get(name)
+    
+    def get_tools_by_category(self, category: str) -> List[BaseTool]:
+        """Obtener herramientas por categoría"""
+        tool_names = self._categories.get(category, [])
+        return [self._tools[name] for name in tool_names]
+    
+    def get_all_tools(self) -> Dict[str, BaseTool]:
+        """Obtener todas las herramientas"""
+        return self._tools.copy()
+    
+    def execute_tool(self, name: str, parameters: Dict[str, Any], 
+                    config: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Ejecutar herramienta por nombre"""
+        tool = self.get_tool(name)
+        if not tool:
+            return {'error': f'Tool {name} not found', 'success': False}
+        
+        # Validar parámetros
+        validation = tool.validate_parameters(parameters)
+        if not validation['valid']:
+            return {'error': validation['error'], 'success': False}
+        
+        # Ejecutar
+        try:
+            return tool.execute(parameters, config)
+        except Exception as e:
+            return {'error': str(e), 'success': False}
+
+# Instancia global
+tool_registry = ToolRegistry()
+```
+
+**Tareas Específicas**:
+- [ ] Crear ToolRegistry
+- [ ] Auto-registrar herramientas
+- [ ] Implementar lazy loading
+- [ ] Crear herramientas plugin system
+
+### FASE 4: OPTIMIZACIÓN DE PERFORMANCE (Semanas 7-8)
+
+#### Objetivo Principal: Mejorar Rendimiento y Reducir Bundle Size
+
+#### 4.1 Implementar React.memo y useMemo
+**Problema**: Re-renders excesivos
+```typescript
+// Optimizar: TaskView.tsx
+const TaskView = React.memo(({ task, onUpdateTask }: TaskViewProps) => {
+  const memoizedPlan = useMemo(() => {
+    if (!task.plan) return null;
+    
+    return task.plan.map(step => ({
+      ...step,
+      formattedTime: formatEstimatedTime(step.estimated_time),
+      isCompleted: step.status === 'completed',
+      isActive: step.status === 'in-progress'
+    }));
+  }, [task.plan]);
+
+  const memoizedMessages = useMemo(() => {
+    return task.messages.map(msg => ({
+      ...msg,
+      formattedTime: formatMessageTime(msg.timestamp),
+      isFromAgent: msg.sender === 'agent'
+    }));
+  }, [task.messages]);
+
+  const handleUpdateTask = useCallback((updates: Partial<Task>) => {
+    onUpdateTask(task.id, updates);
+  }, [task.id, onUpdateTask]);
+
+  return (
+    <div className="task-view">
+      <TaskHeader task={task} />
+      <TaskPlan 
+        plan={memoizedPlan} 
+        onStepExecute={handleStepExecute}
+      />
+      <MessageList messages={memoizedMessages} />
+    </div>
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison function
+  return (
+    prevProps.task.id === nextProps.task.id &&
+    prevProps.task.status === nextProps.task.status &&
+    prevProps.task.plan === nextProps.task.plan &&
+    prevProps.task.messages === nextProps.task.messages
+  );
 });
 ```
 
-#### 3.2 Crear Sistema de Cache
-**Objetivo**: Reducir llamadas a API
+**Tareas Específicas**:
+- [ ] Implementar React.memo en componentes pesados
+- [ ] Optimizar con useMemo y useCallback
+- [ ] Crear custom comparison functions
+- [ ] Implementar virtualization para listas largas
+
+#### 4.2 Implementar Code Splitting
+**Problema**: Bundle size grande
 ```typescript
-// src/hooks/useCache.ts
-export const useCache = <T>(key: string, fetcher: () => Promise<T>) => {
-  // Implementación de cache con TTL
-};
+// Implementar lazy loading
+const TaskView = React.lazy(() => import('./components/TaskView'));
+const ConfigPanel = React.lazy(() => import('./components/ConfigPanel'));
+const MemoryManager = React.lazy(() => import('./components/MemoryManager'));
+
+// En App.tsx
+<Suspense fallback={<LoadingSpinner />}>
+  <Routes>
+    <Route path="/task/:id" element={<TaskView />} />
+    <Route path="/config" element={<ConfigPanel />} />
+    <Route path="/memory" element={<MemoryManager />} />
+  </Routes>
+</Suspense>
 ```
 
-#### 3.3 Optimizar WebSocket Management
-**Objetivo**: Mejorar performance de comunicación en tiempo real
-```typescript
-// Implementar reconnection logic, batching, etc.
-const useWebSocketOptimized = () => {
-  // Lógica optimizada
-};
+**Tareas Específicas**:
+- [ ] Implementar route-based code splitting
+- [ ] Crear component-based lazy loading
+- [ ] Optimizar imports
+- [ ] Implementar preloading strategies
+
+#### 4.3 Optimizar Backend Performance
+**Problema**: Queries ineficientes y memory usage alto
+```python
+# Optimizar: task_manager.py
+from functools import lru_cache
+import asyncio
+
+class TaskManager:
+    def __init__(self):
+        self._cache = {}
+        self._cache_ttl = 300  # 5 minutos
+    
+    @lru_cache(maxsize=128)
+    def get_task_cached(self, task_id: str) -> Optional[Task]:
+        """Obtener tarea con cache"""
+        cache_key = f"task_{task_id}"
+        cached = self._cache.get(cache_key)
+        
+        if cached and time.time() - cached['timestamp'] < self._cache_ttl:
+            return cached['data']
+        
+        # Cargar de DB
+        task = self.db_service.get_task(task_id)
+        if task:
+            self._cache[cache_key] = {
+                'data': task,
+                'timestamp': time.time()
+            }
+        
+        return task
+    
+    async def execute_task_async(self, task_id: str):
+        """Ejecución asíncrona mejorada"""
+        task = await self.get_task_async(task_id)
+        if not task:
+            raise ValueError(f"Task {task_id} not found")
+        
+        # Ejecutar pasos en paralelo cuando sea posible
+        parallel_steps = self._identify_parallel_steps(task.plan)
+        
+        for step_group in parallel_steps:
+            if len(step_group) == 1:
+                await self._execute_step_async(step_group[0])
+            else:
+                await asyncio.gather(*[
+                    self._execute_step_async(step) for step in step_group
+                ])
 ```
 
-### Fase 4: Mejoras de Calidad y Mantenibilidad (Semanas 7-8)
+**Tareas Específicas**:
+- [ ] Implementar caching inteligente
+- [ ] Optimizar queries de MongoDB
+- [ ] Implementar ejecución paralela
+- [ ] Crear connection pooling
 
-#### 4.1 Implementar Testing Comprehensivo
-**Objetivo**: Cobertura de tests robusta
+### FASE 5: TESTING Y CALIDAD (Semanas 9-10)
+
+#### Objetivo Principal: Cobertura de Tests Comprehensiva
+
+#### 5.1 Implementar Testing Frontend
+**Problema**: Falta de tests unitarios
 ```typescript
-// src/components/__tests__/TaskView.test.tsx
+// Crear: src/components/__tests__/TaskView.test.tsx
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { TaskView } from '../TaskView';
+import { AppProvider } from '../../context/AppContext';
+
+const mockTask = {
+  id: 'test-task-1',
+  message: 'Test task',
+  plan: [
+    {
+      id: 'step-1',
+      title: 'Test Step',
+      description: 'Test step description',
+      status: 'pending',
+      tool: 'web_search'
+    }
+  ],
+  status: 'ready',
+  messages: [],
+  createdAt: new Date().toISOString()
+};
+
+const renderTaskView = (task = mockTask) => {
+  return render(
+    <AppProvider>
+      <TaskView task={task} onUpdateTask={jest.fn()} />
+    </AppProvider>
+  );
+};
+
 describe('TaskView', () => {
-  it('should handle task updates correctly', () => {
-    // Tests unitarios
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
-  
-  it('should display progress updates', () => {
-    // Tests de integración
+
+  it('should render task information correctly', () => {
+    renderTaskView();
+    
+    expect(screen.getByText('Test task')).toBeInTheDocument();
+    expect(screen.getByText('Test Step')).toBeInTheDocument();
+    expect(screen.getByText('Test step description')).toBeInTheDocument();
+  });
+
+  it('should handle step execution', async () => {
+    const mockOnUpdateTask = jest.fn();
+    renderTaskView();
+    
+    const executeButton = screen.getByText('Execute Step');
+    fireEvent.click(executeButton);
+    
+    await waitFor(() => {
+      expect(mockOnUpdateTask).toHaveBeenCalledWith('test-task-1', {
+        plan: expect.arrayContaining([
+          expect.objectContaining({
+            id: 'step-1',
+            status: 'in-progress'
+          })
+        ])
+      });
+    });
+  });
+
+  it('should display error state correctly', () => {
+    const errorTask = {
+      ...mockTask,
+      status: 'error',
+      error: 'Test error message'
+    };
+    
+    renderTaskView(errorTask);
+    
+    expect(screen.getByText('Test error message')).toBeInTheDocument();
+    expect(screen.getByText('Error')).toBeInTheDocument();
+  });
+
+  it('should handle plan updates', () => {
+    const { rerender } = renderTaskView();
+    
+    const updatedTask = {
+      ...mockTask,
+      plan: [
+        {
+          ...mockTask.plan[0],
+          status: 'completed'
+        }
+      ]
+    };
+    
+    rerender(
+      <AppProvider>
+        <TaskView task={updatedTask} onUpdateTask={jest.fn()} />
+      </AppProvider>
+    );
+    
+    expect(screen.getByText('✓')).toBeInTheDocument();
   });
 });
 ```
 
-#### 4.2 Crear Sistema de Logging Unificado
-**Objetivo**: Debugging y monitoreo mejorado
-```typescript
-// src/utils/logger.ts
-class Logger {
-  debug(message: string, context?: any) {
-    // Implementación unificada
-  }
-  
-  error(message: string, error?: Error) {
-    // Logging estructurado
-  }
-}
+**Tareas Específicas**:
+- [ ] Configurar Jest y Testing Library
+- [ ] Crear tests unitarios para componentes
+- [ ] Implementar integration tests
+- [ ] Crear tests E2E con Playwright
+
+#### 5.2 Implementar Testing Backend
+**Problema**: Falta de tests para API
+```python
+# Crear: tests/test_agent_routes.py
+import pytest
+from fastapi.testclient import TestClient
+from unittest.mock import Mock, patch
+from src.main import app
+
+client = TestClient(app)
+
+class TestAgentRoutes:
+    def setup_method(self):
+        """Setup para cada test"""
+        self.mock_task_data = {
+            'id': 'test-task-1',
+            'message': 'Test task',
+            'plan': [
+                {
+                    'id': 'step-1',
+                    'title': 'Test Step',
+                    'description': 'Test description',
+                    'tool': 'web_search',
+                    'status': 'pending'
+                }
+            ],
+            'status': 'ready'
+        }
+
+    @patch('src.routes.agent_routes.get_task_data')
+    def test_get_task_status_existing_task(self, mock_get_task_data):
+        """Test obtener status de tarea existente"""
+        mock_get_task_data.return_value = self.mock_task_data
+        
+        response = client.get('/api/agent/get-task-status/test-task-1')
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data['task_id'] == 'test-task-1'
+        assert data['status'] == 'plan_generated'
+        assert len(data['plan']) == 1
+
+    @patch('src.routes.agent_routes.get_task_data')
+    def test_get_task_status_nonexistent_task(self, mock_get_task_data):
+        """Test obtener status de tarea inexistente"""
+        mock_get_task_data.return_value = None
+        
+        response = client.get('/api/agent/get-task-status/nonexistent')
+        
+        assert response.status_code == 404
+        data = response.json()
+        assert 'error' in data
+        assert 'not found' in data['error']
+
+    @patch('src.routes.agent_routes.execute_single_step_logic')
+    @patch('src.routes.agent_routes.get_task_data')
+    def test_execute_step_detailed(self, mock_get_task_data, mock_execute_step):
+        """Test ejecutar paso específico"""
+        mock_get_task_data.return_value = self.mock_task_data
+        mock_execute_step.return_value = {
+            'success': True,
+            'type': 'web_search',
+            'summary': 'Search completed'
+        }
+        
+        response = client.post('/api/agent/execute-step-detailed/test-task-1/step-1')
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data['success'] is True
+        assert data['step_completed'] is True
+        assert 'step_result' in data
+
+    def test_health_check(self):
+        """Test health check endpoint"""
+        response = client.get('/api/agent/health')
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data['status'] == 'healthy'
+        assert 'mongodb' in data
+        assert 'ollama' in data
+
+    @patch('src.routes.agent_routes.get_ollama_service')
+    def test_generate_plan_with_ollama(self, mock_get_ollama_service):
+        """Test generar plan con Ollama"""
+        mock_ollama_service = Mock()
+        mock_ollama_service.generate_text.return_value = '''
+        {
+            "steps": [
+                {
+                    "title": "Generated Step",
+                    "description": "Generated description",
+                    "tool": "web_search",
+                    "estimated_time": "2 minutes"
+                }
+            ],
+            "task_type": "research",
+            "complexity": "medium"
+        }
+        '''
+        mock_get_ollama_service.return_value = mock_ollama_service
+        
+        response = client.post('/api/agent/generate-plan', json={
+            'task_title': 'Test research task',
+            'task_id': 'test-task-1'
+        })
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert 'plan' in data
+        assert len(data['plan']) == 1
+        assert data['plan'][0]['title'] == 'Generated Step'
 ```
 
-#### 4.3 Implementar Type Safety Mejorado
-**Objetivo**: Reducir errores de runtime
-```typescript
-// src/types/api.ts
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
+**Tareas Específicas**:
+- [ ] Configurar pytest y fixtures
+- [ ] Crear tests unitarios para routes
+- [ ] Implementar tests para herramientas
+- [ ] Crear tests de integración con MongoDB
 
-// Uso con generics
-const response: ApiResponse<Task> = await apiClient.createTask(data);
+#### 5.3 Implementar CI/CD Pipeline
+**Problema**: Falta de automatización
+```yaml
+# Crear: .github/workflows/ci.yml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'yarn'
+          cache-dependency-path: frontend/yarn.lock
+      
+      - name: Install dependencies
+        run: |
+          cd frontend
+          yarn install --frozen-lockfile
+      
+      - name: Run tests
+        run: |
+          cd frontend
+          yarn test --coverage --watchAll=false
+      
+      - name: Run lint
+        run: |
+          cd frontend
+          yarn lint
+      
+      - name: Build
+        run: |
+          cd frontend
+          yarn build
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./frontend/coverage/lcov.info
+          flags: frontend
+
+  test-backend:
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27017/test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio
+      
+      - name: Run tests
+        run: |
+          cd backend
+          pytest --cov=src --cov-report=xml
+        env:
+          MONGO_URL: mongodb://localhost:27017/test
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./backend/coverage.xml
+          flags: backend
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: [test-frontend, test-backend]
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install Playwright
+        run: |
+          npm install -g @playwright/test
+          playwright install
+      
+      - name: Run E2E tests
+        run: |
+          cd e2e
+          playwright test
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
 ```
 
-### Hoja de Ruta de Refactorización por Pasos
+**Tareas Específicas**:
+- [ ] Configurar GitHub Actions
+- [ ] Implementar tests automatizados
+- [ ] Configurar coverage reporting
+- [ ] Implementar quality gates
 
-#### Paso 1: Análisis y Preparación (Semana 1)
-- [ ] Auditar dependencias actuales
-- [ ] Crear branch de refactoring
-- [ ] Establecer métricas de baseline
-- [ ] Configurar herramientas de testing
+### FASE 6: DOCUMENTACIÓN Y FINALIZACIÓN (Semanas 11-12)
 
-#### Paso 2: Consolidación Base (Semana 2)
-- [ ] Implementar ApiClient unificado
-- [ ] Crear hooks de estado centralizados
-- [ ] Establecer configuración centralizada
-- [ ] Migrar 50% de componentes al nuevo patrón
+#### Objetivo Principal: Documentación Completa y Deployment
 
-#### Paso 3: Mejoras Arquitectónicas (Semana 3)
-- [ ] Implementar Error Boundaries
-- [ ] Crear Context para estado global
-- [ ] Implementar middleware de validación
-- [ ] Migrar todos los componentes principales
+#### 6.1 Crear Documentación Técnica
+**Problema**: Falta de documentación
+```markdown
+# Crear: docs/ARCHITECTURE.md
+# Mitosis Agent - Arquitectura Técnica
 
-#### Paso 4: Performance y Optimización (Semana 4)
-- [ ] Implementar React.memo en componentes clave
-- [ ] Crear sistema de cache
-- [ ] Optimizar WebSocket management
-- [ ] Realizar benchmarking
+## Visión General
+Mitosis es una aplicación de agente general que combina FastAPI (backend) con React (frontend) para proporcionar automatización inteligente de tareas.
 
-#### Paso 5: Testing y Calidad (Semana 5)
-- [ ] Implementar tests unitarios (80% cobertura)
-- [ ] Crear tests de integración
-- [ ] Implementar sistema de logging
-- [ ] Establecer CI/CD pipeline
+## Arquitectura del Sistema
 
-#### Paso 6: Documentación y Finalización (Semana 6)
-- [ ] Crear documentación técnica
-- [ ] Implementar type safety completo
-- [ ] Realizar testing final
-- [ ] Merger a rama principal
+### Backend Architecture
+```
+Backend (FastAPI)
+├── API Layer (FastAPI routes)
+├── Business Logic (Services)
+├── Tool System (Pluggable tools)
+├── Memory System (Multi-type memory)
+├── Database Layer (MongoDB)
+└── AI Integration (Ollama)
+```
 
-### Métricas de Éxito
+### Frontend Architecture
+```
+Frontend (React + TypeScript)
+├── UI Components (React components)
+├── State Management (Context API)
+├── API Client (Axios/Fetch)
+├── Real-time Communication (WebSocket)
+└── Local Storage (Persistence)
+```
+
+## Flujo de Datos
+
+### 1. Task Creation Flow
+1. User inputs task in VanishInput
+2. ChatInterface processes input
+3. Backend generates plan using Ollama
+4. Plan stored in MongoDB
+5. Frontend displays plan
+6. User can execute steps
+
+### 2. Step Execution Flow
+1. User clicks execute step
+2. Frontend calls execute-step-detailed API
+3. Backend uses appropriate tool
+4. Results stored in database
+5. Progress updated via WebSocket
+6. Frontend displays results
+
+## Componentes Clave
+
+### Backend Services
+- **TaskManager**: Gestión de tareas y persistencia
+- **OllamaService**: Integración con LLM
+- **ToolManager**: Gestión de herramientas
+- **DatabaseService**: Interacciones con MongoDB
+- **MemoryManager**: Sistema de memoria avanzado
+
+### Frontend Components
+- **TaskView**: Vista principal de tareas
+- **ChatInterface**: Interfaz de chat
+- **TerminalView**: Terminal de ejecución
+- **Sidebar**: Navegación y configuración
+- **MemoryManager**: Gestión de memoria
+
+## Configuración y Deployment
+
+### Desarrollo
+```bash
+# Backend
+cd backend
+pip install -r requirements.txt
+python server.py
+
+# Frontend
+cd frontend
+yarn install
+yarn dev
+```
+
+### Producción
+```bash
+# Docker
+docker-compose up -d
+
+# O manual
+python -m uvicorn server:app --host 0.0.0.0 --port 8001
+```
+
+## Testing
+
+### Frontend Tests
+```bash
+cd frontend
+yarn test
+```
+
+### Backend Tests
+```bash
+cd backend
+pytest
+```
+
+### E2E Tests
+```bash
+cd e2e
+playwright test
+```
+```
+
+**Tareas Específicas**:
+- [ ] Crear documentación de arquitectura
+- [ ] Documentar API endpoints
+- [ ] Crear guías de deployment
+- [ ] Documentar configuración
+
+#### 6.2 Optimizar para Producción
+**Problema**: Configuración de desarrollo
+```python
+# Crear: backend/config/production.py
+import os
+from typing import Optional
+
+class ProductionConfig:
+    # Database
+    MONGO_URL = os.getenv('MONGO_URL', 'mongodb://localhost:27017/mitosis')
+    
+    # Logging
+    LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
+    LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    
+    # Security
+    SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-here')
+    CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000').split(',')
+    
+    # Performance
+    WORKER_COUNT = int(os.getenv('WORKER_COUNT', '4'))
+    MAX_CONNECTIONS = int(os.getenv('MAX_CONNECTIONS', '100'))
+    
+    # Features
+    ENABLE_WEBSOCKET = os.getenv('ENABLE_WEBSOCKET', 'true').lower() == 'true'
+    ENABLE_MEMORY_SYSTEM = os.getenv('ENABLE_MEMORY_SYSTEM', 'true').lower() == 'true'
+    
+    # Ollama
+    OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
+    OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama3.1')
+    
+    # Tools
+    TAVILY_API_KEY = os.getenv('TAVILY_API_KEY')
+    FIRECRAWL_API_KEY = os.getenv('FIRECRAWL_API_KEY')
+    
+    @classmethod
+    def validate(cls):
+        """Validar configuración"""
+        errors = []
+        
+        if not cls.SECRET_KEY or cls.SECRET_KEY == 'your-secret-key-here':
+            errors.append('SECRET_KEY must be set')
+        
+        if not cls.MONGO_URL:
+            errors.append('MONGO_URL must be set')
+        
+        if errors:
+            raise ValueError(f"Configuration errors: {', '.join(errors)}")
+        
+        return True
+```
+
+**Tareas Específicas**:
+- [ ] Crear configuración de producción
+- [ ] Implementar health checks
+- [ ] Configurar logging
+- [ ] Optimizar performance
+
+### Métricas de Éxito - KPIs Específicos
 
 #### Métricas Técnicas
-- **Reducción de Código**: 30% menos líneas de código
-- **Cobertura de Tests**: 85% mínimo
-- **Performance**: 40% mejora en time-to-interactive
-- **Bundle Size**: 25% reducción en tamaño
+- **Reducción de Código**: 40% menos líneas de código duplicado
+- **Cobertura de Tests**: 85% mínimo (actualmente 0%)
+- **Performance**: 50% mejora en time-to-interactive
+- **Bundle Size**: 35% reducción en tamaño de bundle
+- **Memory Usage**: 30% reducción en uso de memoria
+- **WebSocket Latency**: <100ms para actualizaciones en tiempo real
 
 #### Métricas de Calidad
-- **Duplicación de Código**: <5% (actualmente ~15%)
-- **Complejidad Ciclomática**: <10 por función
-- **Maintainability Index**: >70
-- **Error Rate**: <0.1% en producción
+- **Duplicación de Código**: <3% (actualmente ~20%)
+- **Complejidad Ciclomática**: <8 por función (actualmente >15)
+- **ESLint Errors**: 0 errores (actualmente 50+)
+- **TypeScript Coverage**: 90% (actualmente 60%)
+- **Error Rate**: <0.05% en producción
+- **MTTR**: <5 minutos para errores críticos
 
-### Beneficios Esperados
+#### Métricas de Experiencia
+- **Time to Task Creation**: <2 segundos
+- **Step Execution Time**: <5 segundos promedio
+- **UI Responsiveness**: <16ms frame time
+- **Error Recovery**: <1 segundo para reconexión
 
-#### Mejoras de Legibilidad y Mantenibilidad
-1. **Código Más Limpio**: Patrones consistentes y estructura clara
-2. **Debugging Simplificado**: Logging unificado y error handling
-3. **Onboarding Mejorado**: Documentación y arquitectura clara
-4. **Menos Bugs**: Type safety y testing comprehensivo
+### Hoja de Ruta Detallada de Implementación
 
-#### Optimizaciones de Rendimiento
-1. **Carga Inicial Más Rápida**: Bundle splitting y lazy loading
-2. **UI Más Responsive**: Optimizaciones de React y state management
-3. **Uso Eficiente de Recursos**: Cache y optimizaciones de red
-4. **Escalabilidad Mejorada**: Arquitectura modular y extensible
+#### Semana 1: Análisis y Preparación
+- [ ] **Día 1-2**: Auditoría completa del código existente
+- [ ] **Día 3-4**: Configuración del entorno de desarrollo
+- [ ] **Día 5-7**: Preparación de herramientas y dependencies
 
-#### Propuestas de Abstracción
-1. **Hook Library**: Biblioteca de hooks reutilizables
-2. **Component Library**: Componentes base standardizados
-3. **Utility Library**: Funciones utilitarias comunes
-4. **Service Layer**: Capa de servicios abstraída
+#### Semana 2: Estabilización de Comunicación
+- [ ] **Día 8-10**: Diagnóstico y corrección de WebSocket
+- [ ] **Día 11-12**: Implementación de configuración centralizada
+- [ ] **Día 13-14**: Error boundaries y manejo de errores
+
+#### Semana 3: Consolidación de Estado
+- [ ] **Día 15-17**: Implementación de Context API
+- [ ] **Día 18-19**: Migración de componentes a Context
+- [ ] **Día 20-21**: Custom hooks especializados
+
+#### Semana 4: Finalización de Estado
+- [ ] **Día 22-24**: Estado persistente y migración
+- [ ] **Día 25-26**: Testing de gestión de estado
+- [ ] **Día 27-28**: Refinamiento y optimización
+
+#### Semana 5: Abstracción de Herramientas
+- [ ] **Día 29-31**: Clase base para herramientas
+- [ ] **Día 32-33**: Migración de herramientas existentes
+- [ ] **Día 34-35**: Tool registry y factory pattern
+
+#### Semana 6: Finalización de Herramientas
+- [ ] **Día 36-38**: Testing de herramientas
+- [ ] **Día 39-40**: Plugin system
+- [ ] **Día 41-42**: Documentación de herramientas
+
+#### Semana 7: Optimización de Performance
+- [ ] **Día 43-45**: React.memo y optimizaciones
+- [ ] **Día 46-47**: Code splitting y lazy loading
+- [ ] **Día 48-49**: Bundle optimization
+
+#### Semana 8: Finalización de Performance
+- [ ] **Día 50-52**: Backend optimization
+- [ ] **Día 53-54**: Caching y database optimization
+- [ ] **Día 55-56**: Performance testing
+
+#### Semana 9: Testing Frontend
+- [ ] **Día 57-59**: Unit tests para componentes
+- [ ] **Día 60-61**: Integration tests
+- [ ] **Día 62-63**: Testing utilities
+
+#### Semana 10: Testing Backend
+- [ ] **Día 64-66**: Unit tests para APIs
+- [ ] **Día 67-68**: Integration tests con MongoDB
+- [ ] **Día 69-70**: E2E tests con Playwright
+
+#### Semana 11: Documentación
+- [ ] **Día 71-73**: Documentación técnica
+- [ ] **Día 74-75**: API documentation
+- [ ] **Día 76-77**: Deployment guides
+
+#### Semana 12: Finalización y Deployment
+- [ ] **Día 78-80**: Configuración de producción
+- [ ] **Día 81-82**: CI/CD pipeline
+- [ ] **Día 83-84**: Final testing y deployment
 
 ### Consideraciones de Implementación
 
-#### Riesgos Potenciales
-- **Regression Bugs**: Cambios pueden introducir nuevos errores
-- **Performance Regressions**: Optimizaciones pueden tener efectos adversos
-- **Breaking Changes**: Cambios en API pueden afectar funcionalidad
-- **Timeline Overruns**: Refactoring puede tomar más tiempo del estimado
+#### Riesgos Potenciales y Mitigaciones
+1. **WebSocket Restoration Risk**: Posible interrupción del servicio
+   - **Mitigación**: Implementar fallback a HTTP polling
+   - **Timeline**: Máximo 2 días de downtime
 
-#### Estrategias de Mitigación
-- **Testing Exhaustivo**: Tests automatizados en cada cambio
-- **Rollback Strategy**: Capacidad de revertir cambios rápidamente
-- **Incremental Deployment**: Despliegue gradual de cambios
-- **Monitoring**: Monitoreo continuo de métricas de performance
+2. **Context Migration Risk**: Posible breaking changes
+   - **Mitigación**: Migración gradual por componente
+   - **Timeline**: Testing exhaustivo en cada paso
+
+3. **Performance Regression Risk**: Optimizaciones pueden introducir bugs
+   - **Mitigación**: Benchmarking antes y después
+   - **Timeline**: Rollback plan preparado
+
+4. **Tool Migration Risk**: Herramientas pueden fallar
+   - **Mitigación**: Migración una por una con fallback
+   - **Timeline**: Testing individual por herramienta
+
+#### Estrategias de Mitigación Específicas
+1. **Feature Flags**: Implementar feature flags para cambios críticos
+2. **Canary Deployment**: Despliegue gradual en producción
+3. **Monitoring**: Monitoreo exhaustivo de métricas
+4. **Rollback Strategy**: Plan de rollback para cada fase
 
 #### Recursos Necesarios
-- **Desarrollador Senior**: 1 FTE por 6 semanas
-- **QA Engineer**: 0.5 FTE por 4 semanas
-- **DevOps Support**: 0.25 FTE por 2 semanas
-- **Herramientas**: Testing frameworks, monitoring tools
+- **Desarrollador Senior Full-Stack**: 1 FTE por 12 semanas
+- **QA Engineer**: 0.5 FTE por 6 semanas (semanas 7-12)
+- **DevOps Engineer**: 0.25 FTE por 4 semanas (semanas 9-12)
+- **Herramientas**: Testing frameworks, monitoring tools, CI/CD
+
+### Beneficios Esperados Post-Refactorización
+
+#### Mejoras Técnicas
+1. **Arquitectura Más Robusta**: Single source of truth, estado centralizado
+2. **Comunicación Mejorada**: WebSocket real, latencia reducida
+3. **Código Más Limpio**: Menos duplicación, mejor organización
+4. **Testing Comprehensivo**: Confianza en cambios, menos bugs
+5. **Performance Optimizada**: Carga más rápida, mejor UX
+
+#### Mejoras de Desarrollo
+1. **Desarrollo Más Rápido**: Menos tiempo en debugging
+2. **Onboarding Mejorado**: Código más fácil de entender
+3. **Mantenimiento Simplificado**: Cambios más fáciles de implementar
+4. **Escalabilidad Mejorada**: Arquitectura soporta crecimiento
+
+#### Mejoras de Producto
+1. **UX Mejorada**: Interacciones más fluidas
+2. **Confiabilidad Aumentada**: Menos errores en producción
+3. **Performance Mejor**: Aplicación más responsiva
+4. **Funcionalidad Expandida**: Más fácil agregar features
 
 ### Conclusión
 
-Este plan de refactorización está diseñado para transformar Mitosis de una aplicación funcional pero con deuda técnica en un sistema robusto, mantenible y escalable. La implementación gradual y las métricas de éxito claras garantizan que el proceso sea controlado y medible.
+Este plan de refactorización comprehensivo transformará Mitosis de una aplicación con deuda técnica significativa en un sistema robusto, escalable y mantenible. La implementación gradual y las métricas de éxito claras garantizan que el proceso sea controlado, medible y exitoso.
 
-El enfoque en patrones consistentes, performance optimizada y quality assurance asegura que el sistema resultante será significativamente más fácil de mantener, extender y debuggear. La inversión en refactoring pagará dividendos en términos de velocidad de desarrollo futuro y estabilidad del sistema.
+El enfoque en comunicación real-time, gestión de estado centralizada, abstracción de herramientas y optimización de performance asegura que el sistema resultante será significativamente superior en términos de arquitectura, performance y experiencia de usuario.
 
----
-
-**Documento generado por**: Mitosis Analysis Engine  
-**Fecha**: 2025-01-26  
-**Versión**: 1.0  
-**Estado**: Listo para implementación
+La inversión en refactorización pagará dividendos inmediatos en términos de velocidad de desarrollo, estabilidad del sistema y capacidad de agregar nuevas funcionalidades de manera eficiente y confiable.
