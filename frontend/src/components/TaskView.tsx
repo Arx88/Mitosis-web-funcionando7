@@ -247,6 +247,9 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       onInitializationComplete={handleInitializationComplete}
       onInitializationLog={handleInitializationLog}
       task={task}
+      plan={task.plan || []}
+      taskId={task.id}
+      taskTitle={task.title}
     />
   ), [task.terminalCommands, task, combinedLogs, isInitializing, handleInitializationComplete, handleInitializationLog]);
 
