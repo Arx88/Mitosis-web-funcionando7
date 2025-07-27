@@ -177,9 +177,13 @@ export function App() {
 
   const handleCreateTaskWithMessage = useCallback(async (message: string) => {
     console.log('🎯 Homepage: Creating task with initial message (Optimized)');
+    console.log('🎯 Message received:', message);
     if (message.trim()) {
+      console.log('🎯 About to call createTaskWithMessage with:', message.trim());
       const newTask = await createTaskWithMessage(message.trim());
       console.log('✅ Task created optimized:', newTask.id);
+    } else {
+      console.log('❌ Message is empty, not creating task');
     }
   }, [createTaskWithMessage]);
 
