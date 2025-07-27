@@ -116,12 +116,12 @@ export function App() {
   // MEMOIZED VALUES - PREVENIR CÁLCULOS INNECESARIOS
   // ========================================================================
 
-  const activeTask = useMemo(() => getActiveTask(), [getActiveTask]);
-
-  // Memoizar condición de renderizado principal
+  // Memoizar condición de renderizado principal - simplificado para evitar race conditions
   const shouldShowTaskView = useMemo(() => {
-    return activeTask && activeTaskId;
-  }, [activeTask, activeTaskId]);
+    return activeTaskId && tasks.some(task => task.id === activeTaskId);
+  }, [activeTaskId, tasks]);
+
+  const activeTask = useMemo(() => getActiveTask(), [getActiveTask]);
 
   // ========================================================================
   // CALLBACKS MEMOIZADOS - PREVENIR RE-RENDERS
