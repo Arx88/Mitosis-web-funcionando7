@@ -111,6 +111,8 @@ export const useTaskManagement = () => {
             await startTaskExecution(newTask.id);
           }, 1000);
         }
+        
+        console.log('✅ Task creation completed successfully');
       } else {
         console.error('📝 Response error:', await response.text());
       }
