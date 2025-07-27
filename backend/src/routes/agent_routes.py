@@ -6328,7 +6328,14 @@ def chat():
             
         message = data.get('message', '')
         context = data.get('context', {})
-        task_id = context.get('task_id') or f"chat-{int(time.time())}"
+        
+        # Handle both string and dictionary context
+        if isinstance(context, str):
+            task_id = context
+        elif isinstance(context, dict):
+            task_id = context.get('task_id') or f"chat-{int(time.time())}"
+        else:
+            task_id = f"chat-{int(time.time())}"
         
         if not message:
             return jsonify({'error': 'message is required'}), 400
