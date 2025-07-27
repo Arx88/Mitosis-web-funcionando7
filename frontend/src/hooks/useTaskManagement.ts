@@ -49,6 +49,9 @@ export const useTaskManagement = () => {
     // Generar plan mejorado y título
     try {
       console.log('📝 Hook: Generating enhanced title and plan');
+      console.log('📝 Backend URL:', API_CONFIG.backend.url);
+      console.log('📝 Request payload:', { task_title: messageContent.trim(), task_id: newTask.id });
+      
       const response = await fetch(`${API_CONFIG.backend.url}/api/agent/generate-plan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,8 +61,12 @@ export const useTaskManagement = () => {
         })
       });
       
+      console.log('📝 Response status:', response.status);
+      console.log('📝 Response ok:', response.ok);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('📝 Response data:', data);
         
         // Actualizar tarea con título mejorado y plan
         updateTask((task: Task) => {
@@ -69,6 +76,7 @@ export const useTaskManagement = () => {
           
           if (data.enhanced_title) {
             updatedTask.title = data.enhanced_title;
+            console.log('📝 Updated title:', data.enhanced_title);
           }
           
           if (data.plan) {
@@ -89,6 +97,8 @@ export const useTaskManagement = () => {
               status: 'in-progress',
               progress: 0
             };
+            
+            console.log('📝 Updated task with plan:', updatedTask);
           }
           
           return updatedTask;
@@ -96,10 +106,13 @@ export const useTaskManagement = () => {
         
         // Auto-iniciar ejecución si hay plan
         if (data.plan && data.plan.length > 0) {
+          console.log('📝 Auto-starting task execution');
           setTimeout(async () => {
             await startTaskExecution(newTask.id);
           }, 1000);
         }
+      } else {
+        console.error('📝 Response error:', await response.text());
       }
     } catch (error) {
       console.error('❌ Error generating plan:', error);
