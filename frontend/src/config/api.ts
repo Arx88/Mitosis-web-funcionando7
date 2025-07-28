@@ -89,7 +89,7 @@ export const API_CONFIG: ApiConfig = {
     downloadFile: '/api/agent/download'
   },
   websocket: {
-    url: `${getBackendUrl()}/socket.io/`,
+    url: `${getBackendUrl()}/api/socket.io/`,
     options: {
       transports: ['websocket', 'polling'], // WebSocket first, polling fallback
       upgrade: true,
