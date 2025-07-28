@@ -247,6 +247,30 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
           if (onTaskPlanGenerated) {
             onTaskPlanGenerated(response.plan);
           }
+
+          // Iniciar automáticamente la ejecución del plan
+          if (task?.id) {
+            try {
+              console.log('🚀 Starting automatic plan execution for task:', task.id);
+              const executionResponse = await fetch(`${API_CONFIG.backend.url}/api/agent/start-task-execution/${task.id}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                }
+              });
+              
+              if (executionResponse.ok) {
+                console.log('✅ Plan execution started successfully');
+                if (onLogToTerminal) {
+                  onLogToTerminal('🚀 Plan execution started automatically', 'info');
+                }
+              } else {
+                console.error('❌ Failed to start plan execution:', executionResponse.status);
+              }
+            } catch (executionError) {
+              console.error('❌ Error starting plan execution:', executionError);
+            }
+          }
         }
 
         // Log de herramientas al terminal
