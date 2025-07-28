@@ -159,7 +159,7 @@ export const VanishInput: React.FC<VanishInputProps> = ({
       clearTimeout(timeoutId);
       clearAllTimers();
     };
-  }, [placeholderIndex, inputValue, disabled, placeholder]); // Fixed dependencies to prevent infinite re-rendering
+  }, [placeholderIndex, inputValue, disabled, placeholder, startTypingEffect, clearAllTimers]); // Updated dependencies with memoized functions
 
   // Cleanup al desmontar el componente
   useEffect(() => {
