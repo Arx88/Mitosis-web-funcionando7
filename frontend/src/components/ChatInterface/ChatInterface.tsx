@@ -250,8 +250,8 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
         }
 
         // Log de herramientas al terminal
-        if (response.toolResults && onLogToTerminal) {
-          response.toolResults.forEach((result: ToolResult) => {
+        if (response.tool_results && onLogToTerminal) {
+          response.tool_results.forEach((result: ToolResult) => {
             onLogToTerminal(
               `Tool: ${result.tool_name} - ${result.success ? 'Success' : 'Failed'}`,
               result.success ? 'success' : 'error'
