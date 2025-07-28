@@ -19,7 +19,7 @@ RECENT CHANGES TESTED:
 
 BACKEND URL: Backend should be running on localhost:8001 with gunicorn+eventlet
 FRONTEND URL: Frontend should be running on localhost:3000 with serve
-PUBLIC URL: https://e5264aee-8866-49fb-a2eb-7a4c7b869c9e.preview.emergentagent.com
+PUBLIC URL: https://a2a8582c-0473-4067-a2e3-f3964c12edee.preview.emergentagent.com
 MESSAGE: "Genera un informe sobre la IA en 2025"
 """
 
@@ -32,7 +32,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment - test both internal and external URLs
-BACKEND_URL = "https://e5264aee-8866-49fb-a2eb-7a4c7b869c9e.preview.emergentagent.com"
+BACKEND_URL = "https://a2a8582c-0473-4067-a2e3-f3964c12edee.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class MitosisCORSAndConfigTester:
@@ -41,7 +41,7 @@ class MitosisCORSAndConfigTester:
         self.session.headers.update({
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'Origin': 'https://e5264aee-8866-49fb-a2eb-7a4c7b869c9e.preview.emergentagent.com'  # Test CORS
+            'Origin': 'https://a2a8582c-0473-4067-a2e3-f3964c12edee.preview.emergentagent.com'  # Test CORS
         })
         self.test_results = []
         self.task_id = None
