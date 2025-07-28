@@ -31,24 +31,39 @@ interface ApiConfig {
 }
 
 function getBackendUrl(): string {
-  // Simplificar: usar directamente la URL de producción para builds de producción
-  // Esta URL se inyecta en tiempo de compilación por Vite
-  const productionUrl = 'https://63c32999-9c01-40eb-86d9-4a9e28abc65e.preview.emergentagent.com';
-  
-  // En desarrollo, intentar usar variables de entorno
+  // Usar variables de entorno SIEMPRE, tanto en desarrollo como producción
   try {
-    if (import.meta.env?.MODE === 'development') {
-      return import.meta.env.VITE_BACKEND_URL || 
-             import.meta.env.REACT_APP_BACKEND_URL || 
-             'http://localhost:8001';
+    // Intentar obtener la URL del backend desde variables de entorno
+    const envUrl = import.meta.env?.VITE_BACKEND_URL || 
+                   import.meta.env?.REACT_APP_BACKEND_URL ||
+                   (typeof process !== 'undefined' ? process.env.REACT_APP_BACKEND_URL : null);
+                   
+    if (envUrl) {
+      console.log('🔧 Using environment backend URL:', envUrl);
+      return envUrl;
     }
+    
+    // Si estamos en desarrollo, usar localhost
+    if (import.meta.env?.MODE === 'development') {
+      console.log('🔧 Using development backend URL: http://localhost:8001');
+      return 'http://localhost:8001';
+    }
+    
+    // Fallback para producción si no hay variables de entorno
+    // Usar la URL actual del window con puerto 8001 (mapeado por el ingress)
+    if (typeof window !== 'undefined') {
+      const currentUrl = window.location.origin;
+      console.log('🔧 Using current origin as backend URL:', currentUrl);
+      return currentUrl;
+    }
+    
   } catch (e) {
-    // En caso de error (producción), continuar
+    console.warn('🔧 Error getting backend URL from environment:', e);
   }
   
-  // En producción, usar URL fija
-  console.log('🔧 Using production backend URL:', productionUrl);
-  return productionUrl;
+  // Último fallback - esto no debería usarse normalmente
+  console.warn('🔧 Using localhost fallback - this should not happen in production');
+  return 'http://localhost:8001';
 }
 
 function getWebSocketUrl(): string {
