@@ -15,7 +15,7 @@ ADDITIONAL TESTS:
 4. CORS or routing issues
 5. Response formats (JSON vs HTML)
 
-BACKEND URL: https://2d6bd67a-c88f-4adf-aad2-a25028aa0f12.preview.emergentagent.com
+BACKEND URL: https://022fe56d-38bc-4752-a5da-625969514d2c.preview.emergentagent.com
 """
 
 import requests
@@ -27,7 +27,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment
-BACKEND_URL = "https://2d6bd67a-c88f-4adf-aad2-a25028aa0f12.preview.emergentagent.com"
+BACKEND_URL = "https://022fe56d-38bc-4752-a5da-625969514d2c.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class MitosisBackendIssuesTester:
@@ -36,7 +36,7 @@ class MitosisBackendIssuesTester:
         self.session.headers.update({
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'Origin': 'https://2d6bd67a-c88f-4adf-aad2-a25028aa0f12.preview.emergentagent.com'
+            'Origin': 'https://022fe56d-38bc-4752-a5da-625969514d2c.preview.emergentagent.com'
         })
         self.test_results = []
         self.task_id = None

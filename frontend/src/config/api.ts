@@ -45,8 +45,8 @@ function getBackendUrl(): string {
     
     // Si estamos en desarrollo, usar localhost
     if (import.meta.env?.MODE === 'development') {
-      console.log('🔧 Using development backend URL: https://frontend-fix-9.preview.emergentagent.com');
-      return 'https://frontend-fix-9.preview.emergentagent.com';
+      console.log('🔧 Using development backend URL: https://022fe56d-38bc-4752-a5da-625969514d2c.preview.emergentagent.com');
+      return 'https://022fe56d-38bc-4752-a5da-625969514d2c.preview.emergentagent.com';
     }
     
     // Fallback para producción si no hay variables de entorno
@@ -63,7 +63,7 @@ function getBackendUrl(): string {
   
   // Último fallback - esto no debería usarse normalmente
   console.warn('🔧 Using localhost fallback - this should not happen in production');
-  return 'https://frontend-fix-9.preview.emergentagent.com';
+  return 'https://022fe56d-38bc-4752-a5da-625969514d2c.preview.emergentagent.com';
 }
 
 function getWebSocketUrl(): string {

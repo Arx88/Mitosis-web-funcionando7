@@ -165,7 +165,7 @@ export const TerminalView = ({
   // Función para cargar el informe final - FIXED: Proper error handling and content loading
   const loadFinalReport = async (taskId: string) => {
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || 'https://frontend-fix-9.preview.emergentagent.com';
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || 'https://022fe56d-38bc-4752-a5da-625969514d2c.preview.emergentagent.com';
       console.log('📄 Loading final report for task:', taskId);
       
       const response = await fetch(`${backendUrl}/api/agent/generate-final-report/${taskId}`, {

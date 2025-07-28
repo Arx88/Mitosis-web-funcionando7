@@ -396,7 +396,7 @@ export const saveReportToBackend = async (
     const backendUrl = import.meta.env.VITE_BACKEND_URL || 
                    import.meta.env.REACT_APP_BACKEND_URL || 
                    process.env.REACT_APP_BACKEND_URL || 
-                   'https://frontend-fix-9.preview.emergentagent.com';
+                   'https://022fe56d-38bc-4752-a5da-625969514d2c.preview.emergentagent.com';
 
     const response = await fetch(`${backendUrl}/api/agent/save-report`, {
       method: 'POST',

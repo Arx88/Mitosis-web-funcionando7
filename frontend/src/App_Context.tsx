@@ -13,7 +13,7 @@ import { useAppContext } from './context/AppContext';
 // Función para generar ideas dinámicas basadas en contexto
 const generateDynamicIdeas = async () => {
   try {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || 'https://frontend-fix-9.preview.emergentagent.com';
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || 'https://022fe56d-38bc-4752-a5da-625969514d2c.preview.emergentagent.com';
     const response = await fetch(`${backendUrl}/api/agent/generate-suggestions`, {
       method: 'POST',
       headers: {

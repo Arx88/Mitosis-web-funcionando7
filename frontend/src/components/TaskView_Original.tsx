@@ -757,7 +757,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
                   console.log('🔥 TASKVIEW DEBUG: Starting message processing...');
                   
                   // Call the backend to process the message
-                  const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || 'https://frontend-fix-9.preview.emergentagent.com';
+                  const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || 'https://022fe56d-38bc-4752-a5da-625969514d2c.preview.emergentagent.com';
                   console.log('🔥 TASKVIEW DEBUG: Backend URL:', backendUrl);
                   
                   const response = await fetch(`${backendUrl}/api/agent/generate-plan`, {

@@ -14,7 +14,7 @@ COMPREHENSIVE TESTING AREAS:
 7. **Tool Integration**: Verify the 12 tools are available and functional
 8. **Memory System**: Test that memory_used=true is working correctly
 
-BACKEND URL: https://2d6bd67a-c88f-4adf-aad2-a25028aa0f12.preview.emergentagent.com
+BACKEND URL: https://022fe56d-38bc-4752-a5da-625969514d2c.preview.emergentagent.com
 OLLAMA URL: https://bef4a4bb93d1.ngrok-free.app
 """
 
@@ -27,7 +27,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment - test both internal and external URLs
-BACKEND_URL = "https://2d6bd67a-c88f-4adf-aad2-a25028aa0f12.preview.emergentagent.com"
+BACKEND_URL = "https://022fe56d-38bc-4752-a5da-625969514d2c.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class MitosisCORSAndConfigTester:
@@ -36,7 +36,7 @@ class MitosisCORSAndConfigTester:
         self.session.headers.update({
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'Origin': 'https://2d6bd67a-c88f-4adf-aad2-a25028aa0f12.preview.emergentagent.com'  # Test CORS
+            'Origin': 'https://022fe56d-38bc-4752-a5da-625969514d2c.preview.emergentagent.com'  # Test CORS
         })
         self.test_results = []
         self.task_id = None
