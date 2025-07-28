@@ -43,10 +43,11 @@ function getBackendUrl(): string {
       return envUrl;
     }
     
-    // Si estamos en desarrollo, usar localhost
+    // Si estamos en desarrollo, usar la URL de environment
     if (import.meta.env?.MODE === 'development') {
-      console.log('🔧 Using development backend URL: https://774fd713-b4f7-45a0-a37e-a42a5d8a20be.preview.emergentagent.com');
-      return 'https://774fd713-b4f7-45a0-a37e-a42a5d8a20be.preview.emergentagent.com';
+      const devUrl = import.meta.env?.VITE_BACKEND_URL || 'http://localhost:8001';
+      console.log('🔧 Using development backend URL:', devUrl);
+      return devUrl;
     }
     
     // Fallback para producción si no hay variables de entorno
