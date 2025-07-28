@@ -1,26 +1,21 @@
 #!/usr/bin/env python3
 """
-COMPREHENSIVE MITOSIS BACKEND TESTING FOR CORS FIXES AND CONFIGURATION CHANGES
-Testing the specific requirements from the review request:
+MITOSIS BACKEND TESTING FOR SPECIFIC REPORTED ISSUES
+Testing the two critical issues reported in the review request:
 
-TESTING REQUIREMENTS:
-1. API Health: Test /api/health endpoint
-2. CORS Configuration: Test that /api/ and /files/ endpoints have proper CORS headers
-3. Chat Functionality: Test /api/agent/chat endpoint with "Genera un informe sobre la IA en 2025"
-4. Plan Generation: Verify that chat endpoint returns a proper plan with steps
-5. WebSocket Support: Check if socket.io endpoint is accessible
-6. File Endpoint: Test /files/<task_id> endpoint for CORS compliance
+CRITICAL ISSUES TO TEST:
+1. **File Fetching SyntaxError**: Test the `/api/agent/get-task-files/{task_id}` endpoint 
+   to see if it's returning HTML instead of JSON, causing the `SyntaxError: Unexpected token '<'` on the frontend.
 
-RECENT CHANGES TESTED:
-- Removed hardcoded preview URLs from frontend .env
-- Added CORS support for /files/* endpoints
-- Rebuilt frontend for production
-- Restarted both backend and frontend services
+2. **Missing Auto-Execution Endpoint**: Test the `/api/agent/start-task-execution/{task_id}` endpoint 
+   to check if it returns 404 or if there's another routing issue.
 
-BACKEND URL: Backend should be running on localhost:8001 with gunicorn+eventlet
-FRONTEND URL: Frontend should be running on localhost:3000 with serve
-PUBLIC URL: https://8fa1dc01-c3ce-476f-9641-88b06a3b331e.preview.emergentagent.com
-MESSAGE: "Genera un informe sobre la IA en 2025"
+ADDITIONAL TESTS:
+3. Backend health and basic endpoints
+4. CORS or routing issues
+5. Response formats (JSON vs HTML)
+
+BACKEND URL: https://8fa1dc01-c3ce-476f-9641-88b06a3b331e.preview.emergentagent.com
 """
 
 import requests
