@@ -425,7 +425,57 @@ class MitosisPlanGenerationFlowTester:
             self.log_test("CORS and Headers", False, f"Exception: {str(e)}")
             return False
     
-    def test_complete_frontend_simulation(self) -> bool:
+    def test_api_consistency_issue(self) -> bool:
+        """Test 8: API Consistency Issue - Different field requirements"""
+        try:
+            print(f"\n🔍 Testing API consistency between chat and generate-plan endpoints")
+            
+            test_message = "Genera un informe sobre la IA en 2025"
+            
+            # Test 1: Chat endpoint with 'message' field (should work)
+            chat_payload = {"message": test_message}
+            chat_response = self.session.post(f"{API_BASE}/agent/chat", 
+                                            json=chat_payload, timeout=30)
+            
+            chat_works = chat_response.status_code == 200
+            
+            # Test 2: Generate-plan endpoint with 'message' field (should fail)
+            plan_payload_wrong = {"message": test_message}
+            plan_response_wrong = self.session.post(f"{API_BASE}/agent/generate-plan", 
+                                                  json=plan_payload_wrong, timeout=30)
+            
+            plan_fails_with_message = plan_response_wrong.status_code == 400
+            
+            # Test 3: Generate-plan endpoint with 'task_title' field (should work)
+            plan_payload_correct = {"task_title": test_message}
+            plan_response_correct = self.session.post(f"{API_BASE}/agent/generate-plan", 
+                                                    json=plan_payload_correct, timeout=30)
+            
+            plan_works_with_task_title = plan_response_correct.status_code == 200
+            
+            # Analyze the inconsistency
+            inconsistency_detected = chat_works and plan_fails_with_message and plan_works_with_task_title
+            
+            if inconsistency_detected:
+                self.log_test("API Consistency Issue", False, 
+                            f"CRITICAL API INCONSISTENCY DETECTED: Chat endpoint uses 'message' field, Generate-plan endpoint uses 'task_title' field. This causes frontend-backend communication issues.")
+                
+                # Log detailed findings
+                print(f"   📊 DETAILED ANALYSIS:")
+                print(f"      ✅ /api/agent/chat with 'message': {chat_works}")
+                print(f"      ❌ /api/agent/generate-plan with 'message': {plan_fails_with_message} (returns 400)")
+                print(f"      ✅ /api/agent/generate-plan with 'task_title': {plan_works_with_task_title}")
+                print(f"   🎯 ROOT CAUSE: Frontend likely sends 'message' to generate-plan endpoint but it expects 'task_title'")
+                
+                return False
+            else:
+                self.log_test("API Consistency Issue", True, 
+                            f"API endpoints are consistent - no field requirement mismatch detected")
+                return True
+                
+        except Exception as e:
+            self.log_test("API Consistency Issue", False, f"Exception: {str(e)}")
+            return False
         """Test 7: Complete Frontend Flow Simulation"""
         try:
             print(f"\n🔄 Simulating complete frontend flow")
