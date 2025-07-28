@@ -342,7 +342,7 @@ class AgentAPI {
 
   async downloadFile(fileId: string): Promise<Blob> {
     try {
-      const response = await fetch(`${this.baseUrl}/download/${fileId}`);
+      const response = await fetch(`${this.baseUrl}/api/agent/download/${fileId}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
