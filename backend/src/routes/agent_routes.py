@@ -6059,6 +6059,13 @@ Responde SOLO con el contenido final solicitado.
                 'tool_result': tool_result
             })
             
+            # 🚀 NUEVO: Copiar claves importantes del tool_result para evaluación
+            if isinstance(tool_result, dict):
+                # Copiar claves relevantes que usa la función de evaluación
+                for key in ['results', 'count', 'search_results', 'success']:
+                    if key in tool_result:
+                        step_result[key] = tool_result[key]
+            
             # Emit detailed tool result
             emit_step_event(task_id, 'tool_result', {
                 'step_id': step_id,
