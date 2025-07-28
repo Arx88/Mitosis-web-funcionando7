@@ -308,7 +308,7 @@ class AgentAPI {
         formData.append('files', files[i]);
       }
 
-      const response = await fetch(`${this.baseUrl}/upload-files`, {
+      const response = await fetch(`${this.baseUrl}/api/agent/upload-files`, {
         method: 'POST',
         body: formData
       });
