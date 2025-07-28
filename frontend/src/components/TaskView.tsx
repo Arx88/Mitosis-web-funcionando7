@@ -247,7 +247,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   const chatInterface = useMemo(() => (
     <ChatInterface
       messages={task.messages || []}
-      onUpdateMessages={handleUpdateMessages}
+      onUpdateMessages={handleUpdateMessagesWrapper}
       isTyping={isTyping || isThinking}
       onFilesClick={handleFilesModal}
       onShareClick={handleShareModal}
