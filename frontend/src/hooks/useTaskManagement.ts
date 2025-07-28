@@ -46,17 +46,19 @@ export const useTaskManagement = () => {
     dispatch({ type: 'ADD_TASK', payload: newTask });
     dispatch({ type: 'SET_ACTIVE_TASK', payload: newTask.id });
     
-    // Generar plan mejorado y título
+    // ✅ FIX: Use /api/agent/chat endpoint which works perfectly
     try {
-      console.log('📝 Hook: Generating enhanced title and plan');
+      console.log('🚀 NUEVA TAREA FIX: About to call backend for plan generation');
       console.log('📝 Backend URL:', API_CONFIG.backend.url);
-      console.log('📝 Request payload:', { task_title: messageContent.trim(), task_id: newTask.id });
+      console.log('📝 Message content:', messageContent.trim());
+      console.log('📝 Task ID:', newTask.id);
       
-      const response = await fetch(`${API_CONFIG.backend.url}/api/agent/generate-plan`, {
+      // Use chat endpoint which includes plan generation
+      const response = await fetch(`${API_CONFIG.backend.url}/api/agent/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          task_title: messageContent.trim(),
+          message: messageContent.trim(),
           task_id: newTask.id
         })
       });
