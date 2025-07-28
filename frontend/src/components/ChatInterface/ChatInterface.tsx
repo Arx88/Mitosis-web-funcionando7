@@ -226,9 +226,9 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
           content: response.response,
           sender: 'assistant',
           timestamp: new Date(),
-          toolResults: response.toolResults,
-          searchData: response.searchData,
-          uploadData: response.uploadData,
+          toolResults: response.tool_results,
+          searchData: response.search_data,
+          uploadData: response.upload_data,
           links: response.links
         };
 
