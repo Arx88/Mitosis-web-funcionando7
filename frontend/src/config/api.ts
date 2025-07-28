@@ -50,14 +50,6 @@ function getBackendUrl(): string {
       return devUrl;
     }
     
-    // Fallback para producción si no hay variables de entorno
-    // Usar la URL actual del window con puerto 8001 (mapeado por el ingress)
-    if (typeof window !== 'undefined') {
-      const currentUrl = window.location.origin;
-      console.log('🔧 Using current origin as backend URL:', currentUrl);
-      return currentUrl;
-    }
-    
   } catch (e) {
     console.warn('🔧 Error getting backend URL from environment:', e);
   }
