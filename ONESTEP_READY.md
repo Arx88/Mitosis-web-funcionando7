@@ -45,7 +45,7 @@ El script automáticamente verifica:
 ```
 🎉 MITOSIS ONE-STEP READY - ESTADO FINAL
 ==============================================================
-📍 Frontend: https://8fa1dc01-c3ce-476f-9641-88b06a3b331e.preview.emergentagent.com
+📍 Frontend: https://52e59a01-1790-4e28-9f7a-142898d7bb56.preview.emergentagent.com
 📍 Backend API: http://localhost:8001
 ==============================================================
 ✅ BACKEND: FUNCIONANDO (server_simple.py - sin uvicorn)
