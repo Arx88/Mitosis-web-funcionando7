@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-MITOSIS BACKEND TESTING FOR SPECIFIC REPORTED ISSUES
-Testing the two critical issues reported in the review request:
+COMPREHENSIVE MITOSIS BACKEND TESTING AFTER ROBUST INSTALLATION
+Testing the Mitosis backend comprehensively to verify the agent is 100% functional 
+after the robust installation with start_mitosis.sh.
 
-CRITICAL ISSUES TO TEST:
-1. **File Fetching SyntaxError**: Test the `/api/agent/get-task-files/{task_id}` endpoint 
-   to see if it's returning HTML instead of JSON, causing the `SyntaxError: Unexpected token '<'` on the frontend.
-
-2. **Missing Auto-Execution Endpoint**: Test the `/api/agent/start-task-execution/{task_id}` endpoint 
-   to check if it returns 404 or if there's another routing issue.
-
-ADDITIONAL TESTS:
-3. Backend health and basic endpoints
-4. CORS or routing issues
-5. Response formats (JSON vs HTML)
+COMPREHENSIVE TESTING AREAS:
+1. **Backend Health**: Verify all health endpoints (/api/health, /api/agent/health, /api/agent/status)
+2. **OLLAMA Integration**: Test OLLAMA connection (https://bef4a4bb93d1.ngrok-free.app) with llama3.1:8b
+3. **Chat Functionality**: Test /api/agent/chat endpoint with "Hola, como estas?"
+4. **Plan Generation**: Test /api/agent/generate-plan with "Crear un análisis de mercado para software en 2025"
+5. **WebSocket Infrastructure**: Verify WebSocket endpoints are ready for real-time updates
+6. **Database Connectivity**: Test MongoDB connection and data persistence
+7. **Tool Integration**: Verify the 12 tools are available and functional
+8. **Memory System**: Test that memory_used=true is working correctly
 
 BACKEND URL: https://52e59a01-1790-4e28-9f7a-142898d7bb56.preview.emergentagent.com
+OLLAMA URL: https://bef4a4bb93d1.ngrok-free.app
 """
 
 import requests
