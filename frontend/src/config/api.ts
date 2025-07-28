@@ -95,9 +95,9 @@ export const API_CONFIG: ApiConfig = {
       transports: ['websocket', 'polling'], // WebSocket first, polling fallback
       upgrade: true,
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
-      timeout: 20000
+      reconnectionDelay: 2000,  // Increased delay
+      reconnectionAttempts: 10, // More attempts
+      timeout: 30000            // Increased timeout to 30 seconds
     }
   }
 };
