@@ -62,6 +62,11 @@ CORS(app, resources={
         "origins": ["*"],
         "methods": ["GET", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
+    },
+    r"/get-task-files/*": {
+        "origins": ["*"],
+        "methods": ["GET", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
     }
 })
 
