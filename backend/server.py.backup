@@ -664,31 +664,3 @@ def internal_error(error):
 if __name__ == '__main__':
     print(f"🚀 Starting server on {HOST}:{PORT}")
     app.run(host=HOST, port=PORT, debug=DEBUG)
-# Servir archivos estáticos del frontend
-from flask import send_from_directory, send_file
-import os
-
-# Configurar directorio de archivos estáticos
-STATIC_FOLDER = '/app/frontend/dist'
-
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve_frontend(path):
-    """Servir archivos estáticos del frontend"""
-    if path != "" and os.path.exists(os.path.join(STATIC_FOLDER, path)):
-        return send_from_directory(STATIC_FOLDER, path)
-    else:
-        return send_file(os.path.join(STATIC_FOLDER, 'index.html'))
-
-# Ruta para servir archivos específicos
-@app.route('/assets/<path:filename>')
-def serve_assets(filename):
-    """Servir archivos de assets"""
-    return send_from_directory(os.path.join(STATIC_FOLDER, 'assets'), filename)
-
-# Ruta para servir archivos de tareas
-@app.route('/files/<task_id>')
-def serve_task_files(task_id):
-    """Servir archivos de tareas"""
-    return redirect(f'/api/agent/get-task-files/{task_id}')
-
