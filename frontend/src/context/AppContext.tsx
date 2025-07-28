@@ -177,12 +177,29 @@ function appReducer(state: GlobalAppState, action: AppAction): GlobalAppState {
         ...state,
         tasks: state.tasks.map(task => {
           try {
-            // Validate that payload is actually a function
-            if (typeof action.payload !== 'function') {
-              console.error('❌ UPDATE_TASK_FUNCTIONAL payload is not a function:', typeof action.payload, action.payload);
+            // Strict validation that payload is actually a function
+            if (!action.payload || typeof action.payload !== 'function') {
+              console.error('❌ UPDATE_TASK_FUNCTIONAL payload is not a valid function:', {
+                payloadType: typeof action.payload,
+                payload: action.payload,
+                payloadConstructor: action.payload?.constructor?.name,
+                taskId: task.id
+              });
               return task; // Return unchanged if not a function
             }
+            
+            // Call the function and validate result
             const updatedTask = action.payload(task);
+            
+            // Validate that the result is a valid task object
+            if (!updatedTask || typeof updatedTask !== 'object' || !updatedTask.id) {
+              console.error('❌ UPDATE_TASK_FUNCTIONAL returned invalid task:', {
+                result: updatedTask,
+                originalTaskId: task.id
+              });
+              return task;
+            }
+            
             if (updatedTask !== task) {
               console.log('🚀 CONTEXT FUNCTIONAL UPDATE:', {
                 taskId: task.id,
