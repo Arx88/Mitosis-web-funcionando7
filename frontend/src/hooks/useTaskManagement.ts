@@ -68,7 +68,7 @@ export const useTaskManagement = () => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('📝 Response data:', data);
+        console.log('🎉 NUEVA TAREA FIX: Backend response received:', data);
         
         // Actualizar tarea con título mejorado y plan
         updateTask((task: Task) => {
@@ -76,12 +76,14 @@ export const useTaskManagement = () => {
           
           let updatedTask = { ...task };
           
+          // Update title from enhanced_title
           if (data.enhanced_title) {
             updatedTask.title = data.enhanced_title;
             console.log('📝 Updated title:', data.enhanced_title);
           }
           
-          if (data.plan) {
+          // Update plan from response
+          if (data.plan && Array.isArray(data.plan)) {
             const frontendPlan = data.plan.map((step: any) => ({
               id: step.id,
               title: step.title,
