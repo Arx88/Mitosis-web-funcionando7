@@ -270,7 +270,7 @@ class AgentAPI {
 
   async getStatus(): Promise<AgentStatus> {
     try {
-      const response = await fetch(`${this.baseUrl}/status`);
+      const response = await fetch(`${this.baseUrl}/api/agent/status`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
