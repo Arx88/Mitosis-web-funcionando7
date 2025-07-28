@@ -117,7 +117,7 @@ class ToolManager:
         return result
     
     def execute_tool_with_retry(self, tool_name: str, parameters: Dict[str, Any], 
-                               config: Dict[str, Any] = None, max_retries: int = 2) -> Dict[str, Any]:
+                               config: Dict[str, Any] = None, max_retries: int = 2, task_id: str = None) -> Dict[str, Any]:
         """
         Ejecutar herramienta con reintentos automáticos
         Funcionalidad mejorada que mantiene compatibilidad
