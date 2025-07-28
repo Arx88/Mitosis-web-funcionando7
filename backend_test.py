@@ -1,25 +1,26 @@
 #!/usr/bin/env python3
 """
-COMPREHENSIVE MITOSIS BACKEND TESTING FOR WEBSOCKET AND CORS ISSUES
-Testing the specific issues reported in the review request:
-
-PROBLEMS REPORTED:
-1. WebSocket Error: Frontend failing to connect with "timeout" error
-2. CORS Error: Error accessing `/files/task-1753710463282`
-3. Plan Generation: Backend generates plans correctly but frontend doesn't show them
-4. Task ID: task-1753710463282 was created and has a plan with 4 steps
+COMPREHENSIVE MITOSIS BACKEND TESTING FOR CORS FIXES AND CONFIGURATION CHANGES
+Testing the specific requirements from the review request:
 
 TESTING REQUIREMENTS:
-1. WebSocket endpoints and configuration
-2. CORS configuration for files and other endpoints
-3. Endpoint `/files/task-1753710463282` vs `/api/agent/get-task-files/task-1753710463282`
-4. State of task task-1753710463282 and its plan
-5. Testing plan generation in real-time
-6. Verify endpoints work correctly for frontend flow
+1. API Health: Test /api/health endpoint
+2. CORS Configuration: Test that /api/ and /files/ endpoints have proper CORS headers
+3. Chat Functionality: Test /api/agent/chat endpoint with "Genera un informe sobre la IA en 2025"
+4. Plan Generation: Verify that chat endpoint returns a proper plan with steps
+5. WebSocket Support: Check if socket.io endpoint is accessible
+6. File Endpoint: Test /files/<task_id> endpoint for CORS compliance
 
-BACKEND URL: https://e5264aee-8866-49fb-a2eb-7a4c7b869c9e.preview.emergentagent.com
-SPECIFIC TASK ID: task-1753710463282
-MESSAGE: "Genera un informe sobre IA en 2025"
+RECENT CHANGES TESTED:
+- Removed hardcoded preview URLs from frontend .env
+- Added CORS support for /files/* endpoints
+- Rebuilt frontend for production
+- Restarted both backend and frontend services
+
+BACKEND URL: Backend should be running on localhost:8001 with gunicorn+eventlet
+FRONTEND URL: Frontend should be running on localhost:3000 with serve
+PUBLIC URL: https://e5264aee-8866-49fb-a2eb-7a4c7b869c9e.preview.emergentagent.com
+MESSAGE: "Genera un informe sobre la IA en 2025"
 """
 
 import requests
