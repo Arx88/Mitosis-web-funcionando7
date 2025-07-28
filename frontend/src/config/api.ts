@@ -63,7 +63,7 @@ function getBackendUrl(): string {
   
   // Último fallback - esto no debería usarse normalmente
   console.warn('🔧 Using localhost fallback - this should not happen in production');
-  return 'https://2d6bd67a-c88f-4adf-aad2-a25028aa0f12.preview.emergentagent.com';
+  return 'https://frontend-fix-9.preview.emergentagent.com';
 }
 
 function getWebSocketUrl(): string {
