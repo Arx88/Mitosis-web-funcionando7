@@ -5373,11 +5373,12 @@ def generate_plan():
     """Generate a plan for a task - Compatible with frontend expectations"""
     try:
         data = request.get_json()
-        task_title = data.get('task_title', '')
+        # ✅ FIX: Accept both 'task_title' and 'message' for API consistency
+        task_title = data.get('task_title') or data.get('message', '')
         task_id = data.get('task_id')
         
         if not task_title:
-            return jsonify({'error': 'task_title is required'}), 400
+            return jsonify({'error': 'task_title or message is required'}), 400
         
         logger.info(f"📋 Generating plan for task: {task_title}")
         
