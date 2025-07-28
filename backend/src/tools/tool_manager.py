@@ -89,7 +89,7 @@ class ToolManager:
         return self.registry.validate_tool_parameters(tool_name, parameters)
     
     def execute_tool(self, tool_name: str, parameters: Dict[str, Any], 
-                    config: Dict[str, Any] = None) -> Dict[str, Any]:
+                    config: Dict[str, Any] = None, task_id: str = None) -> Dict[str, Any]:
         """
         Ejecutar herramienta
         Interfaz compatible con código existente pero usando ToolRegistry
