@@ -101,7 +101,7 @@ def main():
         print("📋 Los pasos se mantienen en su estado correcto")
         print("🎉 La función simulate_plan_execution está correctamente desactivada")
         print("\n💡 RECOMENDACIÓN PARA VERIFICACIÓN VISUAL:")
-        print("   1. Acceder a: https://52e59a01-1790-4e28-9f7a-142898d7bb56.preview.emergentagent.com")
+        print("   1. Acceder a: https://2d6bd67a-c88f-4adf-aad2-a25028aa0f12.preview.emergentagent.com")
         print("   2. Escribir la tarea: 'Busca los mejores bares de España 2025'")
         print("   3. Verificar que el plan aparezca en el sidebar")
         print("   4. Confirmar que los pasos NO se marquen como completados automáticamente")
