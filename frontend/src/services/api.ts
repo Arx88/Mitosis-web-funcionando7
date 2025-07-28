@@ -326,7 +326,7 @@ class AgentAPI {
 
   async getTaskFiles(taskId: string): Promise<FileItem[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/get-task-files/${taskId}`);
+      const response = await fetch(`${this.baseUrl}/api/agent/get-task-files/${taskId}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
