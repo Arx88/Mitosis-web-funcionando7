@@ -129,7 +129,7 @@ class ToolManager:
         
         for attempt in range(max_retries + 1):
             try:
-                result = self.execute_tool(tool_name, parameters, config)
+                result = self.execute_tool(tool_name, parameters, config, task_id)
                 
                 if result.get('success', False):
                     if attempt > 0:
