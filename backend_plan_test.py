@@ -562,6 +562,7 @@ class MitosisPlanGenerationFlowTester:
             ("MongoDB Plan Persistence", self.test_mongodb_plan_persistence),
             ("Response Format Compatibility", self.test_response_format_compatibility),
             ("CORS and Headers", self.test_cors_and_headers),
+            ("API Consistency Issue", self.test_api_consistency_issue),
             ("Complete Frontend Simulation", self.test_complete_frontend_simulation)
         ]
         
