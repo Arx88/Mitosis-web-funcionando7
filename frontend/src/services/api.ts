@@ -357,7 +357,7 @@ class AgentAPI {
 
   async downloadAllFiles(taskId: string): Promise<Blob> {
     try {
-      const response = await fetch(`${this.baseUrl}/download-all/${taskId}`);
+      const response = await fetch(`${this.baseUrl}/api/agent/download-all/${taskId}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
