@@ -111,6 +111,14 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     }));
   }, [handleUpdateTask, task.id]);
 
+  // Create a wrapper function that adapts to ChatInterface's expected signature
+  const handleUpdateMessagesWrapper = useCallback((messages: Message[]) => {
+    handleUpdateTask((currentTask: Task) => ({
+      ...currentTask,
+      messages: messages
+    }));
+  }, [handleUpdateTask]);
+
   const handleToggleFavorite = useCallback(() => {
     handleUpdateTask((currentTask: Task) => ({
       ...currentTask,
