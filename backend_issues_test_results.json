@@ -1,0 +1,49 @@
+{
+  "total_tests": 5,
+  "passed_tests": 5,
+  "success_rate": 100.0,
+  "overall_status": "\u2705 BACKEND WORKING PERFECTLY",
+  "critical_passed": 2,
+  "critical_total": 2,
+  "test_results": [
+    {
+      "test_name": "Backend Health",
+      "success": true,
+      "details": "Backend healthy - DB: True, Ollama: True, Tools: 12",
+      "timestamp": "2025-07-28T15:34:57.257102",
+      "response_data": null
+    },
+    {
+      "test_name": "File Fetching Endpoint",
+      "success": true,
+      "details": "Endpoint returns valid JSON - Status: 200, JSON: True, HTML: False",
+      "timestamp": "2025-07-28T15:35:09.302851",
+      "response_data": null
+    },
+    {
+      "test_name": "Auto-Execution Endpoint",
+      "success": true,
+      "details": "Endpoint working - Status: 200, returns valid JSON",
+      "timestamp": "2025-07-28T15:35:10.317218",
+      "response_data": null
+    },
+    {
+      "test_name": "Basic Endpoints",
+      "success": true,
+      "details": "Basic endpoints working - 3/3 (100%)",
+      "timestamp": "2025-07-28T15:35:11.658293",
+      "response_data": null
+    },
+    {
+      "test_name": "CORS and Routing",
+      "success": true,
+      "details": "CORS working - 3/3 (100%)",
+      "timestamp": "2025-07-28T15:35:12.690486",
+      "response_data": null
+    }
+  ],
+  "task_id": "chat-1753716898",
+  "backend_working": true,
+  "file_fetching_working": true,
+  "auto_execution_working": true
+}
