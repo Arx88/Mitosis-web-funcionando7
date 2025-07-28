@@ -385,7 +385,7 @@ class MitosisPlanGenerationFlowTester:
             test_message = "Genera un informe sobre la IA en 2025"
             
             payload = {
-                "message": test_message
+                "task_title": test_message  # Use correct field for generate-plan endpoint
             }
             
             print(f"\n🔍 Testing CORS and headers configuration")
