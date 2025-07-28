@@ -1,55 +1,55 @@
 {
   "total_tests": 6,
-  "passed_tests": 5,
-  "success_rate": 83.33333333333334,
-  "overall_status": "\u26a0\ufe0f BACKEND MOSTLY WORKING - Minor issues detected",
-  "critical_passed": 4,
+  "passed_tests": 4,
+  "success_rate": 66.66666666666666,
+  "overall_status": "\u26a0\ufe0f BACKEND PARTIAL - Significant issues found",
+  "critical_passed": 3,
   "critical_total": 4,
   "test_results": [
     {
       "test_name": "API Health Endpoint",
       "success": true,
       "details": "Health endpoint working - DB: True, Ollama: True, Tools: 12, CORS: True",
-      "timestamp": "2025-07-28T14:26:09.585987",
+      "timestamp": "2025-07-28T15:35:18.298035",
       "response_data": null
     },
     {
       "test_name": "CORS Configuration API",
       "success": true,
       "details": "CORS properly configured for /api/* - OPTIONS: True, POST: True",
-      "timestamp": "2025-07-28T14:26:15.542256",
+      "timestamp": "2025-07-28T15:35:21.800390",
       "response_data": null
     },
     {
       "test_name": "Chat Functionality with Plan",
       "success": true,
-      "details": "Chat generates proper plan - 4 steps, Task ID: chat-1753712776, Enhanced title: An\u00e1lisis de Tendencias en IA 2025",
-      "timestamp": "2025-07-28T14:26:25.083871",
+      "details": "Chat generates proper plan - 4 steps, Task ID: chat-1753716922, Enhanced title: An\u00e1lisis de Tendencias en IA 2025",
+      "timestamp": "2025-07-28T15:35:31.931492",
       "response_data": null
     },
     {
       "test_name": "Plan Generation Verification",
       "success": true,
       "details": "Plan generation working - 4 steps, Type: creacion, Complexity: alta, Tools: 4",
-      "timestamp": "2025-07-28T14:26:34.681318",
+      "timestamp": "2025-07-28T15:35:41.296720",
       "response_data": null
     },
     {
       "test_name": "WebSocket Support",
-      "success": true,
-      "details": "WebSocket support available - Endpoint accessible: True, Backend running: True, Memory: True",
-      "timestamp": "2025-07-28T14:26:35.722248",
+      "success": false,
+      "details": "WebSocket support issues - Accessible: False, Running: True, Memory: True",
+      "timestamp": "2025-07-28T15:35:42.312578",
       "response_data": null
     },
     {
       "test_name": "Files Endpoint CORS",
       "success": false,
-      "details": "Files endpoint CORS issues - Accessible: True, CORS: False",
-      "timestamp": "2025-07-28T14:26:36.742450",
+      "details": "Files endpoint CORS issues - Accessible: False, CORS: False",
+      "timestamp": "2025-07-28T15:35:43.325690",
       "response_data": null
     }
   ],
-  "task_id": "chat-1753712776",
+  "task_id": "chat-1753716922",
   "backend_working": true,
   "cors_working": true,
   "files_cors_working": false
