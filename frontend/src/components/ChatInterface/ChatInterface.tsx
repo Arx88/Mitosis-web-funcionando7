@@ -259,14 +259,15 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
           });
         }
       } else {
+        // Si no hay respuesta válida del backend
         const errorMessage: Message = {
           id: `msg-${Date.now() + 1}`,
-          content: 'Error al procesar el mensaje',
+          content: 'No se recibió respuesta del agente',
           sender: 'assistant',
           timestamp: new Date(),
           status: {
             type: 'error',
-            message: response.error || 'Error desconocido'
+            message: 'Respuesta vacía del servidor'
           }
         };
 
