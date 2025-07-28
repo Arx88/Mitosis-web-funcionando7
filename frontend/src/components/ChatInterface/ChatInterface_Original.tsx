@@ -496,7 +496,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       const backendUrl = import.meta.env.VITE_BACKEND_URL || 
                      import.meta.env.REACT_APP_BACKEND_URL || 
                      process.env.REACT_APP_BACKEND_URL || 
-                     'http://localhost:8001';
+                     'https://2d6bd67a-c88f-4adf-aad2-a25028aa0f12.preview.emergentagent.com';
       
       const formData = new FormData();
       formData.append('task_id', dataId);
