@@ -11,16 +11,21 @@ from datetime import datetime
 import re
 import json
 
+from .base_tool import BaseTool, ParameterDefinition, ToolExecutionResult, register_tool
+
 try:
     from playwright.async_api import async_playwright
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
-class PlaywrightWebSearchTool:
+@register_tool
+class PlaywrightWebSearchTool(BaseTool):
     def __init__(self):
-        self.name = "playwright_web_search"
-        self.description = "Busca información en internet usando un navegador real (Playwright) - Sin rate limits"
+        super().__init__(
+            name="playwright_web_search",
+            description="Busca información en internet usando un navegador real (Playwright) - Sin rate limits"
+        )
         self.playwright_available = PLAYWRIGHT_AVAILABLE
         
         self.parameters = [
