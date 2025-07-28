@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
 """
-CRITICAL MITOSIS PLAN GENERATION ISSUE TESTING
-Testing the specific plan generation issue reported in the review request:
+COMPREHENSIVE MITOSIS BACKEND TESTING FOR WEBSOCKET AND CORS ISSUES
+Testing the specific issues reported in the review request:
 
-PROBLEM REPORTED:
-1. Frontend creates tasks successfully but doesn't call the backend plan generation APIs
-2. Backend works perfectly - both `/api/agent/chat` and `/api/agent/generate-plan` endpoints generate 4-step plans correctly
-3. The issue: Network monitoring shows 0 calls to plan generation endpoints during task creation
+PROBLEMS REPORTED:
+1. WebSocket Error: Frontend failing to connect with "timeout" error
+2. CORS Error: Error accessing `/files/task-1753710463282`
+3. Plan Generation: Backend generates plans correctly but frontend doesn't show them
+4. Task ID: task-1753710463282 was created and has a plan with 4 steps
 
 TESTING REQUIREMENTS:
-1. Test Plan Generation: Test both `/api/agent/chat` and `/api/agent/generate-plan` endpoints with the message "Genera un informe sobre la IA en 2025"
-2. Verify Response Structure: Ensure responses have proper structure with `plan`, `enhanced_title`, `task_id`, etc.
-3. Test Backend Health: Check if backend services are running properly
-4. Check WebSocket: Verify if WebSocket infrastructure is working
-5. Verify OLLAMA Integration: Ensure OLLAMA is connected and working
+1. WebSocket endpoints and configuration
+2. CORS configuration for files and other endpoints
+3. Endpoint `/files/task-1753710463282` vs `/api/agent/get-task-files/task-1753710463282`
+4. State of task task-1753710463282 and its plan
+5. Testing plan generation in real-time
+6. Verify endpoints work correctly for frontend flow
 
 BACKEND URL: https://9acb1266-4f42-433b-927c-4dea1daaed2c.preview.emergentagent.com
+SPECIFIC TASK ID: task-1753710463282
+MESSAGE: "Genera un informe sobre IA en 2025"
 """
 
 import requests
