@@ -65,29 +65,7 @@ class PlaywrightWebSearchTool(BaseTool):
             )
         ]
     
-    def get_description(self) -> str:
-        return self.description
-    
-    def get_parameters(self) -> List[Dict[str, Any]]:
-        return self.parameters
-    
-    def validate_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Validar parámetros de entrada"""
-        if not isinstance(parameters, dict):
-            return {'valid': False, 'error': 'Parameters must be a dictionary'}
-        
-        if 'query' not in parameters:
-            return {'valid': False, 'error': 'query parameter is required'}
-        
-        if not isinstance(parameters['query'], str) or not parameters['query'].strip():
-            return {'valid': False, 'error': 'query must be a non-empty string'}
-        
-        if not self.playwright_available:
-            return {'valid': False, 'error': 'Playwright not available'}
-        
-        return {'valid': True}
-    
-    def execute(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
+    def _execute_tool(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
         """Ejecutar búsqueda web con Playwright"""
         if config is None:
             config = {}
