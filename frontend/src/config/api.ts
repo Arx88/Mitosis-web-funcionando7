@@ -62,9 +62,9 @@ function getBackendUrl(): string {
     console.warn('🔧 Error getting backend URL from environment:', e);
   }
   
-  // Último fallback - esto no debería usarse normalmente
-  console.warn('🔧 Using localhost fallback - this should not happen in production');
-  return 'https://774fd713-b4f7-45a0-a37e-a42a5d8a20be.preview.emergentagent.com';
+  // Último fallback - usar localhost para desarrollo local
+  console.warn('🔧 Using localhost fallback for development');
+  return 'http://localhost:8001';
 }
 
 function getWebSocketUrl(): string {
