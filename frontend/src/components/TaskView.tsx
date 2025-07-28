@@ -255,7 +255,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       task={task}
       onUpdateTask={handleUpdateTask}
     />
-  ), [task.messages, task, handleUpdateMessages, isTyping, isThinking, handleFilesModal, handleShareModal, isInitializing, handleUpdateTask]);
+  ), [task.messages, task, handleUpdateMessagesWrapper, isTyping, isThinking, handleFilesModal, handleShareModal, isInitializing, handleUpdateTask]);
 
   const terminalView = useMemo(() => (
     <TerminalView
