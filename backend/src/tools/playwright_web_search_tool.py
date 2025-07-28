@@ -27,35 +27,42 @@ class PlaywrightWebSearchTool(BaseTool):
             description="Busca información en internet usando un navegador real (Playwright) - Sin rate limits"
         )
         self.playwright_available = PLAYWRIGHT_AVAILABLE
-        
-        self.parameters = [
-            {
-                "name": "query",
-                "type": "string",
-                "required": True,
-                "description": "Términos de búsqueda"
-            },
-            {
-                "name": "search_engine",
-                "type": "string",
-                "required": False,
-                "description": "Motor de búsqueda: SOLO 'bing' (DuckDuckGo eliminado)",
-                "default": "bing"
-            },
-            {
-                "name": "max_results",
-                "type": "integer",
-                "required": False,
-                "description": "Número máximo de resultados",
-                "default": 8
-            },
-            {
-                "name": "extract_content",
-                "type": "boolean",
-                "required": False,
-                "description": "Extraer contenido de los primeros resultados",
-                "default": True
-            }
+    
+    def _define_parameters(self) -> List[ParameterDefinition]:
+        """Definir parámetros específicos de PlaywrightWebSearch"""
+        return [
+            ParameterDefinition(
+                name="query",
+                param_type="string",
+                required=True,
+                description="Términos de búsqueda",
+                min_value=1,
+                max_value=200
+            ),
+            ParameterDefinition(
+                name="search_engine", 
+                param_type="string",
+                required=False,
+                description="Motor de búsqueda: SOLO 'bing' (DuckDuckGo eliminado)",
+                default="bing",
+                choices=["bing"]
+            ),
+            ParameterDefinition(
+                name="max_results",
+                param_type="integer", 
+                required=False,
+                description="Número máximo de resultados",
+                default=8,
+                min_value=1,
+                max_value=20
+            ),
+            ParameterDefinition(
+                name="extract_content",
+                param_type="boolean",
+                required=False, 
+                description="Extraer contenido de los primeros resultados",
+                default=True
+            )
         ]
     
     def get_description(self) -> str:
