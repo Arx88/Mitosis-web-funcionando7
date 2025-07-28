@@ -68,6 +68,11 @@ try:
 except ImportError:
     pass
 
+try:
+    from .playwright_web_search_tool import PlaywrightWebSearchTool
+except ImportError:
+    pass
+
 # Exportar interfaz principal
 __all__ = [
     # Arquitectura base
