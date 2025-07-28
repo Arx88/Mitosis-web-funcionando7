@@ -113,13 +113,20 @@ export const useTaskManagement = () => {
         
         // Auto-iniciar ejecución si hay plan
         if (data.plan && data.plan.length > 0) {
-          console.log('📝 Auto-starting task execution');
+          console.log('🚀 NUEVA TAREA FIX: Auto-starting task execution for', data.plan.length, 'steps');
           setTimeout(async () => {
-            await startTaskExecution(newTask.id);
+            try {
+              await startTaskExecution(newTask.id);
+              console.log('🎉 NUEVA TAREA FIX: Task execution started successfully');
+            } catch (error) {
+              console.error('🚨 NUEVA TAREA FIX: Error starting task execution:', error);
+            }
           }, 1000);
+        } else {
+          console.warn('🚨 NUEVA TAREA FIX: No plan available for auto-start');
         }
         
-        console.log('✅ Task creation completed successfully');
+        console.log('✅ NUEVA TAREA FIX: Task creation completed successfully');
       } else {
         console.error('📝 Response error:', await response.text());
       }
