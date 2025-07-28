@@ -126,7 +126,7 @@ export function App() {
       const backendUrl = import.meta.env.VITE_BACKEND_URL || 
                      import.meta.env.REACT_APP_BACKEND_URL || 
                      process.env.REACT_APP_BACKEND_URL || 
-                     'https://022fe56d-38bc-4752-a5da-625969514d2c.preview.emergentagent.com';
+                     'https://774fd713-b4f7-45a0-a37e-a42a5d8a20be.preview.emergentagent.com';
       const response = await fetch(`${backendUrl}/api/agent/create-test-files/${newTask.id}`, {
         method: 'POST',
         headers: {
