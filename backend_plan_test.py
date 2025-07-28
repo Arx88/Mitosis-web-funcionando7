@@ -476,7 +476,8 @@ class MitosisPlanGenerationFlowTester:
         except Exception as e:
             self.log_test("API Consistency Issue", False, f"Exception: {str(e)}")
             return False
-        """Test 7: Complete Frontend Flow Simulation"""
+    def test_complete_frontend_simulation(self) -> bool:
+        """Test 9: Complete Frontend Flow Simulation"""
         try:
             print(f"\n🔄 Simulating complete frontend flow")
             
