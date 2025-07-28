@@ -177,6 +177,11 @@ function appReducer(state: GlobalAppState, action: AppAction): GlobalAppState {
         ...state,
         tasks: state.tasks.map(task => {
           try {
+            // Validate that payload is actually a function
+            if (typeof action.payload !== 'function') {
+              console.error('❌ UPDATE_TASK_FUNCTIONAL payload is not a function:', typeof action.payload, action.payload);
+              return task; // Return unchanged if not a function
+            }
             const updatedTask = action.payload(task);
             if (updatedTask !== task) {
               console.log('🚀 CONTEXT FUNCTIONAL UPDATE:', {
