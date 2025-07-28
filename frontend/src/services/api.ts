@@ -285,7 +285,7 @@ class AgentAPI {
 
   async getTools(): Promise<Tool[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/tools`);
+      const response = await fetch(`${this.baseUrl}/api/agent/tools`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
