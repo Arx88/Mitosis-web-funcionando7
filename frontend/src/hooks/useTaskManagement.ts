@@ -128,10 +128,11 @@ export const useTaskManagement = () => {
         
         console.log('✅ NUEVA TAREA FIX: Task creation completed successfully');
       } else {
-        console.error('📝 Response error:', await response.text());
+        const errorText = await response.text();
+        console.error('🚨 NUEVA TAREA FIX: Backend response error:', response.status, errorText);
       }
     } catch (error) {
-      console.error('❌ Error generating plan:', error);
+      console.error('🚨 NUEVA TAREA FIX: Error generating plan:', error);
     }
     
     console.log('🔄 Setting task creating to false');
