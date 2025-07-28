@@ -85,7 +85,7 @@ export const VanishInput: React.FC<VanishInputProps> = ({
     }
   }, []);
 
-  // Efecto de typing mejorado
+  // Efecto de typing mejorado - MEMOIZADO
   const startTypingEffect = useCallback((phrase: string) => {
     clearAllTimers();
     
@@ -105,19 +105,18 @@ export const VanishInput: React.FC<VanishInputProps> = ({
         charIndex++;
         
         if (charIndex <= phrase.length) {
-          typingTimeoutRef.current = setTimeout(typeNextChar, 80); // Velocidad más lenta
+          typingTimeoutRef.current = setTimeout(typeNextChar, 80);
         } else {
           setIsTyping(false);
-          // Esperar más tiempo antes de borrar para reducir la frecuencia
           eraseTimeoutRef.current = setTimeout(() => {
             startErasingEffect(phrase);
-          }, 3000); // Aumentado de 2000 a 3000ms
+          }, 3000);
         }
       }
     };
     
     typeNextChar();
-  }, [inputValue.length, disabled, placeholder, clearAllTimers]);
+  }, [disabled, placeholder]); // SIMPLIFIED DEPENDENCIES
 
   // Efecto de borrado mejorado
   const startErasingEffect = useCallback((phrase: string) => {
