@@ -372,7 +372,7 @@ class AgentAPI {
 
   async downloadSelectedFiles(fileIds: string[]): Promise<Blob> {
     try {
-      const response = await fetch(`${this.baseUrl}/download-selected`, {
+      const response = await fetch(`${this.baseUrl}/api/agent/download-selected`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
