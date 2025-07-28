@@ -11,6 +11,7 @@ import { useAppContext } from './context/AppContext';
 import { ConfigPanel } from './components/ConfigPanel';
 import { FilesModal } from './components/FilesModal';
 import { FileUploadModal } from './components/FileUploadModal';
+import { API_CONFIG } from './config/api';
 
 // Componentes simples de fallback - SIN LAZY LOADING
 const ModalLoadingFallback = () => <div>Loading...</div>;
@@ -24,7 +25,7 @@ const preloadCriticalComponents = () => {};
 // Memoizar generación de ideas dinámicas
 const generateDynamicIdeas = async () => {
   try {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || 'https://774fd713-b4f7-45a0-a37e-a42a5d8a20be.preview.emergentagent.com';
+    const backendUrl = API_CONFIG.backend.url;
     const response = await fetch(`${backendUrl}/api/agent/generate-suggestions`, {
       method: 'POST',
       headers: {
