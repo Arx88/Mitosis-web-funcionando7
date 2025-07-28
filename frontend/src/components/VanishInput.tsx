@@ -118,7 +118,7 @@ export const VanishInput: React.FC<VanishInputProps> = ({
     typeNextChar();
   }, [disabled, placeholder]); // SIMPLIFIED DEPENDENCIES
 
-  // Efecto de borrado mejorado
+  // Efecto de borrado mejorado - MEMOIZADO
   const startErasingEffect = useCallback((phrase: string) => {
     if (inputValue.length > 0 || disabled) return;
     
@@ -130,18 +130,17 @@ export const VanishInput: React.FC<VanishInputProps> = ({
         eraseIndex--;
         
         if (eraseIndex >= 0) {
-          eraseTimeoutRef.current = setTimeout(eraseNextChar, 50); // Velocidad más lenta
+          eraseTimeoutRef.current = setTimeout(eraseNextChar, 50);
         } else {
-          // Cycle completado, pasar a la siguiente frase con más delay
           cycleTimeoutRef.current = setTimeout(() => {
             setPlaceholderIndex((prev) => (prev + 1) % inspirationalPhrases.length);
-          }, 1000); // Aumentado de 500 a 1000ms
+          }, 1000);
         }
       }
     };
     
     eraseNextChar();
-  }, [inputValue.length, disabled]);
+  }, [disabled]); // SIMPLIFIED DEPENDENCIES
 
   // Efecto para manejar el ciclo de placeholder - OPTIMIZADO
   useEffect(() => {
