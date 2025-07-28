@@ -100,6 +100,7 @@ try:
         ping_interval=25,
         transports=['websocket', 'polling'],    # WebSocket PRIMERO, polling fallback
         allow_upgrades=True,      # Permitir upgrade a WebSocket
+        path='/api/socket.io/',   # Set the socket.io path to /api/socket.io/
         json=json
     )
     
