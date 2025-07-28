@@ -65,7 +65,7 @@ export const VanishInput: React.FC<VanishInputProps> = ({
   ];
 
   // Limpiar todos los timers
-  const clearAllTimers = () => {
+  const clearAllTimers = useCallback(() => {
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = null;
@@ -78,10 +78,10 @@ export const VanishInput: React.FC<VanishInputProps> = ({
       clearTimeout(cycleTimeoutRef.current);
       cycleTimeoutRef.current = null;
     }
-  };
+  }, []);
 
   // Efecto de typing mejorado
-  const startTypingEffect = (phrase: string) => {
+  const startTypingEffect = useCallback((phrase: string) => {
     clearAllTimers();
     
     if (inputValue.length > 0 || disabled) {
@@ -112,10 +112,10 @@ export const VanishInput: React.FC<VanishInputProps> = ({
     };
     
     typeNextChar();
-  };
+  }, [inputValue.length, disabled, placeholder, clearAllTimers]);
 
   // Efecto de borrado mejorado
-  const startErasingEffect = (phrase: string) => {
+  const startErasingEffect = useCallback((phrase: string) => {
     if (inputValue.length > 0 || disabled) return;
     
     let eraseIndex = phrase.length;
@@ -137,7 +137,7 @@ export const VanishInput: React.FC<VanishInputProps> = ({
     };
     
     eraseNextChar();
-  };
+  }, [inputValue.length, disabled]);
 
   // Efecto para manejar el ciclo de placeholder
   useEffect(() => {
