@@ -5370,17 +5370,21 @@ def initialize_task():
 
 @agent_bp.route('/generate-plan', methods=['POST'])
 def generate_plan():
-    """Generate a plan for a task - Compatible with frontend expectations"""
+    """Generate a plan for a task and automatically execute it - Compatible with frontend expectations"""
+    import time
+    import threading
+    
     try:
         data = request.get_json()
         # ✅ FIX: Accept both 'task_title' and 'message' for API consistency
         task_title = data.get('task_title') or data.get('message', '')
-        task_id = data.get('task_id')
+        task_id = data.get('task_id') or f"task-{int(time.time() * 1000)}"  # Auto-generate task_id
+        auto_execute = data.get('auto_execute', True)  # Default to True for automatic execution
         
         if not task_title:
             return jsonify({'error': 'task_title or message is required'}), 400
         
-        logger.info(f"📋 Generating plan for task: {task_title}")
+        logger.info(f"📋 Generating plan for task {task_id}: {task_title}")
         
         # Generar plan usando la función existente
         plan_response = generate_task_plan(task_title, task_id)
@@ -5388,18 +5392,80 @@ def generate_plan():
         # Generar título mejorado
         enhanced_title = generate_task_title_with_llm(task_title, task_id)
         
-        # Formatear respuesta para el frontend
+        # 🚀 NUEVA FUNCIONALIDAD: Emitir evento WebSocket (copiado de initialize-task)
+        if hasattr(current_app, 'websocket_manager') and current_app.websocket_manager:
+            try:
+                current_app.websocket_manager.emit_to_task(
+                    task_id,
+                    'plan_updated',
+                    {
+                        'task_id': task_id,
+                        'plan': {
+                            'steps': plan_response.get('steps', []),
+                            'task_type': plan_response.get('task_type', 'general'),
+                            'complexity': plan_response.get('complexity', 'media'),
+                            'estimated_total_time': plan_response.get('estimated_total_time', '10-15 minutos')
+                        },
+                        'timestamp': datetime.now().isoformat()
+                    }
+                )
+                logger.info(f"📡 Plan emitted via WebSocket to task {task_id}")
+            except Exception as ws_error:
+                logger.error(f"❌ WebSocket emission failed: {ws_error}")
+        
+        # 🚀 AUTO-EJECUTAR EL PLAN (lógica copiada de initialize-task)
+        if auto_execute:
+            # Iniciar ejecución en hilo separado después de 3 segundos
+            app = current_app._get_current_object()  # Get the actual app instance
+            
+            def delayed_execution():
+                with app.app_context():
+                    time.sleep(3)
+                    logger.info(f"🔄 Auto-executing task {task_id} with {len(plan_response.get('steps', []))} steps")
+                    execute_task_steps_sequentially(task_id, plan_response.get('steps', []))
+                    logger.info(f"✅ Auto-execution completed for task {task_id}")
+            
+            execution_thread = threading.Thread(target=delayed_execution)
+            execution_thread.daemon = True
+            execution_thread.start()
+            
+            logger.info(f"🔄 Auto-execution scheduled for task {task_id}")
+        
+        # 🚀 GUARDAR DATOS DE LA TAREA (lógica copiada de initialize-task)
+        task_data = {
+            'task_id': task_id,
+            'title': task_title,
+            'enhanced_title': enhanced_title,
+            'message': task_title,  # Para compatibilidad
+            'plan': plan_response.get('steps', []),
+            'task_type': plan_response.get('task_type', 'general'),
+            'complexity': plan_response.get('complexity', 'media'),
+            'estimated_total_time': plan_response.get('estimated_total_time', '10-15 minutos'),
+            'auto_execute': auto_execute,
+            'status': 'initialized',
+            'created_at': datetime.now().isoformat(),
+            'start_time': datetime.now()
+        }
+        
+        # Guardar usando TaskManager
+        saved = save_task_data(task_id, task_data)
+        if saved:
+            logger.info(f"💾 Task {task_id} saved to persistent storage")
+        
+        # Formatear respuesta para el frontend (mantener formato existente)
         response = {
             'success': True,
+            'task_id': task_id,  # 🚀 NUEVO: Incluir task_id en respuesta
             'enhanced_title': enhanced_title,
             'plan': plan_response.get('steps', []),
             'task_type': plan_response.get('task_type', 'general'),
             'complexity': plan_response.get('complexity', 'media'),
             'estimated_total_time': plan_response.get('estimated_total_time', '10-15 minutos'),
+            'auto_execute': auto_execute,  # 🚀 NUEVO: Informar si se está ejecutando automáticamente
             'timestamp': datetime.now().isoformat()
         }
         
-        logger.info(f"✅ Plan generated successfully: {len(response['plan'])} steps")
+        logger.info(f"✅ Plan generated successfully: {len(response['plan'])} steps, auto_execute: {auto_execute}")
         return jsonify(response)
         
     except Exception as e:
