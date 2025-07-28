@@ -18,7 +18,7 @@ export const useTaskManagement = () => {
   
   // Crear tarea con mensaje inicial (consolidado)
   const createTaskWithMessage = useCallback(async (messageContent: string) => {
-    dispatch({ type: 'SET_TASK_CREATING', payload: true });
+    console.log('🎯 RACE CONDITION FIX: Starting createTaskWithMessage without early loading state');
     dispatch({ type: 'SET_THINKING', payload: false });
     
     // Crear mensaje de usuario
@@ -45,6 +45,10 @@ export const useTaskManagement = () => {
     // Agregar tarea y activarla
     dispatch({ type: 'ADD_TASK', payload: newTask });
     dispatch({ type: 'SET_ACTIVE_TASK', payload: newTask.id });
+    
+    // ✅ CRITICAL FIX: Set loading state AFTER task creation but BEFORE API call
+    console.log('🎯 RACE CONDITION FIX: Setting loading state after task creation');
+    dispatch({ type: 'SET_TASK_CREATING', payload: true });
     
     // ✅ FIX: Use /api/agent/chat endpoint which works perfectly
     try {
