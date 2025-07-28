@@ -1,122 +1,56 @@
 {
-  "total_tests": 8,
-  "passed_tests": 6,
-  "success_rate": 75.0,
-  "overall_status": "\u26a0\ufe0f BACKEND MOSTLY WORKING - Minor backend issues detected",
-  "critical_passed": 3,
+  "total_tests": 6,
+  "passed_tests": 5,
+  "success_rate": 83.33333333333334,
+  "overall_status": "\u26a0\ufe0f BACKEND MOSTLY WORKING - Minor issues detected",
+  "critical_passed": 4,
   "critical_total": 4,
   "test_results": [
     {
-      "test_name": "Backend Health Check",
+      "test_name": "API Health Endpoint",
       "success": true,
-      "details": "All services healthy - DB: True, Ollama: True, Tools: 12",
-      "timestamp": "2025-07-28T12:59:38.978969",
+      "details": "Health endpoint working - DB: True, Ollama: True, Tools: 12, CORS: True",
+      "timestamp": "2025-07-28T14:26:09.585987",
       "response_data": null
     },
     {
-      "test_name": "Chat Endpoint Plan Generation",
+      "test_name": "CORS Configuration API",
       "success": true,
-      "details": "Plan generated successfully - 4 steps, Task ID: chat-1753707579, Enhanced title: An\u00e1lisis de Tendencias en IA 2025",
-      "timestamp": "2025-07-28T12:59:51.482194",
+      "details": "CORS properly configured for /api/* - OPTIONS: True, POST: True",
+      "timestamp": "2025-07-28T14:26:15.542256",
       "response_data": null
     },
     {
-      "test_name": "Generate Plan Endpoint",
+      "test_name": "Chat Functionality with Plan",
+      "success": true,
+      "details": "Chat generates proper plan - 4 steps, Task ID: chat-1753712776, Enhanced title: An\u00e1lisis de Tendencias en IA 2025",
+      "timestamp": "2025-07-28T14:26:25.083871",
+      "response_data": null
+    },
+    {
+      "test_name": "Plan Generation Verification",
+      "success": true,
+      "details": "Plan generation working - 4 steps, Type: creacion, Complexity: alta, Tools: 4",
+      "timestamp": "2025-07-28T14:26:34.681318",
+      "response_data": null
+    },
+    {
+      "test_name": "WebSocket Support",
+      "success": true,
+      "details": "WebSocket support available - Endpoint accessible: True, Backend running: True, Memory: True",
+      "timestamp": "2025-07-28T14:26:35.722248",
+      "response_data": null
+    },
+    {
+      "test_name": "Files Endpoint CORS",
       "success": false,
-      "details": "Plan structure invalid - Valid plan: True, Title: True, Task ID: False",
-      "timestamp": "2025-07-28T13:00:00.414992",
-      "response_data": {
-        "complexity": "alta",
-        "enhanced_title": "An\u00e1lisis de Tendencias en IA 2025",
-        "estimated_total_time": "35-45 minutos",
-        "plan": [
-          {
-            "active": true,
-            "completed": false,
-            "complexity": "media",
-            "description": "Realizar b\u00fasqueda exhaustiva con herramientas como Google Scholar y arXiv para encontrar art\u00edculos y estudios recientes sobre el estado actual y futuras perspectivas de la inteligencia artificial.",
-            "estimated_time": "8-10 minutos",
-            "id": "step-1",
-            "status": "active",
-            "title": "Investigaci\u00f3n profunda sobre tendencias de la IA en 2025",
-            "tool": "web_search"
-          },
-          {
-            "active": false,
-            "completed": false,
-            "complexity": "alta",
-            "description": "Aplicar herramientas de an\u00e1lisis para evaluar c\u00f3mo la IA podr\u00eda influir en \u00e1reas como la salud, la educaci\u00f3n y la seguridad en el a\u00f1o 2025.",
-            "estimated_time": "10-12 minutos",
-            "id": "step-2",
-            "status": "pending",
-            "title": "An\u00e1lisis de impacto en sectores clave",
-            "tool": "analysis"
-          },
-          {
-            "active": false,
-            "completed": false,
-            "complexity": "alta",
-            "description": "Utilizar herramientas de creaci\u00f3n para desarrollar posibles escenarios sobre c\u00f3mo la IA podr\u00eda evolucionar y ser utilizada en 2025, incluyendo beneficios potenciales y desaf\u00edos.",
-            "estimated_time": "12-15 minutos",
-            "id": "step-3",
-            "status": "pending",
-            "title": "Desarrollo de escenarios futuros",
-            "tool": "creation"
-          },
-          {
-            "active": false,
-            "completed": false,
-            "complexity": "media",
-            "description": "Aplicar herramientas de procesamiento para revisar, validar y mejorar la precisi\u00f3n y claridad del contenido del informe.",
-            "estimated_time": "5-8 minutos",
-            "id": "step-4",
-            "status": "pending",
-            "title": "Refinamiento y optimizaci\u00f3n del informe",
-            "tool": "processing"
-          }
-        ],
-        "success": true,
-        "task_type": "creacion",
-        "timestamp": "2025-07-28T13:00:00.411905"
-      }
-    },
-    {
-      "test_name": "OLLAMA Integration",
-      "success": true,
-      "details": "OLLAMA connected - Endpoint: https://bef4a4bb93d1.ngrok-free.app, Model: llama3.1:8b, Available models: 0",
-      "timestamp": "2025-07-28T13:00:01.421645",
-      "response_data": null
-    },
-    {
-      "test_name": "WebSocket Infrastructure",
-      "success": true,
-      "details": "WebSocket infrastructure operational - Status: running, Memory enabled: True",
-      "timestamp": "2025-07-28T13:00:02.430972",
-      "response_data": null
-    },
-    {
-      "test_name": "Response Structure Compatibility",
-      "success": false,
-      "details": "Missing required fields - Chat: True, Plan: False",
-      "timestamp": "2025-07-28T13:00:19.699475",
-      "response_data": null
-    },
-    {
-      "test_name": "Plan Persistence",
-      "success": true,
-      "details": "Database connected - Plan persistence capability verified",
-      "timestamp": "2025-07-28T13:00:22.711521",
-      "response_data": null
-    },
-    {
-      "test_name": "API Field Consistency",
-      "success": true,
-      "details": "API consistency fixed - Both endpoints accept both field names",
-      "timestamp": "2025-07-28T13:00:46.917874",
+      "details": "Files endpoint CORS issues - Accessible: True, CORS: False",
+      "timestamp": "2025-07-28T14:26:36.742450",
       "response_data": null
     }
   ],
-  "task_id": "chat-1753707579",
+  "task_id": "chat-1753712776",
   "backend_working": true,
-  "root_cause_identified": false
+  "cors_working": true,
+  "files_cors_working": false
 }
