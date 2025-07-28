@@ -607,7 +607,7 @@ class MitosisPlanGenerationFlowTester:
         print(f"   Overall Status: {overall_status}")
         
         # Critical findings for plan generation
-        critical_tests = ["Exact User Scenario", "Generate Plan Endpoint Direct", "Response Format Compatibility", "Complete Frontend Simulation"]
+        critical_tests = ["Exact User Scenario", "Generate Plan Endpoint Direct", "Response Format Compatibility", "API Consistency Issue", "Complete Frontend Simulation"]
         critical_passed = sum(1 for result in self.test_results 
                             if result['test_name'] in critical_tests and result['success'])
         
