@@ -1,99 +1,122 @@
 {
-  "total_tests": 7,
-  "passed_tests": 4,
-  "success_rate": 57.14285714285714,
-  "overall_status": "\u26a0\ufe0f PARTIAL - Backend has significant issues affecting frontend communication",
+  "total_tests": 8,
+  "passed_tests": 6,
+  "success_rate": 75.0,
+  "overall_status": "\u26a0\ufe0f BACKEND MOSTLY WORKING - Minor backend issues detected",
   "critical_passed": 3,
   "critical_total": 4,
   "test_results": [
     {
-      "test_name": "Backend Health Endpoint",
+      "test_name": "Backend Health Check",
       "success": true,
-      "details": "Health endpoint working - DB: True, Ollama: True, Tools: 12, CORS: True",
-      "timestamp": "2025-07-26T21:29:47.259728",
+      "details": "All services healthy - DB: True, Ollama: True, Tools: 12",
+      "timestamp": "2025-07-28T12:59:38.978969",
       "response_data": null
     },
     {
-      "test_name": "CORS Configuration",
+      "test_name": "Chat Endpoint Plan Generation",
       "success": true,
-      "details": "CORS properly configured - OPTIONS CORS OK, GET CORS OK",
-      "timestamp": "2025-07-26T21:29:48.278793",
+      "details": "Plan generated successfully - 4 steps, Task ID: chat-1753707579, Enhanced title: An\u00e1lisis de Tendencias en IA 2025",
+      "timestamp": "2025-07-28T12:59:51.482194",
       "response_data": null
     },
     {
-      "test_name": "WebSocket Endpoint Accessibility",
+      "test_name": "Generate Plan Endpoint",
       "success": false,
-      "details": "WebSocket endpoint responds but no Socket.IO indicators - HTTP 200",
-      "timestamp": "2025-07-26T21:29:49.311437",
-      "response_data": null
-    },
-    {
-      "test_name": "Agent Endpoints Functionality",
-      "success": true,
-      "details": "Agent endpoints working - 3/3 endpoints successful",
-      "timestamp": "2025-07-26T21:29:51.007862",
-      "response_data": null
-    },
-    {
-      "test_name": "Chat Endpoint Processing",
-      "success": false,
-      "details": "Chat endpoint failed - HTTP 404: {\"error\":\"Endpoint not found\"}\n",
-      "timestamp": "2025-07-26T21:29:52.016337",
+      "details": "Plan structure invalid - Valid plan: True, Title: True, Task ID: False",
+      "timestamp": "2025-07-28T13:00:00.414992",
       "response_data": {
-        "error": "Endpoint not found"
+        "complexity": "alta",
+        "enhanced_title": "An\u00e1lisis de Tendencias en IA 2025",
+        "estimated_total_time": "35-45 minutos",
+        "plan": [
+          {
+            "active": true,
+            "completed": false,
+            "complexity": "media",
+            "description": "Realizar b\u00fasqueda exhaustiva con herramientas como Google Scholar y arXiv para encontrar art\u00edculos y estudios recientes sobre el estado actual y futuras perspectivas de la inteligencia artificial.",
+            "estimated_time": "8-10 minutos",
+            "id": "step-1",
+            "status": "active",
+            "title": "Investigaci\u00f3n profunda sobre tendencias de la IA en 2025",
+            "tool": "web_search"
+          },
+          {
+            "active": false,
+            "completed": false,
+            "complexity": "alta",
+            "description": "Aplicar herramientas de an\u00e1lisis para evaluar c\u00f3mo la IA podr\u00eda influir en \u00e1reas como la salud, la educaci\u00f3n y la seguridad en el a\u00f1o 2025.",
+            "estimated_time": "10-12 minutos",
+            "id": "step-2",
+            "status": "pending",
+            "title": "An\u00e1lisis de impacto en sectores clave",
+            "tool": "analysis"
+          },
+          {
+            "active": false,
+            "completed": false,
+            "complexity": "alta",
+            "description": "Utilizar herramientas de creaci\u00f3n para desarrollar posibles escenarios sobre c\u00f3mo la IA podr\u00eda evolucionar y ser utilizada en 2025, incluyendo beneficios potenciales y desaf\u00edos.",
+            "estimated_time": "12-15 minutos",
+            "id": "step-3",
+            "status": "pending",
+            "title": "Desarrollo de escenarios futuros",
+            "tool": "creation"
+          },
+          {
+            "active": false,
+            "completed": false,
+            "complexity": "media",
+            "description": "Aplicar herramientas de procesamiento para revisar, validar y mejorar la precisi\u00f3n y claridad del contenido del informe.",
+            "estimated_time": "5-8 minutos",
+            "id": "step-4",
+            "status": "pending",
+            "title": "Refinamiento y optimizaci\u00f3n del informe",
+            "tool": "processing"
+          }
+        ],
+        "success": true,
+        "task_type": "creacion",
+        "timestamp": "2025-07-28T13:00:00.411905"
       }
     },
     {
-      "test_name": "Backend Response Format",
+      "test_name": "OLLAMA Integration",
       "success": true,
-      "details": "Response format consistent - 2/2 endpoints return valid JSON",
-      "timestamp": "2025-07-26T21:29:53.064984",
+      "details": "OLLAMA connected - Endpoint: https://bef4a4bb93d1.ngrok-free.app, Model: llama3.1:8b, Available models: 0",
+      "timestamp": "2025-07-28T13:00:01.421645",
       "response_data": null
     },
     {
-      "test_name": "Error Handling and Status Codes",
+      "test_name": "WebSocket Infrastructure",
+      "success": true,
+      "details": "WebSocket infrastructure operational - Status: running, Memory enabled: True",
+      "timestamp": "2025-07-28T13:00:02.430972",
+      "response_data": null
+    },
+    {
+      "test_name": "Response Structure Compatibility",
       "success": false,
-      "details": "Error handling issues - 2/3 error scenarios handled correctly",
-      "timestamp": "2025-07-26T21:29:54.095863",
-      "response_data": [
-        {
-          "test": "GET /api/agent/nonexistent",
-          "status_code": 404,
-          "expected": [
-            404
-          ],
-          "correct": true,
-          "has_error_message": true
-        },
-        {
-          "test": "DELETE /api/agent/status",
-          "status_code": 405,
-          "expected": [
-            405,
-            404
-          ],
-          "correct": true,
-          "has_error_message": false
-        },
-        {
-          "test": "POST /api/agent/chat",
-          "status_code": 404,
-          "expected": [
-            400,
-            422
-          ],
-          "correct": false,
-          "has_error_message": true
-        }
-      ]
+      "details": "Missing required fields - Chat: True, Plan: False",
+      "timestamp": "2025-07-28T13:00:19.699475",
+      "response_data": null
+    },
+    {
+      "test_name": "Plan Persistence",
+      "success": true,
+      "details": "Database connected - Plan persistence capability verified",
+      "timestamp": "2025-07-28T13:00:22.711521",
+      "response_data": null
+    },
+    {
+      "test_name": "API Field Consistency",
+      "success": true,
+      "details": "API consistency fixed - Both endpoints accept both field names",
+      "timestamp": "2025-07-28T13:00:46.917874",
+      "response_data": null
     }
   ],
-  "task_id": null,
-  "react_error_diagnosis": {
-    "backend_healthy": false,
-    "likely_cause": "backend",
-    "failed_critical_tests": [
-      "Chat Endpoint Processing"
-    ]
-  }
+  "task_id": "chat-1753707579",
+  "backend_working": true,
+  "root_cause_identified": false
 }
