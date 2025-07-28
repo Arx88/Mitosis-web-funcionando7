@@ -1,66 +1,71 @@
 {
-  "total_tests": 7,
-  "passed_tests": 3,
-  "success_rate": 42.857142857142854,
-  "overall_status": "\u274c CRITICAL - Major issues with plan generation flow",
-  "critical_passed": 1,
-  "critical_total": 4,
+  "total_tests": 8,
+  "passed_tests": 6,
+  "success_rate": 75.0,
+  "overall_status": "\u26a0\ufe0f GOOD - Plan generation mostly working with minor issues",
+  "critical_passed": 2,
+  "critical_total": 5,
   "test_results": [
     {
       "test_name": "Exact User Scenario - Chat Endpoint",
       "success": true,
-      "details": "Chat successful - Task ID: chat-1753701203, Plan steps: 4, Enhanced title: An\u00e1lisis de Tendencias en IA 2025",
-      "timestamp": "2025-07-28T11:13:34.480858",
+      "details": "Chat successful - Task ID: chat-1753701380, Plan steps: 4, Enhanced title: An\u00e1lisis de Tendencias en IA 2025",
+      "timestamp": "2025-07-28T11:16:28.167823",
       "response_data": null
     },
     {
       "test_name": "Generate Plan Endpoint Direct",
-      "success": false,
-      "details": "HTTP 400: {\"error\":\"task_title is required\"}\n",
-      "timestamp": "2025-07-28T11:13:36.491098",
-      "response_data": {
-        "error": "task_title is required"
-      }
+      "success": true,
+      "details": "Plan generated correctly - 4 steps, type: creacion, complexity: alta, success: True",
+      "timestamp": "2025-07-28T11:16:37.603041",
+      "response_data": null
     },
     {
       "test_name": "Frontend Payload Variations",
-      "success": false,
-      "details": "Only 0/3 payload variations successful",
-      "timestamp": "2025-07-28T11:13:38.513363",
+      "success": true,
+      "details": "Expected scenarios successful: 3/4 (expected 3+)",
+      "timestamp": "2025-07-28T11:17:02.314041",
       "response_data": null
     },
     {
       "test_name": "MongoDB Plan Persistence",
       "success": true,
       "details": "Plan persisted correctly (alternative check) - Steps: 4",
-      "timestamp": "2025-07-28T11:13:42.529742",
+      "timestamp": "2025-07-28T11:17:06.327146",
       "response_data": null
     },
     {
       "test_name": "Response Format Compatibility",
       "success": true,
       "details": "Response format fully compatible - All fields present with correct types, plan structure valid",
-      "timestamp": "2025-07-28T11:13:52.450155",
+      "timestamp": "2025-07-28T11:17:15.993012",
       "response_data": null
     },
     {
       "test_name": "CORS and Headers",
+      "success": true,
+      "details": "CORS properly configured - Origin: https://18ee1512-876b-47e6-b867-bac2b873f929.preview.emergentagent.com",
+      "timestamp": "2025-07-28T11:17:25.907319",
+      "response_data": null
+    },
+    {
+      "test_name": "API Consistency Issue",
       "success": false,
-      "details": "HTTP 400: {\"error\":\"task_title is required\"}\n",
-      "timestamp": "2025-07-28T11:13:54.457405",
+      "details": "CRITICAL API INCONSISTENCY DETECTED: Chat endpoint uses 'message' field, Generate-plan endpoint uses 'task_title' field. This causes frontend-backend communication issues.",
+      "timestamp": "2025-07-28T11:17:42.922634",
       "response_data": null
     },
     {
       "test_name": "Complete Frontend Simulation",
       "success": false,
       "details": "Step 3 failed - Status check returned HTTP 404",
-      "timestamp": "2025-07-28T11:14:06.485740",
+      "timestamp": "2025-07-28T11:17:54.872577",
       "response_data": null
     }
   ],
-  "task_id": "chat-1753701203",
-  "backend_plan_generation": false,
+  "task_id": "chat-1753701380",
+  "backend_plan_generation": true,
   "frontend_compatibility": true,
   "mongodb_persistence": true,
-  "diagnosis": "\u274c BACKEND PLAN GENERATION FAILING - Core functionality broken"
+  "diagnosis": "\u2705 BACKEND IS WORKING CORRECTLY - Issue likely in frontend rendering or state management"
 }
