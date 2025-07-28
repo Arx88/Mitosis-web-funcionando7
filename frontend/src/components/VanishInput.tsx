@@ -25,12 +25,17 @@ export const VanishInput: React.FC<VanishInputProps> = ({
   onDeepSearch,
   onVoiceInput
 }) => {
-  // 🔥 URGENT DEBUG: Add component lifecycle logging
-  console.log('🟢 VANISHINPUT: Component rendering with props:', { 
-    onSendMessage: !!onSendMessage, 
-    disabled, 
-    placeholder 
-  });
+  // DEBUG: Reduce logging frequency to prevent console spam
+  const renderCount = useRef(0);
+  renderCount.current++;
+  
+  if (renderCount.current % 100 === 0) { // Only log every 100th render
+    console.log('🟢 VANISHINPUT: Component rendering (count:', renderCount.current, ') with props:', { 
+      onSendMessage: !!onSendMessage, 
+      disabled, 
+      placeholder 
+    });
+  }
 
   const [inputValue, setInputValue] = useState('');
   const [currentPlaceholder, setCurrentPlaceholder] = useState('');
