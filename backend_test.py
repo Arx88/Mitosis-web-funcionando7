@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-COMPREHENSIVE MITOSIS PLAN GENERATION FLOW TESTING
-Testing the complete flow from frontend to backend focusing on the reported issue:
+CRITICAL MITOSIS PLAN GENERATION ISSUE TESTING
+Testing the specific plan generation issue reported in the review request:
 
 PROBLEM REPORTED:
-- User creates task from frontend but action plan is not generated or visible
-- Backend works perfectly - logs show plan generated correctly with 4 steps
-- Endpoints /api/agent/chat and /api/agent/generate-plan return correct responses when tested directly
-- Plan is saved successfully in MongoDB
-- Problem seems to be in frontend-backend communication or frontend rendering logic
+1. Frontend creates tasks successfully but doesn't call the backend plan generation APIs
+2. Backend works perfectly - both `/api/agent/chat` and `/api/agent/generate-plan` endpoints generate 4-step plans correctly
+3. The issue: Network monitoring shows 0 calls to plan generation endpoints during task creation
 
-TESTING OBJECTIVES:
-1. Test complete flow from frontend to backend comprehensively
-2. Verify specifically the /api/agent/generate-plan endpoint with different payloads
-3. Simulate exact flow that frontend makes when user creates a task
-4. Verify response that frontend is receiving matches expectations
-5. Identify specifically where disconnection is between backend (working) and frontend (not showing plans)
+TESTING REQUIREMENTS:
+1. Test Plan Generation: Test both `/api/agent/chat` and `/api/agent/generate-plan` endpoints with the message "Genera un informe sobre la IA en 2025"
+2. Verify Response Structure: Ensure responses have proper structure with `plan`, `enhanced_title`, `task_id`, etc.
+3. Test Backend Health: Check if backend services are running properly
+4. Check WebSocket: Verify if WebSocket infrastructure is working
+5. Verify OLLAMA Integration: Ensure OLLAMA is connected and working
+
+BACKEND URL: https://2143d7f4-57ef-41c0-92aa-9349b6ada141.preview.emergentagent.com
 """
 
 import requests
