@@ -95,11 +95,21 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   }, [onUpdateTask]);
 
   const handleUpdateMessages = useCallback((updater: (messages: Message[]) => Message[]) => {
+    // Validate that updater is actually a function
+    if (typeof updater !== 'function') {
+      console.error('❌ handleUpdateMessages: updater is not a function:', {
+        updaterType: typeof updater,
+        updater: updater,
+        taskId: task.id
+      });
+      return;
+    }
+    
     handleUpdateTask((currentTask: Task) => ({
       ...currentTask,
       messages: updater(currentTask.messages || [])
     }));
-  }, [handleUpdateTask]);
+  }, [handleUpdateTask, task.id]);
 
   const handleToggleFavorite = useCallback(() => {
     handleUpdateTask((currentTask: Task) => ({
