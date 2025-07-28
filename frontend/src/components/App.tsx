@@ -115,11 +115,74 @@ export function App() {
       status: 'pending',
       messages: [],
       terminalCommands: [],
+      plan: [], // Initialize with empty plan
       isFavorite: false,
       iconType: iconType // Agregar el tipo de icono
     };
     setTasks(prev => [...prev, newTask]);
     setActiveTaskId(newTask.id);
+    
+    // Generate plan automatically for the new task
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 
+                     import.meta.env.REACT_APP_BACKEND_URL || 
+                     process.env.REACT_APP_BACKEND_URL || 
+                     'http://localhost:8001';
+      
+      console.log('🎯 Generating plan for task:', title);
+      const planResponse = await fetch(`${backendUrl}/api/agent/generate-plan`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          task_title: title
+        })
+      });
+
+      if (planResponse.ok) {
+        const planData = await planResponse.json();
+        console.log('✅ Plan generated:', planData);
+        
+        // Update the task with the generated plan
+        const updatedTask = {
+          ...newTask,
+          plan: planData.plan || [],
+          status: 'ready' as const
+        };
+        
+        setTasks(prev => prev.map(task => 
+          task.id === newTask.id ? updatedTask : task
+        ));
+
+        // Start automatic execution
+        console.log('🚀 Starting automatic execution for task:', newTask.id);
+        const executionResponse = await fetch(`${backendUrl}/api/agent/start-task-execution/${newTask.id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            plan: planData.plan,
+            task_title: title
+          })
+        });
+
+        if (executionResponse.ok) {
+          console.log('✅ Task execution started successfully');
+          // Update task status to in-progress
+          setTasks(prev => prev.map(task => 
+            task.id === newTask.id ? { ...task, status: 'in-progress' as const } : task
+          ));
+        } else {
+          console.error('❌ Failed to start task execution:', executionResponse.status);
+        }
+      } else {
+        console.error('❌ Failed to generate plan:', planResponse.status);
+      }
+    } catch (error) {
+      console.error('❌ Error in automatic plan generation and execution:', error);
+    }
     
     // Crear archivos automáticamente para la nueva tarea
     try {
