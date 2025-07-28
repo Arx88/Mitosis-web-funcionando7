@@ -70,10 +70,8 @@ class PlaywrightWebSearchTool(BaseTool):
         if config is None:
             config = {}
         
-        # Validar parámetros
-        validation = self.validate_parameters(parameters)
-        if not validation['valid']:
-            return {'error': validation['error'], 'success': False}
+        if not self.playwright_available:
+            return {'error': 'Playwright not available', 'success': False}
         
         query = parameters['query'].strip()
         search_engine = parameters.get('search_engine', 'bing').lower()  # Cambiar default a bing
