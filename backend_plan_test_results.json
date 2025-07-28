@@ -44,7 +44,7 @@
     {
       "test_name": "CORS and Headers",
       "success": true,
-      "details": "CORS properly configured - Origin: https://45737716-7252-439d-841b-d7f2788d3111.preview.emergentagent.com",
+      "details": "CORS properly configured - Origin: https://898a4b84-5e9b-4fa6-85cd-9b2b60286659.preview.emergentagent.com",
       "timestamp": "2025-07-28T11:17:25.907319",
       "response_data": null
     },
