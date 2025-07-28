@@ -266,7 +266,7 @@ Done in 11.63s.
 🔧 BACKEND: Flask + gunicorn + eventlet (SocketIO optimizado)
 🎭 TESTING: Playwright + Selenium + Chrome instalados
 ==============================================================
-📍 URL Externa: https://2143d7f4-57ef-41c0-92aa-9349b6ada141.preview.emergentagent.com
+📍 URL Externa: https://9acb1266-4f42-433b-927c-4dea1daaed2c.preview.emergentagent.com
 📍 Backend API: http://localhost:8001
 📍 Frontend Local: http://localhost:3000
 ==============================================================
@@ -324,7 +324,7 @@ mongodb                          RUNNING   pid 969, uptime 0:00:30
 ✅ WEBSOCKETS: SocketIO habilitado para tiempo real
 
 🚀 APLICACIÓN 100% LISTA PARA PRODUCCIÓN
-🌐 URL: https://2143d7f4-57ef-41c0-92aa-9349b6ada141.preview.emergentagent.com
+🌐 URL: https://9acb1266-4f42-433b-927c-4dea1daaed2c.preview.emergentagent.com
 
 🎉 AGENTE GENERAL MITOSIS COMPLETAMENTE OPERATIVO
    📱 Accesible desde cualquier dispositivo
