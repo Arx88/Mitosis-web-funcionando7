@@ -2706,7 +2706,7 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                         # Para herramientas no explícitamente manejadas, intentar con tool_manager
                         if not tool_manager or not hasattr(tool_manager, 'execute_tool'):
                             raise ToolNotAvailableError(f"Herramienta '{tool_name}' no reconocida o no disponible.")
-                        return tool_manager.execute_tool(tool_name, tool_params, task_id=task_id)
+                        return tool_manager.execute_tool(tool_name, tool_params)
                 
                 try:
                     # EJECUTAR HERRAMIENTA REAL según el tipo de paso con reintentos automáticos
