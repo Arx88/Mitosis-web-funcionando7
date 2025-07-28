@@ -24,7 +24,7 @@ const preloadCriticalComponents = () => {};
 // Memoizar generación de ideas dinámicas
 const generateDynamicIdeas = async () => {
   try {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || 'https://2d6bd67a-c88f-4adf-aad2-a25028aa0f12.preview.emergentagent.com';
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || 'https://frontend-fix-9.preview.emergentagent.com';
     const response = await fetch(`${backendUrl}/api/agent/generate-suggestions`, {
       method: 'POST',
       headers: {
