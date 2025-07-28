@@ -144,8 +144,9 @@ export const VanishInput: React.FC<VanishInputProps> = ({
     eraseNextChar();
   }, [inputValue.length, disabled]);
 
-  // Efecto para manejar el ciclo de placeholder
+  // Efecto para manejar el ciclo de placeholder - OPTIMIZADO
   useEffect(() => {
+    // Si hay input o está disabled, no hacer animación
     if (inputValue.length > 0 || disabled) {
       clearAllTimers();
       setCurrentPlaceholder(placeholder);
@@ -153,18 +154,22 @@ export const VanishInput: React.FC<VanishInputProps> = ({
       return;
     }
 
-    // Prevenir múltiples ejecuciones del mismo efecto
+    // Solo iniciar la animación una vez
+    let mounted = true;
     const timeoutId = setTimeout(() => {
-      const phrase = inspirationalPhrases[placeholderIndex];
-      startTypingEffect(phrase);
+      if (mounted) {
+        const phrase = inspirationalPhrases[placeholderIndex];
+        startTypingEffect(phrase);
+      }
     }, 100);
 
     // Cleanup al cambiar de efecto
     return () => {
+      mounted = false;
       clearTimeout(timeoutId);
       clearAllTimers();
     };
-  }, [placeholderIndex, inputValue, disabled, placeholder, startTypingEffect, clearAllTimers]); // Updated dependencies with memoized functions
+  }, [placeholderIndex, disabled]); // SIMPLIFIED DEPENDENCIES - removed inputValue to prevent infinite loop
 
   // Cleanup al desmontar el componente
   useEffect(() => {
