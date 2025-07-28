@@ -65,13 +65,20 @@ class PlaywrightWebSearchTool(BaseTool):
             )
         ]
     
-    def _execute_tool(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
+    def _execute_tool(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> 'ToolExecutionResult':
         """Ejecutar búsqueda web con Playwright"""
+        from .base_tool import ToolExecutionResult
+        
         if config is None:
             config = {}
         
         if not self.playwright_available:
-            return {'error': 'Playwright not available', 'success': False}
+            return ToolExecutionResult(
+                success=False, 
+                error='Playwright not available',
+                tool_name='playwright_web_search',
+                parameters=parameters
+            )
         
         query = parameters['query'].strip()
         search_engine = parameters.get('search_engine', 'bing').lower()  # Cambiar default a bing
@@ -83,20 +90,35 @@ class PlaywrightWebSearchTool(BaseTool):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             try:
-                result = loop.run_until_complete(
+                result_data = loop.run_until_complete(
                     self._search_with_playwright(query, search_engine, max_results, extract_content)
                 )
-                return result
+                
+                # Crear resultado estandarizado
+                if result_data.get('success', True) and len(result_data.get('results', [])) > 0:
+                    return ToolExecutionResult(
+                        success=True,
+                        data=result_data,
+                        tool_name='playwright_web_search',
+                        parameters=parameters
+                    )
+                else:
+                    return ToolExecutionResult(
+                        success=False,
+                        error=result_data.get('error', 'No results found'),
+                        tool_name='playwright_web_search',
+                        parameters=parameters
+                    )
             finally:
                 loop.close()
                 
         except Exception as e:
-            return {
-                'query': query,
-                'search_engine': search_engine,
-                'error': str(e),
-                'success': False
-            }
+            return ToolExecutionResult(
+                success=False,
+                error=str(e),
+                tool_name='playwright_web_search',
+                parameters=parameters
+            )
     
     async def _search_with_playwright(self, query: str, search_engine: str, max_results: int, extract_content: bool) -> Dict[str, Any]:
         """Realizar búsqueda usando Playwright"""
