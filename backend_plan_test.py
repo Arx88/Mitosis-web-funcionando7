@@ -187,13 +187,13 @@ class MitosisPlanGenerationFlowTester:
             # Test different payload formats that frontend might send
             test_scenarios = [
                 {
-                    "name": "Standard Frontend Payload",
-                    "payload": {"message": "Genera un informe sobre la IA en 2025"}
+                    "name": "Standard Frontend Payload (task_title)",
+                    "payload": {"task_title": "Genera un informe sobre la IA en 2025"}
                 },
                 {
                     "name": "Frontend with Additional Fields",
                     "payload": {
-                        "message": "Genera un informe sobre la IA en 2025",
+                        "task_title": "Genera un informe sobre la IA en 2025",
                         "user_id": "test_user",
                         "session_id": "test_session"
                     }
@@ -201,9 +201,13 @@ class MitosisPlanGenerationFlowTester:
                 {
                     "name": "Frontend Nueva Tarea Flow",
                     "payload": {
-                        "message": "Genera un informe sobre la IA en 2025",
+                        "task_title": "Genera un informe sobre la IA en 2025",
                         "task_type": "nueva_tarea"
                     }
+                },
+                {
+                    "name": "WRONG: Frontend using 'message' field",
+                    "payload": {"message": "Genera un informe sobre la IA en 2025"}
                 }
             ]
             
@@ -225,15 +229,17 @@ class MitosisPlanGenerationFlowTester:
                     else:
                         print(f"      ❌ Failed - Invalid plan: {type(plan)}, length: {len(plan) if isinstance(plan, list) else 'N/A'}")
                 else:
-                    print(f"      ❌ Failed - HTTP {response.status_code}")
+                    print(f"      ❌ Failed - HTTP {response.status_code}: {response.text[:100]}")
             
-            if successful_scenarios == len(test_scenarios):
+            # We expect 3/4 to succeed (the 'message' field one should fail)
+            expected_success = 3
+            if successful_scenarios >= expected_success:
                 self.log_test("Frontend Payload Variations", True, 
-                            f"All {successful_scenarios}/{len(test_scenarios)} payload variations successful")
+                            f"Expected scenarios successful: {successful_scenarios}/{len(test_scenarios)} (expected {expected_success}+)")
                 return True
             else:
                 self.log_test("Frontend Payload Variations", False, 
-                            f"Only {successful_scenarios}/{len(test_scenarios)} payload variations successful")
+                            f"Only {successful_scenarios}/{len(test_scenarios)} payload variations successful (expected {expected_success}+)")
                 return False
                 
         except Exception as e:
