@@ -220,10 +220,10 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
     try {
       const response = await agentAPI.sendMessage(message, task?.id);
       
-      if (response.success) {
+      if (response.response) {
         const assistantMessage: Message = {
           id: `msg-${Date.now() + 1}`,
-          content: response.message,
+          content: response.response,
           sender: 'assistant',
           timestamp: new Date(),
           toolResults: response.toolResults,
