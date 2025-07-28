@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 """
-MITOSIS BACKEND HEALTH AND FUNCTIONALITY TESTING
-Testing backend health and functionality to resolve React Error #306 and frontend blank page issue:
+COMPREHENSIVE MITOSIS PLAN GENERATION FLOW TESTING
+Testing the complete flow from frontend to backend focusing on the reported issue:
 
-1. Test all /api/agent/ endpoints are working correctly
-2. Verify the /api/health endpoint returns correct status
-3. Test that CORS is configured correctly for the frontend domain
-4. Verify that WebSocket endpoint /socket.io/ is accessible
-5. Test a simple chat request to /api/agent/chat to ensure backend processing is working
+PROBLEM REPORTED:
+- User creates task from frontend but action plan is not generated or visible
+- Backend works perfectly - logs show plan generated correctly with 4 steps
+- Endpoints /api/agent/chat and /api/agent/generate-plan return correct responses when tested directly
+- Plan is saved successfully in MongoDB
+- Problem seems to be in frontend-backend communication or frontend rendering logic
 
-CRITICAL OBJECTIVE: Identify and resolve backend communication issues preventing React from completing its render cycle.
+TESTING OBJECTIVES:
+1. Test complete flow from frontend to backend comprehensively
+2. Verify specifically the /api/agent/generate-plan endpoint with different payloads
+3. Simulate exact flow that frontend makes when user creates a task
+4. Verify response that frontend is receiving matches expectations
+5. Identify specifically where disconnection is between backend (working) and frontend (not showing plans)
 """
 
 import requests
