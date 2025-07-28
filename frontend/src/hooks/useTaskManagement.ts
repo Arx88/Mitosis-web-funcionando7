@@ -84,6 +84,7 @@ export const useTaskManagement = () => {
           
           // Update plan from response
           if (data.plan && Array.isArray(data.plan)) {
+            console.log('🎉 NUEVA TAREA FIX: Plan received with', data.plan.length, 'steps');
             const frontendPlan = data.plan.map((step: any) => ({
               id: step.id,
               title: step.title,
@@ -102,7 +103,9 @@ export const useTaskManagement = () => {
               progress: 0
             };
             
-            console.log('📝 Updated task with plan:', updatedTask);
+            console.log('🎉 NUEVA TAREA FIX: Updated task with plan:', updatedTask);
+          } else {
+            console.warn('🚨 NUEVA TAREA FIX: No valid plan in response:', data);
           }
           
           return updatedTask;
