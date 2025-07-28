@@ -33,7 +33,7 @@ interface ApiConfig {
 function getBackendUrl(): string {
   // Simplificar: usar directamente la URL de producción para builds de producción
   // Esta URL se inyecta en tiempo de compilación por Vite
-  const productionUrl = 'https://18ee1512-876b-47e6-b867-bac2b873f929.preview.emergentagent.com';
+  const productionUrl = 'https://63c32999-9c01-40eb-86d9-4a9e28abc65e.preview.emergentagent.com';
   
   // En desarrollo, intentar usar variables de entorno
   try {
