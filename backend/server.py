@@ -612,6 +612,24 @@ def api_health_check():
         return jsonify({"status": "unhealthy", "error": str(e)}), 500
 
 # Endpoint para sugerencias dinámicas que faltaba
+@app.route('/api/agent/get-stored-events/<task_id>', methods=['GET'])
+def get_stored_events(task_id):
+    """Get stored WebSocket events for a task (for late-joining clients)"""
+    try:
+        if hasattr(app, 'websocket_manager') and app.websocket_manager:
+            stored_events = app.websocket_manager.get_stored_events(task_id)
+            return jsonify({
+                'task_id': task_id,
+                'events': stored_events,
+                'count': len(stored_events),
+                'timestamp': datetime.now().isoformat()
+            }), 200
+        else:
+            return jsonify({'error': 'WebSocket manager not available'}), 500
+    except Exception as e:
+        logger.error(f"Get stored events error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/agent/websocket-test/<task_id>', methods=['GET'])
 def websocket_test(task_id):
     """Test WebSocket connection and task room joining"""
@@ -628,6 +646,10 @@ def websocket_test(task_id):
                 k: len(v) for k, v in app.websocket_manager.active_connections.items()
             }
             connections_info['total_connections'] = sum(len(v) for v in app.websocket_manager.active_connections.values())
+            
+            # Include stored events count
+            stored_events = app.websocket_manager.get_stored_events(task_id)
+            connections_info['stored_events_count'] = len(stored_events)
         
         return jsonify(connections_info), 200
     except Exception as e:
