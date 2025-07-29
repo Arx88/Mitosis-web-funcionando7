@@ -534,10 +534,10 @@ def analyze_step_requirements(title: str, description: str, original_message: st
     # Seleccionar herramientas óptimas basadas en el análisis - PRIORIDAD A LAS QUE FUNCIONAN
     if analysis['needs_real_data']:
         analysis['optimal_tools'] = ['web_search', 'enhanced_analysis']  # FUNCIONA - playwright_web_search usando playwright
-        analysis['fallback_tools'] = ['comprehensive_research', 'tavily_search', 'multi_source_research']  # Fallback - puede fallar
+        analysis['fallback_tools'] = ['comprehensive_research', 'multi_source_research']  # Fallback - puede fallar
     elif analysis['needs_web_search']:
         analysis['optimal_tools'] = ['web_search', 'enhanced_analysis']  # FUNCIONA
-        analysis['fallback_tools'] = ['comprehensive_research', 'tavily_search']  # Fallback - puede fallar
+        analysis['fallback_tools'] = ['comprehensive_research']  # Fallback - puede fallar
     else:
         analysis['optimal_tools'] = ['enhanced_analysis']  # Usando Ollama - FUNCIONA
         analysis['fallback_tools'] = ['web_search', 'comprehensive_research']  # Fallback - puede fallar
