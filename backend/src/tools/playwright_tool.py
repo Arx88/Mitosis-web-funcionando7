@@ -13,6 +13,8 @@ import tempfile
 from pathlib import Path
 import time
 
+from .base_tool import BaseTool, ParameterDefinition, ToolExecutionResult
+
 # Playwright será instalado como dependencia
 try:
     from playwright.async_api import async_playwright
@@ -21,7 +23,7 @@ except ImportError:
     PLAYWRIGHT_AVAILABLE = False
     print("⚠️  Playwright not installed. Install with: pip install playwright")
 
-class PlaywrightTool:
+class PlaywrightTool(BaseTool):
     def __init__(self):
         self.name = "playwright_automation"
         self.description = "Herramienta de automatización de navegadores con Playwright VISUAL - Muestra interacciones paso a paso"
