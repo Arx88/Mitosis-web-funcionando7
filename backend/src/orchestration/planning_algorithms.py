@@ -808,8 +808,7 @@ class PlanningAlgorithms:
             "comprehensive_research": 0.8,
             "file_manager": 0.3,
             "shell": 0.5,
-            "playwright": 0.6,
-            "tavily_search": 0.4
+            "playwright": 0.6
         }
         
         base_complexity = tool_complexity.get(tool, 0.5)
