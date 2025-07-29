@@ -110,12 +110,28 @@ try:
         logger.info(f"🔌 WEBSOCKET: Client connecting from {request.environ.get('REMOTE_ADDR')}")
         logger.info(f"🔌 WEBSOCKET: Session ID: {request.sid}")
         logger.info(f"🔌 WEBSOCKET: Transport: {request.transport}")
+        
+        # CRITICAL FIX: Register connection in websocket_manager
+        if hasattr(app, 'websocket_manager') and app.websocket_manager:
+            # Add to global connections (we'll assign to task later)
+            if 'global' not in app.websocket_manager.active_connections:
+                app.websocket_manager.active_connections['global'] = []
+            app.websocket_manager.active_connections['global'].append(request.sid)
+            logger.info(f"🔌 WEBSOCKET: Registered session {request.sid} globally")
+        
         emit('connection_established', {'status': 'connected', 'session_id': request.sid})
         return True  # Accept all connections
     
     @socketio.on('disconnect')
     def handle_disconnect():
         logger.info(f"🔌 WEBSOCKET: Client {request.sid} disconnected")
+        
+        # CRITICAL FIX: Remove from all connections
+        if hasattr(app, 'websocket_manager') and app.websocket_manager:
+            for task_id, sessions in app.websocket_manager.active_connections.items():
+                if request.sid in sessions:
+                    sessions.remove(request.sid)
+                    logger.info(f"🔌 WEBSOCKET: Removed {request.sid} from task {task_id}")
     
     @socketio.on('join_task')
     def handle_join_task(data):
@@ -123,6 +139,16 @@ try:
         logger.info(f"🏠 WEBSOCKET: Client {request.sid} joining task room: {task_id}")
         if task_id:
             join_room(task_id)
+            
+            # CRITICAL FIX: Register in websocket_manager for this task
+            if hasattr(app, 'websocket_manager') and app.websocket_manager:
+                if task_id not in app.websocket_manager.active_connections:
+                    app.websocket_manager.active_connections[task_id] = []
+                if request.sid not in app.websocket_manager.active_connections[task_id]:
+                    app.websocket_manager.active_connections[task_id].append(request.sid)
+                logger.info(f"🔌 WEBSOCKET: Registered {request.sid} for task {task_id}")
+                logger.info(f"🔌 WEBSOCKET: Task {task_id} now has {len(app.websocket_manager.active_connections[task_id])} connections")
+            
             emit('joined_task', {'task_id': task_id, 'status': 'joined'})
             logger.info(f"✅ WEBSOCKET: Client {request.sid} joined task room {task_id}")
         else:
