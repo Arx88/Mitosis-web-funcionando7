@@ -72,7 +72,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   // Memoizar configuración de WebSocket
   const socketConfig = useMemo(() => ({
     taskId: task.id,
-    roomName: `task-${task.id}`
+    roomName: task.id  // ✅ FIX: Usar task.id directamente, no task-${task.id}
   }), [task.id]);
 
   // Memoizar logs combinados para evitar re-creación en cada render
