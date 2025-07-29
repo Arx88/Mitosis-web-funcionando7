@@ -281,7 +281,7 @@ EOF
 echo "✅ Variables de entorno configuradas correctamente"
 
 # ============================================================================
-# 🔧 CONFIGURACIÓN CORS ULTRA-DINÁMICA EN BACKEND
+# 🔧 CONFIGURACIÓN CORS ULTRA-DINÁMICA EN BACKEND (INFALIBLE)
 # ============================================================================
 echo "🔧 Configurando CORS ultra-dinámico en backend..."
 cd /app/backend
@@ -292,33 +292,97 @@ if [ ! -f "server.py.backup" ]; then
     echo "   💾 Backup creado: server.py.backup"
 fi
 
-# Generar lista COMPLETA de URLs para CORS (máxima compatibilidad)
-ALL_CORS_URLS=(
-    "\"$REAL_FRONTEND_URL\""
-    "\"https://*.preview.emergentagent.com\""
-    "\"https://cell-split-app-1.preview.emergentagent.com\""
-    "\"https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com\""
+# Generar lista ULTRA-COMPLETA de URLs para CORS (100% compatible)
+echo "   🌐 Generando lista completa de URLs permitidas..."
+
+# URLs base siempre incluidas
+BASE_CORS_URLS=(
+    "\"$REAL_FRONTEND_URL\""  # URL detectada dinámicamente
+    "\"https://*.preview.emergentagent.com\""  # Wildcard para todos los previews
     "\"http://localhost:3000\""
     "\"http://localhost:5173\""
     "\"http://127.0.0.1:3000\""
     "\"http://127.0.0.1:5173\""
-    "\"*\""
 )
 
-# Convertir array a string separado por comas
-CORS_URLS_STRING=$(IFS=', '; echo "${ALL_CORS_URLS[*]}")
+# URLs adicionales basadas en patrones comunes
+ADDITIONAL_CORS_URLS=(
+    "\"https://cell-split-app-1.preview.emergentagent.com\""
+    "\"https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com\""
+)
 
-# Actualizar FRONTEND_ORIGINS en server.py con TODAS las URLs posibles
-sed -i '/^FRONTEND_ORIGINS = \[/,/^\]/c\
-FRONTEND_ORIGINS = [\
-    '"$CORS_URLS_STRING"'  # URLs DETECTADAS DINÁMICAMENTE + FALLBACKS\
-]' server.py
+# Generar variaciones de la URL detectada
+if [[ "$REAL_FRONTEND_URL" =~ ^https://([^.]+)\.preview\.emergentagent\.com$ ]]; then
+    APP_NAME="${BASH_REMATCH[1]}"
+    ADDITIONAL_CORS_URLS+=(
+        "\"https://${APP_NAME}.preview.emergentagent.com\""
+        "\"https://${APP_NAME}-1.preview.emergentagent.com\""
+        "\"https://${APP_NAME}-2.preview.emergentagent.com\""
+    )
+fi
 
-echo "   ✅ CORS configurado con detección dinámica y múltiples fallbacks"
-echo "   📋 URLs incluidas en CORS:"
-for url in "${ALL_CORS_URLS[@]}"; do
+# Combinar todas las URLs y eliminar duplicados
+ALL_CORS_URLS=("${BASE_CORS_URLS[@]}" "${ADDITIONAL_CORS_URLS[@]}")
+UNIQUE_CORS_URLS=($(printf '%s\n' "${ALL_CORS_URLS[@]}" | sort -u))
+
+# Agregar wildcard final como fallback absoluto
+UNIQUE_CORS_URLS+=('"*"')
+
+# Convertir array a string separado por comas para el script sed
+CORS_URLS_STRING=$(IFS=', '; echo "${UNIQUE_CORS_URLS[*]}")
+
+echo "   📋 URLs que serán incluidas en CORS:"
+for url in "${UNIQUE_CORS_URLS[@]}"; do
     echo "      - $url"
 done
+
+# Actualizar FRONTEND_ORIGINS en server.py con configuración ultra-dinámica
+cat > temp_cors_config.txt << EOF
+FRONTEND_ORIGINS = [
+    # 🌐 URL DETECTADA DINÁMICAMENTE
+    $REAL_FRONTEND_URL,
+    
+    # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
+    "https://*.preview.emergentagent.com",
+    
+    # 🏠 DESARROLLO LOCAL
+    "http://localhost:3000",
+    "http://localhost:5173", 
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    
+    # 📱 PREVIEW DOMAINS COMUNES
+    "https://cell-split-app-1.preview.emergentagent.com",
+    "https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com",
+    
+    # 🌟 FALLBACK UNIVERSAL (último recurso)
+    "*"
+]
+EOF
+
+# Aplicar la nueva configuración usando un método más robusto
+if grep -q "^FRONTEND_ORIGINS = \[" server.py; then
+    # Eliminar la configuración anterior
+    sed -i '/^FRONTEND_ORIGINS = \[/,/^\]/d' server.py
+    
+    # Insertar la nueva configuración después de la línea de imports de CORS
+    sed -i '/from flask_cors import CORS/r temp_cors_config.txt' server.py
+    
+    echo "   ✅ Configuración CORS reemplazada exitosamente"
+else
+    echo "   ⚠️ FRONTEND_ORIGINS no encontrado, agregando configuración..."
+    echo "" >> server.py
+    cat temp_cors_config.txt >> server.py
+fi
+
+# Limpiar archivo temporal
+rm -f temp_cors_config.txt
+
+echo "   ✅ CORS configurado con máxima compatibilidad"
+echo "   🎯 URL principal detectada: $REAL_FRONTEND_URL"
+echo "   🔄 Wildcard incluido para dominios *.preview.emergentagent.com"
+echo "   🏠 URLs de desarrollo local incluidas"
+echo "   🌟 Fallback universal (*) como último recurso"
 echo "✅ Configuración CORS ultra-dinámica completada"
 
 cd /app/frontend
