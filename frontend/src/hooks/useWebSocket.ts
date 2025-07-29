@@ -16,7 +16,9 @@ interface WebSocketEvents {
   step_started: (data: any) => void;
   step_completed: (data: any) => void;
   step_failed: (data: any) => void;
+  step_needs_more_work: (data: any) => void;
   plan_updated: (data: any) => void;
+  tool_result: (data: any) => void;
   context_changed: (data: any) => void;
   error: (data: any) => void;
 }
