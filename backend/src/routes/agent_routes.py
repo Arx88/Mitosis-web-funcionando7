@@ -5424,7 +5424,12 @@ def start_task_execution(task_id: str):
                         update_task_data(task_id, {'plan': steps})
                         
                         # ✅ EMITIR EVENTO WEBSOCKET - PASO INICIADO
-                        emit_step_event(task_id, step['id'], 'step_started', step)
+                        emit_step_event(task_id, 'step_started', {
+                            'step_id': step['id'],
+                            'title': step.get('title', 'Ejecutando paso'),
+                            'description': step.get('description', ''),
+                            'timestamp': datetime.now().isoformat()
+                        })
                         
                         # EJECUTAR EL PASO REAL
                         step_result = execute_single_step_logic(step, message, task_id)
