@@ -87,9 +87,9 @@ export const API_CONFIG: ApiConfig = {
       transports: ['polling', 'websocket'], // POLLING first for k8s compatibility
       upgrade: false,       // Disable upgrade initially
       reconnection: true,
-      reconnectionDelay: 1000,  # Faster reconnection
-      reconnectionAttempts: 5,  # Fewer attempts initially
-      timeout: 20000            # Reduced timeout for faster failover
+      reconnectionDelay: 1000,  // Faster reconnection
+      reconnectionAttempts: 5,  // Fewer attempts initially
+      timeout: 20000            // Reduced timeout for faster failover
     }
   }
 };
