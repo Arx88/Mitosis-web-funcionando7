@@ -840,9 +840,24 @@ if $backend_ok && $frontend_ok; then
     echo "   🤖 IA completamente integrada"
     echo "=============================================================="
     
-    # Crear archivo de confirmación
+    # Crear archivo de confirmación con información detallada
     echo "$(date): Mitosis iniciado exitosamente en modo producción" > /app/startup_success.log
     echo "Backend: ✅ | Frontend: ✅ | MongoDB: ✅ | Ollama: ✅" >> /app/startup_success.log
+    echo "URL_DETECTADA: $REAL_FRONTEND_URL" >> /app/startup_success.log
+    echo "DETECTION_METHOD: $DETECTION_METHOD" >> /app/startup_success.log
+    echo "CORS_SUCCESS_RATE: $CORS_SUCCESS_COUNT/${#CORS_TEST_URLS[@]}" >> /app/startup_success.log
+    
+    # Crear configuración persistente para futuras ejecuciones
+    cat > /app/detected_config.env << EOF
+# Configuración detectada automáticamente por start_mitosis.sh
+# Generada el: $(date)
+DETECTED_FRONTEND_URL=$REAL_FRONTEND_URL
+DETECTION_METHOD=$DETECTION_METHOD
+LAST_SUCCESSFUL_START=$(date -Iseconds)
+CORS_CONFIG_APPLIED=true
+EOF
+    
+    echo "   📝 Configuración persistente guardada en /app/detected_config.env"
     
 else
     echo ""
