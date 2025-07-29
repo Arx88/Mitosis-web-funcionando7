@@ -53,10 +53,9 @@ app.config['START_TIME'] = time.time()
 
 # Configurar CORS - UNIFIED CONFIGURATION with explicit origins for WebSocket compatibility
 FRONTEND_ORIGINS = [
-    "https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com",  # FRONTEND ACTUAL FROM LOGS
-    "https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com",  # ORIGEN REAL DEL ERROR CORS
+    "https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com",  # URLs REALES DETECTADAS AUTOMÁTICAMENTE
     "http://localhost:3000",
-    "http://localhost:5173",
+    "http://localhost:5173", 
     "*"  # Fallback for any other origins
 ]
 
