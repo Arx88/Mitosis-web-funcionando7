@@ -245,7 +245,7 @@ export function App() {
       isCollapsed={sidebarCollapsed}
       onToggleCollapse={toggleSidebar}
     />
-  ), [tasks, activeTaskId, setActiveTask, createTask, deleteTask, updateTask, sidebarCollapsed, toggleSidebar]);
+  ), [tasks, activeTaskId, setActiveTask, createTaskWithMessage, deleteTask, updateTask, sidebarCollapsed, toggleSidebar]);
 
   const taskView = useMemo(() => {
     if (!shouldShowTaskView) return null;
