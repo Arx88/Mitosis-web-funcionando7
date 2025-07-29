@@ -5503,7 +5503,10 @@ def start_task_execution(task_id: str):
                 logger.info(f"🎉 Task {task_id} execution completed")
                 
                 # ✅ EMITIR EVENTO WEBSOCKET - TAREA COMPLETADA
-                emit_step_event(task_id, 'task_completed', 'task_completed', {'status': 'completed'})
+                emit_step_event(task_id, 'task_completed', {
+                    'task_id': task_id,
+                    'timestamp': datetime.now().isoformat()
+                })
         
         execution_thread = threading.Thread(target=execute_real_steps)
         execution_thread.daemon = True
