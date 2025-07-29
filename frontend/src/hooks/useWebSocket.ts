@@ -51,7 +51,11 @@ export const useWebSocket = (): UseWebSocketReturn => {
     console.log('🔧 WebSocket URL:', wsConfig.url);
     console.log('🔧 WebSocket Options:', wsConfig.options);
     
-    const newSocket = io(wsConfig.url, wsConfig.options);
+    const newSocket = io(wsConfig.url, {
+      ...wsConfig.options,
+      path: '/api/socket.io/', // FORZAR PATH EXPLÍCITAMENTE
+      forceNew: true
+    });
     
     newSocket.on('connect', () => {
       console.log('✅ WebSocket connected successfully!');
