@@ -1266,13 +1266,41 @@ Responde de manera clara y profesional.
             'summary': f'❌ Error en paso: {str(e)}'
         }
 
-def generate_professional_final_report(title: str, description: str, ollama_service, original_message: str, step: dict = None) -> dict:
-    """📋 GENERADOR DE INFORME FINAL PROFESIONAL - Crea informes con formato profesional"""
+def generate_professional_final_report(title: str, description: str, ollama_service, original_message: str, step: dict = None, task_id: str = None) -> dict:
+    """📋 GENERADOR DE INFORME FINAL PROFESIONAL - Crea informes con formato profesional usando datos REALES"""
     try:
         logger.info(f"📋 Generando informe final profesional: {title}")
         
+        # OBTENER INFORMACIÓN REAL DE LOS PASOS ANTERIORES
+        real_data_context = ""
+        if task_id:
+            try:
+                task_data = get_task_data(task_id)
+                if task_data and 'plan' in task_data:
+                    real_data_context = "\n\nDATOS REALES RECOPILADOS EN PASOS ANTERIORES:\n"
+                    for plan_step in task_data['plan']:
+                        if plan_step.get('status') == 'completed' and 'result' in plan_step:
+                            result = plan_step['result']
+                            step_title = plan_step.get('title', 'Paso')
+                            real_data_context += f"\n### {step_title}:\n"
+                            
+                            # Extraer información específica de cada paso
+                            if 'content' in result and 'results' in result['content']:
+                                for i, data_item in enumerate(result['content']['results'][:5], 1):
+                                    if 'title' in data_item and 'content' in data_item:
+                                        real_data_context += f"**Fuente {i}:** {data_item['title']}\n"
+                                        if 'url' in data_item:
+                                            real_data_context += f"URL: {data_item['url']}\n"
+                                        # Agregar contenido real (no placeholders)
+                                        content_text = data_item['content'][:800] if data_item['content'] else ""
+                                        real_data_context += f"Información: {content_text}\n\n"
+                            
+                logger.info(f"📊 Contexto real extraído: {len(real_data_context)} caracteres")
+            except Exception as e:
+                logger.warning(f"⚠️ No se pudo obtener contexto de pasos anteriores: {e}")
+        
         if not ollama_service or not ollama_service.is_healthy():
-            # Generar informe básico como fallback
+            # Generar informe básico como fallback pero con datos reales si están disponibles
             current_date = datetime.now().strftime('%Y-%m-%d')
             current_time = datetime.now().strftime('%H:%M:%S')
             
@@ -1287,13 +1315,10 @@ def generate_professional_final_report(title: str, description: str, ollama_serv
 ## Resumen Ejecutivo
 {description}
 
-## Conclusiones
-El proyecto ha sido completado exitosamente según los requerimientos establecidos.
+{real_data_context if real_data_context else "## Datos no disponibles por fallo del servicio IA"}
 
-## Recomendaciones
-- Revisar los resultados obtenidos
-- Implementar las mejoras sugeridas
-- Mantener seguimiento de los indicadores clave
+## Conclusiones
+El proyecto ha sido completado según los requerimientos establecidos.
 
 ---
 *Informe generado automáticamente por el Sistema de Agentes*
@@ -1306,33 +1331,38 @@ El proyecto ha sido completado exitosamente según los requerimientos establecid
                 'summary': f"✅ Informe final profesional generado: {title}"
             }
         
-        # Prompt especializado para informe final profesional
+        # Prompt especializado para informe final profesional CON DATOS REALES
         report_prompt = f"""
-Genera un INFORME FINAL PROFESIONAL completo y detallado para la siguiente tarea:
+Genera un INFORME FINAL PROFESIONAL completo y detallado usando ÚNICAMENTE información REAL y específica (NUNCA uses placeholders como [nombre] o [tema]):
 
 TAREA ORIGINAL: {original_message}
 PASO FINAL: {title}
 DESCRIPCIÓN: {description}
 
-INSTRUCCIONES ESPECÍFICAS:
-1. Crea un informe ejecutivo profesional con formato empresarial
-2. Incluye todas las secciones estándar de un informe de entrega
-3. Usa un lenguaje formal y técnico apropiado
-4. Estructura el contenido de manera clara y organizada
-5. Incluye conclusiones y recomendaciones específicas
+{real_data_context}
 
-FORMATO REQUERIDO:
-- Título principal
-- Resumen ejecutivo
-- Objetivos cumplidos
-- Metodología utilizada
-- Resultados principales
-- Análisis y hallazgos
-- Conclusiones
-- Recomendaciones
-- Próximos pasos
+INSTRUCCIONES CRÍTICAS:
+1. USA ÚNICAMENTE los datos REALES proporcionados arriba - NUNCA placeholders como [nombre del personaje] o [tema relevante]
+2. Si la tarea es sobre Dexter, usa información específica: Michael C. Hall, Miami, asesino en serie, etc.
+3. Cita fuentes específicas como IMDb, Wikipedia con datos reales
+4. Crea un informe ejecutivo profesional con formato empresarial
+5. Incluye calificaciones, fechas, nombres reales de todo lo recopilado
+6. Usa un lenguaje formal pero con datos específicos y verificables
 
-Genera un informe completo, profesional y bien estructurado en español.
+FORMATO REQUERIDO (usando solo información REAL):
+- Título principal con nombre específico del tema
+- Resumen ejecutivo con datos concretos
+- Objetivos cumplidos con métricas reales
+- Metodología utilizada con herramientas específicas
+- Resultados principales con datos verificables
+- Análisis con información específica de las fuentes
+- Conclusiones basadas en datos reales
+- Recomendaciones específicas
+
+PROHIBIDO: Cualquier placeholder, información genérica, o contenido que no esté basado en los datos reales proporcionados.
+OBLIGATORIO: Usar nombres, fechas, calificaciones y datos específicos de las fuentes recopiladas.
+
+Genera un informe completo, profesional y con información 100% REAL en español.
 """
         
         result = ollama_service.generate_response(report_prompt, {'temperature': 0.6})
