@@ -358,6 +358,19 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         setTerminalLogs(prev => [...prev, logEntry]);
       },
       
+      'tool_result': (data: any) => {
+        console.log('🔧 WebSocket tool_result received:', data);
+        
+        const status = data.result?.success ? '✅' : '❌';
+        const logEntry = {
+          message: `${status} Herramienta ${data.tool}: ${data.result?.success ? 'Éxito' : data.result?.error || 'Error'}`,
+          type: data.result?.success ? 'success' as const : 'error' as const,
+          timestamp: new Date(data.timestamp || Date.now())
+        };
+        
+        setTerminalLogs(prev => [...prev, logEntry]);
+      },
+      
       // Mantener eventos legacy para compatibilidad
       'task_message': (data: any) => {
         if (data.task_id === task.id) {
