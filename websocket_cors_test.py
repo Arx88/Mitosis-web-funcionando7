@@ -350,7 +350,8 @@ class MitosisWebSocketCORSTester:
             ("Backend Health After CORS Changes", self.test_backend_health_after_cors_changes),
             ("Task Creation with CORS", self.test_task_creation_with_cors),
             ("WebSocket Test Endpoint", self.test_websocket_test_endpoint),
-            ("CORS Test Endpoint", self.test_cors_test_endpoint)
+            ("CORS Test Endpoint", self.test_cors_test_endpoint),
+            ("WebSocket Manager Functionality", self.test_websocket_manager_functionality)
         ]
         
         passed_tests = 0
