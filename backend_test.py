@@ -1,21 +1,26 @@
 #!/usr/bin/env python3
 """
-COMPREHENSIVE MITOSIS BACKEND TESTING AFTER ROBUST INSTALLATION
-Testing the Mitosis backend comprehensively to verify the agent is 100% functional 
-after the robust installation with start_mitosis.sh.
+COMPREHENSIVE MITOSIS WEBSOCKET COMMUNICATION TESTING
+Testing WebSocket communication between frontend and backend to diagnose why
+the frontend is not receiving real-time updates despite backend working perfectly.
 
-COMPREHENSIVE TESTING AREAS:
-1. **Backend Health**: Verify all health endpoints (/api/health, /api/agent/health, /api/agent/status)
-2. **OLLAMA Integration**: Test OLLAMA connection (https://bef4a4bb93d1.ngrok-free.app) with llama3.1:8b
-3. **Chat Functionality**: Test /api/agent/chat endpoint with "Hola, como estas?"
-4. **Plan Generation**: Test /api/agent/generate-plan with "Crear un análisis de mercado para software en 2025"
-5. **WebSocket Infrastructure**: Verify WebSocket endpoints are ready for real-time updates
-6. **Database Connectivity**: Test MongoDB connection and data persistence
-7. **Tool Integration**: Verify the 12 tools are available and functional
-8. **Memory System**: Test that memory_used=true is working correctly
+CRITICAL ISSUE IDENTIFIED:
+- Backend is functioning perfectly and completing all tasks
+- WebSocket events are being emitted correctly from backend  
+- Frontend is not receiving real-time updates (task_progress, step_completed, task_completed)
+- User sees "el agente se queda en el primer paso" due to lack of progress updates
+
+TESTING FOCUS:
+1. **WebSocket Connectivity**: Test WebSocket connection establishment
+2. **Real-time Event Emission**: Verify backend emits progress events correctly
+3. **Task Execution Flow**: Test complete task execution with event tracking
+4. **Backend API Functionality**: Verify all backend endpoints work correctly
+5. **Task Persistence**: Test MongoDB task storage and recovery
+6. **CORS Configuration**: Verify CORS allows WebSocket connections
+7. **Event Broadcasting**: Test WebSocket event broadcasting to clients
+8. **Connection Diagnostics**: Identify WebSocket connection issues
 
 BACKEND URL: https://cca0017e-8b5f-4b34-8012-a22ce8188d1a.preview.emergentagent.com
-OLLAMA URL: https://bef4a4bb93d1.ngrok-free.app
 """
 
 import requests
