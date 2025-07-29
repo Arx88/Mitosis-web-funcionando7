@@ -117,7 +117,7 @@ try:
         ping_interval=90,      # Aumentado aún más
         transports=['polling'],  # SOLO POLLING para máxima compatibilidad
         allow_upgrades=False,   # NO upgrades
-        path='/socket.io/',     # CORREGIDO: Sin /api prefix - Kubernetes ingress lo remueve
+        path='/api/socket.io/',     # CRÍTICO: Con /api prefix para routing correcto
         manage_session=False,    # No manejar sesiones automáticamente
         max_http_buffer_size=1000000  # Buffer más grande para datos
     )
