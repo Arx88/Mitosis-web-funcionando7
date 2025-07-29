@@ -238,7 +238,15 @@ export const useWebSocket = (): UseWebSocketReturn => {
     
     if (socket) {
       socket.emit('leave_task', { task_id: taskId });
-      socket.off('task_update'); // Remove listeners
+      
+      // Remove ALL WebSocket event listeners
+      socket.off('plan_updated');
+      socket.off('step_started');
+      socket.off('task_progress');
+      socket.off('tool_result');
+      socket.off('step_needs_more_work');
+      socket.off('task_completed');
+      socket.off('task_failed');
     }
     
     // Stop HTTP Polling fallback
