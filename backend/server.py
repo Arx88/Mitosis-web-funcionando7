@@ -148,6 +148,14 @@ try:
                     app.websocket_manager.active_connections[task_id].append(request.sid)
                 logger.info(f"🔌 WEBSOCKET: Registered {request.sid} for task {task_id}")
                 logger.info(f"🔌 WEBSOCKET: Task {task_id} now has {len(app.websocket_manager.active_connections[task_id])} connections")
+                
+                # IMMEDIATELY EMIT A TEST EVENT to confirm connection
+                app.websocket_manager.emit_to_task(task_id, 'connection_confirmed', {
+                    'message': 'WebSocket connection established for task',
+                    'task_id': task_id,
+                    'session_id': request.sid,
+                    'timestamp': datetime.now().isoformat()
+                })
             
             emit('joined_task', {'task_id': task_id, 'status': 'joined'})
             logger.info(f"✅ WEBSOCKET: Client {request.sid} joined task room {task_id}")
