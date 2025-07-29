@@ -1853,21 +1853,27 @@ def evaluate_step_completion_with_agent(step: dict, step_result: dict, original_
                 }
         
         elif tool_name in ['comprehensive_research', 'enhanced_web_search']:
-            # Para investigación comprehensiva: success=True O hay contenido mínimo → COMPLETADO
-            if success or (results and len(results) > 0) or (content and len(str(content)) > 30):
+            # Para investigación comprehensiva: Validación real pero flexible
+            if success and ((results and len(results) > 0) or (content and len(str(content)) > 50)):
                 return {
                     'step_completed': True,
                     'should_continue': False,
                     'reason': 'Investigación completada con contenido suficiente',
                     'feedback': 'Investigación exitosa'
                 }
-            else:
-                # VERSIÓN MEJORADA: Ser menos estricto
+            elif success:  # Success básico - permitir continuar
                 return {
-                    'step_completed': True,  # ✅ CAMBIO CRÍTICO: Continuar flujo de trabajo
+                    'step_completed': True,
                     'should_continue': False,
-                    'reason': 'Investigación ejecutada - continuar con siguiente paso',
-                    'feedback': 'Investigación completada - continuar flujo'
+                    'reason': 'Investigación ejecutada correctamente',
+                    'feedback': 'Investigación completada'
+                }
+            else:
+                return {
+                    'step_completed': False,
+                    'should_continue': True,
+                    'reason': 'Investigación incompleta o falló',
+                    'feedback': 'Se necesita completar la investigación correctamente'
                 }
         
         elif tool_name in ['analysis', 'processing', 'creation']:
