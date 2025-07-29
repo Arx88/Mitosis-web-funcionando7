@@ -17,7 +17,7 @@ CRITICAL TESTING FOCUS:
 5. **Task Status Tracking**: Monitor task progression through API calls
 6. **Event Broadcasting**: Test if WebSocket events reach frontend
 
-BACKEND URL: https://3bafd010-69cf-4d1c-a1c1-55447decce39.preview.emergentagent.com
+BACKEND URL: https://e9d10c57-6ed9-40c1-8ff7-904db66dbe60.preview.emergentagent.com
 """
 
 import requests
@@ -29,7 +29,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment - test both internal and external URLs
-BACKEND_URL = "https://3bafd010-69cf-4d1c-a1c1-55447decce39.preview.emergentagent.com"
+BACKEND_URL = "https://e9d10c57-6ed9-40c1-8ff7-904db66dbe60.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class MitosisCORSAndConfigTester:
@@ -38,7 +38,7 @@ class MitosisCORSAndConfigTester:
         self.session.headers.update({
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'Origin': 'https://3bafd010-69cf-4d1c-a1c1-55447decce39.preview.emergentagent.com'  # Test CORS
+            'Origin': 'https://e9d10c57-6ed9-40c1-8ff7-904db66dbe60.preview.emergentagent.com'  # Test CORS
         })
         self.test_results = []
         self.task_id = None
