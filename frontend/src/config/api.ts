@@ -82,12 +82,12 @@ export const API_CONFIG: ApiConfig = {
     downloadFile: '/api/agent/download'
   },
   websocket: {
-    url: `${getBackendUrl()}/api/socket.io/`,  # BACK TO: /api prefix para ingress routing
+    url: `${getBackendUrl()}/api/socket.io/`,  // BACK TO: /api prefix para ingress routing
     options: {
-      transports: ['polling'],     # SOLO POLLING para máxima estabilidad
-      upgrade: false,              # NO upgrade a websocket
+      transports: ['polling'],     // SOLO POLLING para máxima estabilidad
+      upgrade: false,              // NO upgrade a websocket
       reconnection: true,
-      reconnectionDelay: 2000,     # Delay más largo para estabilidad
+      reconnectionDelay: 2000,     // Delay más largo para estabilidad
       reconnectionAttempts: 10, // More attempts for stability
       timeout: 30000,           // Increased timeout
       forceNew: true            // Force new connection each time
