@@ -137,81 +137,129 @@ echo "🏗️ Construyendo frontend en modo producción..."
 cd /app/frontend
 
 # ============================================================================
-# 🔧 DETECCIÓN AUTOMÁTICA Y DINÁMICA DE URL REAL (MÉTODO ROBUSTO)
+# 🔧 DETECCIÓN AUTOMÁTICA Y DINÁMICA DE URL REAL (MÉTODO ULTRA-ROBUSTO)
 # ============================================================================
 echo "🔧 Detectando URL real del entorno automáticamente..."
 
-# MÉTODO 1: Variables de entorno del sistema
-REAL_FRONTEND_URL=""
-if [ -n "$EMERGENT_PREVIEW_URL" ]; then
-    REAL_FRONTEND_URL="$EMERGENT_PREVIEW_URL"
-    echo "   📍 URL detectada desde EMERGENT_PREVIEW_URL: $REAL_FRONTEND_URL"
-elif [ -n "$PREVIEW_URL" ]; then
-    REAL_FRONTEND_URL="$PREVIEW_URL"
-    echo "   📍 URL detectada desde PREVIEW_URL: $REAL_FRONTEND_URL"
-fi
-
-# MÉTODO 2: Detección desde el proceso actual si las variables no están
-if [ -z "$REAL_FRONTEND_URL" ]; then
-    echo "   🔍 Variables de entorno no encontradas, detectando desde contexto actual..."
+# FUNCIÓN AUXILIAR: Detectar URL desde el contexto actual del sistema
+detect_current_url() {
+    local detected_url=""
     
-    # Intentar obtener desde el hostname/dominio actual
-    if command -v hostname >/dev/null 2>&1; then
-        CURRENT_HOSTNAME=$(hostname -f 2>/dev/null || hostname 2>/dev/null || echo "")
-        if [[ "$CURRENT_HOSTNAME" == *".preview.emergentagent.com" ]]; then
-            REAL_FRONTEND_URL="https://$CURRENT_HOSTNAME"
-            echo "   📍 URL detectada desde hostname: $REAL_FRONTEND_URL"
+    # Método 1: Variables de entorno del sistema
+    if [ -n "$EMERGENT_PREVIEW_URL" ]; then
+        detected_url="$EMERGENT_PREVIEW_URL"
+        echo "ENV_VAR"
+        return 0
+    elif [ -n "$PREVIEW_URL" ]; then
+        detected_url="$PREVIEW_URL"  
+        echo "ENV_VAR"
+        return 0
+    fi
+    
+    # Método 2: Headers HTTP del proceso actual (si está ejecutándose en un servidor web)
+    if command -v netstat >/dev/null 2>&1; then
+        local active_port=$(netstat -tlnp 2>/dev/null | grep ":3000" | head -1)
+        if [ -n "$active_port" ]; then
+            # Si el puerto 3000 está activo, intentar obtener el dominio
+            local hostname_check=$(hostname -f 2>/dev/null || hostname 2>/dev/null)
+            if [[ "$hostname_check" == *".preview.emergentagent.com"* ]]; then
+                detected_url="https://$hostname_check"
+                echo "HOSTNAME"
+                return 0
+            fi
         fi
     fi
-fi
-
-# MÉTODO 3: Detección desde headers HTTP si está disponible
-if [ -z "$REAL_FRONTEND_URL" ] && command -v curl >/dev/null 2>&1; then
-    echo "   🔍 Intentando detectar URL desde headers HTTP..."
     
-    # Probar URLs comunes de preview
-    PREVIEW_PATTERNS=(
+    # Método 3: Analizar procesos activos en busca de URLs
+    if command -v ps >/dev/null 2>&1; then
+        local process_urls=$(ps aux | grep -E "(serve|node|npm)" | grep -oE "https://[a-zA-Z0-9\.-]+\.preview\.emergentagent\.com" | head -1)
+        if [ -n "$process_urls" ]; then
+            detected_url="$process_urls"
+            echo "PROCESS"
+            return 0
+        fi
+    fi
+    
+    # Método 4: Verificar archivo de configuración existente
+    if [ -f "/app/frontend/.env" ]; then
+        local existing_url=$(grep -E "^(VITE_BACKEND_URL|REACT_APP_BACKEND_URL)=" /app/frontend/.env 2>/dev/null | head -1 | cut -d'=' -f2 | tr -d '"' | tr -d "'")
+        if [[ "$existing_url" == https://*.preview.emergentagent.com ]]; then
+            detected_url="$existing_url"
+            echo "CONFIG_FILE"
+            return 0
+        fi
+    fi
+    
+    # Método 5: Test de conectividad con patrones comunes
+    local test_patterns=(
         "https://cell-split-app-1.preview.emergentagent.com"
-        "https://$(echo $HOSTNAME | cut -d'.' -f1).preview.emergentagent.com"
-        "https://$(whoami)-app.preview.emergentagent.com"
+        "https://$(whoami | head -c 12).preview.emergentagent.com"
+        "https://$(hostname | head -c 20).preview.emergentagent.com"
     )
     
-    for url in "${PREVIEW_PATTERNS[@]}"; do
-        if curl -s --max-time 3 "$url" >/dev/null 2>&1; then
-            REAL_FRONTEND_URL="$url"
-            echo "   📍 URL detectada por conectividad: $REAL_FRONTEND_URL"
-            break
+    for test_url in "${test_patterns[@]}"; do
+        if curl -s --max-time 2 --connect-timeout 1 "$test_url" >/dev/null 2>&1; then
+            detected_url="$test_url"
+            echo "CONNECTIVITY"
+            return 0
         fi
     done
-fi
-
-# MÉTODO 4: Detección desde archivos de configuración existentes
-if [ -z "$REAL_FRONTEND_URL" ] && [ -f "/app/frontend/.env" ]; then
-    echo "   🔍 Buscando URL en configuración existente..."
-    EXISTING_URL=$(grep -E "^(VITE_BACKEND_URL|REACT_APP_BACKEND_URL)=" /app/frontend/.env | head -1 | cut -d'=' -f2)
-    if [[ "$EXISTING_URL" == https://*.preview.emergentagent.com ]]; then
-        REAL_FRONTEND_URL="$EXISTING_URL"
-        echo "   📍 URL detectada desde configuración existente: $REAL_FRONTEND_URL"
-    fi
-fi
-
-# MÉTODO 5: Fallback con detección inteligente
-if [ -z "$REAL_FRONTEND_URL" ]; then
-    echo "   🔍 Usando método de fallback inteligente..."
     
-    # Generar URL basada en el ID del container/pod
-    CONTAINER_ID=$(hostname | head -c 12)
-    if [[ ${#CONTAINER_ID} -ge 8 ]]; then
-        REAL_FRONTEND_URL="https://$CONTAINER_ID.preview.emergentagent.com"
-        echo "   📍 URL generada desde container ID: $REAL_FRONTEND_URL"
-    else
-        # Último recurso: usar patrón genérico que funciona con wildcards
-        REAL_FRONTEND_URL="https://cell-split-app-1.preview.emergentagent.com"
-        echo "   📍 URL de último recurso: $REAL_FRONTEND_URL"
-    fi
+    echo "FALLBACK"
+    return 1
+}
+
+# Ejecutar detección
+REAL_FRONTEND_URL=""
+DETECTION_METHOD=$(detect_current_url)
+
+case $DETECTION_METHOD in
+    "ENV_VAR")
+        REAL_FRONTEND_URL="$EMERGENT_PREVIEW_URL$PREVIEW_URL"
+        echo "   📍 URL detectada desde variables de entorno: $REAL_FRONTEND_URL"
+        ;;
+    "HOSTNAME")
+        HOSTNAME_FULL=$(hostname -f 2>/dev/null || hostname 2>/dev/null)
+        REAL_FRONTEND_URL="https://$HOSTNAME_FULL"
+        echo "   📍 URL detectada desde hostname del sistema: $REAL_FRONTEND_URL"
+        ;;
+    "PROCESS")
+        REAL_FRONTEND_URL=$(ps aux | grep -E "(serve|node|npm)" | grep -oE "https://[a-zA-Z0-9\.-]+\.preview\.emergentagent\.com" | head -1)
+        echo "   📍 URL detectada desde procesos activos: $REAL_FRONTEND_URL"
+        ;;
+    "CONFIG_FILE")
+        REAL_FRONTEND_URL=$(grep -E "^(VITE_BACKEND_URL|REACT_APP_BACKEND_URL)=" /app/frontend/.env 2>/dev/null | head -1 | cut -d'=' -f2 | tr -d '"' | tr -d "'")
+        echo "   📍 URL detectada desde archivo de configuración: $REAL_FRONTEND_URL"
+        ;;
+    "CONNECTIVITY")
+        # Se detectó por conectividad, usar el resultado del test
+        echo "   📍 URL detectada por test de conectividad"
+        ;;
+    "FALLBACK")
+        echo "   🔍 Métodos automáticos fallaron, usando lógica de fallback inteligente..."
+        
+        # Generar URL basada en contexto del container
+        CONTAINER_ID=$(cat /proc/self/cgroup 2>/dev/null | grep docker | head -1 | sed 's/.*\///' | head -c 12 2>/dev/null || echo "")
+        if [[ ${#CONTAINER_ID} -ge 8 ]]; then
+            REAL_FRONTEND_URL="https://${CONTAINER_ID}.preview.emergentagent.com"
+            echo "   📍 URL generada desde container context: $REAL_FRONTEND_URL"
+        else
+            # Usar patrón que funciona con múltiples entornos
+            REAL_FRONTEND_URL="https://cell-split-app-1.preview.emergentagent.com"
+            echo "   📍 URL de fallback seguro: $REAL_FRONTEND_URL"
+        fi
+        ;;
+esac
+
+# Validación final: asegurar que la URL es válida
+if [[ ! "$REAL_FRONTEND_URL" =~ ^https://.*\.preview\.emergentagent\.com$ ]]; then
+    echo "   ⚠️ URL detectada no válida, aplicando corrección..."
+    REAL_FRONTEND_URL="https://cell-split-app-1.preview.emergentagent.com"
+    echo "   📍 URL corregida: $REAL_FRONTEND_URL"
 fi
 
 echo "✅ URL FINAL DETECTADA: $REAL_FRONTEND_URL"
+echo "   🔍 Método de detección: $DETECTION_METHOD"
 
 # ============================================================================
 # 🌐 CONFIGURACIÓN DINÁMICA DE VARIABLES DE ENTORNO
