@@ -233,19 +233,25 @@ export function App() {
   // MEMOIZED COMPONENTS - PREVENIR RE-RENDERS INNECESARIOS
   // ========================================================================
 
+  // Callback for sidebar task creation - DIRECT REFERENCE to avoid memoization issues
+  const handleSidebarCreateTask = useCallback(async (title: string) => {
+    console.log('🎯 SIDEBAR CALLBACK: handleSidebarCreateTask called with title:', title);
+    return await createTaskWithMessage(title);
+  }, [createTaskWithMessage]);
+
   const sidebar = useMemo(() => (
     <Sidebar 
       tasks={tasks} 
       activeTaskId={activeTaskId} 
       onTaskSelect={setActiveTask} 
-      onCreateTask={(title) => createTaskWithMessage(title)} // ✅ FIX: Use createTaskWithMessage to auto-generate plan
+      onCreateTask={handleSidebarCreateTask} // ✅ FIX: Use direct callback to ensure createTaskWithMessage is called
       onDeleteTask={deleteTask}
       onUpdateTask={updateTask}
       onConfigOpen={() => setIsConfigOpen(true)}
       isCollapsed={sidebarCollapsed}
       onToggleCollapse={toggleSidebar}
     />
-  ), [tasks, activeTaskId, setActiveTask, createTaskWithMessage, deleteTask, updateTask, sidebarCollapsed, toggleSidebar]);
+  ), [tasks, activeTaskId, setActiveTask, handleSidebarCreateTask, deleteTask, updateTask, sidebarCollapsed, toggleSidebar]);
 
   const taskView = useMemo(() => {
     if (!shouldShowTaskView) return null;
