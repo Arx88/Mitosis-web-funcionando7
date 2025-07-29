@@ -785,8 +785,7 @@ class PlanningAlgorithms:
             "comprehensive_research": 180,
             "file_manager": 30,
             "shell": 60,
-            "playwright": 90,
-            "tavily_search": 45
+            "playwright": 90
         }
         
         base_duration = tool_durations.get(tool, 60)
