@@ -675,6 +675,34 @@ def socket_io_test():
         'timestamp': datetime.now().isoformat()
     })
 
+# CRITICAL FIX: Add explicit CORS handling for Socket.IO endpoint
+@app.before_request
+def handle_socket_io_cors():
+    """Handle CORS for Socket.IO endpoints specifically"""
+    if request.path.startswith('/socket.io/'):
+        origin = request.headers.get('Origin')
+        if origin in FRONTEND_ORIGINS or '*' in FRONTEND_ORIGINS:
+            # This is a preflight OPTIONS request
+            if request.method == 'OPTIONS':
+                response = app.make_default_options_response()
+                response.headers['Access-Control-Allow-Origin'] = origin
+                response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+                response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Accept, Origin, X-Requested-With'
+                response.headers['Access-Control-Allow-Credentials'] = 'false'
+                return response
+
+@app.after_request  
+def after_request_socket_io_cors(response):
+    """Add CORS headers to Socket.IO responses"""
+    if request.path.startswith('/socket.io/'):
+        origin = request.headers.get('Origin')
+        if origin in FRONTEND_ORIGINS or '*' in FRONTEND_ORIGINS:
+            response.headers['Access-Control-Allow-Origin'] = origin
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Accept, Origin, X-Requested-With'
+            response.headers['Access-Control-Allow-Credentials'] = 'false'
+    return response
+
 @app.route('/api/agent/websocket-test/<task_id>', methods=['GET'])
 def websocket_test(task_id):
     """Test WebSocket connection and task room joining"""
