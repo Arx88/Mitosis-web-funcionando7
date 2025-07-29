@@ -98,6 +98,7 @@ try:
     socketio = SocketIO(
         app, 
         cors_allowed_origins="*",
+        cors_credentials=False,     # CRITICAL: No credentials needed for cross-origin
         async_mode='eventlet',
         logger=True,           # Habilitar logs para debugging
         engineio_logger=True,  # Logs detallados de engine.io
