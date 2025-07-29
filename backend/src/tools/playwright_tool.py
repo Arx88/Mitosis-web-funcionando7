@@ -25,8 +25,7 @@ except ImportError:
 
 class PlaywrightTool(BaseTool):
     def __init__(self):
-        self.name = "playwright_automation"
-        self.description = "Herramienta de automatización de navegadores con Playwright VISUAL - Muestra interacciones paso a paso"
+        super().__init__()
         self.playwright_available = PLAYWRIGHT_AVAILABLE
         
         # Configuración por defecto - SIEMPRE VISUAL en terminal
@@ -47,8 +46,69 @@ class PlaywrightTool(BaseTool):
         # Lista para almacenar todos los pasos visuales
         self.visual_steps = []
     
+    def get_name(self) -> str:
+        return "playwright_automation"
+    
     def get_description(self) -> str:
-        return self.description
+        return "Herramienta de automatización de navegadores con Playwright VISUAL - Muestra interacciones paso a paso"
+    
+    def get_parameters(self) -> List[ParameterDefinition]:
+        return [
+            ParameterDefinition(
+                name="action",
+                param_type="string",
+                required=True,
+                description="Acción a realizar: navigate, click, type, screenshot, scrape_text, scrape_links, fill_form"
+            ),
+            ParameterDefinition(
+                name="url",
+                param_type="string",
+                required=False,
+                description="URL a visitar (para navigate)"
+            ),
+            ParameterDefinition(
+                name="selector",
+                param_type="string",
+                required=False,
+                description="Selector CSS del elemento"
+            ),
+            ParameterDefinition(
+                name="text",
+                param_type="string",
+                required=False,
+                description="Texto a escribir (para type)"
+            ),
+            ParameterDefinition(
+                name="timeout",
+                param_type="integer",
+                required=False,
+                description="Timeout en milisegundos",
+                default=30000
+            )
+        ]
+    
+    def validate_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Validar parámetros específicos de Playwright"""
+        if not self.playwright_available:
+            return {
+                'valid': False,
+                'error': 'Playwright no está disponible. Instalar con: pip install playwright'
+            }
+        
+        action = parameters.get('action')
+        if not action:
+            return {'valid': False, 'error': 'Parámetro "action" es requerido'}
+        
+        if action == 'navigate' and not parameters.get('url'):
+            return {'valid': False, 'error': 'Parámetro "url" es requerido para navigate'}
+        
+        if action in ['click', 'type'] and not parameters.get('selector'):
+            return {'valid': False, 'error': f'Parámetro "selector" es requerido para {action}'}
+        
+        if action == 'type' and not parameters.get('text'):
+            return {'valid': False, 'error': 'Parámetro "text" es requerido para type'}
+        
+        return {'valid': True}
     
     def get_parameters(self) -> List[Dict[str, Any]]:
         return [
