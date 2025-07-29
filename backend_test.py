@@ -29,8 +29,11 @@ import json
 import time
 import os
 import sys
+import threading
+import socketio
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
+from collections import defaultdict
 
 # Backend URL from environment - test both internal and external URLs
 BACKEND_URL = "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com"
