@@ -82,14 +82,14 @@ export const API_CONFIG: ApiConfig = {
     downloadFile: '/api/agent/download'
   },
   websocket: {
-    url: `${getBackendUrl()}/api/socket.io/`,
+    url: `${getBackendUrl()}/socket.io/`,  // SIMPLIFIED PATH - removed /api prefix
     options: {
       transports: ['polling', 'websocket'], // POLLING first for k8s compatibility
-      upgrade: false,       // Disable upgrade initially
+      upgrade: true,        // Allow upgrade to websocket
       reconnection: true,
       reconnectionDelay: 1000,  // Faster reconnection
-      reconnectionAttempts: 5,  // Fewer attempts initially
-      timeout: 20000            // Reduced timeout for faster failover
+      reconnectionAttempts: 10, // More attempts for stability
+      timeout: 30000            // Increased timeout
     }
   }
 };
