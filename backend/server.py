@@ -54,7 +54,7 @@ app.config['START_TIME'] = time.time()
 # Configurar CORS - UNIFIED CONFIGURATION with explicit origins for WebSocket compatibility
 FRONTEND_ORIGINS = [
     "https://a5d44523-6b54-4782-99d6-beb01a60ce68.preview.emergentagent.com",
-    "https://a5d44523-6b54-4782-99d6-beb01a60ce68.preview.emergentagent.com",
+    "https://mitosis-app-2.preview.emergentagent.com",  # FRONTEND ACTUAL
     "http://localhost:3000",
     "http://localhost:5173",
     "*"  # Fallback for any other origins
