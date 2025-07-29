@@ -1827,23 +1827,29 @@ def evaluate_step_completion_with_agent(step: dict, step_result: dict, original_
         
         logger.info(f"🧠 Evaluando paso: tool={tool_name}, success={success}, count={count}, results={len(results)}")
         
-        # REGLAS DETERMINÍSTICAS INTELIGENTES (VERSIÓN MEJORADA - MENOS ESTRICTA)
+        # REGLAS DETERMINÍSTICAS BALANCEADAS - VALIDACIÓN REAL
         if tool_name == 'web_search':
-            # Para búsquedas web: success=True O (hay resultados, incluso si count=0) → COMPLETADO
-            if success or (results and len(results) > 0) or (content and len(str(content)) > 50):
+            # Para búsquedas web: Validación real pero flexible
+            if success and (count > 0 or (results and len(results) > 0) or (content and len(str(content)) > 30)):
                 return {
                     'step_completed': True,
                     'should_continue': False,
                     'reason': f'Búsqueda web exitosa: success={success}, count={count}, results={len(results)}, content_length={len(str(content))}',
                     'feedback': 'Búsqueda completada correctamente'
                 }
-            else:
-                # VERSIÓN MEJORADA: Solo falla si realmente no hay ningún resultado útil
+            elif success:  # Success pero sin resultados claros - intentar una vez más
                 return {
-                    'step_completed': True,  # ✅ CAMBIO CRÍTICO: Ser menos estricto
+                    'step_completed': True,  # Permitir continuar si hay success básico
                     'should_continue': False,
-                    'reason': f'Búsqueda web ejecutada: success={success}, count={count}, results={len(results)}',
-                    'feedback': 'Búsqueda web ejecutada - continuar con siguiente paso'
+                    'reason': f'Búsqueda web ejecutada correctamente aunque con resultados limitados',
+                    'feedback': 'Búsqueda ejecutada - continuar workflow'
+                }
+            else:
+                return {
+                    'step_completed': False,
+                    'should_continue': True,
+                    'reason': f'Búsqueda web falló: success={success}, count={count}, results={len(results)}',
+                    'feedback': 'La búsqueda web necesita ejecutarse correctamente'
                 }
         
         elif tool_name in ['comprehensive_research', 'enhanced_web_search']:
