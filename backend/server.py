@@ -96,11 +96,11 @@ try:
         async_mode='eventlet',
         logger=True,           # Habilitar logs para debugging
         engineio_logger=True,  # Logs detallados de engine.io
-        ping_timeout=30,       # Reducido para mejor detección
-        ping_interval=10,      # Más frecuente para estabilidad
+        ping_timeout=60,       # Aumentado para estabilidad
+        ping_interval=25,      # Aumentado para estabilidad
         transports=['polling', 'websocket'],    # POLLING PRIMERO para k8s
-        allow_upgrades=False,     # Desabilitar upgrade por ahora
-        path='/api/socket.io/',   # Set the socket.io path to /api/socket.io/
+        allow_upgrades=True,      # Permitir upgrade a websocket
+        path='/socket.io/',       # SIMPLIFIED PATH - remove /api prefix
         json=json
     )
     
