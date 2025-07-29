@@ -261,23 +261,47 @@ class WebSocketManager:
         )
 
     def emit_to_task(self, task_id: str, event: str, data: Dict[str, Any]):
-        """Emit event to all clients connected to a specific task"""
+        """Emit event to all clients connected to a specific task - ENHANCED VERSION"""
         if not self.is_initialized or not self.socketio:
             logger.warning("WebSocket not initialized, cannot emit event")
             return
             
         try:
+            logger.info(f"🚀 Attempting to emit {event} to task {task_id}")
+            logger.info(f"🔌 Active connections for task {task_id}: {len(self.active_connections.get(task_id, []))}")
+            
+            # Enhanced data with more information
+            enhanced_data = {
+                **data,
+                'task_id': task_id,
+                'event': event,
+                'server_timestamp': datetime.now().isoformat()
+            }
+            
             # Emit to task room
-            self.socketio.emit(event, data, room=task_id)
-            logger.info(f"Emitted {event} to task {task_id}: {data}")
+            self.socketio.emit(event, enhanced_data, room=task_id)
+            logger.info(f"✅ Emitted {event} to task room {task_id}")
             
             # Also emit to individual sessions if room doesn't work
             if task_id in self.active_connections:
                 for session_id in self.active_connections[task_id]:
-                    self.socketio.emit(event, data, room=session_id)
-                    
+                    self.socketio.emit(event, enhanced_data, room=session_id)
+                    logger.info(f"✅ Emitted {event} to session {session_id}")
+            else:
+                logger.warning(f"⚠️ No active connections found for task {task_id}")
+            
+            # Also emit generic events that frontend might be listening for
+            generic_events = ['task_update', 'progress_update', 'agent_activity']
+            for generic_event in generic_events:
+                self.socketio.emit(generic_event, enhanced_data, room=task_id)
+                if task_id in self.active_connections:
+                    for session_id in self.active_connections[task_id]:
+                        self.socketio.emit(generic_event, enhanced_data, room=session_id)
+                        
         except Exception as e:
-            logger.error(f"Error emitting to task {task_id}: {e}")
+            logger.error(f"❌ Error emitting to task {task_id}: {e}")
+            import traceback
+            traceback.print_exc()
     
     def send_orchestration_progress(self, task_id: str, step_id: str, progress: float, 
                                    current_step: str, total_steps: int):
