@@ -112,12 +112,12 @@ try:
         cors_credentials=False,     # CRITICAL: No credentials needed for cross-origin
         async_mode='eventlet',
         logger=True,           # Habilitar logs para debugging
-        engineio_logger=True,  # Logs detallados de engine.io
+        engineio_logger=True,  # Logs detallados de engine.io  
         ping_timeout=60,       # Aumentado para estabilidad
         ping_interval=25,      # Aumentado para estabilidad
         transports=['polling', 'websocket'],    # POLLING PRIMERO para k8s
         allow_upgrades=True,      # Permitir upgrade a websocket
-        path='/socket.io/',       # SIMPLIFIED PATH - remove /api prefix
+        path='/api/socket.io/',   # BACK TO /api prefix to use same ingress route
         json=json
     )
     
