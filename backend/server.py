@@ -105,10 +105,10 @@ try:
     from src.websocket.websocket_manager import WebSocketManager
     websocket_manager = WebSocketManager()
     
-    # Configurar SocketIO SOLO CON POLLING (más estable en K8s/proxy)
+    # Configurar SocketIO con CORS más específico y mejorado para conexiones cross-origin
     socketio = SocketIO(
         app, 
-        cors_allowed_origins="*",  # Simplificado - permitir todos los orígenes
+        cors_allowed_origins=FRONTEND_ORIGINS,  # Usar los orígenes específicos definidos arriba
         cors_credentials=False,
         async_mode='eventlet',
         logger=True,
