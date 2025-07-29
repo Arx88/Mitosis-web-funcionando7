@@ -116,7 +116,7 @@ try:
         ping_interval=60,      # Aumentado más para estabilidad
         transports=['polling', 'websocket'],
         allow_upgrades=False,   # DESHABILITADO: No upgrades para mayor estabilidad
-        path='/socket.io/',     # SIMPLIFICAR: Remover /api prefix
+        path='/api/socket.io/', # VOLVER a /api prefix para ingress routing
         manage_session=False    # NUEVO: No manejar sesiones automáticamente
     )
     
