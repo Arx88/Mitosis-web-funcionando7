@@ -61,8 +61,8 @@ function getBackendUrl(): string {
 
 function getWebSocketUrl(): string {
   const backendUrl = getBackendUrl();
-  // Para WebSocket, usar la URL del backend con prefijo /api para routing correcto
-  return `${backendUrl}/api/socket.io/`;
+  // FIXED: Usar /socket.io/ directamente sin /api prefix
+  return `${backendUrl}/socket.io/`;
 }
 
 export const API_CONFIG: ApiConfig = {
