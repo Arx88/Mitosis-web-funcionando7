@@ -7,12 +7,12 @@ SPECIFIC TESTING REQUEST:
 Test the WebSocket CORS fix that was just applied to the Mitosis backend. Specifically test:
 
 1. **WebSocket Connection**: Test if WebSocket connections now work without CORS errors using the /socket.io/ endpoint
-2. **CORS Headers**: Verify that proper CORS headers are being sent for WebSocket/polling requests from the frontend domain (https://a5d44523-6b54-4782-99d6-beb01a60ce68.preview.emergentagent.com)
+2. **CORS Headers**: Verify that proper CORS headers are being sent for WebSocket/polling requests from the frontend domain (https://50fa1ce8-422a-437f-b521-f208408f443e.preview.emergentagent.com)
 3. **SocketIO Endpoint**: Test the /socket.io/ endpoint to ensure it's accessible and returns proper CORS headers
 4. **Health Check**: Verify all backend services are still working after the CORS changes
 5. **Task Creation**: Test that task creation still works properly with the new CORS configuration
 
-**Backend URL**: https://a5d44523-6b54-4782-99d6-beb01a60ce68.preview.emergentagent.com
+**Backend URL**: https://50fa1ce8-422a-437f-b521-f208408f443e.preview.emergentagent.com
 **Expected Outcome**: WebSocket connections should work without CORS policy errors, allowing real-time communication between frontend and backend.
 
 **Key Changes Made**:
@@ -33,7 +33,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment - test both internal and external URLs
-BACKEND_URL = "https://a5d44523-6b54-4782-99d6-beb01a60ce68.preview.emergentagent.com"
+BACKEND_URL = "https://50fa1ce8-422a-437f-b521-f208408f443e.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class MitosisCORSAndConfigTester:
@@ -42,7 +42,7 @@ class MitosisCORSAndConfigTester:
         self.session.headers.update({
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'Origin': 'https://a5d44523-6b54-4782-99d6-beb01a60ce68.preview.emergentagent.com'  # Test CORS
+            'Origin': 'https://50fa1ce8-422a-437f-b521-f208408f443e.preview.emergentagent.com'  # Test CORS
         })
         self.test_results = []
         self.task_id = None
