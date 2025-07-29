@@ -278,7 +278,18 @@ class WebSocketManager:
                 'server_timestamp': datetime.now().isoformat()
             }
             
-            # Emit to task room
+            # CRITICAL FIX: Store the event for later retrieval even if no connections
+            if not hasattr(self, 'stored_events'):
+                self.stored_events = {}
+            if task_id not in self.stored_events:
+                self.stored_events[task_id] = []
+            
+            # Store last 10 events per task for late-joining clients
+            self.stored_events[task_id].append(enhanced_data)
+            if len(self.stored_events[task_id]) > 10:
+                self.stored_events[task_id] = self.stored_events[task_id][-10:]
+            
+            # Emit to task room regardless of active connections
             self.socketio.emit(event, enhanced_data, room=task_id)
             logger.info(f"✅ Emitted {event} to task room {task_id}")
             
@@ -288,7 +299,7 @@ class WebSocketManager:
                     self.socketio.emit(event, enhanced_data, room=session_id)
                     logger.info(f"✅ Emitted {event} to session {session_id}")
             else:
-                logger.warning(f"⚠️ No active connections found for task {task_id}")
+                logger.warning(f"⚠️ No active connections found for task {task_id} - Event stored for later retrieval")
             
             # Also emit generic events that frontend might be listening for
             generic_events = ['task_update', 'progress_update', 'agent_activity']
@@ -302,6 +313,12 @@ class WebSocketManager:
             logger.error(f"❌ Error emitting to task {task_id}: {e}")
             import traceback
             traceback.print_exc()
+    
+    def get_stored_events(self, task_id: str) -> List[Dict[str, Any]]:
+        """Get stored events for a task (for late-joining clients)"""
+        if not hasattr(self, 'stored_events'):
+            self.stored_events = {}
+        return self.stored_events.get(task_id, [])
     
     def send_orchestration_progress(self, task_id: str, step_id: str, progress: float, 
                                    current_step: str, total_steps: int):
