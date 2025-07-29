@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Production WSGI Server - OPTIMIZADO PARA MODO PRODUCCIÓN
-Usa SocketIO app con gunicorn + eventlet para máxima compatibilidad WebSocket
+Usa Flask app con SocketIO para máxima compatibilidad WebSocket
 """
 
 import os
@@ -12,13 +12,14 @@ sys.path.insert(0, '/app/backend')
 os.environ['FLASK_ENV'] = 'production'
 os.environ['FLASK_DEBUG'] = 'False'
 
-# Importar la Flask app y socketio
-from server import app, socketio
+# Importar la Flask app (SocketIO ya está integrado en ella)
+from server import app
 
-# CRÍTICO: Para gunicorn con eventlet + SocketIO
-# SocketIO object IS the WSGI application when using eventlet
-application = socketio
+# CRÍTICO: Para gunicorn con eventlet + SocketIO en Flask-SocketIO 5.x
+# El objeto app ya tiene SocketIO integrado
+application = app
 
 if __name__ == '__main__':
-    # Para testing directo con SocketIO
+    # Para testing directo
+    from server import socketio
     socketio.run(app, host='0.0.0.0', port=8001, debug=False)
