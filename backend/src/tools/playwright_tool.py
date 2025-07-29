@@ -26,7 +26,10 @@ except ImportError:
 @register_tool
 class PlaywrightTool(BaseTool):
     def __init__(self):
-        super().__init__()
+        super().__init__(
+            name="playwright_automation",
+            description="Herramienta de automatización de navegadores con Playwright VISUAL - Muestra interacciones paso a paso"
+        )
         self.playwright_available = PLAYWRIGHT_AVAILABLE
         
         # Configuración por defecto - SIEMPRE VISUAL en terminal
@@ -47,13 +50,7 @@ class PlaywrightTool(BaseTool):
         # Lista para almacenar todos los pasos visuales
         self.visual_steps = []
     
-    def get_name(self) -> str:
-        return "playwright_automation"
-    
-    def get_description(self) -> str:
-        return "Herramienta de automatización de navegadores con Playwright VISUAL - Muestra interacciones paso a paso"
-    
-    def get_parameters(self) -> List[ParameterDefinition]:
+    def _define_parameters(self) -> List[ParameterDefinition]:
         return [
             ParameterDefinition(
                 name="action",
@@ -87,29 +84,6 @@ class PlaywrightTool(BaseTool):
                 default=30000
             )
         ]
-    
-    def validate_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Validar parámetros específicos de Playwright"""
-        if not self.playwright_available:
-            return {
-                'valid': False,
-                'error': 'Playwright no está disponible. Instalar con: pip install playwright'
-            }
-        
-        action = parameters.get('action')
-        if not action:
-            return {'valid': False, 'error': 'Parámetro "action" es requerido'}
-        
-        if action == 'navigate' and not parameters.get('url'):
-            return {'valid': False, 'error': 'Parámetro "url" es requerido para navigate'}
-        
-        if action in ['click', 'type'] and not parameters.get('selector'):
-            return {'valid': False, 'error': f'Parámetro "selector" es requerido para {action}'}
-        
-        if action == 'type' and not parameters.get('text'):
-            return {'valid': False, 'error': 'Parámetro "text" es requerido para type'}
-        
-        return {'valid': True}
     
     def get_parameters(self) -> List[Dict[str, Any]]:
         return [
