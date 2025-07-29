@@ -11,6 +11,26 @@ import json
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+FRONTEND_ORIGINS = [
+    # 🌐 URL DETECTADA DINÁMICAMENTE
+    "https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com",
+    
+    # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
+    "https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com",
+    
+    # 🏠 DESARROLLO LOCAL
+    "http://localhost:3000",
+    "http://localhost:5173", 
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    
+    # 📱 PREVIEW DOMAINS COMUNES
+    "https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com",
+    "https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com",
+    
+    # 🌟 FALLBACK UNIVERSAL (último recurso)
+    "*"
+]
 from flask_socketio import SocketIO
 from dotenv import load_dotenv
 import pymongo
@@ -52,25 +72,6 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 app.config['START_TIME'] = time.time()
 
 # Configurar CORS - CONFIGURACIÓN ULTRA-DINÁMICA PARA WEBSOCKET
-FRONTEND_ORIGINS = [
-    # 🌐 URL DETECTADA DINÁMICAMENTE  
-    "https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com",
-    
-    # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS
-    "https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com",
-    
-    # 🏠 DESARROLLO LOCAL
-    "http://localhost:3000",
-    "http://localhost:5173", 
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
-    
-    # 📱 PREVIEW DOMAINS COMUNES
-    "https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com",
-    
-    # 🌟 FALLBACK UNIVERSAL
-    "*"
-]
 
 CORS(app, resources={
     r"/api/*": {
