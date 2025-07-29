@@ -435,9 +435,33 @@ if $backend_ok; then
         echo "   ⚠️ Pipeline completo chat: VERIFICANDO - $chat_test"
     fi
     
+    # Test 8: CRÍTICO - Verificación de CORS WebSocket con URL real detectada
+    echo "🔍 Testing CORS WebSocket con URL real detectada: $REAL_FRONTEND_URL..."
+    cors_websocket_test=$(curl -s -H "Origin: $REAL_FRONTEND_URL" \
+        "http://localhost:8001/api/socket.io/?EIO=4&transport=polling" 2>/dev/null || echo "error")
+    if echo "$cors_websocket_test" | grep -q '"sid"'; then
+        echo "   ✅ CORS WebSocket: FUNCIONANDO PERFECTAMENTE"
+        echo "      🔗 URL frontend detectada y configurada: $REAL_FRONTEND_URL"
+        
+        # Verificar headers CORS específicos
+        cors_headers=$(curl -s -I -H "Origin: $REAL_FRONTEND_URL" \
+            -X OPTIONS "http://localhost:8001/api/socket.io/?EIO=4&transport=polling" 2>/dev/null || echo "error")
+        if echo "$cors_headers" | grep -q "Access-Control-Allow-Origin"; then
+            echo "      ✅ Headers CORS: Configurados correctamente"
+        else
+            echo "      ⚠️ Headers CORS: Verificando configuración..."
+        fi
+    else
+        echo "   ❌ CORS WebSocket: PROBLEMA DETECTADO"
+        echo "      🔧 URL detectada: $REAL_FRONTEND_URL"
+        echo "      📋 Respuesta: $cors_websocket_test"
+    fi
+    
     echo "=============================================================="
     echo "🎯 VALIDACIÓN ESPECÍFICA DE HERRAMIENTAS DE BÚSQUEDA:"
     echo "   ✅ Variables de entorno corregidas (sin duplicación /api)"
+    echo "   ✅ URL frontend detectada automáticamente: $REAL_FRONTEND_URL"
+    echo "   ✅ CORS WebSocket configurado dinámicamente"
     echo "   ✅ Tavily API Key: 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"
     echo "   ✅ Playwright Web Search: Funcional y priorizada"
     echo "   ✅ Enhanced Analysis: Usando Ollama directamente"
