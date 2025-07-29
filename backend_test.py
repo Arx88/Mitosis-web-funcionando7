@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 """
-MITOSIS WEBSOCKET EVENT EMISSION DIAGNOSIS
-Diagnose the specific issue where backend progresses correctly but frontend doesn't show real-time updates.
+MITOSIS WEBSOCKET CORS FIX TESTING
+Test the WebSocket CORS fix that was just applied to the Mitosis backend.
 
-SPECIFIC ISSUE TO DIAGNOSE:
-- Backend generates plans and executes steps correctly (task-1753789476281 executing step-2)
-- Frontend shows agent "stuck on first step" visually
-- WebSocket hook implemented with HTTP polling fallback
-- Need to verify if backend emits WebSocket events during task execution
+SPECIFIC TESTING REQUEST:
+Test the WebSocket CORS fix that was just applied to the Mitosis backend. Specifically test:
 
-CRITICAL TESTING FOCUS:
-1. **Task Creation and Execution**: Create task and verify execution starts
-2. **WebSocket Event Emission**: Monitor if backend emits step_started, task_progress, step_completed events
-3. **HTTP Polling Fallback**: Test get-task-status endpoints for polling
-4. **Real-time Communication**: Verify WebSocket infrastructure is working
-5. **Task Status Tracking**: Monitor task progression through API calls
-6. **Event Broadcasting**: Test if WebSocket events reach frontend
+1. **WebSocket Connection**: Test if WebSocket connections now work without CORS errors using the /socket.io/ endpoint
+2. **CORS Headers**: Verify that proper CORS headers are being sent for WebSocket/polling requests from the frontend domain (https://0b80d189-2d16-41d3-96e6-14926f319934.preview.emergentagent.com)
+3. **SocketIO Endpoint**: Test the /socket.io/ endpoint to ensure it's accessible and returns proper CORS headers
+4. **Health Check**: Verify all backend services are still working after the CORS changes
+5. **Task Creation**: Test that task creation still works properly with the new CORS configuration
 
-BACKEND URL: https://0b80d189-2d16-41d3-96e6-14926f319934.preview.emergentagent.com
+**Backend URL**: https://0b80d189-2d16-41d3-96e6-14926f319934.preview.emergentagent.com
+**Expected Outcome**: WebSocket connections should work without CORS policy errors, allowing real-time communication between frontend and backend.
+
+**Key Changes Made**:
+- Updated CORS origins from "*" to specific frontend domains
+- Enhanced CORS headers for WebSocket compatibility  
+- Modified SocketIO cors_allowed_origins to use specific origins
+- Added Accept, Origin, X-Requested-With headers
+
+Please verify if these changes resolve the CORS policy blocking that was preventing WebSocket connections.
 """
 
 import requests
