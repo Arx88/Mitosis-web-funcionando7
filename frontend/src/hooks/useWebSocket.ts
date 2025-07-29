@@ -267,6 +267,9 @@ export const useWebSocket = (): UseWebSocketReturn => {
       
       // Remove ALL WebSocket event listeners
       socket.off('plan_updated');
+      socket.off('progress_update');
+      socket.off('agent_activity');
+      socket.off('task_update');
       socket.off('step_started');
       socket.off('step_completed');
       socket.off('task_progress');
