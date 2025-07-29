@@ -703,23 +703,3 @@ def internal_error(error):
 if __name__ == '__main__':
     print(f"🚀 Starting server on {HOST}:{PORT}")
     app.run(host=HOST, port=PORT, debug=DEBUG)
-FRONTEND_ORIGINS = [
-    # 🌐 URL DETECTADA DINÁMICAMENTE
-    "https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com",
-    
-    # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
-    "https://*.preview.emergentagent.com",
-    
-    # 🏠 DESARROLLO LOCAL
-    "http://localhost:3000",
-    "http://localhost:5173", 
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
-    
-    # 📱 PREVIEW DOMAINS COMUNES
-    "https://cell-split-app-1.preview.emergentagent.com",
-    "https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com",
-    
-    # 🌟 FALLBACK UNIVERSAL (último recurso)
-    "*"
-]
