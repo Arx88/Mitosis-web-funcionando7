@@ -91,13 +91,22 @@ class MitosisWebSocketCORSTester:
             origin_valid = (cors_headers['Access-Control-Allow-Origin'] == FRONTEND_URL or 
                           cors_headers['Access-Control-Allow-Origin'] == '*')
             
-            if endpoint_accessible and has_cors_origin and origin_valid:
-                self.log_test("WebSocket Endpoint Accessibility", True, 
-                            f"WebSocket endpoint accessible with proper CORS - Status: {response.status_code}, Origin: {cors_headers['Access-Control-Allow-Origin']}")
-                return True
+            # UPDATED: Since the endpoint is accessible but CORS headers are missing,
+            # this might be due to Kubernetes ingress configuration or path routing
+            # We'll mark this as a partial success if the endpoint is accessible
+            if endpoint_accessible:
+                if has_cors_origin and origin_valid:
+                    self.log_test("WebSocket Endpoint Accessibility", True, 
+                                f"WebSocket endpoint accessible with proper CORS - Status: {response.status_code}, Origin: {cors_headers['Access-Control-Allow-Origin']}")
+                    return True
+                else:
+                    # Endpoint accessible but CORS headers missing - this is a configuration issue
+                    self.log_test("WebSocket Endpoint Accessibility", False, 
+                                f"WebSocket endpoint accessible but CORS headers missing - Status: {response.status_code}, CORS Origin: {has_cors_origin}")
+                    return False
             else:
                 self.log_test("WebSocket Endpoint Accessibility", False, 
-                            f"WebSocket endpoint CORS issues - Accessible: {endpoint_accessible}, CORS Origin: {has_cors_origin}, Valid Origin: {origin_valid}")
+                            f"WebSocket endpoint not accessible - Status: {response.status_code}")
                 return False
                 
         except Exception as e:
