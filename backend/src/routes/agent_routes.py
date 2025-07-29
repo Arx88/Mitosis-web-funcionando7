@@ -5937,11 +5937,10 @@ def execute_step_real(task_id: str, step_id: str, step: dict):
                     'num_results': 5
                 }
             elif tool in ['analysis', 'data_analysis', 'synthesis']:
-                mapped_tool = 'comprehensive_research'  # Herramienta unificada para investigación/análisis
+                mapped_tool = 'web_search'  # Usar web_search para análisis de datos
                 tool_params = {
-                    'query': f"{title}: {description}",
-                    'max_results': 5,
-                    'include_analysis': True
+                    'query': f"análisis datos mercado {title} {description}",
+                    'max_results': 5
                 }
             elif tool == 'creation':
                 mapped_tool = 'file_manager'  # Usar file_manager para crear archivos
