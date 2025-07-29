@@ -356,6 +356,197 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         };
         
         setTerminalLogs(prev => [...prev, logEntry]);
+        
+        // CRÍTICO: Actualizar el plan completo de la tarea
+        if (data.plan && data.plan.steps && Array.isArray(data.plan.steps)) {
+          handleUpdateTask((currentTask: Task) => {
+            const updatedPlan = data.plan.steps.map((step: any) => ({
+              id: step.id,
+              title: step.title,
+              description: step.description,
+              tool: step.tool,
+              status: step.status,
+              estimated_time: step.estimated_time,
+              completed: step.completed || false,
+              active: step.active || false
+            }));
+            
+            console.log('📋 Updating task plan from plan_updated:', {
+              taskId: currentTask.id,
+              stepsCount: updatedPlan.length,
+              activeStep: updatedPlan.find(s => s.active)?.title
+            });
+            
+            return {
+              ...currentTask,
+              plan: updatedPlan,
+              status: 'in-progress'
+            };
+          });
+        }
+      },
+      
+      'progress_update': (data: any) => {
+        console.log('🔄 WebSocket progress_update received:', data);
+        
+        // Manejar diferentes tipos de progress_update
+        if (data.type === 'step_completed' && data.data?.step_id) {
+          const stepData = data.data;
+          
+          const logEntry = {
+            message: `✅ Paso completado: ${stepData.title}`,
+            type: 'success' as const,
+            timestamp: new Date(data.timestamp || Date.now())
+          };
+          
+          setTerminalLogs(prev => [...prev, logEntry]);
+          
+          // Actualizar el plan igual que en step_completed
+          handleUpdateTask((currentTask: Task) => {
+            if (!currentTask.plan) return currentTask;
+            
+            const currentStepIndex = currentTask.plan.findIndex(step => step.id === stepData.step_id);
+            const nextStepIndex = currentStepIndex + 1;
+            
+            const updatedPlan = currentTask.plan.map((step, index) => {
+              if (step.id === stepData.step_id) {
+                return {
+                  ...step,
+                  active: false,
+                  status: 'completed',
+                  completed: true
+                };
+              } else if (index === nextStepIndex && nextStepIndex < currentTask.plan.length) {
+                return {
+                  ...step,
+                  active: true,
+                  status: 'in-progress'
+                };
+              } else {
+                return {
+                  ...step,
+                  active: false
+                };
+              }
+            });
+            
+            const completedSteps = updatedPlan.filter(s => s.completed).length;
+            const totalSteps = updatedPlan.length;
+            const progress = Math.round((completedSteps / totalSteps) * 100);
+            
+            console.log('📈 Progress updated from progress_update event:', {
+              stepId: stepData.step_id,
+              progress,
+              completedSteps,
+              totalSteps
+            });
+            
+            return {
+              ...currentTask,
+              plan: updatedPlan,
+              progress,
+              status: progress === 100 ? 'completed' : 'in-progress'
+            };
+          });
+        } else if (data.plan) {
+          // Actualizar plan completo si viene en los datos
+          handleUpdateTask((currentTask: Task) => {
+            if (!data.plan.steps) return currentTask;
+            
+            const updatedPlan = data.plan.steps.map((step: any) => ({
+              id: step.id,
+              title: step.title,
+              description: step.description,
+              tool: step.tool,
+              status: step.status,
+              estimated_time: step.estimated_time,
+              completed: step.completed || false,
+              active: step.active || false
+            }));
+            
+            return {
+              ...currentTask,
+              plan: updatedPlan
+            };
+          });
+        }
+      },
+      
+      'agent_activity': (data: any) => {
+        console.log('🤖 WebSocket agent_activity received:', data);
+        
+        // Manejar actividad del agente similar a progress_update
+        if (data.type === 'step_completed' && data.data?.step_id) {
+          const stepData = data.data;
+          
+          const logEntry = {
+            message: `🤖 Agente completó: ${stepData.title}`,
+            type: 'success' as const,
+            timestamp: new Date(data.timestamp || Date.now())
+          };
+          
+          setTerminalLogs(prev => [...prev, logEntry]);
+          
+          // Mismo manejo que progress_update para step_completed
+          handleUpdateTask((currentTask: Task) => {
+            if (!currentTask.plan) return currentTask;
+            
+            const updatedPlan = currentTask.plan.map(step => {
+              if (step.id === stepData.step_id) {
+                return {
+                  ...step,
+                  active: false,
+                  status: 'completed',
+                  completed: true
+                };
+              }
+              return step;
+            });
+            
+            const completedSteps = updatedPlan.filter(s => s.completed).length;
+            const totalSteps = updatedPlan.length;
+            const progress = Math.round((completedSteps / totalSteps) * 100);
+            
+            return {
+              ...currentTask,
+              plan: updatedPlan,
+              progress,
+              status: progress === 100 ? 'completed' : 'in-progress'
+            };
+          });
+        }
+      },
+      
+      'task_update': (data: any) => {
+        console.log('📝 WebSocket task_update received:', data);
+        
+        // Actualizar el plan si viene en task_update
+        if (data.plan && data.plan.steps && Array.isArray(data.plan.steps)) {
+          handleUpdateTask((currentTask: Task) => {
+            const updatedPlan = data.plan.steps.map((step: any) => ({
+              id: step.id,
+              title: step.title,
+              description: step.description,
+              tool: step.tool,
+              status: step.status,
+              estimated_time: step.estimated_time,
+              completed: step.completed || false,
+              active: step.active || false
+            }));
+            
+            console.log('📝 Task updated from task_update:', {
+              taskId: currentTask.id,
+              stepsCount: updatedPlan.length,
+              activeStep: updatedPlan.find(s => s.active)?.title
+            });
+            
+            return {
+              ...currentTask,
+              plan: updatedPlan,
+              status: data.status || currentTask.status
+            };
+          });
+        }
       },
       
       'tool_result': (data: any) => {
