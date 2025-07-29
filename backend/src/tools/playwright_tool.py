@@ -174,7 +174,7 @@ class PlaywrightTool(BaseTool):
             }
         ]
     
-    def execute(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
+    def _execute_tool(self, parameters: Dict[str, Any], config: Dict[str, Any]) -> ToolExecutionResult:
         """
         Ejecutar automatización con Playwright
         
