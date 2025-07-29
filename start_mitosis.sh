@@ -170,13 +170,8 @@ if [ ! -f "server.py.backup" ]; then
     echo "   💾 Backup creado: server.py.backup"
 fi
 
-# Detectar variantes de URL para máxima compatibilidad
-CORS_URLS=""
-if [[ "$REAL_FRONTEND_URL" == *"cell-split-exec"* ]]; then
-    CORS_URLS="\"$REAL_FRONTEND_URL\", \"https://d1c8ceae-497e-462b-a5fa-5c5f477c24df.preview.emergentagent.com\""
-else
-    CORS_URLS="\"$REAL_FRONTEND_URL\", \"https://cell-split-exec.preview.emergentagent.com\""
-fi
+# Detectar variantes de URL para máxima compatibilidad (siempre incluir ambas)
+CORS_URLS="\"https://cell-split-exec.preview.emergentagent.com\", \"https://d1c8ceae-497e-462b-a5fa-5c5f477c24df.preview.emergentagent.com\""
 
 # Actualizar FRONTEND_ORIGINS en server.py con URL real detectada
 sed -i '/^FRONTEND_ORIGINS = \[/,/^\]/c\
