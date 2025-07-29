@@ -233,6 +233,18 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         }));
       },
       
+      'plan_updated': (data: any) => {
+        console.log('📋 WebSocket plan_updated received:', data);
+        
+        const logEntry = {
+          message: `📋 Plan actualizado para: ${data.plan?.task_type || 'tarea'}`,
+          type: 'info' as const,
+          timestamp: new Date(data.timestamp || Date.now())
+        };
+        
+        setTerminalLogs(prev => [...prev, logEntry]);
+      },
+      
       // Mantener eventos legacy para compatibilidad
       'task_message': (data: any) => {
         if (data.task_id === task.id) {
