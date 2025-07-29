@@ -291,46 +291,44 @@ class MitosisWebSocketCORSTester:
             self.log_test("WebSocket Test Endpoint", False, f"Exception: {str(e)}")
             return False
     
-    def test_cors_test_endpoint(self) -> bool:
-        """Test 6: CORS Test Endpoint"""
+    def test_websocket_manager_functionality(self) -> bool:
+        """Test 7: WebSocket Manager Functionality"""
         try:
-            # Test dedicated CORS test endpoint
-            response = self.session.get(f"{API_BASE}/test-cors", timeout=10)
+            # Test if WebSocket manager is working by forcing an emit
+            test_task_id = self.task_id or "test-websocket-cors"
+            
+            # Force emit a test event to verify WebSocket manager is working
+            response = self.session.post(f"{API_BASE}/agent/force-websocket-emit/{test_task_id}", 
+                                       json={"message": "Test CORS WebSocket emission"}, 
+                                       timeout=10)
             
             # Check CORS headers
-            cors_headers = {
-                'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
-                'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
-                'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers')
-            }
+            cors_origin = response.headers.get('Access-Control-Allow-Origin')
+            has_cors = cors_origin is not None
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check response content
-                status = data.get('status', '')
-                origin = data.get('origin', '')
-                method = data.get('method', '')
+                # Check WebSocket manager functionality
+                success = data.get('success', False)
+                message = data.get('message', '')
+                active_connections = data.get('active_connections', 0)
                 
-                # Check if CORS is working
-                cors_working = cors_headers['Access-Control-Allow-Origin'] is not None
-                test_successful = 'CORS test successful' in status
-                
-                if cors_working and test_successful:
-                    self.log_test("CORS Test Endpoint", True, 
-                                f"CORS test endpoint working - Status: {status}, Origin: {origin}, CORS headers present: {cors_working}")
+                if success and has_cors:
+                    self.log_test("WebSocket Manager Functionality", True, 
+                                f"WebSocket manager working - Success: {success}, CORS: {has_cors}, Connections: {active_connections}")
                     return True
                 else:
-                    self.log_test("CORS Test Endpoint", False, 
-                                f"CORS test endpoint issues - Test successful: {test_successful}, CORS working: {cors_working}", data)
+                    self.log_test("WebSocket Manager Functionality", False, 
+                                f"WebSocket manager issues - Success: {success}, CORS: {has_cors}", data)
                     return False
             else:
-                self.log_test("CORS Test Endpoint", False, 
-                            f"CORS test endpoint error - HTTP {response.status_code}: {response.text}")
+                self.log_test("WebSocket Manager Functionality", False, 
+                            f"WebSocket manager endpoint error - HTTP {response.status_code}: {response.text}")
                 return False
                 
         except Exception as e:
-            self.log_test("CORS Test Endpoint", False, f"Exception: {str(e)}")
+            self.log_test("WebSocket Manager Functionality", False, f"Exception: {str(e)}")
             return False
     
     def run_all_tests(self) -> Dict[str, Any]:
