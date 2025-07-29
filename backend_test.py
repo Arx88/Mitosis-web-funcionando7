@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 """
-MITOSIS BACKEND AUTOMATIC EXECUTION TESTING
-Test the specific issue where backend creates plans but doesn't execute them automatically.
+MITOSIS BACKEND REAL-TIME WEBSOCKET STEP PROGRESSION TESTING
+Test the specific WebSocket step progression issue reported by the user.
 
-SPECIFIC TESTING REQUEST:
-Testea específicamente el endpoint /api/agent/chat con el backend de Mitosis para verificar si:
+SPECIFIC TESTING REQUEST FROM USER:
+Test the Mitosis backend comprehensively focusing on the REAL-TIME WebSocket step progression issue:
 
-1. **Crear tarea desde frontend**: Enviar un POST a /api/agent/chat con mensaje "Crear un análisis de mercado para software en 2025" 
-2. **Verificar respuesta**: Confirmar que el backend devuelve un plan con steps
-3. **Verificar ejecución automática**: Buscar en logs si aparecen mensajes de:
-   - "🚀 STARTING execute_task_steps_sequentially"
-   - "⚡ EXECUTING STEP 1/4" (o similar)
-   - "emit_step_event called" (eventos WebSocket)
-4. **Monitorear logs durante 30 segundos** después del request para ver si la ejecución automática se inicia
-5. **Verificar WebSocket Manager**: Confirmar que existe y está inicializado
+1. **Create a task** with a complex plan that will take some time to execute
+2. **Monitor WebSocket events** in real-time to verify step progression is sent correctly 
+3. **Verify step sequence** - ensure steps execute 1→2→3→4 without jumping back
+4. **Check step completion logic** - verify steps are only marked complete when they actually finish
+5. **Monitor execution logs** - verify actual vs reported step progression
+6. **Test frontend sync** - ensure frontend receives accurate real-time updates
+
+SPECIFIC ISSUES TO INVESTIGATE:
+- User reports agent jumps from step 3 back to step 2
+- Steps being marked as "HECHO" (done) prematurely  
+- Frontend may not be showing real agent action vs cached data
+- Agent incorrectly determining task completion
 
 **URL Backend**: https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com
-
-**PROBLEMA ESPECÍFICO A DEBUGGEAR**: El backend debería crear el plan Y luego ejecutarlo automáticamente con emit_step_event, pero según el usuario el frontend se queda en paso 1. Necesito confirmar si la ejecución automática se está iniciando o no.
+**WebSocket URL**: /api/socket.io/
+**Test Task**: "Crear análisis detallado sobre blockchain en 2025"
 """
 
 import requests
