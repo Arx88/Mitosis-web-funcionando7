@@ -144,9 +144,15 @@ export function App() {
         const planData = await planResponse.json();
         console.log('✅ Plan generated:', planData);
         
-        // Update the task with the generated plan
-        const updatedTask = {
+        // CRÍTICO: Usar el task_id que devuelve el backend
+        const backendTaskId = planData.task_id;
+        console.log('🆔 Using backend task ID:', backendTaskId);
+        
+        // Update the newTask with backend ID and plan
+        const updatedTask: Task = {
           ...newTask,
+          id: backendTaskId, // USAR ID DEL BACKEND
+          title: planData.enhanced_title || title,
           plan: planData.plan || [],
           status: 'ready' as const
         };
@@ -155,9 +161,9 @@ export function App() {
           task.id === newTask.id ? updatedTask : task
         ));
 
-        // Start automatic execution
-        console.log('🚀 Starting automatic execution for task:', newTask.id);
-        const executionResponse = await fetch(`${backendUrl}/api/agent/start-task-execution/${newTask.id}`, {
+        // Start automatic execution using BACKEND ID
+        console.log('🚀 Starting automatic execution for task:', backendTaskId);
+        const executionResponse = await fetch(`${backendUrl}/api/agent/start-task-execution/${backendTaskId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
