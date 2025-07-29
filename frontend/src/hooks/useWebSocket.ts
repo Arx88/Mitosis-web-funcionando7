@@ -48,64 +48,14 @@ export const useWebSocket = (): UseWebSocketReturn => {
     console.log('🔌 Initializing WebSocket connection...');
     const wsConfig = getWebSocketConfig();
     
-    const newSocket = io(wsConfig.url, wsConfig.options);
+    // **TEMPORAL**: Force HTTP polling fallback to bypass WebSocket issues
+    console.log('🔄 TEMPORARILY FORCING HTTP POLLING MODE');
+    setIsPollingFallback(true);
+    setConnectionType('polling');
+    setIsConnected(true); // Mark as "connected" for polling mode
     
-    // Connection event handlers
-    newSocket.on('connect', () => {
-      console.log('✅ WebSocket connected successfully');
-      console.log('🔗 Transport:', newSocket.io.engine.transport.name);
-      setIsConnected(true);
-      setConnectionType(newSocket.io.engine.transport.name as 'websocket' | 'polling');
-      setIsPollingFallback(false);
-      
-      // Stop HTTP polling fallback if it was running
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-    });
-    
-    newSocket.on('connect_error', (error) => {
-      console.error('❌ WebSocket connection error:', error);
-      setIsConnected(false);
-      setConnectionType('disconnected');
-      
-      // Start HTTP Polling fallback after 3 failed attempts
-      if (!isPollingFallback && currentTaskId) {
-        console.log('🔄 Starting HTTP Polling fallback...');
-        setIsPollingFallback(true);
-        startHttpPollingFallback(currentTaskId);
-      }
-    });
-    
-    newSocket.on('disconnect', (reason) => {
-      console.log('📡 WebSocket disconnected:', reason);
-      setIsConnected(false);
-      setConnectionType('disconnected');
-      
-      // Auto-reconnect unless manually disconnected
-      if (reason === 'io server disconnect') {
-        newSocket.connect();
-      }
-    });
-    
-    // Transport upgrade events
-    newSocket.io.on('upgrade', () => {
-      console.log('🚀 Transport upgraded to:', newSocket.io.engine.transport.name);
-      setConnectionType(newSocket.io.engine.transport.name as 'websocket' | 'polling');
-    });
-    
-    newSocket.io.on('upgradeError', (error) => {
-      console.warn('⚠️ Transport upgrade failed:', error);
-    });
-    
-    setSocket(newSocket);
-    
-    // Cleanup on unmount
     return () => {
-      console.log('🧹 Cleaning up WebSocket connection');
-      newSocket.close();
-      
+      console.log('🧹 Cleaning up connection');
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
