@@ -1960,7 +1960,7 @@ Este es un informe básico generado debido a limitaciones técnicas en el proces
 """
         return error_report
 
-def execute_processing_step(title: str, description: str, ollama_service, original_message: str, step: dict = None) -> dict:
+def execute_processing_step(title: str, description: str, ollama_service, original_message: str, step: dict = None, task_id: str = None) -> dict:
     """🔄 PROCESAMIENTO GENERAL - Procesamiento genérico con informe profesional"""
     try:
         logger.info(f"🔄 Ejecutando procesamiento: {title}")
@@ -1977,7 +1977,7 @@ def execute_processing_step(title: str, description: str, ollama_service, origin
         
         if is_final_step:
             logger.info(f"📋 Detectado paso final de informe - generando formato profesional")
-            return generate_professional_final_report(title, description, ollama_service, original_message, step)
+            return generate_professional_final_report(title, description, ollama_service, original_message, step, task_id)
         
         if not ollama_service or not ollama_service.is_healthy():
             # Generar contenido genérico como fallback
