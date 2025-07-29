@@ -130,13 +130,13 @@ export function App() {
                      'http://localhost:8001';
       
       console.log('🎯 Generating plan for task:', title);
-      const planResponse = await fetch(`${backendUrl}/api/agent/generate-plan`, {
+      const planResponse = await fetch(`${backendUrl}/api/agent/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          task_title: title
+          message: title
         })
       });
 
