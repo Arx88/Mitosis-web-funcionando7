@@ -1133,6 +1133,166 @@ task_title = data.get('task_title') or data.get('message', '')
 
 **Evidence**: Comprehensive testing confirms backend generates plans correctly, saves to MongoDB, and formats responses properly. The only issue is the field name mismatch between frontend and backend API expectations.
 
+---
+
+## 🧪 **WEBSOCKET CORS FIX TESTING COMPLETED** (January 2025) - TESTING AGENT REVIEW
+
+### ✅ **TESTING REQUEST FULFILLED - WEBSOCKET CORS FIXES PARTIALLY WORKING**
+
+**TESTING REQUEST**: Test the WebSocket CORS fix that was just applied to the Mitosis backend. Specifically test:
+
+1. **WebSocket Connection**: Test if WebSocket connections now work without CORS errors using the /socket.io/ endpoint
+2. **CORS Headers**: Verify that proper CORS headers are being sent for WebSocket/polling requests from the frontend domain
+3. **SocketIO Endpoint**: Test the /socket.io/ endpoint to ensure it's accessible and returns proper CORS headers
+4. **Health Check**: Verify all backend services are still working after the CORS changes
+5. **Task Creation**: Test that task creation still works properly with the new CORS configuration
+
+**BACKEND URL TESTED**: https://0b80d189-2d16-41d3-96e6-14926f319934.preview.emergentagent.com
+**FRONTEND DOMAIN**: https://0b80d189-2d16-41d3-96e6-14926f319934.preview.emergentagent.com
+
+**TESTING METHODOLOGY**:
+1. **Comprehensive WebSocket CORS Testing**: Created specialized test suite to verify all 7 critical areas
+2. **Real CORS Header Testing**: Used exact frontend domain in Origin headers to test CORS policy
+3. **Infrastructure Verification**: Tested all supporting systems (backend health, task creation, WebSocket manager)
+4. **Functional Testing**: Verified actual functionality rather than just endpoint availability
+
+### 📊 **COMPREHENSIVE TESTING RESULTS (5/7 TESTS PASSED - 71.4% SUCCESS RATE)**:
+
+#### ❌ **1. WEBSOCKET ENDPOINT ACCESSIBILITY - PARTIAL SUCCESS (0% SUCCESS)**:
+**Implementation Status**: ❌ **ENDPOINT ACCESSIBLE BUT CORS HEADERS MISSING**
+- **Endpoint Accessibility**: ✅ WebSocket endpoint accessible at /socket.io/ (HTTP 200)
+- **CORS Headers**: ❌ No Access-Control-Allow-Origin header present
+- **Response Type**: ⚠️ Returns HTML content instead of Socket.IO handshake
+- **Issue**: Socket.IO endpoint not properly configured for CORS or intercepted by static file serving
+- **Testing Result**: ❌ **CRITICAL ISSUE** - WebSocket endpoint accessible but missing CORS headers
+
+#### ❌ **2. WEBSOCKET CORS PREFLIGHT - FAILED (0% SUCCESS)**:
+**Implementation Status**: ❌ **CORS PREFLIGHT NOT WORKING**
+- **OPTIONS Request**: ✅ Returns HTTP 200 (preflight accepted)
+- **CORS Origin Header**: ❌ No Access-Control-Allow-Origin header
+- **CORS Methods Header**: ❌ No Access-Control-Allow-Methods header
+- **CORS Headers Header**: ❌ No Access-Control-Allow-Headers header
+- **Required Headers**: ❌ None of the required headers (Content-Type, Accept, Origin, X-Requested-With) allowed
+- **Testing Result**: ❌ **CRITICAL FAILURE** - WebSocket CORS preflight completely broken
+
+#### ✅ **3. BACKEND HEALTH AFTER CORS CHANGES - PERFECT (100% SUCCESS)**:
+**Implementation Status**: ✅ **BACKEND REMAINS HEALTHY AFTER CORS CHANGES**
+- **Database Connection**: ✅ MongoDB connected and operational
+- **Ollama Integration**: ✅ Ollama service working correctly
+- **Tools Available**: ✅ 12 tools available and functional
+- **CORS Headers**: ✅ Proper CORS headers present on /api/health endpoint
+- **Testing Result**: ✅ **VERIFIED** - Backend health unaffected by CORS changes
+
+#### ✅ **4. TASK CREATION WITH CORS - PERFECT (100% SUCCESS)**:
+**Implementation Status**: ✅ **TASK CREATION WORKING WITH NEW CORS CONFIGURATION**
+- **Task Creation**: ✅ Successfully created task with ID: chat-1753812174
+- **CORS Headers**: ✅ Proper Access-Control-Allow-Origin header: https://0b80d189-2d16-41d3-96e6-14926f319934.preview.emergentagent.com
+- **API Response**: ✅ Task creation API working correctly with CORS
+- **Backend Integration**: ✅ Task creation unaffected by CORS changes
+- **Testing Result**: ✅ **VERIFIED** - Task creation works perfectly with new CORS configuration
+
+#### ✅ **5. WEBSOCKET TEST ENDPOINT - PERFECT (100% SUCCESS)**:
+**Implementation Status**: ✅ **WEBSOCKET INFRASTRUCTURE WORKING WITH CORS**
+- **WebSocket Initialized**: ✅ WebSocket manager properly initialized
+- **CORS Headers**: ✅ Proper CORS headers on WebSocket test endpoint
+- **Active Connections**: ✅ WebSocket infrastructure ready (0 connections - expected)
+- **API Integration**: ✅ WebSocket test endpoint accessible with CORS
+- **Testing Result**: ✅ **VERIFIED** - WebSocket infrastructure working with CORS headers
+
+#### ✅ **6. CORS TEST ENDPOINT - PERFECT (100% SUCCESS)**:
+**Implementation Status**: ✅ **CORS CONFIGURATION WORKING FOR API ENDPOINTS**
+- **CORS Test**: ✅ Dedicated CORS test endpoint working correctly
+- **Origin Detection**: ✅ Correctly detects frontend origin
+- **CORS Headers**: ✅ Proper Access-Control-Allow-Origin header present
+- **API CORS**: ✅ CORS configuration working for /api/* endpoints
+- **Testing Result**: ✅ **VERIFIED** - CORS configuration working correctly for API endpoints
+
+#### ✅ **7. WEBSOCKET MANAGER FUNCTIONALITY - PERFECT (100% SUCCESS)**:
+**Implementation Status**: ✅ **WEBSOCKET MANAGER WORKING WITH CORS**
+- **WebSocket Manager**: ✅ Successfully emits test events
+- **CORS Headers**: ✅ Proper CORS headers on WebSocket manager endpoint
+- **Event Emission**: ✅ WebSocket manager can emit events (0 active connections - expected)
+- **Backend Integration**: ✅ WebSocket manager integrated with CORS configuration
+- **Testing Result**: ✅ **VERIFIED** - WebSocket manager functionality working with CORS
+
+### 🔧 **ROOT CAUSE ANALYSIS**:
+
+#### **PRIMARY ISSUE IDENTIFIED**: Socket.IO Endpoint CORS Configuration Gap
+**Evidence**: 
+- API endpoints (/api/*) have proper CORS headers and work correctly
+- WebSocket manager and test endpoints have proper CORS headers
+- Socket.IO endpoint (/socket.io/) is accessible but missing CORS headers
+- **CRITICAL MISSING**: Socket.IO endpoint not configured with CORS headers
+
+#### **SECONDARY ISSUES**:
+1. **Socket.IO Path Configuration**: Socket.IO endpoint may be intercepted by static file serving
+2. **CORS Configuration Scope**: CORS configuration not applied to Socket.IO endpoint path
+3. **Kubernetes Ingress**: Socket.IO path may need specific ingress configuration
+
+### 🎯 **SPECIFIC TECHNICAL FINDINGS**:
+
+**Working Components**:
+- ✅ API endpoints have proper CORS: Access-Control-Allow-Origin: https://0b80d189-2d16-41d3-96e6-14926f319934.preview.emergentagent.com
+- ✅ Backend health unaffected by CORS changes
+- ✅ Task creation working with CORS headers
+- ✅ WebSocket manager functional with CORS headers
+
+**Broken Components**:
+- ❌ Socket.IO endpoint (/socket.io/) missing CORS headers
+- ❌ Socket.IO CORS preflight (OPTIONS) not working
+- ❌ Socket.IO endpoint returns HTML instead of Socket.IO handshake
+
+### 🎯 **FINAL ASSESSMENT**:
+
+**STATUS**: ⚠️ **WEBSOCKET CORS FIXES PARTIALLY WORKING - SOCKET.IO ENDPOINT NEEDS CONFIGURATION**
+
+**FUNCTIONALITY STATUS**: **71.4%** - Most CORS functionality working, Socket.IO endpoint needs fixes
+**API CORS**: **100%** - All API endpoints have proper CORS headers
+**WEBSOCKET INFRASTRUCTURE**: **100%** - WebSocket manager and infrastructure working with CORS
+**SOCKET.IO ENDPOINT**: **0%** - Socket.IO endpoint missing CORS headers
+**BACKEND HEALTH**: **100%** - Backend remains healthy after CORS changes
+
+**EVIDENCE SUMMARY**:
+1. ✅ **Backend Health**: Perfect - All services operational after CORS changes
+2. ✅ **API CORS**: Perfect - All /api/* endpoints have proper CORS headers
+3. ✅ **Task Creation**: Perfect - Works correctly with new CORS configuration
+4. ✅ **WebSocket Infrastructure**: Perfect - WebSocket manager working with CORS
+5. ❌ **Socket.IO Endpoint**: Broken - Missing CORS headers on /socket.io/ endpoint
+6. ❌ **Socket.IO Preflight**: Broken - OPTIONS request not returning CORS headers
+
+**RECOMMENDATION**: ⚠️ **SOCKET.IO ENDPOINT CORS CONFIGURATION NEEDED**
+
+The comprehensive testing confirms that the CORS fixes are mostly working correctly. The API endpoints, WebSocket infrastructure, and task creation all have proper CORS headers. However, the specific Socket.IO endpoint (/socket.io/) is missing CORS headers, which will prevent WebSocket connections from the frontend.
+
+**CRITICAL FIXES NEEDED**:
+1. **Configure Socket.IO Endpoint CORS** - Add CORS headers to /socket.io/ endpoint
+2. **Fix Socket.IO Path Routing** - Ensure /socket.io/ is handled by Flask-SocketIO, not static files
+3. **Test Socket.IO Handshake** - Verify Socket.IO handshake works with CORS headers
+
+**TESTING EVIDENCE**:
+- **Total Tests**: 7 comprehensive WebSocket CORS tests
+- **Success Rate**: 71.4% (5/7 tests passed)
+- **Critical API CORS**: 100% working - All API endpoints have proper CORS
+- **Critical Infrastructure**: 100% working - Backend and WebSocket manager functional
+- **Socket.IO Issue**: Specific to /socket.io/ endpoint CORS configuration
+
+**WEBSOCKET CORS STATUS**: ⚠️ **MOSTLY WORKING - SOCKET.IO ENDPOINT NEEDS CORS CONFIGURATION**
+
+The WebSocket CORS fixes have successfully configured CORS for API endpoints and WebSocket infrastructure. The remaining issue is specific to the Socket.IO endpoint configuration, which needs CORS headers to allow WebSocket connections from the frontend.
+
+**COMPONENT STATUS SUMMARY**:
+- ✅ **API CORS**: WORKING PERFECTLY
+- ✅ **Backend Health**: WORKING PERFECTLY  
+- ✅ **Task Creation**: WORKING PERFECTLY
+- ✅ **WebSocket Infrastructure**: WORKING PERFECTLY
+- ✅ **WebSocket Manager**: WORKING PERFECTLY
+- ❌ **Socket.IO Endpoint**: MISSING CORS HEADERS
+- ❌ **Socket.IO Preflight**: MISSING CORS HEADERS
+
+**CONCLUSION**: The WebSocket CORS fixes have been largely successful. API endpoints and WebSocket infrastructure now have proper CORS headers. The specific issue is that the Socket.IO endpoint (/socket.io/) needs CORS configuration to allow WebSocket connections from the frontend domain.
+
+---
+
 #### Métricas Finales:
 | Métrica | Antes | Después | Mejora |
 |---------|-------|---------|--------|
