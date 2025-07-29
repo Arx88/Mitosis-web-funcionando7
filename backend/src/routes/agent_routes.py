@@ -5469,7 +5469,12 @@ def start_task_execution(task_id: str):
                             logger.info(f"✅ Agent approved completion of step {i+1}: {step['title']}")
                             
                             # ✅ EMITIR EVENTO WEBSOCKET - PASO COMPLETADO
-                            emit_step_event(task_id, step['id'], 'step_completed', step)
+                            emit_step_event(task_id, 'step_completed', {
+                                'step_id': step['id'],
+                                'title': step.get('title', 'Paso completado'),
+                                'result': step_result,
+                                'timestamp': datetime.now().isoformat()
+                            })
                         else:
                             # El agente requiere más trabajo - no avanzar
                             step['status'] = 'requires_more_work'
