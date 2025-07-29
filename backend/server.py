@@ -156,6 +156,31 @@ try:
                     'session_id': request.sid,
                     'timestamp': datetime.now().isoformat()
                 })
+                
+                # CRITICAL FIX: Send stored events to late-joining client
+                stored_events = app.websocket_manager.get_stored_events(task_id)
+                if stored_events:
+                    logger.info(f"🔄 WEBSOCKET: Sending {len(stored_events)} stored events to late-joining client {request.sid}")
+                    for event_data in stored_events:
+                        emit('catch_up_event', event_data)
+                        # Also emit the original event type
+                        original_event = event_data.get('event', 'unknown_event')
+                        emit(original_event, event_data)
+                
+                # Send current task status
+                try:
+                    import requests
+                    status_response = requests.get(f'http://localhost:8001/api/agent/get-task-status/{task_id}')
+                    if status_response.status_code == 200:
+                        current_status = status_response.json()
+                        emit('current_task_status', {
+                            'task_id': task_id,
+                            'status': current_status,
+                            'timestamp': datetime.now().isoformat()
+                        })
+                        logger.info(f"📊 WEBSOCKET: Sent current task status to {request.sid}")
+                except Exception as status_error:
+                    logger.error(f"❌ Failed to send current status: {status_error}")
             
             emit('joined_task', {'task_id': task_id, 'status': 'joined'})
             logger.info(f"✅ WEBSOCKET: Client {request.sid} joined task room {task_id}")
