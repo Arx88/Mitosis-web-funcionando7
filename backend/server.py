@@ -121,10 +121,30 @@ try:
     from src.websocket.websocket_manager import WebSocketManager
     websocket_manager = WebSocketManager()
     
-    # Configurar SocketIO con CORS ultra-dinámico
+    # Configurar SocketIO con CORS completamente dinámico
+    def cors_origin_validator(origin):
+        """
+        Validador dinámico de CORS para SocketIO
+        Acepta cualquier origen .preview.emergentagent.com + localhost
+        """
+        if not origin:
+            return True  # Permitir requests sin origin (mismo dominio)
+            
+        # Desarrollo local
+        if origin.startswith(('http://localhost:', 'http://127.0.0.1:')):
+            return True
+            
+        # Dominios preview de Emergent
+        if '.preview.emergentagent.com' in origin:
+            return True
+            
+        # Log para debugging
+        logger.warning(f"🚨 CORS REJECTED: {origin}")
+        return False
+    
     socketio = SocketIO(
         app, 
-        cors_allowed_origins=FRONTEND_ORIGINS,  # Usar la misma configuración CORS
+        cors_allowed_origins=cors_origin_validator,  # Función de validación dinámica
         cors_credentials=False,
         async_mode='eventlet',
         logger=True,           # Habilitar logs para debugging
