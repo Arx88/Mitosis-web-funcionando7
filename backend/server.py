@@ -104,6 +104,31 @@ try:
         json=json
     )
     
+    # Agregar handlers de debugging más detallados
+    @socketio.on('connect')
+    def handle_connect(auth=None):
+        logger.info(f"🔌 WEBSOCKET: Client connecting from {request.environ.get('REMOTE_ADDR')}")
+        logger.info(f"🔌 WEBSOCKET: Session ID: {request.sid}")
+        logger.info(f"🔌 WEBSOCKET: Transport: {request.transport}")
+        emit('connection_established', {'status': 'connected', 'session_id': request.sid})
+        return True  # Accept all connections
+    
+    @socketio.on('disconnect')
+    def handle_disconnect():
+        logger.info(f"🔌 WEBSOCKET: Client {request.sid} disconnected")
+    
+    @socketio.on('join_task')
+    def handle_join_task(data):
+        task_id = data.get('task_id')
+        logger.info(f"🏠 WEBSOCKET: Client {request.sid} joining task room: {task_id}")
+        if task_id:
+            join_room(task_id)
+            emit('joined_task', {'task_id': task_id, 'status': 'joined'})
+            logger.info(f"✅ WEBSOCKET: Client {request.sid} joined task room {task_id}")
+        else:
+            emit('error', {'message': 'task_id required'})
+            logger.error(f"❌ WEBSOCKET: Client {request.sid} tried to join without task_id")
+    
     websocket_manager.socketio = socketio
     websocket_manager.app = app
     websocket_manager.setup_event_handlers()
