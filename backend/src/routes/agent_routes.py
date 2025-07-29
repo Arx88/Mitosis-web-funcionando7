@@ -6452,6 +6452,74 @@ def chat():
             # Generate enhanced title
             enhanced_title = generate_task_title_with_llm(message, task_id)
             
+            # 🚀 NUEVO: Emitir evento WebSocket para notificar al frontend
+            if hasattr(current_app, 'websocket_manager') and current_app.websocket_manager:
+                try:
+                    current_app.websocket_manager.emit_to_task(
+                        task_id,
+                        'plan_updated',
+                        {
+                            'task_id': task_id,
+                            'plan': {
+                                'steps': plan_response.get('steps', []),
+                                'task_type': plan_response.get('task_type', 'general'),
+                                'complexity': plan_response.get('complexity', 'media'),
+                                'estimated_total_time': plan_response.get('estimated_total_time', '10-15 minutos')
+                            },
+                            'timestamp': datetime.now().isoformat()
+                        }
+                    )
+                    logger.info(f"📡 Plan emitted via WebSocket to task {task_id}")
+                except Exception as ws_error:
+                    logger.error(f"❌ WebSocket emission failed: {ws_error}")
+            
+            # 🚀 NUEVO: AUTO-EJECUTAR EL PLAN (copiado de generate-plan endpoint)
+            import threading
+            
+            # Guardar datos de la tarea para ejecución
+            task_data = {
+                'task_id': task_id,
+                'title': message,
+                'enhanced_title': enhanced_title,
+                'message': message,
+                'plan': plan_response.get('steps', []),
+                'task_type': plan_response.get('task_type', 'general'),
+                'complexity': plan_response.get('complexity', 'media'),
+                'estimated_total_time': plan_response.get('estimated_total_time', '10-15 minutos'),
+                'auto_execute': True,
+                'status': 'initialized',
+                'created_at': datetime.now().isoformat(),
+                'start_time': datetime.now()
+            }
+            
+            # Guardar usando TaskManager
+            try:
+                from ..services.task_manager import TaskManager
+                task_manager = TaskManager()
+                task_manager.create_task(task_data)
+                logger.info(f"💾 Task {task_id} saved for auto-execution")
+            except Exception as save_error:
+                logger.error(f"❌ Failed to save task {task_id}: {save_error}")
+            
+            # Iniciar ejecución automática en hilo separado después de 2 segundos
+            app = current_app._get_current_object()
+            
+            def delayed_execution():
+                with app.app_context():
+                    time.sleep(2)
+                    logger.info(f"🚀 STARTING REAL EXECUTION for task: {task_id}")
+                    try:
+                        execute_task_steps_sequentially(task_id, plan_response.get('steps', []))
+                        logger.info(f"🎉 Task {task_id} execution completed")
+                    except Exception as exec_error:
+                        logger.error(f"❌ Task {task_id} execution failed: {exec_error}")
+            
+            execution_thread = threading.Thread(target=delayed_execution)
+            execution_thread.daemon = True
+            execution_thread.start()
+            
+            logger.info(f"🔄 Auto-execution scheduled for task {task_id}")
+            
             # Format response compatible with frontend expectations
             response = {
                 'response': f"He generado un plan para tu tarea: {enhanced_title}",
