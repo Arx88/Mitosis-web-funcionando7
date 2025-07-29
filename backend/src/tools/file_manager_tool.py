@@ -14,41 +14,71 @@ from .base_tool import BaseTool, ParameterDefinition, ToolExecutionResult
 
 class FileManagerTool(BaseTool):
     def __init__(self):
-        self.name = "file_manager"
-        self.description = "Gestiona archivos y directorios de forma segura"
-        self.parameters = [
-            {
-                "name": "action",
-                "type": "string",
-                "required": True,
-                "description": "Acción a realizar: read, write, create, delete, list, copy, move, mkdir"
-            },
-            {
-                "name": "path",
-                "type": "string",
-                "required": True,
-                "description": "Ruta del archivo o directorio"
-            },
-            {
-                "name": "content",
-                "type": "string",
-                "required": False,
-                "description": "Contenido para escribir (solo para write/create)"
-            },
-            {
-                "name": "destination",
-                "type": "string",
-                "required": False,
-                "description": "Ruta de destino (solo para copy/move)"
-            },
-            {
-                "name": "encoding",
-                "type": "string",
-                "required": False,
-                "description": "Codificación del archivo",
-                "default": "utf-8"
-            }
+        super().__init__()
+    
+    def get_name(self) -> str:
+        return "file_manager"
+    
+    def get_description(self) -> str:
+        return "Gestiona archivos y directorios de forma segura"
+    
+    def get_parameters(self) -> List[ParameterDefinition]:
+        return [
+            ParameterDefinition(
+                name="action",
+                param_type="string",
+                required=True,
+                description="Acción a realizar: read, write, create, delete, list, copy, move, mkdir"
+            ),
+            ParameterDefinition(
+                name="path",
+                param_type="string",
+                required=True,
+                description="Ruta del archivo o directorio"
+            ),
+            ParameterDefinition(
+                name="content",
+                param_type="string",
+                required=False,
+                description="Contenido para escribir (solo para write/create)"
+            ),
+            ParameterDefinition(
+                name="destination",
+                param_type="string",
+                required=False,
+                description="Ruta de destino (solo para copy/move)"
+            ),
+            ParameterDefinition(
+                name="encoding",
+                param_type="string",
+                required=False,
+                description="Codificación del archivo",
+                default="utf-8"
+            )
         ]
+    
+    def validate_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Validar parámetros específicos del file manager"""
+        action = parameters.get('action')
+        path = parameters.get('path')
+        
+        if not action:
+            return {'valid': False, 'error': 'Parámetro "action" es requerido'}
+        
+        if not path:
+            return {'valid': False, 'error': 'Parámetro "path" es requerido'}
+        
+        valid_actions = ['read', 'write', 'create', 'delete', 'list', 'copy', 'move', 'mkdir']
+        if action not in valid_actions:
+            return {'valid': False, 'error': f'Acción inválida. Debe ser una de: {valid_actions}'}
+        
+        if action in ['write', 'create'] and not parameters.get('content'):
+            return {'valid': False, 'error': f'Parámetro "content" es requerido para {action}'}
+        
+        if action in ['copy', 'move'] and not parameters.get('destination'):
+            return {'valid': False, 'error': f'Parámetro "destination" es requerido para {action}'}
+        
+        return {'valid': True}
     
     def get_description(self) -> str:
         return self.description
