@@ -86,20 +86,36 @@ class TavilySearchTool(BaseTool):
                         }
                         results.append(result_item)
                 
-                return self._create_success_result({
-                    'query': query,
-                    'answer': data.get('answer', ''),
-                    'results_count': len(results),
-                    'results': results,
-                    'search_depth': search_depth
-                })
+                return ToolExecutionResult(
+                    success=True,
+                    data={
+                        'query': query,
+                        'answer': data.get('answer', ''),
+                        'results_count': len(results),
+                        'results': results,
+                        'search_results': results,  # Para compatibilidad con el sistema
+                        'search_depth': search_depth
+                    }
+                )
             else:
-                return self._create_error_result(f'Error en Tavily API: {response.status_code} - {response.text}')
+                return ToolExecutionResult(
+                    success=False,
+                    error=f'Error en Tavily API: {response.status_code} - {response.text}'
+                )
                 
         except requests.exceptions.Timeout:
-            return self._create_error_result('Timeout en petición a Tavily API')
+            return ToolExecutionResult(
+                success=False,
+                error='Timeout en petición a Tavily API'
+            )
         except requests.exceptions.RequestException as e:
-            return self._create_error_result(f'Error de conexión con Tavily API: {str(e)}')
+            return ToolExecutionResult(
+                success=False,
+                error=f'Error de conexión con Tavily API: {str(e)}'
+            )
         except Exception as e:
-            return self._create_error_result(f'Error inesperado en Tavily search: {str(e)}')
+            return ToolExecutionResult(
+                success=False,
+                error=f'Error inesperado en Tavily search: {str(e)}'
+            )
 
