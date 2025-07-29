@@ -680,7 +680,7 @@ class PlanningAlgorithms:
             "shell": ["file_manager"],
             "file_manager": ["shell"],
             "playwright": ["web_search"],
-            "tavily_search": ["web_search"]
+
         }
         
         for alt in alternatives.get(original_tool, []):
