@@ -340,7 +340,7 @@ done
 cat > temp_cors_config.txt << EOF
 FRONTEND_ORIGINS = [
     # 🌐 URL DETECTADA DINÁMICAMENTE
-    $REAL_FRONTEND_URL,
+    "$REAL_FRONTEND_URL",
     
     # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
     "https://*.preview.emergentagent.com",
