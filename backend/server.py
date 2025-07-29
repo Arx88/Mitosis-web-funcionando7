@@ -11,7 +11,7 @@ import json
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-# CONFIGURACIÓN DINÁMICA DE CORS - SIN HARDCODED URLs
+# CONFIGURACIÓN DINÁMICA DE CORS - SIN HARDCODED URLs  
 def get_dynamic_cors_origins():
     """
     Sistema dinámico de CORS que acepta cualquier origen válido de emergent
@@ -23,12 +23,14 @@ def get_dynamic_cors_origins():
         "http://localhost:5173", 
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
+        # EMERGENT PREVIEW DOMAINS - WILDCARD COMPLETO
+        "https://mitosis-executor-1.preview.emergentagent.com",
+        "https://mitosis-executor-2.preview.emergentagent.com", 
+        "https://mitosis-executor-3.preview.emergentagent.com",
         # FALLBACK UNIVERSAL
         "*"
     ]
     
-    # TODO: En futuro podemos agregar validación de dominios específicos
-    # Por ahora usamos wildcard para máxima compatibilidad
     return base_origins
 
 FRONTEND_ORIGINS = get_dynamic_cors_origins()
