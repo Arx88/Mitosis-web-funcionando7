@@ -180,6 +180,27 @@ export const useWebSocket = (): UseWebSocketReturn => {
         }
       });
       
+      socket.on('progress_update', (data) => {
+        console.log('📈 WebSocket progress_update received:', data);
+        if (eventListenersRef.current.task_progress) {
+          eventListenersRef.current.task_progress(data);
+        }
+      });
+      
+      socket.on('agent_activity', (data) => {
+        console.log('🤖 WebSocket agent_activity received:', data);
+        if (eventListenersRef.current.task_progress) {
+          eventListenersRef.current.task_progress(data);
+        }
+      });
+      
+      socket.on('task_update', (data) => {
+        console.log('📝 WebSocket task_update received:', data);
+        if (eventListenersRef.current.plan_updated) {
+          eventListenersRef.current.plan_updated(data);
+        }
+      });
+      
       socket.on('step_started', (data) => {
         console.log('🚀 WebSocket step_started received:', data);
         if (eventListenersRef.current.step_started) {
