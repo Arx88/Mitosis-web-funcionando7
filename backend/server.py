@@ -579,18 +579,52 @@ def api_health_check():
         return jsonify({"status": "unhealthy", "error": str(e)}), 500
 
 # Endpoint para sugerencias dinámicas que faltaba
-@app.route('/api/agent/generate-suggestions', methods=['POST'])
-def generate_suggestions():
-    """Genera sugerencias dinámicas para el frontend"""
+@app.route('/api/agent/websocket-test/<task_id>', methods=['GET'])
+def websocket_test(task_id):
+    """Test WebSocket connection and task room joining"""
     try:
-        suggestions = [
-            {"title": "Buscar información sobre IA", "description": "Investigar avances recientes en inteligencia artificial"},
-            {"title": "Analizar datos de mercado", "description": "Procesar tendencias y métricas comerciales"},
-            {"title": "Crear documento técnico", "description": "Generar documentación profesional con análisis detallado"}
-        ]
-        return jsonify({"suggestions": suggestions}), 200
+        # Get current websocket connections
+        connections_info = {
+            'task_id': task_id,
+            'websocket_initialized': hasattr(app, 'websocket_manager'),
+            'active_connections': {}
+        }
+        
+        if hasattr(app, 'websocket_manager') and app.websocket_manager:
+            connections_info['active_connections'] = {
+                k: len(v) for k, v in app.websocket_manager.active_connections.items()
+            }
+            connections_info['total_connections'] = sum(len(v) for v in app.websocket_manager.active_connections.values())
+        
+        return jsonify(connections_info), 200
     except Exception as e:
-        logger.error(f"Generate suggestions error: {e}")
+        logger.error(f"WebSocket test error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/agent/force-websocket-emit/<task_id>', methods=['POST'])
+def force_websocket_emit(task_id):
+    """Force emit a test event to verify WebSocket is working"""
+    try:
+        data = request.get_json() or {}
+        test_message = data.get('message', 'Test WebSocket emission')
+        
+        if hasattr(app, 'websocket_manager') and app.websocket_manager:
+            # Emit test event
+            app.websocket_manager.emit_to_task(task_id, 'test_event', {
+                'message': test_message,
+                'timestamp': datetime.now().isoformat(),
+                'task_id': task_id
+            })
+            
+            return jsonify({
+                'success': True,
+                'message': f'Test event emitted to task {task_id}',
+                'active_connections': len(app.websocket_manager.active_connections.get(task_id, []))
+            }), 200
+        else:
+            return jsonify({'error': 'WebSocket manager not available'}), 500
+    except Exception as e:
+        logger.error(f"Force websocket emit error: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/agent/generate-final-report/<task_id>', methods=['POST'])
