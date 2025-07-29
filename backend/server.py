@@ -9,29 +9,9 @@ import sys
 import time
 import json
 from datetime import datetime
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-FRONTEND_ORIGINS = [
-    # 🌐 URL DETECTADA DINÁMICAMENTE
-    https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com,
-    
-    # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
-    "https://*.preview.emergentagent.com",
-    
-    # 🏠 DESARROLLO LOCAL
-    "http://localhost:3000",
-    "http://localhost:5173", 
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
-    
-    # 📱 PREVIEW DOMAINS COMUNES
-    "https://cell-split-app-1.preview.emergentagent.com",
-    "https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com",
-    
-    # 🌟 FALLBACK UNIVERSAL (último recurso)
-    "*"
-]
-from flask_socketio import SocketIO, emit, join_room
+from flask_socketio import SocketIO
 from dotenv import load_dotenv
 import pymongo
 import logging
@@ -71,32 +51,12 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 app.config['START_TIME'] = time.time()
 
-# Configurar CORS - UNIFIED CONFIGURATION with explicit origins for WebSocket compatibility
-
+# Configurar CORS
 CORS(app, resources={
     r"/api/*": {
-        "origins": FRONTEND_ORIGINS,
+        "origins": ["*"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
-        "supports_credentials": False,
-        "expose_headers": ["Content-Type", "Authorization"]
-    },
-    r"/files/*": {
-        "origins": FRONTEND_ORIGINS,
-        "methods": ["GET", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin"]
-    },
-    r"/get-task-files/*": {
-        "origins": FRONTEND_ORIGINS,
-        "methods": ["GET", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin"]
-    },
-    r"/socket.io/*": {
-        "origins": FRONTEND_ORIGINS,
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
-        "supports_credentials": False,
-        "expose_headers": ["Content-Type"]
+        "allow_headers": ["Content-Type", "Authorization"]
     }
 })
 
@@ -118,106 +78,20 @@ try:
     from src.websocket.websocket_manager import WebSocketManager
     websocket_manager = WebSocketManager()
     
-    # Configurar SocketIO con CORS más específico y mejorado para conexiones cross-origin
+    # Configurar SocketIO CON WEBSOCKET Y FALLBACK POLLING
+    # Habilitar WebSocket real pero mantener polling como fallback
     socketio = SocketIO(
         app, 
-        cors_allowed_origins=FRONTEND_ORIGINS,  # Usar los orígenes específicos definidos arriba
-        cors_credentials=False,
+        cors_allowed_origins="*",
         async_mode='eventlet',
-        logger=True,
-        engineio_logger=True,  
-        ping_timeout=180,      # Aumentado aún más
-        ping_interval=90,      # Aumentado aún más
-        transports=['polling'],  # SOLO POLLING para máxima compatibilidad
-        allow_upgrades=False,   # NO upgrades
-        path='/api/socket.io/',     # CRÍTICO: Con /api prefix para routing correcto
-        manage_session=False,    # No manejar sesiones automáticamente
-        max_http_buffer_size=1000000  # Buffer más grande para datos
+        logger=True,           # Habilitar logs para debugging
+        engineio_logger=True,  # Logs detallados de engine.io
+        ping_timeout=60,
+        ping_interval=25,
+        transports=['websocket', 'polling'],    # WebSocket PRIMERO, polling fallback
+        allow_upgrades=True,      # Permitir upgrade a WebSocket
+        json=json
     )
-    
-    # Agregar handlers de debugging más detallados
-    @socketio.on('connect')
-    def handle_connect(auth=None):
-        logger.info(f"🔌 WEBSOCKET: Client connecting from {request.environ.get('REMOTE_ADDR')}")
-        logger.info(f"🔌 WEBSOCKET: Session ID: {request.sid}")
-        logger.info(f"🔌 WEBSOCKET: Transport: {request.transport}")
-        
-        # CRITICAL FIX: Register connection in websocket_manager
-        if hasattr(app, 'websocket_manager') and app.websocket_manager:
-            # Add to global connections (we'll assign to task later)
-            if 'global' not in app.websocket_manager.active_connections:
-                app.websocket_manager.active_connections['global'] = []
-            app.websocket_manager.active_connections['global'].append(request.sid)
-            logger.info(f"🔌 WEBSOCKET: Registered session {request.sid} globally")
-        
-        emit('connection_established', {'status': 'connected', 'session_id': request.sid})
-        return True  # Accept all connections
-    
-    @socketio.on('disconnect')
-    def handle_disconnect():
-        logger.info(f"🔌 WEBSOCKET: Client {request.sid} disconnected")
-        
-        # CRITICAL FIX: Remove from all connections
-        if hasattr(app, 'websocket_manager') and app.websocket_manager:
-            for task_id, sessions in app.websocket_manager.active_connections.items():
-                if request.sid in sessions:
-                    sessions.remove(request.sid)
-                    logger.info(f"🔌 WEBSOCKET: Removed {request.sid} from task {task_id}")
-    
-    @socketio.on('join_task')
-    def handle_join_task(data):
-        task_id = data.get('task_id')
-        logger.info(f"🏠 WEBSOCKET: Client {request.sid} joining task room: {task_id}")
-        if task_id:
-            join_room(task_id)
-            
-            # CRITICAL FIX: Register in websocket_manager for this task
-            if hasattr(app, 'websocket_manager') and app.websocket_manager:
-                if task_id not in app.websocket_manager.active_connections:
-                    app.websocket_manager.active_connections[task_id] = []
-                if request.sid not in app.websocket_manager.active_connections[task_id]:
-                    app.websocket_manager.active_connections[task_id].append(request.sid)
-                logger.info(f"🔌 WEBSOCKET: Registered {request.sid} for task {task_id}")
-                logger.info(f"🔌 WEBSOCKET: Task {task_id} now has {len(app.websocket_manager.active_connections[task_id])} connections")
-                
-                # IMMEDIATELY EMIT A TEST EVENT to confirm connection
-                app.websocket_manager.emit_to_task(task_id, 'connection_confirmed', {
-                    'message': 'WebSocket connection established for task',
-                    'task_id': task_id,
-                    'session_id': request.sid,
-                    'timestamp': datetime.now().isoformat()
-                })
-                
-                # CRITICAL FIX: Send stored events to late-joining client
-                stored_events = app.websocket_manager.get_stored_events(task_id)
-                if stored_events:
-                    logger.info(f"🔄 WEBSOCKET: Sending {len(stored_events)} stored events to late-joining client {request.sid}")
-                    for event_data in stored_events:
-                        emit('catch_up_event', event_data)
-                        # Also emit the original event type
-                        original_event = event_data.get('event', 'unknown_event')
-                        emit(original_event, event_data)
-                
-                # Send current task status
-                try:
-                    import requests
-                    status_response = requests.get(f'http://localhost:8001/api/agent/get-task-status/{task_id}')
-                    if status_response.status_code == 200:
-                        current_status = status_response.json()
-                        emit('current_task_status', {
-                            'task_id': task_id,
-                            'status': current_status,
-                            'timestamp': datetime.now().isoformat()
-                        })
-                        logger.info(f"📊 WEBSOCKET: Sent current task status to {request.sid}")
-                except Exception as status_error:
-                    logger.error(f"❌ Failed to send current status: {status_error}")
-            
-            emit('joined_task', {'task_id': task_id, 'status': 'joined'})
-            logger.info(f"✅ WEBSOCKET: Client {request.sid} joined task room {task_id}")
-        else:
-            emit('error', {'message': 'task_id required'})
-            logger.error(f"❌ WEBSOCKET: Client {request.sid} tried to join without task_id")
     
     websocket_manager.socketio = socketio
     websocket_manager.app = app
@@ -643,131 +517,6 @@ def api_health_check():
         return jsonify({"status": "unhealthy", "error": str(e)}), 500
 
 # Endpoint para sugerencias dinámicas que faltaba
-@app.route('/api/agent/get-stored-events/<task_id>', methods=['GET'])
-def get_stored_events(task_id):
-    """Get stored WebSocket events for a task (for late-joining clients)"""
-    try:
-        if hasattr(app, 'websocket_manager') and app.websocket_manager:
-            stored_events = app.websocket_manager.get_stored_events(task_id)
-            return jsonify({
-                'task_id': task_id,
-                'events': stored_events,
-                'count': len(stored_events),
-                'timestamp': datetime.now().isoformat()
-            }), 200
-        else:
-            return jsonify({'error': 'WebSocket manager not available'}), 500
-    except Exception as e:
-        logger.error(f"Get stored events error: {e}")
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/test-cors', methods=['GET', 'POST', 'OPTIONS'])
-def test_cors():
-    """Test CORS configuration"""
-    if request.method == 'OPTIONS':
-        response = jsonify({'message': 'CORS preflight successful'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-        return response
-    
-    return jsonify({
-        'status': 'CORS test successful',
-        'origin': request.headers.get('Origin', 'No origin'),
-        'method': request.method,
-        'timestamp': datetime.now().isoformat()
-    })
-
-@app.route('/socket.io-test', methods=['GET'])
-def socket_io_test():
-    """Test socket.io availability without actual connection"""
-    return jsonify({
-        'status': 'Socket.IO test endpoint accessible',
-        'websocket_initialized': hasattr(app, 'websocket_manager'),
-        'origin': request.headers.get('Origin', 'No origin'),
-        'timestamp': datetime.now().isoformat()
-    })
-
-# CRITICAL FIX: Add explicit CORS handling for Socket.IO endpoint
-@app.before_request
-def handle_socket_io_cors():
-    """Handle CORS for Socket.IO endpoints specifically"""
-    if request.path.startswith('/socket.io/'):
-        origin = request.headers.get('Origin')
-        if origin in FRONTEND_ORIGINS or '*' in FRONTEND_ORIGINS:
-            # This is a preflight OPTIONS request
-            if request.method == 'OPTIONS':
-                response = app.make_default_options_response()
-                response.headers['Access-Control-Allow-Origin'] = origin
-                response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-                response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Accept, Origin, X-Requested-With'
-                response.headers['Access-Control-Allow-Credentials'] = 'false'
-                return response
-
-@app.after_request  
-def after_request_socket_io_cors(response):
-    """Add CORS headers to Socket.IO responses"""
-    if request.path.startswith('/socket.io/'):
-        origin = request.headers.get('Origin')
-        if origin in FRONTEND_ORIGINS or '*' in FRONTEND_ORIGINS:
-            response.headers['Access-Control-Allow-Origin'] = origin
-            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Accept, Origin, X-Requested-With'
-            response.headers['Access-Control-Allow-Credentials'] = 'false'
-    return response
-
-@app.route('/api/agent/websocket-test/<task_id>', methods=['GET'])
-def websocket_test(task_id):
-    """Test WebSocket connection and task room joining"""
-    try:
-        # Get current websocket connections
-        connections_info = {
-            'task_id': task_id,
-            'websocket_initialized': hasattr(app, 'websocket_manager'),
-            'active_connections': {}
-        }
-        
-        if hasattr(app, 'websocket_manager') and app.websocket_manager:
-            connections_info['active_connections'] = {
-                k: len(v) for k, v in app.websocket_manager.active_connections.items()
-            }
-            connections_info['total_connections'] = sum(len(v) for v in app.websocket_manager.active_connections.values())
-            
-            # Include stored events count
-            stored_events = app.websocket_manager.get_stored_events(task_id)
-            connections_info['stored_events_count'] = len(stored_events)
-        
-        return jsonify(connections_info), 200
-    except Exception as e:
-        logger.error(f"WebSocket test error: {e}")
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/agent/force-websocket-emit/<task_id>', methods=['POST'])
-def force_websocket_emit(task_id):
-    """Force emit a test event to verify WebSocket is working"""
-    try:
-        data = request.get_json() or {}
-        test_message = data.get('message', 'Test WebSocket emission')
-        
-        if hasattr(app, 'websocket_manager') and app.websocket_manager:
-            # Emit test event
-            app.websocket_manager.emit_to_task(task_id, 'test_event', {
-                'message': test_message,
-                'timestamp': datetime.now().isoformat(),
-                'task_id': task_id
-            })
-            
-            return jsonify({
-                'success': True,
-                'message': f'Test event emitted to task {task_id}',
-                'active_connections': len(app.websocket_manager.active_connections.get(task_id, []))
-            }), 200
-        else:
-            return jsonify({'error': 'WebSocket manager not available'}), 500
-    except Exception as e:
-        logger.error(f"Force websocket emit error: {e}")
-        return jsonify({"error": str(e)}), 500
-
 @app.route('/api/agent/generate-suggestions', methods=['POST'])
 def generate_suggestions():
     """Genera sugerencias dinámicas para el frontend"""
@@ -915,31 +664,3 @@ def internal_error(error):
 if __name__ == '__main__':
     print(f"🚀 Starting server on {HOST}:{PORT}")
     app.run(host=HOST, port=PORT, debug=DEBUG)
-# Servir archivos estáticos del frontend
-from flask import send_from_directory, send_file
-import os
-
-# Configurar directorio de archivos estáticos
-STATIC_FOLDER = '/app/frontend/dist'
-
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve_frontend(path):
-    """Servir archivos estáticos del frontend"""
-    if path != "" and os.path.exists(os.path.join(STATIC_FOLDER, path)):
-        return send_from_directory(STATIC_FOLDER, path)
-    else:
-        return send_file(os.path.join(STATIC_FOLDER, 'index.html'))
-
-# Ruta para servir archivos específicos
-@app.route('/assets/<path:filename>')
-def serve_assets(filename):
-    """Servir archivos de assets"""
-    return send_from_directory(os.path.join(STATIC_FOLDER, 'assets'), filename)
-
-# Ruta para servir archivos de tareas
-@app.route('/files/<task_id>')
-def serve_task_files(task_id):
-    """Servir archivos de tareas"""
-    return redirect(f'/api/agent/get-task-files/{task_id}')
-
