@@ -652,6 +652,28 @@ if $backend_ok; then
         echo "      📋 Respuesta: $cors_websocket_test"
     fi
     
+    # Test 9: ADICIONAL - Verificación CORS con múltiples orígenes
+    echo "🔍 Testing CORS con múltiples orígenes posibles..."
+    CORS_TEST_URLS=(
+        "$REAL_FRONTEND_URL"
+        "https://cell-split-app-1.preview.emergentagent.com"
+        "http://localhost:3000"
+    )
+    
+    CORS_SUCCESS_COUNT=0
+    for test_origin in "${CORS_TEST_URLS[@]}"; do
+        test_result=$(curl -s -H "Origin: $test_origin" -H "Access-Control-Request-Method: POST" \
+            -X OPTIONS "http://localhost:8001/api/agent/chat" 2>/dev/null || echo "error")
+        if echo "$test_result" | grep -q "Access-Control-Allow-Origin\|200"; then
+            echo "      ✅ CORS para $test_origin: FUNCIONANDO"
+            ((CORS_SUCCESS_COUNT++))
+        else
+            echo "      ⚠️ CORS para $test_origin: Verificando"
+        fi
+    done
+    
+    echo "      📊 CORS Success Rate: $CORS_SUCCESS_COUNT/${#CORS_TEST_URLS[@]} orígenes funcionando"
+    
     echo "=============================================================="
     echo "🎯 VALIDACIÓN ESPECÍFICA DE HERRAMIENTAS DE BÚSQUEDA:"
     echo "   ✅ Variables de entorno corregidas (sin duplicación /api)"
