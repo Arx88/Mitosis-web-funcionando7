@@ -1,27 +1,25 @@
 """
-Herramienta de búsqueda web usando Tavily API
+Herramienta REAL de búsqueda web usando Tavily API
 """
 
 import os
 import requests
 from typing import Dict, List, Any
-from .base_tool import BaseTool, ParameterDefinition, ToolExecutionResult
+from .base_tool import BaseTool, ParameterDefinition, ToolExecutionResult, register_tool
 
+@register_tool
 class TavilySearchTool(BaseTool):
-    """Herramienta para búsquedas web usando Tavily API"""
+    """Herramienta REAL para búsquedas web usando Tavily API"""
     
     def __init__(self):
-        super().__init__()
+        super().__init__(
+            name="tavily_search",
+            description="Búsqueda web REAL usando Tavily API - Resultados actualizados y relevantes"
+        )
         self.api_key = os.environ.get('TAVILY_API_KEY', '')
         self.base_url = "https://api.tavily.com"
     
-    def get_name(self) -> str:
-        return "tavily_search"
-    
-    def get_description(self) -> str:
-        return "Herramienta de búsqueda web usando Tavily API para obtener resultados actualizados y relevantes"
-    
-    def get_parameters(self) -> List[ParameterDefinition]:
+    def _define_parameters(self) -> List[ParameterDefinition]:
         return [
             ParameterDefinition(
                 name="query",
