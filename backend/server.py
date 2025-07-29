@@ -117,18 +117,21 @@ try:
     from src.websocket.websocket_manager import WebSocketManager
     websocket_manager = WebSocketManager()
     
-    # Configurar SocketIO CON WEBSOCKET Y FALLBACK POLLING
-    # Habilitar WebSocket real pero mantener polling como fallback
+    # Configurar SocketIO con CORS ultra-dinámico
     socketio = SocketIO(
         app, 
-        cors_allowed_origins="*",
+        cors_allowed_origins=FRONTEND_ORIGINS,  # Usar la misma configuración CORS
+        cors_credentials=False,
         async_mode='eventlet',
         logger=True,           # Habilitar logs para debugging
         engineio_logger=True,  # Logs detallados de engine.io
-        ping_timeout=60,
-        ping_interval=25,
-        transports=['websocket', 'polling'],    # WebSocket PRIMERO, polling fallback
-        allow_upgrades=True,      # Permitir upgrade a WebSocket
+        ping_timeout=180,      # Aumentado para mayor estabilidad
+        ping_interval=90,      # Aumentado para mejor performance
+        transports=['polling', 'websocket'],    # POLLING PRIMERO para máxima compatibilidad
+        allow_upgrades=False,   # NO upgrades automáticos para evitar problemas CORS
+        path='/api/socket.io/',     # CRÍTICO: Con /api prefix para routing correcto
+        manage_session=False,    # No manejar sesiones automáticamente
+        max_http_buffer_size=1000000,  # Buffer más grande para evitar timeouts
         json=json
     )
     
