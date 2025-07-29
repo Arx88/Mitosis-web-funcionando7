@@ -61,8 +61,8 @@ function getBackendUrl(): string {
 
 function getWebSocketUrl(): string {
   const backendUrl = getBackendUrl();
-  // CORREGIDO: Usar /socket.io/ sin /api - Kubernetes ingress remueve el prefijo
-  return `${backendUrl}/socket.io/`;
+  // CRÍTICO: Usar /api/socket.io/ para routing correcto en producción
+  return `${backendUrl}/api/socket.io/`;
 }
 
 export const API_CONFIG: ApiConfig = {
