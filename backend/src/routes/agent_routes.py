@@ -5566,11 +5566,25 @@ def execute_step_by_tool(step_data: dict) -> dict:
     return result
 
 def execute_task_steps_sequentially(task_id: str, steps: list):
-    """Execute task steps one by one with delays and enhanced logging"""
+    """Execute task steps one by one with delays and enhanced logging - ENHANCED WEBSOCKET DEBUGGING"""
     # 🚨 PASO 1: LOGGING AGRESIVO IMPLEMENTADO 🚨
     print(f"🚀 STARTING execute_task_steps_sequentially for task_id: {task_id}")
     print(f"📋 Total steps to execute: {len(steps)}")
     print(f"🔍 Steps details: {json.dumps(steps, indent=2, default=str)}")
+    
+    # Enhanced WebSocket debugging
+    logger.info(f"🔌 WebSocket Manager Status Check:")
+    if hasattr(current_app, 'websocket_manager'):
+        ws_manager = current_app.websocket_manager
+        logger.info(f"   - Manager exists: True")
+        logger.info(f"   - Is initialized: {ws_manager.is_initialized if ws_manager else False}")
+        logger.info(f"   - Active connections: {len(ws_manager.active_connections) if ws_manager else 0}")
+        if ws_manager and task_id in ws_manager.active_connections:
+            logger.info(f"   - Task {task_id} connections: {len(ws_manager.active_connections[task_id])}")
+        else:
+            logger.warning(f"   - Task {task_id} has no active connections")
+    else:
+        logger.error(f"   - WebSocket Manager NOT FOUND in current_app")
     
     # Log directo a archivo para debugging
     log_file = f"/tmp/mitosis_execution_{task_id}.log"
@@ -5586,6 +5600,14 @@ def execute_task_steps_sequentially(task_id: str, steps: list):
         logger.info(f"🚀 AUTONOMOUS EXECUTION STARTED - Logging to {log_file}")
         print(f"📝 Logging execution details to: {log_file}")
         
+        # 🚀 EMIT TASK EXECUTION STARTED EVENT
+        emit_step_event(task_id, 'task_execution_started', {
+            'task_id': task_id,
+            'total_steps': len(steps),
+            'message': 'Iniciando ejecución automática de la tarea',
+            'timestamp': datetime.now().isoformat()
+        })
+        
         for i, step in enumerate(steps):
             try:
                 step_id = step.get('id', f'step-{i+1}')
@@ -5599,6 +5621,18 @@ def execute_task_steps_sequentially(task_id: str, steps: list):
                     f.write(f"   Tool: {step.get('tool', 'unknown')}\n")
                     f.write(f"   Description: {step.get('description', 'N/A')}\n")
                 
+                # 🚨 EMIT STEP PROGRESS EVENT BEFORE EXECUTION
+                emit_step_event(task_id, 'step_progress', {
+                    'step_id': step_id,
+                    'step_number': i + 1,
+                    'total_steps': len(steps),
+                    'title': step.get('title', 'Unnamed'),
+                    'status': 'starting',
+                    'progress': (i / len(steps)) * 100,
+                    'message': f'Iniciando paso {i+1}: {step.get("title", "Unnamed")}',
+                    'timestamp': datetime.now().isoformat()
+                })
+                
                 # 🚨 LOGGING: Ejecutar el paso con logging agresivo
                 print(f"🔧 About to call execute_step_internal with step_id: {step_id}")
                 execution_result = execute_step_internal(task_id, step_id, step)
@@ -5609,11 +5643,36 @@ def execute_task_steps_sequentially(task_id: str, steps: list):
                     print(f"✅ execute_step_internal completed for step {i+1} - AGENT APPROVED")
                     logger.info(f"✅ Step {i+1} approved by agent, moving to next step...")
                     
+                    # 🚨 EMIT STEP COMPLETED EVENT
+                    emit_step_event(task_id, 'step_completed', {
+                        'step_id': step_id,
+                        'step_number': i + 1,
+                        'total_steps': len(steps),
+                        'title': step.get('title', 'Unnamed'),
+                        'status': 'completed',
+                        'progress': ((i + 1) / len(steps)) * 100,
+                        'message': f'Paso {i+1} completado exitosamente',
+                        'result': execution_result,
+                        'timestamp': datetime.now().isoformat()
+                    })
+                    
                     with open(log_file, "a") as f:
                         f.write(f"✅ STEP {i+1} COMPLETED - AGENT APPROVED\n")
                 elif execution_result and not execution_result.get('agent_approved', True):
                     print(f"⏸️ Agent requires more work on step {i+1} - STOPPING EXECUTION")
                     logger.info(f"⏸️ Agent requires more work on step {i+1}, stopping execution")
+                    
+                    # 🚨 EMIT STEP NEEDS MORE WORK EVENT
+                    emit_step_event(task_id, 'step_needs_work', {
+                        'step_id': step_id,
+                        'step_number': i + 1,
+                        'total_steps': len(steps),
+                        'title': step.get('title', 'Unnamed'),
+                        'status': 'needs_more_work',
+                        'message': f'El paso {i+1} requiere más trabajo',
+                        'feedback': execution_result.get('evaluation', {}).get('feedback', 'No specific feedback'),
+                        'timestamp': datetime.now().isoformat()
+                    })
                     
                     with open(log_file, "a") as f:
                         f.write(f"⏸️ STEP {i+1} REQUIRES MORE WORK - AGENT FEEDBACK: {execution_result.get('evaluation', {}).get('feedback', 'No specific feedback')}\n")
@@ -5624,6 +5683,18 @@ def execute_task_steps_sequentially(task_id: str, steps: list):
                     # Error en la ejecución
                     print(f"❌ Error in step {i+1}: {execution_result.get('error', 'Unknown error')}")
                     logger.error(f"❌ Error in step {i+1}: {execution_result.get('error', 'Unknown error')}")
+                    
+                    # 🚨 EMIT STEP ERROR EVENT
+                    emit_step_event(task_id, 'step_error', {
+                        'step_id': step_id,
+                        'step_number': i + 1,
+                        'total_steps': len(steps),
+                        'title': step.get('title', 'Unnamed'),
+                        'status': 'error',
+                        'error': execution_result.get('error', 'Unknown error'),
+                        'message': f'Error en el paso {i+1}',
+                        'timestamp': datetime.now().isoformat()
+                    })
                     
                     with open(log_file, "a") as f:
                         f.write(f"❌ STEP {i+1} FAILED: {execution_result.get('error', 'Unknown error')}\n")
@@ -5642,12 +5713,43 @@ def execute_task_steps_sequentially(task_id: str, steps: list):
                 emit_step_event(task_id, 'step_failed', {
                     'step_id': step_id,
                     'error': str(e),
+                    'step_number': i + 1,
+                    'total_steps': len(steps),
                     'timestamp': datetime.now().isoformat()
                 })
                 break
         
+        # 🚨 EMIT TASK EXECUTION COMPLETED EVENT
+        completed_steps = sum(1 for step in steps if step.get('completed', False))
+        emit_step_event(task_id, 'task_execution_completed', {
+            'task_id': task_id,
+            'total_steps': len(steps),
+            'completed_steps': completed_steps,
+            'success_rate': (completed_steps / len(steps)) * 100 if steps else 0,
+            'message': f'Ejecución completada. {completed_steps}/{len(steps)} pasos exitosos',
+            'timestamp': datetime.now().isoformat()
+        })
+        
         with open(log_file, "a") as f:
             f.write(f"\n🎉 AUTONOMOUS EXECUTION COMPLETED for task {task_id}\n")
+            f.write(f"📊 Results: {completed_steps}/{len(steps)} steps completed\n")
+        
+        logger.info(f"🎉 Task {task_id} execution sequence completed - {completed_steps}/{len(steps)} steps successful")
+        print(f"🎉 EXECUTION COMPLETED for task {task_id}: {completed_steps}/{len(steps)} steps successful")
+        
+    except Exception as e:
+        logger.error(f"❌ CRITICAL ERROR in execute_task_steps_sequentially: {e}")
+        print(f"❌ CRITICAL ERROR in task execution: {str(e)}")
+        
+        emit_step_event(task_id, 'task_execution_error', {
+            'task_id': task_id,
+            'error': str(e),
+            'message': 'Error crítico en la ejecución de la tarea',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        import traceback
+        traceback.print_exc()
             
     except Exception as e:
         logger.error(f"❌ Critical error in autonomous execution: {e}")
