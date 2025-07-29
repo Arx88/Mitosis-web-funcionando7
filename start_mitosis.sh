@@ -375,8 +375,8 @@ check_ollama() {
 }
 
 check_external_access() {
-    # Verificar acceso externo usando la URL del preview
-    curl -s -f "https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com" >/dev/null 2>&1
+    # Verificar acceso externo usando la URL detectada dinámicamente
+    curl -s -f "$REAL_FRONTEND_URL" >/dev/null 2>&1
 }
 
 # Verificar backend con reintentos extendidos
