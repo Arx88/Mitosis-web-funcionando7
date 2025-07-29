@@ -161,17 +161,45 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     joinTaskRoom(socketConfig.roomName);
 
     const eventHandlers = {
-      // Eventos reales que emite el backend
+      // Eventos reales que emite el backend - ACTUALIZAR PLAN EN TIEMPO REAL
       'task_progress': (data: any) => {
         console.log('🔄 WebSocket task_progress received:', data);
         
         const logEntry = {
-          message: `[${data.step_id}] ${data.activity}`,
+          message: `[${data.step_id || 'task'}] ${data.activity || data.message || 'Progress update'}`,
           type: 'info' as const,
           timestamp: new Date(data.timestamp || Date.now())
         };
         
         setTerminalLogs(prev => [...prev, logEntry]);
+        
+        // CRÍTICO: Actualizar progreso del plan si hay información de step
+        if (data.step_id) {
+          handleUpdateTask((currentTask: Task) => {
+            if (!currentTask.plan) return currentTask;
+            
+            const updatedPlan = currentTask.plan.map(step => {
+              if (step.id === data.step_id) {
+                return {
+                  ...step,
+                  active: true,
+                  status: 'in-progress'
+                };
+              } else {
+                return {
+                  ...step,
+                  active: false
+                };
+              }
+            });
+            
+            return {
+              ...currentTask,
+              plan: updatedPlan,
+              status: 'in-progress'
+            };
+          });
+        }
         
         if (onUpdateTaskProgress) {
           onUpdateTaskProgress(task.id);
@@ -182,25 +210,110 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         console.log('🚀 WebSocket step_started received:', data);
         
         const logEntry = {
-          message: `▶️ Iniciando: ${data.title}`,
+          message: `▶️ Iniciando: ${data.title || data.step_title || 'Step'}`,
           type: 'success' as const,
           timestamp: new Date(data.timestamp || Date.now())
         };
         
         setTerminalLogs(prev => [...prev, logEntry]);
+        
+        // CRÍTICO: Actualizar el plan para mostrar el step activo
+        handleUpdateTask((currentTask: Task) => {
+          if (!currentTask.plan) return currentTask;
+          
+          const updatedPlan = currentTask.plan.map(step => {
+            if (step.id === data.step_id) {
+              return {
+                ...step,
+                active: true,
+                status: 'in-progress',
+                completed: false
+              };
+            } else {
+              return {
+                ...step,
+                active: false
+              };
+            }
+          });
+          
+          console.log('🔄 Plan updated after step_started:', {
+            stepId: data.step_id,
+            stepTitle: data.title,
+            planLength: updatedPlan.length,
+            activeStep: updatedPlan.find(s => s.active)?.title
+          });
+          
+          return {
+            ...currentTask,
+            plan: updatedPlan,
+            status: 'in-progress'
+          };
+        });
       },
       
-      'tool_result': (data: any) => {
-        console.log('🔧 WebSocket tool_result received:', data);
+      'step_completed': (data: any) => {
+        console.log('✅ WebSocket step_completed received:', data);
         
-        const status = data.result?.success ? '✅' : '❌';
         const logEntry = {
-          message: `${status} Herramienta ${data.tool}: ${data.result?.success ? 'Éxito' : data.result?.error || 'Error'}`,
-          type: data.result?.success ? 'success' as const : 'error' as const,
+          message: `✅ Completado: ${data.title || data.step_title || 'Step'}`,
+          type: 'success' as const,
           timestamp: new Date(data.timestamp || Date.now())
         };
         
         setTerminalLogs(prev => [...prev, logEntry]);
+        
+        // CRÍTICO: Marcar el step como completado y activar el siguiente
+        handleUpdateTask((currentTask: Task) => {
+          if (!currentTask.plan) return currentTask;
+          
+          const currentStepIndex = currentTask.plan.findIndex(step => step.id === data.step_id);
+          const nextStepIndex = currentStepIndex + 1;
+          
+          const updatedPlan = currentTask.plan.map((step, index) => {
+            if (step.id === data.step_id) {
+              // Marcar el step actual como completado
+              return {
+                ...step,
+                active: false,
+                status: 'completed',
+                completed: true
+              };
+            } else if (index === nextStepIndex && nextStepIndex < currentTask.plan.length) {
+              // Activar el siguiente step si existe
+              return {
+                ...step,
+                active: true,
+                status: 'pending'
+              };
+            } else {
+              return {
+                ...step,
+                active: false
+              };
+            }
+          });
+          
+          // Calcular progreso total
+          const completedSteps = updatedPlan.filter(s => s.completed).length;
+          const totalSteps = updatedPlan.length;
+          const progress = Math.round((completedSteps / totalSteps) * 100);
+          
+          console.log('🔄 Plan updated after step_completed:', {
+            stepId: data.step_id,
+            completedSteps,
+            totalSteps,
+            progress,
+            nextActiveStep: updatedPlan.find(s => s.active)?.title
+          });
+          
+          return {
+            ...currentTask,
+            plan: updatedPlan,
+            progress,
+            status: progress === 100 ? 'completed' : 'in-progress'
+          };
+        });
       },
       
       'step_needs_more_work': (data: any) => {
