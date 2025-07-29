@@ -1,24 +1,21 @@
 #!/usr/bin/env python3
 """
-COMPREHENSIVE MITOSIS WEBSOCKET COMMUNICATION TESTING
-Testing WebSocket communication between frontend and backend to diagnose why
-the frontend is not receiving real-time updates despite backend working perfectly.
+MITOSIS WEBSOCKET EVENT EMISSION DIAGNOSIS
+Diagnose the specific issue where backend progresses correctly but frontend doesn't show real-time updates.
 
-CRITICAL ISSUE IDENTIFIED:
-- Backend is functioning perfectly and completing all tasks
-- WebSocket events are being emitted correctly from backend  
-- Frontend is not receiving real-time updates (task_progress, step_completed, task_completed)
-- User sees "el agente se queda en el primer paso" due to lack of progress updates
+SPECIFIC ISSUE TO DIAGNOSE:
+- Backend generates plans and executes steps correctly (task-1753789476281 executing step-2)
+- Frontend shows agent "stuck on first step" visually
+- WebSocket hook implemented with HTTP polling fallback
+- Need to verify if backend emits WebSocket events during task execution
 
-TESTING FOCUS:
-1. **WebSocket Connectivity**: Test WebSocket connection establishment
-2. **Real-time Event Emission**: Verify backend emits progress events correctly
-3. **Task Execution Flow**: Test complete task execution with event tracking
-4. **Backend API Functionality**: Verify all backend endpoints work correctly
-5. **Task Persistence**: Test MongoDB task storage and recovery
-6. **CORS Configuration**: Verify CORS allows WebSocket connections
-7. **Event Broadcasting**: Test WebSocket event broadcasting to clients
-8. **Connection Diagnostics**: Identify WebSocket connection issues
+CRITICAL TESTING FOCUS:
+1. **Task Creation and Execution**: Create task and verify execution starts
+2. **WebSocket Event Emission**: Monitor if backend emits step_started, task_progress, step_completed events
+3. **HTTP Polling Fallback**: Test get-task-status endpoints for polling
+4. **Real-time Communication**: Verify WebSocket infrastructure is working
+5. **Task Status Tracking**: Monitor task progression through API calls
+6. **Event Broadcasting**: Test if WebSocket events reach frontend
 
 BACKEND URL: https://c72a4a4f-a7cc-44a8-8c95-ff183e04cfcc.preview.emergentagent.com
 """
