@@ -1,55 +1,62 @@
 {
-  "total_tests": 6,
-  "passed_tests": 4,
-  "success_rate": 66.66666666666666,
-  "overall_status": "\u26a0\ufe0f WEBSOCKET CORS PARTIAL - Significant issues found",
+  "total_tests": 7,
+  "passed_tests": 5,
+  "success_rate": 71.42857142857143,
+  "overall_status": "\u26a0\ufe0f WEBSOCKET CORS MOSTLY WORKING - Minor issues detected",
   "critical_passed": 2,
   "critical_total": 4,
   "test_results": [
     {
       "test_name": "WebSocket Endpoint Accessibility",
       "success": false,
-      "details": "WebSocket endpoint CORS issues - Accessible: True, CORS Origin: False, Valid Origin: False",
-      "timestamp": "2025-07-29T17:57:56.590042",
+      "details": "WebSocket endpoint accessible but CORS headers missing - Status: 200, CORS Origin: False",
+      "timestamp": "2025-07-29T18:02:51.318724",
       "response_data": null
     },
     {
       "test_name": "WebSocket CORS Preflight",
       "success": false,
-      "details": "Exception: 'NoneType' object has no attribute 'lower'",
-      "timestamp": "2025-07-29T17:57:57.606675",
+      "details": "WebSocket CORS preflight issues - Status: True, Origin: False, Methods: False, Headers: False, Allowed Headers: ''",
+      "timestamp": "2025-07-29T18:02:52.333510",
       "response_data": null
     },
     {
       "test_name": "Backend Health After CORS Changes",
       "success": true,
       "details": "Backend healthy after CORS changes - DB: True, Ollama: True, Tools: 12, CORS: True",
-      "timestamp": "2025-07-29T17:57:58.616904",
+      "timestamp": "2025-07-29T18:02:53.343203",
       "response_data": null
     },
     {
       "test_name": "Task Creation with CORS",
       "success": true,
-      "details": "Task creation working with CORS - Task ID: chat-1753811879, CORS Origin: https://0b80d189-2d16-41d3-96e6-14926f319934.preview.emergentagent.com",
-      "timestamp": "2025-07-29T17:58:12.922104",
+      "details": "Task creation working with CORS - Task ID: chat-1753812174, CORS Origin: https://0b80d189-2d16-41d3-96e6-14926f319934.preview.emergentagent.com",
+      "timestamp": "2025-07-29T18:03:02.689244",
       "response_data": null
     },
     {
       "test_name": "WebSocket Test Endpoint",
       "success": true,
       "details": "WebSocket test endpoint working - Initialized: True, CORS: True, Connections: 0",
-      "timestamp": "2025-07-29T17:58:13.932788",
+      "timestamp": "2025-07-29T18:03:03.700120",
       "response_data": null
     },
     {
       "test_name": "CORS Test Endpoint",
       "success": true,
       "details": "CORS test endpoint working - Status: CORS test successful, Origin: https://0b80d189-2d16-41d3-96e6-14926f319934.preview.emergentagent.com, CORS headers present: True",
-      "timestamp": "2025-07-29T17:58:15.032183",
+      "timestamp": "2025-07-29T18:03:04.713565",
+      "response_data": null
+    },
+    {
+      "test_name": "WebSocket Manager Functionality",
+      "success": true,
+      "details": "WebSocket manager working - Success: True, CORS: True, Connections: 0",
+      "timestamp": "2025-07-29T18:03:05.723992",
       "response_data": null
     }
   ],
-  "task_id": "chat-1753811879",
+  "task_id": "chat-1753812174",
   "websocket_cors_working": false,
   "websocket_accessible": false,
   "cors_preflight_working": false,
