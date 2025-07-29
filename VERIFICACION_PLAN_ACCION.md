@@ -69,7 +69,7 @@
 ### 🌐 VERIFICACIÓN VISUAL RECOMENDADA
 Para confirmar visualmente que todo funciona correctamente:
 
-1. **Acceder a**: https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com
+1. **Acceder a**: https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com
 2. **Escribir**: "Busca los mejores bares de España 2025"
 3. **Presionar**: Enter
 4. **Observar**: El plan aparece en el sidebar con 3 pasos

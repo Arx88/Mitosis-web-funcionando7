@@ -24,9 +24,9 @@ def get_dynamic_cors_origins():
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
         # EMERGENT PREVIEW DOMAINS - WILDCARD COMPLETO
-        "https://mitosis-executor-1.preview.emergentagent.com",
-        "https://mitosis-executor-2.preview.emergentagent.com", 
-        "https://mitosis-executor-3.preview.emergentagent.com",
+        "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com",
+        "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com", 
+        "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com",
         # FALLBACK UNIVERSAL
         "*"
     ]

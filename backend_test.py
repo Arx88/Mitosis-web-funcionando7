@@ -15,7 +15,7 @@ Testea específicamente el endpoint /api/agent/chat con el backend de Mitosis pa
 4. **Monitorear logs durante 30 segundos** después del request para ver si la ejecución automática se inicia
 5. **Verificar WebSocket Manager**: Confirmar que existe y está inicializado
 
-**URL Backend**: https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com
+**URL Backend**: https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com
 
 **PROBLEMA ESPECÍFICO A DEBUGGEAR**: El backend debería crear el plan Y luego ejecutarlo automáticamente con emit_step_event, pero según el usuario el frontend se queda en paso 1. Necesito confirmar si la ejecución automática se está iniciando o no.
 """
@@ -29,7 +29,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment - test both internal and external URLs
-BACKEND_URL = "https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com"
+BACKEND_URL = "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class MitosisCORSAndConfigTester:
@@ -38,7 +38,7 @@ class MitosisCORSAndConfigTester:
         self.session.headers.update({
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'Origin': 'https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com'  # Test CORS
+            'Origin': 'https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com'  # Test CORS
         })
         self.test_results = []
         self.task_id = None

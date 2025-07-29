@@ -98,7 +98,7 @@ mongodb      RUNNING   pid 50,   uptime 0:22:08
 ```
 
 ### **URLs de Acceso**
-- **Aplicación**: https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com
+- **Aplicación**: https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com
 - **Backend API**: http://localhost:8001
 - **Frontend Local**: http://localhost:3000
 
