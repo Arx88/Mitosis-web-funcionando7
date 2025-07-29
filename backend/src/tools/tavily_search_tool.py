@@ -40,20 +40,6 @@ class TavilySearchTool(BaseTool):
                 required=False,
                 description="Profundidad de búsqueda (basic, advanced)",
                 default="basic"
-            ),
-            ParameterDefinition(
-                name="include_answer",
-                param_type="boolean",
-                required=False,
-                description="Incluir respuesta generada por IA",
-                default=True
-            ),
-            ParameterDefinition(
-                name="include_raw_content",
-                param_type="boolean",
-                required=False,
-                description="Incluir contenido raw de las páginas",
-                default=False
             )
         ]
     
