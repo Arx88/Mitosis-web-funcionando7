@@ -5988,18 +5988,17 @@ Responde SOLO con el contenido final solicitado.
                     'content': f"# Informe de Entrega: {title}\n\nDescripción: {description}\n\n*Este es el informe de entrega final.*\nFecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
                 }
             elif tool == 'processing':
-                mapped_tool = 'comprehensive_research'
+                mapped_tool = 'web_search'
                 tool_params = {
-                    'query': f"Process and summarize: {title} {description}",
-                    'max_results': 3,
-                    'include_analysis': True
+                    'query': f"análisis procesado resumen {title} {description}",
+                    'max_results': 3
                 }
             # Add more mappings for other tool types as needed
             else:
-                # For unmapped tools, use comprehensive_research as a fallback
-                mapped_tool = 'comprehensive_research'
+                # For unmapped tools, use web_search as a fallback
+                mapped_tool = 'web_search'
                 tool_params = {
-                    'query': f"{title}: {description}",
+                    'query': f"{title} {description}",
                     'max_results': 3
                 }
 
