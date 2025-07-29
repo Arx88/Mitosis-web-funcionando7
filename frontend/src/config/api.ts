@@ -82,8 +82,9 @@ export const API_CONFIG: ApiConfig = {
     downloadFile: '/api/agent/download'
   },
   websocket: {
-    url: `${getBackendUrl()}/api/socket.io/`,  // CRÍTICO: Usar /api prefix para routing correcto
+    url: `${getBackendUrl()}`,  // Solo la URL base
     options: {
+      path: '/api/socket.io/',    // PATH EXPLÍCITO  
       transports: ['polling'],     // SOLO POLLING para máxima estabilidad
       upgrade: false,              // NO upgrade a websocket
       reconnection: true,
