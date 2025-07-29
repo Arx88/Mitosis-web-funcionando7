@@ -6030,7 +6030,7 @@ Responde SOLO con el contenido final solicitado.
             logger.info(f"🚀 Executing MAPPED tool: original='{tool}' -> mapped='{mapped_tool}' with params: {tool_params}")
             
             # Verify tool availability
-            available_tools = list(tool_manager.tools.keys()) if hasattr(tool_manager, 'tools') else []
+            available_tools = tool_manager.get_available_tools() if tool_manager else []
             if mapped_tool not in available_tools:
                 logger.error(f"❌ TOOL MAPPING ERROR: Tool '{mapped_tool}' not found in available tools: {available_tools}")
                 raise Exception(f"Tool '{mapped_tool}' not available. Available tools: {available_tools}")
