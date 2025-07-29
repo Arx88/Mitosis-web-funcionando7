@@ -1,56 +1,59 @@
 {
   "total_tests": 6,
-  "passed_tests": 5,
-  "success_rate": 83.33333333333334,
-  "overall_status": "\u26a0\ufe0f BACKEND MOSTLY WORKING - Minor issues detected",
-  "critical_passed": 4,
+  "passed_tests": 0,
+  "success_rate": 0.0,
+  "overall_status": "\u274c WEBSOCKET CRITICAL - Major step progression failures",
+  "critical_passed": 0,
   "critical_total": 4,
   "test_results": [
     {
-      "test_name": "API Health Endpoint",
-      "success": true,
-      "details": "Health endpoint working - DB: True, Ollama: True, Tools: 12, CORS: True",
-      "timestamp": "2025-07-29T11:54:18.980563",
-      "response_data": null
-    },
-    {
-      "test_name": "CORS Configuration API",
-      "success": true,
-      "details": "CORS properly configured for /api/* - OPTIONS: True, POST: True",
-      "timestamp": "2025-07-29T11:54:25.007740",
-      "response_data": null
-    },
-    {
-      "test_name": "Chat Functionality with Plan",
-      "success": true,
-      "details": "Chat generates proper plan - 4 steps, Task ID: chat-1753790066, Enhanced title: An\u00e1lisis de Tendencias en IA 2025",
-      "timestamp": "2025-07-29T11:54:34.679125",
-      "response_data": null
-    },
-    {
-      "test_name": "Plan Generation Verification",
-      "success": true,
-      "details": "Plan generation working - 4 steps, Type: creacion, Complexity: alta, Tools: 4",
-      "timestamp": "2025-07-29T11:54:44.450732",
-      "response_data": null
-    },
-    {
-      "test_name": "WebSocket Support",
-      "success": true,
-      "details": "WebSocket support available - Endpoint accessible: True, Backend running: True, Memory: True",
-      "timestamp": "2025-07-29T11:54:45.473673",
-      "response_data": null
-    },
-    {
-      "test_name": "Files Endpoint CORS",
+      "test_name": "Create Complex Task",
       "success": false,
-      "details": "Files endpoint CORS issues - Accessible: True, CORS: False",
-      "timestamp": "2025-07-29T11:54:46.498509",
+      "details": "Exception: HTTPSConnectionPool(host='ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com', port=443): Read timed out. (read timeout=30)",
+      "timestamp": "2025-07-29T23:53:50.886430",
+      "response_data": null
+    },
+    {
+      "test_name": "WebSocket Connection",
+      "success": false,
+      "details": "Failed to connect to WebSocket server",
+      "timestamp": "2025-07-29T23:53:53.191026",
+      "response_data": null
+    },
+    {
+      "test_name": "Task Execution Trigger",
+      "success": false,
+      "details": "No task ID available for execution",
+      "timestamp": "2025-07-29T23:53:55.191165",
+      "response_data": null
+    },
+    {
+      "test_name": "Step Sequence Monitoring",
+      "success": false,
+      "details": "No step progression events received - 0 total events",
+      "timestamp": "2025-07-29T23:54:57.264771",
+      "response_data": null
+    },
+    {
+      "test_name": "Step Completion Logic",
+      "success": false,
+      "details": "No step completion events received",
+      "timestamp": "2025-07-29T23:54:59.264959",
+      "response_data": null
+    },
+    {
+      "test_name": "Frontend Sync Verification",
+      "success": false,
+      "details": "Insufficient WebSocket events for frontend sync - Only 0 events",
+      "timestamp": "2025-07-29T23:55:01.265138",
       "response_data": null
     }
   ],
-  "task_id": "chat-1753790066",
-  "backend_working": true,
-  "cors_working": true,
-  "files_cors_working": false
+  "task_id": null,
+  "websocket_events": [],
+  "step_progression": [],
+  "websocket_working": false,
+  "step_progression_working": false,
+  "completion_logic_working": false,
+  "frontend_sync_working": false
 }
