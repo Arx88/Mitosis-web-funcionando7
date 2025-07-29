@@ -724,7 +724,7 @@ else
     echo "   ls -la /app/frontend/dist/"
     echo ""
     echo "🌐 Para probar acceso externo:"
-    echo "   curl https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com"
+    echo "   curl $REAL_FRONTEND_URL"
     echo "=============================================================="
     
     # Crear archivo de debugging
