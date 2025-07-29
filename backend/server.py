@@ -88,18 +88,18 @@ try:
     from src.websocket.websocket_manager import WebSocketManager
     websocket_manager = WebSocketManager()
     
-    # Configurar SocketIO CON WEBSOCKET Y FALLBACK POLLING
-    # Habilitar WebSocket real pero mantener polling como fallback
+    # Configurar SocketIO CON POLLING PRIMERO Y WEBSOCKET FALLBACK
+    # Prioritizar polling para kubernetes/proxy environments
     socketio = SocketIO(
         app, 
         cors_allowed_origins="*",
         async_mode='eventlet',
         logger=True,           # Habilitar logs para debugging
         engineio_logger=True,  # Logs detallados de engine.io
-        ping_timeout=60,
-        ping_interval=25,
-        transports=['websocket', 'polling'],    # WebSocket PRIMERO, polling fallback
-        allow_upgrades=True,      # Permitir upgrade a WebSocket
+        ping_timeout=30,       # Reducido para mejor detección
+        ping_interval=10,      # Más frecuente para estabilidad
+        transports=['polling', 'websocket'],    # POLLING PRIMERO para k8s
+        allow_upgrades=False,     # Desabilitar upgrade por ahora
         path='/api/socket.io/',   # Set the socket.io path to /api/socket.io/
         json=json
     )
