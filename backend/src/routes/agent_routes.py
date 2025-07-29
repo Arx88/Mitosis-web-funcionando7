@@ -6258,7 +6258,7 @@ def execute_step_real_original(task_id: str, step_id: str, step: dict):
             logger.info(f"🚀 Executing MAPPED tool: original='{step.get('tool', 'unknown')}' -> mapped='{tool}' with params: {tool_params}")
             
             # Verificar que la herramienta existe antes de ejecutar
-            available_tools = list(tool_manager.tools.keys()) if hasattr(tool_manager, 'tools') else []
+            available_tools = tool_manager.get_available_tools() if tool_manager else []
             if tool not in available_tools:
                 logger.error(f"❌ TOOL MAPPING ERROR: Tool '{tool}' not found in available tools: {available_tools}")
                 raise Exception(f"Tool '{tool}' not available. Available tools: {available_tools}")
