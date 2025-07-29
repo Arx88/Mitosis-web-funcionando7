@@ -48,14 +48,45 @@ export const useWebSocket = (): UseWebSocketReturn => {
     console.log('🔌 Initializing WebSocket connection...');
     const wsConfig = getWebSocketConfig();
     
-    // **TEMPORAL**: Force HTTP polling fallback to bypass WebSocket issues
-    console.log('🔄 TEMPORARILY FORCING HTTP POLLING MODE');
-    setIsPollingFallback(true);
-    setConnectionType('polling');
-    setIsConnected(true); // Mark as "connected" for polling mode
+    console.log('🔧 WebSocket URL:', wsConfig.url);
+    console.log('🔧 WebSocket Options:', wsConfig.options);
     
+    const newSocket = io(wsConfig.url, wsConfig.options);
+    
+    newSocket.on('connect', () => {
+      console.log('✅ WebSocket connected successfully!');
+      console.log('🔧 Transport:', newSocket.io.engine.transport.name);
+      console.log('🆔 Session ID:', newSocket.id);
+      setIsConnected(true);
+      setConnectionType(newSocket.io.engine.transport.name as 'websocket' | 'polling');
+      setIsPollingFallback(false);
+    });
+    
+    newSocket.on('disconnect', () => {
+      console.log('🔌 WebSocket disconnected');
+      setIsConnected(false);
+      setConnectionType('disconnected');
+    });
+    
+    newSocket.on('connect_error', (error) => {
+      console.error('❌ WebSocket connection error:', error);
+      console.error('❌ Error details:', error.message, error.type);
+      setIsConnected(false);
+      setConnectionType('disconnected');
+    });
+    
+    // Listen for backend connection confirmation
+    newSocket.on('connection_established', (data) => {
+      console.log('🎉 Backend confirmed connection:', data);
+    });
+    
+    setSocket(newSocket);
+    
+    // Cleanup on unmount
     return () => {
-      console.log('🧹 Cleaning up connection');
+      console.log('🧹 Cleaning up WebSocket connection');
+      newSocket.close();
+      
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
