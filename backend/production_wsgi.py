@@ -16,10 +16,8 @@ os.environ['FLASK_DEBUG'] = 'False'
 from server import app, socketio
 
 # CRÍTICO: Para gunicorn con eventlet + SocketIO
-# Usar SocketIO como wrapper de la app Flask 
-def application(environ, start_response):
-    """WSGI callable que funciona con gunicorn + eventlet + SocketIO"""
-    return socketio.wsgi_app(environ, start_response)
+# SocketIO object IS the WSGI application when using eventlet
+application = socketio
 
 if __name__ == '__main__':
     # Para testing directo con SocketIO
