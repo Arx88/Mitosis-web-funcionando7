@@ -234,8 +234,8 @@ export function App() {
   // ========================================================================
 
   // Callback for sidebar task creation - DIRECT REFERENCE to avoid memoization issues
-  const handleSidebarCreateTask = useCallback(async (title: string) => {
-    console.log('🎯 SIDEBAR CALLBACK: handleSidebarCreateTask called with title:', title);
+  const handleSidebarCreateTask = useCallback(async (title: string, iconType?: string): Promise<Task> => {
+    console.log('🎯 SIDEBAR CALLBACK: handleSidebarCreateTask called with title:', title, 'iconType:', iconType);
     return await createTaskWithMessage(title);
   }, [createTaskWithMessage]);
 
