@@ -171,6 +171,7 @@ export const useWebSocket = (): UseWebSocketReturn => {
     setCurrentTaskId(taskId);
     
     if (socket && isConnected) {
+      console.log('✅ Socket connected, joining room immediately');
       socket.emit('join_task', { task_id: taskId });
       
       // Setup DIRECT WebSocket event listeners for backend events
@@ -233,11 +234,13 @@ export const useWebSocket = (): UseWebSocketReturn => {
         }
       });
       
-    } else if (isPollingFallback) {
-      // Use HTTP Polling fallback
+    } else {
+      console.warn('⚠️ Socket not connected, starting polling fallback');
+      // Always start polling fallback if WebSocket not available
       startHttpPollingFallback(taskId);
+      setIsPollingFallback(true);
     }
-  }, [socket, isConnected, isPollingFallback, startHttpPollingFallback]);
+  }, [socket, isConnected, startHttpPollingFallback]);
 
   const leaveTaskRoom = useCallback((taskId: string) => {
     console.log('🚪 Leaving task room:', taskId);
