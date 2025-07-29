@@ -44,9 +44,12 @@ class TavilySearchTool(BaseTool):
         ]
     
     def _execute_tool(self, parameters: Dict[str, Any], config: Dict[str, Any]) -> ToolExecutionResult:
-        """Ejecutar búsqueda usando Tavily API"""
+        """Ejecutar búsqueda REAL usando Tavily API"""
         if not self.api_key:
-            return self._create_error_result('TAVILY_API_KEY no está configurada en las variables de entorno')
+            return ToolExecutionResult(
+                success=False,
+                error='TAVILY_API_KEY no está configurada en las variables de entorno'
+            )
         
         query = parameters.get('query', '')
         num_results = parameters.get('num_results', 5)
