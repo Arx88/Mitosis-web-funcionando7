@@ -136,32 +136,106 @@ chmod +x /app/backend/production_wsgi.py
 echo "🏗️ Construyendo frontend en modo producción..."
 cd /app/frontend
 
-# CRÍTICO: Detectar URL real automáticamente y configurar CORS dinámicamente
-echo "🔧 Detectando URLs reales y corrigiendo configuración CORS..."
+# ============================================================================
+# 🔧 DETECCIÓN AUTOMÁTICA Y DINÁMICA DE URL REAL (MÉTODO ROBUSTO)
+# ============================================================================
+echo "🔧 Detectando URL real del entorno automáticamente..."
 
-# Detectar URL real del preview (método más robusto)
+# MÉTODO 1: Variables de entorno del sistema
 REAL_FRONTEND_URL=""
 if [ -n "$EMERGENT_PREVIEW_URL" ]; then
     REAL_FRONTEND_URL="$EMERGENT_PREVIEW_URL"
-    echo "   📍 URL detectada desde variable de entorno: $REAL_FRONTEND_URL"
-elif curl -s --max-time 5 https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com >/dev/null 2>&1; then
-    REAL_FRONTEND_URL="https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com"
-    echo "   📍 URL detectada por conectividad: $REAL_FRONTEND_URL"
-else
-    REAL_FRONTEND_URL="https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com"
-    echo "   📍 URL por defecto: $REAL_FRONTEND_URL"
+    echo "   📍 URL detectada desde EMERGENT_PREVIEW_URL: $REAL_FRONTEND_URL"
+elif [ -n "$PREVIEW_URL" ]; then
+    REAL_FRONTEND_URL="$PREVIEW_URL"
+    echo "   📍 URL detectada desde PREVIEW_URL: $REAL_FRONTEND_URL"
 fi
 
-# Configurar variables de entorno del frontend
+# MÉTODO 2: Detección desde el proceso actual si las variables no están
+if [ -z "$REAL_FRONTEND_URL" ]; then
+    echo "   🔍 Variables de entorno no encontradas, detectando desde contexto actual..."
+    
+    # Intentar obtener desde el hostname/dominio actual
+    if command -v hostname >/dev/null 2>&1; then
+        CURRENT_HOSTNAME=$(hostname -f 2>/dev/null || hostname 2>/dev/null || echo "")
+        if [[ "$CURRENT_HOSTNAME" == *".preview.emergentagent.com" ]]; then
+            REAL_FRONTEND_URL="https://$CURRENT_HOSTNAME"
+            echo "   📍 URL detectada desde hostname: $REAL_FRONTEND_URL"
+        fi
+    fi
+fi
+
+# MÉTODO 3: Detección desde headers HTTP si está disponible
+if [ -z "$REAL_FRONTEND_URL" ] && command -v curl >/dev/null 2>&1; then
+    echo "   🔍 Intentando detectar URL desde headers HTTP..."
+    
+    # Probar URLs comunes de preview
+    PREVIEW_PATTERNS=(
+        "https://cell-split-app-1.preview.emergentagent.com"
+        "https://$(echo $HOSTNAME | cut -d'.' -f1).preview.emergentagent.com"
+        "https://$(whoami)-app.preview.emergentagent.com"
+    )
+    
+    for url in "${PREVIEW_PATTERNS[@]}"; do
+        if curl -s --max-time 3 "$url" >/dev/null 2>&1; then
+            REAL_FRONTEND_URL="$url"
+            echo "   📍 URL detectada por conectividad: $REAL_FRONTEND_URL"
+            break
+        fi
+    done
+fi
+
+# MÉTODO 4: Detección desde archivos de configuración existentes
+if [ -z "$REAL_FRONTEND_URL" ] && [ -f "/app/frontend/.env" ]; then
+    echo "   🔍 Buscando URL en configuración existente..."
+    EXISTING_URL=$(grep -E "^(VITE_BACKEND_URL|REACT_APP_BACKEND_URL)=" /app/frontend/.env | head -1 | cut -d'=' -f2)
+    if [[ "$EXISTING_URL" == https://*.preview.emergentagent.com ]]; then
+        REAL_FRONTEND_URL="$EXISTING_URL"
+        echo "   📍 URL detectada desde configuración existente: $REAL_FRONTEND_URL"
+    fi
+fi
+
+# MÉTODO 5: Fallback con detección inteligente
+if [ -z "$REAL_FRONTEND_URL" ]; then
+    echo "   🔍 Usando método de fallback inteligente..."
+    
+    # Generar URL basada en el ID del container/pod
+    CONTAINER_ID=$(hostname | head -c 12)
+    if [[ ${#CONTAINER_ID} -ge 8 ]]; then
+        REAL_FRONTEND_URL="https://$CONTAINER_ID.preview.emergentagent.com"
+        echo "   📍 URL generada desde container ID: $REAL_FRONTEND_URL"
+    else
+        # Último recurso: usar patrón genérico que funciona con wildcards
+        REAL_FRONTEND_URL="https://cell-split-app-1.preview.emergentagent.com"
+        echo "   📍 URL de último recurso: $REAL_FRONTEND_URL"
+    fi
+fi
+
+echo "✅ URL FINAL DETECTADA: $REAL_FRONTEND_URL"
+
+# ============================================================================
+# 🌐 CONFIGURACIÓN DINÁMICA DE VARIABLES DE ENTORNO
+# ============================================================================
+echo "🌐 Configurando variables de entorno dinámicamente..."
+
+# Configurar variables de entorno del frontend (SIEMPRE usar la URL detectada)
 cat > /app/frontend/.env << EOF
+# Configuración automática generada por start_mitosis.sh
+# URL real detectada dinámicamente: $REAL_FRONTEND_URL
 VITE_BACKEND_URL=$REAL_FRONTEND_URL
 REACT_APP_BACKEND_URL=$REAL_FRONTEND_URL
+
+# Variables adicionales para compatibilidad
+VITE_APP_URL=$REAL_FRONTEND_URL
+REACT_APP_URL=$REAL_FRONTEND_URL
 EOF
 
-echo "✅ Variables de entorno configuradas con URL real: $REAL_FRONTEND_URL"
+echo "✅ Variables de entorno configuradas correctamente"
 
-# CRÍTICO: Actualizar dinámicamente CORS en backend server.py
-echo "🔧 Actualizando configuración CORS en backend con URL real..."
+# ============================================================================
+# 🔧 CONFIGURACIÓN CORS ULTRA-DINÁMICA EN BACKEND
+# ============================================================================
+echo "🔧 Configurando CORS ultra-dinámico en backend..."
 cd /app/backend
 
 # Crear backup del server.py original si no existe
@@ -170,20 +244,34 @@ if [ ! -f "server.py.backup" ]; then
     echo "   💾 Backup creado: server.py.backup"
 fi
 
-# Detectar variantes de URL para máxima compatibilidad (siempre incluir ambas)
-CORS_URLS="\"https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com\""
+# Generar lista COMPLETA de URLs para CORS (máxima compatibilidad)
+ALL_CORS_URLS=(
+    "\"$REAL_FRONTEND_URL\""
+    "\"https://*.preview.emergentagent.com\""
+    "\"https://cell-split-app-1.preview.emergentagent.com\""
+    "\"https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com\""
+    "\"http://localhost:3000\""
+    "\"http://localhost:5173\""
+    "\"http://127.0.0.1:3000\""
+    "\"http://127.0.0.1:5173\""
+    "\"*\""
+)
 
-# Actualizar FRONTEND_ORIGINS en server.py con URL real detectada
+# Convertir array a string separado por comas
+CORS_URLS_STRING=$(IFS=', '; echo "${ALL_CORS_URLS[*]}")
+
+# Actualizar FRONTEND_ORIGINS en server.py con TODAS las URLs posibles
 sed -i '/^FRONTEND_ORIGINS = \[/,/^\]/c\
 FRONTEND_ORIGINS = [\
-    '"$CORS_URLS"',  # URLs REALES DETECTADAS AUTOMÁTICAMENTE\
-    "http://localhost:3000",\
-    "http://localhost:5173", \
-    "*"  # Fallback for any other origins\
+    '"$CORS_URLS_STRING"'  # URLs DETECTADAS DINÁMICAMENTE + FALLBACKS\
 ]' server.py
 
-echo "   ✅ CORS actualizado automáticamente con: $CORS_URLS"
-echo "✅ Configuración CORS dinámica completada"
+echo "   ✅ CORS configurado con detección dinámica y múltiples fallbacks"
+echo "   📋 URLs incluidas en CORS:"
+for url in "${ALL_CORS_URLS[@]}"; do
+    echo "      - $url"
+done
+echo "✅ Configuración CORS ultra-dinámica completada"
 
 cd /app/frontend
 
