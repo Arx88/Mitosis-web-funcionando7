@@ -94,7 +94,7 @@ try:
     from src.websocket.websocket_manager import WebSocketManager
     websocket_manager = WebSocketManager()
     
-    # Configurar SocketIO CON CONFIGURACIÓN SIMPLIFICADA Y ROBUSTA
+    # Configurar SocketIO SOLO CON POLLING (más estable en K8s/proxy)
     socketio = SocketIO(
         app, 
         cors_allowed_origins="*",  # Simplificado - permitir todos los orígenes
@@ -102,12 +102,13 @@ try:
         async_mode='eventlet',
         logger=True,
         engineio_logger=True,  
-        ping_timeout=120,      # Aumentado más para estabilidad
-        ping_interval=60,      # Aumentado más para estabilidad
-        transports=['polling', 'websocket'],
-        allow_upgrades=False,   # DESHABILITADO: No upgrades para mayor estabilidad
-        path='/api/socket.io/', # VOLVER a /api prefix para ingress routing
-        manage_session=False    # NUEVO: No manejar sesiones automáticamente
+        ping_timeout=180,      # Aumentado aún más
+        ping_interval=90,      # Aumentado aún más
+        transports=['polling'],  # SOLO POLLING para máxima compatibilidad
+        allow_upgrades=False,   # NO upgrades
+        path='/api/socket.io/', # Mantener /api prefix
+        manage_session=False,    # No manejar sesiones automáticamente
+        max_http_buffer_size=1000000  # Buffer más grande para datos
     )
     
     # Agregar handlers de debugging más detallados
