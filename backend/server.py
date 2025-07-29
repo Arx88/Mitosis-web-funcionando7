@@ -54,10 +54,10 @@ app.config['START_TIME'] = time.time()
 # Configurar CORS - CONFIGURACIÓN ULTRA-DINÁMICA PARA WEBSOCKET
 FRONTEND_ORIGINS = [
     # 🌐 URL DETECTADA DINÁMICAMENTE  
-    "https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com",
+    "https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com",
     
     # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS
-    "https://*.preview.emergentagent.com",
+    "https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com",
     
     # 🏠 DESARROLLO LOCAL
     "http://localhost:3000",
@@ -66,7 +66,7 @@ FRONTEND_ORIGINS = [
     "http://127.0.0.1:5173",
     
     # 📱 PREVIEW DOMAINS COMUNES
-    "https://cell-split-app-1.preview.emergentagent.com",
+    "https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com",
     
     # 🌟 FALLBACK UNIVERSAL
     "*"

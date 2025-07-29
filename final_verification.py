@@ -146,7 +146,7 @@ def main():
         print("🚫 NO hay auto-completado de pasos")
         print("🎉 El sistema funciona como se espera")
         print("\n🌐 PARA VERIFICACIÓN VISUAL:")
-        print("   1. Accede a: https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com")
+        print("   1. Accede a: https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com")
         print("   2. Escribe: 'Busca los mejores bares de España 2025'")
         print("   3. Presiona Enter")
         print("   4. Observa el plan en el sidebar (debería mostrar 3 pasos)")
