@@ -136,14 +136,61 @@ chmod +x /app/backend/production_wsgi.py
 echo "🏗️ Construyendo frontend en modo producción..."
 cd /app/frontend
 
-# CRÍTICO: Corregir variables de entorno para evitar duplicación /api
-echo "🔧 Corrigiendo variables de entorno del frontend..."
-cat > /app/frontend/.env << 'EOF'
-VITE_BACKEND_URL=https://d1c8ceae-497e-462b-a5fa-5c5f477c24df.preview.emergentagent.com
-REACT_APP_BACKEND_URL=https://d1c8ceae-497e-462b-a5fa-5c5f477c24df.preview.emergentagent.com
+# CRÍTICO: Detectar URL real automáticamente y configurar CORS dinámicamente
+echo "🔧 Detectando URLs reales y corrigiendo configuración CORS..."
+
+# Detectar URL real del preview (método más robusto)
+REAL_FRONTEND_URL=""
+if [ -n "$EMERGENT_PREVIEW_URL" ]; then
+    REAL_FRONTEND_URL="$EMERGENT_PREVIEW_URL"
+    echo "   📍 URL detectada desde variable de entorno: $REAL_FRONTEND_URL"
+elif curl -s --max-time 5 https://cell-split-exec.preview.emergentagent.com >/dev/null 2>&1; then
+    REAL_FRONTEND_URL="https://cell-split-exec.preview.emergentagent.com"
+    echo "   📍 URL detectada por conectividad: $REAL_FRONTEND_URL"
+else
+    REAL_FRONTEND_URL="https://d1c8ceae-497e-462b-a5fa-5c5f477c24df.preview.emergentagent.com"
+    echo "   📍 URL por defecto: $REAL_FRONTEND_URL"
+fi
+
+# Configurar variables de entorno del frontend
+cat > /app/frontend/.env << EOF
+VITE_BACKEND_URL=$REAL_FRONTEND_URL
+REACT_APP_BACKEND_URL=$REAL_FRONTEND_URL
 EOF
 
-echo "✅ Variables de entorno corregidas (eliminada duplicación /api)"
+echo "✅ Variables de entorno configuradas con URL real: $REAL_FRONTEND_URL"
+
+# CRÍTICO: Actualizar dinámicamente CORS en backend server.py
+echo "🔧 Actualizando configuración CORS en backend con URL real..."
+cd /app/backend
+
+# Crear backup del server.py original si no existe
+if [ ! -f "server.py.backup" ]; then
+    cp server.py server.py.backup
+    echo "   💾 Backup creado: server.py.backup"
+fi
+
+# Detectar variantes de URL para máxima compatibilidad
+CORS_URLS=""
+if [[ "$REAL_FRONTEND_URL" == *"cell-split-exec"* ]]; then
+    CORS_URLS="\"$REAL_FRONTEND_URL\", \"https://d1c8ceae-497e-462b-a5fa-5c5f477c24df.preview.emergentagent.com\""
+else
+    CORS_URLS="\"$REAL_FRONTEND_URL\", \"https://cell-split-exec.preview.emergentagent.com\""
+fi
+
+# Actualizar FRONTEND_ORIGINS en server.py con URL real detectada
+sed -i '/^FRONTEND_ORIGINS = \[/,/^\]/c\
+FRONTEND_ORIGINS = [\
+    '"$CORS_URLS"',  # URLs REALES DETECTADAS AUTOMÁTICAMENTE\
+    "http://localhost:3000",\
+    "http://localhost:5173", \
+    "*"  # Fallback for any other origins\
+]' server.py
+
+echo "   ✅ CORS actualizado automáticamente con: $CORS_URLS"
+echo "✅ Configuración CORS dinámica completada"
+
+cd /app/frontend
 
 # Instalar dependencias si no existen
 if [ ! -d "node_modules" ]; then
