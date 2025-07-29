@@ -176,9 +176,9 @@ export function App() {
 
         if (executionResponse.ok) {
           console.log('✅ Task execution started successfully');
-          // Update task status to in-progress
+          // Update task status to in-progress using BACKEND ID
           setTasks(prev => prev.map(task => 
-            task.id === newTask.id ? { ...task, status: 'in-progress' as const } : task
+            task.id === backendTaskId ? { ...task, status: 'in-progress' as const } : task
           ));
         } else {
           console.error('❌ Failed to start task execution:', executionResponse.status);
