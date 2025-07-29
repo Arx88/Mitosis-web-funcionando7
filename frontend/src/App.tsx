@@ -238,7 +238,7 @@ export function App() {
       tasks={tasks} 
       activeTaskId={activeTaskId} 
       onTaskSelect={setActiveTask} 
-      onCreateTask={createTask}
+      onCreateTask={(title) => createTaskWithMessage(title)} // ✅ FIX: Use createTaskWithMessage to auto-generate plan
       onDeleteTask={deleteTask}
       onUpdateTask={updateTask}
       onConfigOpen={() => setIsConfigOpen(true)}
