@@ -562,7 +562,7 @@ class HierarchicalPlanningEngine:
         }
         
         tool_categories = {
-            "search": ["web_search", "deep_research", "comprehensive_research", "tavily_search"],
+            "search": ["web_search", "deep_research", "comprehensive_research"],
             "analysis": ["deep_research", "comprehensive_research"],
             "automation": ["shell", "playwright", "qstash"],
             "file_management": ["file_manager"],
