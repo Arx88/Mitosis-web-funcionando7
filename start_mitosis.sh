@@ -876,9 +876,21 @@ else
     echo "   curl $REAL_FRONTEND_URL"
     echo "=============================================================="
     
-    # Crear archivo de debugging
+    # Crear archivo de debugging con información detallada
     echo "$(date): Mitosis startup completado con advertencias" > /app/startup_warnings.log
     echo "Backend: $($backend_ok && echo "✅" || echo "❌") | Frontend: $($frontend_ok && echo "✅" || echo "❌")" >> /app/startup_warnings.log
+    echo "URL_DETECTADA: $REAL_FRONTEND_URL" >> /app/startup_warnings.log
+    echo "DETECTION_METHOD: $DETECTION_METHOD" >> /app/startup_warnings.log
+    
+    # Información adicional para debugging
+    echo "" >> /app/startup_warnings.log
+    echo "=== INFORMACIÓN DE DEBUG ===" >> /app/startup_warnings.log
+    echo "Hostname: $(hostname)" >> /app/startup_warnings.log
+    echo "Variables de entorno relevantes:" >> /app/startup_warnings.log
+    env | grep -E "(PREVIEW|EMERGENT|URL)" >> /app/startup_warnings.log 2>/dev/null || echo "  No se encontraron variables de entorno relevantes" >> /app/startup_warnings.log
+    echo "" >> /app/startup_warnings.log
+    echo "CORS URLs detectadas en server.py:" >> /app/startup_warnings.log
+    grep -A 10 "FRONTEND_ORIGINS" /app/backend/server.py >> /app/startup_warnings.log 2>/dev/null || echo "  No se pudo leer configuración CORS" >> /app/startup_warnings.log
 fi
 
 echo ""
