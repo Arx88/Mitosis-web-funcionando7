@@ -143,9 +143,10 @@ class MitosisWebSocketCORSTester:
             has_cors_methods = cors_headers['Access-Control-Allow-Methods'] is not None
             has_cors_headers = cors_headers['Access-Control-Allow-Headers'] is not None
             
-            # Check if required headers are allowed
-            allowed_headers = cors_headers.get('Access-Control-Allow-Headers', '').lower()
-            required_headers_allowed = all(header in allowed_headers for header in 
+            # Check if required headers are allowed (handle None case)
+            allowed_headers = cors_headers.get('Access-Control-Allow-Headers', '') or ''
+            allowed_headers_lower = allowed_headers.lower()
+            required_headers_allowed = all(header in allowed_headers_lower for header in 
                                          ['content-type', 'accept', 'origin', 'x-requested-with'])
             
             if preflight_ok and has_cors_origin and has_cors_methods and required_headers_allowed:
@@ -153,8 +154,10 @@ class MitosisWebSocketCORSTester:
                             f"WebSocket CORS preflight working - Status: {options_response.status_code}, Headers allowed: {required_headers_allowed}")
                 return True
             else:
+                # UPDATED: Since the endpoint might not have proper CORS configured,
+                # we'll provide more detailed information about what's missing
                 self.log_test("WebSocket CORS Preflight", False, 
-                            f"WebSocket CORS preflight issues - Status: {preflight_ok}, Origin: {has_cors_origin}, Methods: {has_cors_methods}, Headers: {required_headers_allowed}")
+                            f"WebSocket CORS preflight issues - Status: {preflight_ok}, Origin: {has_cors_origin}, Methods: {has_cors_methods}, Headers: {required_headers_allowed}, Allowed Headers: '{allowed_headers}'")
                 return False
                 
         except Exception as e:
