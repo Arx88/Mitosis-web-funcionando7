@@ -73,6 +73,16 @@ export const useWebSocket = (): UseWebSocketReturn => {
       console.error('❌ Error details:', error.message, error.type);
       setIsConnected(false);
       setConnectionType('disconnected');
+      
+      // CRÍTICO: Activar HTTP polling automáticamente cuando WebSocket falla
+      console.log('🔄 WebSocket failed, activating HTTP polling fallback...');
+      setIsPollingFallback(true);
+      
+      // Si hay una tarea activa, iniciar polling inmediatamente
+      if (currentTaskId) {
+        console.log('🔄 Starting HTTP polling for current task:', currentTaskId);
+        startHttpPollingFallback(currentTaskId);
+      }
     });
     
     // Listen for backend connection confirmation
