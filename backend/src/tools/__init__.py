@@ -73,6 +73,22 @@ try:
 except ImportError:
     pass
 
+# Nuevas herramientas simplificadas
+try:
+    from .simple_playwright_web_search_tool import SimplePlaywrightWebSearch
+except ImportError:
+    pass
+
+try:
+    from .simple_tavily_search_tool import SimpleTavilySearch
+except ImportError:
+    pass
+
+try:
+    from .simple_file_manager_tool import SimpleFileManager
+except ImportError:
+    pass
+
 # Exportar interfaz principal
 __all__ = [
     # Arquitectura base
