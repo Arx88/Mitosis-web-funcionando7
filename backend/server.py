@@ -730,3 +730,24 @@ def internal_error(error):
 if __name__ == '__main__':
     print(f"🚀 Starting server on {HOST}:{PORT}")
     app.run(host=HOST, port=PORT, debug=DEBUG)
+
+FRONTEND_ORIGINS = [
+    # 🌐 URL DETECTADA DINÁMICAMENTE
+    "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com",
+    
+    # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
+    "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com",
+    
+    # 🏠 DESARROLLO LOCAL
+    "http://localhost:3000",
+    "http://localhost:5173", 
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    
+    # 📱 PREVIEW DOMAINS COMUNES
+    "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com",
+    "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com",
+    
+    # 🌟 FALLBACK UNIVERSAL (último recurso)
+    "*"
+]
