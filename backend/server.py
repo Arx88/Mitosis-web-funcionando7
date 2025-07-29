@@ -104,21 +104,20 @@ try:
     from src.websocket.websocket_manager import WebSocketManager
     websocket_manager = WebSocketManager()
     
-    # Configurar SocketIO CON POLLING PRIMERO Y WEBSOCKET FALLBACK
-    # Prioritizar polling para kubernetes/proxy environments
+    # Configurar SocketIO CON CONFIGURACIÓN SIMPLIFICADA Y ROBUSTA
     socketio = SocketIO(
         app, 
-        cors_allowed_origins=["*", "https://e9d10c57-6ed9-40c1-8ff7-904db66dbe60.preview.emergentagent.com"],
-        cors_credentials=False,     # CRITICAL: No credentials needed for cross-origin
+        cors_allowed_origins="*",  # Simplificado - permitir todos los orígenes
+        cors_credentials=False,
         async_mode='eventlet',
-        logger=True,           # Habilitar logs para debugging
-        engineio_logger=True,  # Logs detallados de engine.io  
-        ping_timeout=60,       # Aumentado para estabilidad
-        ping_interval=25,      # Aumentado para estabilidad
-        transports=['polling', 'websocket'],    # POLLING PRIMERO para k8s
-        allow_upgrades=True,      # Permitir upgrade a websocket
-        path='/api/socket.io/',   # BACK TO /api prefix to use same ingress route
-        json=json
+        logger=True,
+        engineio_logger=True,  
+        ping_timeout=120,      # Aumentado más para estabilidad
+        ping_interval=60,      # Aumentado más para estabilidad
+        transports=['polling', 'websocket'],
+        allow_upgrades=False,   # DESHABILITADO: No upgrades para mayor estabilidad
+        path='/socket.io/',     # SIMPLIFICAR: Remover /api prefix
+        manage_session=False    # NUEVO: No manejar sesiones automáticamente
     )
     
     # Agregar handlers de debugging más detallados
