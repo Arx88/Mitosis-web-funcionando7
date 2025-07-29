@@ -15,15 +15,15 @@ os.environ['FLASK_DEBUG'] = 'False'
 # Importar la Flask app y socketio
 from server import app, socketio
 
-# Para gunicorn con eventlet y SocketIO - configuración CORRECTA
-# Usar directamente socketio.wsgi_app para que WebSocket funcione
-application = socketio.wsgi_app
+# Para gunicorn con eventlet y SocketIO - usar el app directamente
+# SocketIO se integra automáticamente con el app Flask
+application = app
 
 # Debug logging para verificar configuración
 import logging
 logger = logging.getLogger(__name__)
 logger.info(f"🔧 WSGI Application configured: {type(application)}")
-logger.info(f"🔧 SocketIO available: {hasattr(socketio, 'wsgi_app')}")
+logger.info(f"🔧 SocketIO integrated with Flask app")
 logger.info(f"🔧 SocketIO path configured: /api/socket.io/")
 
 if __name__ == '__main__':
