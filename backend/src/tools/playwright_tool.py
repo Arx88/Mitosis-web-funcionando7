@@ -13,7 +13,7 @@ import tempfile
 from pathlib import Path
 import time
 
-from .base_tool import BaseTool, ParameterDefinition, ToolExecutionResult
+from .base_tool import BaseTool, ParameterDefinition, ToolExecutionResult, register_tool
 
 # Playwright será instalado como dependencia
 try:
@@ -23,6 +23,7 @@ except ImportError:
     PLAYWRIGHT_AVAILABLE = False
     print("⚠️  Playwright not installed. Install with: pip install playwright")
 
+@register_tool
 class PlaywrightTool(BaseTool):
     def __init__(self):
         super().__init__()
