@@ -191,6 +191,13 @@ export const useWebSocket = (): UseWebSocketReturn => {
         }
       });
       
+      socket.on('step_completed', (data) => {
+        console.log('✅ WebSocket step_completed received:', data);
+        if (eventListenersRef.current.step_completed) {
+          eventListenersRef.current.step_completed(data);
+        }
+      });
+      
       socket.on('task_progress', (data) => {
         console.log('🔄 WebSocket task_progress received:', data);
         if (eventListenersRef.current.task_progress) {
