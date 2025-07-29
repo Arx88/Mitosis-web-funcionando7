@@ -12,11 +12,11 @@ from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 FRONTEND_ORIGINS = [
-    # 🌐 URL DETECTADA DINÁMICAMENTE
-    "https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com",
+    # 🌐 URL REAL CORREGIDA - MITOSIS EXECUTOR
+    "https://mitosis-executor-1.preview.emergentagent.com",
     
-    # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
-    "https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com",
+    # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS MITOSIS
+    "https://mitosis-executor-1.preview.emergentagent.com",
     
     # 🏠 DESARROLLO LOCAL
     "http://localhost:3000",
@@ -24,9 +24,9 @@ FRONTEND_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
     
-    # 📱 PREVIEW DOMAINS COMUNES
-    "https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com",
-    "https://64a3482e-5c9e-4f08-9906-c7e8583b532a.preview.emergentagent.com",
+    # 📱 PREVIEW DOMAINS GENERALES
+    "https://*.preview.emergentagent.com",
+    "https://mitosis-executor-1.preview.emergentagent.com",
     
     # 🌟 FALLBACK UNIVERSAL (último recurso)
     "*"
