@@ -51,7 +51,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 app.config['START_TIME'] = time.time()
 
-# Configurar CORS
+# Configurar CORS - ENHANCED FOR WEBSOCKET
 CORS(app, resources={
     r"/api/*": {
         "origins": ["*"],
@@ -66,6 +66,11 @@ CORS(app, resources={
     r"/get-task-files/*": {
         "origins": ["*"],
         "methods": ["GET", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    },
+    r"/socket.io/*": {
+        "origins": ["*"],
+        "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
 })
