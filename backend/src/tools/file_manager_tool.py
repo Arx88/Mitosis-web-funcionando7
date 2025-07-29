@@ -10,7 +10,9 @@ from pathlib import Path
 from typing import Dict, Any, List
 import time
 
-class FileManagerTool:
+from .base_tool import BaseTool, ParameterDefinition, ToolExecutionResult
+
+class FileManagerTool(BaseTool):
     def __init__(self):
         self.name = "file_manager"
         self.description = "Gestiona archivos y directorios de forma segura"
