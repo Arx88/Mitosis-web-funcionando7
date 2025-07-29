@@ -82,7 +82,7 @@ export const API_CONFIG: ApiConfig = {
     downloadFile: '/api/agent/download'
   },
   websocket: {
-    url: `${getBackendUrl()}/socket.io/`,  // FIXED: Usar /socket.io/ sin /api prefix
+    url: `${getBackendUrl()}/api/socket.io/`,  // BACK TO: /api prefix para ingress routing
     options: {
       transports: ['polling', 'websocket'], // POLLING first for k8s compatibility  
       upgrade: false,       // DISABLED: No upgrade para mayor estabilidad
