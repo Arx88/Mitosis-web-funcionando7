@@ -53,8 +53,8 @@ app.config['START_TIME'] = time.time()
 
 # Configurar CORS - UNIFIED CONFIGURATION with explicit origins for WebSocket compatibility
 FRONTEND_ORIGINS = [
-    "https://cell-split-app.preview.emergentagent.com",  # FRONTEND ACTUAL FROM LOGS
-    "https://50fa1ce8-422a-437f-b521-f208408f443e.preview.emergentagent.com",
+    "https://d1c8ceae-497e-462b-a5fa-5c5f477c24df.preview.emergentagent.com",  # FRONTEND ACTUAL FROM LOGS
+    "https://d1c8ceae-497e-462b-a5fa-5c5f477c24df.preview.emergentagent.com",
     "http://localhost:3000",
     "http://localhost:5173",
     "*"  # Fallback for any other origins
