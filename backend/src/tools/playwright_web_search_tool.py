@@ -23,7 +23,7 @@ except ImportError:
 class PlaywrightWebSearchTool(BaseTool):
     def __init__(self):
         super().__init__(
-            name="playwright_web_search",
+            name="web_search",
             description="Busca información en internet usando un navegador real (Playwright) - Sin rate limits"
         )
         self.playwright_available = PLAYWRIGHT_AVAILABLE
