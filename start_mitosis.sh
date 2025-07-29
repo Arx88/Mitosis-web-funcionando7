@@ -697,7 +697,7 @@ if $backend_ok && $frontend_ok; then
     echo "✅ WEBSOCKETS: SocketIO habilitado para tiempo real"
     echo ""
     echo "🚀 APLICACIÓN 100% LISTA PARA PRODUCCIÓN"
-    echo "🌐 URL: https://3a6a914f-38f4-4994-976b-6a526ad6d7a0.preview.emergentagent.com"
+    echo "🌐 URL: $REAL_FRONTEND_URL"
     echo ""
     echo "🎉 AGENTE GENERAL MITOSIS COMPLETAMENTE OPERATIVO"
     echo "   📱 Accesible desde cualquier dispositivo"
