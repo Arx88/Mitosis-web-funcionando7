@@ -1,27 +1,23 @@
 #!/usr/bin/env python3
 """
-MITOSIS WEBSOCKET CORS FIX TESTING
-Test the WebSocket CORS fix that was just applied to the Mitosis backend.
+MITOSIS BACKEND AUTOMATIC EXECUTION TESTING
+Test the specific issue where backend creates plans but doesn't execute them automatically.
 
 SPECIFIC TESTING REQUEST:
-Test the WebSocket CORS fix that was just applied to the Mitosis backend. Specifically test:
+Testea específicamente el endpoint /api/agent/chat con el backend de Mitosis para verificar si:
 
-1. **WebSocket Connection**: Test if WebSocket connections now work without CORS errors using the /socket.io/ endpoint
-2. **CORS Headers**: Verify that proper CORS headers are being sent for WebSocket/polling requests from the frontend domain (https://24b15d65-5042-4a37-877d-ed0301dcd2bc.preview.emergentagent.com)
-3. **SocketIO Endpoint**: Test the /socket.io/ endpoint to ensure it's accessible and returns proper CORS headers
-4. **Health Check**: Verify all backend services are still working after the CORS changes
-5. **Task Creation**: Test that task creation still works properly with the new CORS configuration
+1. **Crear tarea desde frontend**: Enviar un POST a /api/agent/chat con mensaje "Crear un análisis de mercado para software en 2025" 
+2. **Verificar respuesta**: Confirmar que el backend devuelve un plan con steps
+3. **Verificar ejecución automática**: Buscar en logs si aparecen mensajes de:
+   - "🚀 STARTING execute_task_steps_sequentially"
+   - "⚡ EXECUTING STEP 1/4" (o similar)
+   - "emit_step_event called" (eventos WebSocket)
+4. **Monitorear logs durante 30 segundos** después del request para ver si la ejecución automática se inicia
+5. **Verificar WebSocket Manager**: Confirmar que existe y está inicializado
 
-**Backend URL**: https://24b15d65-5042-4a37-877d-ed0301dcd2bc.preview.emergentagent.com
-**Expected Outcome**: WebSocket connections should work without CORS policy errors, allowing real-time communication between frontend and backend.
+**URL Backend**: https://24b15d65-5042-4a37-877d-ed0301dcd2bc.preview.emergentagent.com
 
-**Key Changes Made**:
-- Updated CORS origins from "*" to specific frontend domains
-- Enhanced CORS headers for WebSocket compatibility  
-- Modified SocketIO cors_allowed_origins to use specific origins
-- Added Accept, Origin, X-Requested-With headers
-
-Please verify if these changes resolve the CORS policy blocking that was preventing WebSocket connections.
+**PROBLEMA ESPECÍFICO A DEBUGGEAR**: El backend debería crear el plan Y luego ejecutarlo automáticamente con emit_step_event, pero según el usuario el frontend se queda en paso 1. Necesito confirmar si la ejecución automática se está iniciando o no.
 """
 
 import requests
