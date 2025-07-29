@@ -23,7 +23,7 @@
     {
       "test_name": "CORS Configuration",
       "success": true,
-      "details": "CORS properly configured: {'Access-Control-Allow-Origin': 'https://3440443f-1b4d-40a8-931a-a6b8c0a242e0.preview.emergentagent.com', 'Access-Control-Allow-Methods': 'DELETE, GET, OPTIONS, POST, PUT', 'Access-Control-Allow-Headers': 'Content-Type'}",
+      "details": "CORS properly configured: {'Access-Control-Allow-Origin': 'https://d608f718-a718-45a4-819a-24164cb88beb.preview.emergentagent.com', 'Access-Control-Allow-Methods': 'DELETE, GET, OPTIONS, POST, PUT', 'Access-Control-Allow-Headers': 'Content-Type'}",
       "timestamp": "2025-07-28T13:55:51.583924",
       "response_data": null
     },
@@ -37,7 +37,7 @@
     {
       "test_name": "Files Endpoint CORS",
       "success": true,
-      "details": "Files endpoints working: 3/3. Details: [{'endpoint': '/files/task-1753710463282', 'status_code': 200, 'cors_origin': 'Not set', 'success': True}, {'endpoint': 'https://3440443f-1b4d-40a8-931a-a6b8c0a242e0.preview.emergentagent.com', 'success': True}]",
+      "details": "Files endpoints working: 3/3. Details: [{'endpoint': '/files/task-1753710463282', 'status_code': 200, 'cors_origin': 'Not set', 'success': True}, {'endpoint': 'https://d608f718-a718-45a4-819a-24164cb88beb.preview.emergentagent.com', 'success': True}]",
       "timestamp": "2025-07-28T13:55:53.629722",
       "response_data": null
     },
