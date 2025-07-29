@@ -647,6 +647,33 @@ def get_stored_events(task_id):
         logger.error(f"Get stored events error: {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/test-cors', methods=['GET', 'POST', 'OPTIONS'])
+def test_cors():
+    """Test CORS configuration"""
+    if request.method == 'OPTIONS':
+        response = jsonify({'message': 'CORS preflight successful'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+        return response
+    
+    return jsonify({
+        'status': 'CORS test successful',
+        'origin': request.headers.get('Origin', 'No origin'),
+        'method': request.method,
+        'timestamp': datetime.now().isoformat()
+    })
+
+@app.route('/socket.io-test', methods=['GET'])
+def socket_io_test():
+    """Test socket.io availability without actual connection"""
+    return jsonify({
+        'status': 'Socket.IO test endpoint accessible',
+        'websocket_initialized': hasattr(app, 'websocket_manager'),
+        'origin': request.headers.get('Origin', 'No origin'),
+        'timestamp': datetime.now().isoformat()
+    })
+
 @app.route('/api/agent/websocket-test/<task_id>', methods=['GET'])
 def websocket_test(task_id):
     """Test WebSocket connection and task room joining"""
