@@ -37,7 +37,7 @@ class PlaywrightWebSearchTool(BaseTool):
                 required=True,
                 description="Términos de búsqueda",
                 min_value=1,
-                max_value=200
+                max_value=500
             ),
             ParameterDefinition(
                 name="search_engine", 
