@@ -171,13 +171,56 @@ export const useWebSocket = (): UseWebSocketReturn => {
     if (socket && isConnected) {
       socket.emit('join_task', { task_id: taskId });
       
-      // Setup WebSocket event listeners for real-time updates
-      socket.on('task_update', (data) => {
-        console.log('📡 WebSocket task update received:', data);
-        
-        const eventType = data.type;
-        if (eventListenersRef.current[eventType]) {
-          eventListenersRef.current[eventType](data.data);
+      // Setup DIRECT WebSocket event listeners for backend events
+      console.log('📡 Setting up direct WebSocket event listeners...');
+      
+      // Listen to specific events that backend emits
+      socket.on('plan_updated', (data) => {
+        console.log('📋 WebSocket plan_updated received:', data);
+        if (eventListenersRef.current.plan_updated) {
+          eventListenersRef.current.plan_updated(data);
+        }
+      });
+      
+      socket.on('step_started', (data) => {
+        console.log('🚀 WebSocket step_started received:', data);
+        if (eventListenersRef.current.step_started) {
+          eventListenersRef.current.step_started(data);
+        }
+      });
+      
+      socket.on('task_progress', (data) => {
+        console.log('🔄 WebSocket task_progress received:', data);
+        if (eventListenersRef.current.task_progress) {
+          eventListenersRef.current.task_progress(data);
+        }
+      });
+      
+      socket.on('tool_result', (data) => {
+        console.log('🔧 WebSocket tool_result received:', data);
+        if (eventListenersRef.current.tool_result) {
+          eventListenersRef.current.tool_result(data);
+        }
+      });
+      
+      socket.on('step_needs_more_work', (data) => {
+        console.log('⚠️ WebSocket step_needs_more_work received:', data);
+        if (eventListenersRef.current.step_needs_more_work) {
+          eventListenersRef.current.step_needs_more_work(data);
+        }
+      });
+      
+      socket.on('task_completed', (data) => {
+        console.log('🎉 WebSocket task_completed received:', data);
+        if (eventListenersRef.current.task_completed) {
+          eventListenersRef.current.task_completed(data);
+        }
+      });
+      
+      socket.on('task_failed', (data) => {
+        console.log('❌ WebSocket task_failed received:', data);
+        if (eventListenersRef.current.task_failed) {
+          eventListenersRef.current.task_failed(data);
         }
       });
       
