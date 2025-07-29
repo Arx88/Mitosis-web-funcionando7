@@ -2457,10 +2457,13 @@ def get_intelligent_context_manager():
 def get_tool_manager():
     """Obtener tool manager"""
     try:
+        # Primero intentar usar el tool manager de la app
         return current_app.tool_manager
     except AttributeError:
-        logger.error("Tool manager not available")
-        return None
+        # Si no está disponible, usar la instancia global
+        logger.info("Using global tool manager instance")
+        from ..tools.tool_manager import get_tool_manager as get_global_tool_manager
+        return get_global_tool_manager()
 
 def determine_unified_icon(task_message: str) -> str:
     """
