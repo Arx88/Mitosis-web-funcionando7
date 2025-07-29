@@ -713,53 +713,6 @@ def execute_comprehensive_research_step(title: str, description: str, tool_manag
             'summary': f'❌ Error en investigación: {str(e)}'
         }
 
-def execute_tavily_search_step(title: str, description: str, tool_manager, task_id: str, original_message: str) -> dict:
-    """🌐 BÚSQUEDA TAVILY - Búsqueda especializada"""
-    try:
-        logger.info(f"🌐 Ejecutando búsqueda Tavily: {title}")
-        
-        # Extraer query de búsqueda
-        search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
-        
-        if tool_manager and hasattr(tool_manager, 'execute_tool'):
-            # Intentar usar Tavily si está disponible, sino fallback a web_search
-            try:
-                result = tool_manager.execute_tool('tavily_search', {
-                    'query': search_query,
-                    'num_results': 6
-                }, task_id=task_id)
-            except:
-                # Fallback a playwright_web_search
-                result = tool_manager.execute_tool('playwright_web_search', {
-                    'query': search_query,
-                    'max_results': 6,
-                    'search_engine': 'bing',
-                    'extract_content': True
-                }, task_id=task_id)
-            
-            return {
-                'success': True,
-                'type': 'tavily_search',
-                'query': search_query,
-                'results_count': len(result.get('search_results', [])),
-                'count': len(result.get('search_results', [])),  # 🔥 FIX: Agregar count para compatibilidad
-                'results': result.get('search_results', []),    # 🔥 FIX: Agregar results para compatibilidad
-                'summary': f"✅ Búsqueda Tavily completada: {len(result.get('search_results', []))} resultados especializados",
-                'content': f"Búsqueda especializada sobre: {search_query}\n\nResultados: {len(result.get('search_results', []))} fuentes",
-                'data': result.get('search_results', [])
-            }
-        else:
-            raise Exception("Tool manager no disponible")
-            
-    except Exception as e:
-        logger.error(f"❌ Tavily search error: {str(e)}")
-        return {
-            'success': False,
-            'error': str(e),
-            'type': 'tavily_search_error',
-            'summary': f'❌ Error en búsqueda Tavily: {str(e)}'
-        }
-
 def execute_enhanced_web_search_step(title: str, description: str, tool_manager, task_id: str, original_message: str) -> dict:
     """🔍 BÚSQUEDA WEB MEJORADA - Búsqueda web con análisis mejorado"""
     try:
