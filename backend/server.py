@@ -11,24 +11,27 @@ import json
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-FRONTEND_ORIGINS = [
-    # 🌐 CONFIGURACIÓN DINÁMICA - ACEPTA CUALQUIER DOMINIO .preview.emergentagent.com
-    "https://*.preview.emergentagent.com",
+# CONFIGURACIÓN DINÁMICA DE CORS - SIN HARDCODED URLs
+def get_dynamic_cors_origins():
+    """
+    Sistema dinámico de CORS que acepta cualquier origen válido de emergent
+    SIN URLs hardcodeadas
+    """
+    base_origins = [
+        # DESARROLLO LOCAL
+        "http://localhost:3000",
+        "http://localhost:5173", 
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+        # FALLBACK UNIVERSAL
+        "*"
+    ]
     
-    # 🏠 DESARROLLO LOCAL
-    "http://localhost:3000",
-    "http://localhost:5173", 
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
-    
-    # 📱 DOMINIOS COMÚNES DE EMERGENT
-    "https://mitosis-executor-1.preview.emergentagent.com",
-    "https://mitosis-executor-2.preview.emergentagent.com", 
-    "https://mitosis-executor-3.preview.emergentagent.com",
-    
-    # 🌟 FALLBACK UNIVERSAL (último recurso)
-    "*"
-]
+    # TODO: En futuro podemos agregar validación de dominios específicos
+    # Por ahora usamos wildcard para máxima compatibilidad
+    return base_origins
+
+FRONTEND_ORIGINS = get_dynamic_cors_origins()
 from flask_socketio import SocketIO
 from dotenv import load_dotenv
 import pymongo
