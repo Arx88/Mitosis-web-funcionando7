@@ -161,20 +161,79 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     joinTaskRoom(socketConfig.roomName);
 
     const eventHandlers = {
+      // Eventos reales que emite el backend
       'task_progress': (data: any) => {
-        if (data.task_id === task.id) {
-          handleUpdateTask((currentTask: Task) => ({
-            ...currentTask,
-            progress: data.progress,
-            status: data.status || currentTask.status
-          }));
-          
-          if (onUpdateTaskProgress) {
-            onUpdateTaskProgress(task.id);
-          }
+        console.log('🔄 WebSocket task_progress received:', data);
+        
+        const logEntry = {
+          message: `[${data.step_id}] ${data.activity}`,
+          type: 'info' as const,
+          timestamp: new Date(data.timestamp || Date.now())
+        };
+        
+        setTerminalLogs(prev => [...prev, logEntry]);
+        
+        if (onUpdateTaskProgress) {
+          onUpdateTaskProgress(task.id);
         }
       },
       
+      'step_started': (data: any) => {
+        console.log('🚀 WebSocket step_started received:', data);
+        
+        const logEntry = {
+          message: `▶️ Iniciando: ${data.title}`,
+          type: 'success' as const,
+          timestamp: new Date(data.timestamp || Date.now())
+        };
+        
+        setTerminalLogs(prev => [...prev, logEntry]);
+      },
+      
+      'tool_result': (data: any) => {
+        console.log('🔧 WebSocket tool_result received:', data);
+        
+        const status = data.result?.success ? '✅' : '❌';
+        const logEntry = {
+          message: `${status} Herramienta ${data.tool}: ${data.result?.success ? 'Éxito' : data.result?.error || 'Error'}`,
+          type: data.result?.success ? 'success' as const : 'error' as const,
+          timestamp: new Date(data.timestamp || Date.now())
+        };
+        
+        setTerminalLogs(prev => [...prev, logEntry]);
+      },
+      
+      'step_needs_more_work': (data: any) => {
+        console.log('⚠️ WebSocket step_needs_more_work received:', data);
+        
+        const logEntry = {
+          message: `⚠️ Paso ${data.title} requiere más trabajo: ${data.feedback}`,
+          type: 'warning' as const,
+          timestamp: new Date(data.timestamp || Date.now())
+        };
+        
+        setTerminalLogs(prev => [...prev, logEntry]);
+      },
+      
+      'task_completed': (data: any) => {
+        console.log('🎉 WebSocket task_completed received:', data);
+        
+        const logEntry = {
+          message: '🎉 ¡Tarea completada exitosamente!',
+          type: 'success' as const,
+          timestamp: new Date(data.timestamp || Date.now())
+        };
+        
+        setTerminalLogs(prev => [...prev, logEntry]);
+        
+        // Actualizar el estado de la tarea a completada
+        handleUpdateTask((currentTask: Task) => ({
+          ...currentTask,
+          status: 'completed'
+        }));
+      },
+      
+      // Mantener eventos legacy para compatibilidad
       'task_message': (data: any) => {
         if (data.task_id === task.id) {
           const newMessage: Message = {
@@ -198,12 +257,6 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
           };
           
           setTerminalLogs(prev => [...prev, logEntry]);
-        }
-      },
-      
-      'typing_status': (data: any) => {
-        if (data.task_id === task.id) {
-          setIsTyping(data.typing);
         }
       }
     };
