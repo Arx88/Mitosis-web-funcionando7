@@ -58,6 +58,7 @@ class SimplePlaywrightWebSearch(BaseTool):
                     'query': query,
                     'results_count': len(results),
                     'results': results,
+                    'search_results': results,  # Agregar para compatibilidad
                     'search_engine': parameters.get('search_engine', 'google')
                 }
             )
