@@ -51,28 +51,39 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 app.config['START_TIME'] = time.time()
 
-# Configurar CORS - UNIFIED CONFIGURATION (removed manual after_request to avoid duplicates)
+# Configurar CORS - UNIFIED CONFIGURATION with explicit origins for WebSocket compatibility
+FRONTEND_ORIGINS = [
+    "https://0b80d189-2d16-41d3-96e6-14926f319934.preview.emergentagent.com",
+    "https://mitosis-runner-3.preview.emergentagent.com",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "*"  # Fallback for any other origins
+]
+
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["*"],
+        "origins": FRONTEND_ORIGINS,
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": False
+        "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
+        "supports_credentials": False,
+        "expose_headers": ["Content-Type", "Authorization"]
     },
     r"/files/*": {
-        "origins": ["*"],
+        "origins": FRONTEND_ORIGINS,
         "methods": ["GET", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+        "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin"]
     },
     r"/get-task-files/*": {
-        "origins": ["*"],
+        "origins": FRONTEND_ORIGINS,
         "methods": ["GET", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+        "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin"]
     },
     r"/socket.io/*": {
-        "origins": ["*"],
+        "origins": FRONTEND_ORIGINS,
         "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+        "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
+        "supports_credentials": False,
+        "expose_headers": ["Content-Type"]
     }
 })
 
