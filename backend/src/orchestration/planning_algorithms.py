@@ -674,7 +674,7 @@ class PlanningAlgorithms:
         """Encuentra una herramienta alternativa"""
         
         alternatives = {
-            "web_search": ["deep_research", "comprehensive_research", "tavily_search"],
+            "web_search": ["deep_research", "comprehensive_research"],
             "deep_research": ["web_search", "comprehensive_research"],
             "comprehensive_research": ["deep_research", "web_search"],
             "shell": ["file_manager"],
