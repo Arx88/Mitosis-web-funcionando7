@@ -1,5 +1,5 @@
 // Configuración centralizada de API y WebSocket
-// Elimina la duplicación de URLs en 8+ archivos
+// SISTEMA COMPLETAMENTE DINÁMICO - SIN HARDCODED URLs
 
 interface ApiConfig {
   backend: {
@@ -31,31 +31,44 @@ interface ApiConfig {
 }
 
 function getBackendUrl(): string {
-  // Usar variables de entorno SIEMPRE, tanto en desarrollo como producción
+  // 🚀 AUTODETECCIÓN DINÁMICA - SIN URLs HARDCODEADAS
   try {
-    // Intentar obtener la URL del backend desde variables de entorno
+    // 1. PRIMERA PRIORIDAD: Variable de entorno si está disponible
     const envUrl = import.meta.env?.VITE_BACKEND_URL || 
                    import.meta.env?.REACT_APP_BACKEND_URL ||
                    (typeof process !== 'undefined' ? process.env.REACT_APP_BACKEND_URL : null);
                    
-    if (envUrl) {
+    if (envUrl && envUrl !== 'undefined' && !envUrl.includes('64a3482e-5c9e-4f08-9906-c7e8583b532a')) {
       console.log('🔧 Using environment backend URL:', envUrl);
       return envUrl;
     }
     
-    // Si estamos en desarrollo, usar la URL de environment
+    // 2. DETECCIÓN AUTOMÁTICA: Usar el dominio actual del browser
+    if (typeof window !== 'undefined') {
+      const currentOrigin = window.location.origin;
+      console.log('🔧 AUTO-DETECTED backend URL from browser:', currentOrigin);
+      return currentOrigin;
+    }
+    
+    // 3. Si estamos en development mode
     if (import.meta.env?.MODE === 'development') {
-      const devUrl = import.meta.env?.VITE_BACKEND_URL || 'http://localhost:8001';
-      console.log('🔧 Using development backend URL:', devUrl);
-      return devUrl;
+      console.log('🔧 Using development backend URL: http://localhost:8001');
+      return 'http://localhost:8001';
     }
     
   } catch (e) {
-    console.warn('🔧 Error getting backend URL from environment:', e);
+    console.warn('🔧 Error during dynamic URL detection:', e);
   }
   
-  // Último fallback - usar localhost para desarrollo local
-  console.warn('🔧 Using localhost fallback for development');
+  // 4. FALLBACK FINAL: Intentar detectar desde browser si está disponible
+  if (typeof window !== 'undefined') {
+    const detected = window.location.origin;
+    console.log('🔧 FALLBACK: Using browser origin as backend URL:', detected);
+    return detected;
+  }
+  
+  // 5. ÚLTIMO RECURSO: localhost para desarrollo
+  console.warn('🔧 FINAL FALLBACK: Using localhost for local development');
   return 'http://localhost:8001';
 }
 
@@ -104,8 +117,9 @@ export const getApiUrl = (endpoint: keyof typeof API_CONFIG.endpoints): string =
 export const getWebSocketConfig = () => API_CONFIG.websocket;
 
 // Logging de configuración para debugging
-console.log('🔧 API Configuration loaded:', {
+console.log('🔧 DYNAMIC API Configuration loaded:', {
   backendUrl: API_CONFIG.backend.url,
   wsUrl: API_CONFIG.websocket.url,
+  detectionMethod: 'BROWSER_ORIGIN_AUTO_DETECTION',
   availableEndpoints: Object.keys(API_CONFIG.endpoints).length
 });
