@@ -198,6 +198,13 @@ def execute_single_step_detailed(task_id: str, step_id: str):
         current_step['result'] = step_result
         current_step['completed_time'] = datetime.now().isoformat()
         
+        # 🚀 CRÍTICO: ACTIVAR AUTOMÁTICAMENTE EL SIGUIENTE PASO
+        if step_index + 1 < len(steps):
+            next_step = steps[step_index + 1]
+            next_step['active'] = True
+            next_step['status'] = 'in-progress'
+            logger.info(f"🔄 Activando automáticamente el siguiente paso: {next_step.get('title', 'Sin título')}")
+        
         # Actualizar en persistencia
         update_task_data(task_id, {'plan': steps})
         
