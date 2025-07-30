@@ -4247,44 +4247,50 @@ def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool =
                 
                 # Prompts progresivamente más específicos
                 if attempt == 1:
-                    # Prompt optimizado y mejorado para generar JSON correcto
+                    # Prompt CORREGIDO para generar pasos que realmente cumplan la solicitud del usuario
                     plan_prompt = f"""INSTRUCCIÓN: Responde ÚNICAMENTE con JSON válido, sin texto adicional.
 
-Crea un plan específico para: {message}
+CORRECCIÓN CRÍTICA: Los pasos deben ejecutar EXACTAMENTE lo que el usuario pidió, no tareas genéricas.
 
+Solicitud del usuario: {message}
 Categoría detectada: {task_category}
+
+EJEMPLO CORRECTO:
+Si el usuario pide "Escribe un informe sobre los beneficios de la energía solar", el paso final debe ser:
+"title": "Escribir el informe sobre los beneficios de la energía solar",
+"description": "Crear el informe completo sobre los beneficios de la energía solar con datos específicos, ventajas económicas, ambientales y técnicas"
 
 JSON de respuesta (SOLO JSON, sin explicaciones):
 {{
   "steps": [
     {{
       "id": "step-1",
-      "title": "Investigación profunda sobre {message[:50]}",
-      "description": "Realizar investigación exhaustiva con múltiples fuentes especializadas sobre {message}",
+      "title": "Investigar información específica para {message}",
+      "description": "Buscar datos actualizados y específicos necesarios para completar: {message}",
       "tool": "web_search",
       "estimated_time": "8-10 minutos",
       "complexity": "media"
     }},
     {{
       "id": "step-2",
-      "title": "Análisis técnico detallado",
-      "description": "Analizar información recopilada aplicando metodologías específicas para {task_category}",
+      "title": "Analizar datos recopilados",
+      "description": "Procesar y estructurar la información encontrada para su uso en: {message}",
       "tool": "analysis", 
       "estimated_time": "10-12 minutos",
       "complexity": "alta"
     }},
     {{
       "id": "step-3",
-      "title": "Desarrollo y estructuración",
-      "description": "Crear estructura detallada y desarrollar componentes específicos del proyecto",
+      "title": "Desarrollar contenido base",
+      "description": "Crear la estructura y contenido preliminar requerido para: {message}",
       "tool": "creation",
       "estimated_time": "12-15 minutos", 
       "complexity": "alta"
     }},
     {{
       "id": "step-4",
-      "title": "Refinamiento y optimización",
-      "description": "Optimizar, validar y refinar el resultado final para máxima calidad",
+      "title": "{message}",
+      "description": "Completar y entregar exactamente lo solicitado: {message}",
       "tool": "processing",
       "estimated_time": "5-8 minutos",
       "complexity": "media"
