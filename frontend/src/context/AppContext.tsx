@@ -51,6 +51,7 @@ type AppAction =
   | { type: 'ADD_TASK'; payload: Task }
   | { type: 'UPDATE_TASK'; payload: Task }
   | { type: 'UPDATE_TASK_FUNCTIONAL'; payload: (task: Task) => Task }
+  | { type: 'UPDATE_TASK_ID'; payload: { oldId: string; newId: string; updatedTask: Task } }
   | { type: 'DELETE_TASK'; payload: string }
   | { type: 'SET_ACTIVE_TASK'; payload: string | null }
   | { type: 'TOGGLE_SIDEBAR'; payload?: boolean }
