@@ -614,13 +614,47 @@ def execute_step_with_intelligent_tool_selection(step: dict, task_analysis: dict
 
 def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
     """
-    🎯 EVALUADOR DE CALIDAD DE RESULTADOS - FIXED BUG
-    Determina si un resultado es lo suficientemente bueno
+    🎯 EVALUADOR DE CALIDAD DE RESULTADOS ULTRA-MEJORADO
+    Determina si un resultado es real y no meta-contenido
     """
     if not result.get('success', False):
         return False
     
     content = result.get('content', '') or result.get('summary', '')
+    
+    # 🚨 DETECCIÓN CRÍTICA DE META-CONTENIDO
+    meta_phrases = [
+        # Frases de planificación/metodología
+        'se realizará', 'se procederá', 'se analizará', 'se evaluará', 'se estudiará',
+        'este análisis se enfocará', 'este documento analizará', 'este informe presentará',
+        'los objetivos son', 'la metodología será', 'el siguiente paso será',
+        
+        # Frases de futuro/promesas
+        'analizaremos', 'evaluaremos', 'examinaremos', 'desarrollaremos',
+        'presentaremos', 'consideraremos', 'estudiaremos',
+        
+        # Frases de estructura
+        'el documento está estructurado', 'se divide en secciones',
+        'consta de las siguientes partes', 'incluye los siguientes capítulos'
+    ]
+    
+    # Detectar meta-contenido
+    meta_detected = any(phrase in content.lower() for phrase in meta_phrases)
+    if meta_detected:
+        logger.warning("❌ Resultado rechazado: META-CONTENIDO detectado")
+        logger.warning(f"   Frase detectada en: {content[:200]}...")
+        return False
+    
+    # 🔥 VERIFICACIÓN DE CONTENIDO VACÍO O GENÉRICO
+    generic_phrases = [
+        'información no disponible', 'datos no encontrados', 'sin información específica',
+        'información general', 'contenido básico', 'datos genéricos'
+    ]
+    
+    is_generic = any(phrase in content.lower() for phrase in generic_phrases)
+    if is_generic:
+        logger.warning("❌ Resultado rechazado: contenido genérico detectado")
+        return False
     
     # 🔥 BUG FIX: Verificar results_count solo si la herramienta la proporciona
     # Para herramientas como planning, creation, analysis, no rechazar por falta de results_count
@@ -629,14 +663,13 @@ def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
             logger.warning("❌ Resultado rechazado: 0 resultados encontrados")
             return False
     
-    
     # Si dice "0 resultados" en el contenido o resumen
     if '0 resultados' in content.lower() or '0 fuentes' in content.lower():
         logger.warning("❌ Resultado rechazado: contenido indica 0 resultados")
         return False
     
     # Criterios de calidad básicos
-    if len(content) < 100:  # Muy corto
+    if len(content) < 150:  # Aumentado de 100 a 150 para mayor exigencia
         logger.warning("❌ Resultado rechazado: contenido muy corto")
         return False
     
@@ -646,21 +679,38 @@ def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
             # Indicadores temporales
             '2024', '2025', '2023', '2022', 
             # Indicadores de datos
-            'estadística', 'dato', 'resultado', 'cifra', 'número',
+            'estadística', 'dato', 'resultado', 'cifra', 'número', 'porcentaje', '%',
             # Indicadores deportivos
             'jugador', 'equipo', 'partido', 'torneo',
             # Indicadores políticos/gubernamentales 🔥 FIX: Agregados para contenido político
             'presidente', 'gobierno', 'argentina', 'política', 'milei', 'congreso', 'ley',
             'decreto', 'ministro', 'diputado', 'senador', 'reforma', 'economía', 'inflación',
             # Indicadores de actualidad
-            'actualidad', 'reciente', 'nuevo', 'última', 'últimas'
+            'actualidad', 'reciente', 'nuevo', 'nueva', 'última', 'últimas',
+            # Indicadores técnicos/científicos
+            'beneficio', 'ventaja', 'desventaja', 'característica', 'propiedad',
+            # Indicadores de análisis real
+            'impacto', 'efecto', 'consecuencia', 'resultado', 'conclusión'
         ]
         found_indicators = [indicator for indicator in real_data_indicators if indicator in content.lower()]
         if not found_indicators:
             logger.warning(f"❌ Resultado rechazado: sin datos reales específicos - contenido analizado: {content[:200]}...")
             return False
         else:
-            logger.info(f"✅ Datos reales encontrados: {found_indicators}")
+            logger.info(f"✅ Datos reales encontrados: {found_indicators[:5]}")  # Mostrar solo primeros 5
+    
+    # ✅ NUEVA VALIDACIÓN: Verificar que tenga contenido sustancial
+    substantial_indicators = [
+        'beneficios', 'ventajas', 'características', 'propiedades', 'aspectos',
+        'factores', 'elementos', 'componentes', 'resultados', 'hallazgos',
+        'conclusiones', 'recomendaciones', 'estrategias', 'soluciones',
+        'impacto', 'efecto', 'influencia', 'consecuencias', 'implicaciones'
+    ]
+    
+    has_substantial_content = any(indicator in content.lower() for indicator in substantial_indicators)
+    if not has_substantial_content and len(content) < 300:
+        logger.warning("❌ Resultado rechazado: contenido no sustancial")
+        return False
     
     # Si es análisis, verificar que tenga estructura analítica - PERO NO PARA BÚSQUEDA WEB
     analysis_indicators = ['análisis', 'conclusión', 'recomendación', 'hallazgo', 'evaluación']
@@ -676,7 +726,7 @@ def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
                 logger.warning("❌ Resultado rechazado: sin estructura analítica")
                 return False
     
-    logger.info("✅ Resultado aprobado: cumple criterios de calidad")
+    logger.info("✅ Resultado aprobado: cumple todos los criterios de calidad")
     return True
 
 def execute_comprehensive_research_step(title: str, description: str, tool_manager, task_id: str, original_message: str) -> dict:
