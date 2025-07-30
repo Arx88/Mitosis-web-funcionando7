@@ -6503,7 +6503,17 @@ def chat():
             
             def delayed_execution():
                 with app.app_context():
-                    time.sleep(2)
+                    logger.info(f"⏳ DELAYING EXECUTION for task: {task_id} - waiting 5 seconds for frontend connection")
+                    time.sleep(5)
+                    
+                    # Check if there are active connections before starting
+                    if hasattr(current_app, 'websocket_manager') and current_app.websocket_manager:
+                        connection_count = current_app.websocket_manager.get_connection_count(task_id)
+                        logger.info(f"🔌 Active connections for task {task_id}: {connection_count}")
+                        
+                        if connection_count == 0:
+                            logger.warning(f"⚠️ No WebSocket connections for task {task_id}, but proceeding with execution")
+                    
                     logger.info(f"🚀 STARTING REAL EXECUTION for task: {task_id}")
                     try:
                         execute_task_steps_sequentially(task_id, plan_response.get('steps', []))
