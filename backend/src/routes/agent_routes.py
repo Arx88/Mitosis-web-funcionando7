@@ -1228,50 +1228,89 @@ Formato: Entrega profesional y completa.
         }
 
 def execute_generic_step(title: str, description: str, ollama_service, original_message: str) -> dict:
-    """Ejecutar paso genérico"""
+    """Ejecutar paso genérico - GENERA CONTENIDO REAL ESPECÍFICO"""
     try:
         if not ollama_service or not ollama_service.is_healthy():
             raise Exception("Servicio Ollama no disponible")
         
+        # 🚀 PROMPT ULTRA-CORREGIDO: GENERA CONTENIDO DIRECTO, NO META-CONTENIDO
         generic_prompt = f"""
-INSTRUCCIÓN DIRECTA: Genera EXACTAMENTE el contenido que se solicita, NO una descripción de lo que harás.
+INSTRUCCIÓN CRÍTICA: Eres un experto en el tema. EJECUTA y ENTREGA inmediatamente el contenido específico solicitado, NO describas lo que vas a hacer.
 
 TAREA ORIGINAL: {original_message}
 CONTENIDO A GENERAR: {title}
 DESCRIPCIÓN: {description}
 
-PROBLEMA A CORREGIR:
-❌ NO generes "Este documento analizará..."
-❌ NO generes "Se procederá a estudiar..."
-❌ NO generes "Los objetivos de este trabajo son..."
-❌ NO generes "El siguiente informe presentará..."
+REGLAS OBLIGATORIAS:
+🚫 PROHIBIDO escribir frases como:
+- "Este documento analizará", "Se procederá a estudiar", "Los objetivos de este trabajo son"
+- "El siguiente informe presentará", "Se realizará", "Se evaluará", "Se examinará"
+- "Este análisis se enfocará", "La metodología consistirá", "Se desarrollará"
 
-✅ SÍ genera DIRECTAMENTE:
-- El contenido específico solicitado
-- La información concreta sobre el tema
-- Los datos y análisis reales
-- Las conclusiones y recomendaciones
+✅ OBLIGATORIO generar DIRECTAMENTE:
+- El contenido específico solicitado (informe, análisis, documento)
+- Información concreta sobre el tema
+- Datos reales, beneficios, características
+- Conclusiones y recomendaciones específicas
+- Información práctica y útil
 
-EJEMPLO: Si se pide "informe sobre beneficios de energía solar", responde:
-"La energía solar ofrece múltiples beneficios: [beneficios específicos], los costos son: [datos específicos], la eficiencia: [información concreta]..."
+EJEMPLOS DE INICIO CORRECTO:
+Si se pidió "informe sobre beneficios de energía solar": "La energía solar ofrece múltiples beneficios económicos y ambientales. Los costos de instalación han descendido un 40% en cinco años..."
+Si se pidió "análisis de tecnología": "Las tecnologías emergentes están transformando el sector industrial. La automatización reduce costos operativos..."
+Si se pidió "estudio de mercado": "El mercado presenta un crecimiento anual del 12%, impulsado por la demanda creciente..."
+
+FORMATO: Genera directamente el contenido completo solicitado en español, con información específica y detallada.
 
 IMPORTANTE: Tu respuesta debe SER el contenido solicitado, no una descripción de lo que harás.
-
-Genera el contenido completo y específico solicitado en español.
 """
         
-        result = ollama_service.generate_response(generic_prompt, {'temperature': 0.7})
+        result = ollama_service.generate_response(generic_prompt, {'temperature': 0.6})
         
         if result.get('error'):
             raise Exception(f"Error Ollama: {result['error']}")
         
         content = result.get('response', 'Paso completado')
         
+        # 🔍 VALIDACIÓN ANTI-META ULTRA-ESTRICTA
+        meta_indicators = [
+            'este documento analizará', 'se procederá a', 'los objetivos de este',
+            'el siguiente informe presentará', 'se realizará', 'se evaluará',
+            'se examinará', 'este análisis se enfocará', 'la metodología',
+            'se desarrollará', 'analizaremos', 'evaluaremos', 'examinaremos'
+        ]
+        
+        is_meta_content = any(indicator in content.lower() for indicator in meta_indicators)
+        
+        if is_meta_content:
+            logger.warning("🚨 META-CONTENIDO DETECTADO en paso genérico, ejecutando retry ultra-estricto")
+            
+            # 🔄 RETRY CON PROMPT ULTRA-AGRESIVO
+            emergency_prompt = f"""
+EMERGENCIA: El contenido anterior fue rechazado por ser meta-descripción.
+
+GENERA INMEDIATAMENTE el contenido real sobre: {original_message}
+
+TEMA ESPECÍFICO: {title}
+
+INICIO OBLIGATORIO: Comienza tu respuesta directamente con información específica y concreta del tema.
+
+EJEMPLO CORRECTO: Si es sobre energía solar, comienza con: "La energía solar reduce significativamente los costos energéticos. Las instalaciones residenciales promedian..."
+
+PROHIBIDO usar: analizará, evaluará, estudiará, examinará, procederá, metodología, objetivos, presentará, desarrollará.
+
+GENERA EL CONTENIDO REAL AHORA (sin introducción meta):
+"""
+            
+            retry_result = ollama_service.generate_response(emergency_prompt, {'temperature': 0.4})
+            if not retry_result.get('error'):
+                content = retry_result.get('response', content)
+        
         return {
             'success': True,
             'type': 'generic_processing',
             'content': content,
-            'summary': f"✅ Paso completado: {title}"
+            'meta_retry_used': is_meta_content,
+            'summary': f"✅ Contenido real generado: {title}"
         }
         
     except Exception as e:
