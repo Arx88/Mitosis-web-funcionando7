@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>WebSocket Connection Test</h1>
+    <div id="status"></div>
+    <div id="messages"></div>
+    <button onclick="joinTask()">Join Task</button>
+    <button onclick="sendMessage()">Send Message</button>
+
+    <script>
+        const socket = io('https://a3c48966-4ece-4c0c-86b2-4e775a47e5e2.preview.emergentagent.com', {
+            path: '/api/socket.io/',
+            transports: ['polling', 'websocket'],
+            upgrade: true,
+            reconnection: true,
+            reconnectionDelay: 2000,
+            reconnectionAttempts: 10,
+            timeout: 30000,
+            forceNew: true
+        });
+
+        const statusDiv = document.getElementById('status');
+        const messagesDiv = document.getElementById('messages');
+
+        socket.on('connect', function() {
+            statusDiv.innerHTML = '✅ Connected! Session ID: ' + socket.id + '<br>Transport: ' + socket.io.engine.transport.name;
+            addMessage('Connected to WebSocket server');
+        });
+
+        socket.on('disconnect', function() {
+            statusDiv.innerHTML = '❌ Disconnected';
+            addMessage('Disconnected from WebSocket server');
+        });
+
+        socket.on('connection_established', function(data) {
+            addMessage('Connection established: ' + JSON.stringify(data));
+        });
+
+        socket.on('joined_task', function(data) {
+            addMessage('Joined task: ' + JSON.stringify(data));
+        });
+
+        socket.on('task_progress', function(data) {
+            addMessage('Task progress: ' + JSON.stringify(data));
+        });
+
+        socket.on('step_started', function(data) {
+            addMessage('Step started: ' + JSON.stringify(data));
+        });
+
+        socket.on('step_completed', function(data) {
+            addMessage('Step completed: ' + JSON.stringify(data));
+        });
+
+        socket.on('connect_error', function(error) {
+            statusDiv.innerHTML = '❌ Connection error: ' + error;
+            addMessage('Connection error: ' + error);
+        });
+
+        function addMessage(message) {
+            messagesDiv.innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+        }
+
+        function joinTask() {
+            socket.emit('join_task', { task_id: 'test-task-123' });
+        }
+
+        function sendMessage() {
+            socket.emit('test_message', { message: 'Hello from frontend' });
+        }
+    </script>
+</body>
+</html>
