@@ -5977,7 +5977,7 @@ def execute_step_internal(task_id: str, step_id: str, step: dict):
         task_data = get_task_data(task_id)
         if task_data and 'plan' in task_data:
             steps = task_data['plan']
-            for step_item in steps:
+            for i, step_item in enumerate(steps):
                 if step_item.get('id') == step_id:
                     if agent_evaluation.get('step_completed', True):
                         step_item['active'] = False
@@ -5986,6 +5986,14 @@ def execute_step_internal(task_id: str, step_id: str, step: dict):
                         step_item['completed_time'] = datetime.now().isoformat()
                         step_item['result'] = step_result
                         step_item['agent_evaluation'] = agent_evaluation
+                        
+                        # 🚀 CRÍTICO: ACTIVAR AUTOMÁTICAMENTE EL SIGUIENTE PASO
+                        if i + 1 < len(steps):
+                            next_step = steps[i + 1]
+                            next_step['active'] = True
+                            next_step['status'] = 'in-progress'
+                            logger.info(f"🔄 Activando automáticamente el siguiente paso: {next_step.get('title', 'Sin título')}")
+                        
                         logger.info(f"✅ Agent approved completion of step {step_id}")
                     else:
                         step_item['status'] = 'requires_more_work'
