@@ -989,53 +989,92 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
         }
 
 def execute_analysis_step(title: str, description: str, ollama_service, original_message: str) -> dict:
-    """Ejecutar paso de análisis - GENERA CONTENIDO REAL"""
+    """Ejecutar paso de análisis - GENERA CONTENIDO REAL DIRECTO"""
     try:
         if not ollama_service or not ollama_service.is_healthy():
             raise Exception("Servicio Ollama no disponible")
         
+        # 🚀 PROMPT CORREGIDO: GENERA CONTENIDO DIRECTO, NO META-DESCRIPCIONES
         analysis_prompt = f"""
-INSTRUCCIÓN DIRECTA: Genera EXACTAMENTE el análisis que se pide, NO un meta-análisis sobre qué harás.
+INSTRUCCIÓN CRÍTICA: Eres un experto analista. EJECUTA INMEDIATAMENTE el análisis solicitado y entrega los resultados REALES, NO planifiques lo que vas a hacer.
 
-TAREA: {original_message}
-ANÁLISIS REQUERIDO: {title}
-DESCRIPCIÓN: {description}
+TEMA A ANALIZAR: {original_message}
+ANÁLISIS ESPECÍFICO: {title}
+ENFOQUE: {description}
 
-CORRIGE ESTE COMPORTAMIENTO PROBLEMÁTICO:
-❌ NO escribas "Se realizará un análisis de..."
-❌ NO escribas "Este análisis se enfocará en..."
-❌ NO escribas "Se procederá a evaluar..."
-❌ NO escribas "Los objetivos de este análisis son..."
+REGLAS OBLIGATORIAS:
+🚫 PROHIBIDO escribir frases como:
+- "Se analizará", "Se evaluará", "Se estudiará"
+- "Este análisis se enfocará en"
+- "Los objetivos son", "La metodología será"
+- "Se procederá a", "Se realizará"
 
-✅ SÍ genera DIRECTAMENTE:
-- El análisis completo del tema solicitado
-- Los beneficios específicos de la energía solar (si eso se pide)
-- Los datos concretos y cifras relevantes
-- Las conclusiones basadas en información real
-- Las recomendaciones específicas
+✅ OBLIGATORIO generar DIRECTAMENTE:
+- Análisis específico con datos concretos
+- Conclusiones fundamentadas
+- Información específica y detallada
+- Beneficios, ventajas, desventajas según corresponda
+- Recomendaciones prácticas
 
-EJEMPLO CORRECTO:
-Si se pide "análisis de los beneficios de la energía solar", responde:
-"Los beneficios de la energía solar incluyen: [beneficios específicos], las ventajas económicas son: [datos específicos], el impacto ambiental: [información concreta]..."
+FORMATO REQUERIDO:
+Comienza inmediatamente con el contenido real del análisis. Por ejemplo:
 
-IMPORTANTE: Tu respuesta debe SER el análisis completo, no una descripción de qué análisis vas a hacer.
+Si es sobre energía solar: "La energía solar presenta múltiples beneficios económicos y ambientales. Los costos de instalación..."
+Si es sobre tecnología: "Las nuevas tecnologías de IA están transformando..."
+Si es sobre mercado: "El mercado actual muestra tendencias..."
 
-Genera el análisis completo y específico en español.
+GENERA AHORA el análisis completo, específico y detallado en español.
 """
         
-        result = ollama_service.generate_response(analysis_prompt, {'temperature': 0.7})
+        result = ollama_service.generate_response(analysis_prompt, {'temperature': 0.6})
         
         if result.get('error'):
             raise Exception(f"Error Ollama: {result['error']}")
         
         analysis_content = result.get('response', 'Análisis completado')
         
+        # 🔍 VALIDACIÓN ANTI-META: Detectar si generó meta-contenido
+        meta_indicators = [
+            'se analizará', 'se evaluará', 'se estudiará', 'se procederá',
+            'este análisis se enfocará', 'los objetivos son', 'la metodología',
+            'se realizará', 'analizaremos', 'evaluaremos', 'estudiaremos'
+        ]
+        
+        is_meta_content = any(indicator in analysis_content.lower() for indicator in meta_indicators)
+        
+        if is_meta_content:
+            logger.warning("🚨 META-CONTENIDO DETECTADO, ejecutando retry con prompt más estricto")
+            
+            # 🔄 RETRY CON PROMPT MÁS AGRESIVO
+            retry_prompt = f"""
+EMERGENCIA: El análisis anterior fue rechazado por ser meta-contenido.
+
+EJECUTA INMEDIATAMENTE el análisis sobre: {original_message}
+
+INICIO OBLIGATORIO: Comienza tu respuesta directamente con información específica del tema.
+
+EJEMPLO CORRECTO si es energía solar:
+"La energía solar reduce significativamente los costos energéticos a largo plazo. Una instalación residencial promedio..."
+
+EJEMPLO CORRECTO si es análisis de mercado:
+"El mercado presenta un crecimiento del X% anual, impulsado por factores como..."
+
+NO uses palabras como: analizará, evaluará, estudiará, procederá, metodología, objetivos.
+
+GENERA EL ANÁLISIS REAL AHORA:
+"""
+            
+            retry_result = ollama_service.generate_response(retry_prompt, {'temperature': 0.5})
+            if not retry_result.get('error'):
+                analysis_content = retry_result.get('response', analysis_content)
+        
         return {
             'success': True,
             'type': 'analysis',
             'content': analysis_content,
             'length': len(analysis_content),
-            'summary': f"✅ Análisis completado - {len(analysis_content)} caracteres generados"
+            'meta_retry_used': is_meta_content,
+            'summary': f"✅ Análisis real completado - {len(analysis_content)} caracteres generados"
         }
         
     except Exception as e:
