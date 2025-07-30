@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 # Backend URL
-BACKEND_URL = "https://a3c48966-4ece-4c0c-86b2-4e775a47e5e2.preview.emergentagent.com"
+BACKEND_URL = "https://bc41adec-714d-468d-8870-badec58bf366.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 def test_basic_backend_functionality():
@@ -22,7 +22,7 @@ def test_basic_backend_functionality():
     session.headers.update({
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Origin': 'https://a3c48966-4ece-4c0c-86b2-4e775a47e5e2.preview.emergentagent.com'
+        'Origin': 'https://bc41adec-714d-468d-8870-badec58bf366.preview.emergentagent.com'
     })
     
     results = {}
