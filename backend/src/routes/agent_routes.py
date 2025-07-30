@@ -1833,13 +1833,34 @@ def execute_processing_step(title: str, description: str, ollama_service, origin
             }
         
         processing_prompt = f"""
-Realiza el procesamiento solicitado para la tarea: {original_message}
+INSTRUCCIÓN DIRECTA: Genera EXACTAMENTE el contenido que se solicita en la tarea, NO una descripción de qué harás.
 
-Paso específico: {title}
-Descripción: {description}
+TAREA ORIGINAL: {original_message}
+CONTENIDO A GENERAR: {title}
+DESCRIPCIÓN: {description}
 
-Proporciona un resultado específico y útil para este paso.
-Responde de manera clara y profesional.
+CORRECCIÓN CRÍTICA: El usuario se queja que recibe "informes SOBRE el informe" en lugar del informe solicitado.
+
+❌ NO generes meta-contenido como:
+- "Este informe analizará los beneficios..."
+- "Se procederá a estudiar..."
+- "El objetivo de este documento es..."
+- "Los siguientes puntos serán evaluados..."
+
+✅ SÍ genera DIRECTAMENTE:
+- El informe sobre los beneficios de la energía solar (si eso se pide)
+- El análisis específico del tema solicitado
+- Los datos concretos y información real
+- Las conclusiones y recomendaciones específicas
+
+EJEMPLO: Si la tarea es "Escribe un informe sobre los beneficios de la energía solar":
+Respuesta CORRECTA: "Los beneficios de la energía solar incluyen: 1. Reducción de costos energéticos... 2. Impacto ambiental positivo... 3. Independencia energética..."
+
+Respuesta INCORRECTA: "Este informe analizará los beneficios de la energía solar y presentará..."
+
+IMPORTANTE: Tu respuesta debe SER el contenido solicitado, no una descripción de lo que planeas hacer.
+
+Genera el contenido completo, específico y útil solicitado en español.
 """
         
         result = ollama_service.generate_response(processing_prompt, {'temperature': 0.7})
