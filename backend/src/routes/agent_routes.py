@@ -1284,7 +1284,7 @@ Genera el contenido completo y específico solicitado en español.
         }
 
 def generate_professional_final_report(title: str, description: str, ollama_service, original_message: str, step: dict = None, task_id: str = None) -> dict:
-    """📋 GENERADOR DE INFORME FINAL PROFESIONAL - Crea informes con formato profesional usando datos REALES"""
+    """📋 GENERADOR DE INFORME FINAL PROFESIONAL - Crea informes con CONTENIDO REAL, NO META-DESCRIPCIONES"""
     try:
         logger.info(f"📋 Generando informe final profesional: {title}")
         
@@ -1348,35 +1348,36 @@ El proyecto ha sido completado según los requerimientos establecidos.
                 'summary': f"✅ Informe final profesional generado: {title}"
             }
         
-        # Prompt corregido: GENERA DIRECTAMENTE EL CONTENIDO SOLICITADO, NO UN META-INFORME
+        # 🚀 PROMPT COMPLETAMENTE CORREGIDO: GENERA EL CONTENIDO REAL SOLICITADO
         report_prompt = f"""
-INSTRUCCIÓN DIRECTA: Genera EXACTAMENTE el contenido que se está pidiendo, NO un informe SOBRE cómo hacer el contenido.
+INSTRUCCIÓN CRÍTICA: Eres un experto en el tema solicitado. GENERA DIRECTAMENTE el contenido específico que se pidió, NO un informe sobre cómo crear ese contenido.
 
-TAREA SOLICITADA: {original_message}
-CONTENIDO A GENERAR: {description}
+TAREA ORIGINAL: {original_message}
+CONTENIDO ESPECÍFICO A GENERAR: {description}
 
 {real_data_context}
 
-CORRECCIÓN CRÍTICA: 
-- Si se pide "un informe sobre los beneficios de la energía solar", GENERA DIRECTAMENTE el informe sobre los beneficios de la energía solar.
-- Si se pide "un análisis de X", GENERA DIRECTAMENTE el análisis de X.
-- Si se pide "un documento sobre Y", GENERA DIRECTAMENTE el documento sobre Y.
+REGLAS OBLIGATORIAS:
+🚫 PROHIBIDO escribir frases como:
+- "Este informe analizará", "Se procederá a evaluar", "Los objetivos son"
+- "La metodología será", "Se realizará un análisis", "Este documento presenta"
+- "Se estudiará", "Se examinará", "Se considerará"
 
-NO GENERES:
-❌ "Un informe que analizará..."
-❌ "Los siguientes puntos serán analizados..."  
-❌ "Se procederá a evaluar..."
-❌ "Este documento presenta una metodología para..."
+✅ OBLIGATORIO generar DIRECTAMENTE:
+- El contenido específico solicitado (análisis, informe, documento, etc.)
+- Información concreta y específica del tema
+- Datos reales, beneficios, características, estadísticas
+- Conclusiones fundamentadas
+- Recomendaciones prácticas
 
-SÍ GENERA:
-✅ El contenido real, específico y completo que se solicita
-✅ Los beneficios de la energía solar son: [contenido real]
-✅ El análisis muestra que: [análisis real]
-✅ Los datos indican: [información específica]
+EJEMPLOS DE INICIO CORRECTO:
+Si se pidió "informe sobre energía solar": "La energía solar representa una de las fuentes renovables más prometedoras. Los paneles fotovoltaicos actuales..."
+Si se pidió "análisis de mercado": "El mercado actual muestra un crecimiento sostenido del 15% anual, impulsado por..."
+Si se pidió "estudio de viabilidad": "La viabilidad del proyecto se sustenta en tres pilares fundamentales: viabilidad técnica..."
 
-FORMATO: Genera directamente el contenido profesional y completo solicitado en español, con información específica y útil.
+FORMATO: Genera directamente el contenido profesional completo solicitado en español, con información específica y útil.
 
-IMPORTANTE: Tu respuesta debe SER el contenido solicitado, no una descripción de lo que harás o planeas hacer.
+IMPORTANTE: Tu respuesta debe SER el contenido solicitado (informe/análisis/documento), no una descripción de lo que harás.
 """
         
         result = ollama_service.generate_response(report_prompt, {'temperature': 0.6})
@@ -1385,6 +1386,40 @@ IMPORTANTE: Tu respuesta debe SER el contenido solicitado, no una descripción d
             raise Exception(f"Error Ollama: {result['error']}")
         
         report_content = result.get('response', 'Informe final generado')
+        
+        # 🔍 VALIDACIÓN ANTI-META CRÍTICA
+        meta_phrases = [
+            'este informe analizará', 'se procederá a evaluar', 'los objetivos son',
+            'la metodología será', 'se realizará un análisis', 'este documento presenta',
+            'se estudiará', 'se examinará', 'se considerará', 'analizaremos',
+            'evaluaremos', 'examinaremos', 'consideraremos'
+        ]
+        
+        is_meta_report = any(phrase in report_content.lower() for phrase in meta_phrases)
+        
+        if is_meta_report:
+            logger.warning("🚨 META-INFORME DETECTADO, ejecutando retry con prompt ultra-estricto")
+            
+            # 🔄 RETRY CON PROMPT ULTRA-AGRESIVO ANTI-META
+            ultra_strict_prompt = f"""
+ALERTA CRÍTICA: El informe anterior fue rechazado por ser meta-contenido.
+
+GENERAR INMEDIATAMENTE el contenido real sobre: {original_message}
+
+INICIO OBLIGATORIO: Comienza directamente con información específica del tema solicitado.
+
+EJEMPLO si es energía solar: "La energía solar ofrece beneficios económicos significativos. Los costos de instalación han disminuido un 40% en los últimos cinco años..."
+
+EJEMPLO si es análisis empresarial: "La empresa presenta indicadores financieros sólidos. Los ingresos aumentaron un 25% este año..."
+
+PROHIBIDO usar: analizará, evaluará, estudiará, examinará, considerará, procederá, metodología, objetivos.
+
+GENERA EL CONTENIDO REAL AHORA (sin introducción meta):
+"""
+            
+            retry_result = ollama_service.generate_response(ultra_strict_prompt, {'temperature': 0.5})
+            if not retry_result.get('error'):
+                report_content = retry_result.get('response', report_content)
         
         # Agregar metadatos profesionales al informe
         current_date = datetime.now().strftime('%Y-%m-%d')
@@ -1410,6 +1445,7 @@ IMPORTANTE: Tu respuesta debe SER el contenido solicitado, no una descripción d
             'type': 'professional_final_report',
             'content': professional_report,
             'length': len(professional_report),
+            'meta_retry_used': is_meta_report,
             'summary': f"✅ Informe final profesional completado: {len(professional_report)} caracteres"
         }
         
