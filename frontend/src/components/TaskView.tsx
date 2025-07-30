@@ -492,7 +492,10 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
           handleUpdateTask((currentTask: Task) => {
             if (!currentTask.plan) return currentTask;
             
-            const updatedPlan = currentTask.plan.map(step => {
+            const currentStepIndex = currentTask.plan.findIndex(step => step.id === stepData.step_id);
+            const nextStepIndex = currentStepIndex + 1;
+            
+            const updatedPlan = currentTask.plan.map((step, index) => {
               if (step.id === stepData.step_id) {
                 return {
                   ...step,
@@ -500,13 +503,32 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
                   status: 'completed',
                   completed: true
                 };
+              } else if (index === nextStepIndex && nextStepIndex < currentTask.plan.length) {
+                return {
+                  ...step,
+                  active: true,
+                  status: 'in-progress',
+                  completed: false
+                };
+              } else {
+                return {
+                  ...step,
+                  active: false
+                };
               }
-              return step;
             });
             
             const completedSteps = updatedPlan.filter(s => s.completed).length;
             const totalSteps = updatedPlan.length;
             const progress = Math.round((completedSteps / totalSteps) * 100);
+            
+            console.log('🤖 Agent activity updated plan:', {
+              stepId: stepData.step_id,
+              progress,
+              completedSteps,
+              totalSteps,
+              nextActiveStep: updatedPlan.find(s => s.active)?.title
+            });
             
             return {
               ...currentTask,
