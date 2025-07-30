@@ -845,31 +845,38 @@ The user's report remains accurate: tasks continue to get stuck on step 1 due to
 
 ---
 
-## 🧪 **STEP PROGRESSION FUNCTIONALITY TESTING COMPLETED** (January 2025) - TESTING AGENT REVIEW
+## 🧪 **STEP PROGRESSION FUNCTIONALITY TESTING COMPLETED AFTER WEBSOCKET FIXES** (January 2025) - TESTING AGENT REVIEW
 
-### ❌ **TESTING REQUEST FULFILLED - STEP PROGRESSION NOT WORKING AS EXPECTED**
+### ❌ **TESTING REQUEST FULFILLED - WEBSOCKET FIXES DID NOT RESOLVE STEP PROGRESSION ISSUES**
 
-**TESTING REQUEST**: Test the step progression functionality in the Mitosis application after backend bug fixes. Verify that plans appear with 4 steps and show active/processing states as they execute.
+**TESTING REQUEST**: Test the step progression functionality in the Mitosis application after fixing the WebSocket configuration. Verify that connection status no longer shows "OFFLINE", plans appear with 4 steps, and step progression occurs automatically (Step 1 → Step 2 → Step 3 → Step 4).
+
+**CONTEXT PROVIDED**: 
+- Frontend .env was fixed to use http://localhost:8001 instead of preview URLs
+- Backend step progression confirmed working perfectly with logs showing proper step transitions
+- Backend emits WebSocket events correctly for step transitions
+- Issue was supposedly WebSocket connection failure due to URL mismatch
 
 **SPECIFIC TESTING COMPLETED**:
 1. ✅ **Open Application**: Successfully accessed https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com
 2. ✅ **Create New Task**: Successfully clicked "Nueva tarea" and transitioned to TaskView
-3. ✅ **Enter Message**: Successfully entered "Crear un análisis de tecnología 2025"
+3. ✅ **Enter Message**: Successfully entered "Crear una presentación sobre sostenibilidad"
 4. ✅ **Send Message**: Successfully sent message via chat interface
 5. ❌ **Plan Generation**: NO "PLAN DE ACCIÓN" section appears
-6. ❌ **Step Progression**: NO step progression from 1 → 2 → 3 → 4 detected
-7. ❌ **Connection Status**: Shows "OFFLINE" consistently (multiple indicators found)
-8. ❌ **Real-time Updates**: NO real-time updates occur during 30-second monitoring
+6. ❌ **Step Progression**: NO step progression from 1 → 2 → 3 → 4 detected during 20-second monitoring
+7. ❌ **Connection Status**: Shows "OFFLINE" consistently (2 OFFLINE indicators found)
+8. ❌ **Real-time Updates**: NO real-time updates occur during monitoring period
 
 **URL TESTED**: https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com
-**TEST MESSAGE**: "Crear un análisis de tecnología 2025"
+**TEST MESSAGE**: "Crear una presentación sobre sostenibilidad"
 
 **TESTING METHODOLOGY**:
 1. **Comprehensive UI Testing**: Used Playwright automation to test complete workflow
-2. **Step Progression Monitoring**: Monitored for 30 seconds for step progression indicators
+2. **Step Progression Monitoring**: Monitored for 20 seconds for step progression indicators as requested
 3. **Connection Status Verification**: Checked for ONLINE/OFFLINE status indicators
 4. **Plan Section Detection**: Searched for "PLAN DE ACCIÓN" section and step indicators
 5. **Visual Documentation**: Captured 4 screenshots documenting the complete flow
+6. **Console Log Analysis**: Monitored WebSocket connection attempts and backend communication
 
 ### 📊 **CRITICAL TESTING RESULTS**:
 
@@ -882,30 +889,30 @@ The user's report remains accurate: tasks continue to get stuck on step 1 due to
 - **Send Functionality**: ✅ Send button works and processes messages
 - **Testing Result**: ✅ **VERIFIED** - Basic UI functionality working perfectly
 
-#### ❌ **2. PLAN GENERATION - COMPLETELY BROKEN (0% SUCCESS)**:
+#### ❌ **2. WEBSOCKET CONNECTION - STILL SHOWING OFFLINE (0% SUCCESS)**:
+**Implementation Status**: ❌ **CRITICAL FAILURE - WEBSOCKET FIXES DID NOT WORK**
+- **Connection Status**: ❌ 2 "OFFLINE" indicators found in final state (red indicators visible)
+- **WebSocket Initialization**: ✅ Console shows "🔌 Initializing WebSocket connection..." 
+- **WebSocket Success**: ✅ Console shows "✅ WebSocket connected successfully!" and "🔧 Transport: polling"
+- **Backend Confirmation**: ✅ Console shows "🎉 Backend confirmed connection: {status: connected}"
+- **UI Status Display**: ❌ Despite successful WebSocket connection, UI still shows OFFLINE status
+- **Testing Result**: ❌ **CRITICAL FAILURE** - WebSocket connects but UI shows OFFLINE, indicating display issue
+
+#### ❌ **3. PLAN GENERATION - COMPLETELY BROKEN (0% SUCCESS)**:
 **Implementation Status**: ❌ **CRITICAL FAILURE - NO PLAN GENERATION**
 - **Plan de Acción Section**: ❌ NO "PLAN DE ACCIÓN" section appears after message sent
 - **4-Step Plan Structure**: ❌ NO structured plan with 4 steps is generated or displayed
 - **Progress Indicator**: ❌ NO "0 de 4 tareas completadas" or similar progress tracking
-- **Automatic Trigger**: ❌ NO automatic plan generation after message submission
-- **Backend Response**: ❌ NO plan data received from backend
-- **Testing Result**: ❌ **CRITICAL FAILURE** - Core plan generation functionality completely broken
-
-#### ❌ **3. WEBSOCKET CONNECTION - OFFLINE (0% SUCCESS)**:
-**Implementation Status**: ❌ **CRITICAL FAILURE - CONNECTION CONSISTENTLY OFFLINE**
-- **Connection Status**: ❌ Multiple "OFFLINE" indicators found throughout interface
-- **WebSocket Events**: ❌ NO WebSocket events received during testing
-- **Real-time Updates**: ❌ NO real-time communication with backend
-- **Connection Indicators**: ❌ Consistent OFFLINE status across all interface elements
-- **Backend Communication**: ❌ NO WebSocket connection established
-- **Testing Result**: ❌ **CRITICAL FAILURE** - WebSocket connection completely non-functional
+- **Backend Response**: ✅ Backend responds with 200 status but console shows "🚨 NUEVA TAREA FIX: No valid plan in response"
+- **Plan Data**: ❌ Backend response lacks plan structure despite successful communication
+- **Testing Result**: ❌ **CRITICAL FAILURE** - Backend communication works but no plan data returned
 
 #### ❌ **4. STEP PROGRESSION - NOT FUNCTIONAL (0% SUCCESS)**:
 **Implementation Status**: ❌ **CRITICAL FAILURE - NO STEP PROGRESSION**
 - **Step Indicators**: ❌ NO step indicators (1, 2, 3, 4) visible in interface
 - **Active Step Display**: ❌ NO active/processing step states shown
-- **Step Transitions**: ❌ NO progression from step 1 → step 2 → step 3 → step 4
-- **Progress Monitoring**: ❌ NO step progression detected during 30-second monitoring
+- **Step Transitions**: ❌ NO progression from step 1 → step 2 → step 3 → step 4 during 20-second monitoring
+- **Progress Monitoring**: ❌ NO step progression detected during monitoring period
 - **Visual Feedback**: ❌ NO visual indicators of step execution or completion
 - **Testing Result**: ❌ **CRITICAL FAILURE** - Step progression functionality completely absent
 
@@ -922,83 +929,86 @@ The user's report remains accurate: tasks continue to get stuck on step 1 due to
 
 #### **PRIMARY ISSUES IDENTIFIED**:
 
-1. **WebSocket Connection Failure**: 
-   - Multiple OFFLINE status indicators throughout interface
-   - No WebSocket events received during testing
-   - Backend not establishing WebSocket connection with frontend
+1. **WebSocket Connection Display Issue**: 
+   - Console logs show successful WebSocket connection with polling transport
+   - Backend confirms connection with "status: connected"
+   - BUT UI still displays OFFLINE status indicators
+   - This suggests a frontend display/state management issue, not connection failure
 
-2. **Missing Plan Generation**:
-   - No "PLAN DE ACCIÓN" section appears after message submission
-   - Backend not generating or sending plan data to frontend
-   - No 4-step plan structure visible in interface
+2. **Backend Plan Generation Issue**:
+   - Backend responds successfully (200 status) to chat requests
+   - Console warning: "🚨 NUEVA TAREA FIX: No valid plan in response"
+   - Backend is not returning plan structure in response
+   - This is a backend logic issue, not a WebSocket issue
 
-3. **No Step Progression System**:
-   - No step indicators (1, 2, 3, 4) visible
-   - No active/processing states shown
-   - No progression from step to step detected
+3. **Missing Real-time Event Emission**:
+   - WebSocket connection is established successfully
+   - Backend joins task room correctly
+   - But no task_progress, step_completed, or other real-time events are emitted
+   - Backend is not triggering plan execution or emitting progress events
 
-4. **Backend Event Emission Missing**:
-   - Monitor shows "Esperando datos del agente..." but receives no data
-   - No task_progress, step_completed, or other WebSocket events
-   - Backend not emitting real-time updates
+4. **Frontend Plan Display Logic**:
+   - Frontend expects plan data in backend response
+   - When no plan is received, no "PLAN DE ACCIÓN" section is displayed
+   - Frontend WebSocket listeners are set up correctly but receive no events
 
 ### 🎯 **FINAL ASSESSMENT**:
 
-**STATUS**: ❌ **STEP PROGRESSION FUNCTIONALITY NOT WORKING - CRITICAL ISSUES PERSIST**
+**STATUS**: ❌ **WEBSOCKET FIXES DID NOT RESOLVE STEP PROGRESSION ISSUES**
 
 **FUNCTIONALITY STATUS**: **25%** - Only basic UI loading and task creation work
-**PLAN GENERATION**: **0%** - No plans generated or displayed
-**WEBSOCKET CONNECTION**: **0%** - Consistently shows OFFLINE status
+**WEBSOCKET CONNECTION**: **50%** - Connects successfully but UI shows OFFLINE (display issue)
+**PLAN GENERATION**: **0%** - Backend doesn't return plan structure
 **STEP PROGRESSION**: **0%** - No step progression functionality detected
 **REAL-TIME UPDATES**: **0%** - No real-time monitoring or updates
 
 **EVIDENCE SUMMARY**:
 1. ✅ **Homepage and UI**: Working perfectly - professional interface loads correctly
 2. ✅ **Task Creation**: Working - "Nueva tarea" creates tasks and shows TaskView
-3. ❌ **Plan Generation**: BROKEN - No "PLAN DE ACCIÓN" section appears
-4. ❌ **WebSocket Connection**: BROKEN - Shows OFFLINE status consistently
+3. ⚠️ **WebSocket Connection**: PARTIALLY WORKING - Connects but UI shows OFFLINE
+4. ❌ **Plan Generation**: BROKEN - Backend doesn't return plan structure
 5. ❌ **Step Progression**: BROKEN - No step indicators or progression detected
 6. ❌ **Real-time Updates**: BROKEN - No real-time monitoring or agent activity
-7. ❌ **Backend Integration**: BROKEN - No plan data or WebSocket events received
+7. ❌ **Backend Plan Logic**: BROKEN - Backend responds but without plan data
 
-**RECOMMENDATION**: ❌ **BACKEND BUG FIXES DID NOT RESOLVE STEP PROGRESSION ISSUES**
+**RECOMMENDATION**: ❌ **WEBSOCKET FIXES WERE INSUFFICIENT - MULTIPLE ISSUES REMAIN**
 
-The comprehensive testing reveals that despite the claimed backend bug fixes for step progression, the core issues persist:
+The comprehensive testing reveals that the WebSocket configuration fixes were partially successful but did not resolve the core step progression issues:
 
-**CRITICAL FIXES STILL NEEDED**:
-1. **Fix WebSocket Connection** (Critical - OFFLINE status prevents all real-time communication)
-2. **Implement Plan Generation** (Critical - no "PLAN DE ACCIÓN" section appears)
-3. **Add Step Progression System** (Critical - no step indicators or progression visible)
-4. **Enable Backend Event Emission** (Critical - backend not emitting WebSocket events)
-5. **Connect Plan Execution to Frontend** (Critical - no real-time updates from backend)
+**WEBSOCKET STATUS**: ✅ **PARTIALLY FIXED** - Connection works but UI display issue remains
+**CORE ISSUES STILL PRESENT**:
+1. **Backend Plan Generation Logic** (Critical - backend doesn't generate/return plan structure)
+2. **Frontend Connection Status Display** (High - UI shows OFFLINE despite successful connection)
+3. **Backend Event Emission** (Critical - no real-time events emitted for step progression)
+4. **Plan Execution Trigger** (Critical - backend doesn't start plan execution automatically)
 
 **TESTING EVIDENCE**:
-- **Total Tests**: 8 comprehensive test scenarios covering complete step progression workflow
-- **Success Rate**: 25% overall functionality (only basic UI works)
+- **Total Tests**: 7 comprehensive test scenarios covering complete step progression workflow
+- **Success Rate**: 25% overall functionality (basic UI + partial WebSocket)
 - **Screenshots**: 4 detailed screenshots documenting persistent issues
-- **Connection Status**: Multiple OFFLINE indicators found throughout interface
-- **Plan Generation**: No "PLAN DE ACCIÓN" section detected
-- **Step Progression**: No step indicators (1, 2, 3, 4) found during 30-second monitoring
+- **Console Analysis**: WebSocket connects successfully but backend doesn't emit events
+- **Plan Generation**: Backend responds but without plan structure
+- **Step Progression**: No step indicators found during 20-second monitoring as requested
 
-**STEP PROGRESSION STATUS**: ❌ **NOT FUNCTIONAL - BACKEND FIXES DID NOT WORK**
+**STEP PROGRESSION STATUS**: ❌ **NOT FUNCTIONAL - BACKEND LOGIC ISSUES REMAIN**
 
-The step progression functionality is completely non-functional. The application creates tasks successfully but:
-1. No plans are generated or displayed
-2. WebSocket connection remains OFFLINE
+The step progression functionality is still non-functional. While WebSocket connection was partially fixed:
+1. Backend doesn't generate or return plan structures
+2. UI incorrectly shows OFFLINE status despite successful WebSocket connection
 3. No step progression occurs (no 1 → 2 → 3 → 4 progression)
-4. Monitor shows "Esperando datos del agente..." but receives no data
-5. No real-time updates or agent activity detected
+4. Backend doesn't emit real-time events for step transitions
+5. Monitor shows "Esperando datos del agente..." but receives no data
 
 **COMPONENT STATUS SUMMARY**:
 - ✅ **Homepage UI**: WORKING PERFECTLY
 - ✅ **Task Creation**: WORKING PERFECTLY  
-- ❌ **Plan Generation**: COMPLETELY BROKEN
-- ❌ **WebSocket Connection**: COMPLETELY BROKEN (OFFLINE)
+- ⚠️ **WebSocket Connection**: PARTIALLY WORKING (connects but UI shows OFFLINE)
+- ❌ **Plan Generation**: COMPLETELY BROKEN (backend logic issue)
 - ❌ **Step Progression**: COMPLETELY BROKEN
 - ❌ **Real-time Updates**: COMPLETELY BROKEN
-- ❌ **Backend Integration**: COMPLETELY BROKEN
+- ❌ **Backend Event Emission**: COMPLETELY BROKEN
 
-**CONCLUSION**: The backend bug fixes for step progression have NOT resolved the issues. The user's report remains accurate: tasks get stuck because no plans are generated, no step progression occurs, and the WebSocket connection remains OFFLINE, preventing any real-time updates or autonomous agent functionality.
+**CONCLUSION**: The WebSocket configuration fixes were partially successful (connection now works) but did not resolve the core step progression issues. The main problems are now in backend plan generation logic and event emission, not WebSocket connectivity. The user's report remains accurate: tasks get stuck because backend doesn't generate plans or emit step progression events, despite having a working WebSocket connection.
 
 ---
 
