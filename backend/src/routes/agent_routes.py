@@ -995,24 +995,32 @@ def execute_analysis_step(title: str, description: str, ollama_service, original
             raise Exception("Servicio Ollama no disponible")
         
         analysis_prompt = f"""
-IMPORTANTE: Genera el CONTENIDO REAL solicitado, NO un plan de cómo hacerlo.
+INSTRUCCIÓN DIRECTA: Genera EXACTAMENTE el análisis que se pide, NO un meta-análisis sobre qué harás.
 
-Tarea original: {original_message}
-Paso específico: {title}
-Descripción: {description}
+TAREA: {original_message}
+ANÁLISIS REQUERIDO: {title}
+DESCRIPCIÓN: {description}
 
-GENERA DIRECTAMENTE el análisis detallado y específico que se está solicitando.
-NO escribas "utilizaré herramientas" o "plan de acción".
-NO listes pasos de cómo hacer el trabajo.
+CORRIGE ESTE COMPORTAMIENTO PROBLEMÁTICO:
+❌ NO escribas "Se realizará un análisis de..."
+❌ NO escribas "Este análisis se enfocará en..."
+❌ NO escribas "Se procederá a evaluar..."
+❌ NO escribas "Los objetivos de este análisis son..."
 
-Proporciona DIRECTAMENTE:
-1. El análisis específico del contexto (con datos reales si los conoces)
-2. Los hallazgos principales concretos
-3. Las recomendaciones específicas y accionables
-4. Las conclusiones fundamentadas
+✅ SÍ genera DIRECTAMENTE:
+- El análisis completo del tema solicitado
+- Los beneficios específicos de la energía solar (si eso se pide)
+- Los datos concretos y cifras relevantes
+- Las conclusiones basadas en información real
+- Las recomendaciones específicas
 
-Responde SOLO con el contenido analítico real, completo y detallado.
-Formato: Respuesta estructurada y profesional en español.
+EJEMPLO CORRECTO:
+Si se pide "análisis de los beneficios de la energía solar", responde:
+"Los beneficios de la energía solar incluyen: [beneficios específicos], las ventajas económicas son: [datos específicos], el impacto ambiental: [información concreta]..."
+
+IMPORTANTE: Tu respuesta debe SER el análisis completo, no una descripción de qué análisis vas a hacer.
+
+Genera el análisis completo y específico en español.
 """
         
         result = ollama_service.generate_response(analysis_prompt, {'temperature': 0.7})
