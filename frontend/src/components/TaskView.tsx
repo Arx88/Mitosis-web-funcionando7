@@ -284,7 +284,8 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
               return {
                 ...step,
                 active: true,
-                status: 'pending'
+                status: 'in-progress',
+                completed: false
               };
             } else {
               return {
