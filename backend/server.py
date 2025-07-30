@@ -410,20 +410,38 @@ def apply_configuration():
         
         new_config = data['config']
         
-        # Aplicar configuración de Ollama
+        # 🔧 FIX PROBLEMA 2: Aplicar configuración de Ollama CON MODELO
         if 'ollama' in new_config:
             ollama_config = new_config['ollama']
+            
+            # Actualizar endpoint si se proporciona
             if 'endpoint' in ollama_config:
-                # Actualizar servicio Ollama si existe
                 if hasattr(app, 'ollama_service') and app.ollama_service:
                     success = app.ollama_service.update_endpoint(ollama_config['endpoint'])
                     if not success:
                         logger.warning(f"Failed to update Ollama endpoint to {ollama_config['endpoint']}")
+            
+            # 🚀 CRÍTICO FIX: Actualizar modelo activo cuando se cambie desde el frontend
+            if 'model' in ollama_config:
+                new_model = ollama_config['model']
+                if hasattr(app, 'ollama_service') and app.ollama_service:
+                    # Actualizar el modelo actual del servicio
+                    old_model = app.ollama_service.get_current_model()
+                    app.ollama_service.current_model = new_model
+                    
+                    logger.info(f"🔄 Modelo Ollama actualizado desde configuración: {old_model} → {new_model}")
+                    print(f"🔄 Modelo Ollama actualizado desde configuración: {old_model} → {new_model}")
+                    
+                    # También actualizar la variable de entorno para persistencia
+                    os.environ['OLLAMA_DEFAULT_MODEL'] = new_model
         
         # Verificar nueva configuración
         ollama_connected = False
+        current_model = os.getenv('OLLAMA_DEFAULT_MODEL', 'llama3.1:8b')
+        
         if hasattr(app, 'ollama_service') and app.ollama_service:
             ollama_connected = app.ollama_service.is_healthy()
+            current_model = app.ollama_service.get_current_model()
         
         result = {
             "success": True,
@@ -432,8 +450,9 @@ def apply_configuration():
                 "ollama": {
                     "enabled": new_config.get('ollama', {}).get('enabled', True),
                     "endpoint": new_config.get('ollama', {}).get('endpoint', os.getenv('OLLAMA_BASE_URL')),
-                    "model": new_config.get('ollama', {}).get('model', os.getenv('OLLAMA_DEFAULT_MODEL')),
-                    "connected": ollama_connected
+                    "model": current_model,  # 🔧 FIX: Devolver el modelo actual real
+                    "connected": ollama_connected,
+                    "model_updated": True  # 🔧 FIX: Indicar que el modelo fue actualizado
                 },
                 "openrouter": {
                     "enabled": new_config.get('openrouter', {}).get('enabled', False)
