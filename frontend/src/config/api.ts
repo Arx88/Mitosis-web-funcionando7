@@ -98,8 +98,8 @@ export const API_CONFIG: ApiConfig = {
     url: `${getBackendUrl()}`,  // Solo la URL base
     options: {
       path: '/api/socket.io/',    // PATH EXPLÍCITO  
-      transports: ['polling'],     // SOLO POLLING para máxima estabilidad
-      upgrade: false,              // NO upgrade a websocket
+      transports: ['polling', 'websocket'],     // TANTO POLLING COMO WEBSOCKET
+      upgrade: true,              // PERMITIR upgrade a websocket
       reconnection: true,
       reconnectionDelay: 2000,     // Delay más largo para estabilidad
       reconnectionAttempts: 10, // More attempts for stability
