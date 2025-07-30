@@ -5639,6 +5639,15 @@ def start_task_execution(task_id: str):
                                 next_step['active'] = True
                                 next_step['status'] = 'in-progress'
                                 logger.info(f"🔄 Activando automáticamente el siguiente paso: {next_step.get('title', 'Sin título')}")
+                                
+                                # 🚀 EMITIR EVENTO WEBSOCKET PARA EL SIGUIENTE PASO ACTIVADO
+                                emit_step_event(task_id, 'step_started', {
+                                    'step_id': next_step.get('id'),
+                                    'title': next_step.get('title', 'Siguiente paso'),
+                                    'description': next_step.get('description', ''),
+                                    'activity': f"Iniciando paso: {next_step.get('title', 'Sin título')}",
+                                    'timestamp': datetime.now().isoformat()
+                                })
                             
                             logger.info(f"✅ Agent approved completion of step {i+1}: {step['title']}")
                             
