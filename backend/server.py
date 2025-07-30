@@ -425,15 +425,23 @@ def apply_configuration():
             if 'model' in ollama_config:
                 new_model = ollama_config['model']
                 if hasattr(app, 'ollama_service') and app.ollama_service:
-                    # Actualizar el modelo actual del servicio
+                    # Actualizar el modelo actual del servicio FORZADAMENTE
                     old_model = app.ollama_service.get_current_model()
-                    app.ollama_service.current_model = new_model
+                    success = app.ollama_service.set_model(new_model)  # Usar set_model que ahora fuerza el cambio
                     
-                    logger.info(f"🔄 Modelo Ollama actualizado desde configuración: {old_model} → {new_model}")
-                    print(f"🔄 Modelo Ollama actualizado desde configuración: {old_model} → {new_model}")
+                    logger.info(f"🔄 Modelo Ollama actualizado desde configuración: {old_model} → {new_model} (success: {success})")
+                    print(f"🔄 Modelo Ollama actualizado desde configuración: {old_model} → {new_model} (success: {success})")
                     
                     # También actualizar la variable de entorno para persistencia
                     os.environ['OLLAMA_DEFAULT_MODEL'] = new_model
+                    
+                    # Verificar que efectivamente se cambió
+                    current_after_change = app.ollama_service.get_current_model()
+                    logger.info(f"🔍 Verificación post-cambio: {current_after_change}")
+                    print(f"🔍 Verificación post-cambio: {current_after_change}")
+                else:
+                    logger.error("❌ ollama_service no disponible para cambio de modelo")
+                    print("❌ ollama_service no disponible para cambio de modelo")
         
         # Verificar nueva configuración
         ollama_connected = False
