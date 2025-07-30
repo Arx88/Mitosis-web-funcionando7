@@ -1642,37 +1642,66 @@ Durante la ejecución de esta tarea se utilizaron las siguientes herramientas y 
             
             consolidated_report += "\n"
         
-        # Agregar sección de hallazgos con información real extraída
+        # 🚀 NUEVA LÓGICA: PRIORIZAR CONTENIDO REAL DE LA TAREA
+        # Buscar el contenido más relevante y sustancial de los pasos
+        final_deliverable_content = ""
+        
+        # 1. Buscar pasos con tipo "professional_final_report" o "creation"
+        steps_to_process = executed_tools if executed_tools else completed_steps
+        for step in steps_to_process:
+            if executed_tools:
+                step_result = step.get('result', {})
+                step_type = step_result.get('type', '')
+                content = step_result.get('content', '')
+            else:
+                step_result = step.get('result', {})
+                step_type = step_result.get('type', '')
+                content = step_result.get('content', '')
+            
+            # Priorizar contenido de pasos finales o de creación
+            if step_type in ['professional_final_report', 'creation', 'final_report', 'summary'] and len(content) > 200:
+                final_deliverable_content = content
+                break
+        
+        # 2. Si no hay contenido final específico, buscar el contenido más largo
+        if not final_deliverable_content:
+            for step in steps_to_process:
+                if executed_tools:
+                    content = step.get('result', {}).get('content', '')
+                else:
+                    content = step.get('result', {}).get('content', '')
+                
+                if len(content) > len(final_deliverable_content):
+                    final_deliverable_content = content
+        
+        # 3. Mostrar el contenido real como resultado principal
+        if final_deliverable_content and len(final_deliverable_content) > 100:
+            consolidated_report += f"""## **🎯 RESULTADO PRINCIPAL**
+
+{final_deliverable_content}
+
+---
+
+"""
+        
+        # Agregar sección de hallazgos adicionales si hay más información
         if analysis_content or search_results:
-            consolidated_report += """## **💡 HALLAZGOS PRINCIPALES**
+            consolidated_report += """## **💡 INFORMACIÓN ADICIONAL RECOPILADA**
 
 """
             
-            # Agregar información específica de búsquedas web
-            if search_results:
-                consolidated_report += """### **Información Recopilada**
+            # Solo incluir búsquedas si no hay contenido principal sustancial
+            if search_results and len(final_deliverable_content) < 500:
+                consolidated_report += """### **Fuentes Consultadas**
 
 """
-                # Extraer información clave de los primeros resultados
-                for i, result in enumerate(search_results[:3], 1):
+                for i, result in enumerate(search_results[:2], 1):
                     if result.get('content') and len(result.get('content', '')) > 100:
                         title = result.get('title', f'Fuente {i}')
-                        content = result.get('content', '')[:800]
-                        source = result.get('source', 'web')
+                        content = result.get('content', '')[:400]
                         
-                        consolidated_report += f"""#### **{title}**
-**Fuente:** {source}
-**Contenido:** {content}{'...' if len(result.get('content', '')) > 800 else ''}
-
-"""
-                
-            # Agregar contenido de análisis
-            for analysis in analysis_content:
-                if len(analysis['content']) > 100:  # Solo incluir análisis sustanciales
-                    consolidated_report += f"""### **{analysis['step_title']}**
-**Herramienta:** {analysis.get('tool', 'analysis')}
-
-{analysis['content'][:1000]}{'...' if len(analysis['content']) > 1000 else ''}
+                        consolidated_report += f"""**{title}**
+{content}{'...' if len(result.get('content', '')) > 400 else ''}
 
 """
         
