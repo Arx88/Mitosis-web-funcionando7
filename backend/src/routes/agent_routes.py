@@ -1848,22 +1848,17 @@ def evaluate_step_completion_with_agent(step: dict, step_result: dict, original_
                 }
         
         elif tool_name in ['comprehensive_research', 'enhanced_web_search']:
-            # Para investigación comprehensiva: Validación real pero flexible
-            if success and ((results and len(results) > 0) or (content and len(str(content)) > 50)):
+            # Para investigación comprehensiva: Validación muy permisiva
+            if success:
+                # Si success=True, permitir continuar SIEMPRE
                 return {
                     'step_completed': True,
                     'should_continue': False,
-                    'reason': 'Investigación completada con contenido suficiente',
+                    'reason': 'Investigación completada exitosamente',
                     'feedback': 'Investigación exitosa'
                 }
-            elif success:  # Success básico - permitir continuar
-                return {
-                    'step_completed': True,
-                    'should_continue': False,
-                    'reason': 'Investigación ejecutada correctamente',
-                    'feedback': 'Investigación completada'
-                }
             else:
+                # Solo fallar si success=False explícitamente
                 return {
                     'step_completed': False,
                     'should_continue': True,
