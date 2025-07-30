@@ -623,6 +623,9 @@ def generate_final_report(task_id):
     try:
         logger.info(f"📄 Generating final report for task: {task_id}")
         
+        # Definir current_time al inicio
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
         # Buscar la tarea usando el task_manager
         task = None
         try:
@@ -638,7 +641,6 @@ def generate_final_report(task_id):
             report_content = generate_consolidated_final_report(task)
         else:
             # Informe de respaldo si no se encuentra la tarea
-            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             report_content = f"""# Informe Final - Tarea Completada
 
 ## Información General
