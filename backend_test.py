@@ -19,7 +19,7 @@ SPECIFIC ISSUES TO INVESTIGATE:
 - Frontend may not be showing real agent action vs cached data
 - Agent incorrectly determining task completion
 
-**URL Backend**: https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com
+**URL Backend**: https://1a375733-8311-4aee-a369-85ffad84ce7c.preview.emergentagent.com
 **WebSocket URL**: /api/socket.io/
 **Test Task**: "Crear análisis detallado sobre blockchain en 2025"
 """
@@ -35,7 +35,7 @@ from typing import Dict, Any, List, Optional
 from collections import defaultdict
 
 # Backend URL from environment - test both internal and external URLs
-BACKEND_URL = "https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com"
+BACKEND_URL = "https://1a375733-8311-4aee-a369-85ffad84ce7c.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class MitosisWebSocketStepProgressionTester:
@@ -44,7 +44,7 @@ class MitosisWebSocketStepProgressionTester:
         self.session.headers.update({
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'Origin': 'https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com'
+            'Origin': 'https://1a375733-8311-4aee-a369-85ffad84ce7c.preview.emergentagent.com'
         })
         self.test_results = []
         self.task_id = None

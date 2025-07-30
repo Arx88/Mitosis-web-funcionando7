@@ -27,7 +27,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment
-BACKEND_URL = "https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com"
+BACKEND_URL = "https://1a375733-8311-4aee-a369-85ffad84ce7c.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class MitosisPlanGenerationFlowTester:
@@ -36,7 +36,7 @@ class MitosisPlanGenerationFlowTester:
         self.session.headers.update({
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'Origin': 'https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com'
+            'Origin': 'https://1a375733-8311-4aee-a369-85ffad84ce7c.preview.emergentagent.com'
         })
         self.test_results = []
         self.task_id = None
@@ -404,7 +404,7 @@ class MitosisPlanGenerationFlowTester:
                 
                 # Check if CORS is properly configured
                 cors_configured = (
-                    cors_headers['Access-Control-Allow-Origin'] in ['*', 'https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com'] or
+                    cors_headers['Access-Control-Allow-Origin'] in ['*', 'https://1a375733-8311-4aee-a369-85ffad84ce7c.preview.emergentagent.com'] or
                     cors_headers['Access-Control-Allow-Origin'] is not None
                 )
                 
