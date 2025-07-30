@@ -221,7 +221,16 @@ class OllamaService:
         ]
     
     def set_model(self, model_name: str) -> bool:
-        """Establecer el modelo a usar"""
+        """Establecer el modelo a usar - FORZAR sin validación de disponibilidad"""
+        # 🚀 FIX CRÍTICO: Permitir cambio de modelo sin validar disponibilidad
+        # porque el frontend puede enviar modelos válidos que no aparecen en la lista
+        self.current_model = model_name
+        logger = logging.getLogger(__name__)
+        logger.info(f"🔄 Modelo forzado a: {model_name}")
+        return True
+    
+    def set_model_with_validation(self, model_name: str) -> bool:
+        """Establecer el modelo a usar CON validación de disponibilidad"""
         available_models = self.get_available_models()
         if model_name in available_models:
             self.current_model = model_name
