@@ -552,16 +552,22 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         // Actualizar el plan si viene en task_update
         if (data.plan && data.plan.steps && Array.isArray(data.plan.steps)) {
           handleUpdateTask((currentTask: Task) => {
-            const updatedPlan = data.plan.steps.map((step: any) => ({
-              id: step.id,
-              title: step.title,
-              description: step.description,
-              tool: step.tool,
-              status: step.status,
-              estimated_time: step.estimated_time,
-              completed: step.completed || false,
-              active: step.active || false
-            }));
+            const updatedPlan = data.plan.steps.map((step: any, index: number) => {
+              // Buscar el paso existente para preservar estado local
+              const existingStep = currentTask.plan?.find(s => s.id === step.id);
+              
+              return {
+                id: step.id,
+                title: step.title,
+                description: step.description,
+                tool: step.tool,
+                status: step.status,
+                estimated_time: step.estimated_time,
+                completed: step.completed || false,
+                // CRÍTICO: Preservar estado activo local si no viene explícito del backend
+                active: step.active !== undefined ? step.active : (existingStep?.active || false)
+              };
+            });
             
             console.log('📝 Task updated from task_update:', {
               taskId: currentTask.id,
