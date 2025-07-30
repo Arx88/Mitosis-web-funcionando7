@@ -199,14 +199,34 @@ def execute_single_step_detailed(task_id: str, step_id: str):
         current_step['completed_time'] = datetime.now().isoformat()
         
         # 🚀 CRÍTICO: ACTIVAR AUTOMÁTICAMENTE EL SIGUIENTE PASO
+        next_step_activated = False
         if step_index + 1 < len(steps):
             next_step = steps[step_index + 1]
             next_step['active'] = True
             next_step['status'] = 'in-progress'
+            next_step_activated = True
             logger.info(f"🔄 Activando automáticamente el siguiente paso: {next_step.get('title', 'Sin título')}")
+            
+            # 🚀 EMITIR EVENTO WEBSOCKET PARA EL SIGUIENTE PASO ACTIVADO
+            emit_step_event(task_id, 'step_started', {
+                'step_id': next_step.get('id'),
+                'title': next_step.get('title', 'Siguiente paso'),
+                'description': next_step.get('description', ''),
+                'activity': f"Iniciando paso: {next_step.get('title', 'Sin título')}",
+                'timestamp': datetime.now().isoformat()
+            })
         
         # Actualizar en persistencia
         update_task_data(task_id, {'plan': steps})
+        
+        # 🚀 EMITIR EVENTO WEBSOCKET PARA EL PASO COMPLETADO
+        emit_step_event(task_id, 'step_completed', {
+            'step_id': current_step.get('id'),
+            'title': current_step.get('title', 'Paso completado'),
+            'result': step_result,
+            'activity': f"Completado: {current_step.get('title', 'Sin título')}",
+            'timestamp': datetime.now().isoformat()
+        })
         
         # Verificar si todos los pasos están completados
         all_completed = all(step.get('completed', False) for step in steps)
@@ -216,6 +236,7 @@ def execute_single_step_detailed(task_id: str, step_id: str):
             'step_result': step_result,
             'step_completed': True,
             'all_steps_completed': all_completed,
+            'next_step_activated': next_step_activated,
             'next_step': steps[step_index + 1] if step_index + 1 < len(steps) else None
         }
         
