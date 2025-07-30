@@ -623,14 +623,14 @@ def generate_final_report(task_id):
     try:
         logger.info(f"📄 Generating final report for task: {task_id}")
         
-        # Buscar la tarea en la base de datos
+        # Buscar la tarea usando el task_manager
         task = None
-        if client is not None and db is not None:
-            try:
-                task = db.tasks.find_one({"id": task_id})
-                logger.info(f"📄 Task found in database: {task is not None}")
-            except Exception as db_error:
-                logger.warning(f"Database error while fetching task: {db_error}")
+        try:
+            from src.routes.agent_routes import get_task_data
+            task = get_task_data(task_id)
+            logger.info(f"📄 Task found using get_task_data: {task is not None}")
+        except Exception as db_error:
+            logger.warning(f"Error while fetching task: {db_error}")
         
         if task:
             # USAR LA FUNCIÓN CONSOLIDADA QUE INCLUYE CONTENIDO REAL
