@@ -1,55 +1,55 @@
 {
   "total_tests": 6,
-  "passed_tests": 0,
-  "success_rate": 0.0,
+  "passed_tests": 1,
+  "success_rate": 16.666666666666664,
   "overall_status": "\u274c WEBSOCKET CRITICAL - Major step progression failures",
-  "critical_passed": 0,
+  "critical_passed": 1,
   "critical_total": 4,
   "test_results": [
     {
       "test_name": "Create Complex Task",
-      "success": false,
-      "details": "Exception: HTTPSConnectionPool(host='ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com', port=443): Read timed out. (read timeout=30)",
-      "timestamp": "2025-07-29T23:53:50.886430",
+      "success": true,
+      "details": "Complex blockchain task created - 4 steps, 4 tools, Task ID: chat-1753841069",
+      "timestamp": "2025-07-30T02:04:37.688782",
       "response_data": null
     },
     {
       "test_name": "WebSocket Connection",
       "success": false,
       "details": "Failed to connect to WebSocket server",
-      "timestamp": "2025-07-29T23:53:53.191026",
+      "timestamp": "2025-07-30T02:04:40.269321",
       "response_data": null
     },
     {
       "test_name": "Task Execution Trigger",
       "success": false,
-      "details": "No task ID available for execution",
-      "timestamp": "2025-07-29T23:53:55.191165",
+      "details": "Task execution triggered but no WebSocket events - 0 events",
+      "timestamp": "2025-07-30T02:04:52.283508",
       "response_data": null
     },
     {
       "test_name": "Step Sequence Monitoring",
       "success": false,
       "details": "No step progression events received - 0 total events",
-      "timestamp": "2025-07-29T23:54:57.264771",
+      "timestamp": "2025-07-30T02:05:54.362198",
       "response_data": null
     },
     {
       "test_name": "Step Completion Logic",
       "success": false,
       "details": "No step completion events received",
-      "timestamp": "2025-07-29T23:54:59.264959",
+      "timestamp": "2025-07-30T02:05:56.362385",
       "response_data": null
     },
     {
       "test_name": "Frontend Sync Verification",
       "success": false,
       "details": "Insufficient WebSocket events for frontend sync - Only 0 events",
-      "timestamp": "2025-07-29T23:55:01.265138",
+      "timestamp": "2025-07-30T02:05:58.362533",
       "response_data": null
     }
   ],
-  "task_id": null,
+  "task_id": "chat-1753841069",
   "websocket_events": [],
   "step_progression": [],
   "websocket_working": false,
