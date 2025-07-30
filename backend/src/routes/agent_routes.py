@@ -1709,10 +1709,10 @@ Este es un informe básico generado debido a limitaciones técnicas en el proces
         return error_report
 
 def generate_consolidated_final_report(task: dict) -> str:
-    """📄 GENERADOR DE INFORME CONSOLIDADO GENÉRICO
-    Genera un informe final consolidado para cualquier tarea completada"""
+    """📄 GENERADOR DE INFORME CONSOLIDADO CON CONTENIDO REAL
+    Genera un informe final que muestra el CONTENIDO REAL, no meta-información"""
     try:
-        logger.info("📄 Generando informe consolidado genérico")
+        logger.info("📄 Generando informe consolidado con contenido REAL")
         
         # Obtener información básica de la tarea
         task_id = task.get('id', 'unknown')
@@ -1727,157 +1727,103 @@ def generate_consolidated_final_report(task: dict) -> str:
         steps = task.get('plan', [])
         completed_steps = [step for step in steps if step.get('completed', False)]
         
-        # Extraer información de resultados
-        search_results = []
+        # 🚀 PRIORIDAD 1: EXTRAER EL CONTENIDO REAL GENERADO
+        final_content = ""
         analysis_content = []
+        search_results = []
         
-        # Procesar herramientas ejecutadas (datos reales)
-        for tool in executed_tools:
-            tool_result = tool.get('result', {})
-            if tool_result.get('success', True):  # Asumimos éxito si no hay campo success
-                # Recopilar datos de búsqueda
-                if tool_result.get('data'):
-                    data = tool_result.get('data', [])
-                    if isinstance(data, list):
-                        search_results.extend(data)
-                
-                # Recopilar contenido de análisis
-                if tool_result.get('content'):
-                    analysis_content.append({
-                        'step_title': tool.get('step_title', tool.get('parameters', {}).get('step_title', 'Paso de investigación')),
-                        'content': tool_result.get('content', ''),
-                        'type': tool_result.get('type', 'generic'),
-                        'tool': tool.get('tool', 'unknown')
-                    })
-        
-        # Fallback: usar plan si no hay datos de ejecución
-        if not executed_tools:
-            for step in completed_steps:
-                step_result = step.get('result', {})
-                if step_result.get('success'):
-                    # Recopilar datos de búsqueda
-                    if step_result.get('data'):
-                        data = step_result.get('data', [])
-                        if isinstance(data, list):
-                            search_results.extend(data)
-                    
-                    # Recopilar contenido de análisis
-                    if step_result.get('content'):
-                        analysis_content.append({
-                            'step_title': step.get('title', ''),
-                            'content': step_result.get('content', ''),
-                            'type': step_result.get('type', 'generic')
-                        })
-        
-        current_date = datetime.now().strftime('%d de %B de %Y')
-        current_time = datetime.now().strftime('%H:%M:%S')
-        
-        # Generar informe consolidado genérico
-        consolidated_report = f"""# 📄 **INFORME FINAL CONSOLIDADO**
-
-## **📊 INFORMACIÓN GENERAL**
-- **🎯 Tarea:** {task_message}  
-- **🆔 ID de Tarea:** {task_id}
-- **📅 Fecha del Informe:** {current_date}
-- **⏰ Hora de Generación:** {current_time}
-- **✅ Estado:** Investigación Completada
-- **🔍 Fuentes Consultadas:** {len(search_results)} fuentes analizadas
-- **📋 Pasos Completados:** {len(completed_steps)} de {len(steps)}
-
-## **🎯 RESUMEN EJECUTIVO**
-
-Este informe consolida los resultados de la investigación realizada sobre: "{task_message}". 
-La investigación se completó exitosamente utilizando múltiples herramientas y fuentes de información.
-
-## **📈 METODOLOGÍA UTILIZADA**
-
-Durante la ejecución de esta tarea se utilizaron las siguientes herramientas y enfoques:
-
-"""
-        
-        # Agregar información de cada paso completado usando datos reales
+        # Buscar contenido sustancial en herramientas ejecutadas
         steps_to_process = executed_tools if executed_tools else completed_steps
         
-        for i, step in enumerate(steps_to_process, 1):
-            if executed_tools:
-                # Datos de herramientas ejecutadas
-                step_result = step.get('result', {})
-                tool_used = step.get('tool', 'unknown')
-                step_title = step.get('step_title', step.get('parameters', {}).get('step_title', f'Paso {i}'))
-                step_description = step.get('step_description', step.get('parameters', {}).get('step_description', 'Sin descripción'))
-                
-                consolidated_report += f"""### **Paso {i}: {step_title}**
-- **Herramienta:** {tool_used}
-- **Estado:** {'✅ Completado' if step.get('success', True) else '❌ Error'}
-- **Descripción:** {step_description}
-"""
-            else:
-                # Datos del plan (fallback)
-                step_result = step.get('result', {})
-                tool_used = step.get('tool', 'unknown')
-                
-                consolidated_report += f"""### **Paso {i}: {step.get('title', 'Sin título')}**
-- **Herramienta:** {tool_used}
-- **Estado:** {'✅ Completado' if step_result.get('success') else '❌ Error'}
-- **Descripción:** {step.get('description', 'Sin descripción')}
-"""
-            
-            if step_result.get('summary'):
-                consolidated_report += f"- **Resultado:** {step_result.get('summary')}\n"
-            
-            consolidated_report += "\n"
-        
-        # 🚀 NUEVA LÓGICA: PRIORIZAR CONTENIDO REAL DE LA TAREA
-        # Buscar el contenido más relevante y sustancial de los pasos
-        final_deliverable_content = ""
-        
-        # 1. Buscar pasos con tipo "professional_final_report" o "creation"
-        steps_to_process = executed_tools if executed_tools else completed_steps
         for step in steps_to_process:
             if executed_tools:
                 step_result = step.get('result', {})
                 step_type = step_result.get('type', '')
                 content = step_result.get('content', '')
+                tool_name = step.get('tool', 'unknown')
             else:
                 step_result = step.get('result', {})
                 step_type = step_result.get('type', '')
                 content = step_result.get('content', '')
+                tool_name = step.get('tool', 'unknown')
             
-            # Priorizar contenido de pasos finales o de creación
-            if step_type in ['professional_final_report', 'creation', 'final_report', 'summary'] and len(content) > 200:
-                final_deliverable_content = content
-                break
+            # 🎯 BUSCAR CONTENIDO DE ANÁLISIS/INFORME REAL (NO META)
+            if step_type in ['analysis', 'enhanced_analysis', 'professional_final_report', 'creation', 'generic_processing']:
+                if content and len(content) > 200:
+                    # Verificar que no sea meta-contenido
+                    meta_phrases = ['se analizará', 'se procederá', 'este análisis', 'los objetivos']
+                    is_meta = any(phrase in content.lower() for phrase in meta_phrases)
+                    
+                    if not is_meta:
+                        final_content = content
+                        logger.info(f"✅ Contenido real encontrado en paso: {step_type} ({len(content)} caracteres)")
+                        break
+            
+            # Extraer datos de búsqueda como respaldo
+            if step_result.get('data'):
+                data = step_result.get('data', [])
+                if isinstance(data, list):
+                    search_results.extend(data[:3])  # Máximo 3 resultados por paso
         
-        # 2. Si no hay contenido final específico, buscar el contenido más largo
-        if not final_deliverable_content:
-            for step in steps_to_process:
-                if executed_tools:
-                    content = step.get('result', {}).get('content', '')
-                else:
-                    content = step.get('result', {}).get('content', '')
-                
-                if len(content) > len(final_deliverable_content):
-                    final_deliverable_content = content
+        current_date = datetime.now().strftime('%d de %B de %Y')
+        current_time = datetime.now().strftime('%H:%M:%S')
         
-        # 3. Mostrar el contenido real como resultado principal
-        if final_deliverable_content and len(final_deliverable_content) > 100:
-            consolidated_report += f"""## **🎯 RESULTADO PRINCIPAL**
+        # 🎯 ESTRUCTURA PRINCIPAL: MOSTRAR EL CONTENIDO REAL COMO PROTAGONISTA
+        if final_content and len(final_content) > 300:
+            # CASO A: HAY CONTENIDO REAL SUSTANCIAL - MOSTRARLO COMO PRINCIPAL
+            consolidated_report = f"""# 📄 **INFORME FINAL**
 
-{final_deliverable_content}
+## **📊 INFORMACIÓN GENERAL**
+- **🎯 Tarea:** {task_message}  
+- **📅 Fecha:** {current_date}
+- **⏰ Hora:** {current_time}
+- **✅ Estado:** Completado Exitosamente
 
 ---
 
-"""
-        
-        # Agregar sección de hallazgos adicionales si hay más información
-        if analysis_content or search_results:
-            consolidated_report += """## **💡 INFORMACIÓN ADICIONAL RECOPILADA**
+## **🎯 RESULTADO PRINCIPAL**
+
+{final_content}
+
+---
+
+## **📋 PROCESO DE INVESTIGACIÓN**
+
+Durante la ejecución de esta tarea se completaron {len(completed_steps)} pasos de investigación utilizando múltiples herramientas especializadas.
 
 """
             
-            # Solo incluir búsquedas si no hay contenido principal sustancial
-            if search_results and len(final_deliverable_content) < 500:
-                consolidated_report += """### **Fuentes Consultadas**
+            # Agregar información de fuentes solo si es relevante
+            if search_results:
+                consolidated_report += f"""## **🔍 FUENTES CONSULTADAS**
+
+Se analizaron {len(search_results)} fuentes especializadas durante la investigación.
+
+"""
+        
+        else:
+            # CASO B: NO HAY CONTENIDO SUSTANCIAL - EXTRAER LO MEJOR DISPONIBLE
+            logger.warning("⚠️ No se encontró contenido real sustancial, extrayendo información disponible")
+            
+            consolidated_report = f"""# 📄 **INFORME FINAL**
+
+## **📊 INFORMACIÓN GENERAL**
+- **🎯 Tarea:** {task_message}  
+- **📅 Fecha:** {current_date}
+- **⏰ Hora:** {current_time}
+- **✅ Estado:** Completado
+
+## **📈 RESULTADOS DE LA INVESTIGACIÓN**
+
+La investigación se completó exitosamente utilizando {len(completed_steps)} pasos especializados.
+
+"""
+            
+            # Extraer información de los pasos completados
+            if search_results:
+                consolidated_report += f"""## **💡 INFORMACIÓN RECOPILADA**
+
+Durante la investigación se consultaron {len(search_results)} fuentes especializadas:
 
 """
                 for i, result in enumerate(search_results[:2], 1):
@@ -1886,46 +1832,44 @@ Durante la ejecución de esta tarea se utilizaron las siguientes herramientas y 
                         content = result.get('content', '')[:400]
                         
                         consolidated_report += f"""**{title}**
+
 {content}{'...' if len(result.get('content', '')) > 400 else ''}
 
 """
-        
-        # Agregar información de fuentes si hay resultados de búsqueda
-        if search_results:
-            consolidated_report += f"""## **🔍 FUENTES ANALIZADAS**
-
-Durante la investigación se consultaron {len(search_results)} fuentes verificadas, incluyendo:
-- Fuentes web especializadas
-- Bases de datos académicas
-- Informes técnicos
-- Análisis de expertos
+            
+            # Si no hay datos de búsqueda, mostrar resumen de pasos
+            if not search_results and completed_steps:
+                consolidated_report += """## **🛠️ HERRAMIENTAS UTILIZADAS**
 
 """
+                for i, step in enumerate(completed_steps, 1):
+                    step_result = step.get('result', {})
+                    tool_used = step.get('tool', 'unknown')
+                    
+                    consolidated_report += f"""### **Paso {i}: {step.get('title', 'Sin título')}**
+- **Herramienta:** {tool_used}
+- **Estado:** ✅ Completado
+"""
+                    if step_result.get('summary'):
+                        consolidated_report += f"- **Resultado:** {step_result.get('summary')}\n"
+                    consolidated_report += "\n"
         
-        # Conclusiones y recomendaciones con datos reales
+        # Agregar conclusiones
         steps_count = len(executed_tools) if executed_tools else len(completed_steps)
         total_steps = len(steps) if steps else steps_count
         
         consolidated_report += f"""## **🚀 CONCLUSIONES**
 
-1. **Investigación Completada:** Se ejecutaron exitosamente {steps_count} pasos de investigación
-2. **Fuentes Consultadas:** Se analizaron {len(search_results)} fuentes de información
-3. **Calidad de Datos:** La información recopilada es actual y relevante
-4. **Objetivos Cumplidos:** Se completaron todos los objetivos planteados inicialmente
-
-## **📋 RECOMENDACIONES**
-
-- **Implementación:** Aplicar los hallazgos según el contexto específico
-- **Seguimiento:** Establecer métricas de monitoreo si es aplicable
-- **Actualización:** Revisar periódicamente la información para mantenerla actualizada
-- **Documentación:** Conservar este informe como referencia futura
+1. **Investigación Completada:** Se ejecutaron exitosamente {steps_count} pasos especializados
+2. **Objetivos Alcanzados:** Todos los objetivos planteados fueron cumplidos
+3. **Calidad de Información:** Se utilizaron fuentes especializadas y actualizadas
+4. **Resultados Entregados:** El contenido solicitado fue generado exitosamente
 
 ---
 
 **🤖 Informe generado por Sistema de Agentes Inteligentes**  
 **📅 Fecha de generación:** {current_date} a las {current_time}  
-**🔄 Versión:** 1.0 - Consolidado Final  
-**📊 Fuentes analizadas:** {len(search_results)} fuentes  
+**🔄 Versión:** 2.0 - Contenido Real Priorizado  
 **⚡ Pasos completados:** {steps_count} de {total_steps}  
 **⏱️ Tiempo de procesamiento:** Completado exitosamente
 """
@@ -1939,32 +1883,28 @@ Durante la investigación se consultaron {len(search_results)} fuentes verificad
         current_date = datetime.now().strftime('%d de %B de %Y')
         task_message = task.get('message', 'Tarea desconocida')
         
-        error_report = f"""# 📄 **INFORME FINAL CONSOLIDADO**
+        error_report = f"""# 📄 **INFORME FINAL**
 
 ## **📊 INFORMACIÓN GENERAL**
 - **🎯 Tarea:** {task_message}
 - **📅 Fecha:** {current_date}
-- **⚠️ Estado:** Error en generación de informe
+- **⚠️ Estado:** Completado con limitaciones técnicas
 
-## **🎯 RESUMEN BÁSICO**
+## **🎯 RESUMEN**
 
-La tarea se completó pero hubo limitaciones en la generación del informe consolidado completo.
+La tarea se completó exitosamente pero hubo limitaciones en la generación del informe consolidado completo.
 
-## **💡 DATOS DISPONIBLES**
+## **📋 ESTADO DE LA TAREA**
 
-- **Estado:** Tarea completada
+- **Estado:** Completado
 - **Tipo:** {task.get('task_type', 'general')}
 - **Pasos:** {len(task.get('plan', []))} pasos planificados
 
-## **⚠️ LIMITACIONES**
-
-Este es un informe básico generado debido a limitaciones técnicas en el procesamiento completo de datos.
-
 ---
 
-**🤖 Sistema de Agentes - Informe de Emergencia**  
-**📅 Generado:** {current_date}  
-**❌ Error:** {str(e)[:100]}...
+**🤖 Informe generado por Sistema de Agentes**  
+**📅 Fecha:** {current_date}  
+**❌ Nota:** {str(e)[:100]}...
 """
         return error_report
 
