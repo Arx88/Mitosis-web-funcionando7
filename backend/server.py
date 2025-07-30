@@ -621,6 +621,38 @@ def api_health_check():
         logger.error(f"API Health check error: {e}")
         return jsonify({"status": "unhealthy", "error": str(e)}), 500
 
+@app.route('/api/agent/model-info', methods=['GET'])
+def get_current_model_info():
+    """Obtener información del modelo Ollama actual"""
+    try:
+        if hasattr(app, 'ollama_service') and app.ollama_service:
+            current_model = app.ollama_service.get_current_model()
+            default_model = app.ollama_service.default_model
+            is_healthy = app.ollama_service.is_healthy()
+            
+            return jsonify({
+                "success": True,
+                "current_model": current_model,
+                "default_model": default_model,
+                "is_healthy": is_healthy,
+                "endpoint": app.ollama_service.base_url if hasattr(app.ollama_service, 'base_url') else 'unknown',
+                "timestamp": datetime.now().isoformat()
+            }), 200
+        else:
+            return jsonify({
+                "success": False,
+                "error": "Ollama service not available",
+                "current_model": os.getenv('OLLAMA_DEFAULT_MODEL', 'llama3.1:8b'),
+                "timestamp": datetime.now().isoformat()
+            }), 500
+    except Exception as e:
+        logger.error(f"Model info error: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }), 500
+
 # Endpoint para sugerencias dinámicas que faltaba
 @app.route('/api/agent/generate-suggestions', methods=['POST'])
 def generate_suggestions():
