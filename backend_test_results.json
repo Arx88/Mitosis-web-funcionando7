@@ -9,47 +9,47 @@
     {
       "test_name": "Create Complex Task",
       "success": true,
-      "details": "Complex blockchain task created - 4 steps, 4 tools, Task ID: chat-1753841069",
-      "timestamp": "2025-07-30T02:04:37.688782",
+      "details": "Complex blockchain task created - 4 steps, 4 tools, Task ID: chat-1753841502",
+      "timestamp": "2025-07-30T02:11:51.806353",
       "response_data": null
     },
     {
       "test_name": "WebSocket Connection",
       "success": false,
       "details": "Failed to connect to WebSocket server",
-      "timestamp": "2025-07-30T02:04:40.269321",
+      "timestamp": "2025-07-30T02:11:54.377609",
       "response_data": null
     },
     {
       "test_name": "Task Execution Trigger",
       "success": false,
       "details": "Task execution triggered but no WebSocket events - 0 events",
-      "timestamp": "2025-07-30T02:04:52.283508",
+      "timestamp": "2025-07-30T02:12:06.458472",
       "response_data": null
     },
     {
       "test_name": "Step Sequence Monitoring",
       "success": false,
       "details": "No step progression events received - 0 total events",
-      "timestamp": "2025-07-30T02:05:54.362198",
+      "timestamp": "2025-07-30T02:13:08.464671",
       "response_data": null
     },
     {
       "test_name": "Step Completion Logic",
       "success": false,
       "details": "No step completion events received",
-      "timestamp": "2025-07-30T02:05:56.362385",
+      "timestamp": "2025-07-30T02:13:10.464840",
       "response_data": null
     },
     {
       "test_name": "Frontend Sync Verification",
       "success": false,
       "details": "Insufficient WebSocket events for frontend sync - Only 0 events",
-      "timestamp": "2025-07-30T02:05:58.362533",
+      "timestamp": "2025-07-30T02:13:12.464983",
       "response_data": null
     }
   ],
-  "task_id": "chat-1753841069",
+  "task_id": "chat-1753841502",
   "websocket_events": [],
   "step_progression": [],
   "websocket_working": false,
