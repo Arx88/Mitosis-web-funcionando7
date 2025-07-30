@@ -4348,8 +4348,8 @@ IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Ca
 }}"""
 
                 else:
-                    # Prompt mínimo para tercer intento
-                    plan_prompt = f"Plan JSON para '{message}': {{'steps': [{{'id':'step-1','title':'Investigar {message[:20]}','description':'Buscar información','tool':'web_search'}},{{'id':'step-2','title':'Procesar información','description':'Analizar datos','tool':'analysis'}},{{'id':'step-3','title':'Crear resultado','description':'Generar entregable','tool':'creation'}}],'task_type':'general','complexity':'media','estimated_total_time':'25 minutos'}}"
+                    # Prompt mínimo para tercer intento - ESPECÍFICO para la solicitud del usuario
+                    plan_prompt = f"Plan JSON para '{message}': {{'steps': [{{'id':'step-1','title':'Investigar para {message[:20]}','description':'Buscar información específica','tool':'web_search'}},{{'id':'step-2','title':'Procesar información','description':'Analizar datos recopilados','tool':'analysis'}},{{'id':'step-3','title':'{message[:30]}','description':'Completar exactamente lo solicitado','tool':'creation'}}],'task_type':'general','complexity':'media','estimated_total_time':'25 minutos'}}"
                 
                 # Generar plan con Ollama usando diferentes parámetros según el intento
                 ollama_params = {
