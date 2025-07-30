@@ -4300,35 +4300,6 @@ JSON de respuesta (SOLO JSON, sin explicaciones):
   "complexity": "alta",
   "estimated_total_time": "35-45 minutos"
 }}
-    {{
-      "id": "step-2", 
-      "title": "Segundo paso que construya sobre el anterior",
-      "description": "Descripción específica que integre resultados del paso anterior",
-      "tool": "herramienta_apropiada",
-      "estimated_time": "tiempo realista",
-      "complexity": "baja|media|alta"
-    }},
-    {{
-      "id": "step-3",
-      "title": "Tercer paso con valor agregado",
-      "description": "Metodología avanzada que genere insights únicos o valor diferencial",
-      "tool": "herramienta_apropiada", 
-      "estimated_time": "tiempo realista",
-      "complexity": "baja|media|alta"
-    }},
-    {{
-      "id": "step-4",
-      "title": "Cuarto paso de refinamiento y optimización",
-      "description": "Proceso de mejora, validación y optimización de resultados",
-      "tool": "herramienta_apropiada",
-      "estimated_time": "tiempo realista", 
-      "complexity": "baja|media|alta"
-    }}
-  ],
-  "task_type": "tipo específico basado en la tarea real",
-  "complexity": "baja|media|alta",
-  "estimated_total_time": "suma realista de todos los pasos"
-}}
 
 IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Cada paso debe tener valor único."""
 
