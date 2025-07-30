@@ -622,10 +622,13 @@ def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
     
     content = result.get('content', '') or result.get('summary', '')
     
-    # 🔥 BUG FIX: Verificar si hay 0 resultados ANTES que longitud
-    if result.get('results_count', 0) == 0:
-        logger.warning("❌ Resultado rechazado: 0 resultados encontrados")
-        return False
+    # 🔥 BUG FIX: Verificar results_count solo si la herramienta la proporciona
+    # Para herramientas como planning, creation, analysis, no rechazar por falta de results_count
+    if 'results_count' in result and isinstance(result.get('results_count'), int):
+        if result.get('results_count', 0) == 0:
+            logger.warning("❌ Resultado rechazado: 0 resultados encontrados")
+            return False
+    
     
     # Si dice "0 resultados" en el contenido o resumen
     if '0 resultados' in content.lower() or '0 fuentes' in content.lower():
