@@ -1195,14 +1195,30 @@ def execute_generic_step(title: str, description: str, ollama_service, original_
             raise Exception("Servicio Ollama no disponible")
         
         generic_prompt = f"""
-Ejecuta la siguiente tarea:
+INSTRUCCIÓN DIRECTA: Genera EXACTAMENTE el contenido que se solicita, NO una descripción de lo que harás.
 
-Tarea original: {original_message}
-Paso: {title}
-Descripción: {description}
+TAREA ORIGINAL: {original_message}
+CONTENIDO A GENERAR: {title}
+DESCRIPCIÓN: {description}
 
-Proporciona un resultado específico y útil para este paso.
-Responde de manera clara y profesional.
+PROBLEMA A CORREGIR:
+❌ NO generes "Este documento analizará..."
+❌ NO generes "Se procederá a estudiar..."
+❌ NO generes "Los objetivos de este trabajo son..."
+❌ NO generes "El siguiente informe presentará..."
+
+✅ SÍ genera DIRECTAMENTE:
+- El contenido específico solicitado
+- La información concreta sobre el tema
+- Los datos y análisis reales
+- Las conclusiones y recomendaciones
+
+EJEMPLO: Si se pide "informe sobre beneficios de energía solar", responde:
+"La energía solar ofrece múltiples beneficios: [beneficios específicos], los costos son: [datos específicos], la eficiencia: [información concreta]..."
+
+IMPORTANTE: Tu respuesta debe SER el contenido solicitado, no una descripción de lo que harás.
+
+Genera el contenido completo y específico solicitado en español.
 """
         
         result = ollama_service.generate_response(generic_prompt, {'temperature': 0.7})
