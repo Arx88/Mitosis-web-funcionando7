@@ -76,12 +76,12 @@
       "details": "Origin validation failed - Main origin not allowed: False",
       "timestamp": "2025-07-29T18:11:03.456628",
       "response_data": {
-        "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com": {
+        "https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com": {
           "status": 200,
           "cors_origin": null,
           "allowed": false
         },
-        "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com": {
+        "https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com": {
           "status": 200,
           "cors_origin": null,
           "allowed": false

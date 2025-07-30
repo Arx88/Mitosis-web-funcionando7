@@ -24,9 +24,9 @@ def get_dynamic_cors_origins():
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
         # EMERGENT PREVIEW DOMAINS - WILDCARD COMPLETO
-        "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com",
-        "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com", 
-        "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com",
+        "https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com",
+        "https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com", 
+        "https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com",
         # FALLBACK UNIVERSAL
         "*"
     ]
@@ -733,10 +733,10 @@ if __name__ == '__main__':
 
 FRONTEND_ORIGINS = [
     # 🌐 URL DETECTADA DINÁMICAMENTE
-    "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com",
+    "https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com",
     
     # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
-    "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com",
+    "https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com",
     
     # 🏠 DESARROLLO LOCAL
     "http://localhost:3000",
@@ -745,8 +745,8 @@ FRONTEND_ORIGINS = [
     "http://127.0.0.1:5173",
     
     # 📱 PREVIEW DOMAINS COMUNES
-    "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com",
-    "https://ef69378f-09c9-4189-ad5d-8543286306b5.preview.emergentagent.com",
+    "https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com",
+    "https://6fdadea9-df4d-44a4-adc8-feca2d77c031.preview.emergentagent.com",
     
     # 🌟 FALLBACK UNIVERSAL (último recurso)
     "*"
