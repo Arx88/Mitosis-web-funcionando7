@@ -5612,6 +5612,13 @@ def start_task_execution(task_id: str):
                             step['agent_evaluation'] = agent_evaluation
                             step['completed_time'] = datetime.now().isoformat()
                             
+                            # 🚀 CRÍTICO: ACTIVAR AUTOMÁTICAMENTE EL SIGUIENTE PASO
+                            if i + 1 < len(steps):
+                                next_step = steps[i + 1]
+                                next_step['active'] = True
+                                next_step['status'] = 'in-progress'
+                                logger.info(f"🔄 Activando automáticamente el siguiente paso: {next_step.get('title', 'Sin título')}")
+                            
                             logger.info(f"✅ Agent approved completion of step {i+1}: {step['title']}")
                             
                             # ✅ EMITIR EVENTO WEBSOCKET - PASO COMPLETADO
