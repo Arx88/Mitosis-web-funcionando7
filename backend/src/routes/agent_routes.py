@@ -5180,20 +5180,43 @@ def apply_configuration():
             endpoint = ollama_config.get('endpoint')
             model = ollama_config.get('model')
             
-            if endpoint and ollama_service:
+            if ollama_service:
                 logger.info(f"🔄 Actualizando Ollama: endpoint={endpoint}, modelo={model}")
+                print(f"🔄 Actualizando Ollama: endpoint={endpoint}, modelo={model}")
                 
-                # Actualizar endpoint del servicio
-                ollama_service.base_url = endpoint
+                # Actualizar endpoint del servicio si se especifica
+                if endpoint:
+                    ollama_service.base_url = endpoint
                 
-                # Actualizar modelo si se especifica
+                # 🚀 CRÍTICO FIX: Actualizar modelo si se especifica
                 if model:
-                    ollama_service.set_model(model)
+                    old_model = ollama_service.get_current_model()
+                    logger.info(f"🔄 Cambiando modelo: {old_model} → {model}")
+                    print(f"🔄 Cambiando modelo: {old_model} → {model}")
+                    
+                    # Forzar cambio de modelo
+                    success = ollama_service.set_model(model)
+                    logger.info(f"✅ set_model result: {success}")
+                    print(f"✅ set_model result: {success}")
+                    
+                    # Verificar que efectivamente cambió
+                    new_model = ollama_service.get_current_model()
+                    logger.info(f"🔍 Modelo después del cambio: {new_model}")
+                    print(f"🔍 Modelo después del cambio: {new_model}")
+                    
+                    # Debug adicional
+                    logger.info(f"🔍 ollama_service.current_model: {ollama_service.current_model}")
+                    logger.info(f"🔍 ollama_service.default_model: {ollama_service.default_model}")
+                    print(f"🔍 ollama_service.current_model: {ollama_service.current_model}")
+                    print(f"🔍 ollama_service.default_model: {ollama_service.default_model}")
                 
                 # Verificar nueva configuración
                 connection_status = ollama_service.check_connection()
                 
                 logger.info(f"✅ Ollama reconfigurado: {connection_status}")
+            else:
+                logger.error("❌ ollama_service no disponible para reconfiguración")
+                print("❌ ollama_service no disponible para reconfiguración")
         
         # Aplicar configuración OpenRouter si está habilitada
         openrouter_config = config.get('openrouter', {})
