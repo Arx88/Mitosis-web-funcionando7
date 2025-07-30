@@ -13,10 +13,10 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 FRONTEND_ORIGINS = [
     # 🌐 URL DETECTADA DINÁMICAMENTE
-    "https://bc41adec-714d-468d-8870-badec58bf366.preview.emergentagent.com",
+    "https://24e59aef-d4f4-432c-a12f-0514fd334c3f.preview.emergentagent.com",
     
     # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
-    "https://bc41adec-714d-468d-8870-badec58bf366.preview.emergentagent.com",
+    "https://24e59aef-d4f4-432c-a12f-0514fd334c3f.preview.emergentagent.com",
     
     # 🏠 DESARROLLO LOCAL
     "http://localhost:3000",
@@ -25,8 +25,8 @@ FRONTEND_ORIGINS = [
     "http://127.0.0.1:5173",
     
     # 📱 PREVIEW DOMAINS COMUNES
-    "https://bc41adec-714d-468d-8870-badec58bf366.preview.emergentagent.com",
-    "https://bc41adec-714d-468d-8870-badec58bf366.preview.emergentagent.com",
+    "https://24e59aef-d4f4-432c-a12f-0514fd334c3f.preview.emergentagent.com",
+    "https://24e59aef-d4f4-432c-a12f-0514fd334c3f.preview.emergentagent.com",
     
     # 🌟 FALLBACK UNIVERSAL (último recurso)
     "*"
@@ -44,9 +44,9 @@ def get_dynamic_cors_origins():
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
         # EMERGENT PREVIEW DOMAINS - WILDCARD COMPLETO
-        "https://bc41adec-714d-468d-8870-badec58bf366.preview.emergentagent.com",
-        "https://bc41adec-714d-468d-8870-badec58bf366.preview.emergentagent.com", 
-        "https://bc41adec-714d-468d-8870-badec58bf366.preview.emergentagent.com",
+        "https://24e59aef-d4f4-432c-a12f-0514fd334c3f.preview.emergentagent.com",
+        "https://24e59aef-d4f4-432c-a12f-0514fd334c3f.preview.emergentagent.com", 
+        "https://24e59aef-d4f4-432c-a12f-0514fd334c3f.preview.emergentagent.com",
         # FALLBACK UNIVERSAL
         "*"
     ]
