@@ -4333,14 +4333,14 @@ JSON de respuesta (SOLO JSON, sin explicaciones):
 IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Cada paso debe tener valor único."""
 
                 elif attempt == 2:
-                    # Prompt simplificado pero más directo para JSON
+                    # Prompt simplificado pero específico para JSON
                     plan_prompt = f"""Responde SOLO con JSON válido para: {message}
 
 {{
   "steps": [
-    {{"id": "step-1", "title": "Investigación especializada: {message[:30]}", "description": "Búsqueda exhaustiva de información actualizada y específica", "tool": "web_search", "estimated_time": "10 minutos", "complexity": "media"}},
-    {{"id": "step-2", "title": "Análisis profesional de datos", "description": "Procesamiento analítico profundo de la información recopilada", "tool": "analysis", "estimated_time": "15 minutos", "complexity": "alta"}},
-    {{"id": "step-3", "title": "Creación del entregable final", "description": "Desarrollo completo del resultado solicitado con calidad profesional", "tool": "creation", "estimated_time": "20 minutos", "complexity": "alta"}}
+    {{"id": "step-1", "title": "Investigar datos para {message}", "description": "Búsqueda de información específica requerida para: {message}", "tool": "web_search", "estimated_time": "10 minutos", "complexity": "media"}},
+    {{"id": "step-2", "title": "Analizar información recopilada", "description": "Procesar datos encontrados para su uso en: {message}", "tool": "analysis", "estimated_time": "15 minutos", "complexity": "alta"}},
+    {{"id": "step-3", "title": "{message}", "description": "Ejecutar y completar exactamente lo solicitado: {message}", "tool": "creation", "estimated_time": "20 minutos", "complexity": "alta"}}
   ],
   "task_type": "{task_category}",
   "complexity": "alta",
