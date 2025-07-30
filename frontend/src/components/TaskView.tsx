@@ -263,36 +263,23 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         
         setTerminalLogs(prev => [...prev, logEntry]);
         
-        // CRÍTICO: Marcar el step como completado y activar el siguiente
+        // 🔧 FIX PROBLEMA 1: Solo marcar como completado, NO activar siguiente paso
+        // El backend se encarga de activar el siguiente paso vía step_started
         handleUpdateTask((currentTask: Task) => {
           if (!currentTask.plan) return currentTask;
           
-          const currentStepIndex = currentTask.plan.findIndex(step => step.id === data.step_id);
-          const nextStepIndex = currentStepIndex + 1;
-          
-          const updatedPlan = currentTask.plan.map((step, index) => {
+          const updatedPlan = currentTask.plan.map((step) => {
             if (step.id === data.step_id) {
-              // Marcar el step actual como completado
+              // Solo marcar el step actual como completado
               return {
                 ...step,
                 active: false,
                 status: 'completed',
-                completed: true
-              };
-            } else if (index === nextStepIndex && nextStepIndex < currentTask.plan.length) {
-              // Activar el siguiente step si existe
-              return {
-                ...step,
-                active: true,
-                status: 'in-progress',
-                completed: false
-              };
-            } else {
-              return {
-                ...step,
-                active: false
+                completed: true,
+                result: data.result
               };
             }
+            return step; // No modificar otros pasos aquí
           });
           
           // Calcular progreso total
@@ -300,12 +287,11 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
           const totalSteps = updatedPlan.length;
           const progress = Math.round((completedSteps / totalSteps) * 100);
           
-          console.log('🔄 Plan updated after step_completed:', {
+          console.log('🔄 Plan updated after step_completed (only current step):', {
             stepId: data.step_id,
             completedSteps,
             totalSteps,
-            progress,
-            nextActiveStep: updatedPlan.find(s => s.active)?.title
+            progress
           });
           
           return {
@@ -313,6 +299,52 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
             plan: updatedPlan,
             progress,
             status: progress === 100 ? 'completed' : 'in-progress'
+          };
+        });
+      },
+      
+      'step_started': (data: any) => {
+        console.log('🔄 WebSocket step_started received:', data);
+        
+        const logEntry = {
+          message: `🔄 Iniciando: ${data.title || data.step_title || 'Step'}`,
+          type: 'info' as const,
+          timestamp: new Date(data.timestamp || Date.now())
+        };
+        
+        setTerminalLogs(prev => [...prev, logEntry]);
+        
+        // 🚀 FIX PROBLEMA 1: Activar el paso específico cuando recibimos step_started
+        handleUpdateTask((currentTask: Task) => {
+          if (!currentTask.plan) return currentTask;
+          
+          const updatedPlan = currentTask.plan.map((step) => {
+            if (step.id === data.step_id) {
+              // Activar el step específico
+              return {
+                ...step,
+                active: true,
+                status: 'in-progress',
+                completed: false,
+                start_time: data.timestamp
+              };
+            } else {
+              // Desactivar otros pasos
+              return {
+                ...step,
+                active: false
+              };
+            }
+          });
+          
+          console.log('🚀 Plan updated after step_started:', {
+            stepId: data.step_id,
+            activeStep: updatedPlan.find(s => s.active)?.title
+          });
+          
+          return {
+            ...currentTask,
+            plan: updatedPlan
           };
         });
       },
