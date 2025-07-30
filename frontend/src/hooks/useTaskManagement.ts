@@ -77,52 +77,55 @@ export const useTaskManagement = () => {
         // CRÍTICO: Actualizar tarea con título mejorado, plan Y el task_id real del backend
         const backendTaskId = data.task_id; // ID real generado por el backend
         
-        updateTask((task: Task) => {
-          if (task.id !== newTask.id) return task;
+        // Crear la tarea actualizada con el nuevo ID
+        let updatedTask: Task = { 
+          ...newTask,
+          id: backendTaskId // ✅ CRÍTICO: Usar el ID real del backend
+        };
+        
+        // Update title from enhanced_title
+        if (data.enhanced_title) {
+          updatedTask.title = data.enhanced_title;
+          console.log('📝 Updated title:', data.enhanced_title);
+        }
+        
+        // Update plan from response
+        if (data.plan && Array.isArray(data.plan)) {
+          console.log('🎉 NUEVA TAREA FIX: Plan received with', data.plan.length, 'steps');
+          const frontendPlan = data.plan.map((step: any) => ({
+            id: step.id,
+            title: step.title,
+            description: step.description,
+            tool: step.tool,
+            status: step.status,
+            estimated_time: step.estimated_time,
+            completed: step.completed || false,
+            active: step.active || false
+          }));
           
-          let updatedTask = { 
-            ...task,
-            id: backendTaskId // ✅ CRÍTICO: Actualizar con el ID real del backend
+          updatedTask = {
+            ...updatedTask,
+            plan: frontendPlan,
+            status: 'in-progress',
+            progress: 0
           };
           
-          // Update title from enhanced_title
-          if (data.enhanced_title) {
-            updatedTask.title = data.enhanced_title;
-            console.log('📝 Updated title:', data.enhanced_title);
-          }
-          
-          // Update plan from response
-          if (data.plan && Array.isArray(data.plan)) {
-            console.log('🎉 NUEVA TAREA FIX: Plan received with', data.plan.length, 'steps');
-            const frontendPlan = data.plan.map((step: any) => ({
-              id: step.id,
-              title: step.title,
-              description: step.description,
-              tool: step.tool,
-              status: step.status,
-              estimated_time: step.estimated_time,
-              completed: step.completed || false,
-              active: step.active || false
-            }));
-            
-            updatedTask = {
-              ...updatedTask,
-              plan: frontendPlan,
-              status: 'in-progress',
-              progress: 0
-            };
-            
-            console.log('🎉 NUEVA TAREA FIX: Updated task with backend ID and plan:', updatedTask);
-          } else {
-            console.warn('🚨 NUEVA TAREA FIX: No valid plan in response:', data);
-          }
-          
-          return updatedTask;
+          console.log('🎉 NUEVA TAREA FIX: Updated task with backend ID and plan:', updatedTask);
+        } else {
+          console.warn('🚨 NUEVA TAREA FIX: No valid plan in response:', data);
+        }
+        
+        // ✅ CRÍTICO: Usar la nueva acción para actualizar el ID y migrar todos los estados
+        dispatch({ 
+          type: 'UPDATE_TASK_ID', 
+          payload: { 
+            oldId: newTask.id, 
+            newId: backendTaskId, 
+            updatedTask 
+          } 
         });
         
-        // ✅ CRÍTICO: Actualizar el activeTaskId con el ID real del backend
-        dispatch({ type: 'SET_ACTIVE_TASK', payload: backendTaskId });
-        console.log('🔄 Updated activeTaskId to backend task ID:', backendTaskId);
+        console.log('🔄 Updated task ID from', newTask.id, 'to', backendTaskId);
         
         // Auto-iniciar ejecución si hay plan
         if (data.plan && data.plan.length > 0) {
