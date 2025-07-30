@@ -185,8 +185,19 @@ def execute_single_step_detailed(task_id: str, step_id: str):
         current_step['status'] = 'in-progress'
         current_step['start_time'] = datetime.now().isoformat()
         
-        # Actualizar en persistencia
+        # Actualizar en persistencia ANTES de emitir evento
         update_task_data(task_id, {'plan': steps})
+        
+        # 🚀 EMITIR EVENTO WEBSOCKET PARA EL PASO INICIADO
+        emit_step_event(task_id, 'step_started', {
+            'step_id': current_step.get('id'),
+            'step_index': step_index,
+            'title': current_step.get('title', 'Paso iniciado'),
+            'description': current_step.get('description', ''),
+            'activity': f"Iniciando paso {step_index + 1}: {current_step.get('title', 'Sin título')}",
+            'progress_percentage': int((step_index / len(steps)) * 100),
+            'timestamp': datetime.now().isoformat()
+        })
         
         # Ejecutar el paso específico
         step_result = execute_single_step_logic(current_step, task_data.get('message', ''), task_id)
@@ -198,35 +209,53 @@ def execute_single_step_detailed(task_id: str, step_id: str):
         current_step['result'] = step_result
         current_step['completed_time'] = datetime.now().isoformat()
         
-        # 🚀 CRÍTICO: ACTIVAR AUTOMÁTICAMENTE EL SIGUIENTE PASO
+        # 🚀 CRÍTICO FIX: ACTIVAR AUTOMÁTICAMENTE EL SIGUIENTE PASO CON DELAY
         next_step_activated = False
         if step_index + 1 < len(steps):
             next_step = steps[step_index + 1]
             next_step['active'] = True
-            next_step['status'] = 'in-progress'
+            next_step['status'] = 'ready'  # 🔧 FIX: Estado intermedio antes de 'in-progress'  
             next_step_activated = True
             logger.info(f"🔄 Activando automáticamente el siguiente paso: {next_step.get('title', 'Sin título')}")
+        
+        # Actualizar en persistencia ANTES de emitir eventos
+        update_task_data(task_id, {'plan': steps})
+        
+        # 🚀 EMITIR EVENTO WEBSOCKET PARA EL PASO COMPLETADO PRIMERO
+        emit_step_event(task_id, 'step_completed', {
+            'step_id': current_step.get('id'),
+            'step_index': step_index,
+            'title': current_step.get('title', 'Paso completado'),
+            'result': step_result,
+            'activity': f"Completado paso {step_index + 1}: {current_step.get('title', 'Sin título')}",
+            'progress_percentage': int(((step_index + 1) / len(steps)) * 100),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        # 🚀 DELAY Y LUEGO EMITIR EVENTO PARA EL SIGUIENTE PASO ACTIVADO  
+        if next_step_activated:
+            # Pequeño delay para asegurar que el frontend procese el step_completed primero
+            import time
+            time.sleep(0.1)  # 100ms delay
+            
+            # Actualizar el siguiente paso a 'in-progress'
+            next_step = steps[step_index + 1] 
+            next_step['status'] = 'in-progress'
+            next_step['start_time'] = datetime.now().isoformat()
+            
+            # Actualizar en persistencia
+            update_task_data(task_id, {'plan': steps})
             
             # 🚀 EMITIR EVENTO WEBSOCKET PARA EL SIGUIENTE PASO ACTIVADO
             emit_step_event(task_id, 'step_started', {
                 'step_id': next_step.get('id'),
+                'step_index': step_index + 1,
                 'title': next_step.get('title', 'Siguiente paso'),
                 'description': next_step.get('description', ''),
-                'activity': f"Iniciando paso: {next_step.get('title', 'Sin título')}",
+                'activity': f"Activando paso {step_index + 2}: {next_step.get('title', 'Sin título')}",
+                'progress_percentage': int(((step_index + 1) / len(steps)) * 100),
                 'timestamp': datetime.now().isoformat()
             })
-        
-        # Actualizar en persistencia
-        update_task_data(task_id, {'plan': steps})
-        
-        # 🚀 EMITIR EVENTO WEBSOCKET PARA EL PASO COMPLETADO
-        emit_step_event(task_id, 'step_completed', {
-            'step_id': current_step.get('id'),
-            'title': current_step.get('title', 'Paso completado'),
-            'result': step_result,
-            'activity': f"Completado: {current_step.get('title', 'Sin título')}",
-            'timestamp': datetime.now().isoformat()
-        })
         
         # Verificar si todos los pasos están completados
         all_completed = all(step.get('completed', False) for step in steps)
