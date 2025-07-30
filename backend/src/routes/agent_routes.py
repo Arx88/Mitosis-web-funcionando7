@@ -1285,38 +1285,35 @@ El proyecto ha sido completado según los requerimientos establecidos.
                 'summary': f"✅ Informe final profesional generado: {title}"
             }
         
-        # Prompt especializado para informe final profesional CON DATOS REALES
+        # Prompt corregido: GENERA DIRECTAMENTE EL CONTENIDO SOLICITADO, NO UN META-INFORME
         report_prompt = f"""
-Genera un INFORME FINAL PROFESIONAL completo y detallado usando ÚNICAMENTE información REAL y específica (NUNCA uses placeholders como [nombre] o [tema]):
+INSTRUCCIÓN DIRECTA: Genera EXACTAMENTE el contenido que se está pidiendo, NO un informe SOBRE cómo hacer el contenido.
 
-TAREA ORIGINAL: {original_message}
-PASO FINAL: {title}
-DESCRIPCIÓN: {description}
+TAREA SOLICITADA: {original_message}
+CONTENIDO A GENERAR: {description}
 
 {real_data_context}
 
-INSTRUCCIONES CRÍTICAS:
-1. USA ÚNICAMENTE los datos REALES proporcionados arriba - NUNCA placeholders como [nombre del personaje] o [tema relevante]
-2. Si la tarea es sobre Dexter, usa información específica: Michael C. Hall, Miami, asesino en serie, etc.
-3. Cita fuentes específicas como IMDb, Wikipedia con datos reales
-4. Crea un informe ejecutivo profesional con formato empresarial
-5. Incluye calificaciones, fechas, nombres reales de todo lo recopilado
-6. Usa un lenguaje formal pero con datos específicos y verificables
+CORRECCIÓN CRÍTICA: 
+- Si se pide "un informe sobre los beneficios de la energía solar", GENERA DIRECTAMENTE el informe sobre los beneficios de la energía solar.
+- Si se pide "un análisis de X", GENERA DIRECTAMENTE el análisis de X.
+- Si se pide "un documento sobre Y", GENERA DIRECTAMENTE el documento sobre Y.
 
-FORMATO REQUERIDO (usando solo información REAL):
-- Título principal con nombre específico del tema
-- Resumen ejecutivo con datos concretos
-- Objetivos cumplidos con métricas reales
-- Metodología utilizada con herramientas específicas
-- Resultados principales con datos verificables
-- Análisis con información específica de las fuentes
-- Conclusiones basadas en datos reales
-- Recomendaciones específicas
+NO GENERES:
+❌ "Un informe que analizará..."
+❌ "Los siguientes puntos serán analizados..."  
+❌ "Se procederá a evaluar..."
+❌ "Este documento presenta una metodología para..."
 
-PROHIBIDO: Cualquier placeholder, información genérica, o contenido que no esté basado en los datos reales proporcionados.
-OBLIGATORIO: Usar nombres, fechas, calificaciones y datos específicos de las fuentes recopiladas.
+SÍ GENERA:
+✅ El contenido real, específico y completo que se solicita
+✅ Los beneficios de la energía solar son: [contenido real]
+✅ El análisis muestra que: [análisis real]
+✅ Los datos indican: [información específica]
 
-Genera un informe completo, profesional y con información 100% REAL en español.
+FORMATO: Genera directamente el contenido profesional y completo solicitado en español, con información específica y útil.
+
+IMPORTANTE: Tu respuesta debe SER el contenido solicitado, no una descripción de lo que harás o planeas hacer.
 """
         
         result = ollama_service.generate_response(report_prompt, {'temperature': 0.6})
