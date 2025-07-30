@@ -218,6 +218,40 @@ function appReducer(state: GlobalAppState, action: AppAction): GlobalAppState {
         })
       };
       
+    case 'UPDATE_TASK_ID':
+      // Actualizar ID de tarea y todos los estados relacionados
+      const { oldId, newId, updatedTask } = action.payload;
+      return {
+        ...state,
+        tasks: state.tasks.map(task => 
+          task.id === oldId ? updatedTask : task
+        ),
+        activeTaskId: state.activeTaskId === oldId ? newId : state.activeTaskId,
+        // Migrar taskFiles del oldId al newId
+        taskFiles: {
+          ...Object.fromEntries(
+            Object.entries(state.taskFiles).filter(([taskId]) => taskId !== oldId)
+          ),
+          [newId]: state.taskFiles[oldId] || []
+        },
+        // Migrar terminalLogs del oldId al newId
+        terminalLogs: {
+          ...Object.fromEntries(
+            Object.entries(state.terminalLogs).filter(([taskId]) => taskId !== oldId)
+          ),
+          [newId]: state.terminalLogs[oldId] || []
+        },
+        // Migrar typingState del oldId al newId
+        typingState: {
+          ...Object.fromEntries(
+            Object.entries(state.typingState).filter(([taskId]) => taskId !== oldId)
+          ),
+          [newId]: state.typingState[oldId] || false
+        },
+        // Actualizar initializingTaskId si coincide
+        initializingTaskId: state.initializingTaskId === oldId ? newId : state.initializingTaskId
+      };
+      
     case 'DELETE_TASK':
       const newTasks = state.tasks.filter(task => task.id !== action.payload);
       const newActiveTaskId = state.activeTaskId === action.payload 
