@@ -1,27 +1,44 @@
 #!/usr/bin/env python3
 """
-MITOSIS BACKEND REAL-TIME WEBSOCKET STEP PROGRESSION TESTING
-Test the specific WebSocket step progression issue reported by the user.
+MITOSIS BACKEND TESTING - SOLAR ENERGY REPORT META-CONTENT ISSUE
+Test the specific "meta-informes" problem reported by the user.
 
 SPECIFIC TESTING REQUEST FROM USER:
-Test the Mitosis backend comprehensively focusing on the REAL-TIME WebSocket step progression issue:
+Test if the corrections to the "meta-informes" problem in Mitosis work correctly.
 
-1. **Create a task** with a complex plan that will take some time to execute
-2. **Monitor WebSocket events** in real-time to verify step progression is sent correctly 
-3. **Verify step sequence** - ensure steps execute 1→2→3→4 without jumping back
-4. **Check step completion logic** - verify steps are only marked complete when they actually finish
-5. **Monitor execution logs** - verify actual vs reported step progression
-6. **Test frontend sync** - ensure frontend receives accurate real-time updates
+ORIGINAL PROBLEM REPORTED:
+When user asks "Escribe un informe sobre los beneficios de la energía solar", 
+the agent returns a meta-report saying "Este informe analizará los beneficios de la energía solar..." 
+instead of the REAL report with specific content about solar energy.
 
-SPECIFIC ISSUES TO INVESTIGATE:
-- User reports agent jumps from step 3 back to step 2
-- Steps being marked as "HECHO" (done) prematurely  
-- Frontend may not be showing real agent action vs cached data
-- Agent incorrectly determining task completion
+CORRECTIONS MADE:
+Modified functions in /app/backend/src/routes/agent_routes.py:
+1. generate_professional_final_report (lines 1289-1320) 
+2. execute_analysis_step (lines 997-1015)
+3. execute_processing_step (lines 1814-1836) 
+4. generate_unified_ai_plan (lines 4251-4302)
+
+SPECIFIC TEST REQUIRED:
+1. Go to https://bc41adec-714d-468d-8870-badec58bf366.preview.emergentagent.com
+2. Send the EXACT task: "Escribe un informe sobre los beneficios de la energía solar"
+3. Wait full time for execution (up to 5-10 minutes if necessary)
+4. Verify the final generated content
+
+EXPECTED RESULT (CORRECT):
+- Content saying "Los beneficios de la energía solar incluyen..."
+- Specific information about economic, environmental, technical advantages
+- Concrete data about efficiency, costs, impact
+- Useful and specific content about solar energy
+
+PROBLEMATIC RESULT (TO BE AVOIDED):
+- "Este informe analizará los beneficios de la energía solar"
+- "Se procederá a estudiar los aspectos de la energía solar"
+- "Los objetivos de este documento son..."
+- Any meta-content describing what will be done
 
 **URL Backend**: https://bc41adec-714d-468d-8870-badec58bf366.preview.emergentagent.com
 **WebSocket URL**: /api/socket.io/
-**Test Task**: "Crear análisis detallado sobre blockchain en 2025"
+**Test Task**: "Escribe un informe sobre los beneficios de la energía solar"
 """
 
 import requests
