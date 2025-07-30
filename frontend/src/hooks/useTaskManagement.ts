@@ -74,11 +74,16 @@ export const useTaskManagement = () => {
         const data = await response.json();
         console.log('🎉 NUEVA TAREA FIX: Backend response received:', data);
         
-        // Actualizar tarea con título mejorado y plan
+        // CRÍTICO: Actualizar tarea con título mejorado, plan Y el task_id real del backend
+        const backendTaskId = data.task_id; // ID real generado por el backend
+        
         updateTask((task: Task) => {
           if (task.id !== newTask.id) return task;
           
-          let updatedTask = { ...task };
+          let updatedTask = { 
+            ...task,
+            id: backendTaskId // ✅ CRÍTICO: Actualizar con el ID real del backend
+          };
           
           // Update title from enhanced_title
           if (data.enhanced_title) {
@@ -107,13 +112,17 @@ export const useTaskManagement = () => {
               progress: 0
             };
             
-            console.log('🎉 NUEVA TAREA FIX: Updated task with plan:', updatedTask);
+            console.log('🎉 NUEVA TAREA FIX: Updated task with backend ID and plan:', updatedTask);
           } else {
             console.warn('🚨 NUEVA TAREA FIX: No valid plan in response:', data);
           }
           
           return updatedTask;
         });
+        
+        // ✅ CRÍTICO: Actualizar el activeTaskId con el ID real del backend
+        dispatch({ type: 'SET_ACTIVE_TASK', payload: backendTaskId });
+        console.log('🔄 Updated activeTaskId to backend task ID:', backendTaskId);
         
         // Auto-iniciar ejecución si hay plan
         if (data.plan && data.plan.length > 0) {
