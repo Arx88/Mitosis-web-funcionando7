@@ -7,11 +7,8 @@ Verifica por qué el paso activo no avanza en el frontend
 import requests
 import json
 import time
-import websocket
-import threading
 
 BACKEND_URL = "http://localhost:8001"
-WS_URL = "ws://localhost:8001"
 
 def test_plan_progression():
     """Test para verificar la progresión del plan"""
@@ -141,55 +138,6 @@ def test_plan_progression():
         print(f"❌ Error en diagnóstico: {str(e)}")
         return False
 
-def check_websocket_events():
-    """Verificar si los eventos WebSocket funcionan"""
-    print("\n🔍 Verificando eventos WebSocket...")
-    
-    events_received = []
-    ws = None
-    
-    def on_message(ws, message):
-        try:
-            data = json.loads(message)
-            events_received.append(data)
-            print(f"📡 WebSocket recibido: {data}")
-        except Exception as e:
-            print(f"❌ Error procesando mensaje WebSocket: {e}")
-    
-    def on_error(ws, error):
-        print(f"❌ WebSocket error: {error}")
-    
-    def on_close(ws, close_status_code, close_msg):
-        print("🔌 WebSocket conexión cerrada")
-    
-    def on_open(ws):
-        print("✅ WebSocket conectado")
-    
-    try:
-        # Conectar WebSocket
-        ws = websocket.WebSocketApp(f"{WS_URL}/socket.io/?EIO=4&transport=websocket",
-                                  on_message=on_message,
-                                  on_error=on_error,
-                                  on_close=on_close,
-                                  on_open=on_open)
-        
-        # Ejecutar en un hilo separado
-        wst = threading.Thread(target=ws.run_forever)
-        wst.daemon = True
-        wst.start()
-        
-        time.sleep(2)
-        print(f"📊 Eventos WebSocket recibidos: {len(events_received)}")
-        
-        return len(events_received) > 0
-        
-    except Exception as e:
-        print(f"❌ Error verificando WebSocket: {e}")
-        return False
-    finally:
-        if ws:
-            ws.close()
-
 if __name__ == "__main__":
     print("🔍 DIAGNÓSTICO COMPLETO DEL PROBLEMA DE PLAN ACTIVO")
     print("=" * 80)
@@ -208,9 +156,6 @@ if __name__ == "__main__":
     
     # Ejecutar diagnósticos
     plan_ok = test_plan_progression()
-    
-    # Verificar WebSocket (opcional)
-    # ws_ok = check_websocket_events()
     
     print("\n" + "=" * 80)
     print("📊 RESULTADOS DEL DIAGNÓSTICO:")
