@@ -1215,6 +1215,110 @@ Responde SOLO con el contenido final, NO con pasos de cómo crearlo.
             'summary': f'❌ Error en creación: {str(e)}'
         }
 
+def execute_processing_step(title: str, description: str, ollama_service, original_message: str, step: dict, task_id: str) -> dict:
+    """Ejecutar paso de procesamiento - GENERA CONTENIDO REAL ESPECÍFICO, NO META-CONTENIDO"""
+    try:
+        if not ollama_service or not ollama_service.is_healthy():
+            raise Exception("Servicio Ollama no disponible")
+        
+        # Determinar el tipo de procesamiento basado en el título y descripción
+        step_tool = step.get('tool', 'processing')
+        
+        # 🚀 PROMPT ULTRA-ESPECÍFICO SEGÚN EL TIPO DE PROCESAMIENTO
+        if step_tool == 'creation' or 'crear' in title.lower() or 'generar' in title.lower():
+            return execute_creation_step(title, description, ollama_service, original_message, task_id)
+        elif step_tool == 'analysis' or 'analizar' in title.lower() or 'análisis' in title.lower():
+            return execute_analysis_step(title, description, ollama_service, original_message)
+        elif step_tool == 'planning':
+            return execute_planning_delivery_step('planning', title, description, ollama_service, original_message)
+        elif step_tool == 'delivery':
+            return execute_planning_delivery_step('delivery', title, description, ollama_service, original_message)
+        else:
+            # Procesamiento genérico pero con contenido REAL
+            processing_prompt = f"""
+INSTRUCCIÓN CRÍTICA: Eres un experto en el tema. EJECUTA INMEDIATAMENTE el procesamiento solicitado y entrega contenido REAL específico.
+
+TAREA ORIGINAL: {original_message}
+PROCESAMIENTO REQUERIDO: {title}
+DESCRIPCIÓN: {description}
+
+REGLAS OBLIGATORIAS:
+🚫 PROHIBIDO escribir frases como:
+- "Se procesará", "Se ejecutará", "Se realizará"
+- "Este procesamiento consistirá", "Los pasos serán"
+- "La metodología incluye", "Se llevará a cabo"
+
+✅ OBLIGATORIO generar DIRECTAMENTE:
+- El resultado específico del procesamiento solicitado
+- Contenido concreto y detallado sobre el tema
+- Información práctica y útil
+- Datos específicos, características, beneficios
+- Recomendaciones fundamentadas
+
+EJEMPLOS DE INICIO CORRECTO:
+Si es procesamiento de datos: "Los datos analizados muestran las siguientes tendencias principales..."
+Si es procesamiento de información: "La información recopilada revela que..."
+Si es procesamiento de análisis: "El análisis revela los siguientes hallazgos clave..."
+
+FORMATO: Genera directamente el contenido resultante del procesamiento en español.
+
+IMPORTANTE: Tu respuesta debe SER el resultado del procesamiento, no una descripción de lo que harás.
+"""
+            
+            result = ollama_service.generate_response(processing_prompt, {'temperature': 0.6})
+            
+            if result.get('error'):
+                raise Exception(f"Error Ollama: {result['error']}")
+            
+            content = result.get('response', 'Procesamiento completado')
+            
+            # 🔍 VALIDACIÓN ANTI-META
+            meta_indicators = [
+                'se procesará', 'se ejecutará', 'se realizará', 'este procesamiento',
+                'los pasos serán', 'la metodología incluye', 'se llevará a cabo'
+            ]
+            
+            is_meta_content = any(indicator in content.lower() for indicator in meta_indicators)
+            
+            if is_meta_content:
+                logger.warning("🚨 META-CONTENIDO DETECTADO en procesamiento, ejecutando retry")
+                
+                # 🔄 RETRY ULTRA-ESTRICTO
+                retry_prompt = f"""
+ALERTA: El procesamiento anterior fue rechazado por ser meta-contenido.
+
+EJECUTA INMEDIATAMENTE el procesamiento real sobre: {original_message}
+
+TEMA ESPECÍFICO: {title}
+
+INICIO OBLIGATORIO: Comienza directamente con el resultado específico del procesamiento.
+
+PROHIBIDO usar: procesará, ejecutará, realizará, metodología, pasos, llevará a cabo.
+
+GENERA EL CONTENIDO PROCESADO AHORA:
+"""
+                
+                retry_result = ollama_service.generate_response(retry_prompt, {'temperature': 0.4})
+                if not retry_result.get('error'):
+                    content = retry_result.get('response', content)
+            
+            return {
+                'success': True,
+                'type': 'processing',
+                'content': content,
+                'meta_retry_used': is_meta_content,
+                'summary': f"✅ Procesamiento completado: {title}"
+            }
+        
+    except Exception as e:
+        logger.error(f"❌ Processing error: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'processing_error',
+            'summary': f'❌ Error en procesamiento: {str(e)}'
+        }
+
 def execute_planning_delivery_step(tool_type: str, title: str, description: str, ollama_service, original_message: str) -> dict:
     """Ejecutar paso de planificación o entrega"""
     try:
