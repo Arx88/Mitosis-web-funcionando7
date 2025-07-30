@@ -1827,28 +1827,23 @@ def evaluate_step_completion_with_agent(step: dict, step_result: dict, original_
         
         logger.info(f"🧠 Evaluando paso: tool={tool_name}, success={success}, count={count}, results={len(results)}")
         
-        # REGLAS DETERMINÍSTICAS BALANCEADAS - VALIDACIÓN REAL
+        # REGLAS DETERMINÍSTICAS BALANCEADAS - VALIDACIÓN REAL PERO PERMISIVA
         if tool_name == 'web_search':
-            # Para búsquedas web: Validación real pero flexible
-            if success and (count > 0 or (results and len(results) > 0) or (content and len(str(content)) > 30)):
+            # Para búsquedas web: Validación muy permisiva para evitar bloqueos
+            if success:
+                # Si success=True, permitir continuar SIEMPRE
                 return {
                     'step_completed': True,
                     'should_continue': False,
-                    'reason': f'Búsqueda web exitosa: success={success}, count={count}, results={len(results)}, content_length={len(str(content))}',
+                    'reason': f'Búsqueda web exitosa: success={success}, count={count}, results={len(results) if results else 0}, content_length={len(str(content)) if content else 0}',
                     'feedback': 'Búsqueda completada correctamente'
                 }
-            elif success:  # Success pero sin resultados claros - intentar una vez más
-                return {
-                    'step_completed': True,  # Permitir continuar si hay success básico
-                    'should_continue': False,
-                    'reason': f'Búsqueda web ejecutada correctamente aunque con resultados limitados',
-                    'feedback': 'Búsqueda ejecutada - continuar workflow'
-                }
             else:
+                # Solo fallar si success=False explícitamente
                 return {
                     'step_completed': False,
                     'should_continue': True,
-                    'reason': f'Búsqueda web falló: success={success}, count={count}, results={len(results)}',
+                    'reason': f'Búsqueda web falló: success={success}, count={count}, results={len(results) if results else 0}',
                     'feedback': 'La búsqueda web necesita ejecutarse correctamente'
                 }
         
