@@ -10,43 +10,43 @@
       "test_name": "Backend Health",
       "success": true,
       "details": "Backend healthy - Services: {'database': True, 'ollama': True, 'tools': 12}",
-      "timestamp": "2025-07-31T03:02:18.777889",
+      "timestamp": "2025-07-31T05:24:07.058383",
       "response_data": null
     },
     {
       "test_name": "Create Task with Plan",
       "success": false,
       "details": "Plan not generated or insufficient steps - Plan length: 0",
-      "timestamp": "2025-07-31T03:02:26.852308",
+      "timestamp": "2025-07-31T05:24:14.597408",
       "response_data": {
         "memory_used": true,
-        "response": "\u00a1Hola! Me alegra ayudarte a crear un archivo de texto con el contenido \"hola mundo\".\n**PLAN DE ACCI\u00d3N:**\n1. **Crear un nuevo archivo**: Utilizar\u00e9 la herramienta `creation` para generar un nuevo archivo de texto.\n2. **Especificar el contenido**: En el archivo, escribir\u00e9 el texto \"hola mundo\" utilizando la funci\u00f3n de edici\u00f3n del editor de texto.\n3. **Guardar el archivo**: Guardar\u00e9 el archivo con un nombre y ubicaci\u00f3n espec\u00edficos.\n**Herramientas utilizadas:**",
-        "task_id": "chat-1753930939",
-        "timestamp": "2025-07-31T03:02:26.848954"
+        "response": "\u00a1Hola! Me alegra ayudarte a crear un archivo de texto con el contenido \"hola mundo\".\n**PLAN DE ACCI\u00d3N:**\n1. **Crear un nuevo archivo**: Utilizar\u00e9 la herramienta `creation` para generar un nuevo archivo de texto.\n2. **Especificar el contenido**: Escribir\u00e9 el contenido \"hola mundo\" en el archivo utilizando la herramienta `creation`.\n3. **Guardar el archivo**: Guardar\u00e9 el archivo con un nombre y ubicaci\u00f3n espec\u00edficos.\n**Paso a paso:**\n1. Crear un nuevo archivo de texto utilizando la herramienta `creation`:",
+        "task_id": "chat-1753939448",
+        "timestamp": "2025-07-31T05:24:14.593920"
       }
     },
     {
       "test_name": "Task Status Endpoint",
       "success": false,
-      "details": "HTTP 404: {\"error\":\"Task chat-1753930939 not found\"}\n",
-      "timestamp": "2025-07-31T03:02:27.889979",
+      "details": "HTTP 404: {\"error\":\"Task chat-1753939448 not found\"}\n",
+      "timestamp": "2025-07-31T05:24:15.639788",
       "response_data": null
     },
     {
       "test_name": "Agent Status",
       "success": false,
       "details": "Exception: object of type 'int' has no len()",
-      "timestamp": "2025-07-31T03:02:28.899342",
+      "timestamp": "2025-07-31T05:24:16.649279",
       "response_data": null
     },
     {
       "test_name": "WebSocket Endpoint",
       "success": true,
       "details": "WebSocket endpoint accessible - Status: 400",
-      "timestamp": "2025-07-31T03:02:29.909909",
+      "timestamp": "2025-07-31T05:24:17.661214",
       "response_data": null
     }
   ],
-  "task_id": "chat-1753930939",
+  "task_id": "chat-1753939448",
   "backend_ready": false
 }
