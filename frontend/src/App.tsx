@@ -119,13 +119,6 @@ export function App() {
 
   // Memoizar condición de renderizado principal - simplificado para evitar race conditions
   const shouldShowTaskView = useMemo(() => {
-    console.log('🔍 shouldShowTaskView evaluation:', { 
-      activeTaskId, 
-      tasksLength: tasks.length,
-      taskIds: tasks.map(t => t.id),
-      hasActiveTask: tasks.some(task => task.id === activeTaskId)
-    });
-    
     // SOLUCIÓN DIRECTA: Si hay activeTaskId, mostrar TaskView inmediatamente
     // Esto evita race conditions donde la tarea existe pero no se encuentra en el momento exacto
     return Boolean(activeTaskId);
