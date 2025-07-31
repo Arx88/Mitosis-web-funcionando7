@@ -279,9 +279,9 @@ export const TerminalView = ({
     { id: 'agent', title: 'Initializing agent', duration: 1000 }
   ];
 
-  // Reset terminal state when dataId changes (switching tasks)
+  // Reset terminal state when dataId changes (switching tasks) - CON LOGGING
   useEffect(() => {
-    console.log('🔄 TERMINAL: Resetting state for new task:', dataId);
+    console.log(`🔄 [TERMINAL-${taskId}] Resetting state for new task:`, dataId);
     setTerminalOutput([]);
     setCurrentExecutingTool(null);
     setMonitorPages([]);
@@ -295,7 +295,14 @@ export const TerminalView = ({
       limit: 20,
       offset: 0
     });
-    console.log('✅ TERMINAL: State reset complete for task:', dataId);
+    
+    // Limpiar timers de pasos anteriores
+    Object.values(stepTimers).forEach(timer => {
+      clearInterval(timer.interval);
+    });
+    setStepTimers({});
+    
+    console.log(`✅ [TERMINAL-${taskId}] State reset complete for task:`, dataId);
   }, [dataId]); // Reset whenever dataId changes, including when it becomes null/undefined
 
   // Handle environment initialization - Fixed dependency array
