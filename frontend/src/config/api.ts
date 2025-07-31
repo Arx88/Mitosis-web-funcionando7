@@ -97,7 +97,7 @@ export const API_CONFIG: ApiConfig = {
   websocket: {
     url: `${getBackendUrl()}`,  // Solo la URL base
     options: {
-      path: '/api/socket.io/',    // PATH EXPLÍCITO  
+      path: '/socket.io/',    // PATH CORRECTO sin /api prefix  
       transports: ['polling', 'websocket'],     // TANTO POLLING COMO WEBSOCKET
       upgrade: true,              // PERMITIR upgrade a websocket
       reconnection: true,
