@@ -198,11 +198,23 @@ export const TerminalView = ({
   const lastTaskIdRef = useRef<string>(''); // Para tracking de cambios de tarea
   
   // ========================================================================
-  // OBTENER DATOS AISLADOS DEL CONTEXT
+  // OBTENER DATOS AISLADOS DEL CONTEXT CON FALLBACK PARA INICIALIZACIÓN
   // ========================================================================
   
   const monitorPages = taskId ? getTaskMonitorPages(taskId) : [];
   const currentPageIndex = taskId ? getTaskCurrentPageIndex(taskId) : 0;
+  
+  // ✅ FIX CRÍTICO: Inicializar sistema como ONLINE si hay taskId válido
+  // El problema era que isSystemOnline se mantenía false cuando no había páginas inicialmente
+  useEffect(() => {
+    if (taskId && !isInitializing) {
+      console.log(`🟢 [TERMINAL-${taskId}] Setting system ONLINE - Task ID present`);
+      setIsSystemOnline(true);
+    } else if (!taskId) {
+      console.log(`🔴 [TERMINAL] Setting system OFFLINE - No task ID`);
+      setIsSystemOnline(false);
+    }
+  }, [taskId, isInitializing]);
 
   // Función para cargar el informe final - FIXED: Proper error handling and content loading
   const loadFinalReport = async (taskId: string) => {
