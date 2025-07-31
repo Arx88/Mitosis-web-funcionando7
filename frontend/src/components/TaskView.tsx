@@ -23,7 +23,7 @@ interface TaskViewProps {
 }
 
 // ========================================================================
-// COMPONENTE REFACTORIZADO - SIMPLIFICADO Y LIMPIO
+// COMPONENTE REFACTORIZADO - ARREGLANDO LOOP INFINITO
 // ========================================================================
 
 const TaskViewComponent: React.FC<TaskViewProps> = ({
@@ -59,7 +59,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   const { hasActiveMemory, getMemoryStats } = useIsolatedMemoryManager({ taskId: task.id });
 
   // ========================================================================
-  // PLAN MANAGER SIMPLIFICADO - SOLUCIÓN DEFINITIVA
+  // PLAN MANAGER SIMPLIFICADO - CON PROTECCIÓN CONTRA LOOPS
   // ========================================================================
 
   const {
@@ -75,16 +75,27 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     taskId: task.id,
     initialPlan: task.plan || [],
     onPlanUpdate: (updatedPlan) => {
-      console.log(`🔄 [TASK-${task.id}] Plan updated (SIMPLE):`, updatedPlan.length, 'steps');
-      // Actualizar la tarea con el nuevo plan
-      onUpdateTask((currentTask: Task) => ({
-        ...currentTask,
-        plan: updatedPlan,
-        progress: Math.round((updatedPlan.filter(s => s.completed).length / updatedPlan.length) * 100)
-      }));
+      console.log(`🔄 [TASK-${task.id}] Plan updated (SAFE):`, updatedPlan.length, 'steps');
+      // ✅ ARREGLO: Solo actualizar si hay cambios reales
+      onUpdateTask((currentTask: Task) => {
+        const currentProgress = Math.round((updatedPlan.filter(s => s.completed).length / updatedPlan.length) * 100);
+        
+        // No actualizar si no hay cambios reales en el progreso
+        if (currentTask.progress === currentProgress && 
+            currentTask.plan?.length === updatedPlan.length) {
+          console.log(`🛡️ [TASK-${task.id}] Skipping unnecessary task update`);
+          return currentTask;
+        }
+        
+        return {
+          ...currentTask,
+          plan: updatedPlan,
+          progress: currentProgress
+        };
+      });
     },
     onStepComplete: (stepId) => {
-      console.log(`✅ [TASK-${task.id}] Step completed (SIMPLE):`, stepId);
+      console.log(`✅ [TASK-${task.id}] Step completed (SAFE):`, stepId);
       // Log cuando un paso se completa
       const step = plan.find(s => s.id === stepId);
       if (step) {
@@ -102,7 +113,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       }
     },
     onTaskComplete: () => {
-      console.log(`🎉 [TASK-${task.id}] Task completed (SIMPLE)!`);
+      console.log(`🎉 [TASK-${task.id}] Task completed (SAFE)!`);
       // Log cuando toda la tarea se completa
       setTerminalLogs(prev => [...prev, {
         message: '🎉 ¡Tarea completada exitosamente!',
@@ -121,15 +132,32 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   });
 
   // ========================================================================
-  // SINCRONIZACIÓN CON PLAN DE LA TAREA
+  // SINCRONIZACIÓN SEGURA CON PLAN DE LA TAREA - ARREGLO DEL LOOP
   // ========================================================================
 
-  // Sincronizar el plan del WebSocket con el plan de la tarea
+  // REF para evitar loops infinitos
+  const lastPlanRef = useRef<string>('');
+
+  // ✅ ARREGLO: Sincronizar solo cuando hay cambios reales
   useEffect(() => {
     if (task.plan && task.plan.length > 0) {
-      setPlan(task.plan);
+      // Crear hash del plan para detectar cambios reales
+      const planHash = JSON.stringify(task.plan.map(s => ({ 
+        id: s.id, 
+        completed: s.completed, 
+        active: s.active 
+      })));
+      
+      // Solo actualizar si el plan realmente cambió
+      if (planHash !== lastPlanRef.current) {
+        console.log(`🔄 [TASK-${task.id}] Plan sync - real change detected`);
+        lastPlanRef.current = planHash;
+        setPlan(task.plan);
+      } else {
+        console.log(`🛡️ [TASK-${task.id}] Plan sync - no changes, skipping`);
+      }
     }
-  }, [task.plan, setPlan]);
+  }, [task.id]); // ✅ ARREGLO CRÍTICO: Solo dependencia en task.id, no en task.plan
 
   // ========================================================================
   // MEMOIZED VALUES
@@ -238,6 +266,9 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     setIsTyping(false);
     setShowFilesModal(false);
     setShowShareModal(false);
+    
+    // Reset plan hash
+    lastPlanRef.current = '';
     
     console.log(`✅ [TASK-${task.id}] TaskView state reset complete`);
   }, [task.id]);
