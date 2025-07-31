@@ -770,37 +770,32 @@ export const TerminalView = ({
     return content;
   };
 
-  // ========================================================================
-  // NAVIGATION HANDLERS - USANDO CONTEXT AISLADO
-  // ========================================================================
-  
-  const handlePreviousPage = useCallback(() => {
-    if (taskId && currentPageIndex > 0) {
-      setTaskCurrentPageIndex(taskId, currentPageIndex - 1);
+  // Navigation handlers
+  const handlePreviousPage = () => {
+    if (currentPageIndex > 0) {
+      setCurrentPageIndex(currentPageIndex - 1);
       setIsLiveMode(false);
     }
-  }, [taskId, currentPageIndex, setTaskCurrentPageIndex]);
+  };
 
-  const handleNextPage = useCallback(() => {
-    if (taskId && currentPageIndex < monitorPages.length - 1) {
-      setTaskCurrentPageIndex(taskId, currentPageIndex + 1);
+  const handleNextPage = () => {
+    if (currentPageIndex < monitorPages.length - 1) {
+      setCurrentPageIndex(currentPageIndex + 1);
       setIsLiveMode(false);
     }
-  }, [taskId, currentPageIndex, monitorPages.length, setTaskCurrentPageIndex]);
+  };
 
-  const handleLiveMode = useCallback(() => {
-    if (taskId && monitorPages.length > 0) {
-      setTaskCurrentPageIndex(taskId, monitorPages.length - 1);
+  const handleLiveMode = () => {
+    if (monitorPages.length > 0) {
+      setCurrentPageIndex(monitorPages.length - 1);
       setIsLiveMode(true);
     }
-  }, [taskId, monitorPages.length, setTaskCurrentPageIndex]);
+  };
 
-  const handleResetToStart = useCallback(() => {
-    if (taskId) {
-      setTaskCurrentPageIndex(taskId, 0);
-      setIsLiveMode(false);
-    }
-  }, [taskId, setTaskCurrentPageIndex]);
+  const handleResetToStart = () => {
+    setCurrentPageIndex(0);
+    setIsLiveMode(false);
+  };
 
   const formatMarkdownContent = (content: string) => {
     return (
