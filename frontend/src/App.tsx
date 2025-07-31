@@ -168,7 +168,6 @@ export function App() {
   }, []);
 
   const handleFilesUploaded = useCallback(async (files: FileList) => {
-    console.log('📎 Files uploaded:', files);
     await uploadFilesForTask(files);
     setShowFileUpload(false);
   }, [uploadFilesForTask]);
