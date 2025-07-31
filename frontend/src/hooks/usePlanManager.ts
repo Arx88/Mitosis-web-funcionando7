@@ -74,7 +74,7 @@ export const usePlanManager = ({
     }
     
     // ✅ PROTECCIÓN 2: Evitar múltiples updates simultáneos
-    if (isUpdingRef.current) {
+    if (isUpdatingRef.current) {
       console.log(`🛡️ [PLAN-${taskId}] Update skipped - already updating from: ${source}`);
       return;
     }
