@@ -208,6 +208,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       
       'step_started': (data: any) => {
         console.log('🚀 WebSocket step_started received:', data);
+        console.log('🔍 Current task plan before update:', handleUpdateTask ? 'handler available' : 'no handler');
         
         const logEntry = {
           message: `▶️ Iniciando: ${data.title || data.step_title || 'Step'}`,
@@ -219,10 +220,21 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         
         // CRÍTICO: Actualizar el plan para mostrar el step activo
         handleUpdateTask((currentTask: Task) => {
-          if (!currentTask.plan) return currentTask;
+          if (!currentTask.plan) {
+            console.log('❌ No plan found in current task');
+            return currentTask;
+          }
+          
+          console.log('🔍 Before step_started update - Plan state:', {
+            totalSteps: currentTask.plan.length,
+            activeSteps: currentTask.plan.filter(s => s.active).map(s => s.title),
+            completedSteps: currentTask.plan.filter(s => s.completed).map(s => s.title),
+            targetStepId: data.step_id
+          });
           
           const updatedPlan = currentTask.plan.map(step => {
             if (step.id === data.step_id) {
+              console.log(`🎯 Activating step: ${step.title} (ID: ${step.id})`);
               return {
                 ...step,
                 active: true,
@@ -231,6 +243,9 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
                 start_time: data.timestamp
               };
             } else {
+              if (step.active) {
+                console.log(`🔄 Deactivating step: ${step.title} (ID: ${step.id})`);
+              }
               return {
                 ...step,
                 active: false
@@ -238,11 +253,10 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
             }
           });
           
-          console.log('🔄 Plan updated after step_started:', {
-            stepId: data.step_id,
-            stepTitle: data.title,
-            planLength: updatedPlan.length,
-            activeStep: updatedPlan.find(s => s.active)?.title
+          console.log('🔄 After step_started update - Plan state:', {
+            activeSteps: updatedPlan.filter(s => s.active).map(s => s.title),
+            completedSteps: updatedPlan.filter(s => s.completed).map(s => s.title),
+            targetStepFound: updatedPlan.some(s => s.id === data.step_id && s.active)
           });
           
           return {
