@@ -301,7 +301,13 @@ export const TerminalView = ({
 
   // Reset terminal state when dataId changes (switching tasks) - CON LOGGING
   useEffect(() => {
-    console.log(`🔄 [TERMINAL-${taskId}] Resetting state for new task:`, dataId);
+    console.log(`🔄 [TERMINAL-RESET] Task switch detected:`);
+    console.log(`  - Previous dataId: ${lastTaskIdRef.current || 'none'}`);
+    console.log(`  - New dataId: ${dataId}`);
+    console.log(`  - TaskId: ${taskId}`);
+    console.log(`  - TaskTitle: ${taskTitle}`);
+    
+    console.log(`🔄 [TERMINAL-RESET] Resetting terminal state for task: ${dataId}`);
     setTerminalOutput([]);
     setCurrentExecutingTool(null);
     setMonitorPages([]);
@@ -321,9 +327,11 @@ export const TerminalView = ({
       clearInterval(timer.interval);
     });
     setStepTimers({});
+    setLiveTimers({});
     
-    console.log(`✅ [TERMINAL-${taskId}] State reset complete for task:`, dataId);
-  }, [dataId]); // Reset whenever dataId changes, including when it becomes null/undefined
+    console.log(`✅ [TERMINAL-RESET] State reset complete for task: ${dataId}`);
+    lastTaskIdRef.current = dataId || '';
+  }, [dataId, taskId, taskTitle]); // Reset whenever dataId changes, including when it becomes null/undefined
 
   // Handle environment initialization - MEJORADO CON LOGGING ESPECÍFICO POR TAREA
   useEffect(() => {
