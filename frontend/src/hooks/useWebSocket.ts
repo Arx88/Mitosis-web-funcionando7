@@ -202,9 +202,14 @@ export const useWebSocket = (): UseWebSocketReturn => {
   }, [socket, isConnected]);
 
   const removeEventListeners = useCallback(() => {
-    console.log('🗑️ Removing WebSocket/Polling event listeners');
+    if (socket) {
+      // Remover todos los listeners actuales
+      Object.keys(eventListenersRef.current).forEach((eventName) => {
+        socket.off(eventName);
+      });
+    }
     eventListenersRef.current = {};
-  }, []);
+  }, [socket]);
 
   return {
     socket,
