@@ -547,10 +547,15 @@ export const TerminalView = ({
       });
       
       // Actualizar páginas manteniendo TODO.md como primera página
-      setMonitorPages(prev => {
-        const todoPage = prev.find(p => p.id === 'todo-plan');
-        const otherPages = prev.filter(p => p.id !== 'todo-plan');
+      if (taskId) {
+        console.log(`🔧 [TOOL-PAGES] Adding ${newPages.length} tool pages to task ${taskId}`);
+        const currentPages = getTaskMonitorPages(taskId);
+        const todoPage = currentPages.find(p => p.id === 'todo-plan');
+        const otherPages = currentPages.filter(p => p.id !== 'todo-plan');
         const allPages = todoPage ? [todoPage, ...otherPages, ...newPages] : [...otherPages, ...newPages];
+        
+        setTaskMonitorPages(taskId, allPages);
+        console.log(`✅ [TOOL-PAGES] Set ${allPages.length} total pages for task ${taskId}`);
         
         setPaginationStats(prevStats => ({
           ...prevStats,
@@ -559,11 +564,10 @@ export const TerminalView = ({
         
         // Mantener en modo Live y ir a la última página automáticamente
         if (isLiveMode && allPages.length > 0) {
-          setCurrentPageIndex(allPages.length - 1);
+          setTaskCurrentPageIndex(taskId, allPages.length - 1);
+          console.log(`🔴 [TOOL-PAGES] Live mode: navigated to page ${allPages.length - 1}`);
         }
-        
-        return allPages;
-      });
+      }
       
       // Set current executing tool
       if (toolResults.length > 0) {
