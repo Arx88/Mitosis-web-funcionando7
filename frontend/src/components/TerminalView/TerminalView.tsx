@@ -305,10 +305,10 @@ export const TerminalView = ({
     console.log(`✅ [TERMINAL-${taskId}] State reset complete for task:`, dataId);
   }, [dataId]); // Reset whenever dataId changes, including when it becomes null/undefined
 
-  // Handle environment initialization - Fixed dependency array
+  // Handle environment initialization - MEJORADO CON LOGGING ESPECÍFICO POR TAREA
   useEffect(() => {
     if (isInitializing && taskId && taskTitle) {
-      console.log('🚀 TERMINAL: Starting environment initialization');
+      console.log(`🚀 [INIT-${taskId}] Starting environment initialization for: ${taskTitle}`);
       setIsSystemOnline(false);
       setInitializationStep(0);
       
@@ -321,6 +321,7 @@ export const TerminalView = ({
       const processStep = (stepIndex: number) => {
         if (stepIndex >= initializationSteps.length) {
           // All steps completed
+          console.log(`✅ [INIT-${taskId}] Environment ready! System is now ONLINE`);
           setIsSystemOnline(true);
           if (onInitializationLog) {
             onInitializationLog('✅ Environment ready! System is now ONLINE', 'success');
@@ -334,11 +335,13 @@ export const TerminalView = ({
         const step = initializationSteps[stepIndex];
         setInitializationStep(stepIndex);
         
+        console.log(`⚙️ [INIT-${taskId}] ${step.title}...`);
         if (onInitializationLog) {
           onInitializationLog(`⚙️ ${step.title}...`, 'info');
         }
         
         setTimeout(() => {
+          console.log(`✓ [INIT-${taskId}] ${step.title} completed`);
           if (onInitializationLog) {
             onInitializationLog(`✓ ${step.title} completed`, 'success');
           }
@@ -348,7 +351,7 @@ export const TerminalView = ({
       
       processStep(0);
     }
-  }, [isInitializing, taskId, taskTitle, onInitializationLog, onInitializationComplete]); // Removed initializationSteps
+  }, [isInitializing, taskId, taskTitle, onInitializationLog, onInitializationComplete]);
 
   // Inicializar con TODO.md como Página 1 - Solo si hay plan Y no hay páginas Y hay dataId
   useEffect(() => {
