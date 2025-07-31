@@ -282,10 +282,21 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         // 🔧 FIX PROBLEMA 1: Solo marcar como completado, NO activar siguiente paso
         // El backend se encarga de activar el siguiente paso vía step_started
         handleUpdateTask((currentTask: Task) => {
-          if (!currentTask.plan) return currentTask;
+          if (!currentTask.plan) {
+            console.log('❌ No plan found in current task for step_completed');
+            return currentTask;
+          }
+          
+          console.log('🔍 Before step_completed update - Plan state:', {
+            totalSteps: currentTask.plan.length,
+            activeSteps: currentTask.plan.filter(s => s.active).map(s => s.title),
+            completedSteps: currentTask.plan.filter(s => s.completed).map(s => s.title),
+            targetStepId: data.step_id
+          });
           
           const updatedPlan = currentTask.plan.map((step) => {
             if (step.id === data.step_id) {
+              console.log(`✅ Completing step: ${step.title} (ID: ${step.id})`);
               // Solo marcar el step actual como completado
               return {
                 ...step,
@@ -303,11 +314,10 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
           const totalSteps = updatedPlan.length;
           const progress = Math.round((completedSteps / totalSteps) * 100);
           
-          console.log('🔄 Plan updated after step_completed (only current step):', {
-            stepId: data.step_id,
-            completedSteps,
-            totalSteps,
-            progress
+          console.log('🔄 After step_completed update - Plan state:', {
+            activeSteps: updatedPlan.filter(s => s.active).map(s => s.title),
+            completedSteps: updatedPlan.filter(s => s.completed).map(s => s.title),
+            progress: `${progress}%`
           });
           
           return {
