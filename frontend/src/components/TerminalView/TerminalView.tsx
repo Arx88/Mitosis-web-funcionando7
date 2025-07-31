@@ -437,7 +437,12 @@ export const TerminalView = ({
       };
       
       console.log(`📋 [TODO-INIT] Creating TODO page:`, todoPage);
-      setMonitorPages([todoPage]);
+      
+      // ✅ USAR CONTEXT PARA PERSISTIR PÁGINAS
+      if (taskId) {
+        setTaskMonitorPages(taskId, [todoPage]);
+      }
+      
       setPaginationStats(prev => ({ ...prev, totalPages: 1 }));
       console.log(`✅ [TODO-INIT] TODO page created for task ${dataId}`);
     } else {
