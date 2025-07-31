@@ -18,7 +18,6 @@ export const useTaskManagement = () => {
   
   // Crear tarea con mensaje inicial (consolidado)
   const createTaskWithMessage = useCallback(async (messageContent: string) => {
-    console.log('🎯 RACE CONDITION FIX: Starting createTaskWithMessage without early loading state');
     dispatch({ type: 'SET_THINKING', payload: false });
     
     // Crear mensaje de usuario
