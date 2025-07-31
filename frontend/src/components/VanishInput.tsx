@@ -273,7 +273,6 @@ export const VanishInput: React.FC<VanishInputProps> = ({
             ref={textareaRef}
             value={inputValue}
             onChange={(e) => {
-              console.log('🔵 VANISHINPUT onChange triggered:', e.target.value);
               setInputValue(e.target.value);
               adjustTextareaHeight();
             }}
