@@ -883,6 +883,7 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
   }, []);
 
   const setTaskMonitorPages = useCallback((taskId: string, pages: any[]) => {
+    console.log(`📤 [CONTEXT-SET] setTaskMonitorPages(${taskId}): Setting ${pages.length} pages`);
     dispatch({ type: 'SET_TASK_MONITOR_PAGES', payload: { taskId, pages } });
   }, []);
 
