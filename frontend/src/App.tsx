@@ -131,7 +131,6 @@ export function App() {
   // ========================================================================
 
   const handleInitializationComplete = useCallback(() => {
-    console.log('✅ Task initialization completed');
     setInitializingTaskId(null);
     
     const logEntry = {
