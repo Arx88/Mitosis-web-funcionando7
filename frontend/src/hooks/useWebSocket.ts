@@ -175,26 +175,11 @@ export const useWebSocket = (): UseWebSocketReturn => {
     if (socket && isConnected) {
       Object.entries(events).forEach(([eventName, handler]) => {
         if (handler) {
-          // ✅ FIX: Wrapper para filtrar eventos por task_id
-          const wrappedHandler = (data: any) => {
-            // Solo procesar eventos que pertenecen a la tarea actual
-            if (data.task_id && data.task_id === currentTaskId) {
-              console.log(`📡 [WEBSOCKET] Processing ${eventName} for task: ${data.task_id}`);
-              handler(data);
-            } else if (!data.task_id) {
-              // Eventos sin task_id se procesan normalmente (eventos globales)
-              console.log(`📡 [WEBSOCKET] Processing global ${eventName}`);
-              handler(data);
-            } else {
-              console.log(`📡 [WEBSOCKET] Ignoring ${eventName} for other task: ${data.task_id} (current: ${currentTaskId})`);
-            }
-          };
-          
-          socket.on(eventName, wrappedHandler);
+          socket.on(eventName, handler);
         }
       });
     }
-  }, [socket, isConnected, currentTaskId]);
+  }, [socket, isConnected]);
 
   const removeEventListeners = useCallback(() => {
     if (socket) {
