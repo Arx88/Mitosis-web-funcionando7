@@ -206,51 +206,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         }
       },
       
-      'step_started': (data: any) => {
-        console.log('🚀 WebSocket step_started received:', data);
-        
-        const logEntry = {
-          message: `▶️ Iniciando: ${data.title || data.step_title || 'Step'}`,
-          type: 'success' as const,
-          timestamp: new Date(data.timestamp || Date.now())
-        };
-        
-        setTerminalLogs(prev => [...prev, logEntry]);
-        
-        // CRÍTICO: Actualizar el plan para mostrar el step activo
-        handleUpdateTask((currentTask: Task) => {
-          if (!currentTask.plan) return currentTask;
-          
-          const updatedPlan = currentTask.plan.map(step => {
-            if (step.id === data.step_id) {
-              return {
-                ...step,
-                active: true,
-                status: 'in-progress',
-                completed: false
-              };
-            } else {
-              return {
-                ...step,
-                active: false
-              };
-            }
-          });
-          
-          console.log('🔄 Plan updated after step_started:', {
-            stepId: data.step_id,
-            stepTitle: data.title,
-            planLength: updatedPlan.length,
-            activeStep: updatedPlan.find(s => s.active)?.title
-          });
-          
-          return {
-            ...currentTask,
-            plan: updatedPlan,
-            status: 'in-progress'
-          };
-        });
-      },
+
       
       'step_completed': (data: any) => {
         console.log('✅ WebSocket step_completed received:', data);
