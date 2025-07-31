@@ -161,97 +161,12 @@ export const useWebSocket = (): UseWebSocketReturn => {
   }, [eventListenersRef.current]);
 
   const joinTaskRoom = useCallback((taskId: string) => {
-    console.log('🏠 Joining task room:', taskId);
     setCurrentTaskId(taskId);
     
     if (socket && isConnected) {
-      console.log('✅ Socket connected, joining room immediately');
       socket.emit('join_task', { task_id: taskId });
-      
-      // Setup DIRECT WebSocket event listeners for backend events
-      console.log('📡 Setting up direct WebSocket event listeners...');
-      
-      // Listen to specific events that backend emits
-      socket.on('plan_updated', (data) => {
-        console.log('📋 WebSocket plan_updated received:', data);
-        if (eventListenersRef.current.plan_updated) {
-          eventListenersRef.current.plan_updated(data);
-        }
-      });
-      
-      socket.on('progress_update', (data) => {
-        console.log('📈 WebSocket progress_update received:', data);
-        if (eventListenersRef.current.task_progress) {
-          eventListenersRef.current.task_progress(data);
-        }
-      });
-      
-      socket.on('agent_activity', (data) => {
-        console.log('🤖 WebSocket agent_activity received:', data);
-        if (eventListenersRef.current.task_progress) {
-          eventListenersRef.current.task_progress(data);
-        }
-      });
-      
-      socket.on('task_update', (data) => {
-        console.log('📝 WebSocket task_update received:', data);
-        if (eventListenersRef.current.plan_updated) {
-          eventListenersRef.current.plan_updated(data);
-        }
-      });
-      
-      socket.on('step_started', (data) => {
-        console.log('🚀 WebSocket step_started received:', data);
-        if (eventListenersRef.current.step_started) {
-          eventListenersRef.current.step_started(data);
-        }
-      });
-      
-      socket.on('step_completed', (data) => {
-        console.log('✅ WebSocket step_completed received:', data);
-        if (eventListenersRef.current.step_completed) {
-          eventListenersRef.current.step_completed(data);
-        }
-      });
-      
-      socket.on('task_progress', (data) => {
-        console.log('🔄 WebSocket task_progress received:', data);
-        if (eventListenersRef.current.task_progress) {
-          eventListenersRef.current.task_progress(data);
-        }
-      });
-      
-      socket.on('tool_result', (data) => {
-        console.log('🔧 WebSocket tool_result received:', data);
-        if (eventListenersRef.current.tool_result) {
-          eventListenersRef.current.tool_result(data);
-        }
-      });
-      
-      socket.on('step_needs_more_work', (data) => {
-        console.log('⚠️ WebSocket step_needs_more_work received:', data);
-        if (eventListenersRef.current.step_needs_more_work) {
-          eventListenersRef.current.step_needs_more_work(data);
-        }
-      });
-      
-      socket.on('task_completed', (data) => {
-        console.log('🎉 WebSocket task_completed received:', data);
-        if (eventListenersRef.current.task_completed) {
-          eventListenersRef.current.task_completed(data);
-        }
-      });
-      
-      socket.on('task_failed', (data) => {
-        console.log('❌ WebSocket task_failed received:', data);
-        if (eventListenersRef.current.task_failed) {
-          eventListenersRef.current.task_failed(data);
-        }
-      });
-      
     } else {
-      console.warn('⚠️ Socket not connected, starting polling fallback');
-      // Always start polling fallback if WebSocket not available
+      // Start polling fallback if WebSocket not available
       startHttpPollingFallback(taskId);
       setIsPollingFallback(true);
     }
