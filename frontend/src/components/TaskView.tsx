@@ -43,8 +43,8 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   const [terminalLogs, setTerminalLogs] = useState<Array<{message: string, type: 'info' | 'success' | 'error', timestamp: Date}>>([]);
   const monitorRef = useRef<HTMLDivElement>(null);
   
-  // Memory manager
-  const { memory } = useMemoryManager();
+  // Memory manager aislado por tarea
+  const { hasActiveMemory, getMemoryStats } = useIsolatedMemoryManager({ taskId: task.id });
 
   // ========================================================================
   // PLAN MANAGER COMPLETAMENTE AISLADO - SOLUCIÓN AL PROBLEMA DE CONTAMINACIÓN
