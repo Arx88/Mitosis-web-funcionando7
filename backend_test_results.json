@@ -1,59 +1,52 @@
 {
-  "total_tests": 6,
-  "passed_tests": 1,
-  "success_rate": 16.666666666666664,
-  "overall_status": "\u274c WEBSOCKET CRITICAL - Major step progression failures",
+  "total_tests": 5,
+  "passed_tests": 2,
+  "success_rate": 40.0,
+  "overall_status": "\u274c BACKEND NOT READY - Major issues",
   "critical_passed": 1,
-  "critical_total": 4,
+  "critical_total": 3,
   "test_results": [
     {
-      "test_name": "Create Complex Task",
+      "test_name": "Backend Health",
       "success": true,
-      "details": "Complex blockchain task created - 4 steps, 4 tools, Task ID: chat-1753930533",
-      "timestamp": "2025-07-31T02:55:47.218201",
+      "details": "Backend healthy - Services: {'database': True, 'ollama': True, 'tools': 12}",
+      "timestamp": "2025-07-31T03:02:18.777889",
       "response_data": null
     },
     {
-      "test_name": "WebSocket Connection",
+      "test_name": "Create Task with Plan",
       "success": false,
-      "details": "Failed to connect to WebSocket server",
-      "timestamp": "2025-07-31T02:55:49.482939",
+      "details": "Plan not generated or insufficient steps - Plan length: 0",
+      "timestamp": "2025-07-31T03:02:26.852308",
+      "response_data": {
+        "memory_used": true,
+        "response": "\u00a1Hola! Me alegra ayudarte a crear un archivo de texto con el contenido \"hola mundo\".\n**PLAN DE ACCI\u00d3N:**\n1. **Crear un nuevo archivo**: Utilizar\u00e9 la herramienta `creation` para generar un nuevo archivo de texto.\n2. **Especificar el contenido**: En el archivo, escribir\u00e9 el texto \"hola mundo\" utilizando la funci\u00f3n de edici\u00f3n del editor de texto.\n3. **Guardar el archivo**: Guardar\u00e9 el archivo con un nombre y ubicaci\u00f3n espec\u00edficos.\n**Herramientas utilizadas:**",
+        "task_id": "chat-1753930939",
+        "timestamp": "2025-07-31T03:02:26.848954"
+      }
+    },
+    {
+      "test_name": "Task Status Endpoint",
+      "success": false,
+      "details": "HTTP 404: {\"error\":\"Task chat-1753930939 not found\"}\n",
+      "timestamp": "2025-07-31T03:02:27.889979",
       "response_data": null
     },
     {
-      "test_name": "Task Execution Trigger",
+      "test_name": "Agent Status",
       "success": false,
-      "details": "Task execution triggered but no WebSocket events - 0 events",
-      "timestamp": "2025-07-31T02:56:01.510802",
+      "details": "Exception: object of type 'int' has no len()",
+      "timestamp": "2025-07-31T03:02:28.899342",
       "response_data": null
     },
     {
-      "test_name": "Step Sequence Monitoring",
-      "success": false,
-      "details": "No step progression events received - 0 total events",
-      "timestamp": "2025-07-31T02:57:03.517355",
-      "response_data": null
-    },
-    {
-      "test_name": "Step Completion Logic",
-      "success": false,
-      "details": "No step completion events received",
-      "timestamp": "2025-07-31T02:57:05.517542",
-      "response_data": null
-    },
-    {
-      "test_name": "Frontend Sync Verification",
-      "success": false,
-      "details": "Insufficient WebSocket events for frontend sync - Only 0 events",
-      "timestamp": "2025-07-31T02:57:07.517701",
+      "test_name": "WebSocket Endpoint",
+      "success": true,
+      "details": "WebSocket endpoint accessible - Status: 400",
+      "timestamp": "2025-07-31T03:02:29.909909",
       "response_data": null
     }
   ],
-  "task_id": "chat-1753930533",
-  "websocket_events": [],
-  "step_progression": [],
-  "websocket_working": false,
-  "step_progression_working": false,
-  "completion_logic_working": false,
-  "frontend_sync_working": false
+  "task_id": "chat-1753930939",
+  "backend_ready": false
 }
