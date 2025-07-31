@@ -68,6 +68,7 @@ export const TerminalView = ({
   // USAR CONTEXT PARA DATOS AISLADOS - NUEVO ENFOQUE
   // ========================================================================
   
+  // ✅ FIX: Obtener datos aislados correctamente del Context
   const { 
     getTaskMonitorPages, 
     setTaskMonitorPages,
