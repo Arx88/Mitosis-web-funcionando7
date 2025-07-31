@@ -66,8 +66,9 @@ export const TerminalView = ({
   const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
   const [isPlanExpanded, setIsPlanExpanded] = useState(true);
 
-  // ✨ NEW: Time tracking for steps - SIMPLIFICADO
+  // ✨ NEW: Time tracking for steps - FIXED VERSION
   const [stepTimers, setStepTimers] = useState<{ [stepId: string]: { startTime: Date, interval: NodeJS.Timeout } }>({});
+  const [liveTimers, setLiveTimers] = useState<{ [stepId: string]: string }>({});
 
   // ✨ NEW: Function to format elapsed time
   const formatElapsedTime = (startTime: Date): string => {
@@ -79,7 +80,7 @@ export const TerminalView = ({
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // ✨ NEW: Start timer for active step - SIMPLIFICADO
+  // ✨ NEW: Start timer for active step - FIXED TO UPDATE UI
   const startStepTimer = (stepId: string) => {
     if (stepTimers[stepId]) return; // Already has timer
     
@@ -87,13 +88,23 @@ export const TerminalView = ({
     const startTime = new Date();
     const interval = setInterval(() => {
       const elapsedTime = formatElapsedTime(startTime);
-      // Solo actualizar el tiempo transcurrido sin modificar el plan
+      // ✅ FIX: Actually update the UI by setting state
+      setLiveTimers(prev => ({
+        ...prev,
+        [stepId]: elapsedTime
+      }));
       console.log(`⏲️ [STEP-${stepId}] Elapsed: ${elapsedTime}`);
     }, 1000);
 
     setStepTimers(prev => ({
       ...prev,
       [stepId]: { startTime, interval }
+    }));
+    
+    // Set initial time
+    setLiveTimers(prev => ({
+      ...prev,
+      [stepId]: '00:00'
     }));
   };
 
