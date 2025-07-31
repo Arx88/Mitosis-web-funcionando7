@@ -428,7 +428,6 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
     dispatch({ type: 'ADD_TASK', payload: newTask });
     dispatch({ type: 'SET_ACTIVE_TASK', payload: newTask.id });
     
-    console.log('🆕 Context: Task created:', newTask.id);
     return newTask;
   }, []);
   
