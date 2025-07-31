@@ -1083,15 +1083,16 @@ export const TerminalView = ({
                             {step.description}
                           </span>
                         )}
-                        {step.elapsed_time && (
+                        {/* Mostrar tiempo transcurrido si hay timer activo */}
+                        {stepTimers[step.id] && (
                           <span className={`block text-xs mt-0.5 transition-all duration-200 ${
                             step.completed ? 'text-green-400 font-medium' : 
                             step.active ? 'text-blue-200 font-medium' : 
                             'text-[#7f7f7f] group-hover:text-[#ACACAC]'
                           }`}>
-                            {step.completed ? '✅ Completado en ' + step.elapsed_time : 
-                             step.active ? '⏱️ ' + step.elapsed_time + ' (En progreso)' : 
-                             '⏰ ' + step.elapsed_time}
+                            {step.completed ? '✅ Completado en ' + formatElapsedTime(stepTimers[step.id].startTime) : 
+                             step.active ? '⏱️ ' + formatElapsedTime(stepTimers[step.id].startTime) + ' (En progreso)' : 
+                             '⏰ ' + formatElapsedTime(stepTimers[step.id].startTime)}
                           </span>
                         )}
                       </div>
