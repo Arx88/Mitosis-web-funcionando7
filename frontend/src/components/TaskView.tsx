@@ -274,14 +274,14 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   }, [onInitializationComplete]);
 
   // ========================================================================
-  // EFFECTS - AISLAMIENTO Y LIMPIEZA
+  // EFFECTS - AISLAMIENTO Y LIMPIEZA MEJORADOS
   // ========================================================================
 
-  // RESET COMPLETO cuando cambia la tarea
+  // RESET COMPLETO cuando cambia la tarea - MEJORADO
   useEffect(() => {
     console.log(`🔄 [TASK-${task.id}] TaskView initialized - clearing state`);
     
-    // Limpiar estado local aislado
+    // Limpiar estado local aislado de manera más agresiva
     setTerminalLogs([]);
     setTaskFiles([]);
     setIsTyping(false);
@@ -291,8 +291,15 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     // Reset plan hash
     lastPlanRef.current = '';
     
+    // ✅ NUEVO: Reset también el usePlanManager cuando cambia la tarea
+    if (task.plan && task.plan.length > 0) {
+      console.log(`📋 [TASK-${task.id}] Initializing plan with ${task.plan.length} steps`);
+    } else {
+      console.log(`📋 [TASK-${task.id}] No initial plan found`);
+    }
+    
     console.log(`✅ [TASK-${task.id}] TaskView state reset complete`);
-  }, [task.id]);
+  }, [task.id]); // Solo cuando cambia el ID de la tarea
 
   // Cargar archivos de tarea específicos
   useEffect(() => {
