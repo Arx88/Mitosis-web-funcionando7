@@ -805,7 +805,9 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
   }, [state.terminalLogs]);
 
   const getTaskMessages = useCallback((taskId: string) => {
-    return state.taskMessages[taskId] || [];
+    const messages = state.taskMessages[taskId] || [];
+    console.log(`📥 [CONTEXT-GET] getTaskMessages(${taskId}): ${messages.length} messages`);
+    return messages;
   }, [state.taskMessages]);
 
   const getTaskPlanState = useCallback((taskId: string) => {
