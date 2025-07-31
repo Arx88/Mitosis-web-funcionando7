@@ -61,11 +61,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     const randomTitle = intelligentTitles[Math.floor(Math.random() * intelligentTitles.length)];
     
     console.log('🎯 SIDEBAR: Generando nueva tarea con título inteligente:', randomTitle);
+    console.log('🧠 DEBUG: Array de títulos disponibles:', intelligentTitles);
+    console.log('🧠 DEBUG: Índice aleatorio seleccionado:', Math.floor(Math.random() * intelligentTitles.length));
+    console.log('🧠 DEBUG: Título final a enviar:', randomTitle);
     
     // Crear la nueva tarea con el título inteligente
     const newTask = await onCreateTask(randomTitle);
     
     console.log('✅ SIDEBAR: Nueva tarea creada desde botón NUEVA TAREA:', newTask?.id);
+    console.log('✅ SIDEBAR: Título de la tarea creada:', newTask?.title);
     console.log('🧠 FIXED: Título inteligente aplicado, usuario puede refinar con primer mensaje');
     
     // No necesitamos setTimeout ni setActiveTaskId adicional porque createTask ya lo hace
