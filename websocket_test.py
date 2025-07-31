@@ -20,7 +20,7 @@ TESTING FOCUS:
 7. **Event Broadcasting**: Test WebSocket event broadcasting to clients
 8. **Connection Diagnostics**: Identify WebSocket connection issues
 
-BACKEND URL: https://dbfc239b-4e7b-47b8-8e45-749b3bc48d99.preview.emergentagent.com
+BACKEND URL: https://7ac24ada-9a56-4ac5-8359-affff70362b6.preview.emergentagent.com
 """
 
 import requests
@@ -32,7 +32,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment
-BACKEND_URL = "https://dbfc239b-4e7b-47b8-8e45-749b3bc48d99.preview.emergentagent.com"
+BACKEND_URL = "https://7ac24ada-9a56-4ac5-8359-affff70362b6.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 WEBSOCKET_URL = f"{BACKEND_URL}/api/socket.io/"
 
@@ -42,7 +42,7 @@ class MitosisWebSocketTester:
         self.session.headers.update({
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'Origin': 'https://dbfc239b-4e7b-47b8-8e45-749b3bc48d99.preview.emergentagent.com'
+            'Origin': 'https://7ac24ada-9a56-4ac5-8359-affff70362b6.preview.emergentagent.com'
         })
         self.test_results = []
         self.task_id = None
