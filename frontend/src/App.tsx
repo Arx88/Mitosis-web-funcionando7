@@ -164,9 +164,7 @@ export function App() {
   }, [createTaskWithMessage]);
 
   const handleAttachFiles = useCallback(() => {
-    console.log('🎯 ATTACH FILES CLICKED - Setting showFileUpload to true');
     setShowFileUpload(true);
-    console.log('✅ showFileUpload state set to true');
   }, []);
 
   const handleFilesUploaded = useCallback(async (files: FileList) => {
