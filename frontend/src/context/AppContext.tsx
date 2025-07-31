@@ -723,6 +723,8 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
   
   // Helper functions
   const createTask = useCallback((title: string, iconType?: string): Task => {
+    console.log('🎯 CONTEXT: createTask called with:', { title, iconType });
+    
     const newTask: Task = {
       id: `task-${Date.now()}`,
       title,
@@ -735,9 +737,13 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
       iconType
     };
     
+    console.log('🎯 CONTEXT: Created task object:', newTask.id);
+    console.log('🎯 CONTEXT: Dispatching ADD_TASK...');
+    
     dispatch({ type: 'ADD_TASK', payload: newTask });
     dispatch({ type: 'SET_ACTIVE_TASK', payload: newTask.id });
     
+    console.log('🎯 CONTEXT: Task creation completed, returning:', newTask.id);
     return newTask;
   }, []);
   
