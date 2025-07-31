@@ -141,11 +141,26 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     isCompleted: task.status === 'completed'
   }), [task.messages?.length, task.terminalCommands?.length, progress, task.status, taskFiles.length]);
 
+  // Combinar logs con filtro de seguridad por tarea
   const combinedLogs = useMemo(() => {
-    return [...terminalLogs, ...externalLogs].sort((a, b) => 
+    // Solo incluir logs que pertenecen específicamente a esta tarea
+    const filteredTerminalLogs = terminalLogs.filter(log => 
+      !log.taskId || log.taskId === task.id
+    );
+    
+    // Los external logs deben ser válidos y no tener taskId (son logs de inicialización)
+    const filteredExternalLogs = externalLogs.filter(log => 
+      log && log.message && log.timestamp
+    );
+    
+    const combined = [...filteredTerminalLogs, ...filteredExternalLogs].sort((a, b) => 
       new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
-  }, [terminalLogs, externalLogs]);
+    
+    console.log(`📋 [TASK-${task.id}] Combined logs: ${combined.length} total (${filteredTerminalLogs.length} terminal + ${filteredExternalLogs.length} external)`);
+    
+    return combined;
+  }, [terminalLogs, externalLogs, task.id]);
 
   // ========================================================================
   // CALLBACKS MEMOIZADOS
