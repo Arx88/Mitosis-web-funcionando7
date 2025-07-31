@@ -83,13 +83,14 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     },
     onStepComplete: (stepId) => {
       console.log(`✅ [TASK-${task.id}] Step completed (ISOLATED):`, stepId);
-      // Log cuando un paso se completa
+      // Log cuando un paso se completa - AISLADO POR TAREA
       const step = plan.find(s => s.id === stepId);
       if (step) {
         setTerminalLogs(prev => [...prev, {
           message: `✅ Completado: ${step.title}`,
           type: 'success',
-          timestamp: new Date()
+          timestamp: new Date(),
+          taskId: task.id // Identificador de seguridad
         }]);
       }
       
