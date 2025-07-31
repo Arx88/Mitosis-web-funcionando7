@@ -94,8 +94,6 @@ export const useWebSocket = (): UseWebSocketReturn => {
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
     }
-
-    console.log('🔄 HTTP Polling fallback active for task:', taskId);
     
     pollingIntervalRef.current = setInterval(async () => {
       try {
@@ -137,9 +135,9 @@ export const useWebSocket = (): UseWebSocketReturn => {
           }
         }
       } catch (error) {
-        console.error('❌ HTTP Polling fallback error:', error);
+        console.error('HTTP Polling fallback error:', error);
       }
-    }, 3000); // Poll every 3 seconds (slower than original 2s to reduce load)
+    }, 3000); // Poll every 3 seconds
   }, [eventListenersRef.current]);
 
   const joinTaskRoom = useCallback((taskId: string) => {
