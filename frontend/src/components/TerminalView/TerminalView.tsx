@@ -280,13 +280,12 @@ export const TerminalView = ({
           }
         };
         
-        // Add fallback report
-        setMonitorPages(prev => {
-          const newPages = [...prev, fallbackPage];
-          setCurrentPageIndex(newPages.length - 1);
-          setIsLiveMode(false);
-          return newPages;
-        });
+        // ✅ FIX: Usar Context aislado consistentemente - Add fallback report
+        const currentPages = taskId ? getTaskMonitorPages(taskId) : [];
+        const newPages = [...currentPages, fallbackPage];
+        setTaskMonitorPages(taskId, newPages);
+        setTaskCurrentPageIndex(taskId, newPages.length - 1);
+        setIsLiveMode(false);
         setPaginationStats(prev => ({ ...prev, totalPages: prev.totalPages + 1 }));
       }
     } catch (error) {
