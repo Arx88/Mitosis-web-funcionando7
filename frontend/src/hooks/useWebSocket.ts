@@ -45,11 +45,7 @@ export const useWebSocket = (): UseWebSocketReturn => {
   const [isPollingFallback, setIsPollingFallback] = useState(false);
 
   useEffect(() => {
-    console.log('🔌 Initializing WebSocket connection...');
     const wsConfig = getWebSocketConfig();
-    
-    console.log('🔧 WebSocket URL:', wsConfig.url);
-    console.log('🔧 WebSocket Options:', wsConfig.options);
     
     const newSocket = io(wsConfig.url, {
       ...wsConfig.options,
@@ -57,47 +53,33 @@ export const useWebSocket = (): UseWebSocketReturn => {
     });
     
     newSocket.on('connect', () => {
-      console.log('✅ WebSocket connected successfully!');
-      console.log('🔧 Transport:', newSocket.io.engine.transport.name);
-      console.log('🆔 Session ID:', newSocket.id);
       setIsConnected(true);
       setConnectionType(newSocket.io.engine.transport.name as 'websocket' | 'polling');
       setIsPollingFallback(false);
     });
     
     newSocket.on('disconnect', () => {
-      console.log('🔌 WebSocket disconnected');
       setIsConnected(false);
       setConnectionType('disconnected');
     });
     
     newSocket.on('connect_error', (error) => {
-      console.error('❌ WebSocket connection error:', error);
-      console.error('❌ Error details:', error.message, error.type);
+      console.error('WebSocket connection error:', error);
       setIsConnected(false);
       setConnectionType('disconnected');
       
-      // CRÍTICO: Activar HTTP polling automáticamente cuando WebSocket falla
-      console.log('🔄 WebSocket failed, activating HTTP polling fallback...');
+      // Activar HTTP polling automáticamente cuando WebSocket falla
       setIsPollingFallback(true);
       
-      // Si hay una tarea activa, iniciar polling inmediatamente
       if (currentTaskId) {
-        console.log('🔄 Starting HTTP polling for current task:', currentTaskId);
         startHttpPollingFallback(currentTaskId);
       }
-    });
-    
-    // Listen for backend connection confirmation
-    newSocket.on('connection_established', (data) => {
-      console.log('🎉 Backend confirmed connection:', data);
     });
     
     setSocket(newSocket);
     
     // Cleanup on unmount
     return () => {
-      console.log('🧹 Cleaning up WebSocket connection');
       newSocket.close();
       
       if (pollingIntervalRef.current) {
