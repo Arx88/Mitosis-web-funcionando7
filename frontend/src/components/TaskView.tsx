@@ -259,51 +259,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         });
       },
       
-      'step_started': (data: any) => {
-        console.log('🔄 WebSocket step_started received:', data);
-        
-        const logEntry = {
-          message: `🔄 Iniciando: ${data.title || data.step_title || 'Step'}`,
-          type: 'info' as const,
-          timestamp: new Date(data.timestamp || Date.now())
-        };
-        
-        setTerminalLogs(prev => [...prev, logEntry]);
-        
-        // 🚀 FIX PROBLEMA 1: Activar el paso específico cuando recibimos step_started
-        handleUpdateTask((currentTask: Task) => {
-          if (!currentTask.plan) return currentTask;
-          
-          const updatedPlan = currentTask.plan.map((step) => {
-            if (step.id === data.step_id) {
-              // Activar el step específico
-              return {
-                ...step,
-                active: true,
-                status: 'in-progress',
-                completed: false,
-                start_time: data.timestamp
-              };
-            } else {
-              // Desactivar otros pasos
-              return {
-                ...step,
-                active: false
-              };
-            }
-          });
-          
-          console.log('🚀 Plan updated after step_started:', {
-            stepId: data.step_id,
-            activeStep: updatedPlan.find(s => s.active)?.title
-          });
-          
-          return {
-            ...currentTask,
-            plan: updatedPlan
-          };
-        });
-      },
+
       
       'step_needs_more_work': (data: any) => {
         console.log('⚠️ WebSocket step_needs_more_work received:', data);
