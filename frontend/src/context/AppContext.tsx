@@ -984,11 +984,18 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
   // ========================================================================
 
   const resetTaskState = useCallback((taskId: string) => {
+    console.log('🧹 [CONTEXT] Resetting task state for:', taskId);
     dispatch({ type: 'RESET_TASK_STATE', payload: taskId });
   }, []);
 
   const migrateTaskState = useCallback((oldId: string, newId: string) => {
+    console.log('🔄 [CONTEXT] Migrating task state from', oldId, 'to', newId);
     dispatch({ type: 'MIGRATE_TASK_STATE', payload: { oldId, newId } });
+  }, []);
+  
+  const initializeTaskData = useCallback((taskId: string) => {
+    console.log('🔧 [CONTEXT] Initializing task data for:', taskId);
+    dispatch({ type: 'INITIALIZE_TASK_DATA', payload: { taskId } });
   }, []);
   
   // Crear el valor del contexto de forma memoizada para evitar re-renders
