@@ -239,13 +239,27 @@ function appReducer(state: GlobalAppState, action: AppAction): GlobalAppState {
       
     case 'ADD_TASK':
       const newTask = action.payload;
+      
+      // ✅ GARANTIZAR INICIALIZACIÓN COMPLETA DE DATOS AISLADOS
+      console.log('🎯 [CONTEXT] ADD_TASK: Initializing isolated data for task:', newTask.id);
+      
       return {
         ...state,
         tasks: [newTask, ...state.tasks],
-        // ✅ INICIALIZAR ESTADO AISLADO PARA NUEVA TAREA
-        taskMessages: { ...state.taskMessages, [newTask.id]: newTask.messages || [] },
-        taskFiles: { ...state.taskFiles, [newTask.id]: [] },
-        terminalLogs: { ...state.terminalLogs, [newTask.id]: [] },
+        
+        // ✅ INICIALIZAR ESTADO AISLADO COMPLETO PARA NUEVA TAREA
+        taskMessages: { 
+          ...state.taskMessages, 
+          [newTask.id]: newTask.messages || [] 
+        },
+        taskFiles: { 
+          ...state.taskFiles, 
+          [newTask.id]: [] 
+        },
+        terminalLogs: { 
+          ...state.terminalLogs, 
+          [newTask.id]: [] 
+        },
         taskPlanStates: { 
           ...state.taskPlanStates, 
           [newTask.id]: {
@@ -256,14 +270,26 @@ function appReducer(state: GlobalAppState, action: AppAction): GlobalAppState {
             isCompleted: false
           }
         },
-        taskTerminalCommands: { ...state.taskTerminalCommands, [newTask.id]: newTask.terminalCommands || [] },
+        taskTerminalCommands: { 
+          ...state.taskTerminalCommands, 
+          [newTask.id]: newTask.terminalCommands || [] 
+        },
         taskWebSocketStates: { 
           ...state.taskWebSocketStates, 
           [newTask.id]: { isConnected: false, joinedRoom: false, lastEvent: null }
         },
-        taskMonitorPages: { ...state.taskMonitorPages, [newTask.id]: [] },
-        taskCurrentPageIndex: { ...state.taskCurrentPageIndex, [newTask.id]: 0 },
-        typingState: { ...state.typingState, [newTask.id]: false }
+        taskMonitorPages: { 
+          ...state.taskMonitorPages, 
+          [newTask.id]: [] 
+        },
+        taskCurrentPageIndex: { 
+          ...state.taskCurrentPageIndex, 
+          [newTask.id]: 0 
+        },
+        typingState: { 
+          ...state.typingState, 
+          [newTask.id]: false 
+        }
       };
       
     case 'UPDATE_TASK':
