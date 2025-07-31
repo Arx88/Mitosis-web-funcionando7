@@ -667,11 +667,15 @@ export const TerminalView = ({
         }
       }
       
-      if (newPages.length > 0) {
-        setMonitorPages(prev => [...prev, ...newPages]);
+      if (newPages.length > 0 && taskId) {
+        console.log(`🔧 [EXEC-PAGES] Adding ${newPages.length} execution pages to task ${taskId}`);
+        const currentPages = getTaskMonitorPages(taskId);
+        const allPages = [...currentPages, ...newPages];
+        setTaskMonitorPages(taskId, allPages);
+        
         setPaginationStats(prev => ({
           ...prev,
-          totalPages: prev.totalPages + newPages.length
+          totalPages: allPages.length
         }));
         
         // Agregar logs de terminal para mostrar la ejecución
