@@ -226,14 +226,17 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     
     const loadTaskFiles = async () => {
       try {
-        console.log(`📁 [TASK-${task.id}] Loading isolated task files`);
+        console.log(`📁 [FILE-LOAD] Loading files for task ${task.id}`);
         const files = await agentAPI.getTaskFiles(task.id);
         if (mounted) {
+          console.log(`📁 [FILE-LOAD] Loaded ${files.length} files, setting in context`);
           setFiles(task.id, files); // ✅ USAR CONTEXT AISLADO
-          console.log(`✅ [TASK-${task.id}] Loaded ${files.length} files to isolated context`);
+          console.log(`✅ [FILE-LOAD] Files set in isolated context for task ${task.id}`);
+        } else {
+          console.log(`📁 [FILE-LOAD] Component unmounted, skipping file set`);
         }
       } catch (error) {
-        console.error(`❌ [TASK-${task.id}] Error loading task files:`, error);
+        console.error(`❌ [FILE-LOAD] Error loading files for task ${task.id}:`, error);
       }
     };
 
@@ -243,7 +246,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
 
     return () => {
       mounted = false;
-      console.log(`🧹 [TASK-${task.id}] TaskView cleanup - isolated data preserved`);
+      console.log(`🧹 [FILE-LOAD] Cleanup for task ${task.id} - isolated data preserved`);
     };
   }, [task.id, setFiles]);
 
