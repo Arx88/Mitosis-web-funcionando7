@@ -28,6 +28,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed,
   onToggleCollapse
 }) => {
+  // ✅ DEBUG: Logging para verificar props
+  React.useEffect(() => {
+    console.log('🎯 [SIDEBAR-DEBUG] Props received:');
+    console.log('  - tasks length:', tasks?.length || 0);
+    console.log('  - tasks array:', tasks);
+    console.log('  - activeTaskId:', activeTaskId);
+    console.log('  - onTaskSelect exists:', !!onTaskSelect);
+    console.log('  - onCreateTask exists:', !!onCreateTask);
+  }, [tasks, activeTaskId]);
+
   const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{isOpen: boolean, taskId: string, taskTitle: string}>({
     isOpen: false,
