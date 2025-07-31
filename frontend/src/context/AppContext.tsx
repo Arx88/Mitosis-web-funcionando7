@@ -546,12 +546,9 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
 export const useAppContext = (): AppContextType => {
   const context = useContext(AppContext);
   if (context === undefined) {
-    console.error('❌ useAppContext called outside of AppContextProvider');
-    console.error('Stack trace:', new Error().stack);
+    console.error('useAppContext must be used within an AppContextProvider');
     
     // Return a safe default context instead of throwing to prevent app crashes
-    console.warn('🔄 Providing default context to prevent crash - THIS IS A FALLBACK');
-    
     return {
       state: initialState,
       dispatch: () => console.warn('dispatch called with default context'),
