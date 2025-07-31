@@ -4,7 +4,7 @@
  * Eliminada duplicación y loops infinitos
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useWebSocket } from './useWebSocket';
 import { TaskStep } from '../types';
 import { useAppContext } from '../context/AppContext';
@@ -26,11 +26,15 @@ export const usePlanManager = ({
 }: PlanManagerProps) => {
   
   // ========================================================================
-  // ESTADO ÚNICO Y SIMPLE
+  // USAR CONTEXT PARA ESTADO AISLADO - NO MÁS ESTADO LOCAL
   // ========================================================================
   
-  const [steps, setSteps] = useState<TaskStep[]>(initialPlan);
-  const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
+  const { 
+    getTaskPlanState, 
+    updateTaskPlan,
+    getTaskWebSocketState,
+    setTaskWebSocketState
+  } = useAppContext();
   
   // WebSocket connection
   const { socket, isConnected, joinTaskRoom, leaveTaskRoom } = useWebSocket();
@@ -41,7 +45,17 @@ export const usePlanManager = ({
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // ========================================================================
-  // FUNCIÓN PRINCIPAL: ACTUALIZAR PLAN - SIMPLIFICADA SIN LOOPS
+  // OBTENER ESTADO AISLADO DESDE CONTEXT
+  // ========================================================================
+  
+  const taskPlanState = useMemo(() => getTaskPlanState(taskId), [getTaskPlanState, taskId]);
+  const plan = taskPlanState.plan;
+  const progress = taskPlanState.progress;
+  const currentActiveStep = taskPlanState.currentActiveStep;
+  const lastUpdateTime = taskPlanState.lastUpdateTime;
+
+  // ========================================================================
+  // FUNCIÓN PRINCIPAL: ACTUALIZAR PLAN - USANDO CONTEXT AISLADO
   // ========================================================================
   
   const updatePlan = useCallback((newSteps: TaskStep[], source: string = 'internal') => {
@@ -60,7 +74,7 @@ export const usePlanManager = ({
     }
     
     // ✅ PROTECCIÓN 2: Evitar múltiples updates simultáneos
-    if (isUpdatingRef.current) {
+    if (isUpdingRef.current) {
       console.log(`🛡️ [PLAN-${taskId}] Update skipped - already updating from: ${source}`);
       return;
     }
@@ -89,9 +103,8 @@ export const usePlanManager = ({
       return step;
     });
 
-    // Actualizar estado
-    setSteps(validatedSteps);
-    setLastUpdateTime(new Date());
+    // ✅ ACTUALIZAR EN CONTEXT AISLADO
+    updateTaskPlan(taskId, validatedSteps);
     
     // Callbacks con protección
     try {
@@ -101,110 +114,76 @@ export const usePlanManager = ({
       const completedSteps = validatedSteps.filter(s => s.completed).length;
       const totalSteps = validatedSteps.length;
       
-      if (totalSteps > 0 && completedSteps === totalSteps) {
-        console.log(`🎉 [PLAN-${taskId}] Task completed!`);
+      if (completedSteps === totalSteps && totalSteps > 0) {
+        console.log(`🎉 [PLAN-${taskId}] Task completed! All ${totalSteps} steps are done`);
         onTaskComplete?.();
       }
     } catch (error) {
       console.error(`❌ [PLAN-${taskId}] Error in callbacks:`, error);
+    } finally {
+      isUpdatingRef.current = false;
     }
+  }, [taskId, updateTaskPlan, onPlanUpdate, onTaskComplete]);
 
-    isUpdatingRef.current = false;
-    
-  }, [taskId, onPlanUpdate, onTaskComplete]);
+  const setPlan = useCallback((newSteps: TaskStep[]) => {
+    updatePlan(newSteps, 'setPlan');
+  }, [updatePlan]);
 
   // ========================================================================
-  // LÓGICA SIMPLE: COMPLETAR PASO Y ACTIVAR EL SIGUIENTE
+  // FUNCIONES DE CONTROL DE STEPS
   // ========================================================================
-
-  const completeStep = useCallback((stepId: string) => {
-    console.log(`✅ [PLAN-${taskId}] Completing step: ${stepId}`);
+  
+  const startStep = useCallback((stepId: string, timestamp?: Date) => {
+    const currentPlan = getTaskPlanState(taskId).plan;
+    const updatedSteps = currentPlan.map(step => ({
+      ...step,
+      active: step.id === stepId && !step.completed,
+      start_time: step.id === stepId ? (timestamp || new Date()) : step.start_time
+    }));
     
-    setSteps(prevSteps => {
-      const stepIndex = prevSteps.findIndex(s => s.id === stepId);
-      if (stepIndex === -1) {
-        console.warn(`⚠️ [PLAN-${taskId}] Step not found: ${stepId}`);
-        return prevSteps;
-      }
+    updatePlan(updatedSteps, 'startStep');
+  }, [taskId, getTaskPlanState, updatePlan]);
 
-      const newSteps = [...prevSteps];
-      
-      // 1. Completar el step actual
-      newSteps[stepIndex] = {
-        ...newSteps[stepIndex],
-        active: false,
-        completed: true,
-        status: 'completed'
-      };
-
-      // 2. Activar el siguiente step automáticamente (LÓGICA SIMPLE)
-      const nextStepIndex = stepIndex + 1;
-      if (nextStepIndex < newSteps.length && !newSteps[nextStepIndex].completed) {
-        console.log(`▶️ [PLAN-${taskId}] Auto-activating next step: ${newSteps[nextStepIndex].id}`);
-        newSteps[nextStepIndex] = {
-          ...newSteps[nextStepIndex],
-          active: true,
-          start_time: new Date()
-        };
-      }
-
-      // ✅ ACTUALIZACIÓN DIRECTA SIN TIMEOUTS
-      updatePlan(newSteps, 'completeStep');
-      onStepComplete?.(stepId);
-      
-      return newSteps;
-    });
-  }, [taskId, updatePlan, onStepComplete]);
-
-  const startStep = useCallback((stepId: string) => {
-    console.log(`▶️ [PLAN-${taskId}] Starting step: ${stepId}`);
+  const completeStep = useCallback((stepId: string, result?: any, timestamp?: Date) => {
+    const currentPlan = getTaskPlanState(taskId).plan;
+    const updatedSteps = currentPlan.map(step => ({
+      ...step,
+      completed: step.id === stepId ? true : step.completed,
+      active: step.id === stepId ? false : step.active,
+      status: step.id === stepId ? 'completed' : step.status
+    }));
     
-    setSteps(prevSteps => {
-      const newSteps = prevSteps.map(step => ({
-        ...step,
-        active: step.id === stepId && !step.completed,
-        start_time: step.id === stepId ? new Date() : step.start_time
-      }));
-      
-      // ✅ ACTUALIZACIÓN DIRECTA SIN TIMEOUTS
-      updatePlan(newSteps, 'startStep');
-      
-      return newSteps;
-    });
-  }, [taskId, updatePlan]);
-
-  const setPlan = useCallback((newPlan: TaskStep[]) => {
-    console.log(`📋 [PLAN-${taskId}] Setting new plan with ${newPlan.length} steps`);
+    updatePlan(updatedSteps, 'completeStep');
     
-    // ✅ PROTECCIÓN: Solo actualizar si realmente hay cambios
-    const newHash = JSON.stringify(newPlan.map(s => ({ 
-      id: s.id, 
-      completed: s.completed, 
-      active: s.active 
-    })));
-    
-    if (newHash !== lastStepsHashRef.current) {
-      updatePlan(newPlan, 'setPlan');
-    } else {
-      console.log(`🛡️ [PLAN-${taskId}] setPlan skipped - no changes`);
+    if (onStepComplete) {
+      onStepComplete(stepId);
     }
-  }, [taskId, updatePlan]);
+  }, [taskId, getTaskPlanState, updatePlan, onStepComplete]);
+
+  const updateStep = useCallback((stepId: string, updates: Partial<TaskStep>) => {
+    const currentPlan = getTaskPlanState(taskId).plan;
+    const updatedSteps = currentPlan.map(step =>
+      step.id === stepId ? { ...step, ...updates } : step
+    );
+    
+    updatePlan(updatedSteps, 'updateStep');
+  }, [taskId, getTaskPlanState, updatePlan]);
 
   // ========================================================================
-  // WEBSOCKET EVENTS - SIMPLIFICADO CON PROTECCIÓN
+  // WEBSOCKET INTEGRATION - USANDO CONTEXT AISLADO
   // ========================================================================
 
   useEffect(() => {
-    if (!socket || !taskId) return;
+    if (!taskId || !socket) return;
 
     console.log(`🔌 [PLAN-${taskId}] Setting up WebSocket listeners`);
+
     joinTaskRoom(taskId);
 
     const handlePlanUpdated = (data: any) => {
-      if (data.task_id !== taskId) return; // Filtro de seguridad
-      
-      console.log(`📡 [PLAN-${taskId}] WebSocket plan_updated:`, data);
       if (data.plan?.steps && Array.isArray(data.plan.steps)) {
+        console.log(`📡 [PLAN-${taskId}] Plan update received via WebSocket:`, data.plan.steps.length, 'steps');
+        
         const newSteps = data.plan.steps.map((step: any) => ({
           id: step.id,
           title: step.title,
@@ -212,50 +191,49 @@ export const usePlanManager = ({
           tool: step.tool,
           status: step.status,
           estimated_time: step.estimated_time,
-          completed: Boolean(step.completed),
-          active: Boolean(step.active),
-          start_time: step.start_time ? new Date(step.start_time) : undefined
+          completed: step.completed || false,
+          active: step.active || false
         }));
+        
         updatePlan(newSteps, 'websocket-plan_updated');
       }
     };
 
     const handleStepStarted = (data: any) => {
-      if (data.task_id !== taskId) return;
-      
-      console.log(`📡 [PLAN-${taskId}] WebSocket step_started:`, data);
       if (data.step_id) {
-        startStep(data.step_id);
+        console.log(`🚀 [PLAN-${taskId}] Step started via WebSocket:`, data.step_id);
+        startStep(data.step_id, data.timestamp ? new Date(data.timestamp) : undefined);
       }
     };
 
     const handleStepCompleted = (data: any) => {
-      if (data.task_id !== taskId) return;
-      
-      console.log(`📡 [PLAN-${taskId}] WebSocket step_completed:`, data);
       if (data.step_id) {
-        completeStep(data.step_id);
+        console.log(`✅ [PLAN-${taskId}] Step completed via WebSocket:`, data.step_id);
+        completeStep(data.step_id, data.result, data.timestamp ? new Date(data.timestamp) : undefined);
       }
     };
 
     const handleTaskProgress = (data: any) => {
-      if (data.task_id !== taskId) return;
-      
-      console.log(`📡 [PLAN-${taskId}] WebSocket task_progress:`, data);
       if (data.step_id) {
-        if (data.status === 'started') {
-          startStep(data.step_id);
+        if (data.status === 'started' || data.activity) {
+          startStep(data.step_id, data.timestamp ? new Date(data.timestamp) : undefined);
         } else if (data.status === 'completed') {
-          completeStep(data.step_id);
+          completeStep(data.step_id, data.result, data.timestamp ? new Date(data.timestamp) : undefined);
         }
       }
     };
 
-    // Registrar event listeners
+    const handleTaskCompleted = (data: any) => {
+      console.log(`🎉 [PLAN-${taskId}] Task completed via WebSocket`);
+      onTaskComplete?.();
+    };
+
+    // Registrar listeners
     socket.on('plan_updated', handlePlanUpdated);
     socket.on('step_started', handleStepStarted);
     socket.on('step_completed', handleStepCompleted);
     socket.on('task_progress', handleTaskProgress);
+    socket.on('task_completed', handleTaskCompleted);
 
     return () => {
       console.log(`🔌 [PLAN-${taskId}] Cleaning up WebSocket listeners`);
@@ -263,69 +241,72 @@ export const usePlanManager = ({
       socket.off('step_started', handleStepStarted);
       socket.off('step_completed', handleStepCompleted);
       socket.off('task_progress', handleTaskProgress);
+      socket.off('task_completed', handleTaskCompleted);
       leaveTaskRoom(taskId);
-      
-      // Limpiar timeout si existe
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
     };
-  }, [socket, taskId, joinTaskRoom, leaveTaskRoom, startStep, completeStep, updatePlan]);
+  }, [taskId, socket, joinTaskRoom, leaveTaskRoom, updatePlan, startStep, completeStep, onTaskComplete]);
 
   // ========================================================================
-  // INICIALIZACIÓN CON PLAN INICIAL - SOLO UNA VEZ
+  // INICIALIZACIÓN DEL PLAN - CON CONTEXT AISLADO
   // ========================================================================
 
   useEffect(() => {
-    if (initialPlan.length > 0 && steps.length === 0) {
-      console.log(`🚀 [PLAN-${taskId}] Initializing with plan:`, initialPlan.length, 'steps');
-      setPlan(initialPlan);
+    if (initialPlan && initialPlan.length > 0) {
+      const currentPlan = getTaskPlanState(taskId).plan;
+      
+      // Solo inicializar si no hay plan existente
+      if (currentPlan.length === 0) {
+        console.log(`📋 [PLAN-${taskId}] Initializing plan with ${initialPlan.length} steps`);
+        updatePlan(initialPlan, 'initialization');
+      }
     }
-  }, [initialPlan.length, steps.length, taskId, setPlan]); // Dependencias específicas
+  }, [taskId, initialPlan, getTaskPlanState, updatePlan]);
+
+  // ========================================================================
+  // COMPUTED VALUES - USANDO CONTEXT AISLADO
+  // ========================================================================
+
+  const currentActiveStepId = useMemo(() => {
+    return currentActiveStep?.id || null;
+  }, [currentActiveStep]);
+
+  const isCompleted = useMemo(() => {
+    return taskPlanState.isCompleted;
+  }, [taskPlanState.isCompleted]);
 
   // ========================================================================
   // CLEANUP
   // ========================================================================
-  
+
   useEffect(() => {
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
-      isUpdatingRef.current = false;
-      lastStepsHashRef.current = '';
     };
-  }, [taskId]);
+  }, []);
 
   // ========================================================================
-  // API PÚBLICA SIMPLE
+  // RETURN - USANDO DATOS AISLADOS DEL CONTEXT
   // ========================================================================
-
-  // Valores computados
-  const currentActiveStep = steps.find(s => s.active) || null;
-  const currentActiveStepId = currentActiveStep?.id || null;
-  const completedSteps = steps.filter(s => s.completed).length;
-  const totalSteps = steps.length;
-  const progress = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
-  const isCompleted = completedSteps === totalSteps && totalSteps > 0;
 
   return {
-    // Estado del plan
-    plan: steps,
+    // Estado del plan desde Context aislado
+    plan,
+    progress,
+    lastUpdateTime,
     currentActiveStep,
     currentActiveStepId,
-    progress,
     isCompleted,
+    
+    // Estado de conexión
     isConnected,
-    lastUpdateTime,
     
     // Funciones de control
     setPlan,
+    updatePlan,
     startStep,
     completeStep,
-    
-    // Estado computado
-    totalSteps,
-    completedSteps
+    updateStep
   };
 };
