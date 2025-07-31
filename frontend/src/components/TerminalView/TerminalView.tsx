@@ -690,10 +690,11 @@ export const TerminalView = ({
 
   // Efecto para mantener el modo Live siempre en la última página
   useEffect(() => {
-    if (isLiveMode && monitorPages.length > 0) {
-      setCurrentPageIndex(monitorPages.length - 1);
+    if (isLiveMode && monitorPages.length > 0 && taskId) {
+      console.log(`🔴 [LIVE-MODE] Navigating to last page ${monitorPages.length - 1} for task ${taskId}`);
+      setTaskCurrentPageIndex(taskId, monitorPages.length - 1);
     }
-  }, [monitorPages.length, isLiveMode]);
+  }, [monitorPages.length, isLiveMode, taskId, setTaskCurrentPageIndex]);
 
   const generateBackendToolPageContent = (tool: any): string => {
     const timestamp = tool.timestamp || new Date().toISOString();
