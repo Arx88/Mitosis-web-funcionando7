@@ -152,10 +152,17 @@ export function App() {
         const updatedTask: Task = {
           ...newTask,
           id: backendTaskId, // USAR ID DEL BACKEND
-          title: planData.enhanced_title || title,
+          title: planData.enhanced_title || title, // ✅ USAR TÍTULO INTELIGENTE
           plan: planData.plan || [],
           status: 'ready' as const
         };
+        
+        console.log('🎯 NUEVA TAREA FIX: Plan received with', planData.plan?.length || 0, 'steps');
+        if (planData.enhanced_title) {
+          console.log('✨ NUEVA TAREA FIX: Enhanced title applied:', planData.enhanced_title);
+        } else {
+          console.log('⚠️ NUEVA TAREA FIX: No enhanced_title in response, using original title');
+        }
         
         setTasks(prev => prev.map(task => 
           task.id === newTask.id ? updatedTask : task
