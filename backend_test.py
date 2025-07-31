@@ -255,22 +255,23 @@ class PlanDeAccionTester:
             return False
     
     def run_all_tests(self) -> Dict[str, Any]:
-        """Run all backend API tests"""
-        print("🧪 STARTING MITOSIS PLAN DE ACCIÓN BACKEND TESTING")
+        """Run all comprehensive backend tests"""
+        print("🧪 STARTING MITOSIS BACKEND COMPREHENSIVE TESTING AFTER ORPHANED FILES CLEANUP")
         print("=" * 80)
-        print("🎯 FOCUS: Testing backend APIs for Plan de Acción functionality")
-        print("📋 TESTING: Task creation, plan generation, status endpoints")
-        print("🔍 TEST TASK: 'Crear un archivo de texto con hola mundo'")
-        print("⚠️ VALIDATING: Backend readiness for frontend Plan de Acción testing")
+        print("🎯 FOCUS: Testing backend after removing orphaned files causing infinite loops")
+        print("📋 TESTING: Health endpoints, task creation, plan generation, WebSocket, database, OLLAMA")
+        print("🔍 CONTEXT: Verifying infinite loop issue is resolved and proper plan structures are generated")
+        print("⚠️ EXPECTED: Structured plans with steps, not just basic chat responses")
         print("=" * 80)
         
-        # Test sequence for backend APIs
+        # Test sequence for comprehensive backend testing
         tests = [
-            ("Backend Health", self.test_backend_health),
-            ("Create Task with Plan", self.test_create_task_with_plan),
-            ("Task Status Endpoint", self.test_task_status_endpoint),
-            ("Agent Status", self.test_agent_status),
-            ("WebSocket Endpoint", self.test_websocket_endpoint)
+            ("Backend Health Endpoints", self.test_backend_health_endpoints),
+            ("Basic Task Creation", self.test_task_creation_basic),
+            ("Plan Generation Structure", self.test_plan_generation_structure),
+            ("WebSocket Functionality", self.test_websocket_functionality),
+            ("Database Operations", self.test_database_operations),
+            ("OLLAMA Integration", self.test_ollama_integration)
         ]
         
         passed_tests = 0
@@ -290,7 +291,7 @@ class PlanDeAccionTester:
         success_rate = (passed_tests / total_tests) * 100
         
         print("\n" + "=" * 80)
-        print("🎯 MITOSIS PLAN DE ACCIÓN BACKEND TEST RESULTS")
+        print("🎯 MITOSIS BACKEND COMPREHENSIVE TEST RESULTS")
         print("=" * 80)
         
         for result in self.test_results:
@@ -303,28 +304,30 @@ class PlanDeAccionTester:
         
         # Determine overall status
         if success_rate >= 80:
-            overall_status = "✅ BACKEND READY FOR FRONTEND TESTING"
+            overall_status = "✅ BACKEND FULLY FUNCTIONAL - INFINITE LOOP ISSUE RESOLVED"
         elif success_rate >= 60:
-            overall_status = "⚠️ BACKEND MOSTLY READY - Minor issues"
+            overall_status = "⚠️ BACKEND MOSTLY FUNCTIONAL - Minor issues remain"
         else:
-            overall_status = "❌ BACKEND NOT READY - Major issues"
+            overall_status = "❌ BACKEND HAS CRITICAL ISSUES - Infinite loop issue may persist"
         
         print(f"   Overall Status: {overall_status}")
         
-        # Critical functionality assessment
-        critical_tests = ["Backend Health", "Create Task with Plan", "Agent Status"]
+        # Critical functionality assessment for infinite loop resolution
+        critical_tests = ["Backend Health Endpoints", "Plan Generation Structure", "OLLAMA Integration"]
         critical_passed = sum(1 for result in self.test_results 
                             if result['test_name'] in critical_tests and result['success'])
         
-        print(f"\n🔥 CRITICAL BACKEND FUNCTIONALITY:")
+        print(f"\n🔥 CRITICAL FUNCTIONALITY FOR INFINITE LOOP RESOLUTION:")
         print(f"   Critical Tests Passed: {critical_passed}/{len(critical_tests)}")
         
         if critical_passed == len(critical_tests):
             print("   ✅ All critical backend functionality is working")
-            print("   🎯 CONCLUSION: Backend is ready for Plan de Acción frontend testing")
+            print("   🎯 CONCLUSION: Infinite loop issue appears to be resolved")
+            print("   📋 RECOMMENDATION: Backend ready for frontend integration")
         else:
             print("   ❌ Some critical backend functionality is not working")
-            print("   🎯 CONCLUSION: Fix backend issues before frontend testing")
+            print("   🎯 CONCLUSION: Infinite loop issue may persist or other critical problems exist")
+            print("   📋 RECOMMENDATION: Fix backend issues before proceeding")
         
         return {
             'total_tests': total_tests,
@@ -335,7 +338,8 @@ class PlanDeAccionTester:
             'critical_total': len(critical_tests),
             'test_results': self.test_results,
             'task_id': self.task_id,
-            'backend_ready': critical_passed >= len(critical_tests) - 1  # Allow 1 failure
+            'backend_ready': critical_passed >= len(critical_tests) - 1,  # Allow 1 failure
+            'infinite_loop_resolved': critical_passed >= 2  # At least plan generation and health working
         }
 
 def main():
