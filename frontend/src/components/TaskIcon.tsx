@@ -150,7 +150,7 @@ export interface TaskIconProps {
   isCompleted?: boolean;
 }
 
-export const TaskIcon: React.FC<TaskIconProps> = ({ 
+export const TaskIcon: React.FC<TaskIconProps> = React.memo(({ 
   type, 
   size = 'medium', 
   className = '',
@@ -159,6 +159,8 @@ export const TaskIcon: React.FC<TaskIconProps> = ({
   isActive = false,
   isCompleted = false
 }) => {
+  // Log para debugging
+  console.log(`🎯 [TaskIcon] Rendering icon for task with progress: ${progressValue}%, active: ${isActive}, completed: ${isCompleted}`);
   const sizeClasses = {
     small: 'w-4 h-4',
     medium: 'w-5 h-5',
