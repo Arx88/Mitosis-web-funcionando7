@@ -204,11 +204,19 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     if (task.messages && task.messages.length > 0) {
       const currentContextMessages = getMessages(task.id);
       
+      console.log(`💬 [MESSAGE-SYNC] Task ${task.id}:`);
+      console.log(`  - Task.messages: ${task.messages.length}`);
+      console.log(`  - Context messages: ${currentContextMessages.length}`);
+      
       // Solo actualizar si hay diferencias
       if (currentContextMessages.length !== task.messages.length) {
-        console.log(`💬 [TASK-${task.id}] Syncing ${task.messages.length} messages to isolated context`);
+        console.log(`💬 [MESSAGE-SYNC] Syncing ${task.messages.length} messages to isolated context`);
         setMessages(task.id, task.messages);
+      } else {
+        console.log(`💬 [MESSAGE-SYNC] Messages already in sync`);
       }
+    } else {
+      console.log(`💬 [MESSAGE-SYNC] Task ${task.id} has no messages`);
     }
   }, [task.messages, task.id, getMessages, setMessages]);
 
