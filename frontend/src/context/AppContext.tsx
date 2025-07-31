@@ -677,6 +677,53 @@ function appReducer(state: GlobalAppState, action: AppAction): GlobalAppState {
         }
       };
       
+    case 'INITIALIZE_TASK_DATA':
+      // ✅ GARANTIZAR QUE UNA TAREA TENGA TODOS SUS DATOS AISLADOS INICIALIZADOS
+      const taskToInitialize = action.payload.taskId;
+      console.log('🔧 [CONTEXT] INITIALIZE_TASK_DATA: Ensuring complete data isolation for task:', taskToInitialize);
+      
+      return {
+        ...state,
+        taskMessages: state.taskMessages[taskToInitialize] ? state.taskMessages : { 
+          ...state.taskMessages, 
+          [taskToInitialize]: [] 
+        },
+        taskFiles: state.taskFiles[taskToInitialize] ? state.taskFiles : { 
+          ...state.taskFiles, 
+          [taskToInitialize]: [] 
+        },
+        terminalLogs: state.terminalLogs[taskToInitialize] ? state.terminalLogs : { 
+          ...state.terminalLogs, 
+          [taskToInitialize]: [] 
+        },
+        taskPlanStates: state.taskPlanStates[taskToInitialize] ? state.taskPlanStates : { 
+          ...state.taskPlanStates, 
+          [taskToInitialize]: {
+            plan: [], currentActiveStep: null, progress: 0, lastUpdateTime: new Date(), isCompleted: false
+          }
+        },
+        taskTerminalCommands: state.taskTerminalCommands[taskToInitialize] ? state.taskTerminalCommands : { 
+          ...state.taskTerminalCommands, 
+          [taskToInitialize]: [] 
+        },
+        taskWebSocketStates: state.taskWebSocketStates[taskToInitialize] ? state.taskWebSocketStates : { 
+          ...state.taskWebSocketStates, 
+          [taskToInitialize]: { isConnected: false, joinedRoom: false, lastEvent: null }
+        },
+        taskMonitorPages: state.taskMonitorPages[taskToInitialize] ? state.taskMonitorPages : { 
+          ...state.taskMonitorPages, 
+          [taskToInitialize]: [] 
+        },
+        taskCurrentPageIndex: state.taskCurrentPageIndex[taskToInitialize] !== undefined ? state.taskCurrentPageIndex : { 
+          ...state.taskCurrentPageIndex, 
+          [taskToInitialize]: 0 
+        },
+        typingState: state.typingState[taskToInitialize] !== undefined ? state.typingState : { 
+          ...state.typingState, 
+          [taskToInitialize]: false 
+        }
+      };
+      
     default:
       return state;
   }
