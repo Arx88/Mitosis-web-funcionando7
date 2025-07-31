@@ -158,6 +158,9 @@ export const TerminalView = ({
       Object.values(stepTimers).forEach(timer => {
         clearInterval(timer.interval);
       });
+      // ✅ FIX: Also cleanup live timers
+      setStepTimers({});
+      setLiveTimers({});
     };
   }, [plan, taskId]);
   const [currentExecutingTool, setCurrentExecutingTool] = useState<ToolResult | null>(null);
