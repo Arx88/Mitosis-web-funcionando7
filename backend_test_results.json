@@ -10,46 +10,46 @@
       "test_name": "Backend Health Endpoints",
       "success": true,
       "details": "All health endpoints working - API Health: \u2705 healthy;   - Database: \u2705;   - OLLAMA: \u2705;   - Tools: 12; Agent Status: \u2705 running",
-      "timestamp": "2025-07-31T08:36:27.589928",
+      "timestamp": "2025-07-31T08:40:16.235748",
       "response_data": null
     },
     {
       "test_name": "Basic Task Creation",
       "success": true,
-      "details": "Task created successfully - ID: chat-1753950988, Memory: True",
-      "timestamp": "2025-07-31T08:36:38.837889",
+      "details": "Task created successfully - ID: chat-1753951217, Memory: True",
+      "timestamp": "2025-07-31T08:40:27.614312",
       "response_data": null
     },
     {
       "test_name": "Plan Generation Structure",
       "success": true,
       "details": "Structured plan generated - 4 steps, Type: creacion, Complexity: alta",
-      "timestamp": "2025-07-31T08:36:48.828813",
+      "timestamp": "2025-07-31T08:40:37.912235",
       "response_data": null
     },
     {
       "test_name": "WebSocket Functionality",
       "success": true,
       "details": "WebSocket endpoint accessible - Status: 400",
-      "timestamp": "2025-07-31T08:36:49.848488",
+      "timestamp": "2025-07-31T08:40:38.927701",
       "response_data": null
     },
     {
       "test_name": "Database Operations",
       "success": true,
-      "details": "Task data retrievable from database - Task ID: chat-1753950988",
-      "timestamp": "2025-07-31T08:36:50.856882",
+      "details": "Task data retrievable from database - Task ID: chat-1753951217",
+      "timestamp": "2025-07-31T08:40:39.938189",
       "response_data": null
     },
     {
       "test_name": "OLLAMA Integration",
       "success": true,
       "details": "OLLAMA working - Endpoint: https://bef4a4bb93d1.ngrok-free.app, Model: llama3.1:8b, Models available: 0",
-      "timestamp": "2025-07-31T08:36:53.710754",
+      "timestamp": "2025-07-31T08:40:42.962615",
       "response_data": null
     }
   ],
-  "task_id": "chat-1753950988",
+  "task_id": "chat-1753951217",
   "backend_ready": true,
   "infinite_loop_resolved": true
 }
