@@ -234,10 +234,12 @@ export function App() {
             tasks={tasks} // ✅ DESDE CONTEXT
             activeTaskId={activeTaskId} // ✅ DESDE CONTEXT
             onTaskSelect={setActiveTask} // ✅ HOOK DEL CONTEXT
-            onCreateTask={async (title, iconType) => {
+            onCreateTask={(title, iconType) => {
               // ✅ USAR HOOK DEL CONTEXT - ARREGLA PROBLEMA DE AISLAMIENTO
+              console.log('🎯 APP: Creating task with title:', title);
               const newTask = createTask(title, iconType);
-              console.log('🎯 SIDEBAR: Nueva tarea creada correctamente:', newTask.id);
+              console.log('🎯 APP: Nueva tarea creada correctamente:', newTask.id);
+              console.log('🎯 APP: Tasks array length after creation:', tasks.length + 1);
               return newTask;
             }}
             onDeleteTask={deleteTask} // ✅ HOOK DEL CONTEXT
