@@ -1,44 +1,23 @@
 #!/usr/bin/env python3
 """
-MITOSIS BACKEND TESTING - SOLAR ENERGY REPORT META-CONTENT ISSUE
-Test the specific "meta-informes" problem reported by the user.
+MITOSIS PLAN DE ACCIÓN TESTING
+Testing the refactored Plan de Acción functionality as requested in the review.
 
-SPECIFIC TESTING REQUEST FROM USER:
-Test if the corrections to the "meta-informes" problem in Mitosis work correctly.
+SPECIFIC TESTING REQUEST:
+Test the refactored Plan de Acción system with:
+- New usePlanReducer hook with centralized logic
+- New usePlanWebSocket hook for WebSocket events
+- Refactored TaskView.tsx component
+- Cleaned useWebSocket.ts hook
 
-ORIGINAL PROBLEM REPORTED:
-When user asks "Escribe un informe sobre los beneficios de la energía solar", 
-the agent returns a meta-report saying "Este informe analizará los beneficios de la energía solar..." 
-instead of the REAL report with specific content about solar energy.
-
-CORRECTIONS MADE:
-Modified functions in /app/backend/src/routes/agent_routes.py:
-1. generate_professional_final_report (lines 1289-1320) 
-2. execute_analysis_step (lines 997-1015)
-3. execute_processing_step (lines 1814-1836) 
-4. generate_unified_ai_plan (lines 4251-4302)
-
-SPECIFIC TEST REQUIRED:
-1. Go to https://93bccf3b-06b1-46aa-82a0-28eecdc87a14.preview.emergentagent.com
-2. Send the EXACT task: "Escribe un informe sobre los beneficios de la energía solar"
-3. Wait full time for execution (up to 5-10 minutes if necessary)
-4. Verify the final generated content
-
-EXPECTED RESULT (CORRECT):
-- Content saying "Los beneficios de la energía solar incluyen..."
-- Specific information about economic, environmental, technical advantages
-- Concrete data about efficiency, costs, impact
-- Useful and specific content about solar energy
-
-PROBLEMATIC RESULT (TO BE AVOIDED):
-- "Este informe analizará los beneficios de la energía solar"
-- "Se procederá a estudiar los aspectos de la energía solar"
-- "Los objetivos de este documento son..."
-- Any meta-content describing what will be done
-
-**URL Backend**: https://93bccf3b-06b1-46aa-82a0-28eecdc87a14.preview.emergentagent.com
-**WebSocket URL**: /api/socket.io/
-**Test Task**: "Escribe un informe sobre los beneficios de la energía solar"
+EXPECTED FUNCTIONALITY:
+1. Creating a new task should show the Action Plan
+2. Steps should appear correctly (pending, active, completed)
+3. Logic: completed step → next step activates automatically
+4. Visual states: only ONE step active at a time with blue spinner
+5. Completed steps show green ✅
+6. Pending steps show numbering
+7. No excessive console logs
 """
 
 import requests
