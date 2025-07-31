@@ -59,7 +59,52 @@ El problema NO está en el backend (que maneja correctamente el aislamiento por 
 
 ---
 
-## [2025-01-12 - Análisis Específico del Código Actual]
+## [2025-01-12 - PROBLEMA CRÍTICO IDENTIFICADO] ❌
+
+### ESTADO ACTUAL: **SISTEMA ROTO**
+
+**Problema real encontrado**: Mis "mejoras" rompieron completamente la funcionalidad de la aplicación.
+
+**Evidencia de los Logs del Browser**:
+```
+🔍 RENDER DEBUG - App.tsx render: {activeTaskId: null, tasksLength: 0, activeTask: Not found, condition: activeTask=false, activeTaskId=false, renderResult: Homepage}
+```
+
+**Problemas identificados**:
+1. ❌ **tasksLength: 0** - No hay tareas en el Context
+2. ❌ **activeTaskId: null** - No se está estableciendo tarea activa
+3. ❌ **Sidebar no se renderiza** - Mis logs de debug del Sidebar no aparecen
+4. ❌ **Context no recibe tareas** - No aparecen logs de ADD_TASK del Context
+
+**Causa raíz**: Las "mejoras" de aislamiento rompieron el flujo de creación de tareas y/o la conexión entre backend y frontend.
+
+**Backend funcionando correctamente**: 
+- ✅ Tests directos con curl funcionan
+- ✅ Tareas se crean con task_id válido
+- ✅ Plan se genera correctamente
+
+**Frontend completamente roto**:
+- ❌ Tareas no llegan al Context
+- ❌ Sidebar no muestra tareas
+- ❌ Terminal muestra "OFFLINE" porque no hay tareas
+- ❌ Sistema completo no funcional
+
+### NECESIDAD URGENTE: ROLLBACK COMPLETO
+
+Las modificaciones implementadas han causado una regresión crítica. El sistema que estaba funcionando correctamente antes de mis "mejoras" ahora está completamente inutilizable.
+
+**Archivos que necesitan ROLLBACK**:
+1. `/app/frontend/src/components/TerminalView/TerminalView.tsx`
+2. `/app/frontend/src/hooks/useWebSocket.ts`
+3. `/app/frontend/src/components/Sidebar.tsx` (quitar debug logging)
+
+---
+
+### LECCIÓN APRENDIDA ⚠️
+
+**NUNCA** hacer "mejoras" extensivas sin pruebas incrementales. El problema original reportado por el usuario (terminal OFFLINE) era correcto, pero mis modificaciones empeoraron el problema en lugar de solucionarlo.
+
+El sistema necesita ser restaurado a su estado funcional original ANTES de intentar cualquier corrección.
 
 ### Problema Identificado en el Código:
 
