@@ -101,11 +101,12 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     },
     onTaskComplete: () => {
       console.log(`🎉 [TASK-${task.id}] Task completed (ISOLATED)!`);
-      // Log cuando toda la tarea se completa
+      // Log cuando toda la tarea se completa - AISLADO POR TAREA
       setTerminalLogs(prev => [...prev, {
         message: '🎉 ¡Tarea completada exitosamente!',
         type: 'success',
-        timestamp: new Date()
+        timestamp: new Date(),
+        taskId: task.id // Identificador de seguridad
       }]);
 
       // Actualizar estado de la tarea
