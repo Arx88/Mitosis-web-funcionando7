@@ -409,16 +409,15 @@ export const TerminalView = ({
     }
   }, [isInitializing, taskId, taskTitle, onInitializationLog, onInitializationComplete]);
 
-  // Inicializar con TODO.md como Página 1 - ✅ FIX: Mejorado con verificación de Context
+  // Inicializar con TODO.md como Página 1 - Solo si hay plan Y no hay páginas Y hay dataId
   useEffect(() => {
     console.log(`📋 [TODO-INIT] Checking TODO initialization:`);
     console.log(`  - Plan length: ${plan?.length || 0}`);
     console.log(`  - Monitor pages length: ${monitorPages.length}`);
     console.log(`  - DataId: ${dataId}`);
-    console.log(`  - TaskId: ${taskId}`);
     
-    if (plan && plan.length > 0 && monitorPages.length === 0 && taskId) {
-      console.log(`📋 [TODO-INIT] Initializing TODO page for task ${taskId}`);
+    if (plan && plan.length > 0 && monitorPages.length === 0 && dataId) {
+      console.log(`📋 [TODO-INIT] Initializing TODO page for task ${dataId}`);
       
       const todoPlan = plan.map((step, index) => 
         `${index + 1}. ${step.title} ${step.completed ? '✓' : '○'}`
@@ -438,21 +437,17 @@ export const TerminalView = ({
       
       console.log(`📋 [TODO-INIT] Creating TODO page:`, todoPage);
       
-      // ✅ USAR CONTEXT PARA PERSISTIR PÁGINAS - CON VERIFICACIÓN
-      setTaskMonitorPages(taskId, [todoPage]);
+      // ✅ USAR CONTEXT PARA PERSISTIR PÁGINAS
+      if (taskId) {
+        setTaskMonitorPages(taskId, [todoPage]);
+      }
       
       setPaginationStats(prev => ({ ...prev, totalPages: 1 }));
-      
-      // ✅ FIX CRÍTICO: Activar sistema inmediatamente después de crear TODO
-      console.log(`🟢 [TODO-INIT] System going ONLINE after TODO creation`);
-      setIsSystemOnline(true);
-      
-      console.log(`✅ [TODO-INIT] TODO page created and system set ONLINE for task ${taskId}`);
+      console.log(`✅ [TODO-INIT] TODO page created for task ${dataId}`);
     } else {
       console.log(`📋 [TODO-INIT] Skipping TODO initialization - conditions not met`);
-      console.log(`  - Reasons: plan=${plan?.length || 0}, pages=${monitorPages.length}, taskId=${!!taskId}`);
     }
-  }, [plan, taskId, monitorPages.length]); // ✅ Dependencias correctas para detectar cambios
+  }, [plan, dataId, monitorPages.length]); // Solo para cargar TODO.md inicial
 
   // SEPARAR: Verificar completación y cargar informe final - ✅ FIX: Mejorado
   useEffect(() => {
