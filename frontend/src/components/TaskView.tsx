@@ -7,7 +7,7 @@ import { FilesModal } from './FilesModal';
 import { ShareModal } from './ShareModal';
 import { agentAPI, FileItem } from '../services/api';
 import { useIsolatedMemoryManager } from '../hooks/useIsolatedMemoryManager';
-import { useIsolatedPlanManager } from '../hooks/useIsolatedPlanManager';
+import { usePlanManager } from '../hooks/usePlanManager'; // ✅ Usar el hook simplificado
 import { Star } from 'lucide-react';
 
 interface TaskViewProps {
@@ -23,7 +23,7 @@ interface TaskViewProps {
 }
 
 // ========================================================================
-// COMPONENTE REFACTORIZADO - USANDO usePlanWebSocket
+// COMPONENTE REFACTORIZADO - SIMPLIFICADO Y LIMPIO
 // ========================================================================
 
 const TaskViewComponent: React.FC<TaskViewProps> = ({
@@ -37,7 +37,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   onInitializationLog
 }) => {
   // ========================================================================
-  // ESTADO LOCAL COMPLETAMENTE AISLADO POR TAREA
+  // ESTADO LOCAL SIMPLE
   // ========================================================================
   
   const [isTyping, setIsTyping] = useState(false);
@@ -45,12 +45,12 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   const [showShareModal, setShowShareModal] = useState(false);
   const [taskFiles, setTaskFiles] = useState<FileItem[]>([]);
   
-  // LOGS TERMINALES AISLADOS - CADA TAREA TIENE SUS PROPIOS LOGS
+  // LOGS TERMINALES AISLADOS
   const [terminalLogs, setTerminalLogs] = useState<Array<{
     message: string, 
     type: 'info' | 'success' | 'error', 
     timestamp: Date,
-    taskId: string // Identificador para mayor seguridad
+    taskId: string
   }>>([]);
   
   const monitorRef = useRef<HTMLDivElement>(null);
@@ -59,7 +59,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   const { hasActiveMemory, getMemoryStats } = useIsolatedMemoryManager({ taskId: task.id });
 
   // ========================================================================
-  // PLAN MANAGER COMPLETAMENTE AISLADO - SOLUCIÓN AL PROBLEMA DE CONTAMINACIÓN
+  // PLAN MANAGER SIMPLIFICADO - SOLUCIÓN DEFINITIVA
   // ========================================================================
 
   const {
@@ -67,13 +67,15 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     progress,
     isConnected,
     currentActiveStep,
-    setPlan: updatePlanFromTask,
-    lastUpdateTime
-  } = useIsolatedPlanManager({
+    currentActiveStepId,
+    setPlan,
+    lastUpdateTime,
+    completeStep
+  } = usePlanManager({
     taskId: task.id,
     initialPlan: task.plan || [],
     onPlanUpdate: (updatedPlan) => {
-      console.log(`🔄 [TASK-${task.id}] Plan updated (ISOLATED):`, updatedPlan.length, 'steps');
+      console.log(`🔄 [TASK-${task.id}] Plan updated (SIMPLE):`, updatedPlan.length, 'steps');
       // Actualizar la tarea con el nuevo plan
       onUpdateTask((currentTask: Task) => ({
         ...currentTask,
@@ -82,15 +84,15 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       }));
     },
     onStepComplete: (stepId) => {
-      console.log(`✅ [TASK-${task.id}] Step completed (ISOLATED):`, stepId);
-      // Log cuando un paso se completa - AISLADO POR TAREA
+      console.log(`✅ [TASK-${task.id}] Step completed (SIMPLE):`, stepId);
+      // Log cuando un paso se completa
       const step = plan.find(s => s.id === stepId);
       if (step) {
         setTerminalLogs(prev => [...prev, {
           message: `✅ Completado: ${step.title}`,
           type: 'success',
           timestamp: new Date(),
-          taskId: task.id // Identificador de seguridad
+          taskId: task.id
         }]);
       }
       
@@ -100,13 +102,13 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       }
     },
     onTaskComplete: () => {
-      console.log(`🎉 [TASK-${task.id}] Task completed (ISOLATED)!`);
-      // Log cuando toda la tarea se completa - AISLADO POR TAREA
+      console.log(`🎉 [TASK-${task.id}] Task completed (SIMPLE)!`);
+      // Log cuando toda la tarea se completa
       setTerminalLogs(prev => [...prev, {
         message: '🎉 ¡Tarea completada exitosamente!',
         type: 'success',
         timestamp: new Date(),
-        taskId: task.id // Identificador de seguridad
+        taskId: task.id
       }]);
 
       // Actualizar estado de la tarea
@@ -125,9 +127,9 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   // Sincronizar el plan del WebSocket con el plan de la tarea
   useEffect(() => {
     if (task.plan && task.plan.length > 0) {
-      updatePlanFromTask(task.plan);
+      setPlan(task.plan);
     }
-  }, [task.plan, updatePlanFromTask]);
+  }, [task.plan, setPlan]);
 
   // ========================================================================
   // MEMOIZED VALUES
@@ -143,12 +145,10 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
 
   // Combinar logs con filtro de seguridad por tarea
   const combinedLogs = useMemo(() => {
-    // Solo incluir logs que pertenecen específicamente a esta tarea
     const filteredTerminalLogs = terminalLogs.filter(log => 
       !log.taskId || log.taskId === task.id
     );
     
-    // Los external logs deben ser válidos y no tener taskId (son logs de inicialización)
     const filteredExternalLogs = externalLogs.filter(log => 
       log && log.message && log.timestamp
     );
@@ -228,9 +228,9 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   // EFFECTS - AISLAMIENTO Y LIMPIEZA
   // ========================================================================
 
-  // RESET COMPLETO cuando cambia la tarea - CRÍTICO PARA AISLAMIENTO
+  // RESET COMPLETO cuando cambia la tarea
   useEffect(() => {
-    console.log(`🔄 [TASK-${task.id}] TaskView initialized - clearing isolated state`);
+    console.log(`🔄 [TASK-${task.id}] TaskView initialized - clearing state`);
     
     // Limpiar estado local aislado
     setTerminalLogs([]);
@@ -240,7 +240,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     setShowShareModal(false);
     
     console.log(`✅ [TASK-${task.id}] TaskView state reset complete`);
-  }, [task.id]); // Dependencia en task.id para resetear cuando cambie
+  }, [task.id]);
 
   // Cargar archivos de tarea específicos
   useEffect(() => {
@@ -294,7 +294,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       onInitializationComplete={handleInitializationComplete}
       onInitializationLog={handleInitializationLog}
       task={task}
-      plan={plan} // Usar el plan del hook WebSocket
+      plan={plan} // ✅ Usar el plan del hook simplificado
       taskId={task.id}
       taskTitle={task.title}
     />
