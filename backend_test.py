@@ -1,23 +1,21 @@
 #!/usr/bin/env python3
 """
-MITOSIS PLAN DE ACCIÓN TESTING
-Testing the refactored Plan de Acción functionality as requested in the review.
+MITOSIS BACKEND COMPREHENSIVE TESTING AFTER ORPHANED FILES CLEANUP
+Testing the Mitosis backend comprehensively after removing orphaned files that were causing infinite loops.
 
 SPECIFIC TESTING REQUEST:
-Test the refactored Plan de Acción system with:
-- New usePlanReducer hook with centralized logic
-- New usePlanWebSocket hook for WebSocket events
-- Refactored TaskView.tsx component
-- Cleaned useWebSocket.ts hook
+Test the Mitosis backend comprehensively after removing orphaned files that were causing infinite loops in the "PLAN DE ACCION" logic. Specifically test:
 
-EXPECTED FUNCTIONALITY:
-1. Creating a new task should show the Action Plan
-2. Steps should appear correctly (pending, active, completed)
-3. Logic: completed step → next step activates automatically
-4. Visual states: only ONE step active at a time with blue spinner
-5. Completed steps show green ✅
-6. Pending steps show numbering
-7. No excessive console logs
+1. **Backend Health**: Verify all health endpoints (/api/health, /api/agent/health, /api/agent/status) are working properly
+2. **Task Creation**: Test basic task creation via /api/agent/chat endpoint  
+3. **Plan Generation**: Verify that tasks generate proper plan structures with steps, not just basic responses
+4. **WebSocket Functionality**: Test WebSocket endpoints and verify they're accessible and functional
+5. **Database Operations**: Test task persistence and retrieval from MongoDB
+6. **OLLAMA Integration**: Ensure OLLAMA connection is working for plan generation
+
+CONTEXT: Just removed orphaned files (useIsolatedPlanManager.ts and useTaskWebSocket.ts) that were causing infinite loops and conflicts with the new simplified plan management system. Need to verify that the backend can now generate proper plans with step structures and that the infinite loop issue is resolved at the backend level.
+
+EXPECTED: Backend should generate structured plans with steps, not just basic chat responses, and all endpoints should work without infinite loops or conflicts.
 """
 
 import requests
