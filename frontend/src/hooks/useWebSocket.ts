@@ -189,9 +189,17 @@ export const useWebSocket = (): UseWebSocketReturn => {
   }, [socket]);
 
   const addEventListeners = useCallback((events: Partial<WebSocketEvents>) => {
-    console.log('📡 Adding WebSocket/Polling event listeners');
     eventListenersRef.current = { ...eventListenersRef.current, ...events };
-  }, []);
+    
+    // Agregar los listeners al socket si está conectado
+    if (socket && isConnected) {
+      Object.entries(events).forEach(([eventName, handler]) => {
+        if (handler) {
+          socket.on(eventName, handler);
+        }
+      });
+    }
+  }, [socket, isConnected]);
 
   const removeEventListeners = useCallback(() => {
     console.log('🗑️ Removing WebSocket/Polling event listeners');
