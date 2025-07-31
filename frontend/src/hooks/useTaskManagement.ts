@@ -1,7 +1,7 @@
 /**
- * HOOK DE GESTIÓN DE TAREAS - REFACTORIZADO PARA AISLAMIENTO COMPLETO
- * Usa completamente el Context API expandido para persistencia por tarea
- * Elimina props drilling y centraliza lógica de negocio con aislamiento
+ * HOOKS DE GESTIÓN DE TAREAS REFACTORIZADOS - AISLAMIENTO COMPLETO Y SIMPLIFICADO
+ * Dividido en hooks específicos para mejorar mantenibilidad y rendimiento
+ * Usa completamente el Context API para persistencia aislada por tarea
  */
 
 import { useCallback } from 'react';
@@ -10,7 +10,7 @@ import { API_CONFIG } from '../config/api';
 import { Task, Message } from '../types';
 
 // ========================================================================
-// HOOK PARA GESTIÓN DE TAREAS CON AISLAMIENTO COMPLETO
+// HOOK PRINCIPAL: OPERACIONES CRUD DE TAREAS - SIMPLIFICADO
 // ========================================================================
 
 export const useTaskManagement = () => {
@@ -22,9 +22,7 @@ export const useTaskManagement = () => {
     deleteTask, 
     setActiveTask, 
     updateTaskProgress,
-    setTaskMessages,
     addTaskMessage,
-    updateTaskMessages,
     updateTaskPlan,
     resetTaskState,
     migrateTaskState
