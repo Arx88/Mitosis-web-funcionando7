@@ -164,9 +164,13 @@ export function App() {
           console.log('⚠️ NUEVA TAREA FIX: No enhanced_title in response, using original title');
         }
         
+        // Update tasks with both old and new IDs
         setTasks(prev => prev.map(task => 
           task.id === newTask.id ? updatedTask : task
         ));
+        
+        // ✅ CRÍTICO: También actualizar el activeTaskId para que coincida con el backend ID
+        setActiveTaskId(backendTaskId);
 
         // Start automatic execution using BACKEND ID
         console.log('🚀 Starting automatic execution for task:', backendTaskId);
