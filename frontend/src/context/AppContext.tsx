@@ -200,13 +200,7 @@ function appReducer(state: GlobalAppState, action: AppAction): GlobalAppState {
             }
             
             if (updatedTask !== task) {
-              console.log('🚀 CONTEXT FUNCTIONAL UPDATE:', {
-                taskId: task.id,
-                oldTitle: task.title,
-                newTitle: updatedTask.title,
-                oldMessagesCount: task.messages?.length || 0,
-                newMessagesCount: updatedTask.messages?.length || 0
-              });
+              // Solo log para cambios significativos
             }
             return updatedTask;
           } catch (error) {
