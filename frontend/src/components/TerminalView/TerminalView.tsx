@@ -466,7 +466,7 @@ export const TerminalView = ({
     }
   }, [plan, taskId, monitorPages.length]); // ✅ Dependencias correctas para detectar cambios
 
-  // SEPARAR: Verificar completación y cargar informe final
+  // SEPARAR: Verificar completación y cargar informe final - ✅ FIX: Mejorado
   useEffect(() => {
     if (plan && plan.length > 0 && taskId) {
       const allCompleted = plan.every(step => step.completed);
@@ -477,6 +477,8 @@ export const TerminalView = ({
         completedSteps: completedCount,
         allCompleted,
         taskId,
+        isSystemOnline,
+        monitorPagesCount: monitorPages.length,
         planSteps: plan.map(s => ({ id: s.id, title: s.title, completed: s.completed }))
       });
       
@@ -487,6 +489,11 @@ export const TerminalView = ({
         // Verificar que no se haya cargado ya el informe final
         const hasReportPage = monitorPages.some(page => page.id === 'final-report');
         if (!hasReportPage) {
+          
+          // ✅ FIX CRÍTICO: Activar sistema inmediatamente para tarea completada
+          console.log(`🟢 [TASK-COMPLETE] Setting system ONLINE for completed task`);
+          setIsSystemOnline(true);
+          
           setTimeout(() => {
             const finalReportPage: MonitorPage = {
               id: 'final-report',
@@ -503,19 +510,25 @@ export const TerminalView = ({
             
             console.log('📄 [DEBUG] Añadiendo página de informe final');
             // ✅ FIX: Usar Context aislado consistentemente
-            const currentPages = taskId ? getTaskMonitorPages(taskId) : [];
+            const currentPages = getTaskMonitorPages(taskId);
             const newPages = [...currentPages, finalReportPage];
             setTaskMonitorPages(taskId, newPages);
             // Navegar automáticamente a la página del informe final cuando se agrega
             setTaskCurrentPageIndex(taskId, newPages.length - 1);
             setIsLiveMode(false);
-            setPaginationStats(prev => ({ ...prev, totalPages: prev.totalPages + 1 }));
+            setPaginationStats(prev => ({ ...prev, totalPages: newPages.length }));
+            
+            // Cargar el contenido real del informe
             loadFinalReport(taskId);
           }, 1000);
+        } else {
+          // ✅ FIX: Asegurar que sistema esté ONLINE incluso si reporte ya existe
+          console.log(`🟢 [TASK-COMPLETE] Report exists, ensuring system is ONLINE`);
+          setIsSystemOnline(true);
         }
       }
     }
-  }, [plan, taskId, monitorPages]); // Separado para detectar cambios en completación
+  }, [plan, taskId, monitorPages, getTaskMonitorPages, setTaskMonitorPages, setTaskCurrentPageIndex]); // ✅ Dependencias correctas
 
   // Procesar herramientas y crear páginas
   useEffect(() => {
