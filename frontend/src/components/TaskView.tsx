@@ -47,18 +47,20 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   const { memory } = useMemoryManager();
 
   // ========================================================================
-  // NUEVO: PLAN WEBSOCKET HOOK - REEMPLAZA TODA LA LÓGICA ANTERIOR
+  // NUEVO: PLAN MANAGER SIMPLIFICADO - REEMPLAZA LA LÓGICA ANTERIOR
   // ========================================================================
 
   const {
     plan,
     progress,
     isConnected,
-    updatePlanFromTask
-  } = usePlanWebSocket({
+    currentActiveStep,
+    setPlan: updatePlanFromTask
+  } = usePlanManager({
     taskId: task.id,
     initialPlan: task.plan || [],
     onPlanUpdate: (updatedPlan) => {
+      console.log(`🔄 [TASK-${task.id}] Plan updated:`, updatedPlan.length, 'steps');
       // Actualizar la tarea con el nuevo plan
       onUpdateTask((currentTask: Task) => ({
         ...currentTask,
@@ -67,6 +69,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       }));
     },
     onStepComplete: (stepId) => {
+      console.log(`✅ [TASK-${task.id}] Step completed:`, stepId);
       // Log cuando un paso se completa
       const step = plan.find(s => s.id === stepId);
       if (step) {
@@ -83,6 +86,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       }
     },
     onTaskComplete: () => {
+      console.log(`🎉 [TASK-${task.id}] Task completed!`);
       // Log cuando toda la tarea se completa
       setTerminalLogs(prev => [...prev, {
         message: '🎉 ¡Tarea completada exitosamente!',
