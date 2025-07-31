@@ -236,30 +236,30 @@ export const TerminalView = ({
           }
         };
         
-        // Update or add the final report page
-        setMonitorPages(prev => {
-          const existingIndex = prev.findIndex(page => page.id === 'final-report');
-          if (existingIndex >= 0) {
-            // Update existing page
-            const updated = [...prev];
-            updated[existingIndex] = reportPage;
-            // Navigate to the final report page
-            setCurrentPageIndex(existingIndex);
-            setIsLiveMode(false);
-            return updated;
-          } else {
-            // Add new page
-            setPaginationStats(prevStats => ({ 
-              ...prevStats, 
-              totalPages: prevStats.totalPages + 1 
-            }));
-            const newPages = [...prev, reportPage];
-            // Navigate to the final report page (last page)
-            setCurrentPageIndex(newPages.length - 1);
-            setIsLiveMode(false);
-            return newPages;
-          }
-        });
+        // ✅ FIX: Usar Context aislado consistentemente
+        const currentPages = taskId ? getTaskMonitorPages(taskId) : [];
+        const existingIndex = currentPages.findIndex(page => page.id === 'final-report');
+        
+        if (existingIndex >= 0) {
+          // Update existing page
+          const updated = [...currentPages];
+          updated[existingIndex] = reportPage;
+          setTaskMonitorPages(taskId, updated);
+          // Navigate to the final report page
+          setTaskCurrentPageIndex(taskId, existingIndex);
+          setIsLiveMode(false);
+        } else {
+          // Add new page
+          setPaginationStats(prevStats => ({ 
+            ...prevStats, 
+            totalPages: prevStats.totalPages + 1 
+          }));
+          const newPages = [...currentPages, reportPage];
+          setTaskMonitorPages(taskId, newPages);
+          // Navigate to the final report page (last page)
+          setTaskCurrentPageIndex(taskId, newPages.length - 1);
+          setIsLiveMode(false);
+        }
         
         console.log('📄 Final report loaded successfully in terminal');
       } else {
