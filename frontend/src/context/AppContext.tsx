@@ -845,6 +845,7 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
   // ========================================================================
 
   const setTaskMessages = useCallback((taskId: string, messages: Message[]) => {
+    console.log(`📤 [CONTEXT-SET] setTaskMessages(${taskId}): Setting ${messages.length} messages`);
     dispatch({ type: 'SET_TASK_MESSAGES', payload: { taskId, messages } });
   }, []);
 
