@@ -383,7 +383,7 @@ export const useFileManagement = () => {
 };
 
 // ========================================================================
-// HOOK PARA GESTIÓN DE UI Y MODALS
+// HOOK ESPECÍFICO: GESTIÓN DE UI Y MODALS - SIMPLIFICADO
 // ========================================================================
 
 export const useUIState = () => {
@@ -435,77 +435,13 @@ export const useUIState = () => {
 };
 
 // ========================================================================
-// HOOK PARA GESTIÓN DE ARCHIVOS CON AISLAMIENTO COMPLETO
-// ========================================================================
-
-export const useFileManagement = () => {
-  const { 
-    state, 
-    getTaskFiles,
-    setTaskFiles
-  } = useAppContext();
-  
-  const getFiles = useCallback((taskId: string) => {
-    return getTaskFiles(taskId);
-  }, [getTaskFiles]);
-  
-  const setFiles = useCallback((taskId: string, files: any[]) => {
-    setTaskFiles(taskId, files);
-  }, [setTaskFiles]);
-  
-  const downloadFile = useCallback(async (fileId: string, fileName: string) => {
-    try {
-      const response = await fetch(`${API_CONFIG.backend.url}/api/agent/download/${fileId}`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }
-    } catch (error) {
-      console.error('❌ Error downloading file:', error);
-    }
-  }, []);
-  
-  const downloadAllFiles = useCallback(async (taskId: string, taskTitle: string) => {
-    try {
-      const response = await fetch(`${API_CONFIG.backend.url}/api/agent/download-all-files/${taskId}`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${taskTitle}-files.zip`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }
-    } catch (error) {
-      console.error('❌ Error downloading all files:', error);
-    }
-  }, []);
-  
-  return {
-    getFiles,
-    setFiles,
-    downloadFile,
-    downloadAllFiles
-  };
-};
-
-// ========================================================================
-// HOOK PARA GESTIÓN DE TERMINAL CON AISLAMIENTO COMPLETO
+// HOOK ESPECÍFICO: GESTIÓN DE TERMINAL CON AISLAMIENTO COMPLETO
 // ========================================================================
 
 export const useTerminalManagement = () => {
   const { 
     state, 
+    dispatch,
     getTerminalLogs,
     addTerminalLog,
     getTaskTerminalCommands,
@@ -521,9 +457,10 @@ export const useTerminalManagement = () => {
   
   const clearLogs = useCallback((taskId: string) => {
     dispatch({ type: 'CLEAR_TERMINAL_LOGS', payload: taskId });
-  }, []);
+  }, [dispatch]);
   
   const logToTerminal = useCallback((taskId: string, message: string, type: 'info' | 'success' | 'error' = 'info') => {
+    console.log(`📋 [TERMINAL-MANAGEMENT] Logging to task ${taskId}:`, message, `(${type})`);
     addTerminalLog(taskId, message, type);
   }, [addTerminalLog]);
   
@@ -548,6 +485,7 @@ export const useTerminalManagement = () => {
   }, [getTaskMonitorPages]);
 
   const setMonitorPages = useCallback((taskId: string, pages: any[]) => {
+    console.log(`📺 [TERMINAL-MANAGEMENT] Setting ${pages.length} monitor pages for task ${taskId}`);
     setTaskMonitorPages(taskId, pages);
   }, [setTaskMonitorPages]);
 
@@ -564,16 +502,23 @@ export const useTerminalManagement = () => {
   }, [setTaskCurrentPageIndex]);
   
   return {
+    // Estado básico
     terminalLogs: state.terminalLogs,
     initializingTaskId: state.initializingTaskId,
     initializationLogs: state.initializationLogs,
+    
+    // Operaciones básicas
     clearLogs,
     logToTerminal,
     setTyping,
     getTerminalLogs,
+    
+    // Comandos de terminal
     getTerminalCommands,
     setTerminalCommands,
     addTerminalCommand,
+    
+    // Monitor pages
     getMonitorPages,
     setMonitorPages,
     addMonitorPage,
@@ -583,24 +528,7 @@ export const useTerminalManagement = () => {
 };
 
 // ========================================================================
-// HOOK PARA GESTIÓN DE CONFIGURACIÓN
-// ========================================================================
-
-export const useConfigManagement = () => {
-  const { state, dispatch } = useAppContext();
-  
-  const updateConfig = useCallback((newConfig: any) => {
-    dispatch({ type: 'SET_CONFIG', payload: newConfig });
-  }, [dispatch]);
-  
-  return {
-    config: state.config,
-    updateConfig
-  };
-};
-
-// ========================================================================
-// HOOK PARA GESTIÓN DE MENSAJES CON AISLAMIENTO COMPLETO
+// HOOK ESPECÍFICO: GESTIÓN DE MENSAJES CON AISLAMIENTO COMPLETO
 // ========================================================================
 
 export const useMessagesManagement = () => {
@@ -612,18 +540,23 @@ export const useMessagesManagement = () => {
   } = useAppContext();
   
   const getMessages = useCallback((taskId: string) => {
-    return getTaskMessages(taskId);
+    const messages = getTaskMessages(taskId);
+    console.log(`💬 [MESSAGE-MANAGEMENT] Getting ${messages.length} messages for task ${taskId}`);
+    return messages;
   }, [getTaskMessages]);
   
   const setMessages = useCallback((taskId: string, messages: Message[]) => {
+    console.log(`💬 [MESSAGE-MANAGEMENT] Setting ${messages.length} messages for task ${taskId}`);
     setTaskMessages(taskId, messages);
   }, [setTaskMessages]);
   
   const addMessage = useCallback((taskId: string, message: Message) => {
+    console.log(`💬 [MESSAGE-MANAGEMENT] Adding message to task ${taskId}:`, message.content.slice(0, 50) + '...');
     addTaskMessage(taskId, message);
   }, [addTaskMessage]);
   
   const updateMessages = useCallback((taskId: string, updater: (messages: Message[]) => Message[]) => {
+    console.log(`💬 [MESSAGE-MANAGEMENT] Updating messages for task ${taskId}`);
     updateTaskMessages(taskId, updater);
   }, [updateTaskMessages]);
   
@@ -632,5 +565,23 @@ export const useMessagesManagement = () => {
     setMessages,
     addMessage,
     updateMessages
+  };
+};
+
+// ========================================================================
+// HOOK ESPECÍFICO: GESTIÓN DE CONFIGURACIÓN - SIMPLIFICADO
+// ========================================================================
+
+export const useConfigManagement = () => {
+  const { state, dispatch } = useAppContext();
+  
+  const updateConfig = useCallback((newConfig: any) => {
+    console.log('⚙️ [CONFIG-MANAGEMENT] Updating configuration');
+    dispatch({ type: 'SET_CONFIG', payload: newConfig });
+  }, [dispatch]);
+  
+  return {
+    config: state.config,
+    updateConfig
   };
 };
