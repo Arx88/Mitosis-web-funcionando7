@@ -148,11 +148,35 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   // ========================================================================
 
   // Obtener datos aislados de la tarea desde el Context
-  const taskMessages = useMemo(() => getMessages(task.id), [getMessages, task.id]);
-  const taskTerminalLogs = useMemo(() => getTerminalLogs(task.id), [getTerminalLogs, task.id]);
-  const taskFiles = useMemo(() => getFiles(task.id), [getFiles, task.id]);
-  const taskMonitorPages = useMemo(() => getMonitorPages(task.id), [getMonitorPages, task.id]);
-  const currentPageIndex = useMemo(() => getCurrentPageIndex(task.id), [getCurrentPageIndex, task.id]);
+  const taskMessages = useMemo(() => {
+    const messages = getMessages(task.id);
+    console.log(`💬 [TASK-MESSAGES] Task ${task.id} has ${messages.length} messages in context`);
+    return messages;
+  }, [getMessages, task.id]);
+  
+  const taskTerminalLogs = useMemo(() => {
+    const logs = getTerminalLogs(task.id);
+    console.log(`📋 [TERMINAL-LOGS] Task ${task.id} has ${logs.length} terminal logs in context`);
+    return logs;
+  }, [getTerminalLogs, task.id]);
+  
+  const taskFiles = useMemo(() => {
+    const files = getFiles(task.id);
+    console.log(`📁 [TASK-FILES] Task ${task.id} has ${files.length} files in context`);
+    return files;
+  }, [getFiles, task.id]);
+  
+  const taskMonitorPages = useMemo(() => {
+    const pages = getMonitorPages(task.id);
+    console.log(`📺 [MONITOR-PAGES] Task ${task.id} has ${pages.length} monitor pages in context`);
+    return pages;
+  }, [getMonitorPages, task.id]);
+  
+  const currentPageIndex = useMemo(() => {
+    const index = getCurrentPageIndex(task.id);
+    console.log(`📍 [PAGE-INDEX] Task ${task.id} current page index: ${index}`);
+    return index;
+  }, [getCurrentPageIndex, task.id]);
 
   // ========================================================================
   // EFECTOS DE INICIALIZACIÓN Y RESETEO POR TAREA
