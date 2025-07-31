@@ -137,8 +137,29 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
 
   // REF para evitar loops infinitos
   const lastPlanRef = useRef<string>('');
+  const lastTaskIdRef = useRef<string>('');
 
-  // ✅ ARREGLO: Sincronizar solo cuando hay cambios reales
+  // ✅ ARREGLO CRÍTICO: Reset completo cuando cambia la tarea ID
+  useEffect(() => {
+    if (task.id !== lastTaskIdRef.current) {
+      console.log(`🔄 [TASK-${task.id}] Task changed from ${lastTaskIdRef.current} to ${task.id} - COMPLETE RESET`);
+      
+      // Resetear completamente el estado del plan manager
+      lastPlanRef.current = '';
+      lastTaskIdRef.current = task.id;
+      
+      // Si hay un plan inicial, establecerlo
+      if (task.plan && task.plan.length > 0) {
+        console.log(`📋 [TASK-${task.id}] Setting initial plan with ${task.plan.length} steps`);
+        setPlan(task.plan);
+      } else {
+        // Limpiar plan si no hay plan inicial
+        setPlan([]);
+      }
+    }
+  }, [task.id, task.plan, setPlan]);
+
+  // ✅ ARREGLO: Sincronizar solo cuando hay cambios reales del plan (NO basado en task.id)
   useEffect(() => {
     if (task.plan && task.plan.length > 0) {
       // Crear hash del plan para detectar cambios reales
@@ -157,7 +178,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         console.log(`🛡️ [TASK-${task.id}] Plan sync - no changes, skipping`);
       }
     }
-  }, [task.id]); // ✅ ARREGLO CRÍTICO: Solo dependencia en task.id, no en task.plan
+  }, [task.plan, setPlan]); // ✅ ARREGLO CRÍTICO: Dependencia en task.plan, NO en task.id
 
   // ========================================================================
   // MEMOIZED VALUES
