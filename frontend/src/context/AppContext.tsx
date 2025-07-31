@@ -532,8 +532,6 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
     isTaskTyping
   ]);
   
-  console.log('✅ AppContextProvider: Rendering with context value ready');
-  
   return (
     <AppContext.Provider value={contextValue}>
       {children}
