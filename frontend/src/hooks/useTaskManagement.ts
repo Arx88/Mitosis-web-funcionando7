@@ -178,34 +178,71 @@ export const useTaskManagement = () => {
   }, [dispatch, updateTask, updateTaskPlan, migrateTaskState]);
   
   // ========================================================================
-  // INICIAR EJECUCIÓN DE TAREA
+  // OPERACIONES BÁSICAS SIMPLIFICADAS
   // ========================================================================
   
   const startTaskExecution = useCallback(async (taskId: string) => {
     try {
+      console.log('🚀 [TASK-MANAGEMENT] Starting execution for task:', taskId);
+      
       const response = await fetch(`${API_CONFIG.backend.url}/api/agent/start-task-execution/${taskId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
       
       if (response.ok) {
-        console.log('✅ Task execution started successfully');
+        console.log('✅ [TASK-MANAGEMENT] Task execution started successfully');
+      } else {
+        console.error('❌ [TASK-MANAGEMENT] Failed to start execution:', response.status);
       }
     } catch (error) {
-      console.error('❌ Error starting execution:', error);
+      console.error('❌ [TASK-MANAGEMENT] Error starting execution:', error);
     }
   }, []);
   
-  // ========================================================================
-  // SUBIR ARCHIVOS PARA UNA TAREA - CON AISLAMIENTO COMPLETO
-  // ========================================================================
+  return {
+    // Estado básico
+    tasks: state.tasks,
+    activeTaskId: state.activeTaskId,
+    isTaskCreating: state.isTaskCreating,
+    
+    // Operaciones CRUD
+    createTask,
+    createTaskWithMessage,
+    updateTask,
+    deleteTask,
+    setActiveTask,
+    updateTaskProgress,
+    
+    // Operaciones especiales
+    startTaskExecution
+  };
+};
+
+// ========================================================================
+// HOOK ESPECÍFICO: GESTIÓN DE ARCHIVOS - AISLAMIENTO COMPLETO
+// ========================================================================
+
+export const useFileManagement = () => {
+  const { 
+    state,
+    getTaskFiles,
+    setTaskFiles,
+    addTaskMessage,
+    createTask,
+    updateTask,
+    setActiveTask
+  } = useAppContext();
   
   const uploadFilesForTask = useCallback(async (files: FileList, taskId?: string) => {
     try {
+      console.log('📎 [FILE-MANAGEMENT] Uploading', files.length, 'files for task:', taskId);
+      
       let targetTask = state.tasks.find(t => t.id === taskId);
       
       if (!targetTask) {
         // Crear nueva tarea para archivos con aislamiento completo
+        console.log('📎 [FILE-MANAGEMENT] Creating new task for files');
         targetTask = createTask("Archivos adjuntos");
       }
       
@@ -223,9 +260,9 @@ export const useTaskManagement = () => {
       
       if (response.ok) {
         const uploadData = await response.json();
+        console.log('✅ [FILE-MANAGEMENT] Files uploaded successfully');
         
         // ✅ USAR CONTEXT PARA GESTIÓN AISLADA DE ARCHIVOS
-        const { setTaskFiles } = useAppContext();
         setTaskFiles(targetTask.id, uploadData.files);
         
         // Crear mensajes usando el Context aislado
@@ -281,24 +318,67 @@ export const useTaskManagement = () => {
         });
         
         setActiveTask(targetTask.id);
+        
+      } else {
+        console.error('❌ [FILE-MANAGEMENT] Upload failed:', response.status);
       }
     } catch (error) {
-      console.error('❌ Error uploading files:', error);
+      console.error('❌ [FILE-MANAGEMENT] Error uploading files:', error);
     }
-  }, [state.tasks, createTask, updateTask, setActiveTask, addTaskMessage]);
+  }, [state.tasks, createTask, updateTask, setActiveTask, addTaskMessage, setTaskFiles]);
+  
+  const getFiles = useCallback((taskId: string) => {
+    return getTaskFiles(taskId);
+  }, [getTaskFiles]);
+  
+  const setFiles = useCallback((taskId: string, files: any[]) => {
+    setTaskFiles(taskId, files);
+  }, [setTaskFiles]);
+  
+  const downloadFile = useCallback(async (fileId: string, fileName: string) => {
+    try {
+      const response = await fetch(`${API_CONFIG.backend.url}/api/agent/download/${fileId}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error('❌ [FILE-MANAGEMENT] Error downloading file:', error);
+    }
+  }, []);
+  
+  const downloadAllFiles = useCallback(async (taskId: string, taskTitle: string) => {
+    try {
+      const response = await fetch(`${API_CONFIG.backend.url}/api/agent/download-all-files/${taskId}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${taskTitle}-files.zip`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error('❌ [FILE-MANAGEMENT] Error downloading all files:', error);
+    }
+  }, []);
   
   return {
-    tasks: state.tasks,
-    activeTaskId: state.activeTaskId,
-    isTaskCreating: state.isTaskCreating,
-    createTask,
-    createTaskWithMessage,
-    updateTask,
-    deleteTask,
-    setActiveTask,
-    updateTaskProgress,
-    startTaskExecution,
-    uploadFilesForTask
+    uploadFilesForTask,
+    getFiles,
+    setFiles,
+    downloadFile,
+    downloadAllFiles
   };
 };
 
