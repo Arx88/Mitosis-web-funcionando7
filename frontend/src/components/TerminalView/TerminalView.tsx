@@ -599,11 +599,15 @@ export const TerminalView = ({
         }
       });
       
-      if (newPages.length > 0) {
-        setMonitorPages(prev => [...prev, ...newPages]);
+      if (newPages.length > 0 && taskId) {
+        console.log(`📝 [LOG-PAGES] Adding ${newPages.length} log pages to task ${taskId}`);
+        const currentPages = getTaskMonitorPages(taskId);
+        const allPages = [...currentPages, ...newPages];
+        setTaskMonitorPages(taskId, allPages);
+        
         setPaginationStats(prev => ({
           ...prev,
-          totalPages: prev.totalPages + newPages.length
+          totalPages: allPages.length
         }));
       }
     }
