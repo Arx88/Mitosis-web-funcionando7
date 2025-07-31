@@ -1,7 +1,7 @@
 /**
- * Custom Hooks Especializados - Fase 3
- * Hooks que usan el Context API para funcionalidades específicas
- * Eliminan props drilling y centralizan lógica de negocio
+ * HOOK DE GESTIÓN DE TAREAS - REFACTORIZADO PARA AISLAMIENTO COMPLETO
+ * Usa completamente el Context API expandido para persistencia por tarea
+ * Elimina props drilling y centraliza lógica de negocio con aislamiento
  */
 
 import { useCallback } from 'react';
@@ -10,13 +10,30 @@ import { API_CONFIG } from '../config/api';
 import { Task, Message } from '../types';
 
 // ========================================================================
-// HOOK PARA GESTIÓN DE TAREAS
+// HOOK PARA GESTIÓN DE TAREAS CON AISLAMIENTO COMPLETO
 // ========================================================================
 
 export const useTaskManagement = () => {
-  const { state, dispatch, createTask, updateTask, deleteTask, setActiveTask, updateTaskProgress } = useAppContext();
+  const { 
+    state, 
+    dispatch, 
+    createTask, 
+    updateTask, 
+    deleteTask, 
+    setActiveTask, 
+    updateTaskProgress,
+    setTaskMessages,
+    addTaskMessage,
+    updateTaskMessages,
+    updateTaskPlan,
+    resetTaskState,
+    migrateTaskState
+  } = useAppContext();
   
-  // Crear tarea con mensaje inicial (consolidado)
+  // ========================================================================
+  // CREAR TAREA CON MENSAJE INICIAL - TOTALMENTE AISLADO
+  // ========================================================================
+  
   const createTaskWithMessage = useCallback(async (messageContent: string) => {
     dispatch({ type: 'SET_THINKING', payload: false });
     
@@ -28,27 +45,27 @@ export const useTaskManagement = () => {
       timestamp: new Date()
     };
     
-    // Crear tarea con mensaje incluido
+    // Crear tarea completamente aislada
     const newTask: Task = {
       id: `task-${Date.now()}`,
       title: messageContent,
       createdAt: new Date(),
       status: 'active',
-      messages: [userMessage],
+      messages: [userMessage], // Mensaje incluido directamente
       terminalCommands: [],
       isFavorite: false,
       progress: 0,
       iconType: undefined
     };
     
-    // Agregar tarea y activarla
+    // ✅ USAR CONTEXT COMPLETAMENTE - El Context se encarga del aislamiento
     dispatch({ type: 'ADD_TASK', payload: newTask });
     dispatch({ type: 'SET_ACTIVE_TASK', payload: newTask.id });
     
     // Set loading state AFTER task creation but BEFORE API call
     dispatch({ type: 'SET_TASK_CREATING', payload: true });
     
-    // Use chat endpoint which includes plan generation
+    // Usar chat endpoint que incluye generación de plan
     try {
       const response = await fetch(`${API_CONFIG.backend.url}/api/agent/chat`, {
         method: 'POST',
@@ -95,7 +112,13 @@ export const useTaskManagement = () => {
             status: 'in-progress',
             progress: 0
           };
+
+          // ✅ USAR CONTEXT PARA ACTUALIZAR PLAN DE FORMA AISLADA
+          updateTaskPlan(backendTaskId, frontendPlan);
         }
+        
+        // ✅ MIGRAR ESTADO COMPLETO DE ID VIEJO A NUEVO (AISLAMIENTO COMPLETO)
+        migrateTaskState(newTask.id, backendTaskId);
         
         // CRÍTICO: Usar la nueva acción para actualizar el ID y migrar todos los estados
         dispatch({ 
@@ -111,7 +134,7 @@ export const useTaskManagement = () => {
         if (data.plan && data.plan.length > 0) {
           setTimeout(async () => {
             try {
-              await startTaskExecution(newTask.id);
+              await startTaskExecution(backendTaskId); // Usar el ID del backend
             } catch (error) {
               console.error('Error starting task execution:', error);
             }
@@ -128,9 +151,12 @@ export const useTaskManagement = () => {
     dispatch({ type: 'SET_TASK_CREATING', payload: false });
     
     return newTask;
-  }, [dispatch, updateTask]);
+  }, [dispatch, updateTask, updateTaskPlan, migrateTaskState]);
   
-  // Iniciar ejecución de tarea
+  // ========================================================================
+  // INICIAR EJECUCIÓN DE TAREA
+  // ========================================================================
+  
   const startTaskExecution = useCallback(async (taskId: string) => {
     try {
       const response = await fetch(`${API_CONFIG.backend.url}/api/agent/start-task-execution/${taskId}`, {
@@ -139,20 +165,23 @@ export const useTaskManagement = () => {
       });
       
       if (response.ok) {
-        // Task execution started successfully
+        console.log('✅ Task execution started successfully');
       }
     } catch (error) {
       console.error('❌ Error starting execution:', error);
     }
   }, []);
   
-  // Subir archivos para una tarea
+  // ========================================================================
+  // SUBIR ARCHIVOS PARA UNA TAREA - CON AISLAMIENTO COMPLETO
+  // ========================================================================
+  
   const uploadFilesForTask = useCallback(async (files: FileList, taskId?: string) => {
     try {
       let targetTask = state.tasks.find(t => t.id === taskId);
       
       if (!targetTask) {
-        // Crear nueva tarea para archivos
+        // Crear nueva tarea para archivos con aislamiento completo
         targetTask = createTask("Archivos adjuntos");
       }
       
@@ -171,7 +200,11 @@ export const useTaskManagement = () => {
       if (response.ok) {
         const uploadData = await response.json();
         
-        // Actualizar tarea con archivos subidos
+        // ✅ USAR CONTEXT PARA GESTIÓN AISLADA DE ARCHIVOS
+        const { setTaskFiles } = useAppContext();
+        setTaskFiles(targetTask.id, uploadData.files);
+        
+        // Crear mensajes usando el Context aislado
         const filesList = uploadData.files.map((file: any) => 
           `• **${file.name}** (${Math.round(file.size / 1024)} KB)`
         ).join('\n');
@@ -208,29 +241,27 @@ export const useTaskManagement = () => {
           }
         };
         
+        // ✅ USAR CONTEXT PARA MENSAJES AISLADOS POR TAREA
+        addTaskMessage(targetTask.id, userMessage);
+        addTaskMessage(targetTask.id, assistantMessage);
+        
+        // Actualizar tarea
         updateTask((task: Task) => {
           if (task.id !== targetTask!.id) return task;
           
           return {
             ...task,
-            messages: [...task.messages, userMessage, assistantMessage],
             status: 'completed',
             progress: 100
           };
         });
         
         setActiveTask(targetTask.id);
-        
-        // Actualizar archivos de la tarea
-        dispatch({ 
-          type: 'SET_TASK_FILES', 
-          payload: { taskId: targetTask.id, files: uploadData.files } 
-        });
       }
     } catch (error) {
       console.error('❌ Error uploading files:', error);
     }
-  }, [state.tasks, createTask, updateTask, setActiveTask, dispatch]);
+  }, [state.tasks, createTask, updateTask, setActiveTask, addTaskMessage]);
   
   return {
     tasks: state.tasks,
@@ -282,10 +313,6 @@ export const useUIState = () => {
     dispatch({ type: 'SET_MODALS', payload: { shareModal: false } });
   }, [dispatch]);
   
-  const openConfigPanel = useCallback(() => {
-    dispatch({ type: 'SET_CONFIG', payload: state.config }); // Trigger config open
-  }, [dispatch, state.config]);
-  
   return {
     sidebarCollapsed: state.sidebarCollapsed,
     terminalSize: state.terminalSize,
@@ -299,25 +326,28 @@ export const useUIState = () => {
     openFilesModal,
     closeFilesModal,
     openShareModal,
-    closeShareModal,
-    openConfigPanel
+    closeShareModal
   };
 };
 
 // ========================================================================
-// HOOK PARA GESTIÓN DE ARCHIVOS
+// HOOK PARA GESTIÓN DE ARCHIVOS CON AISLAMIENTO COMPLETO
 // ========================================================================
 
 export const useFileManagement = () => {
-  const { state, dispatch, getTaskFiles } = useAppContext();
-  
-  const setTaskFiles = useCallback((taskId: string, files: any[]) => {
-    dispatch({ type: 'SET_TASK_FILES', payload: { taskId, files } });
-  }, [dispatch]);
+  const { 
+    state, 
+    getTaskFiles,
+    setTaskFiles
+  } = useAppContext();
   
   const getFiles = useCallback((taskId: string) => {
     return getTaskFiles(taskId);
   }, [getTaskFiles]);
+  
+  const setFiles = useCallback((taskId: string, files: any[]) => {
+    setTaskFiles(taskId, files);
+  }, [setTaskFiles]);
   
   const downloadFile = useCallback(async (fileId: string, fileName: string) => {
     try {
@@ -358,42 +388,93 @@ export const useFileManagement = () => {
   }, []);
   
   return {
-    taskFiles: state.taskFiles,
-    setTaskFiles,
     getFiles,
+    setFiles,
     downloadFile,
     downloadAllFiles
   };
 };
 
 // ========================================================================
-// HOOK PARA GESTIÓN DE TERMINAL
+// HOOK PARA GESTIÓN DE TERMINAL CON AISLAMIENTO COMPLETO
 // ========================================================================
 
 export const useTerminalManagement = () => {
-  const { state, dispatch, addTerminalLog, getTerminalLogs } = useAppContext();
+  const { 
+    state, 
+    getTerminalLogs,
+    addTerminalLog,
+    getTaskTerminalCommands,
+    setTaskTerminalCommands,
+    addTaskTerminalCommand,
+    setTaskTyping,
+    getTaskMonitorPages,
+    setTaskMonitorPages,
+    addTaskMonitorPage,
+    getTaskCurrentPageIndex,
+    setTaskCurrentPageIndex
+  } = useAppContext();
   
   const clearLogs = useCallback((taskId: string) => {
     dispatch({ type: 'CLEAR_TERMINAL_LOGS', payload: taskId });
-  }, [dispatch]);
+  }, []);
   
   const logToTerminal = useCallback((taskId: string, message: string, type: 'info' | 'success' | 'error' = 'info') => {
     addTerminalLog(taskId, message, type);
   }, [addTerminalLog]);
   
   const setTyping = useCallback((taskId: string, isTyping: boolean) => {
-    dispatch({ type: 'SET_TYPING', payload: { taskId, isTyping } });
-  }, [dispatch]);
+    setTaskTyping(taskId, isTyping);
+  }, [setTaskTyping]);
+
+  const getTerminalCommands = useCallback((taskId: string) => {
+    return getTaskTerminalCommands(taskId);
+  }, [getTaskTerminalCommands]);
+
+  const setTerminalCommands = useCallback((taskId: string, commands: any[]) => {
+    setTaskTerminalCommands(taskId, commands);
+  }, [setTaskTerminalCommands]);
+
+  const addTerminalCommand = useCallback((taskId: string, command: any) => {
+    addTaskTerminalCommand(taskId, command);
+  }, [addTaskTerminalCommand]);
+
+  const getMonitorPages = useCallback((taskId: string) => {
+    return getTaskMonitorPages(taskId);
+  }, [getTaskMonitorPages]);
+
+  const setMonitorPages = useCallback((taskId: string, pages: any[]) => {
+    setTaskMonitorPages(taskId, pages);
+  }, [setTaskMonitorPages]);
+
+  const addMonitorPage = useCallback((taskId: string, page: any) => {
+    addTaskMonitorPage(taskId, page);
+  }, [addTaskMonitorPage]);
+
+  const getCurrentPageIndex = useCallback((taskId: string) => {
+    return getTaskCurrentPageIndex(taskId);
+  }, [getTaskCurrentPageIndex]);
+
+  const setCurrentPageIndex = useCallback((taskId: string, pageIndex: number) => {
+    setTaskCurrentPageIndex(taskId, pageIndex);
+  }, [setTaskCurrentPageIndex]);
   
   return {
     terminalLogs: state.terminalLogs,
     initializingTaskId: state.initializingTaskId,
     initializationLogs: state.initializationLogs,
-    typingState: state.typingState,
     clearLogs,
     logToTerminal,
     setTyping,
-    getTerminalLogs
+    getTerminalLogs,
+    getTerminalCommands,
+    setTerminalCommands,
+    addTerminalCommand,
+    getMonitorPages,
+    setMonitorPages,
+    addMonitorPage,
+    getCurrentPageIndex,
+    setCurrentPageIndex
   };
 };
 
@@ -411,5 +492,41 @@ export const useConfigManagement = () => {
   return {
     config: state.config,
     updateConfig
+  };
+};
+
+// ========================================================================
+// HOOK PARA GESTIÓN DE MENSAJES CON AISLAMIENTO COMPLETO
+// ========================================================================
+
+export const useMessagesManagement = () => {
+  const { 
+    getTaskMessages,
+    setTaskMessages,
+    addTaskMessage,
+    updateTaskMessages
+  } = useAppContext();
+  
+  const getMessages = useCallback((taskId: string) => {
+    return getTaskMessages(taskId);
+  }, [getTaskMessages]);
+  
+  const setMessages = useCallback((taskId: string, messages: Message[]) => {
+    setTaskMessages(taskId, messages);
+  }, [setTaskMessages]);
+  
+  const addMessage = useCallback((taskId: string, message: Message) => {
+    addTaskMessage(taskId, message);
+  }, [addTaskMessage]);
+  
+  const updateMessages = useCallback((taskId: string, updater: (messages: Message[]) => Message[]) => {
+    updateTaskMessages(taskId, updater);
+  }, [updateTaskMessages]);
+  
+  return {
+    getMessages,
+    setMessages,
+    addMessage,
+    updateMessages
   };
 };
