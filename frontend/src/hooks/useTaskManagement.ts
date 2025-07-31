@@ -48,14 +48,8 @@ export const useTaskManagement = () => {
     // Set loading state AFTER task creation but BEFORE API call
     dispatch({ type: 'SET_TASK_CREATING', payload: true });
     
-    // ✅ FIX: Use /api/agent/chat endpoint which works perfectly
+    // Use chat endpoint which includes plan generation
     try {
-      console.log('🚀 NUEVA TAREA FIX: About to call backend for plan generation');
-      console.log('📝 Backend URL:', API_CONFIG.backend.url);
-      console.log('📝 Message content:', messageContent.trim());
-      console.log('📝 Task ID:', newTask.id);
-      
-      // Use chat endpoint which includes plan generation
       const response = await fetch(`${API_CONFIG.backend.url}/api/agent/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,12 +59,8 @@ export const useTaskManagement = () => {
         })
       });
       
-      console.log('📝 Response status:', response.status);
-      console.log('📝 Response ok:', response.ok);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('🎉 NUEVA TAREA FIX: Backend response received:', data);
         
         // CRÍTICO: Actualizar tarea con título mejorado, plan Y el task_id real del backend
         const backendTaskId = data.task_id; // ID real generado por el backend
@@ -78,18 +68,16 @@ export const useTaskManagement = () => {
         // Crear la tarea actualizada con el nuevo ID
         let updatedTask: Task = { 
           ...newTask,
-          id: backendTaskId // ✅ CRÍTICO: Usar el ID real del backend
+          id: backendTaskId // CRÍTICO: Usar el ID real del backend
         };
         
         // Update title from enhanced_title
         if (data.enhanced_title) {
           updatedTask.title = data.enhanced_title;
-          console.log('📝 Updated title:', data.enhanced_title);
         }
         
         // Update plan from response
         if (data.plan && Array.isArray(data.plan)) {
-          console.log('🎉 NUEVA TAREA FIX: Plan received with', data.plan.length, 'steps');
           const frontendPlan = data.plan.map((step: any) => ({
             id: step.id,
             title: step.title,
@@ -107,13 +95,9 @@ export const useTaskManagement = () => {
             status: 'in-progress',
             progress: 0
           };
-          
-          console.log('🎉 NUEVA TAREA FIX: Updated task with backend ID and plan:', updatedTask);
-        } else {
-          console.warn('🚨 NUEVA TAREA FIX: No valid plan in response:', data);
         }
         
-        // ✅ CRÍTICO: Usar la nueva acción para actualizar el ID y migrar todos los estados
+        // CRÍTICO: Usar la nueva acción para actualizar el ID y migrar todos los estados
         dispatch({ 
           type: 'UPDATE_TASK_ID', 
           payload: { 
@@ -123,30 +107,22 @@ export const useTaskManagement = () => {
           } 
         });
         
-        console.log('🔄 Updated task ID from', newTask.id, 'to', backendTaskId);
-        
         // Auto-iniciar ejecución si hay plan
         if (data.plan && data.plan.length > 0) {
-          console.log('🚀 NUEVA TAREA FIX: Auto-starting task execution for', data.plan.length, 'steps');
           setTimeout(async () => {
             try {
               await startTaskExecution(newTask.id);
-              console.log('🎉 NUEVA TAREA FIX: Task execution started successfully');
             } catch (error) {
-              console.error('🚨 NUEVA TAREA FIX: Error starting task execution:', error);
+              console.error('Error starting task execution:', error);
             }
           }, 1000);
-        } else {
-          console.warn('🚨 NUEVA TAREA FIX: No plan available for auto-start');
         }
-        
-        console.log('✅ NUEVA TAREA FIX: Task creation completed successfully');
       } else {
         const errorText = await response.text();
-        console.error('🚨 NUEVA TAREA FIX: Backend response error:', response.status, errorText);
+        console.error('Backend response error:', response.status, errorText);
       }
     } catch (error) {
-      console.error('🚨 NUEVA TAREA FIX: Error generating plan:', error);
+      console.error('Error generating plan:', error);
     }
     
     console.log('🔄 Setting task creating to false');
