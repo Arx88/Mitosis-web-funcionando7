@@ -131,6 +131,7 @@ type AppAction =
   | { type: 'SET_TASK_CURRENT_PAGE'; payload: { taskId: string; pageIndex: number } }
   | { type: 'RESET_TASK_STATE'; payload: string }
   | { type: 'MIGRATE_TASK_STATE'; payload: { oldId: string; newId: string } }
+  | { type: 'INITIALIZE_TASK_DATA'; payload: { taskId: string } }
   
   | { type: 'SET_INITIALIZATION'; payload: { taskId: string | null; logs?: Array<{message: string, type: 'info' | 'success' | 'error', timestamp: Date}> } }
   | { type: 'SET_MODALS'; payload: { filesModal?: boolean; shareModal?: boolean } }
