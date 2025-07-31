@@ -1,13 +1,13 @@
 /**
- * HOOK ÚNICO Y SIMPLIFICADO PARA PLAN DE ACCIÓN
- * Refactorización completa - elimina duplicación y complejidad
- * UN SOLO lugar para manejar el estado del plan
- * ARREGLO: Protección contra loops infinitos
+ * HOOK ÚNICO Y SIMPLIFICADO PARA PLAN DE ACCIÓN - REFACTORIZADO
+ * Usa completamente el Context API para aislamiento de tareas
+ * Eliminada duplicación y loops infinitos
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useWebSocket } from './useWebSocket';
 import { TaskStep } from '../types';
+import { useAppContext } from '../context/AppContext';
 
 interface PlanManagerProps {
   taskId: string;
