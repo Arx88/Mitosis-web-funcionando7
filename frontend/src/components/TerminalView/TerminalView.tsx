@@ -336,13 +336,16 @@ export const TerminalView = ({
     console.log(`🔄 [TERMINAL-RESET] Resetting terminal state for task: ${dataId}`);
     setTerminalOutput([]);
     setCurrentExecutingTool(null);
-    setMonitorPages([]);
-    setCurrentPageIndex(0);
+    
+    // ✅ NO RESETEAR MONITOR PAGES - ESTÁN EN CONTEXT AISLADO
+    // setMonitorPages([]);
+    // setCurrentPageIndex(0);
+    
     setIsLiveMode(true);
     setIsSystemOnline(false);
     setInitializationStep(0);
     setPaginationStats({
-      totalPages: 0,
+      totalPages: monitorPages.length, // Usar datos del Context
       currentPage: 1,
       limit: 20,
       offset: 0
@@ -355,7 +358,7 @@ export const TerminalView = ({
     setStepTimers({});
     setLiveTimers({});
     
-    console.log(`✅ [TERMINAL-RESET] State reset complete for task: ${dataId}`);
+    console.log(`✅ [TERMINAL-RESET] State reset complete for task: ${dataId} - Context data preserved`);
     lastTaskIdRef.current = dataId || '';
   }, [dataId, taskId, taskTitle]); // Reset whenever dataId changes, including when it becomes null/undefined
 
