@@ -503,7 +503,7 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
   
   // Crear el valor del contexto de forma memoizada para evitar re-renders
   const contextValue = React.useMemo<AppContextType>(() => {
-    const value = {
+    return {
       state,
       dispatch,
       createTask,
@@ -517,9 +517,6 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
       getTerminalLogs,
       isTaskTyping
     };
-    
-    console.log('🔄 AppContext: Context value created/updated');
-    return value;
   }, [
     state,
     dispatch,
