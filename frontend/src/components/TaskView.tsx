@@ -210,21 +210,37 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   }, [onInitializationComplete]);
 
   // ========================================================================
-  // EFFECTS
+  // EFFECTS - AISLAMIENTO Y LIMPIEZA
   // ========================================================================
 
-  // Cargar archivos de tarea
+  // RESET COMPLETO cuando cambia la tarea - CRÍTICO PARA AISLAMIENTO
+  useEffect(() => {
+    console.log(`🔄 [TASK-${task.id}] TaskView initialized - clearing isolated state`);
+    
+    // Limpiar estado local aislado
+    setTerminalLogs([]);
+    setTaskFiles([]);
+    setIsTyping(false);
+    setShowFilesModal(false);
+    setShowShareModal(false);
+    
+    console.log(`✅ [TASK-${task.id}] TaskView state reset complete`);
+  }, [task.id]); // Dependencia en task.id para resetear cuando cambie
+
+  // Cargar archivos de tarea específicos
   useEffect(() => {
     let mounted = true;
     
     const loadTaskFiles = async () => {
       try {
+        console.log(`📁 [TASK-${task.id}] Loading task files`);
         const files = await agentAPI.getTaskFiles(task.id);
         if (mounted) {
           setTaskFiles(files);
+          console.log(`✅ [TASK-${task.id}] Loaded ${files.length} files`);
         }
       } catch (error) {
-        console.error('Error loading task files:', error);
+        console.error(`❌ [TASK-${task.id}] Error loading task files:`, error);
       }
     };
 
@@ -234,6 +250,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
 
     return () => {
       mounted = false;
+      console.log(`🧹 [TASK-${task.id}] TaskView cleanup`);
     };
   }, [task.id]);
 
