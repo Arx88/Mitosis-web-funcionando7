@@ -51,13 +51,14 @@ export function App() {
     tasks,
     activeTaskId,
     isTaskCreating,
-    createTask, // ✅ AGREGADO - FUNCIÓN FALTANTE
+    createTask, // ✅ FUNCIÓN YA DISPONIBLE EN EL HOOK REFACTORIZADO
     createTaskWithMessage,
     updateTask,
     deleteTask,
-    setActiveTask,
-    uploadFilesForTask
+    setActiveTask
   } = useTaskManagement();
+  
+  const { uploadFilesForTask } = useFileManagement(); // ✅ USAR HOOK ESPECÍFICO
   
   const {
     sidebarCollapsed,
