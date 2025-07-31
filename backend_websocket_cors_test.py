@@ -17,7 +17,7 @@ TESTING REQUIREMENTS:
 5. Testing plan generation in real-time
 6. Verify endpoints work correctly for frontend flow
 
-BACKEND URL: https://f5c7b84f-efb6-4c9f-8524-05fb23017c2c.preview.emergentagent.com
+BACKEND URL: https://34c40358-75f9-446c-9942-ad9f92d4bed7.preview.emergentagent.com
 SPECIFIC TASK ID: task-1753710463282
 MESSAGE: "Genera un informe sobre IA en 2025"
 """
@@ -31,7 +31,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment
-BACKEND_URL = "https://f5c7b84f-efb6-4c9f-8524-05fb23017c2c.preview.emergentagent.com"
+BACKEND_URL = "https://34c40358-75f9-446c-9942-ad9f92d4bed7.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 SPECIFIC_TASK_ID = "task-1753710463282"
 TEST_MESSAGE = "Genera un informe sobre IA en 2025"
@@ -42,7 +42,7 @@ class MitosisWebSocketCORSTester:
         self.session.headers.update({
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'Origin': 'https://f5c7b84f-efb6-4c9f-8524-05fb23017c2c.preview.emergentagent.com',
+            'Origin': 'https://34c40358-75f9-446c-9942-ad9f92d4bed7.preview.emergentagent.com',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         })
         self.test_results = []
@@ -137,7 +137,7 @@ class MitosisWebSocketCORSTester:
         try:
             # Test CORS preflight request
             preflight_headers = {
-                'Origin': 'https://f5c7b84f-efb6-4c9f-8524-05fb23017c2c.preview.emergentagent.com',
+                'Origin': 'https://34c40358-75f9-446c-9942-ad9f92d4bed7.preview.emergentagent.com',
                 'Access-Control-Request-Method': 'POST',
                 'Access-Control-Request-Headers': 'Content-Type'
             }
@@ -151,7 +151,7 @@ class MitosisWebSocketCORSTester:
             }
             
             # Check if CORS is properly configured
-            origin_allowed = cors_headers['Access-Control-Allow-Origin'] in ['*', 'https://f5c7b84f-efb6-4c9f-8524-05fb23017c2c.preview.emergentagent.com']
+            origin_allowed = cors_headers['Access-Control-Allow-Origin'] in ['*', 'https://34c40358-75f9-446c-9942-ad9f92d4bed7.preview.emergentagent.com']
             methods_allowed = 'POST' in str(cors_headers.get('Access-Control-Allow-Methods', ''))
             headers_allowed = 'Content-Type' in str(cors_headers.get('Access-Control-Allow-Headers', ''))
             
