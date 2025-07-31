@@ -1132,7 +1132,8 @@ export const useAppContext = (): AppContextType => {
       setTaskCurrentPageIndex: () => {},
       setTaskTyping: () => {},
       resetTaskState: () => {},
-      migrateTaskState: () => {}
+      migrateTaskState: () => {},
+      initializeTaskData: () => {}
     };
   }
   
