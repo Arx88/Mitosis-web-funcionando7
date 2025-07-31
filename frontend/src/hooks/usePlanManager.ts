@@ -148,11 +148,9 @@ export const usePlanManager = ({
         };
       }
 
-      // Actualizar usando la función principal (protegida)
-      setTimeout(() => {
-        updatePlan(newSteps, 'completeStep');
-        onStepComplete?.(stepId);
-      }, 0);
+      // ✅ ACTUALIZACIÓN DIRECTA SIN TIMEOUTS
+      updatePlan(newSteps, 'completeStep');
+      onStepComplete?.(stepId);
       
       return newSteps;
     });
@@ -168,9 +166,8 @@ export const usePlanManager = ({
         start_time: step.id === stepId ? new Date() : step.start_time
       }));
       
-      setTimeout(() => {
-        updatePlan(newSteps, 'startStep');
-      }, 0);
+      // ✅ ACTUALIZACIÓN DIRECTA SIN TIMEOUTS
+      updatePlan(newSteps, 'startStep');
       
       return newSteps;
     });
