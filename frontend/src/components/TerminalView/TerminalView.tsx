@@ -64,6 +64,22 @@ export const TerminalView = ({
   taskTitle,
   executionData
 }: TerminalViewProps) => {
+  // ========================================================================
+  // USAR CONTEXT PARA DATOS AISLADOS - NUEVO ENFOQUE
+  // ========================================================================
+  
+  const { 
+    getTaskMonitorPages, 
+    setTaskMonitorPages,
+    addTaskMonitorPage,
+    getTaskCurrentPageIndex,
+    setTaskCurrentPageIndex
+  } = useAppContext();
+
+  // ========================================================================
+  // ESTADO LOCAL MÍNIMO - SOLO PARA UI
+  // ========================================================================
+  
   const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
   const [isPlanExpanded, setIsPlanExpanded] = useState(true);
 
