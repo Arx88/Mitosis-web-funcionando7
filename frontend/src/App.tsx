@@ -153,7 +153,6 @@ export function App() {
     };
     
     setInitializationLogs(prev => [...prev, logEntry]);
-    console.log(`📝 Initialization log (${type}):`, message);
   }, []);
 
   const handleConfigChange = useCallback((newConfig: any) => {
