@@ -1,0 +1,64 @@
+{
+  "total_tests": 5,
+  "passed_tests": 5,
+  "success_rate": 100.0,
+  "overall_status": "\u2705 BACKEND READY FOR ISOLATION TESTING",
+  "test_results": [
+    {
+      "test_name": "Backend Connectivity",
+      "success": true,
+      "details": "Backend is accessible and healthy",
+      "timestamp": "2025-07-31T05:25:20.671978",
+      "response_data": null
+    },
+    {
+      "test_name": "Create Multiple Tasks",
+      "success": true,
+      "details": "Successfully created 3/3 tasks",
+      "timestamp": "2025-07-31T05:25:56.741143",
+      "response_data": null
+    },
+    {
+      "test_name": "Task Unique Identifiers",
+      "success": true,
+      "details": "All 3 tasks have unique identifiers",
+      "timestamp": "2025-07-31T05:25:57.741392",
+      "response_data": null
+    },
+    {
+      "test_name": "WebSocket Endpoint Availability",
+      "success": true,
+      "details": "WebSocket endpoint accessible for task isolation - Status: 400",
+      "timestamp": "2025-07-31T05:25:58.752196",
+      "response_data": null
+    },
+    {
+      "test_name": "Agent Configuration",
+      "success": true,
+      "details": "Agent is running and configured for task isolation",
+      "timestamp": "2025-07-31T05:25:59.767110",
+      "response_data": null
+    }
+  ],
+  "created_tasks": [
+    {
+      "id": "chat-1753939521",
+      "message": "Crear un archivo README.md con informaci\u00f3n del proyecto",
+      "response": "He generado un plan para tu tarea: Crear un archivo README.md con informaci\u00f3n del proyecto...",
+      "created_at": "2025-07-31T05:25:31.102488"
+    },
+    {
+      "id": "chat-1753939533",
+      "message": "Buscar informaci\u00f3n sobre inteligencia artificial",
+      "response": "He generado un plan para tu tarea: An\u00e1lisis de Tendencias en Inteligencia Artificial 2025...",
+      "created_at": "2025-07-31T05:25:42.755592"
+    },
+    {
+      "id": "chat-1753939544",
+      "message": "Generar un informe de an\u00e1lisis de datos",
+      "response": "He generado un plan para tu tarea: An\u00e1lisis de Rendimiento de Ventas Q1 2025...",
+      "created_at": "2025-07-31T05:25:54.740997"
+    }
+  ],
+  "backend_ready_for_isolation": true
+}
