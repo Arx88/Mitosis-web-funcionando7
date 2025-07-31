@@ -16,7 +16,7 @@ EXPECTED BEHAVIOR:
 3. Complete first step → next step shows as ACTIVO
 4. Continue until all steps are completed
 
-URL: https://69334724-e89c-4e99-8fe5-83524638b0e8.preview.emergentagent.com
+URL: https://93bccf3b-06b1-46aa-82a0-28eecdc87a14.preview.emergentagent.com
 """
 
 import requests
@@ -27,7 +27,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL
-BACKEND_URL = "https://69334724-e89c-4e99-8fe5-83524638b0e8.preview.emergentagent.com"
+BACKEND_URL = "https://93bccf3b-06b1-46aa-82a0-28eecdc87a14.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class PlanActionTester:
