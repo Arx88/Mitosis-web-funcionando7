@@ -39,38 +39,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [editingTitle, setEditingTitle] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'favorites'>('all');
 
-  // ✅ FIX: Función para crear tarea con título inteligente
+  // Función para crear tarea automáticamente
   const handleCreateTask = async () => {
+    const taskNumber = tasks.length + 1;
+    const defaultTitle = `Tarea ${taskNumber}`;
+    
     console.log('🔥 SIDEBAR: handleCreateTask called!');
+    console.log('🔥 SIDEBAR: taskNumber:', taskNumber);
+    console.log('🔥 SIDEBAR: defaultTitle:', defaultTitle);
     console.log('🔥 SIDEBAR: onCreateTask function exists:', !!onCreateTask);
     
-    // ✅ FIX: Generar títulos inteligentes dinámicos
-    const intelligentTitles = [
-      "Automatizar proceso",
-      "Analizar datos", 
-      "Crear informe",
-      "Investigar tendencias",
-      "Optimizar sistema",
-      "Generar contenido",
-      "Revisar documentos",
-      "Configurar entorno",
-      "Desarrollar solución",
-      "Monitorear métricas"
-    ];
+    // Crear la nueva tarea - ya setea activeTaskId internamente
+    const newTask = await onCreateTask(defaultTitle);
     
-    const randomTitle = intelligentTitles[Math.floor(Math.random() * intelligentTitles.length)];
-    
-    console.log('🎯 SIDEBAR: Generando nueva tarea con título inteligente:', randomTitle);
-    console.log('🧠 DEBUG: Array de títulos disponibles:', intelligentTitles);
-    console.log('🧠 DEBUG: Índice aleatorio seleccionado:', Math.floor(Math.random() * intelligentTitles.length));
-    console.log('🧠 DEBUG: Título final a enviar:', randomTitle);
-    
-    // Crear la nueva tarea con el título inteligente
-    const newTask = await onCreateTask(randomTitle);
-    
-    console.log('✅ SIDEBAR: Nueva tarea creada desde botón NUEVA TAREA:', newTask?.id);
-    console.log('✅ SIDEBAR: Título de la tarea creada:', newTask?.title);
-    console.log('🧠 FIXED: Título inteligente aplicado, usuario puede refinar con primer mensaje');
+    console.log('🎯 SIDEBAR: Nueva tarea creada desde botón NUEVA TAREA:', newTask?.id);
+    console.log('⚠️ ISSUE: Esta tarea necesitará que el usuario escriba para generar título inteligente');
     
     // No necesitamos setTimeout ni setActiveTaskId adicional porque createTask ya lo hace
   };
