@@ -780,6 +780,7 @@ interface AppContextType {
   // ========================================================================
   resetTaskState: (taskId: string) => void;
   migrateTaskState: (oldId: string, newId: string) => void;
+  initializeTaskData: (taskId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
