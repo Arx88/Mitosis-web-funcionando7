@@ -553,7 +553,6 @@ export const useAppContext = (): AppContextType => {
       state: initialState,
       dispatch: () => console.warn('dispatch called with default context'),
       createTask: (title: string) => {
-        console.warn('createTask called with default context');
         return {
           id: `default-${Date.now()}`,
           title,
@@ -565,31 +564,18 @@ export const useAppContext = (): AppContextType => {
           progress: 0
         };
       },
-      updateTask: () => console.warn('updateTask called with default context'),
-      deleteTask: () => console.warn('deleteTask called with default context'),
-      setActiveTask: () => console.warn('setActiveTask called with default context'),
-      addTerminalLog: () => console.warn('addTerminalLog called with default context'),
-      updateTaskProgress: () => console.warn('updateTaskProgress called with default context'),
-      getActiveTask: () => {
-        console.warn('getActiveTask called with default context');
-        return undefined;
-      },
-      getTaskFiles: () => {
-        console.warn('getTaskFiles called with default context');
-        return [];
-      },
-      getTerminalLogs: () => {
-        console.warn('getTerminalLogs called with default context');
-        return [];
-      },
-      isTaskTyping: () => {
-        console.warn('isTaskTyping called with default context');
-        return false;
-      }
+      updateTask: () => {},
+      deleteTask: () => {},
+      setActiveTask: () => {},
+      addTerminalLog: () => {},
+      updateTaskProgress: () => {},
+      getActiveTask: () => undefined,
+      getTaskFiles: () => [],
+      getTerminalLogs: () => [],
+      isTaskTyping: () => false
     };
   }
   
-  console.log('✅ useAppContext: Context accessed successfully');
   return context;
 };
 
