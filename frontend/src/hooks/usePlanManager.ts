@@ -41,7 +41,7 @@ export const usePlanManager = ({
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // ========================================================================
-  // FUNCIÓN PRINCIPAL: ACTUALIZAR PLAN - CON PROTECCIÓN ANTI-LOOP
+  // FUNCIÓN PRINCIPAL: ACTUALIZAR PLAN - SIMPLIFICADA SIN LOOPS
   // ========================================================================
   
   const updatePlan = useCallback((newSteps: TaskStep[], source: string = 'internal') => {
@@ -65,57 +65,51 @@ export const usePlanManager = ({
       return;
     }
 
-    // ✅ PROTECCIÓN 3: Debounce para evitar updates muy frecuentes
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
+    // ✅ ACTUALIZACIÓN INMEDIATA SIN DEBOUNCE PARA EVITAR REINICIOS
+    isUpdatingRef.current = true;
+    lastStepsHashRef.current = stepsHash;
     
-    debounceTimeoutRef.current = setTimeout(() => {
-      isUpdatingRef.current = true;
-      lastStepsHashRef.current = stepsHash;
-      
-      console.log(`🎯 [PLAN-${taskId}] Updating plan from: ${source}`, {
-        totalSteps: newSteps.length,
-        activeSteps: newSteps.filter(s => s.active).length,
-        completedSteps: newSteps.filter(s => s.completed).length
-      });
+    console.log(`🎯 [PLAN-${taskId}] Updating plan from: ${source}`, {
+      totalSteps: newSteps.length,
+      activeSteps: newSteps.filter(s => s.active).length,
+      completedSteps: newSteps.filter(s => s.completed).length
+    });
 
-      // VALIDACIÓN CRÍTICA: Solo un step puede estar activo
-      let activeStepFound = false;
-      const validatedSteps = newSteps.map(step => {
-        if (step.active && !activeStepFound && !step.completed) {
-          activeStepFound = true;
-          return step; // Este es el único activo válido
-        } else if (step.active) {
-          // Desactivar steps duplicados o completados que estén activos
-          console.warn(`⚠️ [PLAN-${taskId}] Deactivating invalid active step: ${step.id}`);
-          return { ...step, active: false };
-        }
-        return step;
-      });
-
-      // Actualizar estado
-      setSteps(validatedSteps);
-      setLastUpdateTime(new Date());
-      
-      // Callbacks con protección
-      try {
-        onPlanUpdate?.(validatedSteps);
-        
-        // Verificar si la tarea está completa
-        const completedSteps = validatedSteps.filter(s => s.completed).length;
-        const totalSteps = validatedSteps.length;
-        
-        if (totalSteps > 0 && completedSteps === totalSteps) {
-          console.log(`🎉 [PLAN-${taskId}] Task completed!`);
-          onTaskComplete?.();
-        }
-      } catch (error) {
-        console.error(`❌ [PLAN-${taskId}] Error in callbacks:`, error);
+    // VALIDACIÓN CRÍTICA: Solo un step puede estar activo
+    let activeStepFound = false;
+    const validatedSteps = newSteps.map(step => {
+      if (step.active && !activeStepFound && !step.completed) {
+        activeStepFound = true;
+        return step; // Este es el único activo válido
+      } else if (step.active) {
+        // Desactivar steps duplicados o completados que estén activos
+        console.warn(`⚠️ [PLAN-${taskId}] Deactivating invalid active step: ${step.id}`);
+        return { ...step, active: false };
       }
+      return step;
+    });
 
-      isUpdatingRef.current = false;
-    }, 100); // 100ms debounce
+    // Actualizar estado
+    setSteps(validatedSteps);
+    setLastUpdateTime(new Date());
+    
+    // Callbacks con protección
+    try {
+      onPlanUpdate?.(validatedSteps);
+      
+      // Verificar si la tarea está completa
+      const completedSteps = validatedSteps.filter(s => s.completed).length;
+      const totalSteps = validatedSteps.length;
+      
+      if (totalSteps > 0 && completedSteps === totalSteps) {
+        console.log(`🎉 [PLAN-${taskId}] Task completed!`);
+        onTaskComplete?.();
+      }
+    } catch (error) {
+      console.error(`❌ [PLAN-${taskId}] Error in callbacks:`, error);
+    }
+
+    isUpdatingRef.current = false;
     
   }, [taskId, onPlanUpdate, onTaskComplete]);
 
