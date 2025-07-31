@@ -51,6 +51,7 @@ export function App() {
     tasks,
     activeTaskId,
     isTaskCreating,
+    createTask, // ✅ AGREGADO - FUNCIÓN FALTANTE
     createTaskWithMessage,
     updateTask,
     deleteTask,
