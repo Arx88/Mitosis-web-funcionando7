@@ -36,11 +36,23 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   onInitializationComplete,
   onInitializationLog
 }) => {
+  // ========================================================================
+  // ESTADO LOCAL COMPLETAMENTE AISLADO POR TAREA
+  // ========================================================================
+  
   const [isTyping, setIsTyping] = useState(false);
   const [showFilesModal, setShowFilesModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [taskFiles, setTaskFiles] = useState<FileItem[]>([]);
-  const [terminalLogs, setTerminalLogs] = useState<Array<{message: string, type: 'info' | 'success' | 'error', timestamp: Date}>>([]);
+  
+  // LOGS TERMINALES AISLADOS - CADA TAREA TIENE SUS PROPIOS LOGS
+  const [terminalLogs, setTerminalLogs] = useState<Array<{
+    message: string, 
+    type: 'info' | 'success' | 'error', 
+    timestamp: Date,
+    taskId: string // Identificador para mayor seguridad
+  }>>([]);
+  
   const monitorRef = useRef<HTMLDivElement>(null);
   
   // Memory manager aislado por tarea
