@@ -157,7 +157,6 @@ export function App() {
 
   const handleConfigChange = useCallback((newConfig: any) => {
     updateConfig(newConfig);
-    console.log('Configuración actualizada:', newConfig);
   }, [updateConfig]);
 
   const handleDynamicIdea = useCallback((idea: any) => {
