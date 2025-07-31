@@ -53,7 +53,6 @@ export const useWebSocket = (): UseWebSocketReturn => {
     
     const newSocket = io(wsConfig.url, {
       ...wsConfig.options,
-      path: '/api/socket.io/', // FORZAR PATH EXPLÍCITAMENTE
       forceNew: true
     });
     
