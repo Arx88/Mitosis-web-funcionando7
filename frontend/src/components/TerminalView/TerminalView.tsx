@@ -176,6 +176,7 @@ export const TerminalView = ({
     offset: 0
   });
   const monitorRef = useRef<HTMLDivElement>(null);
+  const lastTaskIdRef = useRef<string>(''); // Para tracking de cambios de tarea
 
   // Función para cargar el informe final - FIXED: Proper error handling and content loading
   const loadFinalReport = async (taskId: string) => {
