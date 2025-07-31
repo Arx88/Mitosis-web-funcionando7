@@ -144,11 +144,11 @@ REAL_FRONTEND_URL=""
 if [ -n "$EMERGENT_PREVIEW_URL" ]; then
     REAL_FRONTEND_URL="$EMERGENT_PREVIEW_URL"
     echo "   📍 URL detectada desde variable de entorno: $REAL_FRONTEND_URL"
-elif curl -s --max-time 5 https://594fc3fc-909f-42ec-a41d-f3921759852b.preview.emergentagent.com >/dev/null 2>&1; then
-    REAL_FRONTEND_URL="https://594fc3fc-909f-42ec-a41d-f3921759852b.preview.emergentagent.com"
+elif curl -s --max-time 5 https://971ab67f-f8ad-40d3-b270-7b1fbfe629ed.preview.emergentagent.com >/dev/null 2>&1; then
+    REAL_FRONTEND_URL="https://971ab67f-f8ad-40d3-b270-7b1fbfe629ed.preview.emergentagent.com"
     echo "   📍 URL detectada por conectividad: $REAL_FRONTEND_URL"
 else
-    REAL_FRONTEND_URL="https://594fc3fc-909f-42ec-a41d-f3921759852b.preview.emergentagent.com"
+    REAL_FRONTEND_URL="https://971ab67f-f8ad-40d3-b270-7b1fbfe629ed.preview.emergentagent.com"
     echo "   📍 URL por defecto: $REAL_FRONTEND_URL"
 fi
 
@@ -171,7 +171,7 @@ if [ ! -f "server.py.backup" ]; then
 fi
 
 # Detectar variantes de URL para máxima compatibilidad (siempre incluir ambas)
-CORS_URLS="\"https://594fc3fc-909f-42ec-a41d-f3921759852b.preview.emergentagent.com\""
+CORS_URLS="\"https://971ab67f-f8ad-40d3-b270-7b1fbfe629ed.preview.emergentagent.com\""
 
 # Actualizar FRONTEND_ORIGINS en server.py con URL real detectada
 sed -i '/^FRONTEND_ORIGINS = \[/,/^\]/c\
@@ -288,7 +288,7 @@ check_ollama() {
 
 check_external_access() {
     # Verificar acceso externo usando la URL del preview
-    curl -s -f "https://594fc3fc-909f-42ec-a41d-f3921759852b.preview.emergentagent.com" >/dev/null 2>&1
+    curl -s -f "https://971ab67f-f8ad-40d3-b270-7b1fbfe629ed.preview.emergentagent.com" >/dev/null 2>&1
 }
 
 # Verificar backend con reintentos extendidos
@@ -478,7 +478,7 @@ echo "🏗️ FRONTEND: Archivos estáticos optimizados (build)"
 echo "🔧 BACKEND: Flask + gunicorn + eventlet (SocketIO optimizado)"
 echo "🎭 TESTING: Playwright + Selenium + Chrome instalados"
 echo "=============================================================="
-echo "📍 URL Externa: https://594fc3fc-909f-42ec-a41d-f3921759852b.preview.emergentagent.com"
+echo "📍 URL Externa: https://971ab67f-f8ad-40d3-b270-7b1fbfe629ed.preview.emergentagent.com"
 echo "📍 Backend API: http://localhost:8001"
 echo "📍 Frontend Local: http://localhost:3000"
 echo "=============================================================="
@@ -609,7 +609,7 @@ if $backend_ok && $frontend_ok; then
     echo "✅ WEBSOCKETS: SocketIO habilitado para tiempo real"
     echo ""
     echo "🚀 APLICACIÓN 100% LISTA PARA PRODUCCIÓN"
-    echo "🌐 URL: https://594fc3fc-909f-42ec-a41d-f3921759852b.preview.emergentagent.com"
+    echo "🌐 URL: https://971ab67f-f8ad-40d3-b270-7b1fbfe629ed.preview.emergentagent.com"
     echo ""
     echo "🎉 AGENTE GENERAL MITOSIS COMPLETAMENTE OPERATIVO"
     echo "   📱 Accesible desde cualquier dispositivo"
@@ -636,7 +636,7 @@ else
     echo "   ls -la /app/frontend/dist/"
     echo ""
     echo "🌐 Para probar acceso externo:"
-    echo "   curl https://594fc3fc-909f-42ec-a41d-f3921759852b.preview.emergentagent.com"
+    echo "   curl https://971ab67f-f8ad-40d3-b270-7b1fbfe629ed.preview.emergentagent.com"
     echo "=============================================================="
     
     # Crear archivo de debugging

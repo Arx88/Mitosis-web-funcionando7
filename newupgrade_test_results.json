@@ -1,6 +1,6 @@
 {
   "timestamp": "2025-07-21T14:00:55.503284",
-  "backend_url": "https://594fc3fc-909f-42ec-a41d-f3921759852b.preview.emergentagent.com",
+  "backend_url": "https://971ab67f-f8ad-40d3-b270-7b1fbfe629ed.preview.emergentagent.com",
   "tests": [
     {
       "name": "Intent Classification Test 1: Casual conversation test",
