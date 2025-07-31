@@ -198,22 +198,16 @@ export const VanishInput: React.FC<VanishInputProps> = ({
   }, [inputValue, disabled, onSendMessage, handleSubmit]);
 
   const handleWebSearch = async () => {
-    console.log('🌐 handleWebSearch called with inputValue:', inputValue.trim());
     if (inputValue.trim()) {
       // Procesar búsqueda web con el texto del input - APLICAR PREFIJO AQUÍ
       const searchQuery = `[WebSearch] ${inputValue.trim()}`;
-      console.log('🌐 Setting isWebSearchProcessing to true');
       setIsWebSearchProcessing(true);
       setWebSearchActive(true);
       setDeepSearchActive(false);
       
       try {
-        console.log('🌐 Calling onWebSearch with prefixed query:', searchQuery);
         if (onWebSearch) {
           await onWebSearch(searchQuery);
-          console.log('🌐 onWebSearch completed successfully');
-        } else {
-          console.error('🌐 onWebSearch prop is undefined!');
         }
         // Limpiar input después del procesamiento exitoso con delay para mostrar feedback
         setTimeout(() => {
@@ -221,9 +215,8 @@ export const VanishInput: React.FC<VanishInputProps> = ({
           adjustTextareaHeight();
         }, 300);
       } catch (error) {
-        console.error('🌐 Error in web search:', error);
+        console.error('Error in web search:', error);
       } finally {
-        console.log('🌐 Setting isWebSearchProcessing to false');
         // Mantener el estado de procesamiento un poco más para mostrar el estado "Buscando..."
         setTimeout(() => {
           setIsWebSearchProcessing(false);
@@ -231,7 +224,6 @@ export const VanishInput: React.FC<VanishInputProps> = ({
         }, 1500); // Aumentar tiempo para que sea más visible
       }
     } else {
-      console.log('🌐 No input text, just toggling state');
       // Solo toggle si no hay texto
       setWebSearchActive(!webSearchActive);
       setDeepSearchActive(false);
