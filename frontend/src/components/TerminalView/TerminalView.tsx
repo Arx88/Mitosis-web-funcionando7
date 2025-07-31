@@ -110,22 +110,25 @@ export const TerminalView = ({
     }
   };
 
-  // ✨ NEW: Effect to manage step timers - FIXED: Don't stop timer when step completes
+  // ✨ NEW: Effect to manage step timers - SIMPLIFICADO SIN MODIFICAR PLAN
   useEffect(() => {
-    if (!plan) return;
+    if (!plan || !taskId) return;
+
+    console.log(`⏱️ [TERMINAL-${taskId}] Managing timers for ${plan.length} steps`);
 
     // Start timer for active steps
     plan.forEach(step => {
       if (step.active && !stepTimers[step.id]) {
         startStepTimer(step.id);
-      } else if (!step.active && !step.completed && stepTimers[step.id]) {
-        // Only stop timer if step becomes inactive AND not completed
-        // This prevents timer from disappearing when step completes
-        stopStepTimer(step.id);
+      } else if (!step.active && stepTimers[step.id]) {
+        // Stop timer when step becomes inactive (but don't stop for completed steps)
+        if (!step.completed) {
+          stopStepTimer(step.id);
+        }
       }
     });
 
-    // Only cleanup timers for steps that no longer exist in plan
+    // Cleanup timers for steps that no longer exist in plan
     Object.keys(stepTimers).forEach(stepId => {
       const step = plan.find(s => s.id === stepId);
       if (!step) {
@@ -139,7 +142,7 @@ export const TerminalView = ({
         clearInterval(timer.interval);
       });
     };
-  }, [plan]);
+  }, [plan, taskId]);
   const [currentExecutingTool, setCurrentExecutingTool] = useState<ToolResult | null>(null);
   const [monitorPages, setMonitorPages] = useState<MonitorPage[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
