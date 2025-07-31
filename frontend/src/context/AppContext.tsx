@@ -410,10 +410,6 @@ interface AppContextProviderProps {
 
 export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  console.log('🚀 AppContextProvider: Initializing with state:', { 
-    tasksCount: state.tasks.length, 
-    activeTaskId: state.activeTaskId 
-  });
   
   // Helper functions
   const createTask = useCallback((title: string, iconType?: string): Task => {
