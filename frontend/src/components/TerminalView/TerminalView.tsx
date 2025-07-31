@@ -181,8 +181,9 @@ export const TerminalView = ({
     };
   }, [plan, taskId]);
   const [currentExecutingTool, setCurrentExecutingTool] = useState<ToolResult | null>(null);
-  const [monitorPages, setMonitorPages] = useState<MonitorPage[]>([]);
-  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  // ✅ USAR CONTEXT PARA MONITOR PAGES - NO MÁS ESTADO LOCAL
+  // const [monitorPages, setMonitorPages] = useState<MonitorPage[]>([]);
+  // const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [isSystemOnline, setIsSystemOnline] = useState(false);
   const [initializationStep, setInitializationStep] = useState(0);
@@ -194,6 +195,13 @@ export const TerminalView = ({
   });
   const monitorRef = useRef<HTMLDivElement>(null);
   const lastTaskIdRef = useRef<string>(''); // Para tracking de cambios de tarea
+  
+  // ========================================================================
+  // OBTENER DATOS AISLADOS DEL CONTEXT
+  // ========================================================================
+  
+  const monitorPages = taskId ? getTaskMonitorPages(taskId) : [];
+  const currentPageIndex = taskId ? getTaskCurrentPageIndex(taskId) : 0;
 
   // Función para cargar el informe final - FIXED: Proper error handling and content loading
   const loadFinalReport = async (taskId: string) => {
