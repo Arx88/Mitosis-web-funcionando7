@@ -59,11 +59,54 @@ El problema NO está en el backend (que maneja correctamente el aislamiento por 
 
 ---
 
-## Historial de Cambios
+## [2025-01-12 - Análisis Específico del Código Actual]
 
-*Este documento se actualizará durante la implementación*
+### Problema Identificado en el Código:
+
+Después de analizar el código fuente actual, he identificado los problemas específicos:
+
+#### 1. **ChatInterface.tsx** - Aislamiento Correcto ✅
+- **Estado**: El componente recibe `messages` como prop y usa `onUpdateMessages` correctamente
+- **Problema**: NO hay problema en este componente, ya está bien aislado por tarea
+
+#### 2. **TerminalView.tsx** - Problema de Inicialización y Carga ❌
+- **Líneas 202-204**: Los datos aislados se obtienen correctamente del Context:
+```tsx
+const monitorPages = taskId ? getTaskMonitorPages(taskId) : [];
+const currentPageIndex = taskId ? getTaskCurrentPageIndex(taskId) : 0;
+```
+- **Problema**: Sin embargo, las funciones `setTaskMonitorPages`, `setTaskCurrentPageIndex` usan contexto del hook directamente en lugar del Context global
+
+#### 3. **TaskView.tsx** - Aislamiento Implementado Correctamente ✅  
+- **Líneas 151-179**: Ya obtiene datos aislados correctamente del Context
+- **Problema**: NO hay problema grave, pero el componente podría ser optimizado
+
+### Causa Raíz Real Identificada:
+
+**El problema NO está en la obtención de datos aislados (que ya funciona), sino en cómo se INICIALIZAN y SINCRONIZAN los datos al cambiar de tarea.**
+
+#### Problemas Específicos Encontrados:
+
+1. **TerminalView.tsx líneas 288, 316**: Las funciones `setMonitorPages` y `setCurrentPageIndex` NO usan el Context aislado consistentemente.
+
+2. **useWebSocket.ts**: El hook no está siendo usado en TaskView, por lo que los eventos WebSocket podrían no estar llegando correctamente a los datos aislados.
+
+3. **AppContext.tsx**: Los setters están correctos, pero algunos componentes los usan de forma inconsistente.
 
 ---
 
-*Inicio del proceso: $(date)*
+## Historial de Cambios
+
+### Implementación Fase 1: Corrección de Inconsistencias en TerminalView
+
+**Fecha**: 2025-01-12  
+**Prioridad**: Alta  
+**Archivos afectados**: 
+- `/app/frontend/src/components/TerminalView/TerminalView.tsx`
+
+**Problema específico**: En las líneas 288 y 316, se usan `setMonitorPages` y `setCurrentPageIndex` que no son del Context aislado.
+
+---
+
+*Inicio del proceso: 2025-01-12*  
 *Agente: E1 - Implementación de Mejoras de Aislamiento y Persistencia*
