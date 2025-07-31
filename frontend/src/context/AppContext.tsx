@@ -150,8 +150,6 @@ const initialState: GlobalAppState = {
 // ========================================================================
 
 function appReducer(state: GlobalAppState, action: AppAction): GlobalAppState {
-  console.log('🔄 AppContext Reducer:', action.type, action.payload);
-  
   switch (action.type) {
     case 'SET_TASKS':
       return {
