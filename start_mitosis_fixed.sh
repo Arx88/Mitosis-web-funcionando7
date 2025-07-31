@@ -190,7 +190,7 @@ echo ""
 echo "🎉 MITOSIS - REPORTE FINAL CON FIX APLICADO"
 echo "=============================================================="
 echo "🔧 FIX APLICADO: Flask + gunicorn + eventlet (WSGI correcto)"
-echo "📍 Frontend: https://971ab67f-f8ad-40d3-b270-7b1fbfe629ed.preview.emergentagent.com"
+echo "📍 Frontend: https://4bb53208-212c-440f-9581-7b02cf7ebdd3.preview.emergentagent.com"
 echo "📍 Backend API: http://localhost:8001"
 echo "=============================================================="
 
@@ -292,7 +292,7 @@ if $backend_ok && $frontend_ok; then
     echo "✅ Sin más errores de Flask.__call__()"
     echo ""
     echo "🚀 APLICACIÓN 100% FUNCIONAL Y LISTA PARA USAR"
-    echo "🌐 Abrir: https://971ab67f-f8ad-40d3-b270-7b1fbfe629ed.preview.emergentagent.com"
+    echo "🌐 Abrir: https://4bb53208-212c-440f-9581-7b02cf7ebdd3.preview.emergentagent.com"
     echo "=============================================================="
 else
     echo ""
