@@ -139,7 +139,7 @@ export const useTaskManagement = () => {
       });
       
       if (response.ok) {
-        console.log('✅ Task execution started:', taskId);
+        // Task execution started successfully
       }
     } catch (error) {
       console.error('❌ Error starting execution:', error);
