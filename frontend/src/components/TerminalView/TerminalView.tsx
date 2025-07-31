@@ -108,7 +108,7 @@ export const TerminalView = ({
     }));
   };
 
-  // ✨ NEW: Stop timer for step - SIMPLIFICADO
+  // ✨ NEW: Stop timer for step - FIXED TO CLEAN UP UI STATE
   const stopStepTimer = (stepId: string) => {
     if (stepTimers[stepId]) {
       console.log(`⏹️ [TERMINAL-${taskId}] Stopping timer for step: ${stepId}`);
@@ -117,6 +117,12 @@ export const TerminalView = ({
         const newTimers = { ...prev };
         delete newTimers[stepId];
         return newTimers;
+      });
+      // ✅ FIX: Also clean up the live timer display
+      setLiveTimers(prev => {
+        const newLiveTimers = { ...prev };
+        delete newLiveTimers[stepId];
+        return newLiveTimers;
       });
     }
   };
