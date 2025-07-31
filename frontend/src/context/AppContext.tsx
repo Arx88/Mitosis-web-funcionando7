@@ -827,7 +827,9 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
   }, [state.taskWebSocketStates]);
 
   const getTaskMonitorPages = useCallback((taskId: string) => {
-    return state.taskMonitorPages[taskId] || [];
+    const pages = state.taskMonitorPages[taskId] || [];
+    console.log(`📥 [CONTEXT-GET] getTaskMonitorPages(${taskId}): ${pages.length} pages`);
+    return pages;
   }, [state.taskMonitorPages]);
 
   const getTaskCurrentPageIndex = useCallback((taskId: string) => {
