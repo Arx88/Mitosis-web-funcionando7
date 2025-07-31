@@ -263,15 +263,15 @@ export const TerminalView = ({
           setIsLiveMode(false);
         } else {
           // Add new page
-          setPaginationStats(prevStats => ({ 
-            ...prevStats, 
-            totalPages: prevStats.totalPages + 1 
-          }));
           const newPages = [...currentPages, reportPage];
           setTaskMonitorPages(taskId, newPages);
           // Navigate to the final report page (last page)
           setTaskCurrentPageIndex(taskId, newPages.length - 1);
           setIsLiveMode(false);
+          setPaginationStats(prevStats => ({ 
+            ...prevStats, 
+            totalPages: newPages.length 
+          }));
         }
         
         console.log('📄 Final report loaded successfully in terminal');
