@@ -383,7 +383,14 @@ export const TerminalView = ({
 
   // Inicializar con TODO.md como Página 1 - Solo si hay plan Y no hay páginas Y hay dataId
   useEffect(() => {
+    console.log(`📋 [TODO-INIT] Checking TODO initialization:`);
+    console.log(`  - Plan length: ${plan?.length || 0}`);
+    console.log(`  - Monitor pages length: ${monitorPages.length}`);
+    console.log(`  - DataId: ${dataId}`);
+    
     if (plan && plan.length > 0 && monitorPages.length === 0 && dataId) {
+      console.log(`📋 [TODO-INIT] Initializing TODO page for task ${dataId}`);
+      
       const todoPlan = plan.map((step, index) => 
         `${index + 1}. ${step.title} ${step.completed ? '✓' : '○'}`
       ).join('\n');
@@ -400,8 +407,12 @@ export const TerminalView = ({
         }
       };
       
+      console.log(`📋 [TODO-INIT] Creating TODO page:`, todoPage);
       setMonitorPages([todoPage]);
       setPaginationStats(prev => ({ ...prev, totalPages: 1 }));
+      console.log(`✅ [TODO-INIT] TODO page created for task ${dataId}`);
+    } else {
+      console.log(`📋 [TODO-INIT] Skipping TODO initialization - conditions not met`);
     }
   }, [plan, dataId, monitorPages.length]); // Solo para cargar TODO.md inicial
 
