@@ -162,7 +162,23 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   const lastTaskIdRef = useRef<string>('');
   useEffect(() => {
     if (task.id !== lastTaskIdRef.current) {
-      console.log(`🔄 [TASK-${task.id}] TaskView switched from ${lastTaskIdRef.current} to ${task.id}`);
+      console.log(`🔄 [TASKVIEW-SWITCH] ${lastTaskIdRef.current} → ${task.id}`);
+      console.log(`🔄 [TASKVIEW-SWITCH] Task title: "${task.title}"`);
+      console.log(`🔄 [TASKVIEW-SWITCH] Task status: ${task.status}`);
+      console.log(`🔄 [TASKVIEW-SWITCH] Task messages: ${task.messages?.length || 0}`);
+      console.log(`🔄 [TASKVIEW-SWITCH] Task plan: ${task.plan?.length || 0} steps`);
+      
+      // Log estado del Context aislado
+      const contextMessages = getMessages(task.id);
+      const contextLogs = getTerminalLogs(task.id);
+      const contextPages = getMonitorPages(task.id);
+      const contextFiles = getFiles(task.id);
+      
+      console.log(`🔍 [CONTEXT-STATE] Task ${task.id}:`);
+      console.log(`  - Messages in context: ${contextMessages.length}`);
+      console.log(`  - Terminal logs in context: ${contextLogs.length}`);
+      console.log(`  - Monitor pages in context: ${contextPages.length}`);
+      console.log(`  - Files in context: ${contextFiles.length}`);
       
       lastTaskIdRef.current = task.id;
       
@@ -173,13 +189,15 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       
       // Si hay un plan inicial, establecerlo
       if (task.plan && task.plan.length > 0) {
-        console.log(`📋 [TASK-${task.id}] Loading existing plan with ${task.plan.length} steps`);
+        console.log(`📋 [PLAN-INIT] Loading existing plan with ${task.plan.length} steps`);
         setPlan(task.plan);
+      } else {
+        console.log(`📋 [PLAN-INIT] No plan found for task ${task.id}`);
       }
       
-      console.log(`✅ [TASK-${task.id}] TaskView switch complete - data isolated`);
+      console.log(`✅ [TASKVIEW-SWITCH] Switch complete - data isolated`);
     }
-  }, [task.id, task.plan, setPlan]);
+  }, [task.id, task.plan, setPlan, getMessages, getTerminalLogs, getMonitorPages, getFiles]);
 
   // Sincronizar mensajes con Context aislado
   useEffect(() => {
