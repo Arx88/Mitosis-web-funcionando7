@@ -173,24 +173,10 @@ export const useWebSocket = (): UseWebSocketReturn => {
   }, [socket, isConnected, startHttpPollingFallback]);
 
   const leaveTaskRoom = useCallback((taskId: string) => {
-    console.log('🚪 Leaving task room:', taskId);
     setCurrentTaskId(null);
     
     if (socket) {
       socket.emit('leave_task', { task_id: taskId });
-      
-      // Remove ALL WebSocket event listeners
-      socket.off('plan_updated');
-      socket.off('progress_update');
-      socket.off('agent_activity');
-      socket.off('task_update');
-      socket.off('step_started');
-      socket.off('step_completed');
-      socket.off('task_progress');
-      socket.off('tool_result');
-      socket.off('step_needs_more_work');
-      socket.off('task_completed');
-      socket.off('task_failed');
     }
     
     // Stop HTTP Polling fallback
