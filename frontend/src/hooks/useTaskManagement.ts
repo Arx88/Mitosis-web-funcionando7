@@ -125,10 +125,8 @@ export const useTaskManagement = () => {
       console.error('Error generating plan:', error);
     }
     
-    console.log('🔄 Setting task creating to false');
     dispatch({ type: 'SET_TASK_CREATING', payload: false });
     
-    console.log('✅ Returning new task:', newTask);
     return newTask;
   }, [dispatch, updateTask]);
   
