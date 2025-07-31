@@ -231,22 +231,16 @@ export const VanishInput: React.FC<VanishInputProps> = ({
   };
 
   const handleDeepSearch = async () => {
-    console.log('🔬 handleDeepSearch called with inputValue:', inputValue.trim());
     if (inputValue.trim()) {
       // Procesar investigación profunda con el texto del input - APLICAR PREFIJO AQUÍ
       const searchQuery = `[DeepResearch] ${inputValue.trim()}`;
-      console.log('🔬 Setting isDeepSearchProcessing to true');
       setIsDeepSearchProcessing(true);
       setDeepSearchActive(true);
       setWebSearchActive(false);
       
       try {
-        console.log('🔬 Calling onDeepSearch with prefixed query:', searchQuery);
         if (onDeepSearch) {
           await onDeepSearch(searchQuery);
-          console.log('🔬 onDeepSearch completed successfully');
-        } else {
-          console.error('🔬 onDeepSearch prop is undefined!');
         }
         // Limpiar input después del procesamiento exitoso con delay para mostrar feedback
         setTimeout(() => {
@@ -254,9 +248,8 @@ export const VanishInput: React.FC<VanishInputProps> = ({
           adjustTextareaHeight();
         }, 300);
       } catch (error) {
-        console.error('🔬 Error in deep search:', error);
+        console.error('Error in deep search:', error);
       } finally {
-        console.log('🔬 Setting isDeepSearchProcessing to false');
         // Mantener el estado de procesamiento un poco más para mostrar el estado "Investigando..."
         setTimeout(() => {
           setIsDeepSearchProcessing(false);
@@ -264,7 +257,6 @@ export const VanishInput: React.FC<VanishInputProps> = ({
         }, 1500); // Aumentar tiempo para que sea más visible
       }
     } else {
-      console.log('🔬 No input text, just toggling state');
       // Solo toggle si no hay texto
       setDeepSearchActive(!deepSearchActive);
       setWebSearchActive(false);
