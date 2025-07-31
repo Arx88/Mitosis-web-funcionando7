@@ -486,9 +486,7 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
   
   // Getters - memoizados para evitar re-renders innecesarios
   const getActiveTask = useCallback(() => {
-    const activeTask = state.tasks.find(task => task.id === state.activeTaskId);
-    console.log('🔍 getActiveTask called:', { activeTaskId: state.activeTaskId, found: !!activeTask });
-    return activeTask;
+    return state.tasks.find(task => task.id === state.activeTaskId);
   }, [state.tasks, state.activeTaskId]);
   
   const getTaskFiles = useCallback((taskId: string) => {
