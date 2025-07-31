@@ -484,13 +484,13 @@ export const TerminalView = ({
             };
             
             console.log('📄 [DEBUG] Añadiendo página de informe final');
-            setMonitorPages(prev => {
-              const newPages = [...prev, finalReportPage];
-              // Navegar automáticamente a la página del informe final cuando se agrega
-              setCurrentPageIndex(newPages.length - 1);
-              setIsLiveMode(false);
-              return newPages;
-            });
+            // ✅ FIX: Usar Context aislado consistentemente
+            const currentPages = taskId ? getTaskMonitorPages(taskId) : [];
+            const newPages = [...currentPages, finalReportPage];
+            setTaskMonitorPages(taskId, newPages);
+            // Navegar automáticamente a la página del informe final cuando se agrega
+            setTaskCurrentPageIndex(taskId, newPages.length - 1);
+            setIsLiveMode(false);
             setPaginationStats(prev => ({ ...prev, totalPages: prev.totalPages + 1 }));
             loadFinalReport(taskId);
           }, 1000);
