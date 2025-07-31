@@ -2,6 +2,7 @@
  * HOOK ÚNICO Y SIMPLIFICADO PARA PLAN DE ACCIÓN
  * Refactorización completa - elimina duplicación y complejidad
  * UN SOLO lugar para manejar el estado del plan
+ * ARREGLO: Protección contra loops infinitos
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
@@ -34,57 +35,88 @@ export const usePlanManager = ({
   // WebSocket connection
   const { socket, isConnected, joinTaskRoom, leaveTaskRoom } = useWebSocket();
   
-  // Ref para evitar loops
+  // Refs para evitar loops infinitos
   const isUpdatingRef = useRef(false);
+  const lastStepsHashRef = useRef<string>('');
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // ========================================================================
-  // FUNCIÓN PRINCIPAL: ACTUALIZAR PLAN - SIMPLE Y DIRECTO
+  // FUNCIÓN PRINCIPAL: ACTUALIZAR PLAN - CON PROTECCIÓN ANTI-LOOP
   // ========================================================================
   
   const updatePlan = useCallback((newSteps: TaskStep[], source: string = 'internal') => {
+    // Crear hash de los pasos para detectar cambios reales
+    const stepsHash = JSON.stringify(newSteps.map(s => ({ 
+      id: s.id, 
+      completed: s.completed, 
+      active: s.active,
+      status: s.status 
+    })));
+    
+    // ✅ PROTECCIÓN 1: Evitar actualizaciones redundantes
+    if (stepsHash === lastStepsHashRef.current) {
+      console.log(`🛡️ [PLAN-${taskId}] Update skipped - no changes detected from: ${source}`);
+      return;
+    }
+    
+    // ✅ PROTECCIÓN 2: Evitar múltiples updates simultáneos
     if (isUpdatingRef.current) {
-      console.log(`🔄 [PLAN-${taskId}] Update skipped (already updating) from: ${source}`);
+      console.log(`🛡️ [PLAN-${taskId}] Update skipped - already updating from: ${source}`);
       return;
     }
 
-    isUpdatingRef.current = true;
-    
-    console.log(`🎯 [PLAN-${taskId}] Updating plan from: ${source}`, {
-      totalSteps: newSteps.length,
-      activeSteps: newSteps.filter(s => s.active).length,
-      completedSteps: newSteps.filter(s => s.completed).length
-    });
-
-    // VALIDACIÓN CRÍTICA: Solo un step puede estar activo
-    let activeStepFound = false;
-    const validatedSteps = newSteps.map(step => {
-      if (step.active && !activeStepFound && !step.completed) {
-        activeStepFound = true;
-        return step; // Este es el único activo válido
-      } else if (step.active) {
-        // Desactivar steps duplicados o completados que estén activos
-        return { ...step, active: false };
-      }
-      return step;
-    });
-
-    // Actualizar estado
-    setSteps(validatedSteps);
-    setLastUpdateTime(new Date());
-    
-    // Callbacks
-    onPlanUpdate?.(validatedSteps);
-    
-    // Verificar si la tarea está completa
-    const completedSteps = validatedSteps.filter(s => s.completed).length;
-    const totalSteps = validatedSteps.length;
-    
-    if (totalSteps > 0 && completedSteps === totalSteps) {
-      console.log(`🎉 [PLAN-${taskId}] Task completed!`);
-      onTaskComplete?.();
+    // ✅ PROTECCIÓN 3: Debounce para evitar updates muy frecuentes
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
     }
+    
+    debounceTimeoutRef.current = setTimeout(() => {
+      isUpdatingRef.current = true;
+      lastStepsHashRef.current = stepsHash;
+      
+      console.log(`🎯 [PLAN-${taskId}] Updating plan from: ${source}`, {
+        totalSteps: newSteps.length,
+        activeSteps: newSteps.filter(s => s.active).length,
+        completedSteps: newSteps.filter(s => s.completed).length
+      });
 
-    isUpdatingRef.current = false;
+      // VALIDACIÓN CRÍTICA: Solo un step puede estar activo
+      let activeStepFound = false;
+      const validatedSteps = newSteps.map(step => {
+        if (step.active && !activeStepFound && !step.completed) {
+          activeStepFound = true;
+          return step; // Este es el único activo válido
+        } else if (step.active) {
+          // Desactivar steps duplicados o completados que estén activos
+          console.warn(`⚠️ [PLAN-${taskId}] Deactivating invalid active step: ${step.id}`);
+          return { ...step, active: false };
+        }
+        return step;
+      });
+
+      // Actualizar estado
+      setSteps(validatedSteps);
+      setLastUpdateTime(new Date());
+      
+      // Callbacks con protección
+      try {
+        onPlanUpdate?.(validatedSteps);
+        
+        // Verificar si la tarea está completa
+        const completedSteps = validatedSteps.filter(s => s.completed).length;
+        const totalSteps = validatedSteps.length;
+        
+        if (totalSteps > 0 && completedSteps === totalSteps) {
+          console.log(`🎉 [PLAN-${taskId}] Task completed!`);
+          onTaskComplete?.();
+        }
+      } catch (error) {
+        console.error(`❌ [PLAN-${taskId}] Error in callbacks:`, error);
+      }
+
+      isUpdatingRef.current = false;
+    }, 100); // 100ms debounce
+    
   }, [taskId, onPlanUpdate, onTaskComplete]);
 
   // ========================================================================
@@ -122,7 +154,7 @@ export const usePlanManager = ({
         };
       }
 
-      // Actualizar usando la función principal
+      // Actualizar usando la función principal (protegida)
       setTimeout(() => {
         updatePlan(newSteps, 'completeStep');
         onStepComplete?.(stepId);
@@ -152,11 +184,23 @@ export const usePlanManager = ({
 
   const setPlan = useCallback((newPlan: TaskStep[]) => {
     console.log(`📋 [PLAN-${taskId}] Setting new plan with ${newPlan.length} steps`);
-    updatePlan(newPlan, 'setPlan');
+    
+    // ✅ PROTECCIÓN: Solo actualizar si realmente hay cambios
+    const newHash = JSON.stringify(newPlan.map(s => ({ 
+      id: s.id, 
+      completed: s.completed, 
+      active: s.active 
+    })));
+    
+    if (newHash !== lastStepsHashRef.current) {
+      updatePlan(newPlan, 'setPlan');
+    } else {
+      console.log(`🛡️ [PLAN-${taskId}] setPlan skipped - no changes`);
+    }
   }, [taskId, updatePlan]);
 
   // ========================================================================
-  // WEBSOCKET EVENTS - SIMPLIFICADO
+  // WEBSOCKET EVENTS - SIMPLIFICADO CON PROTECCIÓN
   // ========================================================================
 
   useEffect(() => {
@@ -186,7 +230,7 @@ export const usePlanManager = ({
     };
 
     const handleStepStarted = (data: any) => {
-      if (data.task_id !== taskId) return; // Filtro de seguridad
+      if (data.task_id !== taskId) return;
       
       console.log(`📡 [PLAN-${taskId}] WebSocket step_started:`, data);
       if (data.step_id) {
@@ -195,7 +239,7 @@ export const usePlanManager = ({
     };
 
     const handleStepCompleted = (data: any) => {
-      if (data.task_id !== taskId) return; // Filtro de seguridad
+      if (data.task_id !== taskId) return;
       
       console.log(`📡 [PLAN-${taskId}] WebSocket step_completed:`, data);
       if (data.step_id) {
@@ -204,7 +248,7 @@ export const usePlanManager = ({
     };
 
     const handleTaskProgress = (data: any) => {
-      if (data.task_id !== taskId) return; // Filtro de seguridad
+      if (data.task_id !== taskId) return;
       
       console.log(`📡 [PLAN-${taskId}] WebSocket task_progress:`, data);
       if (data.step_id) {
@@ -229,11 +273,16 @@ export const usePlanManager = ({
       socket.off('step_completed', handleStepCompleted);
       socket.off('task_progress', handleTaskProgress);
       leaveTaskRoom(taskId);
+      
+      // Limpiar timeout si existe
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
     };
   }, [socket, taskId, joinTaskRoom, leaveTaskRoom, startStep, completeStep, updatePlan]);
 
   // ========================================================================
-  // INICIALIZACIÓN CON PLAN INICIAL
+  // INICIALIZACIÓN CON PLAN INICIAL - SOLO UNA VEZ
   // ========================================================================
 
   useEffect(() => {
@@ -241,7 +290,21 @@ export const usePlanManager = ({
       console.log(`🚀 [PLAN-${taskId}] Initializing with plan:`, initialPlan.length, 'steps');
       setPlan(initialPlan);
     }
-  }, [initialPlan, steps.length, taskId, setPlan]);
+  }, [initialPlan.length, steps.length, taskId, setPlan]); // Dependencias específicas
+
+  // ========================================================================
+  // CLEANUP
+  // ========================================================================
+  
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      isUpdatingRef.current = false;
+      lastStepsHashRef.current = '';
+    };
+  }, [taskId]);
 
   // ========================================================================
   // API PÚBLICA SIMPLE
