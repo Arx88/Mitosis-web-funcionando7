@@ -47,7 +47,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   const { memory } = useMemoryManager();
 
   // ========================================================================
-  // NUEVO: PLAN MANAGER SIMPLIFICADO - REEMPLAZA LA LÓGICA ANTERIOR
+  // PLAN MANAGER COMPLETAMENTE AISLADO - SOLUCIÓN AL PROBLEMA DE CONTAMINACIÓN
   // ========================================================================
 
   const {
@@ -55,12 +55,13 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     progress,
     isConnected,
     currentActiveStep,
-    setPlan: updatePlanFromTask
-  } = usePlanManager({
+    setPlan: updatePlanFromTask,
+    lastUpdateTime
+  } = useIsolatedPlanManager({
     taskId: task.id,
     initialPlan: task.plan || [],
     onPlanUpdate: (updatedPlan) => {
-      console.log(`🔄 [TASK-${task.id}] Plan updated:`, updatedPlan.length, 'steps');
+      console.log(`🔄 [TASK-${task.id}] Plan updated (ISOLATED):`, updatedPlan.length, 'steps');
       // Actualizar la tarea con el nuevo plan
       onUpdateTask((currentTask: Task) => ({
         ...currentTask,
@@ -69,7 +70,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       }));
     },
     onStepComplete: (stepId) => {
-      console.log(`✅ [TASK-${task.id}] Step completed:`, stepId);
+      console.log(`✅ [TASK-${task.id}] Step completed (ISOLATED):`, stepId);
       // Log cuando un paso se completa
       const step = plan.find(s => s.id === stepId);
       if (step) {
@@ -86,7 +87,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       }
     },
     onTaskComplete: () => {
-      console.log(`🎉 [TASK-${task.id}] Task completed!`);
+      console.log(`🎉 [TASK-${task.id}] Task completed (ISOLATED)!`);
       // Log cuando toda la tarea se completa
       setTerminalLogs(prev => [...prev, {
         message: '🎉 ¡Tarea completada exitosamente!',
