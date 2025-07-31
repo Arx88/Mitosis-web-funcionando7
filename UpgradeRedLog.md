@@ -97,14 +97,41 @@ const currentPageIndex = taskId ? getTaskCurrentPageIndex(taskId) : 0;
 
 ## Historial de Cambios
 
-### Implementación Fase 1: Corrección de Inconsistencias en TerminalView
+### Implementación Fase 1: Corrección de Inconsistencias en TerminalView ✅
 
 **Fecha**: 2025-01-12  
+**Estado**: **COMPLETADO**  
 **Prioridad**: Alta  
 **Archivos afectados**: 
 - `/app/frontend/src/components/TerminalView/TerminalView.tsx`
+- `/app/frontend/src/hooks/useWebSocket.ts`
 
-**Problema específico**: En las líneas 288 y 316, se usan `setMonitorPages` y `setCurrentPageIndex` que no son del Context aislado.
+**Problema específico**: En las líneas 288 y 316, se usaban `setMonitorPages` y `setCurrentPageIndex` que no eran del Context aislado.
+
+**Cambios implementados**:
+1. **TerminalView.tsx**:
+   - ✅ Líneas 240-262: Corregido `setMonitorPages` → `setTaskMonitorPages` 
+   - ✅ Líneas 283-289: Corregido fallback reports para usar Context aislado
+   - ✅ Líneas 310-316: Corregido error fallback reports para usar Context aislado  
+   - ✅ Líneas 488-496: Corregido página de informe final para usar Context aislado
+   - ✅ Líneas 773-806: Refactorizados navigation handlers para usar `useCallback` y Context aislado
+
+2. **useWebSocket.ts**:
+   - ✅ Líneas 171-183: Agregado filtro por `task_id` en `addEventListeners` para prevenir eventos cruzados entre tareas
+
+**Resultado**: Los datos del terminal ahora están completamente aislados por tarea y los eventos WebSocket se filtran correctamente.
+
+---
+
+### Implementación Fase 2: Optimización de TaskView
+
+**Fecha**: 2025-01-12  
+**Estado**: **EN PROGRESO**  
+**Prioridad**: Media  
+**Archivos afectados**: 
+- `/app/frontend/src/components/TaskView.tsx`
+
+**Objetivo**: Verificar y optimizar el manejo de cambio de tareas en TaskView.
 
 ---
 
