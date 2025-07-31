@@ -302,6 +302,10 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
               >
                 <Star className={`w-5 h-5 ${task.isFavorite ? 'fill-current' : ''}`} />
               </button>
+              {/* ID DE LA TAREA PARA DEBUGGING */}
+              <span className="text-xs text-gray-500 bg-[#3a3a3c] px-2 py-1 rounded font-mono">
+                ID: {task.id.substring(0, 8)}...
+              </span>
             </div>
             
             {/* Stats */}
@@ -312,8 +316,14 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
               {isConnected && (
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  <span className="text-xs text-green-400">Live</span>
+                  <span className="text-xs text-green-400">Live-{task.id.substring(0, 4)}</span>
                 </div>
+              )}
+              {/* Timestamp de última actualización */}
+              {lastUpdateTime && (
+                <span className="text-xs text-blue-400" title={`Última actualización: ${lastUpdateTime.toLocaleTimeString()}`}>
+                  🔄 {lastUpdateTime.toLocaleTimeString()}
+                </span>
               )}
             </div>
           </div>
