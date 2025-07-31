@@ -5,6 +5,7 @@ import { TaskStep } from '../../types';
 import { TaskIcon } from '../TaskIcon';
 import { ToolExecutionDetails } from '../ToolExecutionDetails';
 import { TaskCompletedUI } from '../TaskCompletedUI';
+import { useAppContext } from '../../context/AppContext';
 
 export interface Task {
   id: string;
