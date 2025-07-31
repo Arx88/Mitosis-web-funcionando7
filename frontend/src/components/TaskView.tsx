@@ -7,7 +7,9 @@ import { FilesModal } from './FilesModal';
 import { ShareModal } from './ShareModal';
 import { agentAPI, FileItem } from '../services/api';
 import { useIsolatedMemoryManager } from '../hooks/useIsolatedMemoryManager';
-import { usePlanManager } from '../hooks/usePlanManager'; // ✅ Usar el hook simplificado
+import { usePlanManager } from '../hooks/usePlanManager';
+import { useMessagesManagement, useTerminalManagement, useFileManagement } from '../hooks/useTaskManagement';
+import { useAppContext } from '../context/AppContext';
 import { Star } from 'lucide-react';
 
 interface TaskViewProps {
@@ -23,7 +25,7 @@ interface TaskViewProps {
 }
 
 // ========================================================================
-// COMPONENTE REFACTORIZADO - ARREGLANDO LOOP INFINITO
+// TASKVIEW REFACTORIZADO - AISLAMIENTO COMPLETO POR TAREA
 // ========================================================================
 
 const TaskViewComponent: React.FC<TaskViewProps> = ({
@@ -37,29 +39,43 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   onInitializationLog
 }) => {
   // ========================================================================
-  // ESTADO LOCAL SIMPLE
+  // CONTEXT Y HOOKS AISLADOS POR TAREA
   // ========================================================================
   
-  const [isTyping, setIsTyping] = useState(false);
+  const { 
+    getTaskPlanState, 
+    updateTaskPlan,
+    getTaskWebSocketState,
+    setTaskWebSocketState
+  } = useAppContext();
+  
+  // ✅ USAR HOOKS COMPLETAMENTE AISLADOS POR TAREA
+  const { getMessages, setMessages, addMessage, updateMessages } = useMessagesManagement();
+  const { 
+    getTerminalLogs, 
+    logToTerminal, 
+    getMonitorPages, 
+    setMonitorPages, 
+    addMonitorPage,
+    getCurrentPageIndex,
+    setCurrentPageIndex 
+  } = useTerminalManagement();
+  const { getFiles, setFiles } = useFileManagement();
+
+  // ========================================================================
+  // ESTADO LOCAL MÍNIMO - SOLO UI, NO DATOS
+  // ========================================================================
+  
   const [showFilesModal, setShowFilesModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [taskFiles, setTaskFiles] = useState<FileItem[]>([]);
-  
-  // LOGS TERMINALES AISLADOS
-  const [terminalLogs, setTerminalLogs] = useState<Array<{
-    message: string, 
-    type: 'info' | 'success' | 'error', 
-    timestamp: Date,
-    taskId: string
-  }>>([]);
   
   const monitorRef = useRef<HTMLDivElement>(null);
   
-  // Memory manager aislado por tarea
+  // Memory manager aislado por tarea (conservado)
   const { hasActiveMemory, getMemoryStats } = useIsolatedMemoryManager({ taskId: task.id });
 
   // ========================================================================
-  // PLAN MANAGER SIMPLIFICADO - CON PROTECCIÓN CONTRA LOOPS
+  // PLAN MANAGER SIMPLIFICADO - USANDO CONTEXT AISLADO
   // ========================================================================
 
   const {
@@ -75,8 +91,12 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     taskId: task.id,
     initialPlan: task.plan || [],
     onPlanUpdate: (updatedPlan) => {
-      console.log(`🔄 [TASK-${task.id}] Plan updated (SAFE):`, updatedPlan.length, 'steps');
-      // ✅ ARREGLO: Solo actualizar si hay cambios reales
+      console.log(`🔄 [TASK-${task.id}] Plan updated (ISOLATED):`, updatedPlan.length, 'steps');
+      
+      // ✅ USAR CONTEXT PARA PERSISTENCIA AISLADA
+      updateTaskPlan(task.id, updatedPlan);
+      
+      // ✅ ACTUALIZAR TAREA SOLO SI HAY CAMBIOS REALES
       onUpdateTask((currentTask: Task) => {
         const currentProgress = Math.round((updatedPlan.filter(s => s.completed).length / updatedPlan.length) * 100);
         
@@ -95,16 +115,12 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       });
     },
     onStepComplete: (stepId) => {
-      console.log(`✅ [TASK-${task.id}] Step completed (SAFE):`, stepId);
-      // Log cuando un paso se completa
+      console.log(`✅ [TASK-${task.id}] Step completed (ISOLATED):`, stepId);
+      
+      // ✅ LOG USANDO CONTEXT AISLADO
       const step = plan.find(s => s.id === stepId);
       if (step) {
-        setTerminalLogs(prev => [...prev, {
-          message: `✅ Completado: ${step.title}`,
-          type: 'success',
-          timestamp: new Date(),
-          taskId: task.id
-        }]);
+        logToTerminal(task.id, `✅ Completado: ${step.title}`, 'success');
       }
       
       // Notificar progreso
@@ -113,14 +129,10 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       }
     },
     onTaskComplete: () => {
-      console.log(`🎉 [TASK-${task.id}] Task completed (SAFE)!`);
-      // Log cuando toda la tarea se completa
-      setTerminalLogs(prev => [...prev, {
-        message: '🎉 ¡Tarea completada exitosamente!',
-        type: 'success',
-        timestamp: new Date(),
-        taskId: task.id
-      }]);
+      console.log(`🎉 [TASK-${task.id}] Task completed (ISOLATED)!`);
+      
+      // ✅ LOG USANDO CONTEXT AISLADO
+      logToTerminal(task.id, '🎉 ¡Tarea completada exitosamente!', 'success');
 
       // Actualizar estado de la tarea
       onUpdateTask((currentTask: Task) => ({
@@ -132,87 +144,112 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   });
 
   // ========================================================================
-  // SINCRONIZACIÓN SEGURA CON PLAN DE LA TAREA - ARREGLO DEL LOOP
+  // SINCRONIZACIÓN CON DATOS AISLADOS DEL CONTEXT
   // ========================================================================
 
-  // REF para evitar loops infinitos
-  const lastPlanRef = useRef<string>('');
-  const lastTaskIdRef = useRef<string>('');
+  // Obtener datos aislados de la tarea desde el Context
+  const taskMessages = useMemo(() => getMessages(task.id), [getMessages, task.id]);
+  const taskTerminalLogs = useMemo(() => getTerminalLogs(task.id), [getTerminalLogs, task.id]);
+  const taskFiles = useMemo(() => getFiles(task.id), [getFiles, task.id]);
+  const taskMonitorPages = useMemo(() => getMonitorPages(task.id), [getMonitorPages, task.id]);
+  const currentPageIndex = useMemo(() => getCurrentPageIndex(task.id), [getCurrentPageIndex, task.id]);
 
-  // ✅ ARREGLO CRÍTICO: Reset completo cuando cambia la tarea ID
+  // ========================================================================
+  // EFECTOS DE INICIALIZACIÓN Y RESETEO POR TAREA
+  // ========================================================================
+
+  // RESET COMPLETO cuando cambia la tarea ID - SIN RESETEAR CONTEXT (ya está aislado)
+  const lastTaskIdRef = useRef<string>('');
   useEffect(() => {
     if (task.id !== lastTaskIdRef.current) {
-      console.log(`🔄 [TASK-${task.id}] Task changed from ${lastTaskIdRef.current} to ${task.id} - COMPLETE RESET`);
+      console.log(`🔄 [TASK-${task.id}] TaskView switched from ${lastTaskIdRef.current} to ${task.id}`);
       
-      // Resetear completamente el estado del plan manager
-      lastPlanRef.current = '';
       lastTaskIdRef.current = task.id;
+      
+      // NO RESETEAR CONTEXT - Ya está aislado por taskId
+      // Solo resetear estado UI local
+      setShowFilesModal(false);
+      setShowShareModal(false);
       
       // Si hay un plan inicial, establecerlo
       if (task.plan && task.plan.length > 0) {
-        console.log(`📋 [TASK-${task.id}] Setting initial plan with ${task.plan.length} steps`);
+        console.log(`📋 [TASK-${task.id}] Loading existing plan with ${task.plan.length} steps`);
         setPlan(task.plan);
-      } else {
-        // Limpiar plan si no hay plan inicial
-        setPlan([]);
       }
+      
+      console.log(`✅ [TASK-${task.id}] TaskView switch complete - data isolated`);
     }
   }, [task.id, task.plan, setPlan]);
 
-  // ✅ ARREGLO: Sincronizar solo cuando hay cambios reales del plan (NO basado en task.id)
+  // Sincronizar mensajes con Context aislado
   useEffect(() => {
-    if (task.plan && task.plan.length > 0) {
-      // Crear hash del plan para detectar cambios reales
-      const planHash = JSON.stringify(task.plan.map(s => ({ 
-        id: s.id, 
-        completed: s.completed, 
-        active: s.active 
-      })));
+    if (task.messages && task.messages.length > 0) {
+      const currentContextMessages = getMessages(task.id);
       
-      // Solo actualizar si el plan realmente cambió
-      if (planHash !== lastPlanRef.current) {
-        console.log(`🔄 [TASK-${task.id}] Plan sync - real change detected`);
-        lastPlanRef.current = planHash;
-        setPlan(task.plan);
-      } else {
-        console.log(`🛡️ [TASK-${task.id}] Plan sync - no changes, skipping`);
+      // Solo actualizar si hay diferencias
+      if (currentContextMessages.length !== task.messages.length) {
+        console.log(`💬 [TASK-${task.id}] Syncing ${task.messages.length} messages to isolated context`);
+        setMessages(task.id, task.messages);
       }
     }
-  }, [task.plan, setPlan]); // ✅ ARREGLO CRÍTICO: Dependencia en task.plan, NO en task.id
+  }, [task.messages, task.id, getMessages, setMessages]);
+
+  // Cargar archivos de tarea específicos (aislados)
+  useEffect(() => {
+    let mounted = true;
+    
+    const loadTaskFiles = async () => {
+      try {
+        console.log(`📁 [TASK-${task.id}] Loading isolated task files`);
+        const files = await agentAPI.getTaskFiles(task.id);
+        if (mounted) {
+          setFiles(task.id, files); // ✅ USAR CONTEXT AISLADO
+          console.log(`✅ [TASK-${task.id}] Loaded ${files.length} files to isolated context`);
+        }
+      } catch (error) {
+        console.error(`❌ [TASK-${task.id}] Error loading task files:`, error);
+      }
+    };
+
+    if (task.id) {
+      loadTaskFiles();
+    }
+
+    return () => {
+      mounted = false;
+      console.log(`🧹 [TASK-${task.id}] TaskView cleanup - isolated data preserved`);
+    };
+  }, [task.id, setFiles]);
 
   // ========================================================================
-  // MEMOIZED VALUES
+  // MEMOIZED VALUES - USANDO DATOS AISLADOS
   // ========================================================================
 
   const taskStats = useMemo(() => ({
-    messageCount: task.messages?.length || 0,
-    commandCount: task.terminalCommands?.length || 0,
+    messageCount: taskMessages.length,
+    commandCount: 0, // Todo: usar taskTerminalCommands cuando esté implementado
     planProgress: progress,
     hasFiles: taskFiles.length > 0,
     isCompleted: task.status === 'completed'
-  }), [task.messages?.length, task.terminalCommands?.length, progress, task.status, taskFiles.length]);
+  }), [taskMessages.length, progress, task.status, taskFiles.length]);
 
-  // Combinar logs con filtro de seguridad por tarea
+  // Combinar logs con filtro de seguridad por tarea (ya están aislados)
   const combinedLogs = useMemo(() => {
-    const filteredTerminalLogs = terminalLogs.filter(log => 
-      !log.taskId || log.taskId === task.id
-    );
-    
     const filteredExternalLogs = externalLogs.filter(log => 
       log && log.message && log.timestamp
     );
     
-    const combined = [...filteredTerminalLogs, ...filteredExternalLogs].sort((a, b) => 
+    const combined = [...taskTerminalLogs, ...filteredExternalLogs].sort((a, b) => 
       new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
     
-    console.log(`📋 [TASK-${task.id}] Combined logs: ${combined.length} total (${filteredTerminalLogs.length} terminal + ${filteredExternalLogs.length} external)`);
+    console.log(`📋 [TASK-${task.id}] Combined isolated logs: ${combined.length} total (${taskTerminalLogs.length} terminal + ${filteredExternalLogs.length} external)`);
     
     return combined;
-  }, [terminalLogs, externalLogs, task.id]);
+  }, [taskTerminalLogs, externalLogs, task.id]);
 
   // ========================================================================
-  // CALLBACKS MEMOIZADOS
+  // CALLBACKS MEMOIZADOS - USANDO DATOS AISLADOS
   // ========================================================================
 
   const handleUpdateTask = useCallback((updatedTask: Task | ((current: Task) => Task)) => {
@@ -229,18 +266,25 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       return;
     }
     
+    // ✅ USAR CONTEXT AISLADO PARA MENSAJES
+    updateMessages(task.id, updater);
+    
+    // También actualizar la tarea principal
     handleUpdateTask((currentTask: Task) => ({
       ...currentTask,
       messages: updater(currentTask.messages || [])
     }));
-  }, [handleUpdateTask]);
+  }, [handleUpdateTask, task.id, updateMessages]);
 
   const handleUpdateMessagesWrapper = useCallback((messages: Message[]) => {
+    // ✅ USAR CONTEXT AISLADO
+    setMessages(task.id, messages);
+    
     handleUpdateTask((currentTask: Task) => ({
       ...currentTask,
       messages: messages
     }));
-  }, [handleUpdateTask]);
+  }, [handleUpdateTask, task.id, setMessages]);
 
   const handleToggleFavorite = useCallback(() => {
     handleUpdateTask((currentTask: Task) => ({
@@ -274,86 +318,31 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   }, [onInitializationComplete]);
 
   // ========================================================================
-  // EFFECTS - AISLAMIENTO Y LIMPIEZA MEJORADOS
-  // ========================================================================
-
-  // RESET COMPLETO cuando cambia la tarea - MEJORADO
-  useEffect(() => {
-    console.log(`🔄 [TASK-${task.id}] TaskView initialized - clearing state`);
-    
-    // Limpiar estado local aislado de manera más agresiva
-    setTerminalLogs([]);
-    setTaskFiles([]);
-    setIsTyping(false);
-    setShowFilesModal(false);
-    setShowShareModal(false);
-    
-    // Reset plan hash
-    lastPlanRef.current = '';
-    
-    // ✅ NUEVO: Reset también el usePlanManager cuando cambia la tarea
-    if (task.plan && task.plan.length > 0) {
-      console.log(`📋 [TASK-${task.id}] Initializing plan with ${task.plan.length} steps`);
-    } else {
-      console.log(`📋 [TASK-${task.id}] No initial plan found`);
-    }
-    
-    console.log(`✅ [TASK-${task.id}] TaskView state reset complete`);
-  }, [task.id]); // Solo cuando cambia el ID de la tarea
-
-  // Cargar archivos de tarea específicos
-  useEffect(() => {
-    let mounted = true;
-    
-    const loadTaskFiles = async () => {
-      try {
-        console.log(`📁 [TASK-${task.id}] Loading task files`);
-        const files = await agentAPI.getTaskFiles(task.id);
-        if (mounted) {
-          setTaskFiles(files);
-          console.log(`✅ [TASK-${task.id}] Loaded ${files.length} files`);
-        }
-      } catch (error) {
-        console.error(`❌ [TASK-${task.id}] Error loading task files:`, error);
-      }
-    };
-
-    if (task.id) {
-      loadTaskFiles();
-    }
-
-    return () => {
-      mounted = false;
-      console.log(`🧹 [TASK-${task.id}] TaskView cleanup`);
-    };
-  }, [task.id]);
-
-  // ========================================================================
-  // MEMOIZED COMPONENTS
+  // MEMOIZED COMPONENTS - USANDO DATOS AISLADOS
   // ========================================================================
 
   const chatInterface = useMemo(() => (
     <ChatInterface
-      messages={task.messages || []}
+      messages={taskMessages} // ✅ USAR DATOS AISLADOS
       onUpdateMessages={handleUpdateMessagesWrapper}
-      isTyping={isTyping || isThinking}
+      isTyping={isThinking}
       onFilesClick={handleFilesModal}
       onShareClick={handleShareModal}
       disabled={isInitializing}
       task={task}
       onUpdateTask={handleUpdateTask}
     />
-  ), [task.messages, task, handleUpdateMessagesWrapper, isTyping, isThinking, handleFilesModal, handleShareModal, isInitializing, handleUpdateTask]);
+  ), [taskMessages, task, handleUpdateMessagesWrapper, isThinking, handleFilesModal, handleShareModal, isInitializing, handleUpdateTask]);
 
   const terminalView = useMemo(() => (
     <TerminalView
       commands={task.terminalCommands || []}
-      logs={combinedLogs}
+      logs={combinedLogs} // ✅ USAR LOGS COMBINADOS AISLADOS
       isInitializing={isInitializing}
       onInitializationComplete={handleInitializationComplete}
       onInitializationLog={handleInitializationLog}
       task={task}
-      plan={plan} // ✅ Usar el plan del hook simplificado
+      plan={plan} // ✅ USAR PLAN DEL HOOK AISLADO
       taskId={task.id}
       taskTitle={task.title}
     />
@@ -364,7 +353,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       <FilesModal
         isOpen={showFilesModal}
         onClose={handleCloseFilesModal}
-        files={taskFiles}
+        files={taskFiles} // ✅ USAR ARCHIVOS AISLADOS
         taskTitle={task.title}
         taskId={task.id}
       />
@@ -413,7 +402,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
               </span>
             </div>
             
-            {/* Stats */}
+            {/* Stats usando datos aislados */}
             <div className="flex items-center gap-4 text-sm text-gray-400">
               <span>{taskStats.messageCount} mensajes</span>
               <span>{taskStats.commandCount} comandos</span>
@@ -453,7 +442,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
 };
 
 // ========================================================================
-// EXPORT CON REACT.MEMO
+// EXPORT CON REACT.MEMO MEJORADO
 // ========================================================================
 
 export const TaskView = React.memo(TaskViewComponent, (prevProps, nextProps) => {
@@ -461,8 +450,6 @@ export const TaskView = React.memo(TaskViewComponent, (prevProps, nextProps) => 
     prevProps.task.id === nextProps.task.id &&
     prevProps.task.title === nextProps.task.title &&
     prevProps.task.status === nextProps.task.status &&
-    prevProps.task.messages?.length === nextProps.task.messages?.length &&
-    prevProps.task.terminalCommands?.length === nextProps.task.terminalCommands?.length &&
     prevProps.task.progress === nextProps.task.progress &&
     prevProps.isThinking === nextProps.isThinking &&
     prevProps.isInitializing === nextProps.isInitializing &&
