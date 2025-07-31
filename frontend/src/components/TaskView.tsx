@@ -7,7 +7,7 @@ import { FilesModal } from './FilesModal';
 import { ShareModal } from './ShareModal';
 import { agentAPI, FileItem } from '../services/api';
 import { useMemoryManager } from '../hooks/useMemoryManager';
-import { usePlanWebSocket } from '../hooks/usePlanWebSocket';
+import { usePlanManager } from '../hooks/usePlanManager';
 import { Star } from 'lucide-react';
 
 interface TaskViewProps {
