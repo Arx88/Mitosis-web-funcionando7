@@ -173,7 +173,7 @@ try:
         ping_interval=90,      # Aumentado para mejor performance
         transports=['polling', 'websocket'],    # POLLING PRIMERO para máxima compatibilidad
         allow_upgrades=True,   # PERMITIR upgrades para mejor conectividad
-        path='/socket.io/',     # CRÍTICO: Sin /api prefix - ingress maneja el routing automáticamente
+        path='/api/socket.io/',     # CRÍTICO: Con /api prefix para routing correcto a través del ingress
         manage_session=False,    # No manejar sesiones automáticamente
         max_http_buffer_size=1000000,  # Buffer más grande para evitar timeouts
         json=json
