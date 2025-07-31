@@ -66,7 +66,7 @@ export const TerminalView = ({
   const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
   const [isPlanExpanded, setIsPlanExpanded] = useState(true);
 
-  // ✨ NEW: Time tracking for steps
+  // ✨ NEW: Time tracking for steps - SIMPLIFICADO
   const [stepTimers, setStepTimers] = useState<{ [stepId: string]: { startTime: Date, interval: NodeJS.Timeout } }>({});
 
   // ✨ NEW: Function to format elapsed time
@@ -79,23 +79,16 @@ export const TerminalView = ({
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // ✨ NEW: Start timer for active step
+  // ✨ NEW: Start timer for active step - SIMPLIFICADO
   const startStepTimer = (stepId: string) => {
     if (stepTimers[stepId]) return; // Already has timer
     
+    console.log(`⏱️ [TERMINAL-${taskId}] Starting timer for step: ${stepId}`);
     const startTime = new Date();
     const interval = setInterval(() => {
       const elapsedTime = formatElapsedTime(startTime);
-      
-      // Update the plan with elapsed time
-      if (plan) {
-        const updatedPlan = plan.map(step => 
-          step.id === stepId 
-            ? { ...step, elapsed_time: elapsedTime, start_time: startTime }
-            : step
-        );
-        onPlanUpdate?.(updatedPlan);
-      }
+      // Solo actualizar el tiempo transcurrido sin modificar el plan
+      console.log(`⏲️ [STEP-${stepId}] Elapsed: ${elapsedTime}`);
     }, 1000);
 
     setStepTimers(prev => ({
@@ -104,9 +97,10 @@ export const TerminalView = ({
     }));
   };
 
-  // ✨ NEW: Stop timer for step
+  // ✨ NEW: Stop timer for step - SIMPLIFICADO
   const stopStepTimer = (stepId: string) => {
     if (stepTimers[stepId]) {
+      console.log(`⏹️ [TERMINAL-${taskId}] Stopping timer for step: ${stepId}`);
       clearInterval(stepTimers[stepId].interval);
       setStepTimers(prev => {
         const newTimers = { ...prev };
