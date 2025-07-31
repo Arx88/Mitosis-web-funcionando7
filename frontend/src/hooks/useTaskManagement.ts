@@ -45,8 +45,7 @@ export const useTaskManagement = () => {
     dispatch({ type: 'ADD_TASK', payload: newTask });
     dispatch({ type: 'SET_ACTIVE_TASK', payload: newTask.id });
     
-    // ✅ CRITICAL FIX: Set loading state AFTER task creation but BEFORE API call
-    console.log('🎯 RACE CONDITION FIX: Setting loading state after task creation');
+    // Set loading state AFTER task creation but BEFORE API call
     dispatch({ type: 'SET_TASK_CREATING', payload: true });
     
     // ✅ FIX: Use /api/agent/chat endpoint which works perfectly
