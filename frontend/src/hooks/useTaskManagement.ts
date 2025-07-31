@@ -29,13 +29,17 @@ export const useTaskManagement = () => {
   } = useAppContext();
   
   // ========================================================================
-  // CREAR TAREA CON MENSAJE INICIAL - TOTALMENTE AISLADO
+  // CREAR TAREA CON MENSAJE INICIAL - SIMPLIFICADO Y ROBUSTO
   // ========================================================================
   
   const createTaskWithMessage = useCallback(async (messageContent: string) => {
-    dispatch({ type: 'SET_THINKING', payload: false });
+    console.log('🎯 [TASK-MANAGEMENT] Creating task with message:', messageContent);
     
-    // Crear mensaje de usuario
+    dispatch({ type: 'SET_THINKING', payload: false });
+    dispatch({ type: 'SET_TASK_CREATING', payload: true });
+    
+    // ✅ PASO 1: CREAR TAREA LIMPIA CON ID TEMPORAL
+    const tempTaskId = `temp-task-${Date.now()}`;
     const userMessage: Message = {
       id: `msg-${Date.now()}`,
       content: messageContent,
@@ -43,56 +47,56 @@ export const useTaskManagement = () => {
       timestamp: new Date()
     };
     
-    // Crear tarea completamente aislada
     const newTask: Task = {
-      id: `task-${Date.now()}`,
-      title: messageContent,
+      id: tempTaskId,
+      title: messageContent.slice(0, 50) + (messageContent.length > 50 ? '...' : ''),
       createdAt: new Date(),
-      status: 'active',
-      messages: [userMessage], // Mensaje incluido directamente
+      status: 'pending',
+      messages: [userMessage],
       terminalCommands: [],
       isFavorite: false,
       progress: 0,
       iconType: undefined
     };
     
-    // ✅ USAR CONTEXT COMPLETAMENTE - El Context se encarga del aislamiento
+    console.log('🎯 [TASK-MANAGEMENT] Creating task with temp ID:', tempTaskId);
+    
+    // ✅ PASO 2: AGREGAR AL CONTEXT - SE INICIALIZA AUTOMÁTICAMENTE AISLADO
     dispatch({ type: 'ADD_TASK', payload: newTask });
-    dispatch({ type: 'SET_ACTIVE_TASK', payload: newTask.id });
+    dispatch({ type: 'SET_ACTIVE_TASK', payload: tempTaskId });
     
-    // Set loading state AFTER task creation but BEFORE API call
-    dispatch({ type: 'SET_TASK_CREATING', payload: true });
-    
-    // Usar chat endpoint que incluye generación de plan
     try {
+      // ✅ PASO 3: ENVIAR AL BACKEND PARA GENERAR PLAN Y TÍTULO MEJORADO
+      console.log('🎯 [TASK-MANAGEMENT] Sending to backend for plan generation...');
+      
       const response = await fetch(`${API_CONFIG.backend.url}/api/agent/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: messageContent.trim(),
-          task_id: newTask.id
+          task_id: tempTaskId
         })
       });
       
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ [TASK-MANAGEMENT] Backend response received:', data);
         
-        // CRÍTICO: Actualizar tarea con título mejorado, plan Y el task_id real del backend
-        const backendTaskId = data.task_id; // ID real generado por el backend
+        // ✅ PASO 4: OBTENER ID REAL DEL BACKEND
+        const backendTaskId = data.task_id || tempTaskId;
         
-        // Crear la tarea actualizada con el nuevo ID
+        // ✅ PASO 5: PREPARAR TAREA ACTUALIZADA
         let updatedTask: Task = { 
           ...newTask,
-          id: backendTaskId // CRÍTICO: Usar el ID real del backend
+          id: backendTaskId,
+          title: data.enhanced_title || newTask.title,
+          status: 'active'
         };
         
-        // Update title from enhanced_title
-        if (data.enhanced_title) {
-          updatedTask.title = data.enhanced_title;
-        }
-        
-        // Update plan from response
+        // ✅ PASO 6: PROCESAR PLAN SI EXISTE
         if (data.plan && Array.isArray(data.plan)) {
+          console.log('📋 [TASK-MANAGEMENT] Processing plan with', data.plan.length, 'steps');
+          
           const frontendPlan = data.plan.map((step: any) => ({
             id: step.id,
             title: step.title,
@@ -110,43 +114,65 @@ export const useTaskManagement = () => {
             status: 'in-progress',
             progress: 0
           };
-
-          // ✅ USAR CONTEXT PARA ACTUALIZAR PLAN DE FORMA AISLADA
+          
+          // ✅ PASO 7: ACTUALIZAR PLAN EN CONTEXT AISLADO
           updateTaskPlan(backendTaskId, frontendPlan);
         }
         
-        // ✅ MIGRAR ESTADO COMPLETO DE ID VIEJO A NUEVO (AISLAMIENTO COMPLETO)
-        migrateTaskState(newTask.id, backendTaskId);
+        // ✅ PASO 8: MIGRAR ESTADO COMPLETO SI ID CAMBIÓ
+        if (backendTaskId !== tempTaskId) {
+          console.log('🔄 [TASK-MANAGEMENT] Migrating state from', tempTaskId, 'to', backendTaskId);
+          migrateTaskState(tempTaskId, backendTaskId);
+          
+          dispatch({ 
+            type: 'UPDATE_TASK_ID', 
+            payload: { 
+              oldId: tempTaskId, 
+              newId: backendTaskId, 
+              updatedTask 
+            } 
+          });
+        } else {
+          // Solo actualizar la tarea si el ID no cambió
+          dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
+        }
         
-        // CRÍTICO: Usar la nueva acción para actualizar el ID y migrar todos los estados
-        dispatch({ 
-          type: 'UPDATE_TASK_ID', 
-          payload: { 
-            oldId: newTask.id, 
-            newId: backendTaskId, 
-            updatedTask 
-          } 
-        });
-        
-        // Auto-iniciar ejecución si hay plan
+        // ✅ PASO 9: AUTO-INICIAR EJECUCIÓN SI HAY PLAN
         if (data.plan && data.plan.length > 0) {
+          console.log('🚀 [TASK-MANAGEMENT] Auto-starting task execution...');
           setTimeout(async () => {
             try {
-              await startTaskExecution(backendTaskId); // Usar el ID del backend
+              await startTaskExecution(backendTaskId);
             } catch (error) {
-              console.error('Error starting task execution:', error);
+              console.error('❌ [TASK-MANAGEMENT] Error starting execution:', error);
             }
           }, 1000);
         }
+        
+        console.log('✅ [TASK-MANAGEMENT] Task creation completed successfully');
+        
       } else {
         const errorText = await response.text();
-        console.error('Backend response error:', response.status, errorText);
+        console.error('❌ [TASK-MANAGEMENT] Backend error:', response.status, errorText);
+        
+        // Mantener la tarea pero marcarla como fallida
+        updateTask((task: Task) => {
+          if (task.id !== tempTaskId) return task;
+          return { ...task, status: 'failed' };
+        });
       }
+      
     } catch (error) {
-      console.error('Error generating plan:', error);
+      console.error('❌ [TASK-MANAGEMENT] Network error:', error);
+      
+      // Mantener la tarea pero marcarla como fallida
+      updateTask((task: Task) => {
+        if (task.id !== tempTaskId) return task;
+        return { ...task, status: 'failed' };
+      });
+    } finally {
+      dispatch({ type: 'SET_TASK_CREATING', payload: false });
     }
-    
-    dispatch({ type: 'SET_TASK_CREATING', payload: false });
     
     return newTask;
   }, [dispatch, updateTask, updateTaskPlan, migrateTaskState]);
