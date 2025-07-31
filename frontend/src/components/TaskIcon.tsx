@@ -507,4 +507,4 @@ export const TaskIcon: React.FC<TaskIconProps> = React.memo(({
       </div>
     </div>
   );
-};
+});
