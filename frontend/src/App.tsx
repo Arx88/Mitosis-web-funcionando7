@@ -234,28 +234,10 @@ export function App() {
             tasks={tasks} // ✅ DESDE CONTEXT
             activeTaskId={activeTaskId} // ✅ DESDE CONTEXT
             onTaskSelect={setActiveTask} // ✅ HOOK DEL CONTEXT
-            onCreateTask={(title, iconType) => {
-              // Crear nueva tarea vacía para títulos simples
-              const newTask = {
-                id: `task-${Date.now()}`,
-                title,
-                createdAt: new Date(),
-                status: 'pending' as const,
-                messages: [],
-                terminalCommands: [],
-                isFavorite: false,
-                progress: 0,
-                iconType
-              };
-              
-              updateTask((currentTask) => {
-                // Esta función se ejecuta para cada tarea
-                // Solo actualizamos si es una nueva tarea
-                return currentTask;
-              });
-              
-              setActiveTask(newTask.id);
-
+            onCreateTask={async (title, iconType) => {
+              // ✅ USAR HOOK DEL CONTEXT - ARREGLA PROBLEMA DE AISLAMIENTO
+              const newTask = createTask(title, iconType);
+              console.log('🎯 SIDEBAR: Nueva tarea creada correctamente:', newTask.id);
               return newTask;
             }}
             onDeleteTask={deleteTask} // ✅ HOOK DEL CONTEXT
