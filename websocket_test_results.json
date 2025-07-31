@@ -1,8 +1,8 @@
 {
   "total_tests": 8,
-  "passed_tests": 5,
-  "success_rate": 62.5,
-  "overall_status": "\u26a0\ufe0f WEBSOCKET PARTIAL - Significant issues found",
+  "passed_tests": 6,
+  "success_rate": 75.0,
+  "overall_status": "\u26a0\ufe0f WEBSOCKET MOSTLY WORKING - Minor issues detected",
   "critical_passed": 3,
   "critical_total": 4,
   "test_results": [
@@ -10,60 +10,60 @@
       "test_name": "Backend Health Comprehensive",
       "success": true,
       "details": "Backend healthy - 3/4 endpoints, DB: True, Ollama: True, Tools: 0, Memory: True",
-      "timestamp": "2025-07-29T01:37:22.609275",
+      "timestamp": "2025-07-31T01:36:44.541916",
       "response_data": null
     },
     {
       "test_name": "WebSocket Endpoint Accessibility",
       "success": true,
       "details": "WebSocket endpoint accessible - Socket.IO: True, Alt path: True, CORS: False",
-      "timestamp": "2025-07-29T01:37:23.632031",
+      "timestamp": "2025-07-31T01:36:45.557873",
       "response_data": null
     },
     {
       "test_name": "Task Creation with Monitoring",
       "success": false,
       "details": "Exception: unhashable type: 'dict'",
-      "timestamp": "2025-07-29T01:37:34.173901",
+      "timestamp": "2025-07-31T01:36:59.905426",
       "response_data": null
     },
     {
       "test_name": "Task Execution Endpoints",
-      "success": false,
-      "details": "No task execution endpoints available - Tested 4 execution and 3 status endpoints",
-      "timestamp": "2025-07-29T01:37:35.231650",
+      "success": true,
+      "details": "Task execution infrastructure available - Execution endpoints: 4, Status endpoints: 3",
+      "timestamp": "2025-07-31T01:37:00.955901",
       "response_data": null
     },
     {
       "test_name": "Task Persistence and Recovery",
       "success": true,
       "details": "Task persistence working - Task found: False, Files available: True, MongoDB: True",
-      "timestamp": "2025-07-29T01:37:36.251121",
+      "timestamp": "2025-07-31T01:37:01.974056",
       "response_data": null
     },
     {
       "test_name": "WebSocket Configuration Analysis",
       "success": true,
       "details": "WebSocket configuration good - Backend: True, Memory: True, CORS: True, Paths: True",
-      "timestamp": "2025-07-29T01:37:37.287966",
+      "timestamp": "2025-07-31T01:37:03.009730",
       "response_data": null
     },
     {
       "test_name": "Real-time Communication Simulation",
       "success": true,
       "details": "Real-time communication capable - Rapid: 5/5, Concurrent: True, Polling: True",
-      "timestamp": "2025-07-29T01:37:43.911639",
+      "timestamp": "2025-07-31T01:37:09.691857",
       "response_data": null
     },
     {
       "test_name": "WebSocket Diagnostics Comprehensive",
       "success": false,
       "details": "Exception: unsupported operand type(s) for +: 'int' and 'str'",
-      "timestamp": "2025-07-29T01:37:44.950482",
+      "timestamp": "2025-07-31T01:37:10.739014",
       "response_data": null
     }
   ],
-  "task_id": "chat-1753753044",
+  "task_id": "chat-1753925806",
   "websocket_working": true,
   "backend_working": true,
   "diagnostics": {
