@@ -6,7 +6,7 @@ import { ThinkingAnimation } from './ThinkingAnimation';
 import { FilesModal } from './FilesModal';
 import { ShareModal } from './ShareModal';
 import { agentAPI, FileItem } from '../services/api';
-import { useMemoryManager } from '../hooks/useMemoryManager';
+import { useIsolatedMemoryManager } from '../hooks/useIsolatedMemoryManager';
 import { useIsolatedPlanManager } from '../hooks/useIsolatedPlanManager';
 import { Star } from 'lucide-react';
 
