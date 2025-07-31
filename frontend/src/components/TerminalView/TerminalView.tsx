@@ -759,26 +759,37 @@ export const TerminalView = ({
   };
 
   const handlePreviousPage = () => {
-    if (currentPageIndex > 0) {
-      setCurrentPageIndex(currentPageIndex - 1);
+    if (currentPageIndex > 0 && taskId) {
+      const newIndex = currentPageIndex - 1;
+      setTaskCurrentPageIndex(taskId, newIndex);
       setIsLiveMode(false);
+      console.log(`◀️ [PAGE-NAV] Previous page: ${newIndex} (task: ${taskId})`);
     }
   };
 
   const handleNextPage = () => {
-    if (currentPageIndex < monitorPages.length - 1) {
-      setCurrentPageIndex(currentPageIndex + 1);
+    if (currentPageIndex < monitorPages.length - 1 && taskId) {
+      const newIndex = currentPageIndex + 1;
+      setTaskCurrentPageIndex(taskId, newIndex);
+      console.log(`▶️ [PAGE-NAV] Next page: ${newIndex} (task: ${taskId})`);
     }
   };
 
   const handleLiveMode = () => {
-    setIsLiveMode(true);
-    setCurrentPageIndex(monitorPages.length - 1); // Ir a la última página
+    if (taskId) {
+      setIsLiveMode(true);
+      const newIndex = monitorPages.length - 1;
+      setTaskCurrentPageIndex(taskId, newIndex); // Ir a la última página
+      console.log(`🔴 [PAGE-NAV] Live mode: page ${newIndex} (task: ${taskId})`);
+    }
   };
 
   const handleResetToStart = () => {
-    setCurrentPageIndex(0);
-    setIsLiveMode(false);
+    if (taskId) {
+      setTaskCurrentPageIndex(taskId, 0);
+      setIsLiveMode(false);
+      console.log(`🔄 [PAGE-NAV] Reset to start: page 0 (task: ${taskId})`);
+    }
   };
 
   const formatMarkdownContent = (content: string) => {
