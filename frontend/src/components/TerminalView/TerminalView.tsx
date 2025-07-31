@@ -770,39 +770,37 @@ export const TerminalView = ({
     return content;
   };
 
-  const handlePreviousPage = () => {
-    if (currentPageIndex > 0 && taskId) {
-      const newIndex = currentPageIndex - 1;
-      setTaskCurrentPageIndex(taskId, newIndex);
+  // ========================================================================
+  // NAVIGATION HANDLERS - USANDO CONTEXT AISLADO
+  // ========================================================================
+  
+  const handlePreviousPage = useCallback(() => {
+    if (taskId && currentPageIndex > 0) {
+      setTaskCurrentPageIndex(taskId, currentPageIndex - 1);
       setIsLiveMode(false);
-      console.log(`◀️ [PAGE-NAV] Previous page: ${newIndex} (task: ${taskId})`);
     }
-  };
+  }, [taskId, currentPageIndex, setTaskCurrentPageIndex]);
 
-  const handleNextPage = () => {
-    if (currentPageIndex < monitorPages.length - 1 && taskId) {
-      const newIndex = currentPageIndex + 1;
-      setTaskCurrentPageIndex(taskId, newIndex);
-      console.log(`▶️ [PAGE-NAV] Next page: ${newIndex} (task: ${taskId})`);
+  const handleNextPage = useCallback(() => {
+    if (taskId && currentPageIndex < monitorPages.length - 1) {
+      setTaskCurrentPageIndex(taskId, currentPageIndex + 1);
+      setIsLiveMode(false);
     }
-  };
+  }, [taskId, currentPageIndex, monitorPages.length, setTaskCurrentPageIndex]);
 
-  const handleLiveMode = () => {
-    if (taskId) {
+  const handleLiveMode = useCallback(() => {
+    if (taskId && monitorPages.length > 0) {
+      setTaskCurrentPageIndex(taskId, monitorPages.length - 1);
       setIsLiveMode(true);
-      const newIndex = monitorPages.length - 1;
-      setTaskCurrentPageIndex(taskId, newIndex); // Ir a la última página
-      console.log(`🔴 [PAGE-NAV] Live mode: page ${newIndex} (task: ${taskId})`);
     }
-  };
+  }, [taskId, monitorPages.length, setTaskCurrentPageIndex]);
 
-  const handleResetToStart = () => {
+  const handleResetToStart = useCallback(() => {
     if (taskId) {
       setTaskCurrentPageIndex(taskId, 0);
       setIsLiveMode(false);
-      console.log(`🔄 [PAGE-NAV] Reset to start: page 0 (task: ${taskId})`);
     }
-  };
+  }, [taskId, setTaskCurrentPageIndex]);
 
   const formatMarkdownContent = (content: string) => {
     return (
