@@ -1033,7 +1033,8 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
       setTaskCurrentPageIndex,
       setTaskTyping,
       resetTaskState,
-      migrateTaskState
+      migrateTaskState,
+      initializeTaskData
     };
   }, [
     state,
