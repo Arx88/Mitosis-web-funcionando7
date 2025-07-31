@@ -801,7 +801,9 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
   }, [state.taskFiles]);
   
   const getTerminalLogs = useCallback((taskId: string) => {
-    return state.terminalLogs[taskId] || [];
+    const logs = state.terminalLogs[taskId] || [];
+    console.log(`📥 [CONTEXT-GET] getTerminalLogs(${taskId}): ${logs.length} logs`);
+    return logs;
   }, [state.terminalLogs]);
 
   const getTaskMessages = useCallback((taskId: string) => {
