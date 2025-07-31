@@ -9,7 +9,7 @@ import { generateRandomIcon } from './components/TaskIcon';
 import { Globe, FileText, Presentation, Smartphone, Search, Gamepad2 } from 'lucide-react';
 import { API_CONFIG } from './config/api';
 import { useAppContext } from './context/AppContext';
-import { useTaskManagement, useUIState, useConfigManagement } from './hooks/useTaskManagement';
+import { useTaskManagement, useUIState, useConfigManagement, useFileManagement } from './hooks/useTaskManagement';
 
 // ========================================================================
 // APP PRINCIPAL - REFACTORIZADO PARA AISLAMIENTO COMPLETO
