@@ -1,32 +1,25 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { VanishInput } from './components/VanishInput';
 import { TaskView } from './components/TaskView';
+import { ConfigPanel } from './components/ConfigPanel';
+import { FileUploadModal } from './components/FileUploadModal';
 import { LoadingPlaceholder } from './components/LoadingPlaceholder';
 import { generateRandomIcon } from './components/TaskIcon';
 import { Globe, FileText, Presentation, Smartphone, Search, Gamepad2 } from 'lucide-react';
-import { useTaskManagement, useUIState, useConfigManagement } from './hooks/useTaskManagement';
-import { useAppContext } from './context/AppContext';
-// Importaciones directas - SOLUCIÓN DEFINITIVA para evitar React Error #306
-import { ConfigPanel } from './components/ConfigPanel';
-import { FilesModal } from './components/FilesModal';
-import { FileUploadModal } from './components/FileUploadModal';
 import { API_CONFIG } from './config/api';
-
-// Componentes simples de fallback - SIN LAZY LOADING
-const ModalLoadingFallback = () => <div>Loading...</div>;
-const LazyWrapper = ({ children }: { children: React.ReactNode }) => <>{children}</>;
-const preloadCriticalComponents = () => {};
+import { useAppContext } from './context/AppContext';
+import { useTaskManagement, useUIState, useConfigManagement } from './hooks/useTaskManagement';
 
 // ========================================================================
-// OPTIMIZACIONES DE PERFORMANCE - FASE 5
+// APP PRINCIPAL - REFACTORIZADO PARA AISLAMIENTO COMPLETO
+// Usa completamente el Context API expandido para gestión de estado aislado
 // ========================================================================
 
-// Memoizar generación de ideas dinámicas
+// Función para generar ideas dinámicas basadas en contexto
 const generateDynamicIdeas = async () => {
   try {
-    const backendUrl = API_CONFIG.backend.url;
-    const response = await fetch(`${backendUrl}/api/agent/generate-suggestions`, {
+    const response = await fetch(`${API_CONFIG.backend.url}/api/agent/generate-suggestions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -49,47 +42,19 @@ const generateDynamicIdeas = async () => {
   }
 };
 
-// Componente de idea memoizado para evitar re-renders
-const DynamicIdeaButton = React.memo<{
-  idea: any;
-  isLoading: boolean;
-  onClick: (idea: any) => void;
-}>(({ idea, isLoading, onClick }) => {
-  const handleClick = useCallback(() => {
-    onClick(idea);
-  }, [idea, onClick]);
-
-  return (
-    <button
-      onClick={handleClick}
-      disabled={isLoading}
-      className="flex items-center gap-2 px-4 py-2 bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.1)] rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      <Search className="w-4 h-4 text-blue-400" />
-      <span className="text-sm text-[#DADADA]">{idea.title}</span>
-    </button>
-  );
-});
-
-DynamicIdeaButton.displayName = 'DynamicIdeaButton';
-
-// ========================================================================
-// COMPONENTE PRINCIPAL OPTIMIZADO
-// ========================================================================
-
 export function App() {
-  // Context hooks - eliminan props drilling
-  const { getActiveTask } = useAppContext();
+  // ========================================================================
+  // USAR CONTEXT COMPLETAMENTE - NO MÁS ESTADO LOCAL
+  // ========================================================================
+  
   const {
     tasks,
     activeTaskId,
     isTaskCreating,
-    createTask,
     createTaskWithMessage,
     updateTask,
     deleteTask,
     setActiveTask,
-    updateTaskProgress,
     uploadFilesForTask
   } = useTaskManagement();
   
@@ -97,6 +62,7 @@ export function App() {
     sidebarCollapsed,
     isThinking,
     showFilesModal,
+    isConfigOpen,
     toggleSidebar,
     setThinking,
     openFilesModal,
@@ -105,46 +71,65 @@ export function App() {
   
   const { config, updateConfig } = useConfigManagement();
   
-  // Estado local mínimo - solo para datos que NO se comparten
-  const [dynamicIdeas, setDynamicIdeas] = React.useState<any[]>([]);
-  const [isInitialLoading, setIsInitialLoading] = React.useState(false);
-  const [showFileUpload, setShowFileUpload] = React.useState(false);
-  const [isConfigOpen, setIsConfigOpen] = React.useState(false);
-  const [initializingTaskId, setInitializingTaskId] = React.useState<string | null>(null);
-  const [initializationLogs, setInitializationLogs] = React.useState<Array<{message: string, type: 'info' | 'success' | 'error', timestamp: Date}>>([]);
+  // ========================================================================
+  // ESTADO LOCAL MÍNIMO - SOLO PARA UI NO PERSISTENTE
+  // ========================================================================
+  
+  const [dynamicIdeas, setDynamicIdeas] = useState<any[]>([]);
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [initializingTaskId, setInitializingTaskId] = useState<string | null>(null);
+  const [initializationLogs, setInitializationLogs] = useState<Array<{message: string, type: 'info' | 'success' | 'error', timestamp: Date}>>([]);
 
   // ========================================================================
-  // MEMOIZED VALUES - PREVENIR CÁLCULOS INNECESARIOS
+  // EFECTOS PARA CARGA INICIAL Y GESTIÓN
   // ========================================================================
 
-  // Memoizar condición de renderizado principal - simplificado para evitar race conditions
-  const shouldShowTaskView = useMemo(() => {
-    // SOLUCIÓN DIRECTA: Si hay activeTaskId, mostrar TaskView inmediatamente
-    // Esto evita race conditions donde la tarea existe pero no se encuentra en el momento exacto
-    return Boolean(activeTaskId);
-  }, [activeTaskId, tasks]);
+  // Cargar ideas dinámicas solo cuando no hay tareas activas
+  useEffect(() => {
+    if (!activeTaskId && dynamicIdeas.length === 0) {
+      generateDynamicIdeas().then(ideas => {
+        setDynamicIdeas(ideas.slice(0, 3)); // Mostrar solo 3 ideas
+      });
+    }
+  }, [activeTaskId, dynamicIdeas.length]);
 
-  const activeTask = useMemo(() => getActiveTask(), [getActiveTask]);
-
-  // ========================================================================
-  // CALLBACKS MEMOIZADOS - PREVENIR RE-RENDERS
-  // ========================================================================
-
-  const handleInitializationComplete = useCallback(() => {
-    setInitializingTaskId(null);
-    
-    const logEntry = {
-      message: '🎉 Environment ready! You can start working now.',
-      type: 'success' as const,
-      timestamp: new Date()
-    };
-    setInitializationLogs(prev => [...prev, logEntry]);
-    
-    setTimeout(() => {
-      setInitializationLogs([]);
-    }, 10000);
+  // Quitar loading inmediatamente
+  useEffect(() => {
+    setIsInitialLoading(false);
   }, []);
 
+  // ========================================================================
+  // HANDLERS - USANDO HOOKS DEL CONTEXT
+  // ========================================================================
+
+  const handleDynamicIdea = useCallback((idea: any) => {
+    createTaskWithMessage(idea.title);
+  }, [createTaskWithMessage]);
+
+  const handleAttachFiles = useCallback(() => {
+    console.log('🎯 ATTACH FILES CLICKED - Opening file upload modal');
+    openFilesModal();
+  }, [openFilesModal]);
+
+  const handleFilesUploaded = useCallback(async (files: FileList) => {
+    console.log('📎 Files uploaded:', files);
+    
+    try {
+      await uploadFilesForTask(files);
+    } catch (error) {
+      console.error('💥 Error uploading files:', error);
+    }
+    
+    closeFilesModal();
+  }, [uploadFilesForTask, closeFilesModal]);
+
+  const handleConfigChange = useCallback((newConfig: any) => {
+    updateConfig(newConfig);
+    console.log('Configuración actualizada:', newConfig);
+  }, [updateConfig]);
+
+  // Función para manejar logs de inicialización
   const handleInitializationLog = useCallback((message: string, type: 'info' | 'success' | 'error') => {
     const logEntry = {
       message,
@@ -153,202 +138,241 @@ export function App() {
     };
     
     setInitializationLogs(prev => [...prev, logEntry]);
+    console.log(`📝 Initialization log (${type}):`, message);
   }, []);
 
-  const handleConfigChange = useCallback((newConfig: any) => {
-    updateConfig(newConfig);
-  }, [updateConfig]);
-
-  const handleDynamicIdea = useCallback((idea: any) => {
-    createTaskWithMessage(idea.title);
-  }, [createTaskWithMessage]);
-
-  const handleAttachFiles = useCallback(() => {
-    setShowFileUpload(true);
-  }, []);
-
-  const handleFilesUploaded = useCallback(async (files: FileList) => {
-    await uploadFilesForTask(files);
-    setShowFileUpload(false);
-  }, [uploadFilesForTask]);
-
-  const handleCreateTaskWithMessage = useCallback(async (message: string) => {
-    if (message.trim()) {
-      const newTask = await createTaskWithMessage(message.trim());
-    }
-  }, [createTaskWithMessage]);
+  // Función para completar la inicialización
+  const handleInitializationComplete = useCallback(() => {
+    console.log('✅ Task initialization completed');
+    setInitializingTaskId(null);
+    
+    // Agregar log final de inicialización completada
+    handleInitializationLog('🎉 Environment ready! You can start working now.', 'success');
+    
+    // Opcional: Limpiar logs después de un tiempo
+    setTimeout(() => {
+      setInitializationLogs([]);
+    }, 10000); // Limpiar logs después de 10 segundos
+  }, [handleInitializationLog]);
 
   // ========================================================================
-  // EFFECTS OPTIMIZADOS
+  // OPTIMIZACIÓN DE RENDERS
   // ========================================================================
 
-  // Cargar ideas dinámicas solo cuando es necesario
-  useEffect(() => {
-    if (!activeTaskId && dynamicIdeas.length === 0) {
-      generateDynamicIdeas().then(ideas => {
-        setDynamicIdeas(ideas.slice(0, 3));
-      });
-    }
-  }, [activeTaskId, dynamicIdeas.length]);
-
-  // Preload componentes críticos
-  useEffect(() => {
-    preloadCriticalComponents();
-  }, []);
-
-  // Keyboard shortcuts optimizados
+  // Optimized keyboard shortcuts
   useEffect(() => {
     const handleKeyboard = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isConfigOpen) {
-        setIsConfigOpen(false);
+      // Escape para cerrar configuración
+      if (e.key === 'Escape' && isConfigModalOpen) {
+        setIsConfigModalOpen(false);
       }
     };
 
-    if (isConfigOpen) {
+    if (isConfigModalOpen) { // Solo agregar listener si está abierto
       window.addEventListener('keydown', handleKeyboard);
       return () => window.removeEventListener('keydown', handleKeyboard);
     }
-  }, [isConfigOpen]);
+  }, [isConfigModalOpen]);
 
   // ========================================================================
-  // MEMOIZED COMPONENTS - PREVENIR RE-RENDERS INNECESARIOS
+  // GETTERS MEMOIZADOS USANDO CONTEXT
   // ========================================================================
 
-  // Callback for sidebar task creation - DIRECT REFERENCE to avoid memoization issues
-  const handleSidebarCreateTask = useCallback(async (title: string, iconType?: string): Promise<Task> => {
-    return await createTaskWithMessage(title);
-  }, [createTaskWithMessage]);
+  const activeTask = tasks.find(task => task.id === activeTaskId);
 
-  const sidebar = useMemo(() => (
-    <Sidebar 
-      tasks={tasks} 
-      activeTaskId={activeTaskId} 
-      onTaskSelect={setActiveTask} 
-      onCreateTask={handleSidebarCreateTask} // ✅ FIX: Use direct callback to ensure createTaskWithMessage is called
-      onDeleteTask={deleteTask}
-      onUpdateTask={updateTask}
-      onConfigOpen={() => setIsConfigOpen(true)}
-      isCollapsed={sidebarCollapsed}
-      onToggleCollapse={toggleSidebar}
-    />
-  ), [tasks, activeTaskId, setActiveTask, handleSidebarCreateTask, deleteTask, updateTask, sidebarCollapsed, toggleSidebar]);
-
-  const taskView = useMemo(() => {
-    if (!shouldShowTaskView) return null;
-    
-    return (
-      <TaskView 
-        task={activeTask!} 
-        onUpdateTask={updateTask}
-        onUpdateTaskProgress={updateTaskProgress}
-        isThinking={isThinking}
-        externalLogs={initializationLogs}
-        isInitializing={initializingTaskId === activeTask!.id}
-        onInitializationComplete={handleInitializationComplete}
-        onInitializationLog={handleInitializationLog}
-      />
-    );
-  }, [shouldShowTaskView, activeTask, updateTask, updateTaskProgress, isThinking, initializationLogs, initializingTaskId, handleInitializationComplete, handleInitializationLog]);
-
-  const dynamicIdeasSection = useMemo(() => {
-    if (dynamicIdeas.length === 0) return null;
-    
-    return (
-      <div className="mb-12">
-        <div className="flex items-center justify-center gap-3">
-          {dynamicIdeas.map((idea, index) => (
-            <DynamicIdeaButton
-              key={index}
-              idea={idea}
-              isLoading={isTaskCreating}
-              onClick={handleDynamicIdea}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  }, [dynamicIdeas, isTaskCreating, handleDynamicIdea]);
-
-  const homepage = useMemo(() => {
-    if (shouldShowTaskView) return null;
-    
-    return (
-      <div className="flex flex-1 items-center justify-center bg-[#272728] p-8">
-        <div className="text-left max-w-4xl w-full">
-          {/* Título unificado */}
-          <div className="mb-12 text-left">
-            <h2 className="text-5xl font-bold text-white leading-none mb-2" 
-                style={{ fontFamily: "'Libre Baskerville', serif" }}>
-              Bienvenido a Mitosis
-            </h2>
-            <p className="text-5xl font-bold text-[#ACACAC] leading-none" 
-               style={{ fontFamily: "'Libre Baskerville', serif" }}>
-              ¿Qué puedo hacer por ti?
-            </p>
-          </div>
-          
-          {/* Caja de texto optimizada */}
-          <div className="mb-8 max-w-4xl mx-auto">
-            {isTaskCreating ? (
-              <div className="w-full p-4 bg-[rgba(255,255,255,0.06)] rounded-lg border border-[rgba(255,255,255,0.08)]">
-                <LoadingPlaceholder type="text" lines={1} height="h-6" className="mb-2" />
-                <div className="text-sm text-[#ACACAC]">Creando nueva tarea...</div>
-              </div>
-            ) : (
-              <VanishInput
-                onSendMessage={handleCreateTaskWithMessage}
-                placeholder="Escribe tu tarea aquí..."
-                className="w-full text-lg"
-                showInternalButtons={true}
-                onAttachFiles={handleAttachFiles}
-                onWebSearch={handleCreateTaskWithMessage}
-                onDeepSearch={handleCreateTaskWithMessage}
-                onVoiceInput={() => console.log('Voice input clicked')}
-              />
-            )}
-          </div>
-          
-          {/* Ideas dinámicas memoizadas */}
-          {dynamicIdeasSection}
-        </div>
-      </div>
-    );
-  }, [shouldShowTaskView, isTaskCreating, handleCreateTaskWithMessage, handleAttachFiles, dynamicIdeasSection]);
+  // Debug logging
+  console.log('🔍 RENDER DEBUG - App.tsx render:', {
+    activeTaskId,
+    tasksLength: tasks.length,
+    activeTask: activeTask ? `Found: ${activeTask.id} - "${activeTask.title}"` : 'Not found',
+    condition: `activeTask=${!!activeTask}, activeTaskId=${!!activeTaskId}`,
+    renderResult: activeTask && activeTaskId ? 'TaskView' : 'Homepage'
+  });
 
   // ========================================================================
-  // RENDER OPTIMIZADO CON LAZY LOADING
+  // RENDER PRINCIPAL
   // ========================================================================
 
   return (
     <div className="flex h-screen w-full bg-[#272728] text-[#DADADA]" style={{ fontFamily: "'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, sans-serif", fontWeight: 400 }}>
       {isInitialLoading ? (
+        // Loading placeholder for initial app load
         <div className="flex w-full">
+          {/* Sidebar placeholder */}
           <div className="w-80 bg-[#212122] border-r border-[rgba(255,255,255,0.08)] p-4">
             <LoadingPlaceholder type="card" className="mb-4" />
+            <LoadingPlaceholder type="text" lines={1} className="mb-4" />
+            <div className="space-y-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <LoadingPlaceholder key={i} type="text" lines={2} height="h-12" />
+              ))}
+            </div>
           </div>
-          <div className="flex-1 flex items-center justify-center p-8">
-            <LoadingPlaceholder type="text" lines={1} height="h-12" className="mb-4" />
+          
+          {/* Main content placeholder */}
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="text-center max-w-2xl w-full space-y-8">
+                {/* Placeholder para "Bienvenido a Mitosis" */}
+                <LoadingPlaceholder type="text" lines={1} height="h-12" className="mb-4" />
+                
+                {/* Placeholder para "¿Qué puedo hacer por ti?" */}
+                <LoadingPlaceholder type="text" lines={1} height="h-12" className="mb-6" />
+                
+                {/* Placeholder para la caja de chat */}
+                <LoadingPlaceholder type="card" className="mb-6" />
+                
+                {/* Placeholder para TODOS los botones juntos */}
+                <LoadingPlaceholder type="card" height="h-12" className="w-full" />
+              </div>
+            </div>
           </div>
         </div>
       ) : (
         <>
-          {sidebar}
+          <Sidebar 
+            tasks={tasks} // ✅ DESDE CONTEXT
+            activeTaskId={activeTaskId} // ✅ DESDE CONTEXT
+            onTaskSelect={setActiveTask} // ✅ HOOK DEL CONTEXT
+            onCreateTask={(title, iconType) => {
+              // Crear nueva tarea vacía para títulos simples
+              const newTask = {
+                id: `task-${Date.now()}`,
+                title,
+                createdAt: new Date(),
+                status: 'pending' as const,
+                messages: [],
+                terminalCommands: [],
+                isFavorite: false,
+                progress: 0,
+                iconType
+              };
+              
+              updateTask((currentTask) => {
+                // Esta función se ejecuta para cada tarea
+                // Solo actualizamos si es una nueva tarea
+                return currentTask;
+              });
+              
+              setActiveTask(newTask.id);
+
+              return newTask;
+            }}
+            onDeleteTask={deleteTask} // ✅ HOOK DEL CONTEXT
+            onUpdateTask={updateTask} // ✅ HOOK DEL CONTEXT
+            onConfigOpen={() => setIsConfigModalOpen(true)}
+            isCollapsed={sidebarCollapsed} // ✅ DESDE CONTEXT
+            onToggleCollapse={toggleSidebar} // ✅ HOOK DEL CONTEXT
+          />
           
           <div className="flex-1 flex flex-col overflow-hidden">
-            {taskView || homepage}
+            {activeTask && activeTaskId ? (
+              <TaskView 
+                task={activeTask} // ✅ TAREA ACTIVA DESDE CONTEXT
+                onUpdateTask={updateTask} // ✅ HOOK DEL CONTEXT
+                onUpdateTaskProgress={(taskId) => {
+                  // Progress update se maneja automáticamente en el Context
+                  console.log(`🔄 Progress update request for task: ${taskId}`);
+                }}
+                isThinking={isThinking} // ✅ DESDE CONTEXT
+                onTerminalResize={(height) => {
+                  // Terminal resize se maneja en UI state
+                  console.log(`📏 Terminal resized to: ${height}px`);
+                }}
+                externalLogs={initializationLogs} // Logs locales de inicialización
+                isInitializing={initializingTaskId === activeTask.id}
+                onInitializationComplete={handleInitializationComplete}
+                onInitializationLog={handleInitializationLog}
+              />
+            ) : (
+              <div className="flex flex-1 items-center justify-center bg-[#272728] p-8">
+                <div className="text-left max-w-4xl w-full">
+                  {/* Título unificado - separado 15% hacia arriba del input */}
+                  <div className="mb-12 text-left">
+                    <h2 className="text-5xl font-bold text-white leading-none mb-2" 
+                        style={{ fontFamily: "'Libre Baskerville', serif" }}>
+                      Bienvenido a Mitosis
+                    </h2>
+                    <p className="text-5xl font-bold text-[#ACACAC] leading-none" 
+                       style={{ fontFamily: "'Libre Baskerville', serif" }}>
+                      ¿Qué puedo hacer por ti?
+                    </p>
+                  </div>
+                  
+                  {/* Caja de texto con botones internos */}
+                  <div className="mb-8 max-w-4xl mx-auto">
+                    {isTaskCreating ? (
+                      <div className="w-full p-4 bg-[rgba(255,255,255,0.06)] rounded-lg border border-[rgba(255,255,255,0.08)]">
+                        <LoadingPlaceholder type="text" lines={1} height="h-6" className="mb-2" />
+                        <div className="text-sm text-[#ACACAC]">Creando nueva tarea...</div>
+                      </div>
+                    ) : (
+                      <VanishInput
+                        onSendMessage={async (message) => {
+                          console.log('🎯 Homepage: Creating task with initial message');
+                          if (message.trim()) {
+                            // ✅ USAR HOOK DEL CONTEXT
+                            await createTaskWithMessage(message.trim());
+                          }
+                        }}
+                        placeholder="Escribe tu tarea aquí..."
+                        className="w-full text-lg"
+                        showInternalButtons={true}
+                        onAttachFiles={handleAttachFiles}
+                        onWebSearch={async (searchQuery) => {
+                          console.log('🌐 WebSearch: Creating task with message');
+                          if (searchQuery && searchQuery.trim().length > 0) {
+                            // ✅ USAR HOOK DEL CONTEXT
+                            await createTaskWithMessage(searchQuery);
+                          }
+                        }}
+                        onDeepSearch={async (searchQuery) => {
+                          console.log('🔬 DeepSearch: Creating task with message');
+                          if (searchQuery && searchQuery.trim().length > 0) {
+                            // ✅ USAR HOOK DEL CONTEXT
+                            await createTaskWithMessage(searchQuery);
+                          }
+                        }}
+                        onVoiceInput={() => console.log('Voice input clicked')}
+                      />
+                    )}
+                  </div>
+                  
+                  {/* Ideas dinámicas - solo si hay ideas cargadas */}
+                  {dynamicIdeas.length > 0 && (
+                    <div className="mb-12">
+                      <div className="flex items-center justify-center gap-3">
+                        {dynamicIdeas.map((idea, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleDynamicIdea(idea)}
+                            disabled={isTaskCreating}
+                            className="flex items-center gap-2 px-4 py-2 bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.1)] rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Search className={`w-4 h-4 text-blue-400`} />
+                            <span className="text-sm text-[#DADADA]">{idea.title}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Direct components - NO LAZY LOADING */}
+          {/* Panel de Configuración */}
           <ConfigPanel
-            config={config}
+            config={config} // ✅ DESDE CONTEXT
             onConfigChange={handleConfigChange}
-            onClose={() => setIsConfigOpen(false)}
-            isOpen={isConfigOpen}
+            onClose={() => setIsConfigModalOpen(false)}
+            isOpen={isConfigModalOpen}
           />
 
+          {/* File Upload Modal */}
           <FileUploadModal
-            isOpen={showFileUpload}
-            onClose={() => setShowFileUpload(false)}
+            isOpen={showFilesModal} // ✅ DESDE CONTEXT
+            onClose={closeFilesModal} // ✅ HOOK DEL CONTEXT
             onFilesUploaded={handleFilesUploaded}
           />
         </>
