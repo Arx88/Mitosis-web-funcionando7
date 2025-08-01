@@ -4,6 +4,7 @@ Fase 4: Abstracción de Herramientas - Elimina duplicación en tool_manager.py
 """
 
 import os
+import sys
 import importlib
 import inspect
 from typing import Dict, Any, List, Optional, Type
