@@ -78,7 +78,7 @@ class WebSocketManager:
             
         @self.socketio.on('join_task')
         def handle_join_task(data):
-            """Client joins a task room for updates"""
+            """Client joins a task room for updates - ENHANCED VERSION WITH MESSAGE DELIVERY"""
             task_id = data.get('task_id')
             session_id = request.sid
             
@@ -95,8 +95,22 @@ class WebSocketManager:
             self.active_connections[task_id].append(session_id)
             self.session_tasks[session_id] = task_id
             
-            logger.info(f"Client {session_id} joined task {task_id}")
-            emit('joined_task', {'task_id': task_id, 'status': 'joined'})
+            logger.info(f"🔌 Client {session_id} joined task {task_id}")
+            logger.info(f"📊 Total active connections for task {task_id}: {len(self.active_connections[task_id])}")
+            
+            # 🚀 CRITICAL FIX: Send stored messages to the newly connected client
+            try:
+                self.send_stored_messages_to_client(session_id, task_id)
+                logger.info(f"📦 Sent stored messages to newly connected client {session_id}")
+            except Exception as e:
+                logger.error(f"❌ Error sending stored messages to client {session_id}: {e}")
+            
+            emit('joined_task', {
+                'task_id': task_id, 
+                'status': 'joined',
+                'stored_messages_sent': True,
+                'active_connections': len(self.active_connections[task_id])
+            })
             
         @self.socketio.on('leave_task')
         def handle_leave_task(data):
