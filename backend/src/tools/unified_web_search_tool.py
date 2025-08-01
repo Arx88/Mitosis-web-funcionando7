@@ -115,6 +115,13 @@ class UnifiedWebSearchTool(BaseTool):
         # Obtener task_id del config si está disponible
         self.task_id = config.get('task_id') if config else None
         
+        # DEBUG: Log para verificar task_id
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"🔍 WEB SEARCH TOOL CONFIG: task_id={self.task_id}, config={config}")
+        if not self.task_id:
+            logger.warning("⚠️ WEB SEARCH TOOL: No task_id provided in config - real-time visualization will not work")
+        
         try:
             # 🔄 INICIALIZAR VISUALIZACIÓN EN TIEMPO REAL
             if not self._initialize_real_time_components():
