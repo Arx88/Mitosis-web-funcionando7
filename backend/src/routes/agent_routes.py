@@ -2529,6 +2529,10 @@ def _fallback_casual_detection(message: str) -> bool:
     # Si tiene más de 5 palabras y no es claramente casual, tratarlo como tarea
     return False
 
+def get_websocket_manager():
+    """Obtener la instancia de WebSocketManager desde current_app"""
+    return getattr(current_app, 'websocket_manager', None)
+
 def get_ollama_service():
     """Obtener servicio de Ollama"""
     try:
