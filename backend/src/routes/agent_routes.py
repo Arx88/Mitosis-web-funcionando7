@@ -1150,32 +1150,110 @@ Formato: Información combinada clara y directa en español.
         }
 
 def execute_web_search_step(title: str, description: str, tool_manager, task_id: str) -> dict:
-    """Ejecutar paso de búsqueda web"""
+    """Ejecutar paso de búsqueda web con visualización en tiempo real"""
     try:
         # Extraer query de búsqueda
         search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
         
-        if tool_manager and hasattr(tool_manager, 'execute_tool'):
-            result = tool_manager.execute_tool('playwright_web_search', {
-                'query': search_query,
-                'max_results': 5,
-                'search_engine': 'bing',
-                'extract_content': True
-            }, task_id=task_id)
+        # ✅ INTEGRACIÓN WebBrowserManager PARA VISUALIZACIÓN EN TIEMPO REAL
+        browser_manager = create_web_browser_manager(task_id)
+        websocket_manager = get_websocket_manager()
+        
+        try:
+            # Inicializar navegador para mostrar proceso de búsqueda
+            if browser_manager:
+                browser_manager.initialize_browser()
+                
+                if websocket_manager:
+                    websocket_manager.send_log_message(
+                        task_id, 
+                        "info", 
+                        f"🔍 Iniciando búsqueda web: {search_query}"
+                    )
+                
+                # Navegar a motor de búsqueda
+                search_url = f"https://www.bing.com/search?q={search_query.replace(' ', '+')}"
+                browser_manager.navigate(search_url)
+                
+                # Extraer datos básicos de la página
+                search_preview = browser_manager.extract_data(".b_algo h2 a")
+                
+                if websocket_manager:
+                    websocket_manager.send_data_collection_update(
+                        task_id,
+                        f"basic-search-{task_id}",
+                        f"Vista previa de búsqueda: {search_preview.get('count', 0)} resultados visibles",
+                        search_preview
+                    )
             
-            return {
-                'success': True,
-                'type': 'web_search',
-                'query': search_query,
-                'results_count': len(result.get('search_results', [])),
-                'summary': f"✅ Búsqueda completada: {len(result.get('search_results', []))} resultados encontrados",
-                'data': result.get('search_results', [])
-            }
-        else:
-            raise Exception("Tool manager no disponible")
-            
+            # Ejecutar búsqueda con herramientas
+            if tool_manager and hasattr(tool_manager, 'execute_tool'):
+                result = tool_manager.execute_tool('playwright_web_search', {
+                    'query': search_query,
+                    'max_results': 5,
+                    'search_engine': 'bing',
+                    'extract_content': True
+                }, task_id=task_id)
+                
+                # Enviar datos finales
+                if websocket_manager:
+                    results_count = len(result.get('search_results', []))
+                    websocket_manager.send_data_collection_update(
+                        task_id,
+                        f"web-search-{task_id}",
+                        f"Búsqueda completada: {results_count} resultados obtenidos",
+                        result.get('search_results', [])[:2]  # Muestra de 2 resultados
+                    )
+                    
+                    websocket_manager.send_log_message(
+                        task_id, 
+                        "info", 
+                        f"✅ Búsqueda web finalizada: {results_count} resultados"
+                    )
+                
+                return {
+                    'success': True,
+                    'type': 'web_search',
+                    'query': search_query,
+                    'results_count': len(result.get('search_results', [])),
+                    'summary': f"✅ Búsqueda completada: {len(result.get('search_results', []))} resultados encontrados",
+                    'data': result.get('search_results', [])
+                }
+            else:
+                # Fallback básico
+                if websocket_manager:
+                    websocket_manager.send_log_message(
+                        task_id, 
+                        "warn", 
+                        "⚠️ Usando búsqueda básica - tool manager no disponible"
+                    )
+                
+                return {
+                    'success': True,
+                    'type': 'web_search_basic',
+                    'query': search_query,
+                    'results_count': 0,
+                    'summary': f"⚠️ Búsqueda básica para: {search_query}",
+                    'data': []
+                }
+                
+        finally:
+            # Limpiar navegador
+            if browser_manager:
+                browser_manager.close_browser()
+        
     except Exception as e:
-        logger.error(f"❌ Web search error: {str(e)}")
+        logger.error(f"❌ Error en búsqueda web: {str(e)}")
+        
+        # Notificar error via WebSocket
+        websocket_manager = get_websocket_manager()
+        if websocket_manager:
+            websocket_manager.send_log_message(
+                task_id, 
+                "error", 
+                f"❌ Error en búsqueda web: {str(e)}"
+            )
+        
         return {
             'success': False,
             'error': str(e),
