@@ -2735,12 +2735,27 @@ def create_web_browser_manager(task_id: str, browser_type: str = "playwright"):
         return None
     
     try:
+        # Obtener websocket manager
         websocket_manager = get_websocket_manager()
         if websocket_manager is None:
             logger.warning("⚠️ WebSocketManager no disponible - WebBrowserManager funcionará sin eventos tiempo real")
-            return None
         
-        browser_manager = WebBrowserManager(websocket_manager, task_id, browser_type)
+        # Crear configuración para el navegador
+        from ..web_browser_manager import BrowserConfig, BrowserType
+        
+        # Configurar tipo de navegador
+        if browser_type.lower() == "selenium":
+            browser_config = BrowserConfig(browser_type=BrowserType.CHROMIUM)
+        else:
+            browser_config = BrowserConfig(browser_type=BrowserType.CHROMIUM)
+        
+        # Crear instancia de WebBrowserManager con integración WebSocket
+        browser_manager = WebBrowserManager(
+            config=browser_config,
+            websocket_manager=websocket_manager,
+            task_id=task_id
+        )
+        
         logger.info(f"✅ WebBrowserManager creado para task {task_id} usando {browser_type}")
         return browser_manager
         
