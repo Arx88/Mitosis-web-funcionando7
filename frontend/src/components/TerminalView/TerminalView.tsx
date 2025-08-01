@@ -765,6 +765,18 @@ export const TerminalView = ({
         case 'log_message':
           handleLogMessage(data);
           break;
+        case 'step_started':
+          console.log(`🚀 [TASK-${taskId}] Step started:`, data.step);
+          // El plan component ya maneja estos eventos, solo loggeamos aquí
+          break;
+        case 'step_completed':
+          console.log(`✅ [TASK-${taskId}] Step completed:`, data.step);
+          // El plan component ya maneja estos eventos, solo loggeamos aquí
+          break;
+        case 'task_progress':
+          console.log(`📊 [TASK-${taskId}] Task progress:`, data.progress);
+          // El plan component ya maneja estos eventos, solo loggeamos aquí
+          break;
         default:
           console.log(`🔄 [TASK-${taskId}] Unknown update type:`, data.type);
       }
