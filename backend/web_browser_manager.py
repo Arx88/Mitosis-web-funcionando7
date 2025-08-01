@@ -600,13 +600,18 @@ class WebBrowserManager:
         try:
             import asyncio
             
-            if hasattr(asyncio, 'get_running_loop'):
-                try:
-                    loop = asyncio.get_running_loop()
-                    return loop.run_until_complete(self.initialize())
-                except RuntimeError:
-                    return asyncio.run(self.initialize())
-            else:
+            # Simplificar la inicialización para evitar problemas con event loops
+            try:
+                # Si ya hay un loop corriendo, programar la inicialización como tarea
+                loop = asyncio.get_running_loop()
+                # En un servidor web, generalmente hay un loop corriendo
+                # Vamos a usar un enfoque diferente: llamar al async directamente
+                future = asyncio.ensure_future(self.initialize())
+                # Esperar con timeout
+                result = asyncio.wait_for(future, timeout=30.0)
+                return asyncio.get_event_loop().run_until_complete(result)
+            except RuntimeError:
+                # No hay loop corriendo, crear uno nuevo
                 return asyncio.run(self.initialize())
                 
         except Exception as e:
