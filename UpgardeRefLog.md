@@ -34,3 +34,10 @@
 **Justificación:** Necesario para activar la visualización en tiempo real durante ejecución de herramientas web.
 **Estado:** Completado
 **Notas Adicionales:** Integración completada en execute_enhanced_web_search_step y execute_web_search_step. Añadido endpoint para servir screenshots. Funciones ahora navegan a URLs reales, capturan eventos, envían actualizaciones WebSocket, y muestran proceso de búsqueda en tiempo real.
+
+## 2025-01-31 10:55:00
+**Fase/Módulo:** Frontend - Actualización de Interfaces y WebSocket
+**Descripción:** Actualizando MonitorPage interface y añadiendo soporte para nuevos eventos WebSocket según sección 5.3 de UpgardeRef.md.
+**Justificación:** Interfaz frontend debe soportar nuevos tipos de contenido (web-browsing, data-collection, log) y consumir eventos en tiempo real.
+**Estado:** Completado
+**Notas Adicionales:** MonitorPage expandida con nuevos tipos y metadata. TerminalView integrado con WebSocket hooks. Añadida lógica completa para manejar browser_activity, data_collection_update, report_progress, log_message. Renderizado específico implementado para cada tipo de contenido nuevo.
