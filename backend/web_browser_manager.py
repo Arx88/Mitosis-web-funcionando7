@@ -599,20 +599,29 @@ class WebBrowserManager:
         """Versión sincrónica para compatibilidad con código existente"""
         try:
             import asyncio
+            import threading
             
-            # Simplificar la inicialización para evitar problemas con event loops
-            try:
-                # Si ya hay un loop corriendo, programar la inicialización como tarea
-                loop = asyncio.get_running_loop()
-                # En un servidor web, generalmente hay un loop corriendo
-                # Vamos a usar un enfoque diferente: llamar al async directamente
-                future = asyncio.ensure_future(self.initialize())
-                # Esperar con timeout
-                result = asyncio.wait_for(future, timeout=30.0)
-                return asyncio.get_event_loop().run_until_complete(result)
-            except RuntimeError:
-                # No hay loop corriendo, crear uno nuevo
-                return asyncio.run(self.initialize())
+            self.logger.info("🚀 Iniciando inicialización del navegador...")
+            
+            # Crear una función que ejecute la inicialización async en un hilo separado
+            def run_in_thread():
+                # Crear un nuevo event loop para este hilo
+                new_loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(new_loop)
+                try:
+                    result = new_loop.run_until_complete(self.initialize())
+                    return result
+                finally:
+                    new_loop.close()
+            
+            # Ejecutar en un hilo separado para evitar conflictos con el event loop principal
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(run_in_thread)
+                result = future.result(timeout=30)  # 30 segundos timeout
+                
+            self.logger.info(f"✅ Inicialización del navegador completada: {result}")
+            return result
                 
         except Exception as e:
             self.logger.error(f"❌ Error inicializando navegador: {e}")
