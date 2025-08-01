@@ -2718,6 +2718,56 @@ def get_tool_manager():
     from ..tools.tool_manager import get_tool_manager as get_global_tool_manager
     return get_global_tool_manager()
 
+# ✅ ENDPOINT FALTANTE PARA GET-TASK-STATUS - CORRIGIENDO ERROR 404
+@agent_bp.route('/get-task-status/<task_id>', methods=['GET', 'OPTIONS'])
+def get_task_status_new(task_id):
+    """
+    Obtener el estado actual de una tarea específica
+    
+    Returns:
+        JSON con el estado de la tarea: status, progress, current_step, etc.
+    """
+    try:
+        logger.info(f"🔍 Obteniendo estado de tarea: {task_id}")
+        
+        # Buscar la tarea usando el TaskManager
+        task_manager = get_task_manager()
+        task = task_manager.get_task(task_id)
+        
+        if not task:
+            logger.warning(f"⚠️ Tarea {task_id} no encontrada")
+            return jsonify({
+                "success": False,
+                "error": "Task not found",
+                "task_id": task_id
+            }), 404
+        
+        # Preparar respuesta con estado de la tarea
+        response = {
+            "success": True,
+            "task_id": task_id,
+            "status": task.get("status", "unknown"),
+            "progress": task.get("progress", 0),
+            "current_step": task.get("current_step", None),
+            "total_steps": len(task.get("plan", [])),
+            "completed_steps": len([step for step in task.get("plan", []) if step.get("status") == "completed"]),
+            "created_at": task.get("created_at"),
+            "updated_at": task.get("updated_at"),
+            "title": task.get("title", ""),
+            "plan": task.get("plan", [])
+        }
+        
+        logger.info(f"✅ Estado de tarea {task_id} obtenido exitosamente")
+        return jsonify(response)
+        
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo estado de tarea {task_id}: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "task_id": task_id
+        }), 500
+
 # ✅ FUNCIÓN HELPER PARA WebBrowserManager - SEGÚN UpgardeRef.md SECCIÓN 4.1
 def create_web_browser_manager(task_id: str, browser_type: str = "playwright"):
     """
