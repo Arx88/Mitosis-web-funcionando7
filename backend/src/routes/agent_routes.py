@@ -7077,14 +7077,16 @@ def is_casual_conversation(message: str) -> bool:
     task_patterns = [
         'crear', 'crear un', 'hacer', 'generar', 'desarrollar', 'analizar',
         'create', 'make', 'generate', 'develop', 'analyze', 'write',
-        'necesito', 'quiero', 'puedes', 'ayúdame', 'help me', 'can you'
+        'necesito', 'quiero', 'puedes', 'ayúdame', 'help me', 'can you',
+        'análisis', 'analysis', 'mercado', 'market', 'plan', 'task', 'tarea',
+        'informe', 'report', 'documento', 'document', 'buscar', 'search'
     ]
     
     if any(pattern in message_lower for pattern in task_patterns):
         return False
     
-    # Default to task if uncertain and message is substantial
-    return len(message_lower) < 20
+    # Default to TASK (not casual) if uncertain - most messages should be treated as tasks
+    return len(message_lower) < 10  # Only very short messages are casual
 
 
 # FIN del archivo - función duplicada removida
