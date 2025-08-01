@@ -790,6 +790,17 @@ La tarea se ejecutó correctamente y finalizó sin errores.
         logger.error(f"Error generating final report: {e}")
         return jsonify({"error": str(e)}), 500
 
+# ✅ ENDPOINT PARA SERVIR CAPTURAS DE PANTALLA - SEGÚN UpgardeRef.md SECCIÓN 4.1  
+@app.route('/api/files/screenshots/<task_id>/<filename>')
+def serve_screenshot(task_id, filename):
+    """Serve screenshot files for real-time browser activity visualization"""
+    try:
+        screenshots_dir = f"/tmp/screenshots/{task_id}"
+        return send_from_directory(screenshots_dir, filename)
+    except Exception as e:
+        logger.error(f"Error serving screenshot {filename} for task {task_id}: {e}")
+        return jsonify({"error": "Screenshot not found"}), 404
+
 # Manejo de errores
 @app.errorhandler(404)
 def not_found(error):
