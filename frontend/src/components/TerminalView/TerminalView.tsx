@@ -86,6 +86,9 @@ export const TerminalView = ({
     setTaskCurrentPageIndex
   } = useAppContext();
 
+  // ✅ WEBSOCKET HOOK PARA NUEVOS EVENTOS DE TIEMPO REAL - SEGÚN UpgardeRef.md SECCIÓN 5.3
+  const { socket, isConnected, joinTaskRoom, addEventListeners, removeEventListeners } = useWebSocket();
+
   // ========================================================================
   // ESTADO LOCAL MÍNIMO - SOLO PARA UI
   // ========================================================================
