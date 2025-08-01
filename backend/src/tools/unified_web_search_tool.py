@@ -253,27 +253,50 @@ class UnifiedWebSearchTool(BaseTool):
     
     def _run_async_search_with_visualization(self, query: str, search_engine: str, 
                                            max_results: int, extract_content: bool) -> List[Dict[str, Any]]:
-        """🔄 EJECUTAR BÚSQUEDA ASYNC CON VISUALIZACIÓN - ARREGLADO PARA EVENTLET"""
+        """🔄 EJECUTAR BÚSQUEDA ASYNC CON VISUALIZACIÓN EN TIEMPO REAL - VERSIÓN MEJORADA"""
         
         import threading
         import subprocess
         import tempfile
         import os
         import json
+        import time
+        import signal
+        from datetime import datetime
         
-        # 🔧 SOLUCIÓN: Usar subprocess para evitar conflicto con eventlet
+        # 🚀 NUEVA ESTRATEGIA: Proceso híbrido con comunicación IPC en tiempo real
         try:
-            # Crear script temporal para ejecutar Playwright en proceso separado
+            # 🔧 PASO 1: Crear archivos de comunicación IPC para progreso en tiempo real
+            progress_file = f"/tmp/websocket_progress_{self.task_id}_{int(time.time())}.json"
+            
+            # 🔧 PASO 2: Script Playwright mejorado con comunicación IPC
             script_content = f'''
 import asyncio
 import json
 import sys
+import time
 from playwright.async_api import async_playwright
 from urllib.parse import quote_plus
 import traceback
+from datetime import datetime
 
-async def search_with_playwright(query, search_engine, max_results):
-    """Búsqueda Playwright en proceso separado"""
+def emit_progress(message, progress_file):
+    """Emitir progreso a archivo IPC"""
+    try:
+        progress_data = {{
+            "timestamp": datetime.now().isoformat(),
+            "message": message,
+            "task_id": "{self.task_id}"
+        }}
+        with open(progress_file, "w") as f:
+            json.dump(progress_data, f)
+    except Exception:
+        pass
+
+async def search_with_playwright_realtime(query, search_engine, max_results, progress_file):
+    """Búsqueda Playwright con comunicación en tiempo real"""
+    
+    emit_progress("🚀 Inicializando navegador para búsqueda web", progress_file)
     
     results = []
     
@@ -284,31 +307,40 @@ async def search_with_playwright(query, search_engine, max_results):
     else:
         search_url = f"https://www.bing.com/search?q={{encoded_query}}&count=20"
     
+    emit_progress(f"🌐 Navegando a {{search_engine}}: {{search_url[:60]}}...", progress_file)
+    
     async with async_playwright() as p:
         browser = await p.chromium.launch(
             headless=True,
-            args=['--no-sandbox', '--disable-dev-shm-usage']
+            args=['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
         )
         
         try:
             context = await browser.new_context(
                 viewport={{'width': 1920, 'height': 800}},
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
             )
             
             page = await context.new_page()
             page.set_default_timeout(15000)
             
+            emit_progress("📄 Cargando página de resultados de búsqueda...", progress_file)
+            
             # Navegar y extraer resultados
             await page.goto(search_url, wait_until='networkidle')
             await page.wait_for_timeout(2000)
             
+            emit_progress("🔍 Extrayendo resultados de búsqueda de la página...", progress_file)
+            
             # Extraer resultados según motor de búsqueda
             if search_engine == 'bing':
                 result_elements = await page.query_selector_all('li.b_algo')
+                emit_progress(f"📊 Encontrados {{len(result_elements)}} elementos de resultados en Bing", progress_file)
                 
-                for element in result_elements[:max_results]:
+                for i, element in enumerate(result_elements[:max_results]):
                     try:
+                        emit_progress(f"📄 Procesando resultado {{i+1}}/{{min(len(result_elements), max_results)}}...", progress_file)
+                        
                         title_element = await element.query_selector('h2')
                         title = await title_element.text_content() if title_element else ''
                         
@@ -325,14 +357,19 @@ async def search_with_playwright(query, search_engine, max_results):
                                 'snippet': snippet.strip(),
                                 'source': 'bing'
                             }})
-                    except Exception:
+                            emit_progress(f"✅ Resultado {{i+1}} extraído: {{title[:40]}}...", progress_file)
+                    except Exception as e:
+                        emit_progress(f"⚠️ Error en resultado {{i+1}}: {{str(e)[:50]}}", progress_file)
                         continue
             
             else:  # Google
                 result_elements = await page.query_selector_all('div.g, div[data-ved]')
+                emit_progress(f"📊 Encontrados {{len(result_elements)}} elementos de resultados en Google", progress_file)
                 
-                for element in result_elements[:max_results]:
+                for i, element in enumerate(result_elements[:max_results]):
                     try:
+                        emit_progress(f"📄 Procesando resultado {{i+1}}/{{min(len(result_elements), max_results)}}...", progress_file)
+                        
                         title_element = await element.query_selector('h3')
                         title = await title_element.text_content() if title_element else ''
                         
@@ -349,62 +386,115 @@ async def search_with_playwright(query, search_engine, max_results):
                                 'snippet': snippet.strip(),
                                 'source': 'google'
                             }})
-                    except Exception:
+                            emit_progress(f"✅ Resultado {{i+1}} extraído: {{title[:40]}}...", progress_file)
+                    except Exception as e:
+                        emit_progress(f"⚠️ Error en resultado {{i+1}}: {{str(e)[:50]}}", progress_file)
                         continue
+            
+            emit_progress(f"🎉 Búsqueda completada: {{len(results)}} resultados válidos obtenidos", progress_file)
                         
         finally:
             await browser.close()
+            emit_progress("🔚 Navegador cerrado correctamente", progress_file)
     
     return results
 
-# Ejecutar búsqueda
+# Ejecutar búsqueda con progreso en tiempo real
 try:
-    results = asyncio.run(search_with_playwright("{query}", "{search_engine}", {max_results}))
+    results = asyncio.run(search_with_playwright_realtime("{query}", "{search_engine}", {max_results}, "{progress_file}"))
     print(json.dumps({{"success": True, "results": results}}))
 except Exception as e:
+    emit_progress(f"❌ Error crítico: {{str(e)}}", "{progress_file}")
     print(json.dumps({{"success": False, "error": str(e), "traceback": traceback.format_exc()}}))
 '''
             
-            # Escribir script a archivo temporal
+            # 🔧 PASO 3: Escribir script a archivo temporal
             with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_file:
                 temp_file.write(script_content)
                 temp_script_path = temp_file.name
             
             try:
-                # 🚀 EMISIÓN DE PROGRESO - CORREGIDA PARA FUNCIONAR CON EVENTLET
-                self._emit_progress_eventlet(f"🌐 Navegando a {search_engine} (proceso separado)...")
+                # 🔧 PASO 4: Ejecutar proceso con monitoreo de progreso en tiempo real
+                self._emit_progress_eventlet(f"🚀 Iniciando navegación web en tiempo real para: '{query}'")
                 
-                # Ejecutar script en proceso separado
-                result = subprocess.run(
+                # Iniciar proceso Playwright en background
+                process = subprocess.Popen(
                     ['/root/.venv/bin/python', temp_script_path],
-                    capture_output=True,
-                    text=True,
-                    timeout=30
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
                 )
                 
-                if result.returncode == 0:
+                # 🔧 PASO 5: Monitoreo en tiempo real del progreso
+                start_time = time.time()
+                last_progress_time = start_time
+                
+                while process.poll() is None:
+                    # Verificar timeout
+                    if time.time() - start_time > 30:
+                        self._emit_progress_eventlet("⚠️ Timeout de navegación, terminando proceso...")
+                        process.terminate()
+                        time.sleep(2)
+                        if process.poll() is None:
+                            process.kill()
+                        break
+                    
+                    # Leer y emitir progreso si hay actualizaciones
                     try:
-                        output_data = json.loads(result.stdout.strip())
+                        if os.path.exists(progress_file):
+                            with open(progress_file, 'r') as f:
+                                progress_data = json.load(f)
+                                message = progress_data.get('message', '')
+                                if message:
+                                    self._emit_progress_eventlet(message)
+                                    last_progress_time = time.time()
+                    except (json.JSONDecodeError, FileNotFoundError):
+                        pass
+                    
+                    # Emitir progreso de keepalive si no hay actualizaciones por 5 segundos
+                    if time.time() - last_progress_time > 5:
+                        elapsed = int(time.time() - start_time)
+                        self._emit_progress_eventlet(f"🔄 Navegación web en progreso... ({elapsed}s transcurridos)")
+                        last_progress_time = time.time()
+                    
+                    time.sleep(0.5)  # Polling cada 500ms
+                
+                # 🔧 PASO 6: Procesar resultado
+                stdout, stderr = process.communicate()
+                
+                if process.returncode == 0:
+                    try:
+                        output_data = json.loads(stdout.strip())
                         if output_data.get('success'):
                             results = output_data.get('results', [])
-                            self._emit_progress_eventlet(f"✅ Encontrados {len(results)} resultados")
+                            self._emit_progress_eventlet(f"✅ Navegación completada exitosamente: {len(results)} resultados obtenidos")
+                            
+                            # Mostrar muestra de resultados
+                            for i, result in enumerate(results[:3]):
+                                self._emit_progress_eventlet(f"   📄 Resultado {i+1}: {result.get('title', 'Sin título')[:60]}...")
+                            
                             return results
                         else:
                             raise Exception(f"Playwright subprocess error: {output_data.get('error', 'Unknown error')}")
                     except json.JSONDecodeError as e:
-                        raise Exception(f"Failed to parse subprocess output: {result.stdout}")
+                        self._emit_progress_eventlet(f"❌ Error parseando respuesta del navegador: {str(e)}")
+                        raise Exception(f"Failed to parse subprocess output: {stdout}")
                 else:
-                    raise Exception(f"Subprocess failed with code {result.returncode}: {result.stderr}")
+                    self._emit_progress_eventlet(f"❌ Proceso de navegación falló con código {process.returncode}")
+                    raise Exception(f"Subprocess failed with code {process.returncode}: {stderr}")
                     
             finally:
-                # Limpiar archivo temporal
+                # 🧹 PASO 7: Limpiar archivos temporales
                 try:
-                    os.unlink(temp_script_path)
+                    if os.path.exists(temp_script_path):
+                        os.unlink(temp_script_path)
+                    if os.path.exists(progress_file):
+                        os.unlink(progress_file)
                 except:
                     pass
                     
         except Exception as e:
-            self._emit_progress_eventlet(f"❌ Error en búsqueda subprocess: {str(e)}")
+            self._emit_progress_eventlet(f"❌ Error durante navegación en tiempo real: {str(e)}")
             
             # 🔄 FALLBACK: Usar método simple sin Playwright
             return self._simple_search_fallback(query, search_engine, max_results)
