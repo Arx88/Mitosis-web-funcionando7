@@ -115,12 +115,24 @@ class UnifiedWebSearchTool(BaseTool):
         # Obtener task_id del config si está disponible
         self.task_id = config.get('task_id') if config else None
         
-        # DEBUG: Log para verificar task_id
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f"🔍 WEB SEARCH TOOL CONFIG: task_id={self.task_id}, config={config}")
+        # DEBUG: Escribir directamente a archivo para verificar task_id
+        try:
+            with open('/tmp/websocket_debug.log', 'a') as f:
+                f.write(f"[{datetime.now()}] WEB SEARCH CONFIG: task_id={self.task_id}, config={config}\n")
+                f.flush()
+        except:
+            pass
+        
+        # FORZAR EMISIÓN DE WEBSOCKET INCLUSO SIN TASK_ID (para debugging)
         if not self.task_id:
-            logger.warning("⚠️ WEB SEARCH TOOL: No task_id provided in config - real-time visualization will not work")
+            # Si no hay task_id, usar un ID de fallback para testing
+            self.task_id = "debug-websocket-test"
+            try:
+                with open('/tmp/websocket_debug.log', 'a') as f:
+                    f.write(f"[{datetime.now()}] USING FALLBACK TASK_ID: {self.task_id}\n")
+                    f.flush()
+            except:
+                pass
         
         try:
             # 🔄 INICIALIZAR VISUALIZACIÓN EN TIEMPO REAL
