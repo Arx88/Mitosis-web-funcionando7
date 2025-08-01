@@ -490,31 +490,52 @@ class UnifiedWebSearchTool(BaseTool):
             return ""
     
     def _emit_progress(self, message: str):
-        """📡 EMITIR PROGRESO EN TIEMPO REAL VIA WEBSOCKET - FIXED WITH DIRECT SOCKETIO"""
+        """📡 EMITIR PROGRESO EN TIEMPO REAL VIA WEBSOCKET - FIXED WITH ROBUST SOCKETIO"""
         try:
             if self.task_id:
-                # SOLUCIÓN DIRECTA: Importar socketio directamente para visualización terminal
-                from server import socketio
                 import logging
+                from datetime import datetime
                 
                 logger = logging.getLogger(__name__)
                 logger.info(f"🔍 WEB SEARCH PROGRESS: {message} for task {self.task_id}")
                 
-                # Emitir directamente a la terminal del frontend
-                terminal_data = {
-                    'task_id': self.task_id,
-                    'activity': message,
-                    'timestamp': datetime.now().isoformat(),
-                    'type': 'web_navigation',
-                    'source': 'web_search_tool'
-                }
-                
-                # Emitir múltiples eventos para asegurar que el frontend los reciba
-                socketio.emit('terminal_activity', terminal_data, room=self.task_id)
-                socketio.emit('web_navigation_progress', terminal_data, room=self.task_id)
-                socketio.emit('task_progress', terminal_data, room=self.task_id)
-                
-                logger.info(f"📡 DIRECT TERMINAL EMIT: {message} sent to task {self.task_id}")
+                # SOLUCIÓN ROBUSTA: Importar socketio desde contexto de aplicación
+                try:
+                    from flask import current_app
+                    if hasattr(current_app, 'extensions') and 'socketio' in current_app.extensions:
+                        socketio = current_app.extensions['socketio']
+                    else:
+                        # Fallback: buscar en el módulo server
+                        import sys
+                        if 'server' in sys.modules:
+                            server_module = sys.modules['server']
+                            if hasattr(server_module, 'socketio'):
+                                socketio = server_module.socketio
+                            else:
+                                logger.warning("⚠️ SocketIO no encontrado en server module")
+                                return
+                        else:
+                            logger.warning("⚠️ Server module no cargado")
+                            return
+                    
+                    # Emitir eventos para terminal en tiempo real
+                    terminal_data = {
+                        'task_id': self.task_id,
+                        'activity': message,
+                        'timestamp': datetime.now().isoformat(),
+                        'type': 'web_navigation',
+                        'source': 'web_search_tool'
+                    }
+                    
+                    # Emitir múltiples eventos para asegurar compatibilidad
+                    socketio.emit('terminal_activity', terminal_data, room=self.task_id)
+                    socketio.emit('web_navigation_progress', terminal_data, room=self.task_id)
+                    socketio.emit('task_progress', terminal_data, room=self.task_id)
+                    
+                    logger.info(f"📡 TERMINAL ACTIVITY EMITTED: {message[:50]}... to task {self.task_id}")
+                    
+                except Exception as socketio_error:
+                    logger.error(f"❌ Error accessing SocketIO: {socketio_error}")
                 
         except Exception as e:
             import logging
