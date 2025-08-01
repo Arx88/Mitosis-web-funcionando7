@@ -915,7 +915,8 @@ export const TerminalView = ({
 
   const generateToolPageContent = (result: ToolResult): string => {
     const timestamp = new Date().toISOString();
-    let content = `# Ejecución de Herramienta: ${result.tool.toUpperCase()}\n\n`;
+    const toolName = result.tool || 'herramienta';
+    let content = `# Ejecución de Herramienta: ${toolName.toUpperCase()}\n\n`;
     content += `**Timestamp:** ${timestamp}\n`;
     content += `**Parámetros:**\n\`\`\`json\n${JSON.stringify(result.parameters, null, 2)}\n\`\`\`\n\n`;
     
