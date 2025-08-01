@@ -17,6 +17,12 @@ import re
 import jsonschema
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
+# ✅ IMPORTAR WebBrowserManager PARA VISUALIZACIÓN EN TIEMPO REAL - SEGÚN UpgardeRef.md SECCIÓN 4.1
+try:
+    from ..web_browser_manager import WebBrowserManager
+except ImportError:
+    WebBrowserManager = None
+
 # 🆕 PROBLEMA 2: Importar sistema de validación de resultados
 from ..validation.result_validators import (
     validate_step_result, 
