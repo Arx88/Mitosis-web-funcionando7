@@ -459,6 +459,46 @@ class WebSocketManager:
         
         self.emit_update(task_id, UpdateType.TASK_COMPLETED, completion_info)
 
+    # ✅ NUEVOS MÉTODOS PARA VISUALIZACIÓN EN TIEMPO REAL - SEGÚN UpgardeRef.md SECCIÓN 5.1
+    def send_browser_activity(self, task_id: str, activity_type: str, url: str, title: str = "", screenshot_url: str = ""):
+        """Send browser activity notification for real-time web navigation tracking"""
+        self.send_update(task_id, UpdateType.BROWSER_ACTIVITY, {
+            'activity_type': activity_type,  # 'url_changed', 'page_loaded', 'click', 'input', etc.
+            'url': url,
+            'title': title,
+            'screenshot_url': screenshot_url,
+            'message': f'Navegando a: {url}' if activity_type == 'page_loaded' else f'Actividad en navegador: {activity_type}',
+            'timestamp': datetime.now().isoformat()
+        })
+
+    def send_data_collection_update(self, task_id: str, step_id: str, data_summary: str, partial_data: Any = None):
+        """Send incremental data collection update for granular progress tracking"""
+        self.send_update(task_id, UpdateType.DATA_COLLECTION_UPDATE, {
+            'step_id': step_id,
+            'data_summary': data_summary,
+            'partial_data': partial_data,
+            'message': f'Datos recolectados: {data_summary}',
+            'timestamp': datetime.now().isoformat()
+        })
+
+    def send_report_progress(self, task_id: str, section_title: str, content_delta: str, full_report_so_far: str = ""):
+        """Send incremental report progress update for real-time report building"""
+        self.send_update(task_id, UpdateType.REPORT_PROGRESS, {
+            'section_title': section_title,
+            'content_delta': content_delta,
+            'full_report_so_far': full_report_so_far,
+            'message': f'Generando informe: {section_title}',
+            'timestamp': datetime.now().isoformat()
+        })
+
+    def send_log_message(self, task_id: str, level: str, message: str):
+        """Send generic log message to terminal for comprehensive logging"""
+        self.send_update(task_id, UpdateType.LOG_MESSAGE, {
+            'level': level,  # 'info', 'warn', 'error', 'debug'
+            'message': message,
+            'timestamp': datetime.now().isoformat()
+        })
+
 # Global WebSocket manager instance
 websocket_manager = WebSocketManager()
 
