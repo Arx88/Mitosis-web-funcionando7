@@ -17,7 +17,7 @@ export interface MonitorPage {
   id: string;
   title: string;
   content: string;
-  type: 'plan' | 'tool-execution' | 'report' | 'file' | 'error';
+  type: 'plan' | 'tool-execution' | 'report' | 'file' | 'error' | 'web-browsing' | 'data-collection' | 'log'; // ✅ NUEVOS TIPOS SEGÚN UpgardeRef.md SECCIÓN 5.3
   timestamp: Date;
   toolName?: string;
   toolParams?: any;
@@ -26,6 +26,14 @@ export interface MonitorPage {
     fileSize?: number;
     executionTime?: number;
     status?: 'success' | 'error' | 'running';
+    // ✅ NUEVOS CAMPOS PARA NAVEGACIÓN WEB - SEGÚN UpgardeRef.md SECCIÓN 5.3
+    url?: string;
+    screenshotUrl?: string; // URL accesible para la imagen
+    // ✅ NUEVOS CAMPOS PARA RECOLECCIÓN DE DATOS
+    dataSummary?: string;
+    partialData?: any;
+    // ✅ NUEVOS CAMPOS PARA LOGS
+    logLevel?: 'info' | 'warn' | 'error' | 'debug';
   };
 }
 
