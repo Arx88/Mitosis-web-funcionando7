@@ -1150,13 +1150,116 @@ export const TerminalView = ({
                     <div className="w-full">
                       {formatMarkdownContent(currentPage.content)}
                     </div>
+                  ) : currentPage.type === 'web-browsing' ? (
+                    // ✅ RENDERIZADO PARA NAVEGACIÓN WEB - SEGÚN UpgardeRef.md SECCIÓN 5.3
+                    <div className="space-y-4 w-full">
+                      <div className="flex items-center gap-2 text-sm text-[#ACACAC] border-b border-[#404040] pb-2">
+                        <div className="w-2 h-2 rounded-full bg-blue-400" />
+                        <span className="font-medium">NAVEGACIÓN WEB</span>
+                        <span className="text-xs ml-auto">{currentPage.timestamp.toLocaleString()}</span>
+                      </div>
+                      <div className="web-browsing-content">
+                        <div className="mb-4">
+                          <h3 className="text-lg font-semibold text-white mb-2">🌐 {currentPage.title}</h3>
+                          {currentPage.metadata?.url && (
+                            <p className="text-sm mb-2">
+                              <strong>URL:</strong> 
+                              <a 
+                                href={currentPage.metadata.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-blue-400 hover:underline ml-2"
+                              >
+                                {currentPage.metadata.url}
+                              </a>
+                            </p>
+                          )}
+                          {currentPage.metadata?.screenshotUrl && (
+                            <div className="mt-4">
+                              <img 
+                                src={currentPage.metadata.screenshotUrl} 
+                                alt="Captura de pantalla de navegación" 
+                                className="rounded-lg max-w-full h-auto border border-[#404040]"
+                                style={{ maxHeight: '400px' }}
+                              />
+                            </div>
+                          )}
+                          <div className="mt-4">
+                            <pre className="text-sm font-mono text-[#e0e0e0] whitespace-pre-wrap">
+                              {currentPage.content}
+                            </pre>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : currentPage.type === 'data-collection' ? (
+                    // ✅ RENDERIZADO PARA RECOLECCIÓN DE DATOS - SEGÚN UpgardeRef.md SECCIÓN 5.3
+                    <div className="space-y-4 w-full">
+                      <div className="flex items-center gap-2 text-sm text-[#ACACAC] border-b border-[#404040] pb-2">
+                        <div className="w-2 h-2 rounded-full bg-green-400" />
+                        <span className="font-medium">DATOS RECOLECTADOS</span>
+                        <span className="text-xs ml-auto">{currentPage.timestamp.toLocaleString()}</span>
+                      </div>
+                      <div className="data-collection-content">
+                        <h3 className="text-lg font-semibold text-white mb-2">📊 {currentPage.title}</h3>
+                        {currentPage.metadata?.dataSummary && (
+                          <p className="text-sm mb-4 text-green-400">
+                            <strong>Resumen:</strong> {currentPage.metadata.dataSummary}
+                          </p>
+                        )}
+                        {currentPage.metadata?.partialData && (
+                          <div className="mb-4">
+                            <h4 className="text-sm font-semibold text-[#DADADA] mb-2">Datos parciales:</h4>
+                            <pre className="bg-[#2a2a2b] p-3 rounded text-xs overflow-x-auto">
+                              {JSON.stringify(currentPage.metadata.partialData, null, 2)}
+                            </pre>
+                          </div>
+                        )}
+                        <div className="mt-4">
+                          <pre className="text-sm font-mono text-[#e0e0e0] whitespace-pre-wrap">
+                            {currentPage.content}
+                          </pre>
+                        </div>
+                      </div>
+                    </div>
+                  ) : currentPage.type === 'log' ? (
+                    // ✅ RENDERIZADO PARA LOGS - SEGÚN UpgardeRef.md SECCIÓN 5.3
+                    <div className="space-y-4 w-full">
+                      <div className="flex items-center gap-2 text-sm text-[#ACACAC] border-b border-[#404040] pb-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          currentPage.metadata?.logLevel === 'error' ? 'bg-red-400' :
+                          currentPage.metadata?.logLevel === 'warn' ? 'bg-yellow-400' :
+                          'bg-blue-400'
+                        }`} />
+                        <span className="font-medium">LOG MESSAGE</span>
+                        <span className="text-xs ml-auto">{currentPage.timestamp.toLocaleString()}</span>
+                      </div>
+                      <div className="log-content">
+                        <h3 className={`text-lg font-semibold mb-2 ${
+                          currentPage.metadata?.logLevel === 'error' ? 'text-red-400' :
+                          currentPage.metadata?.logLevel === 'warn' ? 'text-yellow-400' :
+                          'text-white'
+                        }`}>
+                          {currentPage.metadata?.logLevel === 'error' ? '❌' :
+                           currentPage.metadata?.logLevel === 'warn' ? '⚠️' :
+                           'ℹ️'} {currentPage.title}
+                        </h3>
+                        <pre className="text-sm font-mono text-[#e0e0e0] whitespace-pre-wrap">
+                          {currentPage.content}
+                        </pre>
+                      </div>
+                    </div>
                   ) : (
+                    // Renderizado para tipos existentes (tool-execution, file, error)
                     <div className="space-y-2 w-full">
                       <div className="flex items-center gap-2 text-sm text-[#ACACAC] border-b border-[#404040] pb-2">
                         <div className={`w-2 h-2 rounded-full ${
                           currentPage.type === 'tool-execution' ? 'bg-blue-400' :
                           currentPage.type === 'file' ? 'bg-green-400' :
                           currentPage.type === 'error' ? 'bg-red-400' :
+                          currentPage.type === 'web-browsing' ? 'bg-purple-400' :
+                          currentPage.type === 'data-collection' ? 'bg-green-400' :
+                          currentPage.type === 'log' ? 'bg-yellow-400' :
                           'bg-gray-400'
                         }`} />
                         <span className="font-medium">{currentPage.type.toUpperCase()}</span>
