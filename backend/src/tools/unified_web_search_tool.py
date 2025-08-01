@@ -174,34 +174,35 @@ class UnifiedWebSearchTool(BaseTool):
             self._cleanup_browser_manager()
     
     def _initialize_real_time_components(self) -> bool:
-        """🔧 INICIALIZAR COMPONENTES PARA VISUALIZACIÓN EN TIEMPO REAL"""
+        """🔧 INICIALIZAR COMPONENTES PARA VISUALIZACIÓN EN TIEMPO REAL - CORREGIDO PARA EVENTLET"""
         try:
-            # Inicializar WebSocket manager
+            # PASO 1: Inicializar WebSocket manager SIN Playwright/Browser inicialmente
             if WEBSOCKET_AVAILABLE and self.task_id:
-                self.websocket_manager = get_websocket_manager()
-                
-            # Inicializar Browser manager para screenshots
-            if BROWSER_MANAGER_AVAILABLE and self.task_id:
-                self.browser_manager = WebBrowserManager(
-                    task_id=self.task_id,
-                    websocket_manager=self.websocket_manager
-                )
-                
-                # Inicializar navegador
-                browser_ready = self.browser_manager.initialize_browser()
-                if browser_ready:
-                    self._emit_progress("🚀 Navegador inicializado para visualización en tiempo real")
-                    return True
-                else:
-                    self._emit_progress("⚠️ Navegador no disponible - continuando sin visualización")
-                    self.browser_manager = None
+                try:
+                    # Obtener WebSocket manager del Flask app directamente
+                    from flask import current_app
+                    if current_app and hasattr(current_app, 'websocket_manager'):
+                        self.websocket_manager = current_app.websocket_manager
+                        if self.websocket_manager and self.websocket_manager.is_initialized:
+                            self._emit_progress_eventlet("🚀 WebSocket inicializado para navegación en tiempo real")
+                            return True
                     
-            return False
+                    # Fallback a WebSocket manager global
+                    self.websocket_manager = get_websocket_manager()
+                    if self.websocket_manager and self.websocket_manager.is_initialized:
+                        self._emit_progress_eventlet("🚀 WebSocket global inicializado para navegación en tiempo real")
+                        return True
+                        
+                except Exception as ws_error:
+                    self._emit_progress_eventlet(f"⚠️ Error inicializando WebSocket: {str(ws_error)}")
+            
+            # PASO 2: NO inicializar Playwright/Browser aquí para evitar conflictos
+            # El navegador se manejará en subprocess cuando sea necesario
+            self._emit_progress_eventlet("✅ Navegación configurada para modo subprocess (compatible con eventlet)")
+            return True
             
         except Exception as e:
-            self._emit_progress(f"⚠️ Error inicializando visualización: {str(e)}")
-            self.browser_manager = None
-            self.websocket_manager = None
+            self._emit_progress_eventlet(f"⚠️ Error en inicialización eventlet: {str(e)}")
             return False
     
     def _execute_search_with_visualization(self, query: str, search_engine: str, 
