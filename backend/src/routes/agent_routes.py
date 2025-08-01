@@ -2743,9 +2743,11 @@ def create_web_browser_manager(task_id: str, browser_type: str = "playwright"):
         # Crear configuración para el navegador
         import sys
         import os
-        backend_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        if backend_root not in sys.path:
-            sys.path.insert(0, backend_root)
+        
+        # Añadir el directorio backend al path para importar web_browser_manager
+        backend_dir = '/app/backend'
+        if backend_dir not in sys.path:
+            sys.path.insert(0, backend_dir)
         
         from web_browser_manager import BrowserConfig, BrowserType
         
