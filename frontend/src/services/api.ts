@@ -238,24 +238,44 @@ class AgentAPI {
     this.baseUrl = baseUrl;
   }
 
-  async sendMessage(message: string, context: any = {}): Promise<ChatResponse> {
+  async sendMessage(message: string, taskId?: string): Promise<ChatResponse> {
     try {
+      const requestBody: any = {
+        message: message
+      };
+      
+      // Agregar task_id si se proporciona
+      if (taskId) {
+        requestBody.task_id = taskId;
+      }
+      
+      console.log('🚀 Enviando mensaje al backend:', {
+        endpoint: `${this.baseUrl}${API_CONFIG.endpoints.chat}`,
+        message: message.substring(0, 50) + '...',
+        task_id: taskId
+      });
+      
       const response = await fetch(`${this.baseUrl}${API_CONFIG.endpoints.chat}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          message,
-          context
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
+        console.error('❌ Error response from backend:', response.status, response.statusText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      
+      console.log('✅ Respuesta recibida del backend:', {
+        response: data.response?.substring(0, 50) + '...',
+        task_id: data.task_id,
+        plan_generated: !!data.plan,
+        plan_steps: data.plan?.length || 0
+      });
       
       if (data.error) {
         throw new Error(data.error);
@@ -263,7 +283,7 @@ class AgentAPI {
 
       return data;
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Error sending message:', error);
       throw error;
     }
   }
