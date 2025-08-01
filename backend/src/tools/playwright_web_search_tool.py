@@ -70,10 +70,10 @@ class PlaywrightWebSearchTool(BaseTool):
         extract_content = parameters.get('extract_content', True)
         
         try:
-            # Ejecutar búsqueda con Playwright
-            results = asyncio.run(self._search_with_playwright(
+            # Ejecutar búsqueda con Playwright usando método compatible con eventlet
+            results = self._run_async_search(
                 query, search_engine, max_results, extract_content
-            ))
+            )
             
             return ToolExecutionResult(
                 success=True,
@@ -92,6 +92,40 @@ class PlaywrightWebSearchTool(BaseTool):
                 success=False,
                 error=f'Error en búsqueda Playwright: {str(e)}'
             )
+    
+    def _run_async_search(self, query: str, search_engine: str, max_results: int, extract_content: bool) -> List[Dict[str, Any]]:
+        """Ejecutar búsqueda async de manera compatible con eventlet"""
+        import threading
+        import asyncio
+        
+        results = []
+        exception = None
+        
+        def run_in_thread():
+            nonlocal results, exception
+            try:
+                # Crear un nuevo event loop en el hilo separado
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                results = loop.run_until_complete(
+                    self._search_with_playwright(query, search_engine, max_results, extract_content)
+                )
+                loop.close()
+            except Exception as e:
+                exception = e
+        
+        # Ejecutar en un hilo separado para evitar conflictos de event loop
+        thread = threading.Thread(target=run_in_thread)
+        thread.start()
+        thread.join(timeout=30)  # 30 segundos timeout
+        
+        if exception:
+            raise exception
+            
+        if thread.is_alive():
+            raise Exception("Timeout en búsqueda Playwright")
+            
+        return results
     
     async def _search_with_playwright(self, query: str, search_engine: str, 
                                     max_results: int, extract_content: bool) -> List[Dict[str, Any]]:
