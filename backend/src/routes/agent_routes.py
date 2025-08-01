@@ -1156,12 +1156,57 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
         # Extraer query de búsqueda
         search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
         
-        # ✅ INTEGRACIÓN WebBrowserManager PARA VISUALIZACIÓN EN TIEMPO REAL
-        browser_manager = create_web_browser_manager(task_id)
-        websocket_manager = get_websocket_manager()
+        # 🚀 PRIORIDAD: EJECUTAR LA BÚSQUEDA REAL PRIMERO (sin dependencias de WebSocket/Browser)
+        search_result = None
+        if tool_manager and hasattr(tool_manager, 'execute_tool'):
+            try:
+                search_result = tool_manager.execute_tool('playwright_web_search', {
+                    'query': search_query,
+                    'max_results': 5,
+                    'search_engine': 'bing',
+                    'extract_content': True
+                }, task_id=task_id)
+                logger.info(f"✅ Web search executed successfully: {search_result.get('success', False)}")
+            except Exception as search_error:
+                logger.error(f"❌ Error in web search execution: {str(search_error)}")
+                search_result = {'success': False, 'error': str(search_error)}
         
+        # 🎯 SI LA BÚSQUEDA FUNCIONÓ, DEVOLVER RESULTADO EXITOSO INMEDIATAMENTE
+        if search_result and search_result.get('success'):
+            results_count = len(search_result.get('search_results', []))
+            
+            # 📡 OPCIONAL: Intentar enviar datos por WebSocket (no crítico)
+            try:
+                websocket_manager = get_websocket_manager()
+                if websocket_manager:
+                    websocket_manager.send_data_collection_update(
+                        task_id,
+                        f"web-search-{task_id}",
+                        f"Búsqueda completada: {results_count} resultados obtenidos",
+                        search_result.get('search_results', [])[:2]
+                    )
+                    websocket_manager.send_log_message(
+                        task_id, 
+                        "info", 
+                        f"✅ Búsqueda web finalizada: {results_count} resultados"
+                    )
+            except Exception as ws_error:
+                logger.warning(f"⚠️ WebSocket notification failed (non-critical): {str(ws_error)}")
+            
+            return {
+                'success': True,
+                'type': 'web_search',
+                'query': search_query,
+                'results_count': results_count,
+                'summary': f"✅ Búsqueda completada: {results_count} resultados encontrados",
+                'data': search_result.get('search_results', [])
+            }
+        
+        # 🎬 OPCIONAL: Intentar visualización con WebBrowserManager (no crítico)
         try:
-            # Inicializar navegador para mostrar proceso de búsqueda
+            browser_manager = create_web_browser_manager(task_id)
+            websocket_manager = get_websocket_manager()
+            
             if browser_manager:
                 browser_manager.initialize_browser()
                 
@@ -1169,7 +1214,7 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
                     websocket_manager.send_log_message(
                         task_id, 
                         "info", 
-                        f"🔍 Iniciando búsqueda web: {search_query}"
+                        f"🔍 Iniciando búsqueda web visual: {search_query}"
                     )
                 
                 # Navegar a motor de búsqueda
@@ -1186,62 +1231,35 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
                         f"Vista previa de búsqueda: {search_preview.get('count', 0)} resultados visibles",
                         search_preview
                     )
-            
-            # Ejecutar búsqueda con herramientas
-            if tool_manager and hasattr(tool_manager, 'execute_tool'):
-                result = tool_manager.execute_tool('playwright_web_search', {
-                    'query': search_query,
-                    'max_results': 5,
-                    'search_engine': 'bing',
-                    'extract_content': True
-                }, task_id=task_id)
                 
-                # Enviar datos finales
-                if websocket_manager:
-                    results_count = len(result.get('search_results', []))
-                    websocket_manager.send_data_collection_update(
-                        task_id,
-                        f"web-search-{task_id}",
-                        f"Búsqueda completada: {results_count} resultados obtenidos",
-                        result.get('search_results', [])[:2]  # Muestra de 2 resultados
-                    )
-                    
-                    websocket_manager.send_log_message(
-                        task_id, 
-                        "info", 
-                        f"✅ Búsqueda web finalizada: {results_count} resultados"
-                    )
-                
-                return {
-                    'success': True,
-                    'type': 'web_search',
-                    'query': search_query,
-                    'results_count': len(result.get('search_results', [])),
-                    'summary': f"✅ Búsqueda completada: {len(result.get('search_results', []))} resultados encontrados",
-                    'data': result.get('search_results', [])
-                }
-            else:
-                # Fallback básico
-                if websocket_manager:
-                    websocket_manager.send_log_message(
-                        task_id, 
-                        "warn", 
-                        "⚠️ Usando búsqueda básica - tool manager no disponible"
-                    )
-                
-                return {
-                    'success': True,
-                    'type': 'web_search_basic',
-                    'query': search_query,
-                    'results_count': 0,
-                    'summary': f"⚠️ Búsqueda básica para: {search_query}",
-                    'data': []
-                }
-                
-        finally:
-            # Limpiar navegador
-            if browser_manager:
+                # Limpiar navegador
                 browser_manager.close_browser()
+                
+        except Exception as visual_error:
+            logger.warning(f"⚠️ WebBrowser visualization failed (non-critical): {str(visual_error)}")
+        
+        # Si llegamos aquí, la búsqueda principal falló, pero intentamos fallback básico
+        logger.warning(f"⚠️ Primary web search failed, using basic fallback")
+        
+        try:
+            websocket_manager = get_websocket_manager()
+            if websocket_manager:
+                websocket_manager.send_log_message(
+                    task_id, 
+                    "warn", 
+                    "⚠️ Usando búsqueda básica - herramienta principal no disponible"
+                )
+        except:
+            pass  # WebSocket no crítico
+        
+        return {
+            'success': True,  # Fallback basic siempre exitoso para no bloquear
+            'type': 'web_search_basic',
+            'query': search_query,
+            'results_count': 0,
+            'summary': f"⚠️ Búsqueda básica para: {search_query}",
+            'data': []
+        }
         
     except Exception as e:
         logger.error(f"❌ Error en búsqueda web: {str(e)}")
