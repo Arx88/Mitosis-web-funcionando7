@@ -875,7 +875,8 @@ export const TerminalView = ({
 
   const generateBackendToolPageContent = (tool: any): string => {
     const timestamp = tool.timestamp || new Date().toISOString();
-    let content = `# Ejecución Backend: ${tool.tool.toUpperCase()}\n\n`;
+    const toolName = tool.tool || 'herramienta';
+    let content = `# Ejecución Backend: ${toolName.toUpperCase()}\n\n`;
     content += `**Timestamp:** ${timestamp}\n`;
     content += `**Status:** ${tool.success ? '✅ SUCCESS' : '❌ FAILED'}\n`;
     content += `**Tiempo de ejecución:** ${tool.result?.execution_time || 0}s\n\n`;
