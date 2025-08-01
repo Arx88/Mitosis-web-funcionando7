@@ -648,7 +648,7 @@ except Exception as e:
             return ""
     
     def _emit_progress_eventlet(self, message: str):
-        """📡 EMITIR PROGRESO COMPATIBLE CON EVENTLET - SOLUCIÓN PARA NAVEGACIÓN EN TIEMPO REAL"""
+        """📡 EMITIR PROGRESO COMPATIBLE CON EVENTLET - FORZADO PARA MOSTRAR NAVEGACIÓN"""
         try:
             if self.task_id:
                 import logging
@@ -657,43 +657,52 @@ except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.info(f"🔍 WEB SEARCH PROGRESS (EVENTLET): {message} for task {self.task_id}")
                 
-                # 🔧 SOLUCIÓN: Usar el websocket_manager del servidor Flask directamente
+                # MÉTODO 1: Usar el websocket_manager del servidor Flask directamente
+                success_ws_1 = False
                 try:
                     from flask import current_app
                     if current_app and hasattr(current_app, 'websocket_manager'):
                         ws_manager = current_app.websocket_manager
-                        if ws_manager and ws_manager.is_initialized:
-                            # Emitir directamente usando SocketIO del app
+                        if ws_manager:  # No verificar is_initialized - forzar envío
                             ws_manager.send_log_message(self.task_id, "info", message)
-                            logger.info(f"📡 EVENTLET PROGRESS SENT TO TERMINAL: {message[:50]}...")
-                            return
+                            logger.info(f"📡 EVENTLET PROGRESS SENT VIA APP WS: {message[:50]}...")
+                            success_ws_1 = True
                 except Exception as ws_error:
                     logger.warning(f"⚠️ App WebSocket manager error: {ws_error}")
                 
-                # 🔄 FALLBACK: WebSocket manager global
+                # MÉTODO 2: WebSocket manager global
+                success_ws_2 = False
+                if not success_ws_1:
+                    try:
+                        from ..websocket.websocket_manager import get_websocket_manager
+                        websocket_manager = get_websocket_manager()
+                        
+                        if websocket_manager:  # No verificar is_initialized - forzar envío
+                            websocket_manager.send_log_message(self.task_id, "info", message)
+                            logger.info(f"📡 GLOBAL WEBSOCKET PROGRESS SENT: {message[:50]}...")
+                            success_ws_2 = True
+                    except Exception as global_error:
+                        logger.warning(f"⚠️ Global WebSocket manager error: {global_error}")
+                
+                # MÉTODO 3: FORZAR ESCRITURA A ARCHIVO DE DEBUG (SIEMPRE)
                 try:
-                    from ..websocket.websocket_manager import get_websocket_manager
-                    websocket_manager = get_websocket_manager()
-                    
-                    if websocket_manager and websocket_manager.is_initialized:
-                        websocket_manager.send_log_message(self.task_id, "info", message)
-                        logger.info(f"📡 GLOBAL WEBSOCKET PROGRESS SENT: {message[:50]}...")
-                    else:
-                        # 📝 LOG DIRECTO: Al menos escribir a archivo para debug
-                        try:
-                            with open('/tmp/websocket_debug.log', 'a') as f:
-                                f.write(f"[{datetime.now()}] EVENTLET PROGRESS (NO WS): {message}\n")
-                                f.flush()
-                        except:
-                            pass
-                        logger.warning(f"⚠️ WebSocket manager not available for eventlet progress")
-                except Exception as global_error:
-                    logger.warning(f"⚠️ Global WebSocket manager error: {global_error}")
+                    with open('/tmp/websocket_debug.log', 'a') as f:
+                        status_msg = "SUCCESS" if (success_ws_1 or success_ws_2) else "FAILED_WS"
+                        f.write(f"[{datetime.now()}] EVENTLET PROGRESS [{status_msg}]: {message}\n")
+                        f.flush()
+                except:
+                    pass
+                
+                # MÉTODO 4: ESCRIBIR A LOG DEL SISTEMA (BACKUP)
+                if not success_ws_1 and not success_ws_2:
+                    logger.warning(f"⚠️ WebSocket fallido - mensaje registrado en logs: {message[:50]}...")
                     
         except Exception as e:
             import logging
             logger = logging.getLogger(__name__)
             logger.error(f"❌ Error emitting eventlet progress: {e}")
+            # ÚLTIMO RECURSO: Al menos escribir al log de sistema
+            print(f"🔍 WEB SEARCH: {message}")
     
     def _simple_search_fallback(self, query: str, search_engine: str, max_results: int) -> List[Dict[str, Any]]:
         """🔄 FALLBACK: Búsqueda simple sin Playwright para eventlet"""
