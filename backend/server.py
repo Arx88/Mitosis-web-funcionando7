@@ -866,8 +866,8 @@ def test_real_time_browser():
         
         if "extract_links" in actions:
             # Esperar un momento para que la página se cargue
-            import time
-            time.sleep(2)
+            import time as time_module
+            time_module.sleep(2)
             
             # Extraer links con tracking en tiempo real
             extracted_data = browser_manager.extract_data("a[href]")
