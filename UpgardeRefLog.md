@@ -11,5 +11,12 @@
 **Fase/Módulo:** Análisis de Arquitectura Actual
 **Descripción:** Revisando estructura completa del proyecto para identificar componentes existentes vs. faltantes según análisis en UpgardeRef.md secciones 3.1 y 3.2.
 **Justificación:** Necesario mapear funcionalidades existentes antes de implementar instrumentación de Playwright y nuevos tipos de eventos WebSocket.
-**Estado:** En Progreso
-**Notas Adicionales:** Identificados puntos clave: WebSocketManager existe, TerminalView.tsx tiene base sólida, falta instrumentación de navegador y eventos granulares.
+**Estado:** Completado
+**Notas Adicionales:** Análisis completado. Backend: Flask+SocketIO funcional, WebSocketManager existe, faltan nuevos UpdateType. Frontend: TerminalView robusto, falta consumo de eventos de navegación. Identificado que web_browser_manager.py no existe y debe crearse.
+
+## 2025-01-31 10:40:00
+**Fase/Módulo:** Backend - Extensión de WebSocketManager
+**Descripción:** Implementando nuevos UpdateType según sección 5.1 de UpgardeRef.md: BROWSER_ACTIVITY, DATA_COLLECTION_UPDATE, REPORT_PROGRESS, LOG_MESSAGE.
+**Justificación:** Requisito fundamental para habilitar comunicación en tiempo real de navegación web, datos granulares y informes incrementales.
+**Estado:** Iniciado
+**Notas Adicionales:** Expandiendo enum UpdateType y añadiendo métodos send_browser_activity, send_data_collection_update, send_report_progress, send_log_message al WebSocketManager.
