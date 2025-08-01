@@ -59,8 +59,7 @@ export const useWebSocket = (): UseWebSocketReturn => {
     console.log('🔌 Initializing WebSocket connection:', wsConfig);
     
     const newSocket = io(wsConfig.url, {
-      ...wsConfig.options,
-      forceNew: true
+      ...wsConfig.options
     });
     
     newSocket.on('connect', () => {
