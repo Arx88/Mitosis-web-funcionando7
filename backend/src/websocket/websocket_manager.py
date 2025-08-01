@@ -460,43 +460,85 @@ class WebSocketManager:
         self.emit_update(task_id, UpdateType.TASK_COMPLETED, completion_info)
 
     # ✅ NUEVOS MÉTODOS PARA VISUALIZACIÓN EN TIEMPO REAL - SEGÚN UpgardeRef.md SECCIÓN 5.1
+    def send_log_message(self, task_id: str, level: str, message: str):
+        """Send generic log message to terminal for comprehensive logging"""
+        # ✅ VALIDACIONES PARA EVITAR ERRORES DE UNDEFINED EN FRONTEND
+        if not level or not isinstance(level, str):
+            level = "info"
+        
+        if not message or not isinstance(message, str):
+            message = "Empty message"
+        
+        # Asegurar que level sea válido para el frontend
+        valid_levels = ["info", "warn", "error", "debug", "success"]
+        if level.lower() not in valid_levels:
+            level = "info"
+        
+        self.send_update(task_id, UpdateType.LOG_MESSAGE, {
+            'level': level.lower(),  # Normalizar a minúsculas
+            'message': str(message),  # Asegurar que sea string
+            'timestamp': datetime.now().isoformat(),
+            'type': 'log_message'  # ✅ Añadir campo type explícito para el frontend
+        })
+
     def send_browser_activity(self, task_id: str, activity_type: str, url: str, title: str = "", screenshot_url: str = ""):
         """Send browser activity notification for real-time web navigation tracking"""
+        # ✅ VALIDACIONES PARA EVITAR ERRORES DE UNDEFINED EN FRONTEND
+        if not activity_type or not isinstance(activity_type, str):
+            activity_type = "unknown"
+            
+        if not url or not isinstance(url, str):
+            url = "about:blank"
+            
+        title = str(title) if title else ""
+        screenshot_url = str(screenshot_url) if screenshot_url else ""
+        
         self.send_update(task_id, UpdateType.BROWSER_ACTIVITY, {
             'activity_type': activity_type,  # 'url_changed', 'page_loaded', 'click', 'input', etc.
             'url': url,
             'title': title,
             'screenshot_url': screenshot_url,
             'message': f'Navegando a: {url}' if activity_type == 'page_loaded' else f'Actividad en navegador: {activity_type}',
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now().isoformat(),
+            'type': 'browser_activity'  # ✅ Añadir campo type explícito para el frontend
         })
 
     def send_data_collection_update(self, task_id: str, step_id: str, data_summary: str, partial_data: Any = None):
         """Send incremental data collection update for granular progress tracking"""
+        # ✅ VALIDACIONES PARA EVITAR ERRORES DE UNDEFINED EN FRONTEND
+        if not step_id or not isinstance(step_id, str):
+            step_id = "unknown_step"
+            
+        if not data_summary or not isinstance(data_summary, str):
+            data_summary = "Data collected"
+        
         self.send_update(task_id, UpdateType.DATA_COLLECTION_UPDATE, {
-            'step_id': step_id,
-            'data_summary': data_summary,
+            'step_id': str(step_id),
+            'data_summary': str(data_summary),
             'partial_data': partial_data,
             'message': f'Datos recolectados: {data_summary}',
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now().isoformat(),
+            'type': 'data_collection_update'  # ✅ Añadir campo type explícito para el frontend
         })
 
     def send_report_progress(self, task_id: str, section_title: str, content_delta: str, full_report_so_far: str = ""):
         """Send incremental report progress update for real-time report building"""
+        # ✅ VALIDACIONES PARA EVITAR ERRORES DE UNDEFINED EN FRONTEND
+        if not section_title or not isinstance(section_title, str):
+            section_title = "Report Section"
+            
+        if not content_delta or not isinstance(content_delta, str):
+            content_delta = "Content generated"
+            
+        full_report_so_far = str(full_report_so_far) if full_report_so_far else ""
+        
         self.send_update(task_id, UpdateType.REPORT_PROGRESS, {
-            'section_title': section_title,
-            'content_delta': content_delta,
+            'section_title': str(section_title),
+            'content_delta': str(content_delta),
             'full_report_so_far': full_report_so_far,
             'message': f'Generando informe: {section_title}',
-            'timestamp': datetime.now().isoformat()
-        })
-
-    def send_log_message(self, task_id: str, level: str, message: str):
-        """Send generic log message to terminal for comprehensive logging"""
-        self.send_update(task_id, UpdateType.LOG_MESSAGE, {
-            'level': level,  # 'info', 'warn', 'error', 'debug'
-            'message': message,
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now().isoformat(),
+            'type': 'report_progress'  # ✅ Añadir campo type explícito para el frontend
         })
 
 # Global WebSocket manager instance
