@@ -6822,51 +6822,52 @@ def execute_step_real_original(task_id: str, step_id: str, step: dict):
         })
 
 def emit_step_event(task_id: str, event_type: str, data: dict):
-    """Helper function to emit step events - FIXED WITH ENHANCED DEBUGGING"""
+    """Helper function to emit step events - FIXED WITH DIRECT SOCKETIO IMPORT"""
     logger.info(f"🔍 emit_step_event called: task_id={task_id}, event_type={event_type}")
     
-    if hasattr(current_app, 'websocket_manager') and current_app.websocket_manager:
+    # SOLUCIÓN DIRECTA: Importar socketio directamente
+    from server import socketio
+    
+    try:
+        # Add more detailed event data for frontend
+        enhanced_data = {
+            **data,
+            'event_type': event_type,
+            'task_id': task_id,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        # EMITIR DIRECTAMENTE CON SOCKETIO
+        logger.info(f"📡 DIRECT EMIT: Emitting {event_type} for task {task_id}")
+        
+        # Emit to task room
+        socketio.emit(event_type, enhanced_data, room=task_id)
+        socketio.emit('task_progress', enhanced_data, room=task_id)
+        socketio.emit('step_update', enhanced_data, room=task_id)
+        socketio.emit('execution_update', enhanced_data, room=task_id)
+        
+        # Also emit activity for terminal visualization
+        socketio.emit('terminal_activity', {
+            'task_id': task_id,
+            'activity': f"[{event_type.upper()}] {data.get('title', 'Ejecutando paso')}",
+            'timestamp': datetime.now().isoformat(),
+            'type': event_type
+        }, room=task_id)
+        
+        logger.info(f"📡 DIRECT EMIT SUCCESS: All events emitted for task {task_id}")
+        
+    except Exception as e:
+        logger.error(f"❌ Error with direct socketio emit for task {task_id}: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        # Fallback: Try with websocket_manager
         try:
-            # Add more detailed event data for frontend
-            enhanced_data = {
-                **data,
-                'event_type': event_type,
-                'task_id': task_id,
-                'timestamp': datetime.now().isoformat()
-            }
-            
-            # Emit multiple event types that the frontend might be listening for
-            events_to_emit = [
-                event_type,  # Original event
-                'task_progress',  # Generic progress event
-                'step_update',    # Generic step update
-                'execution_update'  # Generic execution update
-            ]
-            
-            for event in events_to_emit:
-                current_app.websocket_manager.emit_to_task(task_id, event, enhanced_data)
-                logger.info(f"📡 Emitted {event} for task {task_id} with data: {enhanced_data}")
-            
-            # Also emit to the general 'message' event that frontend might be listening to
-            current_app.websocket_manager.emit_to_task(task_id, 'message', {
-                'type': event_type,
-                'data': enhanced_data,
-                'timestamp': datetime.now().isoformat()
-            })
-            
-            logger.info(f"📡 Successfully emitted all events for task {task_id}")
-        except Exception as e:
-            logger.error(f"❌ Error emitting WebSocket events for task {task_id}: {e}")
-            import traceback
-            traceback.print_exc()
-    else:
-        logger.warning("⚠️ WebSocket manager not available - events not emitted")
-        if not hasattr(current_app, 'websocket_manager'):
-            logger.warning("⚠️ current_app has no websocket_manager attribute")
-        elif not current_app.websocket_manager:
-            logger.warning("⚠️ current_app.websocket_manager is None")
-        elif not current_app.websocket_manager.is_initialized:
-            logger.warning("⚠️ WebSocket manager is not initialized")
+            if hasattr(current_app, 'websocket_manager') and current_app.websocket_manager:
+                current_app.websocket_manager.emit_to_task(task_id, event_type, enhanced_data)
+                logger.info(f"📡 FALLBACK SUCCESS: Used websocket_manager for task {task_id}")
+        except Exception as fallback_error:
+            logger.error(f"❌ Fallback also failed for task {task_id}: {fallback_error}")
 
 def generate_task_plan(title: str, task_id: str) -> Dict:
     """
