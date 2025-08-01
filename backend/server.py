@@ -11,12 +11,38 @@ import json
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-FRONTEND_ORIGINS = [
-    # 🌐 URL DETECTADA DINÁMICAMENTE
-    "https://e16aaf8b-9515-4874-baf4-4996642c59cb.preview.emergentagent.com",
+# CONFIGURACIÓN DINÁMICA DE CORS - DETECTA AUTOMÁTICAMENTE LA URL DEL ENTORNO
+def get_current_environment_url():
+    """Detecta la URL del entorno actual dinámicamente"""
+    import socket
+    import os
     
-    # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
-    "https://e16aaf8b-9515-4874-baf4-4996642c59cb.preview.emergentagent.com",
+    # Método 1: Variables de entorno del sistema
+    if os.environ.get('EMERGENT_PREVIEW_URL'):
+        return os.environ.get('EMERGENT_PREVIEW_URL')
+    
+    # Método 2: Detectar desde hostname
+    try:
+        hostname = socket.gethostname()
+        if '.emergentagent.' in hostname or '-' in hostname:
+            # Extraer ID del container/hostname para formar URL
+            if 'agent-env-' in hostname:
+                env_id = hostname.replace('agent-env-', '')
+                return f"https://{env_id}.preview.emergentagent.com"
+            elif '-' in hostname and len(hostname) > 20:
+                return f"https://{hostname}.preview.emergentagent.com"
+    except:
+        pass
+    
+    # Método 3: Fallback usando patrón común
+    return "https://*.preview.emergentagent.com"
+
+# Generar CORS origins dinámicamente
+CURRENT_ENV_URL = get_current_environment_url()
+
+FRONTEND_ORIGINS = [
+    # 🌐 URL DETECTADA DINÁMICAMENTE DEL ENTORNO ACTUAL
+    CURRENT_ENV_URL,
     
     # 🏠 DESARROLLO LOCAL
     "http://localhost:3000",
@@ -24,9 +50,8 @@ FRONTEND_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
     
-    # 📱 PREVIEW DOMAINS COMUNES
-    "https://e16aaf8b-9515-4874-baf4-4996642c59cb.preview.emergentagent.com",
-    "https://e16aaf8b-9515-4874-baf4-4996642c59cb.preview.emergentagent.com",
+    # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS DE EMERGENT
+    "https://*.preview.emergentagent.com",
     
     # 🌟 FALLBACK UNIVERSAL (último recurso)
     "*"
