@@ -207,27 +207,37 @@ class UnifiedWebSearchTool(BaseTool):
     def _execute_search_with_visualization(self, query: str, search_engine: str, 
                                          max_results: int, extract_content: bool) -> List[Dict[str, Any]]:
         """
-        🔍 BÚSQUEDA CON VISUALIZACIÓN PASO A PASO
-        Implementa el flujo especificado en WEBUPGRADE.md Sección 2.2
+        🔍 BÚSQUEDA CON VISUALIZACIÓN PASO A PASO - CORREGIDA PARA EVENTLET
+        Implementa el flujo especificado en WEBUPGRADE.md Sección 2.2 con corrección para eventos en tiempo real
         """
         
-        # PASO 1: INICIALIZACIÓN
-        self._emit_progress(f"🔍 Iniciando búsqueda web: '{query}'")
-        self._emit_progress(f"🌐 Motor de búsqueda: {search_engine}")
+        # PASO 1: INICIALIZACIÓN CON MÉTODO COMPATIBLE
+        self._emit_progress_eventlet(f"🔍 Iniciando búsqueda web en tiempo real: '{query}'")
+        self._emit_progress_eventlet(f"🌐 Motor de búsqueda seleccionado: {search_engine}")
         
         try:
-            # Ejecutar búsqueda con Playwright usando método compatible con eventlet
+            # PASO 2: EJECUTAR BÚSQUEDA CON MÉTODO CORREGIDO
             results = self._run_async_search_with_visualization(
                 query, search_engine, max_results, extract_content
             )
             
-            # PASO FINAL: RESUMEN
-            self._emit_progress(f"✅ Búsqueda completada: {len(results)} resultados encontrados")
+            # PASO 3: FINALIZACIÓN CON PROGRESO EN TIEMPO REAL
+            if results:
+                self._emit_progress_eventlet(f"✅ Navegación completada exitosamente: {len(results)} resultados obtenidos")
+                
+                # Mostrar muestra de resultados en tiempo real
+                for i, result in enumerate(results[:3]):  # Primeros 3 resultados
+                    self._emit_progress_eventlet(f"   📄 Resultado {i+1}: {result.get('title', 'Sin título')[:50]}...")
+                
+                if len(results) > 3:
+                    self._emit_progress_eventlet(f"   📚 Y {len(results) - 3} resultados adicionales encontrados")
+            else:
+                self._emit_progress_eventlet("⚠️ Búsqueda completada sin resultados")
             
             return results
             
         except Exception as e:
-            self._emit_progress(f"❌ Error durante búsqueda: {str(e)}")
+            self._emit_progress_eventlet(f"❌ Error durante navegación en tiempo real: {str(e)}")
             raise
     
     def _run_async_search_with_visualization(self, query: str, search_engine: str, 
