@@ -2558,6 +2558,36 @@ def get_tool_manager():
     from ..tools.tool_manager import get_tool_manager as get_global_tool_manager
     return get_global_tool_manager()
 
+# ✅ FUNCIÓN HELPER PARA WebBrowserManager - SEGÚN UpgardeRef.md SECCIÓN 4.1
+def create_web_browser_manager(task_id: str, browser_type: str = "playwright"):
+    """
+    Crear instancia de WebBrowserManager con integración de WebSocket
+    
+    Args:
+        task_id: ID de la tarea para tracking de eventos
+        browser_type: 'playwright' (default) o 'selenium'
+    
+    Returns:
+        WebBrowserManager instance o None si no está disponible
+    """
+    if WebBrowserManager is None:
+        logger.warning("⚠️ WebBrowserManager no disponible - funcionalidad básica sin visualización en tiempo real")
+        return None
+    
+    try:
+        websocket_manager = get_websocket_manager()
+        if websocket_manager is None:
+            logger.warning("⚠️ WebSocketManager no disponible - WebBrowserManager funcionará sin eventos tiempo real")
+            return None
+        
+        browser_manager = WebBrowserManager(websocket_manager, task_id, browser_type)
+        logger.info(f"✅ WebBrowserManager creado para task {task_id} usando {browser_type}")
+        return browser_manager
+        
+    except Exception as e:
+        logger.error(f"❌ Error creando WebBrowserManager para task {task_id}: {e}")
+        return None
+
 def determine_unified_icon(task_message: str) -> str:
     """
     Determine appropriate icon based on task content with simplified, consistent logic
