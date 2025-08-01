@@ -54,7 +54,12 @@ class WebSocketTester:
     def connect_websocket(self):
         """Conectar al WebSocket"""
         try:
-            self.sio.connect(self.backend_url, transports=['websocket'])
+            # IMPORTANTE: Usar el path correcto para SocketIO
+            self.sio.connect(
+                self.backend_url, 
+                socketio_path='/api/socket.io/',
+                transports=['polling', 'websocket']  # Probar polling primero
+            )
             return True
         except Exception as e:
             print(f"❌ Error conectando WebSocket: {e}")
