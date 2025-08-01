@@ -1,919 +1,635 @@
-
-# Informe de Análisis del Agente General
-
-## 1. Arquitectura General del Sistema
-
-El sistema del agente general está compuesto por dos componentes principales: un **Backend** desarrollado con Flask y un **Frontend** desarrollado con React. La comunicación entre estos dos componentes se realiza a través de APIs REST y WebSockets para actualizaciones en tiempo real. La persistencia de datos se gestiona mediante una base de datos MongoDB.
-
-### 1.1. Componentes del Backend
-
-El backend, implementado en Python con el framework Flask, es el cerebro del agente. Sus componentes clave incluyen:
-
-*   **`server.py`**: Este es el archivo principal del servidor Flask. Se encarga de:
-    *   Inicializar la aplicación Flask y configurar CORS para permitir la comunicación con el frontend.
-    *   Configurar el logging para el sistema y la terminal.
-    *   Establecer la conexión con MongoDB (`pymongo`).
-    *   Inicializar el `WebSocketManager` para manejar las comunicaciones en tiempo real.
-    *   Inicializar el `OllamaService` para interactuar con modelos de lenguaje.
-    *   Inicializar el `ToolManager` para gestionar las herramientas disponibles para el agente.
-    *   Registrar los `Blueprints` de las rutas del agente (definidas en `agent_routes.py`).
-    *   Proveer endpoints para la configuración dinámica del agente y checks de salud (`/health`).
-
-*   **`src/routes/agent_routes.py`**: Este módulo define las rutas API específicas para la lógica del agente. Incluye endpoints para:
-    *   `health`: Un endpoint de salud que verifica la conexión a MongoDB, el estado de Ollama y el `TaskManager`.
-    *   `execute-step-detailed/<task_id>/<step_id>`: Permite la ejecución controlada y secuencial de un paso específico de un plan de tarea. Este endpoint es crítico para la orquestación de las tareas.
-    *   `get-task-status/<task_id>`: Proporciona el estado actual de una tarea, incluyendo el plan de ejecución y las herramientas ejecutadas. Es utilizado por el frontend para el polling.
-    *   `get-task-plan/<task_id>`: Retorna el plan de ejecución de una tarea específica.
-    *   Contiene la lógica para la generación de planes de acción utilizando Ollama y la validación de estos planes contra un `PLAN_SCHEMA`.
-    *   Emite eventos de WebSocket (`emit_step_event`) para notificar al frontend sobre el progreso de los pasos y la tarea.
-
-*   **`src/websocket/websocket_manager.py`**: Gestiona las conexiones WebSocket y las actualizaciones en tiempo real. Sus funciones principales son:
-    *   Inicializar `SocketIO` con la aplicación Flask.
-    *   Manejar eventos de conexión (`connect`), desconexión (`disconnect`), unión a tareas (`join_task`) y salida de tareas (`leave_task`).
-    *   Mantener un registro de las conexiones activas por `task_id` y `session_id`.
-    *   Proveer el método `send_update` para enviar actualizaciones a todos los clientes suscritos a una tarea específica.
-    *   **Punto clave para la persistencia del chat y la terminal**: Este módulo almacena los últimos 10 eventos por tarea (`stored_events`) para clientes que se unen tarde, lo que sugiere un intento de persistencia a corto plazo para la UI.
-
-*   **`src/services/task_manager.py`**: Este módulo es fundamental para la persistencia del estado de las tareas. Se encarga de:
-    *   Interactuar con la base de datos MongoDB a través de `DatabaseService`.
-    *   `create_task`: Crea y persiste una nueva tarea en MongoDB.
-    *   `get_task`: Recupera una tarea por su ID, utilizando un caché en memoria (`active_cache`) para reducir la latencia.
-    *   `update_task`: Actualiza los datos de una tarea en MongoDB y en el caché.
-    *   `update_task_step_status`: Actualiza el estado de un paso específico dentro de una tarea.
-    *   `get_all_tasks`, `get_incomplete_tasks`, `delete_task`, `get_task_history`, `cleanup_old_tasks`, `recover_incomplete_tasks_on_startup`: Funciones para la gestión completa del ciclo de vida de las tareas.
-    *   Implementa un patrón Singleton (`get_task_manager`) para asegurar una única instancia del gestor de tareas.
-
-*   **`src/services/database.py`**: (Asumo su existencia y funcionalidad basándome en `task_manager.py`) Este módulo abstrae la interacción con MongoDB, proporcionando métodos para guardar, obtener, actualizar y eliminar documentos de tareas.
-
-*   **`src/context/intelligent_context_manager.py`**: Gestiona la construcción de contexto optimizado para el modelo de lenguaje. Utiliza diferentes estrategias (`ChatContextStrategy`, `TaskPlanningContextStrategy`, etc.) para adaptar el contexto según el tipo de interacción. También implementa un caché de contexto.
-
-*   **`src/services/ollama_service.py`**: Proporciona una interfaz para interactuar con el servicio Ollama, permitiendo la generación de texto y la gestión de modelos.
-
-*   **`src/tools/tool_manager.py`**: Gestiona la disponibilidad y ejecución de las herramientas que el agente puede utilizar (e.g., `web_search`, `shell`, `analysis`).
-
-### 1.2. Componentes del Frontend
-
-El frontend, desarrollado con React, es la interfaz de usuario que interactúa con el backend. Los archivos clave que se relacionan con la gestión de tareas, chat y persistencia son:
-
-*   **`frontend/src/App.tsx`**: El componente raíz de la aplicación React, que probablemente orquesta la visualización de las diferentes secciones (barra lateral, chat, terminal, plan de acción).
-
-*   **`frontend/src/context/AppContext.tsx`**: Es probable que este archivo defina el contexto global de React, donde se almacenan estados compartidos como la tarea activa, el historial del chat, el plan de acción, etc. Este es un punto crítico para entender cómo se maneja el estado a nivel de la UI.
-
-*   **`frontend/src/hooks/useTaskManagement.ts`**: Un hook personalizado que encapsula la lógica para interactuar con el `TaskManager` del backend, incluyendo la creación, actualización y recuperación de tareas. Es probable que maneje la lógica de cambio de tareas y la carga de su estado.
-
-*   **`frontend/src/hooks/usePlanManager.ts`**: Probablemente gestiona el estado y las interacciones relacionadas con el plan de acción de la tarea actual.
-
-*   **`frontend/src/hooks/useWebSocket.ts`**: Este hook se encarga de establecer y mantener la conexión WebSocket con el backend, así como de procesar los eventos recibidos en tiempo real. Es crucial para las actualizaciones del chat y la terminal.
-
-*   **`frontend/src/components/ChatInterface`**: Componentes relacionados con la visualización y gestión del chat.
-
-*   **`frontend/src/components/TerminalView`**: Componentes relacionados con la visualización de la terminal y la salida de comandos.
-
-*   **`frontend/src/components/TaskView.tsx`**: Este componente es central, ya que agrupa la visualización del chat, el plan de acción y la terminal. Es donde se manifiestan los problemas de aislamiento.
-
-### 1.3. Comunicación entre Backend y Frontend
-
-La comunicación se establece principalmente a través de:
-
-*   **APIs REST**: Para operaciones como la creación de tareas, la obtención del estado inicial de una tarea, la aplicación de configuraciones, etc. (ej. `/api/agent/create-task`, `/api/agent/get-task-status`).
-*   **WebSockets (Socket.IO)**: Para actualizaciones en tiempo real. El backend emite eventos (`task_update`, `step_started`, `step_completed`, etc.) que el frontend escucha para actualizar dinámicamente la UI (chat, progreso del plan, salida de la terminal). El `WebSocketManager` en el backend y `useWebSocket.ts` en el frontend son los encargados de esta comunicación.
-
-### 1.4. Estructura de Datos para Tareas y su Estado
-
-El estado de una tarea se persiste en MongoDB y se gestiona a través del `TaskManager`. Una tarea (`task_document`) típicamente incluye los siguientes campos:
-
-*   `task_id`: Identificador único de la tarea.
-*   `status`: Estado actual de la tarea (e.g., `created`, `pending`, `executing`, `completed`, `failed`).
-*   `plan`: Una lista de pasos (`steps`) que componen el plan de acción. Cada paso tiene su propio `id`, `title`, `description`, `tool`, `status` (e.g., `in-progress`, `completed`), `result`, `start_time`, `completed_time`, etc.
-*   `current_step`: Índice o ID del paso actual en ejecución.
-*   `message`: El mensaje inicial o la descripción de la tarea.
-*   `task_type`, `complexity`, `ai_generated`, `plan_source`.
-*   `created_at`, `updated_at`, `start_time`, `completed_at`.
-*   `final_result`, `error`, `fallback_reason`, `warning`.
-*   `metadata`: Un diccionario para almacenar información adicional.
-
-El `TaskManager` utiliza un caché en memoria (`active_cache`) para las tareas accedidas recientemente, lo que es una optimización de rendimiento. Sin embargo, la fuente de verdad principal es MongoDB.
-
-En el frontend, el estado de la tarea activa, el historial del chat y la salida de la terminal se gestionan a través del contexto de React (probablemente `AppContext.tsx`) y varios hooks (`useTaskManagement.ts`, `usePlanManager.ts`, `useWebSocket.ts`). La clave aquí es cómo este estado se carga y se descarga al cambiar de tarea, y cómo se asegura que los datos sean específicos de cada `task_id`.
-
-
-
-### 1.2. Componentes del Frontend
-
-El frontend, desarrollado con React, es la interfaz de usuario que interactúa con el backend. Los archivos clave que se relacionan con la gestión de tareas, chat y persistencia son:
-
-*   **`frontend/src/App.tsx`**: El componente raíz de la aplicación React, que probablemente orquesta la visualización de las diferentes secciones (barra lateral, chat, terminal, plan de acción).
-
-*   **`frontend/src/context/AppContext.tsx`**: Este archivo define el contexto global de React, donde se almacenan estados compartidos como la tarea activa, el historial del chat, el plan de acción, etc. **Es un punto crítico para entender cómo se maneja el estado a nivel de la UI.** Se observa que ya se han implementado estructuras `Record<string, ...>` para aislar el estado por `taskId` para `taskFiles`, `terminalLogs`, `taskMessages`, `taskPlanStates`, `taskTerminalCommands`, `taskWebSocketStates`, `taskMonitorPages`, y `taskCurrentPageIndex`. Esto indica un esfuerzo por lograr el aislamiento a nivel del frontend.
-
-*   **`frontend/src/hooks/useTaskManagement.ts`**: Un hook personalizado que encapsula la lógica para interactuar con el `TaskManager` del backend, incluyendo la creación, actualización y recuperación de tareas. Maneja la lógica de cambio de tareas y la carga de su estado. Se observa que utiliza IDs temporales para las tareas y luego las migra a IDs reales del backend, lo cual es fundamental para la persistencia.
-
-*   **`frontend/src/hooks/usePlanManager.ts`**: Probablemente gestiona el estado y las interacciones relacionadas con el plan de acción de la tarea actual.
-
-*   **`frontend/src/hooks/useWebSocket.ts`**: Este hook se encarga de establecer y mantener la conexión WebSocket con el backend, así como de procesar los eventos recibidos en tiempo real. Es crucial para las actualizaciones del chat y la terminal.
-
-*   **`frontend/src/components/ChatInterface`**: Componentes relacionados con la visualización y gestión del chat.
-
-*   **`frontend/src/components/TerminalView`**: Componentes relacionados con la visualización de la terminal y la salida de comandos.
-
-*   **`frontend/src/components/TaskView.tsx`**: Este componente es central, ya que agrupa la visualización del chat, el plan de acción y la terminal. Es donde se manifiestan los problemas de aislamiento.
-
-### 1.3. Comunicación entre Backend y Frontend
-
-La comunicación se establece principalmente a través de:
-
-*   **APIs REST**: Para operaciones como la creación de tareas, la obtención del estado inicial de una tarea, la aplicación de configuraciones, etc. (ej. `/api/agent/create-task`, `/api/agent/get-task-status`).
-*   **WebSockets (Socket.IO)**: Para actualizaciones en tiempo real. El backend emite eventos (`task_update`, `step_started`, `step_completed`, etc.) que el frontend escucha para actualizar dinámicamente la UI (chat, progreso del plan, salida de la terminal). El `WebSocketManager` en el backend y `useWebSocket.ts` en el frontend son los encargados de esta comunicación.
-
-### 1.4. Estructura de Datos para Tareas y su Estado
-
-El estado de una tarea se persiste en MongoDB y se gestiona a través del `TaskManager`. Una tarea (`task_document`) típicamente incluye los siguientes campos:
-
-*   `task_id`: Identificador único de la tarea.
-*   `status`: Estado actual de la tarea (e.g., `created`, `pending`, `executing`, `completed`, `failed`).
-*   `plan`: Una lista de pasos (`steps`) que componen el plan de acción. Cada paso tiene su propio `id`, `title`, `description`, `tool`, `status` (e.g., `in-progress`, `completed`), `result`, `start_time`, `completed_time`, etc.
-*   `current_step`: Índice o ID del paso actual en ejecución.
-*   `message`: El mensaje inicial o la descripción de la tarea.
-*   `task_type`, `complexity`, `ai_generated`, `plan_source`.
-*   `created_at`, `updated_at`, `start_time`, `completed_at`.
-*   `final_result`, `error`, `fallback_reason`, `warning`.
-*   `metadata`: Un diccionario para almacenar información adicional.
-
-El `TaskManager` utiliza un caché en memoria (`active_cache`) para las tareas accedidas recientemente, lo que es una optimización de rendimiento. Sin embargo, la fuente de verdad principal es MongoDB.
-
-En el frontend, el estado de la tarea activa, el historial del chat y la salida de la terminal se gestionan a través del contexto de React (probablemente `AppContext.tsx`) y varios hooks (`useTaskManagement.ts`, `usePlanManager.ts`, `useWebSocket.ts`). La clave aquí es cómo este estado se carga y se descarga al cambiar de tarea, y cómo se asegura que los datos sean específicos de cada `task_id`.
-
-
-
-## 2. Identificación de Problemas de Persistencia y Aislamiento
-
-El problema central radica en la falta de coherencia y aislamiento del estado entre las diferentes tareas, manifestándose en la UI (chat, plan de acción, terminal) y en la persistencia de datos. Aunque se han implementado mecanismos para el aislamiento, existen fallas que provocan la mezcla y duplicación de información.
-
-### 2.1. Problemas de Aislamiento en el Frontend
-
-El frontend, a través de `AppContext.tsx`, ya implementa estructuras `Record<string, ...>` para almacenar el estado de elementos como `taskFiles`, `terminalLogs`, `taskMessages`, y `taskPlanStates` por `taskId`. Esto es un paso correcto hacia el aislamiento. Sin embargo, los problemas reportados sugieren que la *utilización* o *sincronización* de estos estados aislados no es perfecta.
-
-**Síntomas reportados:**
-
-*   **El plan de acción no persiste correctamente y se muestra duplicado en todas las tareas.**
-*   **El chat también se duplica.**
-*   **La terminal no muestra los resultados correspondientes a ninguna tarea.**
-
-**Posibles causas y ejemplos de código (Frontend):**
-
-1.  **Falta de carga/descarga explícita del estado al cambiar de tarea:** Aunque `AppContext.tsx` almacena el estado por `taskId`, los componentes que consumen este contexto (ej. `TaskView.tsx`, `ChatInterface`, `TerminalView`) podrían no estar actualizando su visualización de forma reactiva al cambio de `activeTaskId`. Si un componente no se suscribe correctamente al `activeTaskId` y al estado asociado a ese ID, podría seguir mostrando datos de la tarea anterior o datos globales no aislados.
-
-    *   **Ejemplo (hipotético):** Si `TaskView.tsx` o sus subcomponentes leen directamente de un estado global no indexado por `taskId` o no reaccionan a los cambios de `activeTaskId`:
-
-    ```typescript
-    // frontend/src/components/TaskView.tsx (ejemplo simplificado)
-    // PROBLEMA: Si `messages` no se obtiene del `taskMessages[activeTaskId]`
-    // y en su lugar se usa una variable global o un estado local no reseteado.
-    const { activeTaskId, messages } = useAppContext(); // `messages` aquí podría ser global
-    // ... renderiza `messages`
-    ```
-
-2.  **Manejo incorrecto de eventos WebSocket en el frontend:** El `useWebSocket.ts` recibe actualizaciones del backend. Si estas actualizaciones no se dirigen correctamente al `taskId` activo o si se aplican a un estado global en lugar del estado aislado por tarea, se produciría la duplicación. El `websocket_manager.py` del backend ya emite eventos con `task_id` (`self.socketio.emit(event, enhanced_data, room=task_id)`), lo que sugiere que el problema podría estar en cómo el frontend consume estos eventos.
-
-    *   **Ejemplo (frontend/src/hooks/useWebSocket.ts):**
-
-    ```typescript
-    // frontend/src/hooks/useWebSocket.ts (ejemplo simplificado)
-    socket.on("task_update", (data) => {
-      const { task_id, type, data: updateData } = data;
-      // PROBLEMA: Si `dispatch` no usa `task_id` para actualizar el estado aislado
-      // o si se actualiza un estado global en lugar de `taskMessages[task_id]`
-      if (type === "new_message") {
-        dispatch({ type: "ADD_MESSAGE_TO_GLOBAL_CHAT", payload: updateData.message }); // Incorrecto
-        // Debería ser:
-        // dispatch({ type: "ADD_TASK_MESSAGE", payload: { taskId: task_id, message: updateData.message } });
-      }
-    });
-    ```
-
-3.  **Inicialización o reseteo incompleto del estado al crear una nueva tarea:** Aunque `ADD_TASK` en `AppContext.tsx` inicializa los `Record` con objetos vacíos para la nueva tarea, es crucial que todos los componentes de la UI que muestran datos de la tarea se reinicien o se re-rendericen correctamente cuando se selecciona una nueva tarea o se crea una. Si hay estados locales en los componentes que no se limpian, podrían persistir datos visuales de la tarea anterior.
-
-    *   **Ejemplo (frontend/src/context/AppContext.tsx - `ADD_TASK` reducer):**
-
-    ```typescript
-    // Ya se inicializa correctamente:
-    // taskMessages: { ...state.taskMessages, [newTask.id]: newTask.messages || [] },
-    // terminalLogs: { ...state.terminalLogs, [newTask.id]: [] },
-    // taskPlanStates: { ...state.taskPlanStates, [newTask.id]: { plan: newTask.plan || [], ... } },
-    ```
-    El problema no parece estar en la inicialización en el reducer, sino en cómo los componentes reaccionan a `activeTaskId`.
-
-### 2.2. Problemas de Persistencia en el Backend
-
-El backend utiliza MongoDB y el `TaskManager` para la persistencia de tareas, lo cual es una buena práctica. El `TaskManager` ya maneja la creación, obtención y actualización de tareas, incluyendo sus planes y pasos. El `websocket_manager.py` también intenta almacenar los últimos eventos (`stored_events`) para clientes que se unen tarde.
-
-**Síntomas reportados:**
-
-*   **El plan de acción no persiste correctamente.** (Contradice la implementación de `TaskManager` que sí persiste el plan).
-*   **Al actualizarlo, se muestra duplicado en todas las tareas.** (Esto apunta más a un problema de frontend o de cómo se recupera el plan).
-*   **La terminal no muestra los resultados correspondientes a ninguna tarea.**
-
-**Posibles causas y ejemplos de código (Backend):**
-
-1.  **Sincronización inconsistente entre `TaskManager` y `agent_routes.py`:** Aunque `TaskManager` persiste los datos, si las funciones en `agent_routes.py` (como `execute_single_step_detailed` o `get_task_status`) no utilizan consistentemente los métodos de `TaskManager` para leer y escribir el estado de la tarea, o si manipulan el estado de la tarea en memoria sin persistirlo, podría haber inconsistencias.
-
-    *   **Ejemplo (backend/src/routes/agent_routes.py - `execute_single_step_detailed`):**
-
-    ```python
-    # backend/src/routes/agent_routes.py
-    # ...
-    # Actualizar en persistencia ANTES de emitir evento
-    update_task_data(task_id, {"plan": steps}) # Esto usa TaskManager.update_task
-    # ...
-    ```
-    La función `update_task_data` (que se asume es un wrapper para `task_manager.update_task`) parece estar en su lugar. El problema podría ser que el frontend no siempre *solicita* el estado actualizado del backend, o que el backend no siempre *envía* el estado completo y correcto a través de WebSockets.
-
-2.  **Manejo de `stored_events` en `websocket_manager.py`:** El `websocket_manager.py` almacena los últimos 10 eventos por tarea. Si un cliente se desconecta y se reconecta, o cambia de tarea, debería recibir estos eventos almacenados para reconstruir el estado de la terminal y el chat. Si esta lógica de recuperación no se activa correctamente en el frontend, o si los eventos almacenados no son suficientes para reconstruir el estado completo, se vería una terminal vacía o un chat incompleto.
-
-    *   **Ejemplo (backend/src/websocket/websocket_manager.py - `emit_to_task`):**
-
-    ```python
-    # CRITICAL FIX: Store the event for later retrieval even if no connections
-    if not hasattr(self, 'stored_events'):
-        self.stored_events = {}
-    if task_id not in self.stored_events:
-        self.stored_events[task_id] = []
-    
-    # Store last 10 events per task for late-joining clients
-    self.stored_events[task_id].append(enhanced_data)
-    if len(self.stored_events[task_id]) > 10:
-        self.stored_events[task_id] = self.stored_events[task_id][-10:]
-    ```
-    Esta lógica es correcta para almacenar eventos. El problema es si el frontend realmente los solicita y los usa para reconstruir el estado al cambiar de tarea.
-
-3.  **Recuperación de tareas incompletas al inicio del backend:** El `TaskManager` tiene una función `recover_incomplete_tasks_on_startup`. Si esta función no carga todos los datos necesarios (chat, terminal logs, plan completo) en el caché o si el frontend no tiene un mecanismo para solicitar el estado completo de las tareas recuperadas al iniciar la aplicación, se verían inconsistencias.
-
-    *   **Ejemplo (backend/src/services/task_manager.py - `recover_incomplete_tasks_on_startup`):**
-
-    ```python
-    # backend/src/services/task_manager.py
-    # ...
-    for task in incomplete_tasks:
-        task_id = task.get("task_id")
-        if task_id:
-            # Cargar en caché para acceso rápido
-            self.active_cache[task_id] = task
-            recovered_task_ids.append(task_id)
-    ```
-    Aquí se carga la tarea completa en el caché. El problema es cómo el frontend utiliza esta información al iniciar o al cambiar de tarea.
-
-### 2.3. Resumen de los Problemas Identificados
-
-Los problemas de persistencia y aislamiento no parecen ser una falla fundamental en la arquitectura de almacenamiento (MongoDB + TaskManager), sino más bien en la **sincronización y el flujo de datos entre el backend y el frontend, y cómo el frontend gestiona y renderiza el estado aislado por tarea.**
-
-*   **Duplicación de chat y plan de acción:** Sugiere que el frontend no está limpiando o cargando el estado correcto al cambiar de tarea, o que los eventos de WebSocket se están aplicando a un estado global en lugar de al estado específico de la tarea activa.
-*   **Terminal no muestra resultados:** Indica que la salida de la terminal no se está asociando correctamente con la tarea activa, o que no se está recuperando el historial de comandos/salidas al cambiar de tarea.
-
-El `AppContext.tsx` ya tiene la estructura para el aislamiento, lo que es una ventaja. La clave será asegurar que los `useCallbacks` y `useEffects` en los hooks del frontend (ej. `useTaskManagement`, `useWebSocket`, `useTerminalManagement`, `usePlanManager`) estén correctamente vinculados al `activeTaskId` y que actualicen los estados aislados de forma granular. Además, la lógica de recuperación de estado al cambiar de tarea en el frontend debe ser robusta, posiblemente solicitando el estado completo de la tarea al backend si no está disponible en el caché del frontend.
-
-
-
-### 2.4. Detalles de Persistencia y Aislamiento por Componente
-
-#### 2.4.1. Chat
-
-**Problema Reportado:** El chat se duplica.
-
-**Análisis:**
-
-*   **Frontend (`AppContext.tsx` y `useTaskManagement.ts`):**
-    *   `AppContext.tsx` tiene `taskMessages: Record<string, Message[]>;` que es la estructura correcta para aislar los mensajes por tarea. Cuando se añade una nueva tarea (`ADD_TASK`), se inicializa `taskMessages[newTask.id]` con `newTask.messages || []`. Cuando se migra un `taskId` (`UPDATE_TASK_ID`), el estado de `taskMessages` se mueve al nuevo ID. Cuando se elimina una tarea (`DELETE_TASK`), el estado de `taskMessages` para esa tarea se limpia.
-    *   `useTaskManagement.ts` utiliza `addTaskMessage` (que es un `dispatch` a `ADD_TASK_MESSAGE` en `AppContext.tsx`) para añadir mensajes. Esta acción también está diseñada para ser aislada por `taskId`.
-
-    **Ejemplo de `AppContext.tsx` (Reducer `ADD_TASK_MESSAGE`):**
-    ```typescript
-    case 'ADD_TASK_MESSAGE':
-      return {
-        ...state,
-        taskMessages: {
-          ...state.taskMessages,
-          [action.payload.taskId]: [
-            ...(state.taskMessages[action.payload.taskId] || []),
-            action.payload.message
-          ]
+# Informe de Análisis y Recomendaciones para MitosisV5
+
+## 1. Introducción
+
+El objetivo de este informe es analizar el código proporcionado de MitosisV5, específicamente el backend (`server.py`, `agent_routes.py`, `websocket_manager.py`) y el frontend (`TerminalView.tsx`), para identificar las funcionalidades existentes y las ausencias que impiden la visualización en tiempo real de la navegación web, los datos recolectados y el proceso de armado de informes en el terminal de TaskView, sin modificar la UI existente. Se prestará especial atención a la integración de **Playwright con Selenium** para la captura de eventos de navegación.
+
+## 2. Arquitectura General
+
+El proyecto MitosisV5 sigue una arquitectura cliente-servidor con un backend en Flask y un frontend en React. La comunicación en tiempo real se gestiona a través de WebSockets (SocketIO).
+
+*   **Backend:**
+    *   `server.py`: Punto de entrada principal, configura Flask, CORS, MongoDB, inicializa `WebSocketManager`, `OllamaService` y `ToolManager`. Registra las rutas del agente.
+    *   `websocket_manager.py`: Gestiona las conexiones WebSocket y la emisión de eventos en tiempo real a los clientes. Define varios tipos de actualización (`UpdateType`) como `TASK_STARTED`, `TASK_PROGRESS`, `STEP_STARTED`, `STEP_COMPLETED`, etc.
+    *   `agent_routes.py`: Contiene las rutas API para la interacción del agente, incluyendo la ejecución de pasos (`execute_single_step_detailed`) y la obtención del estado de la tarea (`get_task_status`). Utiliza `emit_step_event` para enviar actualizaciones a través del WebSocket.
+    *   `web_browser_manager.py`: **Este módulo es crucial para la interacción con el navegador web y donde se integraría Playwright/Selenium.**
+
+*   **Frontend:**
+    *   `TerminalView.tsx`: Componente principal que muestra el estado de la ejecución de la tarea, el plan, los resultados de las herramientas y los logs. Utiliza un `AppContext` para gestionar los `monitorPages` (páginas del monitor) y el `currentPageIndex` (índice de la página actual).
+
+## 3. Análisis de la Implementación Actual
+
+### 3.1. Backend (server.py, agent_routes.py, websocket_manager.py)
+
+El `WebSocketManager` está bien estructurado para enviar actualizaciones de tareas y pasos. Métodos como `send_task_progress`, `send_step_started`, `send_step_completed` y `emit_to_task` son fundamentales para la comunicación en tiempo real. El `agent_routes.py` ya emite eventos de `step_started` y `step_completed`.
+
+**Puntos fuertes:**
+*   Infraestructura WebSocket ya establecida y funcional.
+*   Manejo de `task_id` y `session_id` para actualizaciones específicas de tareas.
+*   Tipos de actualización (`UpdateType`) bien definidos para diferentes eventos de la tarea.
+
+**Ausencias clave para la visualización en tiempo real:**
+*   **Navegación Web en Tiempo Real:** No se observa en el código revisado (`server.py`, `agent_routes.py`) que los eventos de navegación web (cambios de URL, contenido de la página, interacciones) sean capturados por `web_browser_manager.py` y luego enviados a través del WebSocket. Para mostrar la navegación en tiempo real, se necesita un mecanismo que envíe estas actualizaciones al frontend a medida que ocurren. **La integración de Playwright/Selenium es clave aquí.**
+*   **Datos Recolectados en Tiempo Real:** Similar a la navegación, la recolección de datos (ej. resultados de búsquedas, scraping) no parece estar siendo enviada de forma granular y en tiempo real al frontend. Los `ToolResult` se envían al final de la ejecución de una herramienta, pero no durante el proceso de recolección.
+*   **Armado de Informes en Tiempo Real:** El informe final se genera y carga al completar la tarea (`loadFinalReport` en el frontend). No hay un mecanismo para enviar actualizaciones incrementales del informe a medida que se va construyendo en el backend.
+
+### 3.2. Frontend (TerminalView.tsx)
+
+El componente `TerminalView` es robusto y ya maneja la visualización de planes, resultados de herramientas y logs. Utiliza `monitorPages` para gestionar diferentes páginas de contenido (plan, ejecución de herramientas, informe). La integración con `AppContext` para `monitorPages` es un buen enfoque para el manejo de estado.
+
+**Puntos fuertes:**
+*   Diseño modular con `MonitorPage` para diferentes tipos de contenido.
+*   Manejo de estados de inicialización y timers para pasos.
+*   Uso de `AppContext` para centralizar el estado de las páginas del monitor.
+*   Capacidad para mostrar `ToolExecutionDetails`.
+
+**Ausencias clave para la visualización en tiempo real:**
+*   **Consumo de Eventos de Navegación Web:** `TerminalView` no tiene lógica explícita para escuchar y renderizar eventos de navegación web en tiempo real (ej. URL actual, capturas de pantalla, interacciones del navegador). Aunque `executionData` se pasa, no se observa cómo se utiliza para este propósito específico.
+*   **Consumo de Datos Recolectados Granulares:** Similar al backend, el frontend no está configurado para recibir y mostrar actualizaciones granulares de datos recolectados. Se espera `ToolResult[]` que son resultados finales, no intermedios.
+*   **Consumo de Actualizaciones de Informe en Tiempo Real:** `TerminalView` carga el informe final una vez que la tarea está completada. No hay un mecanismo para recibir y mostrar el informe a medida que se construye.
+*   **Manejo de `terminalOutput`:** Aunque existe un estado `terminalOutput`, no se observa cómo se alimenta dinámicamente con logs o actividades en tiempo real del agente más allá de la inicialización.
+
+## 4. Identificación de lo que falta para mostrar datos en tiempo real
+
+Para lograr la visualización en tiempo real de la navegación web, los datos recolectados y el armado de informes, se necesita:
+
+### 4.1. Para Navegación Web en Tiempo Real (con Playwright/Selenium):
+
+1.  **Backend (`web_browser_manager.py` y `agent_routes.py`):**
+    *   **Instrumentación de Playwright/Selenium:** El módulo `web_browser_manager.py` (o donde se gestione la instancia del navegador) debe ser instrumentado para capturar eventos del navegador. Esto implica usar los listeners de eventos de Playwright o Selenium.
+        *   **Playwright:** Puedes usar `page.on('urlchanged')`, `page.on('load')`, `page.on('domcontentloaded')`, `page.on('request')`, `page.on('response')`. Para interacciones, puedes interceptar métodos como `page.click()`, `page.fill()`, etc., o usar `page.evaluate()` para inyectar JavaScript que capture eventos del DOM.
+        *   **Selenium:** Puedes usar `driver.current_url` para cambios de URL, y para eventos más detallados, necesitarías inyectar JavaScript en la página usando `driver.execute_script()` para monitorear eventos del DOM (clicks, inputs, etc.) y luego pasar esa información de vuelta a Python.
+    *   **Captura de Contenido y Capturas de Pantalla:** En cada evento relevante (cambio de URL, carga de página), se debe capturar la URL actual, el título de la página y, crucialmente, una captura de pantalla. Las capturas de pantalla pueden guardarse temporalmente en el backend y su URL (o base64 si son pequeñas) enviarse al frontend.
+    *   **Emisión de Eventos WebSocket:** Estos eventos capturados deben ser enviados al frontend a través del `WebSocketManager`. Se podría definir un nuevo `UpdateType` (ej. `BROWSER_ACTIVITY`) o extender `STEP_UPDATE` con un subtipo específico.
+    *   **Ejemplo de Integración (Pseudocódigo para `web_browser_manager.py`):**
+
+        ```python
+        # backend/src/web_browser_manager.py (ejemplo conceptual)
+        from playwright.sync_api import sync_playwright
+        from selenium import webdriver
+        from selenium.webdriver.chrome.service import Service as ChromeService
+        from webdriver_manager.chrome import ChromeDriverManager
+        import base64
+        import os
+        import time
+
+        class WebBrowserManager:
+            def __init__(self, websocket_manager, task_id):
+                self.websocket_manager = websocket_manager
+                self.task_id = task_id
+                self.browser = None
+                self.page = None # Para Playwright
+                self.driver = None # Para Selenium
+                self.browser_type = "playwright" # o "selenium"
+
+            def initialize_browser(self):
+                if self.browser_type == "playwright":
+                    self.playwright_instance = sync_playwright().start()
+                    self.browser = self.playwright_instance.chromium.launch(headless=True)
+                    self.page = self.browser.new_page()
+                    self._setup_playwright_listeners()
+                elif self.browser_type == "selenium":
+                    service = ChromeService(ChromeDriverManager().install())
+                    options = webdriver.ChromeOptions()
+                    options.add_argument('--headless')
+                    options.add_argument('--no-sandbox')
+                    options.add_argument('--disable-dev-shm-usage')
+                    self.driver = webdriver.Chrome(service=service, options=options)
+                    self._setup_selenium_listeners()
+                self.websocket_manager.send_log_message(self.task_id, "info", f"Navegador {self.browser_type} inicializado.")
+
+            def _setup_playwright_listeners(self):
+                self.page.on("urlchanged", lambda url: self._on_url_changed(url))
+                self.page.on("load", lambda: self._on_page_loaded())
+                # Puedes añadir más listeners para clicks, inputs, etc.
+                # self.page.on("request", lambda request: self._on_request(request))
+                # self.page.on("response", lambda response: self._on_response(response))
+
+            def _on_url_changed(self, url):
+                self.websocket_manager.send_browser_activity(self.task_id, "url_changed", url, "", "")
+
+            def _on_page_loaded(self):
+                current_url = self.page.url
+                title = self.page.title()
+                screenshot_path = self._take_screenshot()
+                self.websocket_manager.send_browser_activity(self.task_id, "page_loaded", current_url, title, screenshot_path)
+                self.websocket_manager.send_log_message(self.task_id, "info", f"Página cargada: {title} ({current_url})")
+
+            def _setup_selenium_listeners(self):
+                # Selenium no tiene listeners nativos tan robustos como Playwright.
+                # Se requiere polling o inyección de JS para eventos de DOM.
+                # Para URL, se puede hacer polling en el bucle principal de la herramienta.
+                pass
+
+            def _take_screenshot(self) -> str:
+                screenshot_dir = f"/tmp/screenshots/{self.task_id}"
+                os.makedirs(screenshot_dir, exist_ok=True)
+                timestamp = int(time.time() * 1000)
+                screenshot_name = f"screenshot_{timestamp}.png"
+                screenshot_path = os.path.join(screenshot_dir, screenshot_name)
+                if self.browser_type == "playwright":
+                    self.page.screenshot(path=screenshot_path)
+                elif self.browser_type == "selenium":
+                    self.driver.save_screenshot(screenshot_path)
+                # Retornar una URL accesible para el frontend (ej. a través de un endpoint de Flask)
+                return f"/files/screenshots/{self.task_id}/{screenshot_name}"
+
+            def navigate(self, url):
+                if self.browser_type == "playwright":
+                    self.page.goto(url)
+                elif self.browser_type == "selenium":
+                    self.driver.get(url)
+                self.websocket_manager.send_log_message(self.task_id, "info", f"Navegando a: {url}")
+                # For Selenium, manually trigger page loaded event after navigation
+                if self.browser_type == "selenium":
+                    time.sleep(1) # Give it a moment to load
+                    current_url = self.driver.current_url
+                    title = self.driver.title
+                    screenshot_path = self._take_screenshot()
+                    self.websocket_manager.send_browser_activity(self.task_id, "page_loaded", current_url, title, screenshot_path)
+                    self.websocket_manager.send_log_message(self.task_id, "info", f"Página cargada (Selenium): {title} ({current_url})")
+
+            def close_browser(self):
+                if self.browser_type == "playwright" and self.browser:
+                    self.browser.close()
+                    self.playwright_instance.stop()
+                elif self.browser_type == "selenium" and self.driver:
+                    self.driver.quit()
+                self.websocket_manager.send_log_message(self.task_id, "info", f"Navegador {self.browser_type} cerrado.")
+
+        # En agent_routes.py, al ejecutar un paso de navegación o búsqueda:
+        # from ..web_browser_manager import WebBrowserManager
+        # ...
+        # ws_manager = get_websocket_manager()
+        # browser_manager = WebBrowserManager(ws_manager, task_id)
+        # browser_manager.initialize_browser()
+        # browser_manager.navigate("https://www.ejemplo.com")
+        # ...
+        # browser_manager.close_browser()
+        ```
+
+2.  **Frontend (`TerminalView.tsx` y `AppContext.tsx`):**
+    *   **Suscripción a Eventos de Navegación:** `TerminalView` (o un componente padre que gestione la conexión WebSocket) debe suscribirse a los nuevos eventos de navegación (`BROWSER_ACTIVITY`).
+    *   **Actualización de `monitorPages`:** Cada evento de navegación debe traducirse en una nueva `MonitorPage` de tipo `web-browsing` o similar, que contenga la URL, el título y la captura de pantalla. Estas páginas deben agregarse a `monitorPages` y el `currentPageIndex` debe actualizarse para mostrar la última actividad.
+    *   **Servir Capturas de Pantalla:** Necesitarás un endpoint en Flask (`server.py`) para servir las capturas de pantalla guardadas en `/tmp/screenshots/`. Por ejemplo:
+
+        ```python
+        # server.py
+        from flask import send_from_directory
+
+        @app.route("/files/screenshots/<task_id>/<filename>")
+        def serve_screenshot(task_id, filename):
+            return send_from_directory(f"/tmp/screenshots/{task_id}", filename)
+        ```
+
+    *   **Renderizado Específico:** Dentro de `TerminalView`, se necesitará una lógica de renderizado para las páginas de navegación, mostrando la URL, el título y la imagen de la captura de pantalla.
+
+### 4.2. Para Datos Recolectados en Tiempo Real:
+
+1.  **Backend (`agent_routes.py` y módulos de herramientas):**
+    *   **Emisión de Eventos Intermedios:** Cuando una herramienta (ej. `web_search`, `data_analysis`) recolecta datos, debe enviar actualizaciones intermedias a través del WebSocket, no solo el resultado final. Esto podría ser un `STEP_UPDATE` con un payload específico para datos.
+    *   **Ejemplo de Payload:**
+        ```json
+        {
+            "task_id": "task_xyz",
+            "type": "step_update",
+            "timestamp": "...",
+            "data": {
+                "step_id": "step_123",
+                "update_type": "data_collected",
+                "data_summary": "Se encontraron 10 resultados de búsqueda",
+                "partial_data": [...] // Pequeña muestra o resumen
+            }
         }
-      };
-    ```
-    Esta implementación del reducer es correcta para el aislamiento. El problema de duplicación sugiere que:
-    1.  **Múltiples componentes están escuchando y añadiendo mensajes al mismo tiempo, o**
-    2.  **Los mensajes se están añadiendo a un `taskId` incorrecto, o**
-    3.  **El `useWebSocket.ts` está procesando eventos de chat y añadiéndolos sin verificar si ya existen o si el `activeTaskId` es el correcto para la visualización.**
+        ```
 
-*   **Backend (`agent_routes.py` y `websocket_manager.py`):**
-    *   El backend envía mensajes de chat a través de WebSockets. En `agent_routes.py`, la función `emit_step_event` (que a su vez usa `websocket_manager.emit_to_task`) es la encargada de enviar actualizaciones al frontend. Estos eventos incluyen el `task_id`.
+2.  **Frontend (`TerminalView.tsx`):**
+    *   **Consumo de Actualizaciones de Datos:** `TerminalView` debe escuchar estos eventos `step_update` y, si el `update_type` es `data_collected`, actualizar la `MonitorPage` correspondiente al paso actual o crear una nueva página de tipo `data-collection`.
+    *   **Visualización de Datos Parciales:** La `MonitorPage` debe ser capaz de mostrar estos datos parciales o un resumen, quizás en un formato de tabla o lista.
 
-    **Ejemplo de `websocket_manager.py` (`emit_to_task`):**
-    ```python
-    def emit_to_task(self, task_id: str, event: str, data: Dict[str, Any]):
-        # ...
-        enhanced_data = {
-            **data,
-            'task_id': task_id,
-            'event': event,
-            'server_timestamp': datetime.now().isoformat()
+### 4.3. Para Armado de Informes en Tiempo Real:
+
+1.  **Backend (Módulo de Generación de Informes):**
+    *   **Generación Incremental:** Si el informe se construye en varias etapas, cada etapa debe generar una porción del informe y enviarla al frontend.
+    *   **Emisión de Eventos de Informe:** Se podría usar un `UpdateType` como `REPORT_PROGRESS` o `REPORT_SECTION_COMPLETED`.
+    *   **Ejemplo de Payload:**
+        ```json
+        {
+            "task_id": "task_xyz",
+            "type": "report_progress",
+            "timestamp": "...",
+            "data": {
+                "section_title": "Introducción",
+                "content_delta": "Contenido de la introducción...",
+                "full_report_so_far": "..." // Opcional, para reconstruir
+            }
         }
-        # ...
-        self.socketio.emit(event, enhanced_data, room=task_id)
-        # ...
-    ```
-    La lógica del backend para emitir eventos de chat parece correcta en cuanto al aislamiento por `task_id`. El problema de duplicación en el chat es casi seguro un problema del frontend, donde los mensajes se están renderizando o añadiendo al estado de forma incorrecta.
+        ```
 
-#### 2.4.2. Plan de Acción
+2.  **Frontend (`TerminalView.tsx`):**
+    *   **Actualización de Página de Informe:** `TerminalView` debe tener una `MonitorPage` dedicada al informe. A medida que llegan los eventos `REPORT_PROGRESS`, el contenido de esta página se debe actualizar incrementalmente. Esto podría implicar concatenar `content_delta` o reemplazar el `full_report_so_far`.
+    *   **Renderizado de Markdown:** Dado que el informe es Markdown, el componente ya tiene la capacidad de renderizarlo. Solo necesita actualizar el contenido de la página del monitor.
 
-**Problema Reportado:** El plan de acción no persiste correctamente. Al actualizarlo, se muestra duplicado en todas las tareas.
+### 4.4. Consolidación y Mejora de Logs en TerminalView:
 
-**Análisis:**
-
-*   **Frontend (`AppContext.tsx` y `usePlanManager.ts`):**
-    *   `AppContext.tsx` tiene `taskPlanStates: Record<string, { plan: TaskStep[]; ... }>;` para aislar el estado del plan por tarea. La acción `UPDATE_TASK_PLAN` está diseñada para actualizar el plan de una tarea específica.
-
-    **Ejemplo de `AppContext.tsx` (Reducer `UPDATE_TASK_PLAN`):**
-    ```typescript
-    case 'UPDATE_TASK_PLAN':
-      return {
-        ...state,
-        taskPlanStates: {
-          ...state.taskPlanStates,
-          [action.payload.taskId]: {
-            ...(state.taskPlanStates[action.payload.taskId] || {}),
-            plan: action.payload.plan,
-            lastUpdateTime: new Date()
-          }
+*   **Backend (`websocket_manager.py` y `agent_routes.py`):**
+    *   **Eventos de Log Genéricos:** Además de los eventos estructurados, se podría emitir un evento `LOG_MESSAGE` para cualquier log relevante que deba aparecer en el terminal, incluyendo mensajes de depuración, errores, o información general del agente.
+    *   **Ejemplo de Payload:**
+        ```json
+        {
+            "task_id": "task_xyz",
+            "type": "log_message",
+            "timestamp": "...",
+            "data": {
+                "level": "info", // info, warn, error
+                "message": "Agente iniciando búsqueda web para 'inteligencia artificial'"
+            }
         }
-      };
-    ```
-    Similar al chat, la estructura de datos y la acción del reducer son correctas para el aislamiento. La duplicación sugiere que:
-    1.  **El componente que muestra el plan de acción no está leyendo del `taskPlanStates[activeTaskId]` o no se está re-renderizando correctamente al cambiar `activeTaskId`.**
-    2.  **El backend está enviando actualizaciones de plan que el frontend aplica a todas las tareas o a un estado global.**
+        ```
 
-*   **Backend (`agent_routes.py` y `task_manager.py`):**
-    *   El `TaskManager` (`src/services/task_manager.py`) es la fuente de verdad para la persistencia del plan. Los planes se guardan en MongoDB como parte del documento de la tarea.
+*   **Frontend (`TerminalView.tsx`):**
+    *   **Consumo de `LOG_MESSAGE`:** El `TerminalView` debe escuchar estos eventos y agregarlos a su estado `terminalOutput` para mostrarlos en la sección de logs. Esto proporcionaría una visión más detallada de lo que el agente está haciendo en tiempo real.
 
-    **Ejemplo de `task_manager.py` (`update_task`):**
-    ```python
-    def update_task(self, task_id: str, updates: Dict[str, Any]) -> bool:
-        # ...
-        success = self.db_service.update_task(task_id, updates)
-        if success:
-            if task_id in self.active_cache:
-                self.active_cache[task_id].update(updates)
-        # ...
-    ```
-    Cuando el backend genera un plan (en `agent_routes.py` dentro de la ruta `/api/agent/chat`), este plan se persiste usando `update_task_data` (que llama a `task_manager.update_task`).
+## 5. Soluciones Específicas para el Código
 
-    **Ejemplo de `agent_routes.py` (en la ruta `/api/agent/chat`):**
-    ```python
-    # ... después de generar el plan ...
-    update_task_data(task_id, {
-        'plan': frontend_plan, # El plan se guarda aquí
-        'status': 'plan_generated',
-        'task_type': data.get('task_type', 'general'),
-        'complexity': data.get('complexity', 'media'),
-        'ai_generated': True,
-        'plan_source': 'ollama'
-    })
-    # ...
-    ```
-    La persistencia del plan en el backend es robusta. El problema de duplicación y no persistencia en la UI es casi seguro un problema del frontend, donde el estado del plan no se está cargando o visualizando correctamente al cambiar de tarea.
+Aquí se detallan las modificaciones necesarias en los archivos clave para implementar las funcionalidades descritas.
 
-#### 2.4.3. Terminal
+### 5.1. `backend/src/websocket/websocket_manager.py`
 
-**Problema Reportado:** La terminal no muestra los resultados correspondientes a ninguna tarea.
+**1. Añadir nuevos `UpdateType`:**
 
-**Análisis:**
+```python
+# ... (imports existentes)
 
-*   **Frontend (`AppContext.tsx` y `useTerminalManagement.ts`):**
-    *   `AppContext.tsx` tiene `terminalLogs: Record<string, Array<{ message: string; ... }>>;` y `taskTerminalCommands: Record<string, Array<{ id: string; command: string; ... }>>;` para aislar los logs y comandos de la terminal por tarea.
-    *   `useTerminalManagement.ts` utiliza `addTerminalLog` y `addTaskTerminalCommand` para añadir entradas a estos estados aislados.
+class UpdateType(Enum):
+    # ... (tipos existentes)
+    BROWSER_ACTIVITY = "browser_activity" # Para eventos de navegación web
+    DATA_COLLECTION_UPDATE = "data_collection_update" # Para datos recolectados incrementalmente
+    REPORT_PROGRESS = "report_progress" # Para actualizaciones incrementales del informe
+    LOG_MESSAGE = "log_message" # Para mensajes de log genéricos
 
-    **Ejemplo de `AppContext.tsx` (Reducer `ADD_TERMINAL_LOG`):**
-    ```typescript
-    case 'ADD_TERMINAL_LOG':
-      return {
-        ...state,
-        terminalLogs: {
-          ...state.terminalLogs,
-          [action.payload.taskId]: [
-            ...(state.terminalLogs[action.payload.taskId] || []),
-            { ...action.payload.log, timestamp: new Date(action.payload.log.timestamp) }
-          ]
+class WebSocketManager:
+    # ... (métodos existentes)
+
+    def send_browser_activity(self, task_id: str, activity_type: str, url: str, title: str = "", screenshot_url: str = ""):
+        """Send browser activity notification"""
+        self.send_update(task_id, UpdateType.BROWSER_ACTIVITY, {
+            'activity_type': activity_type,
+            'url': url,
+            'title': title,
+            'screenshot_url': screenshot_url,
+            'message': f'Navegando a: {url}' if activity_type == 'page_loaded' else f'Actividad en navegador: {activity_type}'
+        })
+
+    def send_data_collection_update(self, task_id: str, step_id: str, data_summary: str, partial_data: Any = None):
+        """Send incremental data collection update"""
+        self.send_update(task_id, UpdateType.DATA_COLLECTION_UPDATE, {
+            'step_id': step_id,
+            'data_summary': data_summary,
+            'partial_data': partial_data,
+            'message': f'Datos recolectados: {data_summary}'
+        })
+
+    def send_report_progress(self, task_id: str, section_title: str, content_delta: str, full_report_so_far: str = ""):
+        """Send incremental report progress update"""
+        self.send_update(task_id, UpdateType.REPORT_PROGRESS, {
+            'section_title': section_title,
+            'content_delta': content_delta,
+            'full_report_so_far': full_report_so_far,
+            'message': f'Generando informe: {section_title}'
+        })
+
+    def send_log_message(self, task_id: str, level: str, message: str):
+        """Send generic log message to terminal"""
+        self.send_update(task_id, UpdateType.LOG_MESSAGE, {
+            'level': level,
+            'message': message
+        })
+
+```
+
+### 5.2. `backend/src/routes/agent_routes.py`
+
+**1. Integrar llamadas a `WebSocketManager` para eventos de navegación y datos:**
+
+Deberás identificar los puntos en tu lógica de ejecución de herramientas (especialmente las relacionadas con `web_search`, `web_scraping`, `research`) donde ocurren estos eventos y llamar a los nuevos métodos del `websocket_manager`.
+
+Por ejemplo, si tienes una función `execute_web_search`:
+
+```python
+# ... (imports existentes)
+
+# Obtener websocket_manager de current_app
+def get_websocket_manager():
+    return current_app.websocket_manager
+
+# ... (otras funciones)
+
+def execute_single_step_logic(step: Dict[str, Any], user_message: str, task_id: str) -> Dict[str, Any]:
+    # ... (lógica existente)
+    ws_manager = get_websocket_manager()
+
+    if step["tool"] == "web_search":
+        query = step["description"] # O algún otro campo que contenga la consulta
+        ws_manager.send_log_message(task_id, "info", f"Realizando búsqueda web para: {query}")
+        
+        # --- INTEGRACIÓN PLAYWRIGHT/SELENIUM --- 
+        # Aquí se instanciaría y usaría el WebBrowserManager
+        from src.web_browser_manager import WebBrowserManager # Asegúrate de que la ruta sea correcta
+        browser_manager = WebBrowserManager(ws_manager, task_id)
+        try:
+            browser_manager.initialize_browser()
+            browser_manager.navigate(f"https://www.google.com/search?q={query}")
+            
+            # Simular recolección de datos después de la navegación
+            # En un escenario real, aquí harías el scraping de los resultados
+            results = [{"title": "Resultado 1", "url": "https://ejemplo.com/1"}, {"title": "Resultado 2", "url": "https://ejemplo.com/2"}]
+            ws_manager.send_data_collection_update(task_id, step["id"], f"Se encontraron {len(results)} resultados de búsqueda", results[:2]) # Enviar solo una muestra
+            
+            # Puedes añadir más interacciones y emitir eventos de actividad del navegador
+            # browser_manager.click_element("selector_del_enlace")
+            # browser_manager.type_text("selector_del_input", "texto")
+
+            return {"success": True, "summary": "Búsqueda web completada", "content": json.dumps(results)}
+        except Exception as e:
+            ws_manager.send_log_message(task_id, "error", f"Error en la búsqueda web: {str(e)}")
+            return {"success": False, "summary": f"Error en búsqueda web: {str(e)}", "content": ""}
+        finally:
+            browser_manager.close_browser()
+
+    # ... (otros tipos de herramientas)
+
+    elif step["tool"] == "creation":
+        # Si la creación implica generar un informe, puedes enviar progreso
+        ws_manager.send_log_message(task_id, "info", "Iniciando generación de informe...")
+        ws_manager.send_report_progress(task_id, "Introducción", "Este es el inicio del informe.")
+        # ... (lógica de generación de informe)
+        ws_manager.send_report_progress(task_id, "Conclusiones", "Aquí las conclusiones.", "Contenido completo del informe hasta ahora...")
+        return {"success": True, "summary": "Informe generado"}
+
+    # ... (resto de la función)
+
+```
+
+**2. Asegurar que `websocket_manager` esté disponible:**
+
+En `agent_routes.py`, asegúrate de que `current_app.websocket_manager` esté accesible. Esto ya debería estar configurado en `server.py`.
+
+### 5.3. `frontend/src/components/TerminalView/TerminalView.tsx`
+
+**1. Actualizar `MonitorPage` interface:**
+
+```typescript
+// ... (imports existentes)
+
+export interface MonitorPage {
+  id: string;
+  title: string;
+  content: string;
+  type: 'plan' | 'tool-execution' | 'report' | 'file' | 'error' | 'web-browsing' | 'data-collection' | 'log'; // Añadir nuevos tipos
+  timestamp: Date;
+  toolName?: string;
+  toolParams?: any;
+  metadata?: {
+    lineCount?: number;
+    fileSize?: number;
+    executionTime?: number;
+    status?: 'success' | 'error' | 'running';
+    // Nuevos campos para navegación web
+    url?: string;
+    screenshotUrl?: string; // URL accesible para la imagen
+    // Nuevos campos para recolección de datos
+    dataSummary?: string;
+    partialData?: any;
+    // Nuevos campos para logs
+    logLevel?: 'info' | 'warn' | 'error';
+  };
+}
+
+// ... (resto del archivo)
+```
+
+**2. Suscribirse a los nuevos eventos WebSocket:**
+
+En el `useEffect` donde ya te suscribes a eventos WebSocket (probablemente en un componente padre o en `AppContext`), añade la lógica para los nuevos tipos de eventos.
+
+```typescript
+// En AppContext.tsx o un componente que maneje la conexión WebSocket
+
+useEffect(() => {
+  if (!socket || !currentTaskId) return;
+
+  const handleTaskUpdate = (update: any) => {
+    if (update.task_id !== currentTaskId) return; // Asegurarse de que sea para la tarea actual
+
+    const updateType = update.type;
+    const data = update.data;
+
+    switch (updateType) {
+      case 'browser_activity':
+        addTaskMonitorPage(currentTaskId, {
+          id: `browser-${Date.now()}`,
+          title: `🌐 Navegando: ${data.title || data.url}`,
+          content: `URL: ${data.url}`,
+          type: 'web-browsing',
+          timestamp: new Date(update.timestamp),
+          metadata: {
+            url: data.url,
+            screenshotUrl: data.screenshot_url,
+          },
+        });
+        break;
+      case 'data_collection_update':
+        addTaskMonitorPage(currentTaskId, {
+          id: `data-${Date.now()}`,
+          title: `📊 Datos Recolectados: ${data.data_summary}`,
+          content: JSON.stringify(data.partial_data, null, 2),
+          type: 'data-collection',
+          timestamp: new Date(update.timestamp),
+          metadata: {
+            dataSummary: data.data_summary,
+            partialData: data.partial_data,
+          },
+        });
+        break;
+      case 'report_progress':
+        // Encontrar o crear la página del informe
+        let reportPage = getTaskMonitorPages(currentTaskId).find(p => p.id === 'final-report');
+        if (!reportPage) {
+          reportPage = {
+            id: 'final-report',
+            title: '📄 Informe en Construcción',
+            content: '',
+            type: 'report',
+            timestamp: new Date(),
+            metadata: { status: 'running' },
+          };
+          addTaskMonitorPage(currentTaskId, reportPage); // Añadir si no existe
         }
-      };
-    ```
-    La estructura de datos y las acciones del reducer son correctas para el aislamiento.
+        
+        // Actualizar contenido del informe (concatenar o reemplazar)
+        const newContent = reportPage.content + (data.content_delta || '');
+        // O si `full_report_so_far` está disponible:
+        // const newContent = data.full_report_so_far || reportPage.content;
 
-*   **Backend (`agent_routes.py` y `websocket_manager.py`):**
-    *   La salida de la terminal se envía a través de WebSockets. El `agent_routes.py` emite eventos de `step_completed` que incluyen el `result` de la ejecución de la herramienta, que a menudo contiene la salida de la terminal.
-    *   El `websocket_manager.py` almacena los últimos 10 eventos en `stored_events` por `task_id`. Estos eventos deberían ser utilizados por el frontend para reconstruir el historial de la terminal cuando un usuario cambia a una tarea existente.
+        setTaskMonitorPages(currentTaskId, getTaskMonitorPages(currentTaskId).map(p => 
+          p.id === 'final-report' ? { ...p, content: newContent, timestamp: new Date(update.timestamp) } : p
+        ));
+        break;
+      case 'log_message':
+        // Esto se puede añadir directamente a terminalOutput o a una nueva MonitorPage de tipo 'log'
+        // Para mantenerlo simple y similar a tu `externalLogs` existente:
+        setTerminalOutput(prev => [...prev, `[${data.level.toUpperCase()}] ${data.message}`]);
+        // O si quieres una página de monitor para logs:
+        addTaskMonitorPage(currentTaskId, {
+          id: `log-${Date.now()}`,
+          title: `Log: ${data.level.toUpperCase()}`,
+          content: data.message,
+          type: 'log',
+          timestamp: new Date(update.timestamp),
+          metadata: { logLevel: data.level },
+        });
+        break;
+      // ... (otros casos existentes como step_started, step_completed)
+    }
+  };
 
-    **Ejemplo de `agent_routes.py` (en `execute_single_step_detailed`):**
-    ```python
-    # ...
-    emit_step_event(task_id, 'step_completed', {
-        'step_id': current_step.get('id'),
-        'step_index': step_index,
-        'title': current_step.get('title', 'Paso completado'),
-        'result': step_result, # Aquí se incluye la salida de la herramienta/terminal
-        'activity': f"Completado paso {step_index + 1}: {current_step.get('title', 'Sin título')}",
-        'progress_percentage': int(((step_index + 1) / len(steps)) * 100),
-        'timestamp': datetime.now().isoformat()
-    })
-    # ...
-    ```
-    El problema de la terminal que no muestra los resultados es probablemente una combinación de:
-    1.  **El frontend no está solicitando o procesando correctamente los `stored_events` del `websocket_manager` al cambiar de tarea.**
-    2.  **El componente `TerminalView` no está leyendo del `terminalLogs[activeTaskId]` o no se está re-renderizando correctamente.**
-    3.  **La forma en que la salida de la herramienta se mapea a los `terminalLogs` en el frontend podría ser incorrecta o incompleta.**
+  socket.on('task_update', handleTaskUpdate); // Asumiendo que todos los updates vienen bajo 'task_update'
+  // O si emites eventos separados:
+  // socket.on('browser_activity', handleBrowserActivity);
+  // socket.on('data_collection_update', handleDataCollectionUpdate);
+  // socket.on('report_progress', handleReportProgress);
+  // socket.on('log_message', handleLogMessage);
 
-En resumen, la arquitectura de persistencia del backend (MongoDB + `TaskManager`) parece sólida. El problema principal reside en la capa del frontend, específicamente en cómo se gestiona el estado global de la aplicación (a través de `AppContext`) y cómo los componentes de la UI consumen y reaccionan a los cambios en el `activeTaskId` para mostrar los datos aislados de cada tarea. La lógica de recuperación de estado al cambiar de tarea y al reconectar WebSockets necesita ser revisada y fortalecida en el frontend.
+  return () => {
+    socket.off('task_update', handleTaskUpdate);
+    // socket.off('browser_activity', handleBrowserActivity);
+    // ...
+  };
+}, [socket, currentTaskId, addTaskMonitorPage, getTaskMonitorPages, setTaskMonitorPages]);
 
+```
 
+**3. Renderizar los nuevos tipos de `MonitorPage` en `TerminalView.tsx`:**
 
-## 3. Análisis de Duplicaciones y su Impacto
+Modifica la sección de renderizado de `monitorPages` para manejar los nuevos tipos.
 
-Los problemas reportados de "duplicación" en el chat y el plan de acción no parecen ser el resultado de una duplicación literal de datos en la persistencia del backend (MongoDB), sino más bien una **duplicación percibida en la interfaz de usuario (UI)**. Esto ocurre cuando el frontend no gestiona correctamente el estado de las tareas al cambiar entre ellas, mostrando información de una tarea en el contexto de otra, o acumulando información que debería ser específica de una sola tarea.
+```typescript
+// ... (dentro de TerminalView.tsx, en la sección de renderizado de la página actual)
 
-### 3.1. Duplicación Percibida en el Frontend
+const renderCurrentPageContent = () => {
+  if (!currentPage) return null;
 
-La arquitectura del frontend, especialmente en `AppContext.tsx`, ya ha implementado un modelo de datos que aísla el estado por `taskId` (e.g., `taskMessages: Record<string, Message[]>`, `taskPlanStates: Record<string, { plan: TaskStep[]; ... }>`). Esto significa que, a nivel de almacenamiento en el frontend, los datos no están intrínsecamente duplicados para diferentes tareas; cada tarea tiene su propio conjunto de mensajes, planes, logs, etc.
-
-La duplicación se manifiesta visualmente debido a:
-
-*   **Falta de reseteo o carga adecuada del estado al cambiar de tarea:** Si un componente de la UI (como `ChatInterface` o `TaskView`) no se re-renderiza completamente o no actualiza sus datos internos para reflejar el `activeTaskId` actual, podría seguir mostrando datos de la tarea previamente activa. Esto da la impresión de que el chat o el plan se han "duplicado" en la nueva tarea, cuando en realidad es el componente el que no ha cambiado su fuente de datos.
-
-    *   **Impacto:** Confusión para el usuario, experiencia de usuario inconsistente, dificultad para seguir el progreso de tareas individuales, y una percepción de inestabilidad del sistema.
-
-*   **Manejo incorrecto de eventos de WebSocket:** Si el `useWebSocket.ts` o los componentes que consumen sus datos no filtran los eventos por el `activeTaskId` actual, o si aplican los eventos a un estado global en lugar del estado específico de la tarea, los mensajes o actualizaciones del plan de una tarea podrían aparecer en la UI de otra tarea.
-
-    *   **Impacto:** Mezcla de información entre tareas, lo que invalida el concepto de aislamiento de tareas y hace que el agente sea ineficaz para manejar múltiples contextos simultáneamente.
-
-*   **Inicialización incompleta de componentes:** Aunque `AppContext.tsx` inicializa correctamente los estados aislados para una nueva tarea, si los componentes hijos no se montan/desmontan o no se reinicializan correctamente al cambiar de tarea, podrían retener estados internos que no corresponden a la tarea actual.
-
-    *   **Impacto:** Datos residuales de tareas anteriores, lo que contribuye a la percepción de duplicación y a un comportamiento impredecible de la UI.
-
-### 3.2. Ausencia de Duplicación Crítica en el Backend
-
-Basado en la revisión de `server.py`, `agent_routes.py`, `websocket_manager.py`, y `task_manager.py`, no se encontraron evidencias de duplicación de lógica o datos a nivel de persistencia en el backend que causen los problemas reportados. El `TaskManager` utiliza MongoDB como fuente de verdad única para cada tarea, y el `websocket_manager` almacena eventos por `task_id`.
-
-*   **`TaskManager`:** Cada tarea se guarda como un documento único en MongoDB, y el caché en memoria (`active_cache`) también es un mapeo de `task_id` a `task_data`. No hay duplicación de la tarea completa.
-
-*   **`agent_routes.py`:** Las operaciones de actualización (`update_task_data`) se realizan sobre un `task_id` específico, asegurando que los cambios se apliquen al documento de tarea correcto.
-
-*   **`websocket_manager.py`:** Los eventos se emiten y se almacenan con un `task_id` asociado, lo que permite un direccionamiento preciso de las actualizaciones.
-
-La única "duplicación" en el backend podría ser la lógica de fallback en `server.py` si las rutas reales del agente no se cargan, pero esto es un mecanismo de seguridad y no una causa de los problemas de persistencia/aislamiento en un entorno de producción funcional.
-
-### 3.3. Impacto General de la Duplicación Percibida
-
-La duplicación percibida en la UI, aunque no sea una duplicación de datos subyacente, tiene un impacto significativo en la **usabilidad y fiabilidad** del agente:
-
-*   **Inconsistencia del Estado:** El usuario ve un estado que no corresponde a la tarea activa, lo que rompe la coherencia entre la UI y el backend.
-*   **Experiencia de Usuario Degradada:** La dificultad para gestionar múltiples tareas y la confusión generada por la mezcla de información hacen que el agente sea menos útil y frustrante de usar.
-*   **Dificultad en la Depuración:** Los desarrolladores pueden tener dificultades para identificar la causa raíz de los problemas, ya que la UI muestra un comportamiento que no se alinea con el estado real del backend.
-*   **Falta de Confianza:** El comportamiento errático del agente erosiona la confianza del usuario en su capacidad para manejar tareas complejas de manera fiable.
-
-En resumen, el problema de duplicación es principalmente un problema de **sincronización y gestión del estado en el frontend**, donde los componentes no están reaccionando adecuadamente a los cambios de `activeTaskId` o no están consumiendo los datos aislados de manera correcta. La solución requerirá un enfoque cuidadoso en la lógica de renderizado y actualización de los componentes de React, asegurando que siempre reflejen el estado de la tarea actualmente activa.
-
-
-
-## 4. Diseño de Soluciones Específicas para Aislamiento de Contextos por Tarea
-
-El análisis previo ha revelado que la arquitectura del backend para la persistencia de tareas es robusta, utilizando MongoDB y un `TaskManager` que ya aísla los datos por `task_id`. El problema principal radica en la capa del frontend, específicamente en cómo se gestiona el estado global de la aplicación (a través de `AppContext`) y cómo los componentes de la UI consumen y reaccionan a los cambios en el `activeTaskId` para mostrar los datos aislados de cada tarea. La lógica de recuperación de estado al cambiar de tarea y al reconectar WebSockets en el frontend necesita ser revisada y fortalecida.
-
-### 4.1. Modelo de Datos para Estados de Tareas Aislados (Frontend)
-
-El `AppContext.tsx` ya implementa un modelo de datos adecuado para el aislamiento de tareas, utilizando objetos `Record<string, ...>` donde la clave es el `taskId`. Esto es fundamental y debe mantenerse. Las estructuras existentes son:
-
-*   `taskFiles: Record<string, any[]>;`
-*   `terminalLogs: Record<string, Array<{ message: string; type: 'info' | 'success' | 'error'; timestamp: Date; taskId: string; }>>;
-*   `taskMessages: Record<string, Message[]>;`
-*   `taskPlanStates: Record<string, { plan: TaskStep[]; currentActiveStep: TaskStep | null; progress: number; lastUpdateTime: Date; isCompleted: boolean; }>;`
-*   `taskTerminalCommands: Record<string, Array<{ id: string; command: string; status: 'pending' | 'running' | 'completed' | 'failed'; output?: string; timestamp: Date; }>>;
-*   `taskWebSocketStates: Record<string, { isConnected: boolean; joinedRoom: boolean; lastEvent: Date | null; }>;`
-*   `taskMonitorPages: Record<string, Array<{ id: string; title: string; content: string; type: 'plan' | 'tool-execution' | 'report' | 'file' | 'error'; timestamp: Date; toolName?: string; metadata?: any; }>>;
-*   `taskCurrentPageIndex: Record<string, number>;`
-*   `typingState: Record<string, boolean>;`
-
-Este modelo es correcto y no requiere cambios estructurales importantes. La solución se centrará en asegurar que los componentes de React accedan y actualicen estos estados de manera consistente y reactiva al `activeTaskId`.
-
-### 4.2. Soluciones para el Manejo del Chat por Tarea
-
-El problema de duplicación del chat se debe a que los componentes de la UI no están leyendo o actualizando el estado de los mensajes de forma exclusiva para la tarea activa. La solución implica asegurar que `ChatInterface` y `useWebSocket.ts` siempre operen sobre `state.taskMessages[state.activeTaskId]`.
-
-**Modificaciones Sugeridas (Frontend):**
-
-1.  **`ChatInterface` Component:**
-    *   Asegurarse de que el componente `ChatInterface` (y cualquier subcomponente que muestre mensajes) obtenga los mensajes directamente de `state.taskMessages[state.activeTaskId]` a través del `useAppContext`.
-    *   Utilizar `useEffect` para reaccionar a los cambios en `activeTaskId` y forzar una re-renderización o un reseteo de cualquier estado interno relacionado con los mensajes.
-
-    ```typescript
-    // frontend/src/components/ChatInterface/ChatInterface.tsx (ejemplo conceptual)
-    import { useAppContext } from '../../context/AppContext';
-    import React, { useEffect, useRef } from 'react';
-
-    const ChatInterface: React.FC = () => {
-      const { state } = useAppContext();
-      const messages = state.activeTaskId ? state.taskMessages[state.activeTaskId] || [] : [];
-      const messagesEndRef = useRef<HTMLDivElement>(null);
-
-      useEffect(() => {
-        // Scroll to bottom on activeTaskId change or new messages
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, [state.activeTaskId, messages]); // Dependencia clave: activeTaskId
-
+  switch (currentPage.type) {
+    case 'plan':
       return (
-        <div className="chat-container">
-          {messages.map((msg, index) => (
-            <div key={index} className={`message ${msg.sender}`}>
-              {msg.content}
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
+        <div className="markdown-content">
+          <h3>Plan de Ejecución</h3>
+          <pre className="whitespace-pre-wrap text-sm">{currentPage.content}</pre>
         </div>
       );
-    };
-    ```
-
-2.  **`useWebSocket.ts` Hook:**
-    *   Este hook es crucial. Debe asegurarse de que cuando reciba un evento de WebSocket, el `dispatch` para añadir un mensaje (`ADD_TASK_MESSAGE`) siempre use el `task_id` proporcionado en el payload del evento, y no asuma que es para la tarea actualmente activa en la UI.
-    *   Además, al conectar o unirse a una tarea, el frontend debe solicitar el historial de mensajes (y logs de terminal) almacenados en el backend (`websocket_manager.stored_events`) para esa `task_id` y cargarlos en el `AppContext`.
-
-    ```typescript
-    // frontend/src/hooks/useWebSocket.ts (modificación conceptual)
-    import { useEffect, useCallback } from 'react';
-    import { io } from 'socket.io-client';
-    import { useAppContext } from '../context/AppContext';
-    import { API_CONFIG } from '../config/api';
-
-    export const useWebSocket = () => {
-      const { dispatch, state } = useAppContext();
-      const socket = io(API_CONFIG.backend.url, { path: '/api/socket.io/' });
-
-      useEffect(() => {
-        socket.on('connect', () => {
-          console.log('WebSocket connected');
-          // Al conectar, si hay una tarea activa, unirse a su sala
-          if (state.activeTaskId) {
-            socket.emit('join_task', { task_id: state.activeTaskId });
-          }
-        });
-
-        socket.on('task_update', (data) => {
-          const { task_id, type, data: updateData } = data;
-          // Asegurarse de que el update sea para la tarea correcta
-          if (task_id) {
-            if (type === 'new_message') {
-              dispatch({ type: 'ADD_TASK_MESSAGE', payload: { taskId: task_id, message: updateData.message } });
-            } else if (type === 'step_completed' || type === 'step_started') {
-              // Procesar actualizaciones de plan y terminal aquí
-              // Esto se detalla en las secciones siguientes
-            }
-            // ... otros tipos de actualizaciones
-          }
-        });
-
-        // Manejar eventos de historial al unirse a una sala (si el backend los envía)
-        socket.on('task_history', (data) => {
-          const { task_id, messages, terminalLogs, planState } = data;
-          if (task_id === state.activeTaskId) { // Solo si es la tarea activa
-            dispatch({ type: 'SET_TASK_MESSAGES', payload: { taskId: task_id, messages } });
-            dispatch({ type: 'SET_TERMINAL_LOGS', payload: { taskId: task_id, logs: terminalLogs } });
-            dispatch({ type: 'SET_TASK_PLAN_STATE', payload: { taskId: task_id, planState } });
-          }
-        });
-
-        return () => {
-          socket.disconnect();
-        };
-      }, [dispatch, state.activeTaskId]); // Re-ejecutar si activeTaskId cambia
-
-      const joinTaskRoom = useCallback((taskId: string) => {
-        socket.emit('join_task', { task_id: taskId });
-      }, [socket]);
-
-      const leaveTaskRoom = useCallback((taskId: string) => {
-        socket.emit('leave_task', { task_id: taskId });
-      }, [socket]);
-
-      return { joinTaskRoom, leaveTaskRoom };
-    };
-    ```
-
-### 4.3. Soluciones para el Manejo del Plan de Acción por Tarea
-
-El problema de duplicación del plan de acción es similar al del chat: el componente de la UI no está mostrando el plan correcto para la tarea activa.
-
-**Modificaciones Sugeridas (Frontend):**
-
-1.  **Componente de Visualización del Plan (ej. en `TaskView.tsx` o un subcomponente):**
-    *   Asegurarse de que el componente que renderiza el plan de acción (la lista de pasos) siempre obtenga los datos de `state.taskPlanStates[state.activeTaskId].plan`.
-    *   Implementar un `useEffect` para reaccionar a los cambios en `activeTaskId` y asegurarse de que el plan correcto se cargue y se muestre.
-
-    ```typescript
-    // frontend/src/components/TaskView.tsx (ejemplo conceptual)
-    import { useAppContext } from '../../context/AppContext';
-    import React, { useEffect } from 'react';
-
-    const TaskView: React.FC = () => {
-      const { state } = useAppContext();
-      const activeTaskPlanState = state.activeTaskId ? state.taskPlanStates[state.activeTaskId] : null;
-      const planSteps = activeTaskPlanState ? activeTaskPlanState.plan : [];
-
-      useEffect(() => {
-        // Lógica para asegurar que el plan se muestre correctamente al cambiar de tarea
-        console.log(`Cargando plan para tarea: ${state.activeTaskId}`);
-      }, [state.activeTaskId, planSteps]);
-
+    case 'tool-execution':
       return (
-        <div className="plan-container">
-          {planSteps.length > 0 ? (
-            planSteps.map((step, index) => (
-              <div key={step.id} className={`step ${step.status}`}>
-                {step.title}
-              </div>
-            ))
-          ) : (
-            <p>No hay plan de acción para esta tarea.</p>
+        <div className="markdown-content">
+          <h3>Detalles de Ejecución de Herramienta: {currentPage.toolName}</h3>
+          <p>{currentPage.content}</p>
+          {currentPage.metadata?.status === 'error' && (
+            <div className="text-red-500">Error: {currentPage.metadata.status}</div>
+          )}
+          {currentPage.toolParams && (
+            <pre className="bg-gray-700 p-2 rounded text-xs">{JSON.stringify(currentPage.toolParams, null, 2)}</pre>
           )}
         </div>
       );
-    };
-    ```
-
-2.  **`usePlanManager.ts` Hook:**
-    *   Este hook debe asegurarse de que todas las operaciones (obtener plan, actualizar paso, etc.) se realicen sobre el `task_id` activo. Las funciones de `AppContext` ya están diseñadas para esto.
-
-### 4.4. Soluciones para el Manejo de la Terminal por Tarea
-
-La terminal que no muestra los resultados correctos es un problema de carga de estado y de cómo se procesan los eventos de la terminal.
-
-**Modificaciones Sugeridas (Frontend):**
-
-1.  **`TerminalView` Component:**
-    *   Asegurarse de que `TerminalView` (y sus subcomponentes) obtenga los logs y comandos de `state.terminalLogs[state.activeTaskId]` y `state.taskTerminalCommands[state.activeTaskId]`.
-    *   Utilizar `useEffect` para reaccionar a los cambios en `activeTaskId` y asegurar que la terminal se limpie y cargue los logs y comandos correctos para la nueva tarea.
-
-    ```typescript
-    // frontend/src/components/TerminalView/TerminalView.tsx (ejemplo conceptual)
-    import { useAppContext } from '../../context/AppContext';
-    import React, { useEffect, useRef } from 'react';
-
-    const TerminalView: React.FC = () => {
-      const { state } = useAppContext();
-      const terminalLogs = state.activeTaskId ? state.terminalLogs[state.activeTaskId] || [] : [];
-      const terminalCommands = state.activeTaskId ? state.taskTerminalCommands[state.activeTaskId] || [] : [];
-      const terminalEndRef = useRef<HTMLDivElement>(null);
-
-      useEffect(() => {
-        // Scroll to bottom on activeTaskId change or new logs/commands
-        terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, [state.activeTaskId, terminalLogs, terminalCommands]);
-
+    case 'report':
       return (
-        <div className="terminal-container">
-          {terminalLogs.map((log, index) => (
-            <div key={index} className={`terminal-log ${log.type}`}>
-              {log.message}
-            </div>
-          ))}
-          {/* Render commands as well */}
-          <div ref={terminalEndRef} />
+        <div className="markdown-content">
+          <AcademicMarkdownRenderer markdown={currentPage.content} />
         </div>
       );
-    };
-    ```
+    case 'file':
+      return (
+        <div className="markdown-content">
+          <h3>Contenido del Archivo: {currentPage.title}</h3>
+          <pre className="whitespace-pre-wrap text-sm">{currentPage.content}</pre>
+        </div>
+      );
+    case 'error':
+      return (
+        <div className="markdown-content text-red-500">
+          <h3>Error: {currentPage.title}</h3>
+          <pre className="whitespace-pre-wrap text-sm">{currentPage.content}</pre>
+        </div>
+      );
+    case 'web-browsing':
+      return (
+        <div className="markdown-content">
+          <h3>🌐 Navegación Web: {currentPage.title}</h3>
+          <p>URL: <a href={currentPage.metadata?.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{currentPage.metadata?.url}</a></p>
+          {currentPage.metadata?.screenshotUrl && (
+            <img src={currentPage.metadata.screenshotUrl} alt="Captura de pantalla de la navegación" className="mt-2 rounded-lg max-w-full h-auto" />
+          )}
+          <p className="text-sm mt-2">{currentPage.content}</p>
+        </div>
+      );
+    case 'data-collection':
+      return (
+        <div className="markdown-content">
+          <h3>📊 Datos Recolectados: {currentPage.title}</h3>
+          <p>{currentPage.metadata?.dataSummary}</p>
+          {currentPage.metadata?.partialData && (
+            <pre className="bg-gray-700 p-2 rounded text-xs">{JSON.stringify(currentPage.metadata.partialData, null, 2)}</pre>
+          )}
+          <p className="text-sm mt-2">{currentPage.content}</p>
+        </div>
+      );
+    case 'log':
+      return (
+        <div className="markdown-content">
+          <h3 className={currentPage.metadata?.logLevel === 'error' ? 'text-red-500' : currentPage.metadata?.logLevel === 'warn' ? 'text-yellow-500' : ''}>Log: {currentPage.title}</h3>
+          <pre className="whitespace-pre-wrap text-sm">{currentPage.content}</pre>
+        </div>
+      );
+    default:
+      return (
+        <div className="markdown-content">
+          <h3>Contenido Desconocido</h3>
+          <pre className="whitespace-pre-wrap text-sm">{currentPage.content}</pre>
+        </div>
+      );
+  }
+};
 
-2.  **`useWebSocket.ts` Hook (continuación):**
-    *   Cuando se recibe un evento `step_completed` o `tool_execution_detail` del backend, el `useWebSocket.ts` debe extraer la información relevante (salida de la herramienta, logs) y despacharla a `ADD_TERMINAL_LOG` o `ADD_TASK_TERMINAL_COMMAND` utilizando el `task_id` del evento.
-    *   Es crucial que el backend envíe suficiente información en el `step_result` para que el frontend pueda reconstruir la salida de la terminal de manera significativa.
+// ... (resto del archivo)
+```
 
-3.  **Backend (`agent_routes.py` y `websocket_manager.py`):**
-    *   Asegurarse de que el `step_result` enviado en los eventos de WebSocket (`step_completed`) contenga toda la información necesaria para la terminal, incluyendo la salida de comandos shell, resultados de búsqueda web, etc. El `get_task_status` en `agent_routes.py` ya incluye `executionData` con `executed_tools`, lo cual es un buen punto de partida.
-    *   El `websocket_manager.py` ya almacena los últimos 10 eventos. El frontend debe solicitar estos eventos al unirse a una tarea para reconstruir el historial de la terminal.
+**4. Actualizar la sección de logs del terminal:**
 
-### 4.5. Gestión General del Estado en el Frontend
+Para mostrar los `LOG_MESSAGE` en el `terminalOutput`:
 
-Para garantizar un aislamiento completo y una experiencia de usuario coherente, se deben seguir las siguientes prácticas:
+```typescript
+// ... (dentro de TerminalView.tsx, en la sección de renderizado del terminal)
 
-1.  **Single Source of Truth:** El `AppContext` debe ser la única fuente de verdad para el estado de la aplicación. Los componentes deben obtener su estado de `AppContext` y no mantener estados locales duplicados que no se sincronicen con el contexto.
+<div className="flex-1 overflow-y-auto p-2 text-xs font-mono bg-gray-800 text-gray-200 rounded-b-lg">
+  {terminalOutput.map((line, index) => (
+    <div key={index} className="py-0.5">{line}</div>
+  ))}
+  {externalLogs.map((log, index) => (
+    <div key={`ext-${index}`} className={`py-0.5 ${log.type === 'error' ? 'text-red-400' : log.type === 'success' ? 'text-green-400' : 'text-gray-300'}`}>
+      <span className="text-gray-500">[{new Date(log.timestamp).toLocaleTimeString()}]</span> {log.message}
+    </div>
+  ))}
+  {/* ... (otros elementos de UI) */}
+</div>
+```
 
-2.  **Reactividad a `activeTaskId`:** Todos los componentes que muestran información específica de la tarea (chat, plan, terminal, archivos) deben tener un `useEffect` que reaccione a los cambios en `state.activeTaskId`. Cuando `activeTaskId` cambia, el componente debe:
-    *   Limpiar cualquier estado interno temporal.
-    *   Cargar los datos correspondientes al nuevo `activeTaskId` desde `AppContext`.
-    *   Asegurarse de que los datos se rendericen correctamente.
+### 5.4. Consideraciones Adicionales
 
-3.  **Manejo de la Migración de `taskId`:** El `UPDATE_TASK_ID` en `AppContext.tsx` ya maneja la migración de todos los estados aislados del `oldId` al `newId`. Esto es crítico y debe ser invocado correctamente por `useTaskManagement.ts` cuando el backend devuelve un `task_id` real después de la creación de una tarea temporal.
+*   **Instalación de Playwright/Selenium:** Asegúrate de que las dependencias de Playwright (`pip install playwright` y `playwright install`) o Selenium (`pip install selenium` y el WebDriver correspondiente) estén instaladas en tu entorno de backend.
+*   **Manejo de `executionData`:** El `executionData` que ya se pasa al `TerminalView` desde `get_task_status` en `agent_routes.py` es útil para el estado general y los `executed_tools`. Sin embargo, para la visualización en tiempo real, la estrategia de eventos WebSocket es más adecuada.
+*   **Optimización de WebSocket:** Asegúrate de que los payloads de WebSocket no sean excesivamente grandes, especialmente para las capturas de pantalla o datos masivos. Considera enviar URLs a recursos grandes en lugar de los datos directamente. Para las capturas de pantalla, guardarlas en el servidor y servir su URL es la mejor práctica.
+*   **Manejo de Errores:** Implementa un manejo robusto de errores tanto en el backend (para la captura y emisión de eventos) como en el frontend (para el consumo y renderizado).
+*   **Pruebas:** Realiza pruebas exhaustivas de cada nueva funcionalidad para asegurar que los eventos se emiten y consumen correctamente, y que la UI se actualiza como se espera.
 
-4.  **Recuperación de Estado al Cambiar de Tarea:**
-    *   Cuando el usuario cambia de tarea en el frontend, el `useTaskManagement.ts` o un hook similar debe:
-        *   Actualizar `activeTaskId` en `AppContext`.
-        *   Si la tarea a la que se cambia no tiene su estado completamente cargado en el `AppContext` (ej. si es la primera vez que se selecciona desde que se inició la aplicación o si el caché del frontend se limpió), debe realizar una llamada REST al backend (`/api/agent/get-task-status/<task_id>`) para obtener el estado completo de la tarea (plan, mensajes, `executionData` para la terminal) y luego despachar las acciones correspondientes (`SET_TASK_MESSAGES`, `SET_TASK_PLAN_STATE`, `ADD_TERMINAL_LOG` para logs históricos) para poblar el `AppContext`.
-        *   Unirse a la sala de WebSocket de la nueva tarea (`socket.emit('join_task', { task_id: newTaskId })`) para recibir actualizaciones en tiempo real.
-
-5.  **Manejo de Desconexiones y Reconexiones de WebSocket:**
-    *   Cuando el `useWebSocket.ts` se reconecta, debe re-unirse a la sala de la `activeTaskId` actual.
-    *   El backend (`websocket_manager.py`) ya almacena los últimos 10 eventos. Al unirse a una sala, el backend podría enviar estos eventos almacenados al cliente para ayudar a reconstruir el estado de la UI. El frontend debe tener una lógica para procesar estos eventos históricos y aplicarlos al estado aislado de la tarea.
-
-### 4.6. Consideraciones Adicionales
-
-*   **Optimización de Rendimiento:** Aunque el aislamiento es clave, se debe monitorear el rendimiento, especialmente con muchas tareas activas. El uso de `useMemo` y `useCallback` en los hooks y componentes de React puede ayudar a prevenir re-renderizaciones innecesarias.
-*   **Manejo de Errores:** Asegurar que cualquier error en la comunicación o en el procesamiento de datos se maneje de forma elegante y se muestre al usuario sin romper la aplicación.
-*   **Pruebas Unitarias y de Integración:** Implementar pruebas exhaustivas para cada una de estas soluciones, especialmente para los casos de cambio de tarea, creación de tareas y manejo de eventos de WebSocket, para garantizar que el aislamiento funcione como se espera. Los casos de prueba obligatorios mencionados en el prompt (dos tareas activas al mismo tiempo) serán cruciales para validar estas soluciones.
-
-Al implementar estas soluciones, se logrará que cada tarea tenga su propio contexto completamente aislado y persistente, resolviendo los problemas de duplicación y coherencia entre la UI y el backend.
-
-
-
-## 5. Resumen de los Problemas Encontrados
-
-El análisis exhaustivo del código fuente del agente general ha revelado que los problemas de coherencia entre la UI y el backend, y la falta de persistencia y aislamiento de tareas, se manifiestan principalmente en la capa del frontend. Aunque el backend utiliza MongoDB y un `TaskManager` robusto para la persistencia de datos aislados por `task_id`, la interfaz de usuario no siempre refleja este aislamiento de manera consistente.
-
-Los problemas clave identificados son:
-
-*   **Duplicación Percibida en la UI (Chat y Plan de Acción):** Los mensajes de chat y los pasos del plan de acción aparecen mezclados o duplicados al cambiar entre tareas. Esto no se debe a una duplicación de datos en el backend, sino a que los componentes del frontend no están actualizando su visualización de forma reactiva al `activeTaskId` o están procesando eventos de WebSocket de manera incorrecta, aplicando actualizaciones a un estado global en lugar del estado específico de la tarea.
-
-*   **Terminal sin Resultados Correspondientes:** La terminal no muestra los logs y comandos asociados a la tarea activa. Esto sugiere una falla en la carga del historial de la terminal al cambiar de tarea y/o un procesamiento incorrecto de los eventos de la terminal enviados por WebSocket.
-
-*   **Sincronización Inconsistente Frontend-Backend:** Aunque el backend persiste correctamente el estado de la tarea, el frontend no siempre solicita o procesa el estado completo de la tarea al cambiar entre ellas o al reconectar, lo que lleva a una UI desactualizada o inconsistente.
-
-En esencia, la arquitectura de datos del frontend (`AppContext.tsx` con `Record<string, ...>`) es adecuada para el aislamiento, pero la implementación de los componentes y hooks de React no siempre aprovecha esta estructura de manera óptima, lo que resulta en una experiencia de usuario confusa y una percepción de falta de aislamiento.
-
-
-
-## 6. Soluciones Propuestas
-
-Las soluciones se centran en fortalecer la gestión del estado en el frontend y asegurar una sincronización impecable con el backend, sin requerir cambios significativos en la lógica de persistencia del backend, que ya es robusta.
-
-### 6.1. Refuerzo del Aislamiento en el Frontend
-
-El `AppContext.tsx` ya proporciona la estructura de datos necesaria para el aislamiento por `task_id`. La clave es asegurar que todos los componentes y hooks que interactúan con el estado de la tarea lo hagan de forma consciente del `activeTaskId`.
-
-**Recomendaciones Clave:**
-
-1.  **Centralizar el Acceso al Estado de la Tarea Activa:** Crear un selector o una función de utilidad en `AppContext` o en un hook dedicado (`useActiveTaskState`) que siempre devuelva el sub-estado correspondiente al `activeTaskId` actual. Esto reduce la probabilidad de errores al acceder a los datos.
-
-    ```typescript
-    // frontend/src/context/AppContext.tsx (ejemplo de selector)
-    // ... dentro de useAppContext
-    const getActiveTaskMessages = useCallback(() => {
-      return state.activeTaskId ? state.taskMessages[state.activeTaskId] || [] : [];
-    }, [state.activeTaskId, state.taskMessages]);
-
-    const getActiveTaskPlanState = useCallback(() => {
-      return state.activeTaskId ? state.taskPlanStates[state.activeTaskId] : null;
-    }, [state.activeTaskId, state.taskPlanStates]);
-
-    // ... y así para todos los estados aislados
-    return { state, dispatch, getActiveTaskMessages, getActiveTaskPlanState, ... };
-    ```
-
-2.  **Uso Consistente de `useEffect` en Componentes:** Todos los componentes que visualizan datos específicos de la tarea (ej. `ChatInterface`, `TerminalView`, componentes del plan) deben usar `useEffect` con `state.activeTaskId` como dependencia para reaccionar a los cambios de tarea. Dentro de este `useEffect`, se debe asegurar que el componente se reinicialice o cargue los datos correctos.
-
-    ```typescript
-    // Ejemplo conceptual para cualquier componente de TaskView
-    useEffect(() => {
-      // Lógica para asegurar que el componente se actualice al cambiar de tarea
-      // Por ejemplo, si hay un estado local para el scroll, resetearlo.
-      // Si hay suscripciones a eventos, re-suscribirse con el nuevo taskId.
-      console.log(`Componente ${componentName} actualizado para tarea: ${state.activeTaskId}`);
-    }, [state.activeTaskId]);
-    ```
-
-### 6.2. Sincronización Mejorada con el Backend
-
-La comunicación entre el frontend y el backend debe ser más robusta para asegurar que el estado de la UI siempre refleje la fuente de verdad en MongoDB.
-
-1.  **Recuperación Completa del Estado de la Tarea al Cambiar:**
-    *   Cuando el usuario selecciona una tarea existente (o al cargar la aplicación si hay una tarea activa guardada), el frontend debe realizar una llamada REST al endpoint `/api/agent/get-task-status/<task_id>` para obtener el estado completo de esa tarea desde el backend.
-    *   Esta llamada debe recuperar no solo el plan, sino también el historial de mensajes y los datos de ejecución de la terminal (`executionData`).
-    *   Una vez recibidos los datos, el frontend debe despachar las acciones correspondientes (`SET_TASK_MESSAGES`, `SET_TASK_PLAN_STATE`, `ADD_TERMINAL_LOG` para logs históricos) para poblar el `AppContext` para esa `task_id`.
-
-    ```typescript
-    // frontend/src/hooks/useTaskManagement.ts (modificación conceptual en setActiveTask)
-    const setActiveTask = useCallback(async (taskId: string | null) => {
-      dispatch({ type: 'SET_ACTIVE_TASK', payload: taskId });
-      if (taskId) {
-        // Fetch full task state from backend
-        try {
-          const response = await fetch(`${API_CONFIG.backend.url}/api/agent/get-task-status/${taskId}`);
-          if (response.ok) {
-            const taskData = await response.json();
-            // Actualizar mensajes
-            dispatch({ type: 'SET_TASK_MESSAGES', payload: { taskId, messages: taskData.messages || [] } });
-            // Actualizar plan
-            dispatch({ type: 'SET_TASK_PLAN_STATE', payload: { taskId, planState: { plan: taskData.plan || [], /* ...otros campos del plan */ } } });
-            // Actualizar logs de terminal (convertir executionData a logs)
-            const terminalLogs = convertExecutionDataToTerminalLogs(taskData.executionData);
-            dispatch({ type: 'SET_TERMINAL_LOGS', payload: { taskId, logs: terminalLogs } });
-            // ... y otros estados aislados
-          } else {
-            console.error(`Failed to fetch task status for ${taskId}`);
-          }
-        } catch (error) {
-          console.error(`Error fetching task status for ${taskId}:`, error);
-        }
-      }
-    }, [dispatch]);
-    ```
-    *Nota: Se necesitará una función `convertExecutionDataToTerminalLogs` para transformar los `executed_tools` del backend en el formato de `terminalLogs` del frontend.*
-
-2.  **Manejo de Eventos WebSocket en `useWebSocket.ts`:**
-    *   Asegurarse de que el `useWebSocket.ts` siempre procese los eventos de `task_update` (y otros eventos relevantes) utilizando el `task_id` incluido en el payload del evento.
-    *   Al recibir un evento, el `dispatch` debe dirigirse al estado aislado de la tarea correspondiente, no a un estado global.
-    *   Implementar una lógica para que, al unirse a una sala de WebSocket (`join_task`), el backend envíe el historial de eventos almacenados (`stored_events`) para esa tarea. El frontend debe procesar estos eventos históricos y añadirlos al estado de la tarea en `AppContext`.
-
-    ```typescript
-    // backend/src/websocket/websocket_manager.py (modificación conceptual en handle_join_task)
-    @self.socketio.on("join_task")
-    def handle_join_task(data):
-        task_id = data.get("task_id")
-        session_id = request.sid
-        # ... (lógica existente para unirse a la sala y trackear conexiones)
-
-        # Enviar eventos históricos al cliente que se une
-        stored_events = self.get_stored_events(task_id)
-        for event_data in stored_events:
-            emit(event_data["event"], event_data, room=session_id) # Emitir a la sesión específica
-        logger.info(f"Sent {len(stored_events)} historical events to new client {session_id} for task {task_id}")
-    ```
-
-    ```typescript
-    // frontend/src/hooks/useWebSocket.ts (modificación conceptual para manejar historial)
-    useEffect(() => {
-      // ... (código existente de conexión y task_update)
-
-      socket.on("historical_event", (data) => { // Nuevo evento para historial
-        const { task_id, event, data: eventData } = data;
-        // Procesar eventos históricos como si fueran eventos en tiempo real
-        if (task_id) {
-          if (event === 'new_message') {
-            dispatch({ type: 'ADD_TASK_MESSAGE', payload: { taskId: task_id, message: eventData.message } });
-          } else if (event === 'step_completed' || event === 'step_started') {
-            // Procesar actualizaciones de plan y terminal
-            // ... (lógica para añadir logs de terminal y actualizar plan)
-          }
-          // ... otros tipos de eventos históricos
-        }
-      });
-
-      return () => {
-        socket.disconnect();
-      };
-    }, [dispatch, state.activeTaskId]);
-    ```
-
-### 6.3. Plan de Implementación Paso a Paso
-
-Este plan se enfoca en el frontend, ya que el backend parece estar bien estructurado para el aislamiento.
-
-**Fase 1: Preparación y Refactorización de Componentes (Frontend)**
-
-1.  **Auditoría de Componentes:** Identificar todos los componentes de React que muestran o interactúan con el chat, el plan de acción y la terminal (`ChatInterface`, `TerminalView`, `TaskView`, etc.).
-2.  **Centralización del Acceso al Estado:**
-    *   Modificar `AppContext.tsx` para exponer selectores (`getActiveTaskMessages`, `getActiveTaskPlanState`, etc.) que devuelvan el estado de la tarea activa.
-    *   Actualizar los componentes para que utilicen estos selectores en lugar de acceder directamente a `state.taskMessages[state.activeTaskId]` (aunque la diferencia es sutil, el selector puede añadir memoización y claridad).
-3.  **Implementación de `useEffect` para `activeTaskId`:** En cada componente relevante, añadir un `useEffect` que dependa de `state.activeTaskId`. Dentro de este `useEffect`:
-    *   Asegurarse de que cualquier estado local que pueda retener información de la tarea anterior se reinicie.
-    *   Forzar una re-renderización si es necesario (aunque React debería manejar esto automáticamente si las dependencias son correctas).
-
-**Fase 2: Mejora de la Sincronización y Recuperación (Frontend)**
-
-1.  **Función de Conversión de `executionData`:** Crear una función de utilidad (`convertExecutionDataToTerminalLogs`) que tome el `executionData` del backend (obtenido de `/api/agent/get-task-status`) y lo transforme en el formato de `terminalLogs` y `taskTerminalCommands` esperado por el frontend.
-2.  **Implementación de `setActiveTask` Mejorado:** Modificar el `setActiveTask` en `useTaskManagement.ts` para que, al cambiar de tarea, realice una llamada REST a `/api/agent/get-task-status/<task_id>`. Luego, despachar las acciones (`SET_TASK_MESSAGES`, `SET_TASK_PLAN_STATE`, `SET_TERMINAL_LOGS`, etc.) para poblar el `AppContext` con el estado completo de la tarea recuperada.
-3.  **Manejo de Historial de WebSocket:**
-    *   Modificar `websocket_manager.py` en el backend para que, al recibir un evento `join_task`, envíe los `stored_events` (historial de los últimos eventos) al cliente que se une, utilizando un nuevo tipo de evento (ej. `historical_event`).
-    *   Modificar `useWebSocket.ts` en el frontend para escuchar el evento `historical_event` y procesar estos eventos, añadiéndolos al estado aislado de la tarea en `AppContext`.
-
-**Fase 3: Pruebas Exhaustivas**
-
-1.  **Pruebas Unitarias:** Escribir pruebas unitarias para los selectores de `AppContext` y para la función `convertExecutionDataToTerminalLogs`.
-2.  **Pruebas de Integración (Frontend):**
-    *   **Caso de Prueba 1: Creación de Múltiples Tareas:** Crear dos o más tareas nuevas y verificar que el chat, el plan de acción y la terminal de cada tarea estén completamente vacíos al inicio y que no se mezclen los datos a medida que se interactúa con ellas.
-    *   **Caso de Prueba 2: Cambio entre Tareas Activas:** Iniciar una tarea, interactuar con ella (enviar mensajes, ejecutar pasos del plan, ver salida de terminal). Luego, cambiar a una segunda tarea, interactuar con ella. Volver a la primera tarea y verificar que su estado (chat, plan, terminal) se haya restaurado correctamente y no contenga información de la segunda tarea.
-    *   **Caso de Prueba 3: Recarga de Página:** Iniciar una tarea, interactuar con ella. Recargar la página del navegador y verificar que el estado de la tarea activa se restaure correctamente (si la aplicación tiene un mecanismo para recordar la última tarea activa).
-    *   **Caso de Prueba 4: Desconexión/Reconexión de WebSocket:** Simular una desconexión y reconexión del WebSocket (ej. reiniciando el backend) y verificar que el frontend pueda recuperar el estado de la tarea activa y su historial de eventos.
-3.  **Pruebas de Rendimiento:** Monitorear el rendimiento de la aplicación con múltiples tareas activas para asegurar que las mejoras no introduzcan latencia excesiva.
-
-### 6.4. Casos de Prueba Obligatorios (Reiteración y Detalle)
-
-Para validar las soluciones, se deben ejecutar los siguientes casos de prueba, prestando especial atención a la coherencia y el aislamiento del `TaskView` (chat, plan de acción, terminal):
-
-1.  **Test con al menos dos tareas activas al mismo tiempo:**
-    *   **Paso 1:** Crear `Tarea A`. Enviar 3-4 mensajes en el chat. Iniciar la ejecución de un paso del plan. Ejecutar un comando en la terminal y observar la salida.
-    *   **Paso 2:** Crear `Tarea B`. Verificar que el chat, el plan de acción y la terminal de `Tarea B` estén completamente vacíos. Enviar 3-4 mensajes diferentes en el chat de `Tarea B`. Iniciar la ejecución de un paso diferente del plan. Ejecutar un comando diferente en la terminal y observar la salida.
-    *   **Paso 3:** Cambiar de `Tarea B` a `Tarea A`. Verificar que el chat de `Tarea A` muestre solo los mensajes de `Tarea A`, que el plan de acción de `Tarea A` muestre su estado original, y que la terminal de `Tarea A` muestre solo los logs y comandos de `Tarea A`.
-    *   **Paso 4:** Cambiar de `Tarea A` a `Tarea B`. Verificar que el chat de `Tarea B` muestre solo los mensajes de `Tarea B`, que el plan de acción de `Tarea B` muestre su estado original, y que la terminal de `Tarea B` muestre solo los logs y comandos de `Tarea B`.
-
-2.  **Verificación de Persistencia y Carga:**
-    *   Después de realizar el Test 1, recargar la página del navegador (simulando un cierre y reapertura de la aplicación). Si la aplicación tiene un mecanismo para recordar la última tarea activa, verificar que al cargar, el estado de esa tarea se restaure correctamente. Si no, seleccionar manualmente una de las tareas y verificar su estado.
-
-3.  **Verificación de Eventos Históricos de WebSocket:**
-    *   Con una tarea activa y con historial de chat y terminal, reiniciar el backend (simulando una desconexión de WebSocket). Una vez que el backend se reinicie y el frontend se reconecte, verificar que el historial de chat y terminal se reconstruya correctamente a través de los eventos históricos enviados por el `websocket_manager`.
-
-Al completar estas pruebas con éxito, se podrá confirmar que el sistema se comporta como un agente general bien diseñado, con tareas completamente independientes y persistentes, y que los problemas de inconsistencia y duplicación han sido resueltos.
+Este informe proporciona un camino claro para implementar las funcionalidades de visualización en tiempo real que deseas, incorporando la integración de Playwright/Selenium para la navegación web, manteniendo la separación entre el backend y el frontend y sin requerir cambios drásticos en la UI existente, sino extendiendo sus capacidades.
 
