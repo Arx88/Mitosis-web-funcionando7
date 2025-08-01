@@ -899,7 +899,7 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
             
             # Ejecutar búsqueda tradicional con herramientas
             if tool_manager and hasattr(tool_manager, 'execute_tool'):
-                result = tool_manager.execute_tool('playwright_web_search', {
+                result = tool_manager.execute_tool('web_search', {
                     'query': search_query,
                     'max_results': 7,
                     'search_engine': 'bing',
