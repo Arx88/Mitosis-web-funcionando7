@@ -198,7 +198,14 @@ export const TerminalView = ({
   // const [monitorPages, setMonitorPages] = useState<MonitorPage[]>([]);
   // const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [isLiveMode, setIsLiveMode] = useState(true);
+  // Estado para manejar el estado del sistema - BASADO EN WEBSOCKET REAL
   const [isSystemOnline, setIsSystemOnline] = useState(false);
+  
+  // ✅ FIX CRÍTICO: Usar estado real de WebSocket en lugar de simulación
+  useEffect(() => {
+    console.log(`🔌 [WEBSOCKET-STATUS] Connection state changed: ${isConnected}`);
+    setIsSystemOnline(isConnected); // Usar el estado real del WebSocket
+  }, [isConnected]);
   const [initializationStep, setInitializationStep] = useState(0);
   const [paginationStats, setPaginationStats] = useState({
     totalPages: 0,
