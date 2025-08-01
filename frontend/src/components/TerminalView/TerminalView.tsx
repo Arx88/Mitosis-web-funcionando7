@@ -773,10 +773,13 @@ export const TerminalView = ({
     const handleTaskUpdate = (data: any) => {
       console.log(`🔄 [TASK-${taskId}] Task update received:`, data);
       
-      if (data.task_id !== taskId) return;
+      if (!data || data.task_id !== taskId) return;
+      
+      // 🔧 FIX CRÍTICO: Verificación defensiva del tipo de evento
+      const eventType = data.type || 'unknown';
       
       // Enrutar según el tipo de evento
-      switch (data.type) {
+      switch (eventType) {
         case 'browser_activity':
           handleBrowserActivity(data);
           break;
@@ -790,11 +793,11 @@ export const TerminalView = ({
           handleLogMessage(data);
           break;
         case 'step_started':
-          console.log(`🚀 [TASK-${taskId}] Step started:`, data.step);
+          console.log(`🚀 [TASK-${taskId}] Step started:`, data.step || 'unknown step');
           // El plan component ya maneja estos eventos, solo loggeamos aquí
           break;
         case 'step_completed':
-          console.log(`✅ [TASK-${taskId}] Step completed:`, data.step);
+          console.log(`✅ [TASK-${taskId}] Step completed:`, data.step || 'unknown step');
           // El plan component ya maneja estos eventos, solo loggeamos aquí
           break;
         case 'task_progress':
