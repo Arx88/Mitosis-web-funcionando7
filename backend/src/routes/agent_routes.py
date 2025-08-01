@@ -2759,7 +2759,7 @@ def create_web_browser_manager(task_id: str, browser_type: str = "playwright"):
             browser_config = BrowserConfig(browser_type=BrowserType.CHROMIUM)
         
         # Crear instancia de WebBrowserManager con integración WebSocket
-        browser_manager = WebBrowserManager(
+        browser_manager = WebBrowserManagerClass(
             config=browser_config,
             websocket_manager=websocket_manager,
             task_id=task_id
