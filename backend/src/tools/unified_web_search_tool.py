@@ -123,16 +123,27 @@ class UnifiedWebSearchTool(BaseTool):
         except:
             pass
         
-        # FORZAR EMISIÓN DE WEBSOCKET INCLUSO SIN TASK_ID (para debugging)
+        # 🔧 CRITICAL FIX: NO usar fallback task_id, forzar que se pase el correcto
         if not self.task_id:
-            # Si no hay task_id, usar un ID de fallback para testing
-            self.task_id = "debug-websocket-test"
-            try:
-                with open('/tmp/websocket_debug.log', 'a') as f:
-                    f.write(f"[{datetime.now()}] USING FALLBACK TASK_ID: {self.task_id}\n")
-                    f.flush()
-            except:
-                pass
+            # Intentar obtener task_id desde parámetros también
+            task_id_from_params = parameters.get('task_id')
+            if task_id_from_params:
+                self.task_id = task_id_from_params
+                try:
+                    with open('/tmp/websocket_debug.log', 'a') as f:
+                        f.write(f"[{datetime.now()}] TASK_ID FROM PARAMS: {self.task_id}\n")
+                        f.flush()
+                except:
+                    pass
+            else:
+                # Si realmente no hay task_id, usar uno temporal pero loggearlo
+                self.task_id = f"temp-websocket-{int(time.time())}"
+                try:
+                    with open('/tmp/websocket_debug.log', 'a') as f:
+                        f.write(f"[{datetime.now()}] NO TASK_ID PROVIDED - USING TEMP: {self.task_id}\n")
+                        f.flush()
+                except:
+                    pass
         
         try:
             # 🔄 INICIALIZAR VISUALIZACIÓN EN TIEMPO REAL
