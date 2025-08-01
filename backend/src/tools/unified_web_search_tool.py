@@ -232,43 +232,161 @@ class UnifiedWebSearchTool(BaseTool):
     
     def _run_async_search_with_visualization(self, query: str, search_engine: str, 
                                            max_results: int, extract_content: bool) -> List[Dict[str, Any]]:
-        """🔄 EJECUTAR BÚSQUEDA ASYNC CON VISUALIZACIÓN"""
+        """🔄 EJECUTAR BÚSQUEDA ASYNC CON VISUALIZACIÓN - ARREGLADO PARA EVENTLET"""
         
         import threading
+        import subprocess
+        import tempfile
+        import os
+        import json
         
-        results = []
-        exception = None
+        # 🔧 SOLUCIÓN: Usar subprocess para evitar conflicto con eventlet
+        try:
+            # Crear script temporal para ejecutar Playwright en proceso separado
+            script_content = f'''
+import asyncio
+import json
+import sys
+from playwright.async_api import async_playwright
+from urllib.parse import quote_plus
+import traceback
+
+async def search_with_playwright(query, search_engine, max_results):
+    """Búsqueda Playwright en proceso separado"""
+    
+    results = []
+    
+    # Construir URL de búsqueda
+    encoded_query = quote_plus(query)
+    if search_engine == 'google':
+        search_url = f"https://www.google.com/search?q={{encoded_query}}"
+    else:
+        search_url = f"https://www.bing.com/search?q={{encoded_query}}&count=20"
+    
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(
+            headless=True,
+            args=['--no-sandbox', '--disable-dev-shm-usage']
+        )
         
-        def run_in_thread():
-            nonlocal results, exception
-            try:
-                # Crear nuevo event loop en hilo separado
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
+        try:
+            context = await browser.new_context(
+                viewport={{'width': 1920, 'height': 800}},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            )
+            
+            page = await context.new_page()
+            page.set_default_timeout(15000)
+            
+            # Navegar y extraer resultados
+            await page.goto(search_url, wait_until='networkidle')
+            await page.wait_for_timeout(2000)
+            
+            # Extraer resultados según motor de búsqueda
+            if search_engine == 'bing':
+                result_elements = await page.query_selector_all('li.b_algo')
                 
-                results = loop.run_until_complete(
-                    self._search_with_playwright_and_visualization(
-                        query, search_engine, max_results, extract_content
-                    )
+                for element in result_elements[:max_results]:
+                    try:
+                        title_element = await element.query_selector('h2')
+                        title = await title_element.text_content() if title_element else ''
+                        
+                        link_element = await element.query_selector('h2 a')
+                        url = await link_element.get_attribute('href') if link_element else ''
+                        
+                        snippet_element = await element.query_selector('.b_caption')
+                        snippet = await snippet_element.text_content() if snippet_element else ''
+                        
+                        if title and url and url.startswith('http'):
+                            results.append({{
+                                'title': title.strip(),
+                                'url': url.strip(),
+                                'snippet': snippet.strip(),
+                                'source': 'bing'
+                            }})
+                    except Exception:
+                        continue
+            
+            else:  # Google
+                result_elements = await page.query_selector_all('div.g, div[data-ved]')
+                
+                for element in result_elements[:max_results]:
+                    try:
+                        title_element = await element.query_selector('h3')
+                        title = await title_element.text_content() if title_element else ''
+                        
+                        link_element = await element.query_selector('a')
+                        url = await link_element.get_attribute('href') if link_element else ''
+                        
+                        snippet_element = await element.query_selector('.VwiC3b, .s3v9rd, .st')
+                        snippet = await snippet_element.text_content() if snippet_element else ''
+                        
+                        if title and url and url.startswith('http'):
+                            results.append({{
+                                'title': title.strip(),
+                                'url': url.strip(), 
+                                'snippet': snippet.strip(),
+                                'source': 'google'
+                            }})
+                    except Exception:
+                        continue
+                        
+        finally:
+            await browser.close()
+    
+    return results
+
+# Ejecutar búsqueda
+try:
+    results = asyncio.run(search_with_playwright("{query}", "{search_engine}", {max_results}))
+    print(json.dumps({{"success": True, "results": results}}))
+except Exception as e:
+    print(json.dumps({{"success": False, "error": str(e), "traceback": traceback.format_exc()}}))
+'''
+            
+            # Escribir script a archivo temporal
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_file:
+                temp_file.write(script_content)
+                temp_script_path = temp_file.name
+            
+            try:
+                # 🚀 EMISIÓN DE PROGRESO - CORREGIDA PARA FUNCIONAR CON EVENTLET
+                self._emit_progress_eventlet(f"🌐 Navegando a {search_engine} (proceso separado)...")
+                
+                # Ejecutar script en proceso separado
+                result = subprocess.run(
+                    ['/root/.venv/bin/python', temp_script_path],
+                    capture_output=True,
+                    text=True,
+                    timeout=30
                 )
                 
-                loop.close()
-                
-            except Exception as e:
-                exception = e
-        
-        # Ejecutar en hilo separado para evitar conflictos
-        thread = threading.Thread(target=run_in_thread)
-        thread.start()
-        thread.join(timeout=45)  # 45 segundos timeout
-        
-        if exception:
-            raise exception
+                if result.returncode == 0:
+                    try:
+                        output_data = json.loads(result.stdout.strip())
+                        if output_data.get('success'):
+                            results = output_data.get('results', [])
+                            self._emit_progress_eventlet(f"✅ Encontrados {len(results)} resultados")
+                            return results
+                        else:
+                            raise Exception(f"Playwright subprocess error: {output_data.get('error', 'Unknown error')}")
+                    except json.JSONDecodeError as e:
+                        raise Exception(f"Failed to parse subprocess output: {result.stdout}")
+                else:
+                    raise Exception(f"Subprocess failed with code {result.returncode}: {result.stderr}")
+                    
+            finally:
+                # Limpiar archivo temporal
+                try:
+                    os.unlink(temp_script_path)
+                except:
+                    pass
+                    
+        except Exception as e:
+            self._emit_progress_eventlet(f"❌ Error en búsqueda subprocess: {str(e)}")
             
-        if thread.is_alive():
-            raise Exception("Timeout en búsqueda con visualización")
-            
-        return results
+            # 🔄 FALLBACK: Usar método simple sin Playwright
+            return self._simple_search_fallback(query, search_engine, max_results)
     
     async def _search_with_playwright_and_visualization(self, query: str, search_engine: str, 
                                                       max_results: int, extract_content: bool) -> List[Dict[str, Any]]:
