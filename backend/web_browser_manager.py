@@ -100,11 +100,15 @@ class ScrapingResult:
         self.total_pages = len(self.pages)
 
 class WebBrowserManager:
-    """Gestor unificado de navegación web con Playwright"""
+    """Gestor unificado de navegación web con Playwright y visualización en tiempo real"""
     
-    def __init__(self, config: Optional[BrowserConfig] = None):
+    def __init__(self, config: Optional[BrowserConfig] = None, websocket_manager=None, task_id: str = None):
         self.config = config or BrowserConfig()
         self.logger = logging.getLogger(__name__)
+        
+        # ✅ INTEGRACIÓN WEBSOCKET PARA TIEMPO REAL - SEGÚN UpgardeRef.md SECCIÓN 4.1
+        self.websocket_manager = websocket_manager
+        self.task_id = task_id
         
         # Estado del navegador
         self.browser: Optional[Browser] = None
@@ -132,6 +136,12 @@ class WebBrowserManager:
         self.logger.info("WebBrowserManager inicializado correctamente")
         if not PLAYWRIGHT_AVAILABLE:
             self.logger.error("⚠️ Playwright no disponible - funcionalidad limitada")
+        
+        # ✅ CONFIGURAR DIRECTORIO PARA SCREENSHOTS
+        if self.task_id:
+            self.screenshot_dir = f"/tmp/screenshots/{self.task_id}"
+            import os
+            os.makedirs(self.screenshot_dir, exist_ok=True)
 
     async def initialize(self) -> bool:
         """Inicializa el navegador y contextos"""
