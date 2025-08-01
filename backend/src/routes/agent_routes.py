@@ -1052,7 +1052,7 @@ def execute_multi_source_research_step(title: str, description: str, tool_manage
             
             # Búsqueda web estándar
             try:
-                web_result = tool_manager.execute_tool('playwright_web_search', {
+                web_result = tool_manager.execute_tool('web_search', {
                     'query': search_query,
                     'max_results': 5,
                     'search_engine': 'bing',
