@@ -366,13 +366,16 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     }
   }, []);
 
-  const handleDownloadAllFiles = useCallback(async () => {
+  const handleGenerateShareLink = useCallback(async (taskId: string): Promise<string> => {
     try {
-      await agentAPI.downloadAllFiles(task.id);
+      // Aquí se llamaría a la API para generar el enlace
+      const response = await agentAPI.generateShareLink(taskId);
+      return response.link;
     } catch (error) {
-      console.error('Error downloading all files:', error);
+      console.error('Error generating share link:', error);
+      throw error;
     }
-  }, [task.id]);
+  }, []);
 
   const handleCloseShareModal = useCallback(() => {
     setShowShareModal(false);
