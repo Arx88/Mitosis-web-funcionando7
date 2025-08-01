@@ -186,7 +186,7 @@ export const AgentStatus: React.FC<AgentStatusProps> = ({
                     </div>
                   </div>
                   <div className="text-xs opacity-50">
-                    {step.status.toUpperCase()}
+                    {(step.status || 'pending').toUpperCase()}
                   </div>
                 </div>
                 
