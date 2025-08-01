@@ -2741,7 +2741,7 @@ def create_web_browser_manager(task_id: str, browser_type: str = "playwright"):
             logger.warning("⚠️ WebSocketManager no disponible - WebBrowserManager funcionará sin eventos tiempo real")
         
         # Crear configuración para el navegador
-        from ..web_browser_manager import BrowserConfig, BrowserType
+        from web_browser_manager import BrowserConfig, BrowserType
         
         # Configurar tipo de navegador
         if browser_type.lower() == "selenium":
