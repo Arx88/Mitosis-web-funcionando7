@@ -33,12 +33,14 @@ interface ApiConfig {
 function getBackendUrl(): string {
   // 🚀 AUTODETECCIÓN DINÁMICA - SIN URLs HARDCODEADAS
   try {
-    // 1. PRIMERA PRIORIDAD: Variable de entorno si está disponible
+    // 1. PRIMERA PRIORIDAD: Variable de entorno si está disponible y no es auto-detect
     const envUrl = import.meta.env?.VITE_BACKEND_URL || 
                    import.meta.env?.REACT_APP_BACKEND_URL ||
                    (typeof process !== 'undefined' ? process.env.REACT_APP_BACKEND_URL : null);
                    
-    if (envUrl && envUrl !== 'undefined' && !envUrl.includes('64a3482e-5c9e-4f08-9906-c7e8583b532a')) {
+    if (envUrl && envUrl !== 'undefined' && envUrl !== 'auto-detect' && 
+        !envUrl.includes('64a3482e-5c9e-4f08-9906-c7e8583b532a') &&
+        !envUrl.includes('31ac0422-78aa-4076-a1b1-c3e7b8886947')) {
       console.log('🔧 Using environment backend URL:', envUrl);
       return envUrl;
     }
