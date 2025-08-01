@@ -360,7 +360,17 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
 
   const handleDownloadFile = useCallback(async (file: FileItem) => {
     try {
-      await agentAPI.downloadFile(file.id, file.name);
+      const blob = await agentAPI.downloadFile(file.id);
+      
+      // Crear enlace de descarga
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading file:', error);
     }
