@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 # Backend URL
-BACKEND_URL = "https://1bcbc563-0eb7-47cc-aed1-d326a3e6a573.preview.emergentagent.com"
+BACKEND_URL = "https://6f1dea1b-f2b9-4b55-b52c-7e8bcee0693d.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 def test_backend_health():
@@ -83,7 +83,7 @@ def test_cors_configuration():
     print("🔍 Testing CORS configuration...")
     try:
         headers = {
-            'Origin': 'https://1bcbc563-0eb7-47cc-aed1-d326a3e6a573.preview.emergentagent.com',
+            'Origin': 'https://6f1dea1b-f2b9-4b55-b52c-7e8bcee0693d.preview.emergentagent.com',
             'Content-Type': 'application/json'
         }
         
