@@ -1097,7 +1097,7 @@ export const TerminalView = ({
                   currentPage.metadata?.status === 'error' ? 'bg-red-500/20 text-red-400' :
                   'bg-yellow-500/20 text-yellow-400'
                 }`}>
-                  {currentPage.metadata?.status?.toUpperCase() || 'OK'}
+                  {(currentPage.metadata?.status || 'ok').toUpperCase()}
                 </span>
               </>
             )}
