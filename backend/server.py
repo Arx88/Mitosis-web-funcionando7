@@ -11,6 +11,26 @@ import json
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+FRONTEND_ORIGINS = [
+    # 🌐 URL DETECTADA DINÁMICAMENTE
+    "https://9dc73c61-6be8-4d4c-a742-ec5076a759b5.preview.emergentagent.com",
+    
+    # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
+    "https://9dc73c61-6be8-4d4c-a742-ec5076a759b5.preview.emergentagent.com",
+    
+    # 🏠 DESARROLLO LOCAL
+    "http://localhost:3000",
+    "http://localhost:5173", 
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    
+    # 📱 PREVIEW DOMAINS COMUNES
+    "https://9dc73c61-6be8-4d4c-a742-ec5076a759b5.preview.emergentagent.com",
+    "https://9dc73c61-6be8-4d4c-a742-ec5076a759b5.preview.emergentagent.com",
+    
+    # 🌟 FALLBACK UNIVERSAL (último recurso)
+    "*"
+]
 # CONFIGURACIÓN DINÁMICA DE CORS - DETECTA AUTOMÁTICAMENTE LA URL DEL ENTORNO
 def get_current_environment_url():
     """Detecta la URL del entorno actual dinámicamente"""
@@ -40,22 +60,6 @@ def get_current_environment_url():
 # Generar CORS origins dinámicamente
 CURRENT_ENV_URL = get_current_environment_url()
 
-FRONTEND_ORIGINS = [
-    # 🌐 URL DETECTADA DINÁMICAMENTE DEL ENTORNO ACTUAL
-    CURRENT_ENV_URL,
-    
-    # 🏠 DESARROLLO LOCAL
-    "http://localhost:3000",
-    "http://localhost:5173", 
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
-    
-    # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS DE EMERGENT
-    "https://9dc73c61-6be8-4d4c-a742-ec5076a759b5.preview.emergentagent.com",
-    
-    # 🌟 FALLBACK UNIVERSAL (último recurso)
-    "*"
-]
 # CONFIGURACIÓN DINÁMICA DE CORS - SIN HARDCODED URLs  
 def get_dynamic_cors_origins():
     """
