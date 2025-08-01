@@ -426,21 +426,24 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         isOpen={showFilesModal}
         onClose={handleCloseFilesModal}
         files={taskFiles} // ✅ USAR ARCHIVOS AISLADOS
+        onDownload={handleDownloadFile}
+        onDownloadAll={handleDownloadAllFiles}
         taskTitle={task.title}
-        taskId={task.id}
       />
     )
-  ), [showFilesModal, handleCloseFilesModal, taskFiles, task.title, task.id]);
+  ), [showFilesModal, handleCloseFilesModal, taskFiles, task.title, handleDownloadFile, handleDownloadAllFiles]);
 
   const shareModal = useMemo(() => (
     showShareModal && (
       <ShareModal
         isOpen={showShareModal}
         onClose={handleCloseShareModal}
-        task={task}
+        taskTitle={task.title}
+        taskId={task.id}
+        onGenerateLink={handleGenerateShareLink}
       />
     )
-  ), [showShareModal, handleCloseShareModal, task]);
+  ), [showShareModal, handleCloseShareModal, task.title, task.id, handleGenerateShareLink]);
 
   // ========================================================================
   // RENDER
