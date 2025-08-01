@@ -10,7 +10,7 @@ import { useIsolatedMemoryManager } from '../hooks/useIsolatedMemoryManager';
 import { usePlanManager } from '../hooks/usePlanManager';
 import { useMessagesManagement, useTerminalManagement, useFileManagement } from '../hooks/useTaskManagement';
 import { useAppContext } from '../context/AppContext';
-import { Star } from 'lucide-react';
+import { Star, Files, Share2 } from 'lucide-react';
 
 interface TaskViewProps {
   task: Task;
