@@ -3036,7 +3036,7 @@ def execute_plan_with_real_tools(task_id: str, plan_steps: list, message: str):
                     if tool_name == 'web_search':
                         if not tool_manager or not hasattr(tool_manager, 'execute_tool'):
                             raise ToolNotAvailableError(f"Tool manager no disponible o herramienta 'web_search' no inicializada.")
-                        return tool_manager.execute_tool('playwright_web_search', {
+                        return tool_manager.execute_tool('web_search', {
                             'query': tool_params.get('query', ''),
                             'max_results': tool_params.get('num_results', 6),
                             'search_engine': 'bing',
