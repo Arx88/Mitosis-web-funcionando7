@@ -1185,7 +1185,7 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
         search_result = None
         if tool_manager and hasattr(tool_manager, 'execute_tool'):
             try:
-                search_result = tool_manager.execute_tool('playwright_web_search', {
+                search_result = tool_manager.execute_tool('web_search', {
                     'query': search_query,
                     'max_results': 5,
                     'search_engine': 'bing',
