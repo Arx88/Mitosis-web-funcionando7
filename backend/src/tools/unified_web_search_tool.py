@@ -509,7 +509,7 @@ class UnifiedWebSearchTool(BaseTool):
             return ""
     
     def _emit_progress(self, message: str):
-        """📡 EMITIR PROGRESO EN TIEMPO REAL VIA WEBSOCKET - FIXED WITH GLOBAL WEBSOCKET MANAGER"""
+        """📡 EMITIR PROGRESO EN TIEMPO REAL VIA WEBSOCKET - CORREGIDO PARA VISUALIZACIÓN EN TERMINAL"""
         try:
             if self.task_id:
                 import logging
@@ -525,23 +525,29 @@ class UnifiedWebSearchTool(BaseTool):
                 websocket_manager = get_websocket_manager()
                 
                 if websocket_manager and websocket_manager.is_initialized:
-                    # Crear datos para terminal
-                    terminal_data = {
-                        'activity': message,
-                        'timestamp': datetime.now().isoformat(),
-                        'type': 'web_navigation',
-                        'source': 'web_search_tool',
-                        'task_id': self.task_id
-                    }
+                    # 🔥 FIX CRÍTICO: Enviar como log_message para que aparezca en terminal
+                    websocket_manager.send_log_message(self.task_id, "info", message)
                     
-                    # Emitir usando el websocket manager global
-                    websocket_manager.emit_to_task(self.task_id, 'terminal_activity', terminal_data)
-                    websocket_manager.emit_to_task(self.task_id, 'web_navigation_progress', terminal_data)
-                    websocket_manager.emit_to_task(self.task_id, 'task_progress', terminal_data)
+                    # También enviar como browser activity si es navegación
+                    if any(keyword in message.lower() for keyword in ['navegando', 'página', 'screenshot', 'navegador']):
+                        websocket_manager.send_browser_activity(
+                            self.task_id, 
+                            "navigation_progress", 
+                            "https://web-search", 
+                            message, 
+                            ""
+                        )
                     
-                    logger.info(f"📡 TERMINAL ACTIVITY EMITTED VIA GLOBAL MANAGER: {message[:50]}... to task {self.task_id}")
+                    logger.info(f"📡 WEB SEARCH PROGRESS EMITTED TO TERMINAL: {message[:50]}... to task {self.task_id}")
                 else:
                     logger.warning(f"⚠️ Global WebSocket manager not available or initialized for task {self.task_id}")
+                    # Fallback: escribir a archivo para debug
+                    try:
+                        with open('/tmp/websocket_debug.log', 'a') as f:
+                            f.write(f"[{datetime.now()}] WEBSOCKET MANAGER NOT AVAILABLE: {message}\n")
+                            f.flush()
+                    except:
+                        pass
                 
         except Exception as e:
             import logging
