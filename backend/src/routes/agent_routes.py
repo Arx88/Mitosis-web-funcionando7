@@ -2741,15 +2741,15 @@ def create_web_browser_manager(task_id: str, browser_type: str = "playwright"):
             logger.warning("⚠️ WebSocketManager no disponible - WebBrowserManager funcionará sin eventos tiempo real")
         
         # Crear configuración para el navegador
-        import sys
-        import os
+        import importlib.util
         
-        # Añadir el directorio backend al path para importar web_browser_manager
-        backend_dir = '/app/backend'
-        if backend_dir not in sys.path:
-            sys.path.insert(0, backend_dir)
+        # Importar directamente desde el archivo correcto
+        spec = importlib.util.spec_from_file_location("web_browser_manager", "/app/backend/web_browser_manager.py")
+        web_browser_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(web_browser_module)
         
-        from web_browser_manager import BrowserConfig, BrowserType
+        BrowserConfig = web_browser_module.BrowserConfig
+        BrowserType = web_browser_module.BrowserType
         
         # Configurar tipo de navegador
         if browser_type.lower() == "selenium":
