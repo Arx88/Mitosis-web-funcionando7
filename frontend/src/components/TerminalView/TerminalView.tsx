@@ -813,10 +813,11 @@ export const TerminalView = ({
         if (tool.result && tool.tool) {
           // Crear página para cada herramienta ejecutada
           const pageContent = generateBackendToolPageContent(tool);
+          const toolName = tool.tool || 'herramienta';
           
           const toolPage: MonitorPage = {
-            id: `backend-tool-${tool.tool}-${index}`,
-            title: `${tool.tool.toUpperCase()} - Ejecutado por Backend`,
+            id: `backend-tool-${toolName}-${index}`,
+            title: `${toolName.toUpperCase()} - Ejecutado por Backend`,
             content: pageContent,
             type: 'tool-execution',
             timestamp: new Date(tool.timestamp || new Date()),
