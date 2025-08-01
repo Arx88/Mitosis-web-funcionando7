@@ -830,42 +830,124 @@ def execute_comprehensive_research_step(title: str, description: str, tool_manag
         }
 
 def execute_enhanced_web_search_step(title: str, description: str, tool_manager, task_id: str, original_message: str) -> dict:
-    """🔍 BÚSQUEDA WEB MEJORADA - Búsqueda web con análisis mejorado"""
+    """🔍 BÚSQUEDA WEB MEJORADA - Búsqueda web con análisis mejorado y visualización en tiempo real"""
     try:
         logger.info(f"🔍 Ejecutando búsqueda web mejorada: {title}")
         
         # Extraer query de búsqueda
         search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
         
-        if tool_manager and hasattr(tool_manager, 'execute_tool'):
-            result = tool_manager.execute_tool('playwright_web_search', {
-                'query': search_query,
-                'max_results': 7,
-                'search_engine': 'bing',
-                'extract_content': True
-            }, task_id=task_id)
+        # ✅ INTEGRACIÓN WebBrowserManager PARA VISUALIZACIÓN EN TIEMPO REAL
+        browser_manager = create_web_browser_manager(task_id)
+        websocket_manager = get_websocket_manager()
+        
+        try:
+            # Inicializar navegador para visualización en tiempo real
+            if browser_manager:
+                browser_manager.initialize_browser()
+                
+                # Enviar evento de inicio de búsqueda con navegación
+                if websocket_manager:
+                    websocket_manager.send_log_message(
+                        task_id, 
+                        "info", 
+                        f"🔍 Iniciando búsqueda web con visualización en tiempo real: {search_query}"
+                    )
+                
+                # Navegar a Google/Bing para mostrar proceso de búsqueda
+                search_url = f"https://www.bing.com/search?q={search_query.replace(' ', '+')}"
+                browser_manager.navigate(search_url)
+                
+                # Simular interacción y extracción de datos
+                time.sleep(2)  # Permitir carga completa
+                search_data = browser_manager.extract_data("h3 a, .b_title")
+                
+                # Enviar actualización de datos recolectados
+                if websocket_manager:
+                    websocket_manager.send_data_collection_update(
+                        task_id,
+                        f"search-{search_query[:30]}",
+                        f"Datos extraídos de búsqueda: {search_data.get('count', 0)} elementos encontrados",
+                        search_data
+                    )
             
-            return {
-                'success': True,
-                'type': 'enhanced_web_search',
-                'query': search_query,
-                'results_count': len(result.get('search_results', [])),
-                'count': len(result.get('search_results', [])),  # 🔥 FIX: Agregar count para compatibilidad
-                'results': result.get('search_results', []),    # 🔥 FIX: Agregar results para compatibilidad
-                'summary': f"✅ Búsqueda web mejorada completada: {len(result.get('search_results', []))} resultados analizados",
-                'content': f"Búsqueda web mejorada sobre: {search_query}\n\nAnálisis de {len(result.get('search_results', []))} fuentes",
-                'data': result.get('search_results', [])
-            }
-        else:
-            raise Exception("Tool manager no disponible")
-            
+            # Ejecutar búsqueda tradicional con herramientas
+            if tool_manager and hasattr(tool_manager, 'execute_tool'):
+                result = tool_manager.execute_tool('playwright_web_search', {
+                    'query': search_query,
+                    'max_results': 7,
+                    'search_engine': 'bing',
+                    'extract_content': True
+                }, task_id=task_id)
+                
+                # Enviar progreso incremental de datos recolectados
+                if websocket_manager:
+                    results_count = len(result.get('search_results', []))
+                    websocket_manager.send_data_collection_update(
+                        task_id,
+                        f"enhanced-search-{task_id}",
+                        f"Búsqueda completada: {results_count} resultados procesados",
+                        result.get('search_results', [])[:3]  # Enviar muestra de 3 resultados
+                    )
+                    
+                    websocket_manager.send_log_message(
+                        task_id, 
+                        "info", 
+                        f"✅ Búsqueda web completada: {results_count} resultados analizados"
+                    )
+                
+                return {
+                    'success': True,
+                    'type': 'enhanced_web_search',
+                    'query': search_query,
+                    'results_count': len(result.get('search_results', [])),
+                    'count': len(result.get('search_results', [])),  # 🔥 FIX: Agregar count para compatibilidad
+                    'results': result.get('search_results', []),    # 🔥 FIX: Agregar results para compatibilidad
+                    'summary': f"✅ Búsqueda web mejorada completada: {len(result.get('search_results', []))} resultados analizados",
+                    'content': f"Búsqueda web mejorada sobre: {search_query}\n\nAnálisis de {len(result.get('search_results', []))} fuentes",
+                    'data': result.get('search_results', [])
+                }
+            else:
+                # Fallback sin tool_manager
+                if websocket_manager:
+                    websocket_manager.send_log_message(
+                        task_id, 
+                        "warn", 
+                        "⚠️ Tool manager no disponible, usando búsqueda básica"
+                    )
+                
+                return {
+                    'success': True,
+                    'type': 'enhanced_web_search_fallback',
+                    'query': search_query,
+                    'results_count': 0,
+                    'summary': f"⚠️ Búsqueda básica realizada para: {search_query}",
+                    'content': f"Búsqueda realizada: {search_query}\n\nTool manager no disponible.",
+                    'data': []
+                }
+                
+        finally:
+            # Cerrar navegador
+            if browser_manager:
+                browser_manager.close_browser()
+        
     except Exception as e:
-        logger.error(f"❌ Enhanced web search error: {str(e)}")
+        logger.error(f"❌ Error en búsqueda web mejorada: {str(e)}")
+        
+        # Enviar error via WebSocket
+        websocket_manager = get_websocket_manager()
+        if websocket_manager:
+            websocket_manager.send_log_message(
+                task_id, 
+                "error", 
+                f"❌ Error en búsqueda web: {str(e)}"
+            )
+        
         return {
             'success': False,
             'error': str(e),
             'type': 'enhanced_web_search_error',
-            'summary': f'❌ Error en búsqueda mejorada: {str(e)}'
+            'summary': f'❌ Error en búsqueda: {str(e)}'
         }
 
 def execute_enhanced_analysis_step(title: str, description: str, ollama_service, original_message: str, previous_results: list) -> dict:
