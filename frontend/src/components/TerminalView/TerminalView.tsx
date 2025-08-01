@@ -721,24 +721,28 @@ export const TerminalView = ({
     const handleLogMessage = (data: any) => {
       console.log(`📝 [LOG-${taskId}] Log message received:`, data);
       
-      if (data.task_id !== taskId) return;
+      if (!data || data.task_id !== taskId) return;
+      
+      // 🔧 FIX CRÍTICO: Verificar que data.message existe antes de usarlo
+      const message = data.message || '';
+      const level = data.level || 'info';
+      const timestamp = data.timestamp || new Date().toISOString();
       
       // Añadir al terminal output
-      const logPrefix = data.level === 'error' ? '❌' : data.level === 'warn' ? '⚠️' : data.level === 'info' ? 'ℹ️' : '🔧';
-      const logLevel = data.level || 'info';
-      setTerminalOutput(prev => [...prev, `${logPrefix} [${logLevel.toUpperCase()}] ${data.message}`]);
+      const logPrefix = level === 'error' ? '❌' : level === 'warn' ? '⚠️' : level === 'info' ? 'ℹ️' : '🔧';
+      setTerminalOutput(prev => [...prev, `${logPrefix} [${level.toUpperCase()}] ${message}`]);
       
-      // También crear una página de monitor para logs importantes
-      if (data.level === 'error' || data.message.length > 100) {
+      // También crear una página de monitor para logs importantes (con verificación de longitud segura)
+      if (level === 'error' || (message && message.length > 100)) {
         const logPage: MonitorPage = {
           id: `log-${Date.now()}`,
-          title: `${logPrefix} Log: ${logLevel.toUpperCase()}`,
-          content: data.message,
+          title: `${logPrefix} Log: ${level.toUpperCase()}`,
+          content: message,
           type: 'log',
-          timestamp: new Date(data.timestamp),
+          timestamp: new Date(timestamp),
           metadata: { 
-            logLevel: data.level,
-            status: data.level === 'error' ? 'error' : 'success'
+            logLevel: level,
+            status: level === 'error' ? 'error' : 'success'
           }
         };
         
