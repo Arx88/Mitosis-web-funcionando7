@@ -53,12 +53,15 @@ class ToolRegistry:
                 continue
                 
             try:
-                # Importar módulo
-                module_name = python_file.stem
-                spec = importlib.util.spec_from_file_location(module_name, python_file)
-                if spec and spec.loader:
-                    module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(module)
+                # Importar módulo usando método alternativo
+                module_name = f"src.tools.{python_file.stem}"
+                try:
+                    module = importlib.import_module(module_name)
+                except ImportError:
+                    # Fallback: agregar al path y importar
+                    sys.path.insert(0, str(python_file.parent))
+                    module = importlib.import_module(python_file.stem)
+                    sys.path.pop(0)
                     
                     # Buscar clases que hereden de BaseTool
                     for name, obj in inspect.getmembers(module, inspect.isclass):
