@@ -102,8 +102,14 @@ class ToolManager:
         if config:
             final_config.update(config)
         
+        # 🔧 FIX CRÍTICO: Agregar task_id al config para herramientas de navegación en tiempo real
+        if task_id:
+            final_config['task_id'] = task_id
+        
         # Log de ejecución
         logger.info(f"Executing tool '{tool_name}' with parameters: {parameters}")
+        if task_id:
+            logger.info(f"Task ID for tool execution: {task_id}")
         
         # Ejecutar usando registry
         result = self.registry.execute_tool(tool_name, parameters, final_config)
