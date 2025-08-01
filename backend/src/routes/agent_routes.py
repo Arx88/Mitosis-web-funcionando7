@@ -634,7 +634,8 @@ def execute_step_with_intelligent_tool_selection(step: dict, task_analysis: dict
             if tool_name == 'comprehensive_research':
                 result = execute_comprehensive_research_step(step_title, step_description, tool_manager, task_id, original_message)
             elif tool_name == 'web_search':
-                result = execute_enhanced_web_search_step(step_title, step_description, tool_manager, task_id, original_message)
+                # Usar playwright_web_search para generar screenshots y visualización en tiempo real
+                result = execute_web_search_step(step_title, step_description, tool_manager, task_id)
             elif tool_name == 'enhanced_analysis':
                 result = execute_enhanced_analysis_step(step_title, step_description, ollama_service, original_message, results)
             elif tool_name == 'multi_source_research':
