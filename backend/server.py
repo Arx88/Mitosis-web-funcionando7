@@ -801,6 +801,110 @@ def serve_screenshot(task_id, filename):
         logger.error(f"Error serving screenshot {filename} for task {task_id}: {e}")
         return jsonify({"error": "Screenshot not found"}), 404
 
+# ✅ ENDPOINT DE PRUEBA PARA VISUALIZACIÓN EN TIEMPO REAL - SEGÚN UpgardeRef.md
+@app.route('/api/test-real-time-browser', methods=['POST'])
+def test_real_time_browser():
+    """
+    Endpoint de prueba para la visualización en tiempo real de navegación web
+    
+    Body JSON:
+    {
+        "task_id": "test-123",
+        "url": "https://example.com",
+        "actions": ["navigate", "screenshot", "extract_links"]
+    }
+    """
+    try:
+        data = request.get_json()
+        task_id = data.get('task_id', f'test-{int(time.time())}')
+        url = data.get('url', 'https://example.com')
+        actions = data.get('actions', ['navigate', 'screenshot'])
+        
+        logger.info(f"🧪 Iniciando prueba de visualización en tiempo real para task {task_id}")
+        
+        # Importar funciones necesarias
+        try:
+            from src.routes.agent_routes import create_web_browser_manager, get_websocket_manager
+        except ImportError as e:
+            logger.error(f"❌ Error importando funciones de navegador: {e}")
+            return jsonify({
+                "success": False,
+                "error": "WebBrowser functionality not available"
+            }), 500
+        
+        # Crear WebBrowserManager con visualización en tiempo real
+        browser_manager = create_web_browser_manager(task_id)
+        if not browser_manager:
+            return jsonify({
+                "success": False,
+                "error": "No se pudo crear WebBrowserManager"
+            }), 500
+        
+        # Inicializar navegador
+        if not browser_manager.initialize_browser():
+            return jsonify({
+                "success": False,
+                "error": "No se pudo inicializar el navegador"
+            }), 500
+        
+        websocket_manager = get_websocket_manager()
+        if websocket_manager:
+            # Enviar mensaje de inicio de prueba
+            websocket_manager.send_log_message(
+                task_id,
+                "info",
+                f"🧪 Iniciando prueba de navegación en tiempo real a: {url}"
+            )
+        
+        # Ejecutar acciones
+        results = []
+        
+        if "navigate" in actions:
+            # Navegar con eventos en tiempo real
+            browser_manager.navigate(url)
+            results.append({"action": "navigate", "status": "completed", "url": url})
+        
+        if "extract_links" in actions:
+            # Esperar un momento para que la página se cargue
+            import time
+            time.sleep(2)
+            
+            # Extraer links con tracking en tiempo real
+            extracted_data = browser_manager.extract_data("a[href]")
+            results.append({
+                "action": "extract_links", 
+                "status": "completed", 
+                "count": extracted_data.get("count", 0),
+                "sample_data": extracted_data.get("data", [])[:3]
+            })
+        
+        if "close" in actions:
+            # Cerrar navegador
+            browser_manager.close_browser()
+            results.append({"action": "close", "status": "completed"})
+        
+        if websocket_manager:
+            websocket_manager.send_log_message(
+                task_id,
+                "success",
+                f"🧪 Prueba de navegación completada exitosamente. Acciones ejecutadas: {len(results)}"
+            )
+        
+        return jsonify({
+            "success": True,
+            "task_id": task_id,
+            "url": url,
+            "actions_completed": results,
+            "message": "Prueba de visualización en tiempo real completada. Revisar TerminalView para eventos en tiempo real."
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error en prueba de navegación en tiempo real: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 # Manejo de errores
 @app.errorhandler(404)
 def not_found(error):
