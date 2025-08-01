@@ -10,7 +10,7 @@ CURRENT ISSUES TO TEST:
 - Frontend logs show "No initial plan found" and "Setting new plan with 0 steps"
 
 BACKEND URLs TO TEST:
-- Backend URL: https://5b8e138b-cd29-424b-bbb2-18325b779df3.preview.emergentagent.com
+- Backend URL: https://f600a693-ea20-43b9-acb6-e8ada4e31f8a.preview.emergentagent.com
 - Main chat endpoint: /api/agent/chat (POST)
 
 TEST REQUIREMENTS:
@@ -34,7 +34,7 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 
 # Backend URL from environment
-BACKEND_URL = "https://5b8e138b-cd29-424b-bbb2-18325b779df3.preview.emergentagent.com"
+BACKEND_URL = "https://f600a693-ea20-43b9-acb6-e8ada4e31f8a.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class FrontendIntegrationTester:
