@@ -637,38 +637,57 @@ export const TerminalView = ({
     const handleBrowserActivity = (data: any) => {
       console.log(`🌐 [BROWSER-${taskId}] Browser activity received:`, data);
       
-      if (data.task_id !== taskId) return; // Solo procesar eventos de esta tarea
+      if (!data || data.task_id !== taskId) return; // Solo procesar eventos de esta tarea
       
-      const browserPage: MonitorPage = {
-        id: `browser-${Date.now()}`,
-        title: `🌐 Navegación: ${data.title || new URL(data.url).hostname}`,
-        content: `**URL:** ${data.url}\n**Título:** ${data.title || 'Sin título'}\n**Tipo:** ${data.activity_type}`,
-        type: 'web-browsing',
-        timestamp: new Date(data.timestamp),
-        metadata: {
-          url: data.url,
-          screenshotUrl: data.screenshot_url,
-          status: 'success'
+      // 🔧 FIX CRÍTICO: Verificación defensiva de propiedades
+      const url = data.url || '';
+      const title = data.title || 'Sin título';
+      const activityType = data.activity_type || 'navegación';
+      const timestamp = data.timestamp || new Date().toISOString();
+      
+      // Solo crear página si hay URL válida
+      if (url) {
+        try {
+          const hostname = new URL(url).hostname;
+          const browserPage: MonitorPage = {
+            id: `browser-${Date.now()}`,
+            title: `🌐 Navegación: ${title || hostname}`,
+            content: `**URL:** ${url}\n**Título:** ${title}\n**Tipo:** ${activityType}`,
+            type: 'web-browsing',
+            timestamp: new Date(timestamp),
+            metadata: {
+              url: url,
+              screenshotUrl: data.screenshot_url || '',
+              status: 'success'
+            }
+          };
+          
+          addTaskMonitorPage(taskId, browserPage);
+        } catch (urlError) {
+          console.warn(`⚠️ Invalid URL in browser activity: ${url}`);
         }
-      };
-      
-      addTaskMonitorPage(taskId, browserPage);
+      }
     };
 
     const handleDataCollectionUpdate = (data: any) => {
       console.log(`📊 [DATA-${taskId}] Data collection update received:`, data);
       
-      if (data.task_id !== taskId) return;
+      if (!data || data.task_id !== taskId) return;
+      
+      // 🔧 FIX CRÍTICO: Verificación defensiva de propiedades
+      const dataSummary = data.data_summary || 'Recolección de datos';
+      const partialData = data.partial_data || null;
+      const timestamp = data.timestamp || new Date().toISOString();
       
       const dataPage: MonitorPage = {
         id: `data-${Date.now()}`,
-        title: `📊 ${data.data_summary}`,
-        content: data.partial_data ? JSON.stringify(data.partial_data, null, 2) : data.data_summary,
+        title: `📊 ${dataSummary}`,
+        content: partialData ? JSON.stringify(partialData, null, 2) : dataSummary,
         type: 'data-collection',
-        timestamp: new Date(data.timestamp),
+        timestamp: new Date(timestamp),
         metadata: {
-          dataSummary: data.data_summary,
-          partialData: data.partial_data,
+          dataSummary: dataSummary,
+          partialData: partialData,
           status: 'success'
         }
       };
