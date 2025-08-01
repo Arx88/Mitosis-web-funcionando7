@@ -190,6 +190,429 @@ class WebBrowserManager:
             self.logger.error(f"Error inicializando navegador: {e}")
             return False
 
+    # ✅ MÉTODOS PARA NAVEGACIÓN EN TIEMPO REAL - SEGÚN UpgardeRef.md SECCIÓN 4.1
+
+    def navigate(self, url: str):
+        """Navegar a URL con eventos de tiempo real"""
+        try:
+            if not self.context:
+                self.logger.error("❌ Browser context not initialized")
+                return
+            
+            import asyncio
+            
+            async def _navigate():
+                page = await self.context.new_page()
+                
+                # Configurar listeners para eventos de navegación
+                page.on("domcontentloaded", lambda: self._on_page_loaded(page, url))
+                page.on("load", lambda: self._on_page_fully_loaded(page, url))
+                
+                # Navegar a la URL
+                await page.goto(url, wait_until="domcontentloaded")
+                
+                # Tomar screenshot
+                screenshot_path = await self._take_screenshot(page, url)
+                
+                # Enviar evento de navegación completa
+                if self.websocket_manager and self.task_id:
+                    self.websocket_manager.send_browser_activity(
+                        self.task_id,
+                        "navigation_completed",
+                        url,
+                        await page.title(),
+                        screenshot_path
+                    )
+                
+                # Mantener referencia a la página
+                self.active_pages[url] = page
+                
+                return page
+            
+            # Ejecutar navegación async
+            import asyncio
+            if hasattr(asyncio, 'get_running_loop'):
+                try:
+                    loop = asyncio.get_running_loop()
+                    # Si ya hay un loop corriendo, usar create_task
+                    task = loop.create_task(_navigate())
+                    return task
+                except RuntimeError:
+                    # No hay loop corriendo, crear uno nuevo
+                    return asyncio.run(_navigate())
+            else:
+                return asyncio.run(_navigate())
+                
+        except Exception as e:
+            self.logger.error(f"❌ Error navegando a {url}: {e}")
+            if self.websocket_manager and self.task_id:
+                self.websocket_manager.send_log_message(
+                    self.task_id,
+                    "error",
+                    f"Error navegando a {url}: {str(e)}"
+                )
+
+    def _on_page_loaded(self, page, url: str):
+        """Evento cuando la página se carga (DOM ready)"""
+        try:
+            if self.websocket_manager and self.task_id:
+                self.websocket_manager.send_browser_activity(
+                    self.task_id,
+                    "page_loaded",
+                    url,
+                    "",  # title se obtendrá después
+                    ""   # screenshot se tomará después
+                )
+                
+                self.websocket_manager.send_log_message(
+                    self.task_id,
+                    "info",
+                    f"🌐 Página cargada: {url}"
+                )
+        except Exception as e:
+            self.logger.error(f"Error en _on_page_loaded: {e}")
+
+    def _on_page_fully_loaded(self, page, url: str):
+        """Evento cuando la página se carga completamente"""
+        try:
+            import asyncio
+            
+            async def _handle_full_load():
+                title = await page.title()
+                screenshot_path = await self._take_screenshot(page, url)
+                
+                if self.websocket_manager and self.task_id:
+                    self.websocket_manager.send_browser_activity(
+                        self.task_id,
+                        "page_fully_loaded",
+                        url,
+                        title,
+                        screenshot_path
+                    )
+                    
+                    self.websocket_manager.send_log_message(
+                        self.task_id,
+                        "info",
+                        f"🌐 Página completamente cargada: {title} ({url})"
+                    )
+            
+            # Ejecutar manejo async
+            if hasattr(asyncio, 'get_running_loop'):
+                try:
+                    loop = asyncio.get_running_loop()
+                    loop.create_task(_handle_full_load())
+                except RuntimeError:
+                    asyncio.run(_handle_full_load())
+            else:
+                asyncio.run(_handle_full_load())
+                
+        except Exception as e:
+            self.logger.error(f"Error en _on_page_fully_loaded: {e}")
+
+    async def _take_screenshot(self, page, url: str) -> str:
+        """Tomar screenshot de la página actual"""
+        try:
+            if not self.task_id:
+                return ""
+            
+            import os
+            import time
+            
+            # Generar nombre único para screenshot
+            timestamp = int(time.time() * 1000)
+            hostname = url.replace("https://", "").replace("http://", "").split("/")[0]
+            safe_hostname = "".join(c for c in hostname if c.isalnum() or c in ".-_")[:20]
+            screenshot_name = f"screenshot_{safe_hostname}_{timestamp}.png"
+            screenshot_path = os.path.join(self.screenshot_dir, screenshot_name)
+            
+            # Tomar screenshot
+            await page.screenshot(path=screenshot_path, quality=20, full_page=False)
+            
+            # Retornar URL accesible desde frontend
+            screenshot_url = f"/api/files/screenshots/{self.task_id}/{screenshot_name}"
+            
+            self.logger.info(f"📸 Screenshot guardado: {screenshot_path}")
+            return screenshot_url
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error tomando screenshot: {e}")
+            return ""
+
+    def click_element(self, selector: str):
+        """Hacer click en elemento con tracking en tiempo real"""
+        try:
+            import asyncio
+            
+            async def _click():
+                if not self.active_pages:
+                    self.logger.error("❌ No active pages for clicking")
+                    return
+                
+                # Usar la última página activa
+                page = list(self.active_pages.values())[-1]
+                
+                # Enviar evento de click iniciado
+                if self.websocket_manager and self.task_id:
+                    self.websocket_manager.send_browser_activity(
+                        self.task_id,
+                        "click_initiated",
+                        page.url,
+                        await page.title(),
+                        ""
+                    )
+                
+                # Realizar click
+                await page.click(selector)
+                
+                # Esperar que la página se estabilice
+                await page.wait_for_timeout(1000)
+                
+                # Tomar screenshot después del click
+                screenshot_path = await self._take_screenshot(page, page.url)
+                
+                # Enviar evento de click completado
+                if self.websocket_manager and self.task_id:
+                    self.websocket_manager.send_browser_activity(
+                        self.task_id,
+                        "click_completed",
+                        page.url,
+                        await page.title(),
+                        screenshot_path
+                    )
+                    
+                    self.websocket_manager.send_log_message(
+                        self.task_id,
+                        "info",
+                        f"🖱️ Click realizado en: {selector}"
+                    )
+            
+            # Ejecutar click async
+            if hasattr(asyncio, 'get_running_loop'):
+                try:
+                    loop = asyncio.get_running_loop()
+                    loop.create_task(_click())
+                except RuntimeError:
+                    asyncio.run(_click())
+            else:
+                asyncio.run(_click())
+                
+        except Exception as e:
+            self.logger.error(f"❌ Error haciendo click en {selector}: {e}")
+            if self.websocket_manager and self.task_id:
+                self.websocket_manager.send_log_message(
+                    self.task_id,
+                    "error",
+                    f"Error haciendo click en {selector}: {str(e)}"
+                )
+
+    def type_text(self, selector: str, text: str):
+        """Escribir texto en elemento con tracking en tiempo real"""
+        try:
+            import asyncio
+            
+            async def _type():
+                if not self.active_pages:
+                    self.logger.error("❌ No active pages for typing")
+                    return
+                
+                page = list(self.active_pages.values())[-1]
+                
+                # Enviar evento de typing iniciado
+                if self.websocket_manager and self.task_id:
+                    self.websocket_manager.send_browser_activity(
+                        self.task_id,
+                        "typing_initiated",
+                        page.url,
+                        await page.title(),
+                        ""
+                    )
+                
+                # Escribir texto
+                await page.fill(selector, text)
+                
+                # Tomar screenshot después de escribir
+                screenshot_path = await self._take_screenshot(page, page.url)
+                
+                # Enviar evento de typing completado
+                if self.websocket_manager and self.task_id:
+                    self.websocket_manager.send_browser_activity(
+                        self.task_id,
+                        "typing_completed",
+                        page.url,
+                        await page.title(),
+                        screenshot_path
+                    )
+                    
+                    self.websocket_manager.send_log_message(
+                        self.task_id,
+                        "info",
+                        f"⌨️ Texto escrito en {selector}: {text[:50]}..."
+                    )
+            
+            # Ejecutar typing async
+            if hasattr(asyncio, 'get_running_loop'):
+                try:
+                    loop = asyncio.get_running_loop()
+                    loop.create_task(_type())
+                except RuntimeError:
+                    asyncio.run(_type())
+            else:
+                asyncio.run(_type())
+                
+        except Exception as e:
+            self.logger.error(f"❌ Error escribiendo en {selector}: {e}")
+            if self.websocket_manager and self.task_id:
+                self.websocket_manager.send_log_message(
+                    self.task_id,
+                    "error",
+                    f"Error escribiendo en {selector}: {str(e)}"
+                )
+
+    def extract_data(self, selector: str) -> dict:
+        """Extraer datos de la página con tracking en tiempo real"""
+        try:
+            import asyncio
+            
+            async def _extract():
+                if not self.active_pages:
+                    self.logger.error("❌ No active pages for data extraction")
+                    return {"count": 0, "data": []}
+                
+                page = list(self.active_pages.values())[-1]
+                
+                # Enviar evento de extracción iniciada
+                if self.websocket_manager and self.task_id:
+                    self.websocket_manager.send_log_message(
+                        self.task_id,
+                        "info",
+                        f"🔍 Extrayendo datos con selector: {selector}"
+                    )
+                
+                # Extraer datos
+                elements = await page.query_selector_all(selector)
+                data = []
+                
+                for element in elements[:10]:  # Limitar a 10 elementos
+                    try:
+                        text = await element.inner_text()
+                        href = await element.get_attribute("href")
+                        data.append({
+                            "text": text.strip(),
+                            "href": href,
+                            "type": "link" if href else "text"
+                        })
+                    except:
+                        continue
+                
+                result = {
+                    "count": len(data),
+                    "data": data,
+                    "selector": selector,
+                    "timestamp": time.time()
+                }
+                
+                # Enviar evento de datos recolectados
+                if self.websocket_manager and self.task_id:
+                    self.websocket_manager.send_data_collection_update(
+                        self.task_id,
+                        f"extraction-{selector}",
+                        f"Datos extraídos: {len(data)} elementos encontrados",
+                        data[:3]  # Enviar muestra de 3 elementos
+                    )
+                
+                return result
+            
+            # Ejecutar extracción async
+            if hasattr(asyncio, 'get_running_loop'):
+                try:
+                    loop = asyncio.get_running_loop()
+                    return loop.run_until_complete(_extract())
+                except RuntimeError:
+                    return asyncio.run(_extract())
+            else:
+                return asyncio.run(_extract())
+                
+        except Exception as e:
+            self.logger.error(f"❌ Error extrayendo datos con {selector}: {e}")
+            if self.websocket_manager and self.task_id:
+                self.websocket_manager.send_log_message(
+                    self.task_id,
+                    "error",
+                    f"Error extrayendo datos: {str(e)}"
+                )
+            return {"count": 0, "data": [], "error": str(e)}
+
+    def close_browser(self):
+        """Cerrar navegador y limpiar recursos"""
+        try:
+            import asyncio
+            
+            async def _close():
+                # Cerrar todas las páginas activas
+                for page in self.active_pages.values():
+                    await page.close()
+                self.active_pages.clear()
+                
+                # Cerrar contextos del pool
+                if self.context_pool:
+                    for context in self.context_pool:
+                        await context.close()
+                    self.context_pool.clear()
+                
+                # Cerrar contexto principal
+                if self.context:
+                    await self.context.close()
+                    self.context = None
+                
+                # Cerrar navegador
+                if self.browser:
+                    await self.browser.close()
+                    self.browser = None
+                
+                # Detener Playwright
+                if hasattr(self, 'playwright'):
+                    await self.playwright.stop()
+                
+                self.logger.info("🔐 Navegador cerrado correctamente")
+                
+                if self.websocket_manager and self.task_id:
+                    self.websocket_manager.send_log_message(
+                        self.task_id,
+                        "info",
+                        "🔐 Navegador cerrado y recursos liberados"
+                    )
+            
+            # Ejecutar cierre async
+            if hasattr(asyncio, 'get_running_loop'):
+                try:
+                    loop = asyncio.get_running_loop()
+                    loop.create_task(_close())
+                except RuntimeError:
+                    asyncio.run(_close())
+            else:
+                asyncio.run(_close())
+                
+        except Exception as e:
+            self.logger.error(f"❌ Error cerrando navegador: {e}")
+
+    def initialize_browser(self):
+        """Versión sincrónica para compatibilidad con código existente"""
+        try:
+            import asyncio
+            
+            if hasattr(asyncio, 'get_running_loop'):
+                try:
+                    loop = asyncio.get_running_loop()
+                    return loop.run_until_complete(self.initialize())
+                except RuntimeError:
+                    return asyncio.run(self.initialize())
+            else:
+                return asyncio.run(self.initialize())
+                
+        except Exception as e:
+            self.logger.error(f"❌ Error inicializando navegador: {e}")
+            return False
+
     async def scrape_url(self, url: str, mode: ScrapingMode = ScrapingMode.STRUCTURED) -> WebPage:
         """Scraping de una URL individual"""
         start_time = time.time()
