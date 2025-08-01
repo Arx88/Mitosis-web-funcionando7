@@ -21,6 +21,15 @@ interface WebSocketEvents {
   tool_result: (data: any) => void;
   context_changed: (data: any) => void;
   error: (data: any) => void;
+  // ✅ NUEVOS EVENTOS PARA VISUALIZACIÓN EN TIEMPO REAL - SEGÚN UpgardeRef.md SECCIÓN 5.3
+  browser_activity: (data: any) => void;
+  data_collection_update: (data: any) => void;
+  report_progress: (data: any) => void;
+  log_message: (data: any) => void;
+  // Eventos genéricos que el backend podría emitir
+  task_update: (data: any) => void;
+  progress_update: (data: any) => void;
+  agent_activity: (data: any) => void;
 }
 
 interface UseWebSocketReturn {
