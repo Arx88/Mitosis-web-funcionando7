@@ -557,18 +557,33 @@ class UnifiedWebSearchTool(BaseTool):
             traceback.print_exc()
     
     def _send_screenshot(self, screenshot_url: str, description: str):
-        """📸 ENVIAR SCREENSHOT VIA WEBSOCKET"""
+        """📸 ENVIAR SCREENSHOT VIA WEBSOCKET - CORREGIDO PARA VISUALIZACIÓN EN TERMINAL"""
         try:
-            if self.websocket_manager and self.task_id and screenshot_url:
-                self.websocket_manager.send_browser_activity(
-                    self.task_id,
-                    "screenshot_captured",
-                    screenshot_url,
-                    description,
-                    screenshot_url
-                )
-        except Exception:
-            pass  # Fallar silenciosamente si WebSocket no está disponible
+            if self.task_id and screenshot_url:
+                from ..websocket.websocket_manager import get_websocket_manager
+                import logging
+                
+                logger = logging.getLogger(__name__)
+                websocket_manager = get_websocket_manager()
+                
+                if websocket_manager and websocket_manager.is_initialized:
+                    # Enviar browser activity con screenshot
+                    websocket_manager.send_browser_activity(
+                        self.task_id,
+                        "screenshot_captured",
+                        screenshot_url,  # URL como "URL"
+                        description,     # descripción como "title"
+                        screenshot_url   # screenshot_url para la imagen
+                    )
+                    
+                    logger.info(f"📸 SCREENSHOT SENT TO TERMINAL: {description} - {screenshot_url}")
+                else:
+                    logger.warning(f"⚠️ WebSocket manager not available for screenshot: {screenshot_url}")
+                    
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"❌ Error sending screenshot via WebSocket: {e}")
     
     def _cleanup_browser_manager(self):
         """🧹 LIMPIAR RECURSOS DEL NAVEGADOR"""
