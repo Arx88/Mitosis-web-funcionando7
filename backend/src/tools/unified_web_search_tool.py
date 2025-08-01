@@ -738,61 +738,112 @@ except Exception as e:
             return ""
     
     def _emit_progress_eventlet(self, message: str):
-        """📡 EMITIR PROGRESO COMPATIBLE CON EVENTLET - FORZADO PARA MOSTRAR NAVEGACIÓN"""
+        """📡 EMITIR PROGRESO COMPATIBLE CON EVENTLET - VERSIÓN MEJORADA PARA NAVEGACIÓN EN TIEMPO REAL"""
         try:
             if self.task_id:
                 import logging
                 from datetime import datetime
                 
                 logger = logging.getLogger(__name__)
-                logger.info(f"🔍 WEB SEARCH PROGRESS (EVENTLET): {message} for task {self.task_id}")
+                logger.info(f"🔍 WEB SEARCH REAL-TIME PROGRESS: {message} for task {self.task_id}")
                 
-                # MÉTODO 1: Usar el websocket_manager del servidor Flask directamente
-                success_ws_1 = False
+                # 🚀 MÚLTIPLES MÉTODOS DE EMISIÓN PARA MÁXIMA COMPATIBILIDAD
+                success_count = 0
+                
+                # MÉTODO 1: WebSocket manager del servidor Flask directamente
                 try:
                     from flask import current_app
                     if current_app and hasattr(current_app, 'websocket_manager'):
                         ws_manager = current_app.websocket_manager
-                        if ws_manager:  # No verificar is_initialized - forzar envío
+                        if ws_manager and ws_manager.is_initialized:
+                            # Emitir como log_message para terminal
                             ws_manager.send_log_message(self.task_id, "info", message)
-                            logger.info(f"📡 EVENTLET PROGRESS SENT VIA APP WS: {message[:50]}...")
-                            success_ws_1 = True
+                            
+                            # Emitir como browser_activity para navegación específica
+                            ws_manager.send_browser_activity(
+                                self.task_id, 
+                                "navigation_progress", 
+                                "https://web-search-in-progress", 
+                                message, 
+                                ""
+                            )
+                            
+                            # Emitir como task_progress para progreso general
+                            ws_manager.send_task_progress(
+                                self.task_id,
+                                50.0,  # Progreso estimado
+                                1,     # Paso actual
+                                1,     # Total pasos
+                                "Navegación Web en Tiempo Real"
+                            )
+                            
+                            success_count += 1
+                            logger.info(f"✅ FLASK APP WebSocket: Mensaje emitido exitosamente")
                 except Exception as ws_error:
-                    logger.warning(f"⚠️ App WebSocket manager error: {ws_error}")
+                    logger.warning(f"⚠️ Flask App WebSocket error: {ws_error}")
                 
-                # MÉTODO 2: WebSocket manager global
-                success_ws_2 = False
-                if not success_ws_1:
+                # MÉTODO 2: WebSocket manager global como fallback
+                if success_count == 0:
                     try:
                         from ..websocket.websocket_manager import get_websocket_manager
                         websocket_manager = get_websocket_manager()
                         
-                        if websocket_manager:  # No verificar is_initialized - forzar envío
+                        if websocket_manager and websocket_manager.is_initialized:
+                            # Triple emisión para máxima visibilidad
                             websocket_manager.send_log_message(self.task_id, "info", message)
-                            logger.info(f"📡 GLOBAL WEBSOCKET PROGRESS SENT: {message[:50]}...")
-                            success_ws_2 = True
+                            websocket_manager.send_browser_activity(
+                                self.task_id, 
+                                "web_navigation", 
+                                "https://search-engine", 
+                                message, 
+                                ""
+                            )
+                            websocket_manager.emit_to_task(self.task_id, 'terminal_activity', {
+                                'message': message,
+                                'level': 'info',
+                                'source': 'web_search',
+                                'timestamp': datetime.now().isoformat()
+                            })
+                            success_count += 1
+                            logger.info(f"✅ GLOBAL WebSocket: Mensaje emitido exitosamente")
                     except Exception as global_error:
                         logger.warning(f"⚠️ Global WebSocket manager error: {global_error}")
                 
-                # MÉTODO 3: FORZAR ESCRITURA A ARCHIVO DE DEBUG (SIEMPRE)
+                # MÉTODO 3: Escritura directa a archivo de debug (SIEMPRE)
                 try:
                     with open('/tmp/websocket_debug.log', 'a') as f:
-                        status_msg = "SUCCESS" if (success_ws_1 or success_ws_2) else "FAILED_WS"
-                        f.write(f"[{datetime.now()}] EVENTLET PROGRESS [{status_msg}]: {message}\n")
+                        status_msg = "SUCCESS" if success_count > 0 else "FAILED_WS"
+                        f.write(f"[{datetime.now()}] REAL-TIME NAVIGATION [{status_msg}]: {message}\n")
                         f.flush()
                 except:
                     pass
                 
-                # MÉTODO 4: ESCRIBIR A LOG DEL SISTEMA (BACKUP)
-                if not success_ws_1 and not success_ws_2:
-                    logger.warning(f"⚠️ WebSocket fallido - mensaje registrado en logs: {message[:50]}...")
+                # MÉTODO 4: Log visible en consola para desarrollo
+                console_message = f"🌐 NAVEGACIÓN WEB: {message}"
+                print(console_message)  # Visible en logs del backend
+                logger.info(console_message)
+                
+                # MÉTODO 5: Si todo falla, al menos registrar el intento
+                if success_count == 0:
+                    logger.error(f"❌ CRITICAL: No se pudo emitir progreso de navegación en tiempo real: {message[:100]}...")
+                    # Último recurso: almacenar en variable global para recuperar después
+                    if not hasattr(self, '_failed_messages'):
+                        self._failed_messages = []
+                    self._failed_messages.append({
+                        'message': message,
+                        'timestamp': datetime.now().isoformat(),
+                        'task_id': self.task_id
+                    })
+                else:
+                    logger.info(f"✅ Progreso de navegación emitido exitosamente via {success_count} método(s)")
                     
         except Exception as e:
             import logging
             logger = logging.getLogger(__name__)
-            logger.error(f"❌ Error emitting eventlet progress: {e}")
-            # ÚLTIMO RECURSO: Al menos escribir al log de sistema
-            print(f"🔍 WEB SEARCH: {message}")
+            logger.error(f"❌ Error crítico emitiendo progreso de navegación: {e}")
+            # Al menos mostrar en consola como último recurso
+            print(f"🌐 NAVEGACIÓN WEB (ERROR): {message}")
+    
     
     def _simple_search_fallback(self, query: str, search_engine: str, max_results: int) -> List[Dict[str, Any]]:
         """🔄 FALLBACK: Búsqueda simple sin Playwright para eventlet"""
