@@ -684,6 +684,31 @@ def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
     if not result.get('success', False):
         return False
     
+    # 🚀 MANEJO ESPECIAL PARA HERRAMIENTAS DE BÚSQUEDA WEB
+    result_type = result.get('type', '')
+    if result_type in ['web_search', 'web_search_basic']:
+        # Para búsquedas web, evaluar por cantidad de resultados, no por contenido de texto
+        results_count = result.get('results_count', 0)
+        search_results = result.get('data', []) or result.get('search_results', [])
+        
+        if results_count > 0 and len(search_results) > 0:
+            # Verificar que los resultados tengan títulos y URLs válidos
+            valid_results = 0
+            for res in search_results:
+                if res.get('title') and res.get('url') and res.get('url').startswith('http'):
+                    valid_results += 1
+            
+            if valid_results > 0:
+                logger.info(f"✅ Web search result accepted: {valid_results} valid results")
+                return True
+            else:
+                logger.warning("❌ Web search rejected: no valid results with title+URL")
+                return False
+        else:
+            logger.warning("❌ Web search rejected: 0 results found")
+            return False
+    
+    # Para otras herramientas, evaluar contenido de texto
     content = result.get('content', '') or result.get('summary', '')
     
     # 🚨 DETECCIÓN CRÍTICA DE META-CONTENIDO
@@ -732,7 +757,7 @@ def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
         logger.warning("❌ Resultado rechazado: contenido indica 0 resultados")
         return False
     
-    # Criterios de calidad básicos
+    # Criterios de calidad básicos para contenido de texto
     if len(content) < 150:  # Aumentado de 100 a 150 para mayor exigencia
         logger.warning("❌ Resultado rechazado: contenido muy corto")
         return False
