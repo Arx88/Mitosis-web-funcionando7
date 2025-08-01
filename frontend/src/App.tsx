@@ -273,10 +273,6 @@ export function App() {
               />
             ) : (
               <div className="flex flex-1 items-center justify-center bg-[#272728] p-8">
-                {/* Componente de debug para WebSocket - TEMPORAL */}
-                <div className="absolute top-4 right-4 z-50">
-                  <WebSocketDebug />
-                </div>
                 <div className="text-left max-w-4xl w-full">
                   {/* Título unificado - separado 15% hacia arriba del input */}
                   <div className="mb-12 text-left">
