@@ -624,6 +624,172 @@ export const TerminalView = ({
     }
   }, [externalLogs]);
 
+  // ✅ LÓGICA WEBSOCKET PARA EVENTOS DE TIEMPO REAL - SEGÚN UpgardeRef.md SECCIÓN 5.3
+  useEffect(() => {
+    if (!socket || !taskId) return;
+
+    console.log(`🔌 [TERMINAL-${taskId}] Setting up real-time WebSocket listeners`);
+
+    // Unirse a la sala de la tarea
+    joinTaskRoom(taskId);
+
+    // Definir manejadores de eventos para visualización en tiempo real
+    const handleBrowserActivity = (data: any) => {
+      console.log(`🌐 [BROWSER-${taskId}] Browser activity received:`, data);
+      
+      if (data.task_id !== taskId) return; // Solo procesar eventos de esta tarea
+      
+      const browserPage: MonitorPage = {
+        id: `browser-${Date.now()}`,
+        title: `🌐 Navegación: ${data.title || new URL(data.url).hostname}`,
+        content: `**URL:** ${data.url}\n**Título:** ${data.title || 'Sin título'}\n**Tipo:** ${data.activity_type}`,
+        type: 'web-browsing',
+        timestamp: new Date(data.timestamp),
+        metadata: {
+          url: data.url,
+          screenshotUrl: data.screenshot_url,
+          status: 'success'
+        }
+      };
+      
+      addTaskMonitorPage(taskId, browserPage);
+    };
+
+    const handleDataCollectionUpdate = (data: any) => {
+      console.log(`📊 [DATA-${taskId}] Data collection update received:`, data);
+      
+      if (data.task_id !== taskId) return;
+      
+      const dataPage: MonitorPage = {
+        id: `data-${Date.now()}`,
+        title: `📊 ${data.data_summary}`,
+        content: data.partial_data ? JSON.stringify(data.partial_data, null, 2) : data.data_summary,
+        type: 'data-collection',
+        timestamp: new Date(data.timestamp),
+        metadata: {
+          dataSummary: data.data_summary,
+          partialData: data.partial_data,
+          status: 'success'
+        }
+      };
+      
+      addTaskMonitorPage(taskId, dataPage);
+    };
+
+    const handleReportProgress = (data: any) => {
+      console.log(`📄 [REPORT-${taskId}] Report progress received:`, data);
+      
+      if (data.task_id !== taskId) return;
+      
+      // Buscar o crear la página del informe
+      const currentPages = getTaskMonitorPages(taskId);
+      let reportPage = currentPages.find(p => p.id === 'incremental-report');
+      
+      if (!reportPage) {
+        reportPage = {
+          id: 'incremental-report',
+          title: '📄 Informe en Construcción',
+          content: '',
+          type: 'report',
+          timestamp: new Date(),
+          metadata: { status: 'running' }
+        };
+      }
+      
+      // Actualizar contenido del informe (concatenar o reemplazar)
+      const newContent = data.full_report_so_far || (reportPage.content + (data.content_delta || ''));
+      
+      const updatedReportPage = {
+        ...reportPage,
+        content: newContent,
+        timestamp: new Date(data.timestamp),
+        title: `📄 ${data.section_title}`
+      };
+      
+      // Actualizar página existente o agregar nueva
+      const updatedPages = currentPages.map(p => 
+        p.id === 'incremental-report' ? updatedReportPage : p
+      );
+      
+      if (!currentPages.find(p => p.id === 'incremental-report')) {
+        updatedPages.push(updatedReportPage);
+      }
+      
+      setTaskMonitorPages(taskId, updatedPages);
+    };
+
+    const handleLogMessage = (data: any) => {
+      console.log(`📝 [LOG-${taskId}] Log message received:`, data);
+      
+      if (data.task_id !== taskId) return;
+      
+      // Añadir al terminal output
+      const logPrefix = data.level === 'error' ? '❌' : data.level === 'warn' ? '⚠️' : data.level === 'info' ? 'ℹ️' : '🔧';
+      setTerminalOutput(prev => [...prev, `${logPrefix} [${data.level.toUpperCase()}] ${data.message}`]);
+      
+      // También crear una página de monitor para logs importantes
+      if (data.level === 'error' || data.message.length > 100) {
+        const logPage: MonitorPage = {
+          id: `log-${Date.now()}`,
+          title: `${logPrefix} Log: ${data.level.toUpperCase()}`,
+          content: data.message,
+          type: 'log',
+          timestamp: new Date(data.timestamp),
+          metadata: { 
+            logLevel: data.level,
+            status: data.level === 'error' ? 'error' : 'success'
+          }
+        };
+        
+        addTaskMonitorPage(taskId, logPage);
+      }
+    };
+
+    // Manejador genérico para eventos task_update
+    const handleTaskUpdate = (data: any) => {
+      console.log(`🔄 [TASK-${taskId}] Task update received:`, data);
+      
+      if (data.task_id !== taskId) return;
+      
+      // Enrutar según el tipo de evento
+      switch (data.type) {
+        case 'browser_activity':
+          handleBrowserActivity(data);
+          break;
+        case 'data_collection_update':
+          handleDataCollectionUpdate(data);
+          break;
+        case 'report_progress':
+          handleReportProgress(data);
+          break;
+        case 'log_message':
+          handleLogMessage(data);
+          break;
+        default:
+          console.log(`🔄 [TASK-${taskId}] Unknown update type:`, data.type);
+      }
+    };
+
+    // Registrar manejadores de eventos
+    const eventHandlers = {
+      browser_activity: handleBrowserActivity,
+      data_collection_update: handleDataCollectionUpdate,
+      report_progress: handleReportProgress,
+      log_message: handleLogMessage,
+      task_update: handleTaskUpdate,
+      progress_update: handleTaskUpdate,
+      agent_activity: handleTaskUpdate
+    };
+
+    addEventListeners(eventHandlers);
+
+    // Cleanup function
+    return () => {
+      console.log(`🔌 [TERMINAL-${taskId}] Cleaning up WebSocket listeners`);
+      removeEventListeners();
+    };
+  }, [socket, taskId, addTaskMonitorPage, getTaskMonitorPages, setTaskMonitorPages, joinTaskRoom, addEventListeners, removeEventListeners]);
+
   // Procesar datos de ejecución del backend
   useEffect(() => {
     if (executionData && executionData.executed_tools) {
