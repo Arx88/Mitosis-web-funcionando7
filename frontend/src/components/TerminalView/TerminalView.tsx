@@ -1278,7 +1278,7 @@ export const TerminalView = ({
                           currentPage.type === 'log' ? 'bg-yellow-400' :
                           'bg-gray-400'
                         }`} />
-                        <span className="font-medium">{currentPage.type.toUpperCase()}</span>
+                        <span className="font-medium">{(currentPage.type || 'page').toUpperCase()}</span>
                         <span className="text-xs ml-auto">{currentPage.timestamp.toLocaleString()}</span>
                       </div>
                       
