@@ -254,29 +254,23 @@ export function App() {
           
           <div className="flex-1 flex flex-col overflow-hidden">
             {activeTask && activeTaskId ? (
-              <>
-                {/* Componente de debug para WebSocket - TEMPORAL */}
-                <div className="absolute top-4 right-4 z-50">
-                  <WebSocketDebug />
-                </div>
-                <TaskView 
-                  task={activeTask} // ✅ TAREA ACTIVA DESDE CONTEXT
-                  onUpdateTask={updateTask} // ✅ HOOK DEL CONTEXT
-                  onUpdateTaskProgress={(taskId) => {
-                    // Progress update se maneja automáticamente en el Context
-                    console.log(`🔄 Progress update request for task: ${taskId}`);
-                  }}
-                  isThinking={isThinking} // ✅ DESDE CONTEXT
-                  onTerminalResize={(height) => {
-                    // Terminal resize se maneja en UI state
-                    console.log(`📏 Terminal resized to: ${height}px`);
-                  }}
-                  externalLogs={initializationLogs} // Logs locales de inicialización
-                  isInitializing={initializingTaskId === activeTask.id}
-                  onInitializationComplete={handleInitializationComplete}
-                  onInitializationLog={handleInitializationLog}
-                />
-              </>
+              <TaskView 
+                task={activeTask} // ✅ TAREA ACTIVA DESDE CONTEXT
+                onUpdateTask={updateTask} // ✅ HOOK DEL CONTEXT
+                onUpdateTaskProgress={(taskId) => {
+                  // Progress update se maneja automáticamente en el Context
+                  console.log(`🔄 Progress update request for task: ${taskId}`);
+                }}
+                isThinking={isThinking} // ✅ DESDE CONTEXT
+                onTerminalResize={(height) => {
+                  // Terminal resize se maneja en UI state
+                  console.log(`📏 Terminal resized to: ${height}px`);
+                }}
+                externalLogs={initializationLogs} // Logs locales de inicialización
+                isInitializing={initializingTaskId === activeTask.id}
+                onInitializationComplete={handleInitializationComplete}
+                onInitializationLog={handleInitializationLog}
+              />
             ) : (
               <div className="flex flex-1 items-center justify-center bg-[#272728] p-8">
                 {/* Componente de debug para WebSocket - TEMPORAL */}
