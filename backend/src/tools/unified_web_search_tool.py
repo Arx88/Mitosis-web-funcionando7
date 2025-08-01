@@ -490,16 +490,36 @@ class UnifiedWebSearchTool(BaseTool):
             return ""
     
     def _emit_progress(self, message: str):
-        """📡 EMITIR PROGRESO EN TIEMPO REAL VIA WEBSOCKET"""
+        """📡 EMITIR PROGRESO EN TIEMPO REAL VIA WEBSOCKET - FIXED WITH DIRECT SOCKETIO"""
         try:
-            if self.websocket_manager and self.task_id:
-                self.websocket_manager.send_log_message(
-                    self.task_id,
-                    "info",
-                    message
-                )
-        except Exception:
-            pass  # Fallar silenciosamente si WebSocket no está disponible
+            if self.task_id:
+                # SOLUCIÓN DIRECTA: Importar socketio directamente para visualización terminal
+                from server import socketio
+                import logging
+                
+                logger = logging.getLogger(__name__)
+                logger.info(f"🔍 WEB SEARCH PROGRESS: {message} for task {self.task_id}")
+                
+                # Emitir directamente a la terminal del frontend
+                terminal_data = {
+                    'task_id': self.task_id,
+                    'activity': message,
+                    'timestamp': datetime.now().isoformat(),
+                    'type': 'web_navigation',
+                    'source': 'web_search_tool'
+                }
+                
+                # Emitir múltiples eventos para asegurar que el frontend los reciba
+                socketio.emit('terminal_activity', terminal_data, room=self.task_id)
+                socketio.emit('web_navigation_progress', terminal_data, room=self.task_id)
+                socketio.emit('task_progress', terminal_data, room=self.task_id)
+                
+                logger.info(f"📡 DIRECT TERMINAL EMIT: {message} sent to task {self.task_id}")
+                
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"❌ Error emitting web search progress: {e}")
     
     def _send_screenshot(self, screenshot_url: str, description: str):
         """📸 ENVIAR SCREENSHOT VIA WEBSOCKET"""
