@@ -522,12 +522,12 @@ export const TerminalView = ({
         const pageContent = generateToolPageContent(result);
         
         const toolPage: MonitorPage = {
-          id: `tool-${result.tool}-${index}`,
-          title: `${result.tool.toUpperCase()} - Ejecución #${index + 1}`,
+          id: `tool-${result.tool || 'unknown'}-${index}`,
+          title: `${(result.tool || 'HERRAMIENTA').toUpperCase()} - Ejecución #${index + 1}`,
           content: pageContent,
           type: 'tool-execution',
           timestamp: new Date(),
-          toolName: result.tool,
+          toolName: result.tool || 'unknown',
           toolParams: result.parameters,
           metadata: {
             lineCount: pageContent.split('\n').length,
