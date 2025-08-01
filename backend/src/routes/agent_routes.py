@@ -2750,7 +2750,7 @@ def create_web_browser_manager(task_id: str, browser_type: str = "playwright"):
         
         BrowserConfig = web_browser_module.BrowserConfig
         BrowserType = web_browser_module.BrowserType
-        WebBrowserManager = web_browser_module.WebBrowserManager
+        WebBrowserManagerClass = web_browser_module.WebBrowserManager
         
         # Configurar tipo de navegador
         if browser_type.lower() == "selenium":
