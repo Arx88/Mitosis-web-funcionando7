@@ -21,7 +21,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment
-BACKEND_URL = "https://fa50b149-fb98-403e-9c8a-1c886c430834.preview.emergentagent.com"
+BACKEND_URL = "https://a075526f-6c0c-4a1c-8f21-901f0b838def.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class MitosisBackendHealthTester:
@@ -30,7 +30,7 @@ class MitosisBackendHealthTester:
         self.session.headers.update({
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'Origin': 'https://fa50b149-fb98-403e-9c8a-1c886c430834.preview.emergentagent.com'
+            'Origin': 'https://a075526f-6c0c-4a1c-8f21-901f0b838def.preview.emergentagent.com'
         })
         self.test_results = []
         self.task_id = None

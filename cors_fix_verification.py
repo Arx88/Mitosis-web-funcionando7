@@ -17,8 +17,8 @@ import time
 from datetime import datetime
 from typing import Dict, Any
 
-BACKEND_URL = "https://fa50b149-fb98-403e-9c8a-1c886c430834.preview.emergentagent.com"
-FRONTEND_ORIGIN = "https://fa50b149-fb98-403e-9c8a-1c886c430834.preview.emergentagent.com"
+BACKEND_URL = "https://a075526f-6c0c-4a1c-8f21-901f0b838def.preview.emergentagent.com"
+FRONTEND_ORIGIN = "https://a075526f-6c0c-4a1c-8f21-901f0b838def.preview.emergentagent.com"
 
 class CORSFixVerificationTester:
     def __init__(self):
