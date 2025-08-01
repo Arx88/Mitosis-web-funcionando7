@@ -6552,7 +6552,7 @@ Responde SOLO con el contenido final solicitado.
                 raise Exception(f"Tool '{mapped_tool}' not available. Available tools: {available_tools}")
             
             # Execute the tool
-            tool_result = tool_manager.execute_tool(mapped_tool, tool_params)
+            tool_result = tool_manager.execute_tool(mapped_tool, tool_params, task_id=task_id)
             
             # Emit advanced progress
             emit_step_event(task_id, 'task_progress', {
