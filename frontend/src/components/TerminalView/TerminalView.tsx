@@ -725,13 +725,14 @@ export const TerminalView = ({
       
       // Añadir al terminal output
       const logPrefix = data.level === 'error' ? '❌' : data.level === 'warn' ? '⚠️' : data.level === 'info' ? 'ℹ️' : '🔧';
-      setTerminalOutput(prev => [...prev, `${logPrefix} [${data.level.toUpperCase()}] ${data.message}`]);
+      const logLevel = data.level || 'info';
+      setTerminalOutput(prev => [...prev, `${logPrefix} [${logLevel.toUpperCase()}] ${data.message}`]);
       
       // También crear una página de monitor para logs importantes
       if (data.level === 'error' || data.message.length > 100) {
         const logPage: MonitorPage = {
           id: `log-${Date.now()}`,
-          title: `${logPrefix} Log: ${data.level.toUpperCase()}`,
+          title: `${logPrefix} Log: ${logLevel.toUpperCase()}`,
           content: data.message,
           type: 'log',
           timestamp: new Date(data.timestamp),
