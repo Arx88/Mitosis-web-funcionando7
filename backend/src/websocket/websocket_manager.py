@@ -134,15 +134,18 @@ class WebSocketManager:
                     del self.active_connections[task_id]
                     
     def send_update(self, task_id: str, update_type: UpdateType, data: Dict[str, Any]):
-        """Send update to all clients listening to a task"""
+        """Send update to all clients listening to a task - ENHANCED VERSION WITH MESSAGE PERSISTENCE"""
         if not self.is_initialized or not self.socketio:
             logger.warning("WebSocket not initialized, cannot send update")
             return
-            
-        if task_id not in self.active_connections:
-            logger.debug(f"No active connections for task {task_id}")
-            return
-            
+        
+        # 🔧 CRITICAL FIX: Store messages even if no active connections
+        # This ensures messages are available when clients connect later
+        if not hasattr(self, 'stored_messages'):
+            self.stored_messages = {}
+        if task_id not in self.stored_messages:
+            self.stored_messages[task_id] = []
+        
         update_data = {
             'task_id': task_id,
             'type': update_type.value,
@@ -150,12 +153,68 @@ class WebSocketManager:
             'data': data
         }
         
+        # Store message for late-joining clients (keep last 50 messages per task)
+        self.stored_messages[task_id].append(update_data)
+        if len(self.stored_messages[task_id]) > 50:
+            self.stored_messages[task_id] = self.stored_messages[task_id][-50:]
+        
+        # 🚀 ENHANCED LOGGING for debugging
+        logger.info(f"📡 Storing and attempting to send {update_type.value} update for task {task_id}")
+        logger.info(f"🔌 Active connections for task {task_id}: {len(self.active_connections.get(task_id, []))}")
+        logger.info(f"📦 Message data preview: {str(data)[:100]}...")
+        
         try:
-            # Send to all clients in the task room
+            # Send to all clients in the task room (even if no active connections tracked)
             self.socketio.emit('task_update', update_data, room=task_id)
-            logger.info(f"Sent {update_type.value} update for task {task_id}")
+            
+            # 🔧 ADDITIONAL EMIT STRATEGIES for maximum compatibility
+            # Strategy 1: Emit to individual sessions if room fails
+            if task_id in self.active_connections:
+                for session_id in self.active_connections[task_id]:
+                    self.socketio.emit('task_update', update_data, room=session_id)
+                    logger.info(f"📡 Sent to individual session: {session_id}")
+            
+            # Strategy 2: Broadcast to all connected clients for critical messages
+            if update_type in [UpdateType.LOG_MESSAGE, UpdateType.BROWSER_ACTIVITY, UpdateType.TASK_PROGRESS]:
+                self.socketio.emit('global_task_update', update_data)
+                logger.info(f"📡 Broadcasted {update_type.value} globally for task {task_id}")
+            
+            # Strategy 3: Store in session storage for retrieval
+            if not hasattr(self, 'session_messages'):
+                self.session_messages = {}
+            for session_id in self.active_connections.get(task_id, []):
+                if session_id not in self.session_messages:
+                    self.session_messages[session_id] = []
+                self.session_messages[session_id].append(update_data)
+                # Keep last 20 messages per session
+                if len(self.session_messages[session_id]) > 20:
+                    self.session_messages[session_id] = self.session_messages[session_id][-20:]
+            
+            logger.info(f"✅ Successfully processed {update_type.value} update for task {task_id}")
+            
         except Exception as e:
-            logger.error(f"Error sending WebSocket update: {e}")
+            logger.error(f"❌ Error sending WebSocket update for task {task_id}: {e}")
+            # Even if sending fails, we still have the message stored
+    
+    def get_stored_messages(self, task_id: str) -> List[Dict[str, Any]]:
+        """Get stored messages for a task (for late-joining clients)"""
+        if not hasattr(self, 'stored_messages'):
+            self.stored_messages = {}
+        return self.stored_messages.get(task_id, [])
+    
+    def send_stored_messages_to_client(self, session_id: str, task_id: str):
+        """Send all stored messages for a task to a specific client"""
+        if not self.is_initialized or not self.socketio:
+            return
+        
+        stored_messages = self.get_stored_messages(task_id)
+        if stored_messages:
+            logger.info(f"📦 Sending {len(stored_messages)} stored messages to client {session_id} for task {task_id}")
+            for message in stored_messages:
+                try:
+                    self.socketio.emit('task_update', message, room=session_id)
+                except Exception as e:
+                    logger.error(f"❌ Error sending stored message to {session_id}: {e}")
             
     def send_task_started(self, task_id: str, task_title: str, execution_plan: Dict[str, Any]):
         """Send task started notification"""
