@@ -801,6 +801,51 @@ def serve_screenshot(task_id, filename):
         logger.error(f"Error serving screenshot {filename} for task {task_id}: {e}")
         return jsonify({"error": "Screenshot not found"}), 404
 
+# ✅ ENDPOINT FALTANTE PARA GET-TASK-STATUS - CORRIGIENDO ERROR 404
+@app.route('/api/agent/get-task-status/<task_id>', methods=['GET', 'OPTIONS'])
+def get_task_status(task_id):
+    """
+    Obtener el estado actual de una tarea específica
+    
+    Returns:
+        JSON con el estado de la tarea: status, progress, current_step, etc.
+    """
+    try:
+        # Buscar la tarea en la base de datos
+        task = db.tasks.find_one({"task_id": task_id}) if db else None
+        
+        if not task:
+            return jsonify({
+                "success": False,
+                "error": "Task not found",
+                "task_id": task_id
+            }), 404
+        
+        # Preparar respuesta con estado de la tarea
+        response = {
+            "success": True,
+            "task_id": task_id,
+            "status": task.get("status", "unknown"),
+            "progress": task.get("progress", 0),
+            "current_step": task.get("current_step", None),
+            "total_steps": len(task.get("plan", [])),
+            "completed_steps": len([step for step in task.get("plan", []) if step.get("status") == "completed"]),
+            "created_at": task.get("created_at"),
+            "updated_at": task.get("updated_at"),
+            "title": task.get("title", ""),
+            "plan": task.get("plan", [])
+        }
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo estado de tarea {task_id}: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "task_id": task_id
+        }), 500
+
 # ✅ ENDPOINT DE PRUEBA PARA VISUALIZACIÓN EN TIEMPO REAL - SEGÚN UpgardeRef.md
 @app.route('/api/test-real-time-browser', methods=['POST'])
 def test_real_time_browser():
