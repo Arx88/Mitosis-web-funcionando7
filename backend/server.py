@@ -68,13 +68,17 @@ def get_dynamic_cors_origins():
         "http://localhost:5173", 
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
-        # EMERGENT PREVIEW DOMAINS - WILDCARD COMPLETO
-        "https://e16aaf8b-9515-4874-baf4-4996642c59cb.preview.emergentagent.com",
-        "https://e16aaf8b-9515-4874-baf4-4996642c59cb.preview.emergentagent.com", 
-        "https://e16aaf8b-9515-4874-baf4-4996642c59cb.preview.emergentagent.com",
-        # FALLBACK UNIVERSAL
+        
+        # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS DE EMERGENT - SIN HARDCODING
+        "https://*.preview.emergentagent.com",
+        
+        # 🌟 FALLBACK UNIVERSAL (último recurso)
         "*"
     ]
+    
+    # Agregar la URL detectada dinámicamente si está disponible
+    if CURRENT_ENV_URL and CURRENT_ENV_URL != "https://*.preview.emergentagent.com":
+        base_origins.insert(0, CURRENT_ENV_URL)
     
     return base_origins
 
