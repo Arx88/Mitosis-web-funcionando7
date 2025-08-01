@@ -5,7 +5,6 @@ import { TaskView } from './components/TaskView';
 import { ConfigPanel } from './components/ConfigPanel';
 import { FileUploadModal } from './components/FileUploadModal';
 import { LoadingPlaceholder } from './components/LoadingPlaceholder';
-import { WebSocketDebug } from './components/WebSocketDebug';
 import { generateRandomIcon } from './components/TaskIcon';
 import { Globe, FileText, Presentation, Smartphone, Search, Gamepad2 } from 'lucide-react';
 import { API_CONFIG } from './config/api';
