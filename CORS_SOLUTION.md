@@ -4,8 +4,8 @@
 
 **Error Original:**
 ```
-Access to XMLHttpRequest at 'https://98418f44-5444-41f9-9b1a-1a4c681609b0.preview.emergentagent.com/api/socket.io/' 
-from origin 'https://98418f44-5444-41f9-9b1a-1a4c681609b0.preview.emergentagent.com' has been blocked by CORS policy: 
+Access to XMLHttpRequest at 'https://5b8e138b-cd29-424b-bbb2-18325b779df3.preview.emergentagent.com/api/socket.io/' 
+from origin 'https://5b8e138b-cd29-424b-bbb2-18325b779df3.preview.emergentagent.com' has been blocked by CORS policy: 
 No 'Access-Control-Allow-Origin' header is present on the requested resource.
 ```
 
@@ -55,8 +55,8 @@ cd /app && ./verify_cors.sh
 
 ### Método 1: Variables de Entorno
 ```bash
-EMERGENT_PREVIEW_URL=https://98418f44-5444-41f9-9b1a-1a4c681609b0.preview.emergentagent.com
-PREVIEW_URL=https://98418f44-5444-41f9-9b1a-1a4c681609b0.preview.emergentagent.com
+EMERGENT_PREVIEW_URL=https://5b8e138b-cd29-424b-bbb2-18325b779df3.preview.emergentagent.com
+PREVIEW_URL=https://5b8e138b-cd29-424b-bbb2-18325b779df3.preview.emergentagent.com
 ```
 
 ### Método 2: Hostname del Sistema
@@ -67,7 +67,7 @@ hostname -f  # Detecta automáticamente el FQDN
 ### Método 3: Test de Conectividad
 ```bash
 # Prueba URLs comunes hasta encontrar una que responda
-curl -s --max-time 2 https://98418f44-5444-41f9-9b1a-1a4c681609b0.preview.emergentagent.com
+curl -s --max-time 2 https://5b8e138b-cd29-424b-bbb2-18325b779df3.preview.emergentagent.com
 ```
 
 ### Método 4: Análisis de Procesos
@@ -89,10 +89,10 @@ La configuración final incluye:
 ```python
 FRONTEND_ORIGINS = [
     # 🌐 URL DETECTADA DINÁMICAMENTE
-    "https://98418f44-5444-41f9-9b1a-1a4c681609b0.preview.emergentagent.com",
+    "https://5b8e138b-cd29-424b-bbb2-18325b779df3.preview.emergentagent.com",
     
     # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
-    "https://98418f44-5444-41f9-9b1a-1a4c681609b0.preview.emergentagent.com",
+    "https://5b8e138b-cd29-424b-bbb2-18325b779df3.preview.emergentagent.com",
     
     # 🏠 DESARROLLO LOCAL
     "http://localhost:3000",
@@ -101,8 +101,8 @@ FRONTEND_ORIGINS = [
     "http://127.0.0.1:5173",
     
     # 📱 PREVIEW DOMAINS COMUNES
-    "https://98418f44-5444-41f9-9b1a-1a4c681609b0.preview.emergentagent.com",
-    "https://98418f44-5444-41f9-9b1a-1a4c681609b0.preview.emergentagent.com",
+    "https://5b8e138b-cd29-424b-bbb2-18325b779df3.preview.emergentagent.com",
+    "https://5b8e138b-cd29-424b-bbb2-18325b779df3.preview.emergentagent.com",
     
     # 🌟 FALLBACK UNIVERSAL (último recurso)
     "*"
@@ -144,7 +144,7 @@ tail -50 /var/log/supervisor/backend.err.log
 cat /app/detected_config.env
 
 # Verificar CORS manualmente
-curl -H "Origin: https://98418f44-5444-41f9-9b1a-1a4c681609b0.preview.emergentagent.com" \
+curl -H "Origin: https://5b8e138b-cd29-424b-bbb2-18325b779df3.preview.emergentagent.com" \
      "http://localhost:8001/api/socket.io/?EIO=4&transport=polling"
 
 # Ejecutar verificación completa

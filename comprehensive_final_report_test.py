@@ -7,7 +7,7 @@ import requests
 import json
 from datetime import datetime
 
-BACKEND_URL = "https://98418f44-5444-41f9-9b1a-1a4c681609b0.preview.emergentagent.com"
+BACKEND_URL = "https://5b8e138b-cd29-424b-bbb2-18325b779df3.preview.emergentagent.com"
 
 def test_final_report_with_valid_task():
     """Test final report generation with a valid task ID"""
