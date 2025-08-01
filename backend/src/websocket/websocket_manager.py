@@ -29,6 +29,11 @@ class UpdateType(Enum):
     TOOL_EXECUTION_DETAIL = "tool_execution_detail"  # Detailed tool execution info
     PLAN_UPDATED = "plan_updated"
     ERROR = "error"
+    # ✅ NUEVOS TIPOS PARA VISUALIZACIÓN EN TIEMPO REAL
+    BROWSER_ACTIVITY = "browser_activity"  # Para eventos de navegación web
+    DATA_COLLECTION_UPDATE = "data_collection_update"  # Para datos recolectados incrementalmente
+    REPORT_PROGRESS = "report_progress"  # Para actualizaciones incrementales del informe
+    LOG_MESSAGE = "log_message"  # Para mensajes de log genéricos
 
 class WebSocketManager:
     """Manages WebSocket connections and real-time updates"""
