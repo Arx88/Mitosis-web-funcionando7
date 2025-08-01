@@ -438,39 +438,54 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
               <h2 className="text-xl font-semibold text-white truncate max-w-md">
                 {task.title}
               </h2>
+              {plan.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="w-20 bg-[#3a3a3c] rounded-full h-2">
+                    <div 
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${taskStats.planProgress}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-gray-400">{taskStats.planProgress}%</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2">
               <button
                 onClick={handleToggleFavorite}
-                className={`p-1 rounded-md transition-colors ${
+                className={`p-2 rounded-lg transition-all duration-200 ${
                   task.isFavorite
-                    ? 'text-yellow-400 hover:text-yellow-300'
-                    : 'text-gray-400 hover:text-gray-300'
+                    ? 'text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20'
+                    : 'text-gray-400 hover:text-yellow-400 hover:bg-yellow-400/10'
                 }`}
-                title={task.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                title={task.isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
               >
                 <Star className={`w-5 h-5 ${task.isFavorite ? 'fill-current' : ''}`} />
               </button>
-              {/* ID DE LA TAREA PARA DEBUGGING */}
-              <span className="text-xs text-gray-500 bg-[#3a3a3c] px-2 py-1 rounded font-mono">
-                ID: {task.id.substring(0, 8)}...
-              </span>
-            </div>
-            
-            {/* Stats usando datos aislados */}
-            <div className="flex items-center gap-4 text-sm text-gray-400">
-              <span>{taskStats.messageCount} mensajes</span>
-              <span>{taskStats.commandCount} comandos</span>
-              {plan.length > 0 && <span>{taskStats.planProgress}% completado</span>}
+              
+              <button
+                onClick={handleFilesModal}
+                className="p-2 rounded-lg text-gray-400 hover:text-blue-400 hover:bg-blue-400/10 transition-all duration-200"
+                title="Ver archivos generados"
+              >
+                <Files className="w-5 h-5" />
+              </button>
+              
+              <button
+                onClick={handleShareModal}
+                className="p-2 rounded-lg text-gray-400 hover:text-green-400 hover:bg-green-400/10 transition-all duration-200"
+                title="Compartir conversación"
+              >
+                <Share2 className="w-5 h-5" />
+              </button>
+              
               {isConnected && (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2 ml-2 px-3 py-1 bg-green-500/10 rounded-full">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  <span className="text-xs text-green-400">Live-{task.id.substring(0, 4)}</span>
+                  <span className="text-xs text-green-400 font-medium">En vivo</span>
                 </div>
-              )}
-              {/* Timestamp de última actualización */}
-              {lastUpdateTime && (
-                <span className="text-xs text-blue-400" title={`Última actualización: ${lastUpdateTime.toLocaleTimeString()}`}>
-                  🔄 {lastUpdateTime.toLocaleTimeString()}
-                </span>
               )}
             </div>
           </div>
