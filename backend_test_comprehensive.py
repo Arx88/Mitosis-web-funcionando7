@@ -14,7 +14,7 @@ COMPREHENSIVE TESTING AREAS:
 7. **Tool Integration**: Verify the 12 tools are available and functional
 8. **Memory System**: Test that memory_used=true is working correctly
 
-BACKEND URL: https://7ac24ada-9a56-4ac5-8359-affff70362b6.preview.emergentagent.com
+BACKEND URL: https://e16aaf8b-9515-4874-baf4-4996642c59cb.preview.emergentagent.com
 OLLAMA URL: https://bef4a4bb93d1.ngrok-free.app
 """
 
@@ -27,7 +27,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment - using the production URL
-BACKEND_URL = "https://7ac24ada-9a56-4ac5-8359-affff70362b6.preview.emergentagent.com"
+BACKEND_URL = "https://e16aaf8b-9515-4874-baf4-4996642c59cb.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 OLLAMA_URL = "https://bef4a4bb93d1.ngrok-free.app"
 
