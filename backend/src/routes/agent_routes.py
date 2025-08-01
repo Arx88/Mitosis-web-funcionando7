@@ -7004,7 +7004,7 @@ def chat():
             try:
                 from ..services.task_manager import TaskManager
                 task_manager = TaskManager()
-                task_manager.create_task(task_data)
+                task_manager.create_task(task_id, task_data)
                 logger.info(f"💾 Task {task_id} saved for auto-execution")
             except Exception as save_error:
                 logger.error(f"❌ Failed to save task {task_id}: {save_error}")
