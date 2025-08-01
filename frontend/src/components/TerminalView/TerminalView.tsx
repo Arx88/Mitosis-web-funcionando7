@@ -6,6 +6,7 @@ import { TaskIcon } from '../TaskIcon';
 import { ToolExecutionDetails } from '../ToolExecutionDetails';
 import { TaskCompletedUI } from '../TaskCompletedUI';
 import { useAppContext } from '../../context/AppContext';
+import { useWebSocket } from '../../hooks/useWebSocket'; // ✅ IMPORTAR WebSocket HOOK PARA NUEVOS EVENTOS
 
 export interface Task {
   id: string;
