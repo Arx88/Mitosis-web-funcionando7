@@ -376,6 +376,24 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
     }
   }, []);
 
+  const handleDownloadAllFiles = useCallback(async () => {
+    try {
+      const blob = await agentAPI.downloadAllFiles(task.id);
+      
+      // Crear enlace de descarga
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${task.title}-archivos.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading all files:', error);
+    }
+  }, [task.id, task.title]);
+
   const handleGenerateShareLink = useCallback(async (taskId: string): Promise<string> => {
     try {
       // Aquí se llamaría a la API para generar el enlace
