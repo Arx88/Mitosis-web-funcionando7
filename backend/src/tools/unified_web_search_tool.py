@@ -490,57 +490,46 @@ class UnifiedWebSearchTool(BaseTool):
             return ""
     
     def _emit_progress(self, message: str):
-        """📡 EMITIR PROGRESO EN TIEMPO REAL VIA WEBSOCKET - FIXED WITH ROBUST SOCKETIO"""
+        """📡 EMITIR PROGRESO EN TIEMPO REAL VIA WEBSOCKET - FIXED WITH GLOBAL WEBSOCKET MANAGER"""
         try:
             if self.task_id:
                 import logging
                 from datetime import datetime
                 
+                # SOLUCIÓN CORRECTA: Usar websocket_manager global
+                from ..websocket.websocket_manager import get_websocket_manager
+                
                 logger = logging.getLogger(__name__)
                 logger.info(f"🔍 WEB SEARCH PROGRESS: {message} for task {self.task_id}")
                 
-                # SOLUCIÓN ROBUSTA: Importar socketio desde contexto de aplicación
-                try:
-                    from flask import current_app
-                    if hasattr(current_app, 'extensions') and 'socketio' in current_app.extensions:
-                        socketio = current_app.extensions['socketio']
-                    else:
-                        # Fallback: buscar en el módulo server
-                        import sys
-                        if 'server' in sys.modules:
-                            server_module = sys.modules['server']
-                            if hasattr(server_module, 'socketio'):
-                                socketio = server_module.socketio
-                            else:
-                                logger.warning("⚠️ SocketIO no encontrado en server module")
-                                return
-                        else:
-                            logger.warning("⚠️ Server module no cargado")
-                            return
-                    
-                    # Emitir eventos para terminal en tiempo real
+                # Obtener websocket manager global
+                websocket_manager = get_websocket_manager()
+                
+                if websocket_manager and websocket_manager.is_initialized:
+                    # Crear datos para terminal
                     terminal_data = {
-                        'task_id': self.task_id,
                         'activity': message,
                         'timestamp': datetime.now().isoformat(),
                         'type': 'web_navigation',
-                        'source': 'web_search_tool'
+                        'source': 'web_search_tool',
+                        'task_id': self.task_id
                     }
                     
-                    # Emitir múltiples eventos para asegurar compatibilidad
-                    socketio.emit('terminal_activity', terminal_data, room=self.task_id)
-                    socketio.emit('web_navigation_progress', terminal_data, room=self.task_id)
-                    socketio.emit('task_progress', terminal_data, room=self.task_id)
+                    # Emitir usando el websocket manager global
+                    websocket_manager.emit_to_task(self.task_id, 'terminal_activity', terminal_data)
+                    websocket_manager.emit_to_task(self.task_id, 'web_navigation_progress', terminal_data)
+                    websocket_manager.emit_to_task(self.task_id, 'task_progress', terminal_data)
                     
-                    logger.info(f"📡 TERMINAL ACTIVITY EMITTED: {message[:50]}... to task {self.task_id}")
-                    
-                except Exception as socketio_error:
-                    logger.error(f"❌ Error accessing SocketIO: {socketio_error}")
+                    logger.info(f"📡 TERMINAL ACTIVITY EMITTED VIA GLOBAL MANAGER: {message[:50]}... to task {self.task_id}")
+                else:
+                    logger.warning(f"⚠️ Global WebSocket manager not available or initialized for task {self.task_id}")
                 
         except Exception as e:
             import logging
             logger = logging.getLogger(__name__)
-            logger.error(f"❌ Error emitting web search progress: {e}")
+            logger.error(f"❌ Error emitting web search progress via global manager: {e}")
+            import traceback
+            traceback.print_exc()
     
     def _send_screenshot(self, screenshot_url: str, description: str):
         """📸 ENVIAR SCREENSHOT VIA WEBSOCKET"""
