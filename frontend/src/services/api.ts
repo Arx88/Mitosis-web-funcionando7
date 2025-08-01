@@ -393,6 +393,29 @@ class AgentAPI {
     }
   }
 
+  async generateShareLink(taskId: string): Promise<{ link: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/agent/generate-share-link`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          task_id: taskId
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error generating share link:', error);
+      throw error;
+    }
+  }
+
   // ==========================================
   // EXECUTION ENGINE API METHODS
   // ==========================================
