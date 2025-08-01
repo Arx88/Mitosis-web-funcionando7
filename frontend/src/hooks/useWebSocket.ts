@@ -56,24 +56,28 @@ export const useWebSocket = (): UseWebSocketReturn => {
   useEffect(() => {
     const wsConfig = getWebSocketConfig();
     
+    console.log('🔌 Initializing WebSocket connection:', wsConfig);
+    
     const newSocket = io(wsConfig.url, {
       ...wsConfig.options,
       forceNew: true
     });
     
     newSocket.on('connect', () => {
+      console.log('✅ WebSocket connected successfully');
       setIsConnected(true);
       setConnectionType(newSocket.io.engine.transport.name as 'websocket' | 'polling');
       setIsPollingFallback(false);
     });
     
-    newSocket.on('disconnect', () => {
+    newSocket.on('disconnect', (reason) => {
+      console.log('❌ WebSocket disconnected:', reason);
       setIsConnected(false);
       setConnectionType('disconnected');
     });
     
     newSocket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
+      console.error('❌ WebSocket connection error:', error);
       setIsConnected(false);
       setConnectionType('disconnected');
       
@@ -89,6 +93,7 @@ export const useWebSocket = (): UseWebSocketReturn => {
     
     // Cleanup on unmount
     return () => {
+      console.log('🔌 Cleaning up WebSocket connection');
       newSocket.close();
       
       if (pollingIntervalRef.current) {
