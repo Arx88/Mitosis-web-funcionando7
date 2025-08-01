@@ -6779,7 +6779,7 @@ def execute_step_real_original(task_id: str, step_id: str, step: dict):
                 logger.error(f"❌ TOOL MAPPING ERROR: Tool '{tool}' not found in available tools: {available_tools}")
                 raise Exception(f"Tool '{tool}' not available. Available tools: {available_tools}")
             
-            tool_result = tool_manager.execute_tool(tool, tool_params)
+            tool_result = tool_manager.execute_tool(tool, tool_params, task_id=task_id)
             
             # Emitir progreso avanzado
             emit_step_event(task_id, 'task_progress', {
