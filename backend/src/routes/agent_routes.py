@@ -294,14 +294,12 @@ def get_all_tasks():
     Devuelve todas las tareas almacenadas en la base de datos
     """
     try:
-        from flask import current_app
-        
-        # Obtener todas las tareas del task manager
-        agent = current_app.agent
-        if not agent or not hasattr(agent, 'task_manager'):
+        # Obtener task manager usando la función correcta
+        task_manager = get_task_manager()
+        if not task_manager:
             return jsonify({'error': 'Task manager not available'}), 500
             
-        tasks = agent.task_manager.get_all_tasks(limit=100)
+        tasks = task_manager.get_all_tasks(limit=100)
         
         # Formatear las tareas para el frontend
         formatted_tasks = []
