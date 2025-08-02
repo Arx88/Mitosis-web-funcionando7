@@ -2523,12 +2523,11 @@ def get_task_data(task_id: str) -> dict:
         else:
             logger.warning(f"⚠️ Task {task_id} not found in persistent or legacy storage")
             return {}
-            return None
             
     except Exception as e:
         logger.error(f"❌ Error getting task data {task_id}: {str(e)}")
         # Fallback a memoria legacy
-        return active_task_plans.get(task_id)
+        return active_task_plans.get(task_id, {})
 
 def save_task_data(task_id: str, task_data: dict) -> bool:
     """
