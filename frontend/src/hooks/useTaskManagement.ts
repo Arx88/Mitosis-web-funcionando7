@@ -178,7 +178,7 @@ export const useTaskManagement = () => {
     }
     
     return newTask;
-  }, [dispatch, updateTask, updateTaskPlan, migrateTaskState]);
+  }, [dispatch, updateTask, updateTaskPlan, migrateTaskState, state.tasks]);
   
   // ========================================================================
   // OPERACIONES BÁSICAS SIMPLIFICADAS
