@@ -155,14 +155,15 @@ export const useTaskManagement = () => {
           dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
         }
         
-        // ✅ PASO 7: ACTIVAR TAREA Y UNIRSE A WEBSOCKET ROOM
+        // ✅ PASO 9: ACTIVAR TAREA Y UNIRSE A WEBSOCKET ROOM (DESPUÉS DE ACTUALIZAR)
+        console.log('🎯 [TASK-MANAGEMENT] Activating task:', backendTaskId);
         dispatch({ type: 'SET_ACTIVE_TASK', payload: backendTaskId });
         
         // 🚀 CRÍTICO: UNIRSE A LA ROOM DE WEBSOCKET INMEDIATAMENTE
         console.log('🔌 [TASK-MANAGEMENT] Joining WebSocket room for real-time updates:', backendTaskId);
         joinTaskRoom(backendTaskId);
         
-        // ✅ PASO 9: AUTO-INICIAR EJECUCIÓN SI HAY PLAN
+        // ✅ PASO 10: AUTO-INICIAR EJECUCIÓN SI HAY PLAN
         if (data.plan && data.plan.length > 0) {
           console.log('🚀 [TASK-MANAGEMENT] Auto-starting task execution...');
           setTimeout(async () => {
