@@ -1396,7 +1396,7 @@ export const TerminalView = ({
           
           <button 
             onClick={handleNextPage}
-            disabled={currentPageIndex >= monitorPages.length - 1}
+            disabled={actualCurrentPageIndex >= monitorPages.length - 1}
             title="Página siguiente"
             className="flex items-center gap-1"
           >
@@ -1406,7 +1406,7 @@ export const TerminalView = ({
           
           <div className="file-indicator">
             <span>
-              PÁGINAS {currentPageIndex + 1} / {monitorPages.length}
+              PÁGINAS {actualCurrentPageIndex + 1} / {monitorPages.length}
             </span>
           </div>
           
@@ -1415,7 +1415,7 @@ export const TerminalView = ({
               className="progress-fill"
               style={{ 
                 width: monitorPages.length > 0 
-                  ? `${((currentPageIndex + 1) / monitorPages.length) * 100}%` 
+                  ? `${((actualCurrentPageIndex + 1) / monitorPages.length) * 100}%` 
                   : '0%' 
               }}
             />
