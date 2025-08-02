@@ -86,7 +86,38 @@ else
     echo "   ✅ Tavily API Key agregada exitosamente"
 fi
 
-echo "✅ API keys configuradas correctamente"
+# Configurar OLLAMA endpoints correctos
+echo "   ⚡ Configurando endpoints de Ollama..."
+CORRECT_OLLAMA_URL="https://66bd0d09b557.ngrok-free.app"
+
+# Actualizar todas las variables de Ollama en el .env
+sed -i "s|OLLAMA_HOST=.*|OLLAMA_HOST=66bd0d09b557.ngrok-free.app|" /app/backend/.env
+sed -i "s|OLLAMA_BASE_URL=.*|OLLAMA_BASE_URL=$CORRECT_OLLAMA_URL|" /app/backend/.env
+sed -i "s|OLLAMA_DEFAULT_MODEL=.*|OLLAMA_DEFAULT_MODEL=llama3.1:8b|" /app/backend/.env
+
+# Verificar que Ollama se configuró correctamente
+if grep -q "OLLAMA_BASE_URL=$CORRECT_OLLAMA_URL" /app/backend/.env; then
+    echo "   ✅ Ollama endpoint configurado correctamente: $CORRECT_OLLAMA_URL"
+else
+    echo "   ⚠️ Agregando configuración de Ollama al archivo .env..."
+    echo "" >> /app/backend/.env
+    echo "# Configuración de Ollama" >> /app/backend/.env
+    echo "OLLAMA_HOST=66bd0d09b557.ngrok-free.app" >> /app/backend/.env
+    echo "OLLAMA_PORT=443" >> /app/backend/.env
+    echo "OLLAMA_BASE_URL=$CORRECT_OLLAMA_URL" >> /app/backend/.env
+    echo "OLLAMA_DEFAULT_MODEL=llama3.1:8b" >> /app/backend/.env
+    echo "   ✅ Configuración de Ollama agregada exitosamente"
+fi
+
+# Verificar conectividad con Ollama
+echo "   🔍 Verificando conectividad con Ollama..."
+if curl -s --max-time 5 "$CORRECT_OLLAMA_URL/api/tags" >/dev/null 2>&1; then
+    echo "   ✅ Ollama endpoint accesible: $CORRECT_OLLAMA_URL"
+else
+    echo "   ⚠️ Ollama endpoint no responde, pero configuración aplicada"
+fi
+
+echo "✅ API keys y Ollama configurados correctamente"
 
 # ========================================================================
 # PASO 3: CREAR SERVIDOR WSGI OPTIMIZADO PARA PRODUCCIÓN
