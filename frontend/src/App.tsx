@@ -236,13 +236,21 @@ export function App() {
             tasks={tasks} // ✅ DESDE CONTEXT
             activeTaskId={activeTaskId} // ✅ DESDE CONTEXT
             onTaskSelect={setActiveTask} // ✅ HOOK DEL CONTEXT
-            onCreateTask={(title, iconType) => {
-              // ✅ USAR HOOK DEL CONTEXT - ARREGLA PROBLEMA DE AISLAMIENTO
-              console.log('🎯 APP: Creating task with title:', title);
-              const newTask = createTask(title, iconType);
-              console.log('🎯 APP: Nueva tarea creada correctamente:', newTask.id);
-              console.log('🎯 APP: Tasks array length after creation:', tasks.length + 1);
-              return newTask;
+            onCreateTask={async (title, iconType) => {
+              // ✅ USAR HOOK CON BACKEND INTEGRATION - ARREGLA PROBLEMA 404
+              console.log('🎯 APP: Creating task with backend integration:', title);
+              try {
+                const newTask = await createTaskWithMessage(title, iconType);
+                console.log('🎯 APP: Nueva tarea creada con backend correctamente:', newTask.id);
+                console.log('🎯 APP: Tasks array length after creation:', tasks.length);
+                return newTask;
+              } catch (error) {
+                console.error('❌ Error creating task with backend:', error);
+                // Fallback to context-only creation
+                const fallbackTask = createTask(title, iconType);
+                console.log('🎯 APP: Fallback task created:', fallbackTask.id);
+                return fallbackTask;
+              }
             }}
             onDeleteTask={deleteTask} // ✅ HOOK DEL CONTEXT
             onUpdateTask={updateTask} // ✅ HOOK DEL CONTEXT
