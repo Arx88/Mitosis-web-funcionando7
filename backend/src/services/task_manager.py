@@ -25,7 +25,7 @@ class TaskManager:
     
     def create_task(self, task_id: str, task_data: Dict[str, Any]) -> bool:
         """
-        Crear una nueva tarea y persistirla en MongoDB
+        Crear una nueva tarea y persistirla en MongoDB (con verificación anti-duplicados)
         
         Args:
             task_id: ID único de la tarea
@@ -35,6 +35,12 @@ class TaskManager:
             bool: True si se creó exitosamente
         """
         try:
+            # ✅ VERIFICACIÓN ANTI-DUPLICADOS: Verificar si ya existe
+            existing_task = self.get_task(task_id)
+            if existing_task:
+                logger.warning(f"🚫 Task {task_id} already exists, skipping creation")
+                return True  # No es error, pero ya existe
+            
             task_document = {
                 'task_id': task_id,
                 'status': task_data.get('status', 'created'),
