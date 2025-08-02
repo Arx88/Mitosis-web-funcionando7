@@ -234,9 +234,13 @@ const initialState: GlobalAppState = {
 function appReducer(state: GlobalAppState, action: AppAction): GlobalAppState {
   switch (action.type) {
     case 'SET_TASKS':
+      console.log('🔄 [CONTEXT] SET_TASKS: Cleaning and validating tasks');
+      const cleanedTasks = removeDuplicateTasks(action.payload || []);
+      debugTaskDuplication(cleanedTasks, 'SET_TASKS');
+      
       return {
         ...state,
-        tasks: action.payload
+        tasks: cleanedTasks
       };
       
     case 'ADD_TASK':
