@@ -29,6 +29,9 @@ export const useTaskManagement = () => {
     migrateTaskState
   } = useAppContext();
   
+  // ✅ WEBSOCKET HOOK - PARA UNIRSE A ROOMS INMEDIATAMENTE  
+  const { joinTaskRoom } = useWebSocket();
+  
   // ========================================================================
   // CREAR TAREA CON MENSAJE INICIAL - SIMPLIFICADO Y ROBUSTO
   // ========================================================================
