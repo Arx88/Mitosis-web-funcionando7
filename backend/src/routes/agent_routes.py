@@ -7101,6 +7101,33 @@ def chat():
             }
             
             logger.info(f"✅ Chat response with plan generated: {len(response['plan'])} steps")
+            
+            # 🚀 CRÍTICO: Iniciar automáticamente la ejecución del plan
+            logger.info(f"🚀 Auto-starting task execution for task: {task_id}")
+            try:
+                # Llamar al endpoint de ejecución en background
+                import threading
+                from flask import current_app
+                
+                def auto_start_execution():
+                    with current_app.app_context():
+                        try:
+                            # Llamar directamente a la función de ejecución
+                            start_task_execution(task_id)
+                            logger.info(f"✅ Auto-execution started for task: {task_id}")
+                        except Exception as e:
+                            logger.error(f"❌ Error auto-starting execution for {task_id}: {e}")
+                
+                # Iniciar ejecución en hilo separado para no bloquear la respuesta
+                execution_thread = threading.Thread(target=auto_start_execution)
+                execution_thread.daemon = True
+                execution_thread.start()
+                
+                logger.info(f"🚀 Auto-execution thread started for task: {task_id}")
+                
+            except Exception as e:
+                logger.error(f"❌ Error starting auto-execution thread: {e}")
+            
             return jsonify(response)
         
     except Exception as e:
