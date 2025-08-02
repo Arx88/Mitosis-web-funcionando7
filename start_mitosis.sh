@@ -749,7 +749,7 @@ if check_ollama; then
 else
     echo "⚠️ OLLAMA: NO DISPONIBLE O CON PROBLEMAS"
     echo "   ℹ️ La app funciona pero sin capacidades de IA completas"
-    echo "   🔍 Verificar: curl https://bef4a4bb93d1.ngrok-free.app/api/tags"
+    echo "   🔍 Verificar: curl https://66bd0d09b557.ngrok-free.app/api/tags"
 fi
 
 # Acceso externo
