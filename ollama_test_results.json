@@ -1,0 +1,120 @@
+{
+  "total_tests": 6,
+  "passed_tests": 3,
+  "success_rate": 50.0,
+  "overall_status": "\u274c OLLAMA HAS CRITICAL ISSUES - May still be using fallbacks",
+  "critical_passed": 3,
+  "critical_total": 3,
+  "test_results": [
+    {
+      "test_name": "Ollama Endpoint Configuration",
+      "success": true,
+      "details": "Corrected endpoint configured - Endpoint: https://66bd0d09b557.ngrok-free.app, Model: llama3.1:8b, Connected: True",
+      "timestamp": "2025-08-02T13:54:50.144808",
+      "response_data": null
+    },
+    {
+      "test_name": "Simple Ollama Chat",
+      "success": true,
+      "details": "Intelligent Spanish response generated - Length: 150, Memory: True",
+      "timestamp": "2025-08-02T13:54:54.013202",
+      "response_data": null
+    },
+    {
+      "test_name": "Complex Plan Generation",
+      "success": true,
+      "details": "Intelligent market analysis plan generated - 4 steps, Type: investigacion, Complexity: alta",
+      "timestamp": "2025-08-02T13:55:04.798892",
+      "response_data": null
+    },
+    {
+      "test_name": "Ollama Model Verification",
+      "success": false,
+      "details": "Model verification issues - Wrong model: {'config': {'description': 'Llama 3.1 8B - Optimizado para precisi\u00f3n y adherencia al formato con timeout generoso', 'options': {'repeat_penalty': 1.1, 'stop': ['```', '---', '<|eot_id|>', '<|end_of_text|>'], 'temperature': 0.15, 'top_k': 20, 'top_p': 0.7}, 'request_timeout': 180}, 'description': 'Llama 3.1 8B - Optimizado para precisi\u00f3n y adherencia al formato con timeout generoso', 'is_optimized': True, 'model_name': 'llama3.1:8b', 'temperature': 0.15, 'timeout': 180} (expected: llama3.1:8b); Wrong endpoint:  (expected: https://66bd0d09b557.ngrok-free.app); Not healthy",
+      "timestamp": "2025-08-02T13:55:07.136591",
+      "response_data": {
+        "available_configs": {
+          "deepseek-r1:32b": {
+            "description": "DeepSeek R1 32B - Configuraci\u00f3n balanceada para razonamiento y generaci\u00f3n",
+            "is_optimized": true,
+            "temperature": 0.12,
+            "timeout": 420
+          },
+          "default": {
+            "description": "Configuraci\u00f3n por defecto para modelos no reconocidos",
+            "is_optimized": false,
+            "temperature": 0.7,
+            "timeout": 120
+          },
+          "llama2:13b": {
+            "description": "Llama 2 13B - Configuraci\u00f3n cl\u00e1sica para compatibilidad y estabilidad",
+            "is_optimized": true,
+            "temperature": 0.2,
+            "timeout": 240
+          },
+          "llama3.1:8b": {
+            "description": "Llama 3.1 8B - Optimizado para precisi\u00f3n y adherencia al formato con timeout generoso",
+            "is_optimized": true,
+            "temperature": 0.15,
+            "timeout": 180
+          },
+          "qwen3:32b": {
+            "description": "Qwen 3 32B - Temperatura muy baja para m\u00e1xima precisi\u00f3n, timeout extendido para modelo grande",
+            "is_optimized": true,
+            "temperature": 0.1,
+            "timeout": 480
+          }
+        },
+        "current_model": {
+          "config": {
+            "description": "Llama 3.1 8B - Optimizado para precisi\u00f3n y adherencia al formato con timeout generoso",
+            "options": {
+              "repeat_penalty": 1.1,
+              "stop": [
+                "```",
+                "---",
+                "<|eot_id|>",
+                "<|end_of_text|>"
+              ],
+              "temperature": 0.15,
+              "top_k": 20,
+              "top_p": 0.7
+            },
+            "request_timeout": 180
+          },
+          "description": "Llama 3.1 8B - Optimizado para precisi\u00f3n y adherencia al formato con timeout generoso",
+          "is_optimized": true,
+          "model_name": "llama3.1:8b",
+          "temperature": 0.15,
+          "timeout": 180
+        },
+        "ollama_connection": {
+          "current_model": "llama3.1:8b",
+          "healthy": true,
+          "models_available": 10,
+          "status": "connected",
+          "url": "https://66bd0d09b557.ngrok-free.app"
+        },
+        "status": "success",
+        "total_configured_models": 5
+      }
+    },
+    {
+      "test_name": "Ollama vs Fallback Comparison",
+      "success": false,
+      "details": "Low quality responses suggest fallback usage - 0/2 intelligent responses",
+      "timestamp": "2025-08-02T13:55:30.196100",
+      "response_data": null
+    },
+    {
+      "test_name": "Backend Logs Ollama Check",
+      "success": false,
+      "details": "Ollama not properly configured - Connected: True, Models: 0",
+      "timestamp": "2025-08-02T13:55:32.206505",
+      "response_data": null
+    }
+  ],
+  "task_id": "chat-1754142892",
+  "ollama_working": true,
+  "url_correction_successful": true
+}
