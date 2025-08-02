@@ -819,13 +819,34 @@ export const TerminalView = ({
 
     // Registrar manejadores de eventos
     const eventHandlers = {
-      browser_activity: handleBrowserActivity,
-      data_collection_update: handleDataCollectionUpdate,
-      report_progress: handleReportProgress,
-      log_message: handleLogMessage,
-      task_update: handleTaskUpdate,
-      progress_update: handleTaskUpdate,
-      agent_activity: handleTaskUpdate
+      browser_activity: (data: any) => {
+        console.log(`🌐 [WEBSOCKET-RECEIVED] browser_activity for task ${taskId}:`, data);
+        handleBrowserActivity(data);
+      },
+      data_collection_update: (data: any) => {
+        console.log(`📊 [WEBSOCKET-RECEIVED] data_collection_update for task ${taskId}:`, data);
+        handleDataCollectionUpdate(data);
+      },
+      report_progress: (data: any) => {
+        console.log(`📋 [WEBSOCKET-RECEIVED] report_progress for task ${taskId}:`, data);
+        handleReportProgress(data);
+      },
+      log_message: (data: any) => {
+        console.log(`📝 [WEBSOCKET-RECEIVED] log_message for task ${taskId}:`, data);
+        handleLogMessage(data);
+      },
+      task_update: (data: any) => {
+        console.log(`🔄 [WEBSOCKET-RECEIVED] task_update for task ${taskId}:`, data);
+        handleTaskUpdate(data);
+      },
+      progress_update: (data: any) => {
+        console.log(`📈 [WEBSOCKET-RECEIVED] progress_update for task ${taskId}:`, data);
+        handleTaskUpdate(data);
+      },
+      agent_activity: (data: any) => {
+        console.log(`🤖 [WEBSOCKET-RECEIVED] agent_activity for task ${taskId}:`, data);
+        handleTaskUpdate(data);
+      }
     };
 
     addEventListeners(eventHandlers);
