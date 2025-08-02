@@ -169,58 +169,69 @@ except Exception as e:
 # Añadir el directorio src al path para importar las rutas del agente
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
-# Inicializar WebSocket Manager con configuración optimizada
+# Inicializar SocketIO directamente (simplificado)
 try:
-    from src.websocket.websocket_manager import WebSocketManager
-    websocket_manager = WebSocketManager()
-    
-    # Configurar SocketIO con CORS completamente dinámico
-    def cors_origin_validator(origin):
-        """
-        Validador dinámico de CORS para SocketIO
-        Acepta cualquier origen .preview.emergentagent.com + localhost
-        """
-        if not origin:
-            return True  # Permitir requests sin origin (mismo dominio)
-            
-        # Desarrollo local
-        if origin.startswith(('http://localhost:', 'http://127.0.0.1:')):
-            return True
-            
-        # Dominios preview de Emergent
-        if '.preview.emergentagent.com' in origin:
-            return True
-            
-        # Log para debugging
-        logger.warning(f"🚨 CORS REJECTED: {origin}")
-        return False
+    from flask_socketio import SocketIO, emit, join_room, leave_room
     
     socketio = SocketIO(
         app, 
-        cors_allowed_origins="*",  # SIMPLIFICADO: Permitir todos los orígenes temporalmente 
+        cors_allowed_origins="*",
         cors_credentials=False,
         async_mode='eventlet',
-        logger=False,           # ✅ CRITICAL FIX: Disable excessive logging  
-        engineio_logger=False,  # ✅ CRITICAL FIX: Disable engine.io logging
-        ping_timeout=20,        # ✅ CRITICAL FIX: Reduced timeout to match frontend
-        ping_interval=10,       # ✅ CRITICAL FIX: More frequent pings for stability  
-        transports=['polling', 'websocket'],    # POLLING PRIMERO para máxima compatibilidad
-        allow_upgrades=True,   # PERMITIR upgrades para mejor conectividad
-        path='/api/socket.io/',     # CRÍTICO: Con /api prefix para routing correcto a través del ingress
-        manage_session=False,    # No manejar sesiones automáticamente
-        max_http_buffer_size=1000000,  # Buffer más grande para evitar timeouts
-        json=json
+        logger=False,
+        engineio_logger=False,
+        ping_timeout=60,
+        ping_interval=25,
+        transports=['polling', 'websocket'],
+        allow_upgrades=True,
+        path='/api/socket.io/',
+        manage_session=False
     )
     
-    websocket_manager.socketio = socketio
-    websocket_manager.app = app
-    websocket_manager.setup_event_handlers()
-    websocket_manager.is_initialized = True
+    # Eventos WebSocket simplificados
+    @socketio.on('connect')
+    def handle_connect():
+        logger.info(f"🔌 Client connected: {request.sid}")
+        emit('connection_status', {'status': 'connected', 'sid': request.sid})
     
-    app.websocket_manager = websocket_manager
-    logger.info("✅ WebSocket Manager inicializado exitosamente con SocketIO")
+    @socketio.on('disconnect')
+    def handle_disconnect():
+        logger.info(f"❌ Client disconnected: {request.sid}")
+    
+    @socketio.on('join_task')
+    def handle_join_task(data):
+        task_id = data.get('task_id')
+        if task_id:
+            join_room(f"task_{task_id}")
+            logger.info(f"🔗 Client {request.sid} joined task room: {task_id}")
+            emit('joined_task', {'task_id': task_id, 'room': f"task_{task_id}"})
+    
+    @socketio.on('leave_task')
+    def handle_leave_task(data):
+        task_id = data.get('task_id')
+        if task_id:
+            leave_room(f"task_{task_id}")
+            logger.info(f"🔗 Client {request.sid} left task room: {task_id}")
+    
+    # Función para emitir eventos
+    def emit_task_event(task_id: str, event_type: str, data: dict):
+        """Emitir evento a la room de la tarea"""
+        try:
+            room = f"task_{task_id}"
+            logger.info(f"📡 Emitting {event_type} to room {room}: {data}")
+            socketio.emit(event_type, data, room=room)
+            return True
+        except Exception as e:
+            logger.error(f"❌ Error emitting event: {e}")
+            return False
+    
+    app.socketio = socketio
+    app.emit_task_event = emit_task_event
+    logger.info("✅ SocketIO inicializado exitosamente")
+    
 except Exception as e:
-    logger.error(f"❌ Error inicializando WebSocket Manager: {e}")
+    logger.error(f"❌ Error inicializando SocketIO: {e}")
+    socketio = None
 
 # Inicializar servicio Ollama
 try:
