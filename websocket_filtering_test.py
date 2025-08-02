@@ -9,7 +9,7 @@ import json
 import time
 from datetime import datetime
 
-BACKEND_URL = "https://54c94a9f-bbec-477e-8d3d-4922e13f3d86.preview.emergentagent.com"
+BACKEND_URL = "https://1d8c1b17-cbd1-4708-8b97-da2b0a69661f.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 def test_websocket_filtering():
