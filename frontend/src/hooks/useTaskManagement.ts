@@ -167,7 +167,11 @@ export const useTaskManagement = () => {
         
       } else {
         const errorText = await response.text();
-        console.error('❌ [TASK-MANAGEMENT] Backend error:', response.status, errorText);
+        console.error('❌ [TASK-MANAGEMENT] Backend error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText: errorText
+        });
         
         // Mantener la tarea pero marcarla como fallida
         updateTask((task: Task) => {
@@ -177,7 +181,11 @@ export const useTaskManagement = () => {
       }
       
     } catch (error) {
-      console.error('❌ [TASK-MANAGEMENT] Network error:', error);
+      console.error('❌ [TASK-MANAGEMENT] Network error:', {
+        error: error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
       
       // Mantener la tarea pero marcarla como fallida
       updateTask((task: Task) => {
