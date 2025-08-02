@@ -46,11 +46,28 @@ export const useTaskManagement = () => {
   const createTaskWithMessage = useCallback(async (messageContent: string) => {
     console.log('🎯 [TASK-MANAGEMENT] Creating task with message:', messageContent);
     
+    // ✅ PASO 0: VALIDACIONES ANTI-DUPLICACIÓN
+    if (!messageContent || messageContent.trim().length === 0) {
+      console.error('❌ Cannot create task with empty message');
+      return;
+    }
+    
+    // ✅ PREVENIR CREACIONES DUPLICADAS RÁPIDAS
+    if (!preventDuplicateCreation(messageContent)) {
+      console.warn('🚫 Task creation prevented - potential duplicate');
+      return;
+    }
+    
+    // ✅ DEBUG: Revisar estado actual para detectar duplicados
+    debugTaskDuplication(state.tasks, 'before-task-creation');
+    
     dispatch({ type: 'SET_THINKING', payload: false });
     dispatch({ type: 'SET_TASK_CREATING', payload: true });
     
-    // ✅ PASO 1: CREAR TAREA LIMPIA CON ID TEMPORAL
-    const tempTaskId = `temp-task-${Date.now()}`;
+    // ✅ PASO 1: CREAR TAREA LIMPIA CON ID TEMPORAL ÚNICO
+    const tempTaskId = generateTempTaskId();
+    console.log('🎯 [TASK-MANAGEMENT] Generated unique temp ID:', tempTaskId);
+    
     const userMessage: Message = {
       id: `msg-${Date.now()}`,
       content: messageContent,
@@ -70,6 +87,13 @@ export const useTaskManagement = () => {
       iconType: undefined
     };
     
+    // ✅ PASO 1.5: VALIDAR INTEGRIDAD DE LA TAREA
+    if (!validateTask(newTask)) {
+      console.error('❌ Task validation failed, aborting creation');
+      dispatch({ type: 'SET_TASK_CREATING', payload: false });
+      return;
+    }
+    
     console.log('🎯 [TASK-MANAGEMENT] Creating task with temp ID:', tempTaskId);
     
     // ✅ PASO 2: AGREGAR AL CONTEXT - SE INICIALIZA AUTOMÁTICAMENTE AISLADO
@@ -78,6 +102,11 @@ export const useTaskManagement = () => {
     
     console.log('🎯 [TASK-MANAGEMENT] Task added to context and activated:', tempTaskId);
     console.log('🎯 [TASK-MANAGEMENT] Current tasks after add:', state.tasks.length + 1);
+    
+    // ✅ DEBUG: Verificar que no haya duplicados después de agregar
+    setTimeout(() => {
+      debugTaskDuplication(state.tasks, 'after-task-addition');
+    }, 100);
     
     try {
       // ✅ PASO 3: ENVIAR AL BACKEND PARA GENERAR PLAN Y TÍTULO MEJORADO
@@ -107,8 +136,26 @@ export const useTaskManagement = () => {
         const data = await response.json();
         console.log('✅ [TASK-MANAGEMENT] Backend response received:', data);
         
-        // ✅ PASO 4: OBTENER ID REAL DEL BACKEND
+        // ✅ PASO 4: OBTENER ID REAL DEL BACKEND (CON VALIDACIÓN)
         const backendTaskId = data.task_id || tempTaskId;
+        console.log('🔄 [TASK-MANAGEMENT] Backend task ID:', backendTaskId);
+        
+        // ✅ VALIDAR QUE EL BACKEND ID SEA DIFERENTE Y VÁLIDO
+        if (backendTaskId === tempTaskId) {
+          console.warn('⚠️ Backend returned same ID as temp ID, continuing with temp ID');
+        }
+        
+        // ✅ VERIFICAR QUE NO EXISTA YA UNA TAREA CON ESE ID
+        const existingTask = state.tasks.find(t => t.id === backendTaskId);
+        if (existingTask && backendTaskId !== tempTaskId) {
+          console.error('❌ Backend task ID already exists:', backendTaskId);
+          // En este caso, mantener el temp ID pero marcar como error
+          updateTask((task: Task) => {
+            if (task.id !== tempTaskId) return task;
+            return { ...task, status: 'failed' };
+          });
+          return;
+        }
         
         // ✅ PASO 5: PREPARAR TAREA ACTUALIZADA
         let updatedTask: Task = { 
@@ -144,9 +191,17 @@ export const useTaskManagement = () => {
           updateTaskPlan(backendTaskId, frontendPlan);
         }
         
-        // ✅ PASO 8: MIGRAR ESTADO COMPLETO SI ID CAMBIÓ
+        // ✅ PASO 8: MIGRAR ESTADO COMPLETO SI ID CAMBIÓ (CON VALIDACIÓN MEJORADA)
         if (backendTaskId !== tempTaskId) {
           console.log('🔄 [TASK-MANAGEMENT] Migrating state from', tempTaskId, 'to', backendTaskId);
+          
+          // ✅ VERIFICAR QUE LA MIGRACIÓN ES SEGURA
+          const tempTask = state.tasks.find(t => t.id === tempTaskId);
+          if (!tempTask) {
+            console.error('❌ Temp task not found for migration:', tempTaskId);
+            return;
+          }
+          
           migrateTaskState(tempTaskId, backendTaskId);
           
           dispatch({ 
@@ -167,14 +222,19 @@ export const useTaskManagement = () => {
           console.log('🎯 [TASK-MANAGEMENT] Task updated and activated:', backendTaskId);
         }
         
+        // ✅ DEBUG: Verificar estado final
+        setTimeout(() => {
+          debugTaskDuplication(state.tasks, 'after-backend-response');
+        }, 500);
+        
         // 🚀 CRÍTICO: UNIRSE A LA ROOM DE WEBSOCKET INMEDIATAMENTE
         console.log('🔌 [TASK-MANAGEMENT] Joining WebSocket room for real-time updates:', backendTaskId);
         joinTaskRoom(backendTaskId);
         
-        // ✅ PASO 10: AUTO-INICIAR EJECUCIÓN SI HAY PLAN
+        // ✅ PASO 10: AUTO-INICIAR EJECUCIÓN SI HAY PLAN (CON DEBOUNCE)
         if (data.plan && data.plan.length > 0) {
           console.log('🚀 [TASK-MANAGEMENT] Auto-starting task execution...');
-          setTimeout(async () => {
+          debounceTaskCreation(`execution-${backendTaskId}`, async () => {
             try {
               await startTaskExecution(backendTaskId);
             } catch (error) {
@@ -217,7 +277,7 @@ export const useTaskManagement = () => {
     }
     
     return newTask;
-  }, [dispatch, updateTask, updateTaskPlan, migrateTaskState]);
+  }, [dispatch, updateTask, updateTaskPlan, migrateTaskState, state.tasks, joinTaskRoom]);
   
   // ========================================================================
   // CARGA INICIAL DE TAREAS - FIX CRÍTICO
