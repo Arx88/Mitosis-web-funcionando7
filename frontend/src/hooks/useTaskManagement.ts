@@ -4,7 +4,7 @@
  * Usa completamente el Context API para persistencia aislada por tarea
  */
 
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { useWebSocket } from './useWebSocket';
 import { API_CONFIG } from '../config/api';
