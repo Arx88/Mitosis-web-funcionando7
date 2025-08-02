@@ -46,27 +46,19 @@ export const useWebSocket = (): UseWebSocketReturn => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionType, setConnectionType] = useState<'websocket' | 'polling' | 'disconnected'>('disconnected');
-  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const eventListenersRef = useRef<Partial<WebSocketEvents>>({});
-  
-  // Fallback HTTP Polling (mantener por si WebSocket falla)
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [isPollingFallback, setIsPollingFallback] = useState(false);
 
   useEffect(() => {
     const wsConfig = getWebSocketConfig();
     
     console.log('🔌 Initializing WebSocket connection:', wsConfig);
     
-    const newSocket = io(wsConfig.url, {
-      ...wsConfig.options
-    });
+    const newSocket = io(wsConfig.url, wsConfig.options);
     
     newSocket.on('connect', () => {
       console.log('✅ WebSocket connected successfully');
       setIsConnected(true);
       setConnectionType(newSocket.io.engine.transport.name as 'websocket' | 'polling');
-      setIsPollingFallback(false);
     });
     
     newSocket.on('disconnect', (reason) => {
@@ -79,25 +71,69 @@ export const useWebSocket = (): UseWebSocketReturn => {
       console.error('❌ WebSocket connection error:', error);
       setIsConnected(false);
       setConnectionType('disconnected');
-      
-      // ✅ CRITICAL FIX: No activar HTTP polling automáticamente en timeout errors
-      // Solo activar polling si es un error de conectividad real, no timeout
-      if (!error.message?.includes('timeout')) {
-        console.log('🔄 Activating HTTP polling fallback for non-timeout error');
-        setIsPollingFallback(true);
-        
-        if (currentTaskId) {
-          startHttpPollingFallback(currentTaskId);
-        }
-      } else {
-        console.log('⏱️ Timeout error detected, will retry WebSocket connection automatically');
-      }
     });
     
-    // ✅ CRITICAL FIX: Handle reconnection events
-    newSocket.on('reconnect', (attemptNumber) => {
-      console.log(`🔄 WebSocket reconnected after ${attemptNumber} attempts`);
-      setIsConnected(true);
+    newSocket.on('connection_status', (data) => {
+      console.log('📡 Connection status received:', data);
+    });
+    
+    setSocket(newSocket);
+    
+    return () => {
+      console.log('🧹 Cleaning up WebSocket connection');
+      newSocket.disconnect();
+    };
+  }, []);
+
+  const joinTaskRoom = useCallback((taskId: string) => {
+    if (socket && isConnected) {
+      console.log('🔗 Joining task room:', taskId);
+      socket.emit('join_task', { task_id: taskId });
+    } else {
+      console.warn('⚠️ Cannot join room - socket not connected');
+    }
+  }, [socket, isConnected]);
+
+  const leaveTaskRoom = useCallback((taskId: string) => {
+    if (socket && isConnected) {
+      console.log('🔗 Leaving task room:', taskId);
+      socket.emit('leave_task', { task_id: taskId });
+    }
+  }, [socket, isConnected]);
+
+  const addEventListeners = useCallback((events: Partial<WebSocketEvents>) => {
+    if (!socket) return;
+    
+    console.log('📝 Adding event listeners:', Object.keys(events));
+    eventListenersRef.current = { ...eventListenersRef.current, ...events };
+    
+    Object.entries(events).forEach(([eventName, handler]) => {
+      if (handler) {
+        socket.on(eventName, handler);
+      }
+    });
+  }, [socket]);
+
+  const removeEventListeners = useCallback(() => {
+    if (!socket) return;
+    
+    console.log('🧹 Removing event listeners');
+    Object.keys(eventListenersRef.current).forEach(eventName => {
+      socket.off(eventName);
+    });
+    eventListenersRef.current = {};
+  }, [socket]);
+
+  return {
+    socket,
+    isConnected,
+    connectionType,
+    joinTaskRoom,
+    leaveTaskRoom,
+    addEventListeners,
+    removeEventListeners
+  };
+};
       setIsPollingFallback(false);
       
       // Clear any active polling if reconnected
