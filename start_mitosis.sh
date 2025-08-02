@@ -774,7 +774,7 @@ fi
 if check_ollama; then
     echo "✅ OLLAMA: CONECTADO Y DISPONIBLE"
     echo "   🔗 Endpoint: https://66bd0d09b557.ngrok-free.app"
-    echo "   🧠 Modelo: llama3.1:8b (según configuración)"
+    echo "   🧠 Modelo: llama3.1:8b (configurado automáticamente)"
     echo "   🔄 Validación: Accesible desde backend"
 else
     echo "⚠️ OLLAMA: NO DISPONIBLE O CON PROBLEMAS"
