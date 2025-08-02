@@ -695,19 +695,119 @@ def get_current_model_info():
         }), 500
 
 # Endpoint para sugerencias dinámicas que faltaba
-@app.route('/api/agent/generate-suggestions', methods=['POST'])
-def generate_suggestions():
-    """Genera sugerencias dinámicas para el frontend"""
+@app.route('/api/agent/cleanup-completed-tasks', methods=['POST'])
+def cleanup_completed_tasks():
+    """Limpia las tareas completadas del sistema para prevenir loops infinitos"""
     try:
-        suggestions = [
-            {"title": "Buscar información sobre IA", "description": "Investigar avances recientes en inteligencia artificial"},
-            {"title": "Analizar datos de mercado", "description": "Procesar tendencias y métricas comerciales"},
-            {"title": "Crear documento técnico", "description": "Generar documentación profesional con análisis detallado"}
-        ]
-        return jsonify({"suggestions": suggestions}), 200
+        cleanup_count = 0
+        
+        # Limpiar tareas completadas de la base de datos que sean más antiguas de 1 hora
+        if db:
+            from datetime import datetime, timedelta
+            cutoff_time = datetime.now() - timedelta(hours=1)
+            
+            # Encontrar tareas completadas antigas
+            old_completed_tasks = db.tasks.find({
+                "status": {"$in": ["completed", "failed"]},
+                "updated_at": {"$lt": cutoff_time.isoformat()}
+            })
+            
+            for task in old_completed_tasks:
+                task_id = task.get("task_id")
+                if task_id:
+                    # Notificar a WebSocket manager para limpiar conexiones
+                    if hasattr(app, 'websocket_manager') and app.websocket_manager:
+                        try:
+                            app.websocket_manager.cleanup_task_connections(task_id)
+                        except:
+                            pass
+                    
+                    cleanup_count += 1
+            
+            # Eliminar tareas antigas de la base de datos
+            if cleanup_count > 0:
+                result = db.tasks.delete_many({
+                    "status": {"$in": ["completed", "failed"]},
+                    "updated_at": {"$lt": cutoff_time.isoformat()}
+                })
+                logger.info(f"🧹 Cleaned up {result.deleted_count} old completed tasks from database")
+        
+        # Limpiar task manager cache
+        try:
+            from src.routes.agent_routes import get_task_manager
+            task_manager = get_task_manager()
+            if task_manager and hasattr(task_manager, 'cleanup_completed_tasks'):
+                cache_cleanup_count = task_manager.cleanup_completed_tasks()
+                cleanup_count += cache_cleanup_count
+        except Exception as cache_error:
+            logger.warning(f"Could not clean task manager cache: {cache_error}")
+        
+        return jsonify({
+            "success": True,
+            "message": f"Cleanup completed: {cleanup_count} tasks removed",
+            "cleanup_count": cleanup_count,
+            "timestamp": datetime.now().isoformat()
+        }), 200
+        
     except Exception as e:
-        logger.error(f"Generate suggestions error: {e}")
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Cleanup error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# ✅ ENDPOINT PARA DETENER TAREA ESPECÍFICA POR FUERZA  
+@app.route('/api/agent/force-stop-task/<task_id>', methods=['POST'])
+def force_stop_task(task_id):
+    """Detiene forzadamente una tarea específica"""
+    try:
+        logger.info(f"🛑 Force stopping task: {task_id}")
+        
+        # Actualizar status en base de datos
+        if db:
+            db.tasks.update_one(
+                {"task_id": task_id},
+                {
+                    "$set": {
+                        "status": "force_stopped",
+                        "updated_at": datetime.now().isoformat(),
+                        "force_stopped_at": datetime.now().isoformat()
+                    }
+                }
+            )
+        
+        # Notificar a WebSocket manager
+        if hasattr(app, 'websocket_manager') and app.websocket_manager:
+            try:
+                # Enviar evento de parada forzada
+                app.websocket_manager.send_task_update(task_id, {
+                    "type": "task_force_stopped",
+                    "status": "force_stopped",
+                    "message": "Task forcibly stopped by system",
+                    "timestamp": datetime.now().isoformat()
+                })
+                
+                # Limpiar conexiones de la tarea
+                app.websocket_manager.cleanup_task_connections(task_id)
+            except Exception as ws_error:
+                logger.warning(f"WebSocket cleanup error: {ws_error}")
+        
+        # Limpiar task manager
+        try:
+            from src.routes.agent_routes import get_task_manager
+            task_manager = get_task_manager()
+            if task_manager and hasattr(task_manager, 'force_stop_task'):
+                task_manager.force_stop_task(task_id)
+        except Exception as tm_error:
+            logger.warning(f"Task manager cleanup error: {tm_error}")
+        
+        return jsonify({
+            "success": True,
+            "message": f"Task {task_id} forcibly stopped",
+            "task_id": task_id,
+            "timestamp": datetime.now().isoformat()
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Force stop error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/agent/generate-final-report/<task_id>', methods=['POST'])
 def generate_final_report(task_id):
