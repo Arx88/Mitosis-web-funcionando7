@@ -192,8 +192,6 @@ export function App() {
   // GETTERS MEMOIZADOS USANDO CONTEXT
   // ========================================================================
 
-  const activeTask = tasks.find(task => task.id === activeTaskId);
-
   // Debug logging
   console.log('🔍 RENDER DEBUG - App.tsx render:', {
     activeTaskId,
