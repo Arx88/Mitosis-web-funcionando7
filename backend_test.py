@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 """
-MITOSIS BACKEND COMPREHENSIVE TESTING AFTER ORPHANED FILES CLEANUP
-Testing the Mitosis backend comprehensively after removing orphaned files that were causing infinite loops.
+OLLAMA BACKEND TESTING - VERIFYING CORRECTED URL AND FUNCTIONALITY
+Testing specifically that Ollama is working correctly in the backend after correcting the URL.
 
 SPECIFIC TESTING REQUEST:
-Test the Mitosis backend comprehensively after removing orphaned files that were causing infinite loops in the "PLAN DE ACCION" logic. Specifically test:
+Probar específicamente que Ollama está funcionando correctamente en el backend después de haber corregido la URL incorrecta. Necesito verificar:
 
-1. **Backend Health**: Verify all health endpoints (/api/health, /api/agent/health, /api/agent/status) are working properly
-2. **Task Creation**: Test basic task creation via /api/agent/chat endpoint  
-3. **Plan Generation**: Verify that tasks generate proper plan structures with steps, not just basic responses
-4. **WebSocket Functionality**: Test WebSocket endpoints and verify they're accessible and functional
-5. **Database Operations**: Test task persistence and retrieval from MongoDB
-6. **OLLAMA Integration**: Ensure OLLAMA connection is working for plan generation
+1. **Conexión de Ollama**: Verificar que el endpoint https://66bd0d09b557.ngrok-free.app está funcionando
+2. **Generación con Ollama**: Hacer una llamada real a /api/agent/chat con un mensaje simple como "Hola, ¿cómo estás?" para verificar que usa llama3.1:8b
+3. **Generación de planes**: Probar con una tarea compleja como "Crear un análisis de mercado para startups 2025" para verificar que genera planes detallados usando Ollama
+4. **Verificar logs**: Confirmar en los logs que se ve "Ollama Request - Model: llama3.1:8b" y respuestas exitosas
+5. **Comparar respuestas**: Las respuestas deben ser más inteligentes y específicas, no genéricas
 
-CONTEXT: Just removed orphaned files (useIsolatedPlanManager.ts and useTaskWebSocket.ts) that were causing infinite loops and conflicts with the new simplified plan management system. Need to verify that the backend can now generate proper plans with step structures and that the infinite loop issue is resolved at the backend level.
+CONTEXTO: Anteriormente el agente estaba usando fallbacks porque tenía configurado un endpoint incorrecto de Ollama (bef4a4bb93d1 en lugar de 66bd0d09b557). Ya corregí la URL en el .env y reinicié el backend.
 
-EXPECTED: Backend should generate structured plans with steps, not just basic chat responses, and all endpoints should work without infinite loops or conflicts.
+VERIFICAR: Que las respuestas sean realmente generadas por Ollama llama3.1:8b y no por fallbacks genéricos.
 """
 
 import requests
