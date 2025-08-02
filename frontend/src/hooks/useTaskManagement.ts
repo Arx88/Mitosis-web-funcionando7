@@ -65,6 +65,9 @@ export const useTaskManagement = () => {
     dispatch({ type: 'ADD_TASK', payload: newTask });
     dispatch({ type: 'SET_ACTIVE_TASK', payload: tempTaskId });
     
+    console.log('🎯 [TASK-MANAGEMENT] Task added to context and activated:', tempTaskId);
+    console.log('🎯 [TASK-MANAGEMENT] Current tasks after add:', state.tasks.length + 1);
+    
     try {
       // ✅ PASO 3: ENVIAR AL BACKEND PARA GENERAR PLAN Y TÍTULO MEJORADO
       console.log('🎯 [TASK-MANAGEMENT] Sending to backend for plan generation...');
