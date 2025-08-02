@@ -702,7 +702,7 @@ def cleanup_completed_tasks():
         cleanup_count = 0
         
         # Limpiar tareas completadas de la base de datos que sean más antiguas de 1 hora
-        if db:
+        if db is not None:
             from datetime import datetime, timedelta
             cutoff_time = datetime.now() - timedelta(hours=1)
             
@@ -761,7 +761,7 @@ def force_stop_task(task_id):
         logger.info(f"🛑 Force stopping task: {task_id}")
         
         # Actualizar status en base de datos
-        if db:
+        if db is not None:
             db.tasks.update_one(
                 {"task_id": task_id},
                 {
@@ -808,6 +808,20 @@ def force_stop_task(task_id):
     except Exception as e:
         logger.error(f"Force stop error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/agent/generate-suggestions', methods=['POST'])
+def generate_suggestions():
+    """Genera sugerencias dinámicas para el frontend"""
+    try:
+        suggestions = [
+            {"title": "Buscar información sobre IA", "description": "Investigar avances recientes en inteligencia artificial"},
+            {"title": "Analizar datos de mercado", "description": "Procesar tendencias y métricas comerciales"},
+            {"title": "Crear documento técnico", "description": "Generar documentación profesional con análisis detallado"}
+        ]
+        return jsonify({"suggestions": suggestions}), 200
+    except Exception as e:
+        logger.error(f"Generate suggestions error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/agent/generate-final-report/<task_id>', methods=['POST'])
 def generate_final_report(task_id):
