@@ -220,8 +220,11 @@ export const TerminalView = ({
   // OBTENER DATOS AISLADOS DEL CONTEXT
   // ========================================================================
   
-  const monitorPages = taskId ? getTaskMonitorPages(taskId) : [];
-  const currentPageIndex = taskId ? getTaskCurrentPageIndex(taskId) : 0;
+  // Función para obtener las páginas de monitor de una tarea específica
+  const monitorPages = getTaskMonitorPages(taskId);
+  console.log(`🔧 [TERMINAL-DEBUG] Task ${taskId} has ${monitorPages.length} monitor pages`);
+  
+  const actualCurrentPageIndex = getTaskCurrentPageIndex(taskId);
 
   // Función para cargar el informe final - FIXED: Proper error handling and content loading
   const loadFinalReport = async (taskId: string) => {
