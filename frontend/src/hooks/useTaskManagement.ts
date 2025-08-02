@@ -6,6 +6,7 @@
 
 import { useCallback } from 'react';
 import { useAppContext } from '../context/AppContext';
+import { useWebSocket } from './useWebSocket';
 import { API_CONFIG } from '../config/api';
 import { Task, Message } from '../types';
 
