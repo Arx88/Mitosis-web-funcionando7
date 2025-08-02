@@ -41,13 +41,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   // Función para crear tarea automáticamente
   const handleCreateTask = async () => {
-    // NO crear tarea con contenido genérico - esperar a que el usuario escriba
-    console.log('🔥 SIDEBAR: handleCreateTask called - directing to input');
+    // Crear tarea con placeholder que indica que necesita input del usuario
+    console.log('🔥 SIDEBAR: handleCreateTask called - creating placeholder task');
     
-    // Solo crear una tarea vacía o navegar al chat para que el usuario escriba
-    const newTask = await onCreateTask('');
+    const newTask = await onCreateTask('Nueva tarea');
     
-    console.log('🎯 SIDEBAR: Empty task created, waiting for user input:', newTask?.id);
+    console.log('🎯 SIDEBAR: Placeholder task created, ready for user input:', newTask?.id);
   };
 
   const handleDeleteTask = (taskId: string, taskTitle: string, e: React.MouseEvent) => {
