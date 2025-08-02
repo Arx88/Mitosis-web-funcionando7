@@ -134,38 +134,6 @@ export const useWebSocket = (): UseWebSocketReturn => {
     removeEventListeners
   };
 };
-      setIsPollingFallback(false);
-      
-      // Clear any active polling if reconnected
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-    });
-    
-    newSocket.on('reconnect_error', (error) => {
-      console.error('❌ WebSocket reconnection error:', error);
-    });
-    
-    setSocket(newSocket);
-    
-    // Cleanup on unmount
-    return () => {
-      console.log('🧹 Cleaning up WebSocket connection and resources');
-      newSocket.close();
-      
-      // ✅ CRITICAL FIX: Ensure polling is always stopped on cleanup
-      if (pollingIntervalRef.current) {
-        console.log('🛑 Stopping HTTP polling on cleanup');
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-      
-      // Clear current task to prevent memory leaks
-      setCurrentTaskId(null);
-      setIsPollingFallback(false);
-    };
-  }, []);
 
   // HTTP Polling fallback implementation
   const startHttpPollingFallback = useCallback((taskId: string) => {
