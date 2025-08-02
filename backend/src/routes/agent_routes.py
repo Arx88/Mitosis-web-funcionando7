@@ -2504,7 +2504,7 @@ active_task_plans = {}
 
 def get_task_data(task_id: str) -> dict:
     """
-    Obtener datos de tarea usando TaskManager (con fallback a memoria legacy)
+    Obtener datos de tarea usando TaskManager (fallback removido para prevenir duplicados)
     Mejora implementada según UPGRADE.md Sección 5: Persistencia del Estado de Tareas
     """
     try:
@@ -2515,14 +2515,14 @@ def get_task_data(task_id: str) -> dict:
             logger.debug(f"📥 Task {task_id} retrieved from persistent storage")
             return task_data
         elif task_id in active_task_plans:
-            # Fallback a memoria legacy
-            logger.warning(f"⚠️ Task {task_id} found only in legacy memory, migrating...")
+            # ✅ FALLBACK SIN DUPLICACIÓN: Solo retornar datos, no crear nueva tarea
+            logger.warning(f"⚠️ Task {task_id} found only in legacy memory")
             legacy_data = active_task_plans[task_id]
-            # Migrar a persistencia
-            task_manager.create_task(task_id, legacy_data)
+            logger.info(f"📤 Returning legacy data for task {task_id} (no duplication)")
             return legacy_data
         else:
             logger.warning(f"⚠️ Task {task_id} not found in persistent or legacy storage")
+            return {}
             return None
             
     except Exception as e:
