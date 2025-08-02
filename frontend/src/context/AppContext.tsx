@@ -246,12 +246,30 @@ function appReducer(state: GlobalAppState, action: AppAction): GlobalAppState {
     case 'ADD_TASK':
       const newTask = action.payload;
       
+      // ✅ VALIDACIÓN CRÍTICA: VERIFICAR QUE LA TAREA SEA VÁLIDA
+      if (!validateTask(newTask)) {
+        console.error('❌ [CONTEXT] ADD_TASK: Invalid task, ignoring:', newTask);
+        return state;
+      }
+      
+      // ✅ VERIFICAR QUE NO EXISTA UNA TAREA CON EL MISMO ID
+      const existingTask = state.tasks.find(t => t.id === newTask.id);
+      if (existingTask) {
+        console.error('🚫 [CONTEXT] ADD_TASK: Task with same ID already exists:', newTask.id);
+        return state; // No agregar duplicado
+      }
+      
       // ✅ GARANTIZAR INICIALIZACIÓN COMPLETA DE DATOS AISLADOS
       console.log('🎯 [CONTEXT] ADD_TASK: Initializing isolated data for task:', newTask.id);
       
+      const updatedTasks = [newTask, ...state.tasks];
+      
+      // ✅ DEBUG: Verificar que no haya duplicados después de agregar
+      debugTaskDuplication(updatedTasks, 'ADD_TASK');
+      
       return {
         ...state,
-        tasks: [newTask, ...state.tasks],
+        tasks: updatedTasks,
         
         // ✅ INICIALIZAR ESTADO AISLADO COMPLETO PARA NUEVA TAREA
         taskMessages: { 
