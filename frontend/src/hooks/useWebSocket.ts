@@ -179,16 +179,36 @@ export const useWebSocket = (): UseWebSocketReturn => {
   }, []);
 
   const joinTaskRoom = useCallback((taskId: string) => {
+    // ✅ CRITICAL FIX: Prevent multiple polling for the same task
+    if (currentTaskId === taskId) {
+      console.log(`⚠️ Already connected to task: ${taskId}, skipping join`);
+      return;
+    }
+    
+    // Clean up previous task connection
+    if (currentTaskId) {
+      console.log(`🔄 Switching from task ${currentTaskId} to ${taskId}`);
+      // Stop previous polling
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    }
+    
     setCurrentTaskId(taskId);
+    
+    console.log(`🎯 Joining task room: ${taskId}`);
     
     if (socket && isConnected) {
       socket.emit('join_task', { task_id: taskId });
+      console.log(`✅ WebSocket join_task emitted for: ${taskId}`);
     } else {
       // Start polling fallback if WebSocket not available
+      console.log(`🔄 WebSocket not available, starting HTTP polling for: ${taskId}`);
       startHttpPollingFallback(taskId);
       setIsPollingFallback(true);
     }
-  }, [socket, isConnected, startHttpPollingFallback]);
+  }, [socket, isConnected, startHttpPollingFallback, currentTaskId]);
 
   const leaveTaskRoom = useCallback((taskId: string) => {
     setCurrentTaskId(null);
