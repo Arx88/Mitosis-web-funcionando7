@@ -19,7 +19,7 @@ Modified functions in /app/backend/src/routes/agent_routes.py:
 4. generate_unified_ai_plan (lines 4251-4302)
 
 SPECIFIC TEST REQUIRED:
-1. Go to https://b3718c6d-d2fa-4fa9-9fbd-4ac26e0c8cc4.preview.emergentagent.com
+1. Go to https://f9748e49-9c96-49dd-bee2-60b8cfdb3f15.preview.emergentagent.com
 2. Send the EXACT task: "Escribe un informe sobre los beneficios de la energía solar"
 3. Wait full time for execution (up to 5-10 minutes if necessary)
 4. Verify the final generated content
@@ -36,7 +36,7 @@ PROBLEMATIC RESULT (TO BE AVOIDED):
 - "Los objetivos de este documento son..."
 - Any meta-content describing what will be done
 
-**URL Backend**: https://b3718c6d-d2fa-4fa9-9fbd-4ac26e0c8cc4.preview.emergentagent.com
+**URL Backend**: https://f9748e49-9c96-49dd-bee2-60b8cfdb3f15.preview.emergentagent.com
 **WebSocket URL**: /api/socket.io/
 **Test Task**: "Escribe un informe sobre los beneficios de la energía solar"
 """
@@ -51,7 +51,7 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 
 # Backend URL from environment - test both internal and external URLs
-BACKEND_URL = "https://b3718c6d-d2fa-4fa9-9fbd-4ac26e0c8cc4.preview.emergentagent.com"
+BACKEND_URL = "https://f9748e49-9c96-49dd-bee2-60b8cfdb3f15.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class MitosisSolarEnergyReportTester:
@@ -60,7 +60,7 @@ class MitosisSolarEnergyReportTester:
         self.session.headers.update({
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'Origin': 'https://b3718c6d-d2fa-4fa9-9fbd-4ac26e0c8cc4.preview.emergentagent.com'
+            'Origin': 'https://f9748e49-9c96-49dd-bee2-60b8cfdb3f15.preview.emergentagent.com'
         })
         self.test_results = []
         self.task_id = None
