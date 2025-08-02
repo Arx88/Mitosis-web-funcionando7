@@ -118,7 +118,20 @@ export const getApiUrl = (endpoint: keyof typeof API_CONFIG.endpoints): string =
   return `${API_CONFIG.backend.url}${API_CONFIG.endpoints[endpoint]}`;
 };
 
-export const getWebSocketConfig = () => API_CONFIG.websocket;
+export const getWebSocketConfig = () => ({
+  url: API_CONFIG.backend.url,
+  options: {
+    path: '/api/socket.io/',
+    transports: ['polling', 'websocket'],
+    upgrade: true,
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5,
+    timeout: 20000,
+    forceNew: false,
+    autoConnect: true
+  }
+});
 
 // Logging de configuración para debugging
 console.log('🔧 DYNAMIC API Configuration loaded:', {
