@@ -287,7 +287,53 @@ def execute_single_step_detailed(task_id: str, step_id: str):
         logger.error(f"❌ Error ejecutando paso {step_id}: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-@agent_bp.route('/get-task-status/<task_id>', methods=['GET'])
+@agent_bp.route('/get-all-tasks', methods=['GET'])
+def get_all_tasks():
+    """
+    🔄 ENDPOINT PARA OBTENER TODAS LAS TAREAS
+    Devuelve todas las tareas almacenadas en la base de datos
+    """
+    try:
+        from flask import current_app
+        
+        # Obtener todas las tareas del task manager
+        agent = current_app.agent
+        if not agent or not hasattr(agent, 'task_manager'):
+            return jsonify({'error': 'Task manager not available'}), 500
+            
+        tasks = agent.task_manager.get_all_tasks(limit=100)
+        
+        # Formatear las tareas para el frontend
+        formatted_tasks = []
+        for task in tasks:
+            formatted_task = {
+                'id': task.get('task_id', ''),
+                'title': task.get('message', task.get('title', 'Sin título')),
+                'status': task.get('status', 'pending'),
+                'createdAt': task.get('timestamp', datetime.now().isoformat()),
+                'progress': task.get('progress', 0),
+                'iconType': task.get('icon_type', 'default'),
+                'plan': task.get('plan', []),
+                'complexity': task.get('complexity', 'media'),
+                'estimated_time': task.get('estimated_total_time', '5-10 minutos')
+            }
+            formatted_tasks.append(formatted_task)
+            
+        logger.info(f"📋 Retrieved {len(formatted_tasks)} tasks")
+        
+        return jsonify({
+            'success': True,
+            'tasks': formatted_tasks,
+            'count': len(formatted_tasks),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting all tasks: {e}")
+        return jsonify({
+            'error': str(e),
+            'success': False
+        }), 500
 def get_task_status(task_id: str):
     """
     CRITICAL FIX: Endpoint para HTTP polling del frontend con executionData incluido
