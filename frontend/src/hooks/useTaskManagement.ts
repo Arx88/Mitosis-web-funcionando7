@@ -71,6 +71,11 @@ export const useTaskManagement = () => {
     try {
       // ✅ PASO 3: ENVIAR AL BACKEND PARA GENERAR PLAN Y TÍTULO MEJORADO
       console.log('🎯 [TASK-MANAGEMENT] Sending to backend for plan generation...');
+      console.log('🎯 [TASK-MANAGEMENT] API URL:', `${API_CONFIG.backend.url}/api/agent/chat`);
+      console.log('🎯 [TASK-MANAGEMENT] Request payload:', {
+        message: messageContent.trim(),
+        task_id: tempTaskId
+      });
       
       const response = await fetch(`${API_CONFIG.backend.url}/api/agent/chat`, {
         method: 'POST',
@@ -79,6 +84,12 @@ export const useTaskManagement = () => {
           message: messageContent.trim(),
           task_id: tempTaskId
         })
+      });
+      
+      console.log('🎯 [TASK-MANAGEMENT] Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
       });
       
       if (response.ok) {
