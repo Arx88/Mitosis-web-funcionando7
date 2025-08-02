@@ -89,13 +89,30 @@ class DatabaseService:
     # === TASKS ===
     
     def save_task(self, task_data: Dict) -> str:
-        """Guardar una tarea"""
+        """Guardar una tarea (con upsert para prevenir duplicados)"""
         try:
-            task_data['created_at'] = datetime.now()
             task_data['updated_at'] = datetime.now()
             
-            result = self.db.tasks.insert_one(task_data)
-            return str(result.inserted_id)
+            # Si no tiene created_at, es una nueva tarea
+            if 'created_at' not in task_data:
+                task_data['created_at'] = datetime.now()
+            
+            # Usar replace_one con upsert para prevenir duplicados
+            filter_query = {"task_id": task_data.get('task_id')}
+            result = self.db.tasks.replace_one(
+                filter_query, 
+                task_data, 
+                upsert=True
+            )
+            
+            if result.upserted_id:
+                return str(result.upserted_id)
+            elif result.modified_count > 0:
+                # Tarea actualizada, obtener el _id existente
+                existing_task = self.db.tasks.find_one(filter_query)
+                return str(existing_task['_id']) if existing_task else None
+            else:
+                return None
             
         except Exception as e:
             print(f"Error saving task: {e}")
