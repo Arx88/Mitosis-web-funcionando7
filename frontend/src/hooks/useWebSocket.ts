@@ -92,13 +92,19 @@ export const useWebSocket = (): UseWebSocketReturn => {
     
     // Cleanup on unmount
     return () => {
-      console.log('🔌 Cleaning up WebSocket connection');
+      console.log('🧹 Cleaning up WebSocket connection and resources');
       newSocket.close();
       
+      // ✅ CRITICAL FIX: Ensure polling is always stopped on cleanup
       if (pollingIntervalRef.current) {
+        console.log('🛑 Stopping HTTP polling on cleanup');
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
       }
+      
+      // Clear current task to prevent memory leaks
+      setCurrentTaskId(null);
+      setIsPollingFallback(false);
     };
   }, []);
 
