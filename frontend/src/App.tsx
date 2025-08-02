@@ -55,13 +55,20 @@ export function App() {
     createTaskWithMessage,
     updateTask,
     deleteTask,
-    setActiveTask
+    setActiveTask,
+    loadAllTasks  // ✅ NUEVA FUNCIÓN PARA CARGAR TAREAS
   } = useTaskManagement();
   
   // ✅ CALCULAR ACTIVE TASK - FIX CRÍTICO
   const activeTask = useMemo(() => {
     return tasks.find(task => task.id === activeTaskId) || null;
   }, [tasks, activeTaskId]);
+  
+  // ✅ CARGAR TAREAS AL MONTAR EL COMPONENTE - FIX ADICIONAL
+  useEffect(() => {
+    console.log('🔄 App mounted, loading tasks...');
+    loadAllTasks();
+  }, [loadAllTasks]);
   
   const { uploadFilesForTask } = useFileManagement(); // ✅ USAR HOOK ESPECÍFICO
   
