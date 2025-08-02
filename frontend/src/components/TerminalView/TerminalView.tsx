@@ -1363,7 +1363,7 @@ export const TerminalView = ({
         <div className="pager-controls bg-[#383739] border-t border-white/10">
           <button 
             onClick={handleResetToStart}
-            disabled={currentPageIndex === 0}
+            disabled={actualCurrentPageIndex === 0}
             title="Ir al inicio"
             className="flex items-center gap-1"
           >
@@ -1373,7 +1373,7 @@ export const TerminalView = ({
           
           <button 
             onClick={handlePreviousPage}
-            disabled={currentPageIndex === 0}
+            disabled={actualCurrentPageIndex === 0}
             title="Página anterior"
             className="flex items-center gap-1"
           >
