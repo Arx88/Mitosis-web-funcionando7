@@ -6,6 +6,7 @@
 
 import React, { createContext, useContext, useReducer, useCallback, ReactNode } from 'react';
 import { Task, Message, AgentConfig, TaskStep } from '../types';
+import { generateUniqueTaskId, validateTask, removeDuplicateTasks, debugTaskDuplication } from '../utils/taskUtils';
 
 // ========================================================================
 // TIPOS EXPANDIDOS PARA AISLAMIENTO COMPLETO
