@@ -73,7 +73,7 @@ mongodb                          RUNNING
 ✅ **Base de Datos:** MongoDB operacional  
 ✅ **IA Integration:** Ollama conectado  
 ✅ **WebSocket:** Funcionando correctamente sin spam  
-✅ **Acceso Externo:** https://d1426851-cff7-417a-8bf8-9f92c2fe94ff.preview.emergentagent.com  
+✅ **Acceso Externo:** https://b3718c6d-d2fa-4fa9-9fbd-4ac26e0c8cc4.preview.emergentagent.com  
 
 ### 🛡️ **Prevención Futura:**
 - Sistema de detección automática de loops
