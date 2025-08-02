@@ -6124,8 +6124,8 @@ def execute_task_steps_sequentially(task_id: str, steps: list):
                     f.write(f"   Tool: {step.get('tool', 'unknown')}\n")
                     f.write(f"   Description: {step.get('description', 'N/A')}\n")
                 
-                # 🚨 EMIT STEP PROGRESS EVENT BEFORE EXECUTION
-                emit_step_event(task_id, 'step_progress', {
+                # 🚨 EMIT STEP STARTED EVENT BEFORE EXECUTION
+                emit_step_event(task_id, 'step_started', {
                     'step_id': step_id,
                     'step_number': i + 1,
                     'total_steps': len(steps),
