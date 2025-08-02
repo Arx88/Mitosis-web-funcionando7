@@ -174,11 +174,42 @@ export const usePlanManager = ({
   // ========================================================================
 
   useEffect(() => {
-    if (!taskId || !socket) return;
+    if (!taskId || !socket) {
+      console.log(`🔌 [PLAN-${taskId}] WebSocket not available, skipping setup`);
+      return;
+    }
 
     console.log(`🔌 [PLAN-${taskId}] Setting up WebSocket listeners`);
 
-    joinTaskRoom(taskId);
+    // ✅ CRITICAL FIX: Only join room once per task
+    let isJoined = false;
+    
+    const setupConnection = () => {
+      if (!isJoined) {
+        console.log(`🎯 [PLAN-${taskId}] Joining WebSocket room`);
+        joinTaskRoom(taskId);
+        isJoined = true;
+      }
+    };
+
+    // Setup connection if socket is connected
+    if (socket.connected) {
+      setupConnection();
+    }
+
+    // Listen for connection events
+    const onConnect = () => {
+      console.log(`✅ [PLAN-${taskId}] WebSocket connected, joining room`);
+      setupConnection();
+    };
+
+    const onDisconnect = () => {
+      console.log(`❌ [PLAN-${taskId}] WebSocket disconnected`);
+      isJoined = false;
+    };
+
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
 
     const handlePlanUpdated = (data: any) => {
       if (data.plan?.steps && Array.isArray(data.plan.steps)) {
@@ -236,15 +267,23 @@ export const usePlanManager = ({
     socket.on('task_completed', handleTaskCompleted);
 
     return () => {
-      console.log(`🔌 [PLAN-${taskId}] Cleaning up WebSocket listeners`);
+      console.log(`🧹 [PLAN-${taskId}] Cleaning up WebSocket listeners`);
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
       socket.off('plan_updated', handlePlanUpdated);
       socket.off('step_started', handleStepStarted);
       socket.off('step_completed', handleStepCompleted);
       socket.off('task_progress', handleTaskProgress);
       socket.off('task_completed', handleTaskCompleted);
-      leaveTaskRoom(taskId);
+      
+      // ✅ CRITICAL FIX: Only leave room if we actually joined
+      if (isJoined) {
+        console.log(`🚪 [PLAN-${taskId}] Leaving WebSocket room`);
+        leaveTaskRoom(taskId);
+        isJoined = false;
+      }
     };
-  }, [taskId, socket, joinTaskRoom, leaveTaskRoom, updatePlan, startStep, completeStep, onTaskComplete]);
+  }, [taskId, socket]); // ✅ CRITICAL FIX: Remove dependencies that cause re-renders
 
   // ========================================================================
   // INICIALIZACIÓN DEL PLAN - CON CONTEXT AISLADO
