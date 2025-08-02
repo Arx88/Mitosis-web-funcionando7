@@ -41,21 +41,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   // Función para crear tarea automáticamente
   const handleCreateTask = async () => {
-    const taskNumber = tasks.length + 1;
-    const defaultTitle = `Tarea ${taskNumber}`;
+    // NO crear tarea con contenido genérico - esperar a que el usuario escriba
+    console.log('🔥 SIDEBAR: handleCreateTask called - directing to input');
     
-    console.log('🔥 SIDEBAR: handleCreateTask called!');
-    console.log('🔥 SIDEBAR: taskNumber:', taskNumber);
-    console.log('🔥 SIDEBAR: defaultTitle:', defaultTitle);
-    console.log('🔥 SIDEBAR: onCreateTask function exists:', !!onCreateTask);
+    // Solo crear una tarea vacía o navegar al chat para que el usuario escriba
+    const newTask = await onCreateTask('');
     
-    // Crear la nueva tarea - ya setea activeTaskId internamente
-    const newTask = await onCreateTask(defaultTitle);
-    
-    console.log('🎯 SIDEBAR: Nueva tarea creada desde botón NUEVA TAREA:', newTask?.id);
-    console.log('⚠️ ISSUE: Esta tarea necesitará que el usuario escriba para generar título inteligente');
-    
-    // No necesitamos setTimeout ni setActiveTaskId adicional porque createTask ya lo hace
+    console.log('🎯 SIDEBAR: Empty task created, waiting for user input:', newTask?.id);
   };
 
   const handleDeleteTask = (taskId: string, taskTitle: string, e: React.MouseEvent) => {
