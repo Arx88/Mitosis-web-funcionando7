@@ -213,6 +213,38 @@ export const useTaskManagement = () => {
   }, [dispatch, updateTask, updateTaskPlan, migrateTaskState]);
   
   // ========================================================================
+  // CARGA INICIAL DE TAREAS - FIX CRÍTICO
+  // ========================================================================
+  
+  const loadAllTasks = useCallback(async () => {
+    try {
+      console.log('📋 Loading all tasks from backend...');
+      
+      const response = await fetch(`${API_CONFIG.backend.url}/api/agent/get-all-tasks`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📋 Tasks loaded successfully:', data.count);
+        
+        // Actualizar las tareas en el estado
+        dispatch({ type: 'SET_TASKS', payload: data.tasks || [] });
+        return data.tasks || [];
+      } else {
+        console.error('❌ Failed to load tasks:', response.status);
+        return [];
+      }
+    } catch (error) {
+      console.error('❌ Error loading tasks:', error);
+      return [];
+    }
+  }, [dispatch]);
+  
+  // Cargar tareas al inicializar el hook
+  useEffect(() => {
+    loadAllTasks();
+  }, [loadAllTasks]);
+  
+  // ========================================================================
   // OPERACIONES BÁSICAS SIMPLIFICADAS
   // ========================================================================
   
