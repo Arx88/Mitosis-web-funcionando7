@@ -1024,28 +1024,28 @@ export const TerminalView = ({
 
   // Navigation handlers
   const handlePreviousPage = () => {
-    if (currentPageIndex > 0) {
-      setCurrentPageIndex(currentPageIndex - 1);
+    if (actualCurrentPageIndex > 0) {
+      setTaskCurrentPageIndex(taskId, actualCurrentPageIndex - 1);
       setIsLiveMode(false);
     }
   };
 
   const handleNextPage = () => {
-    if (currentPageIndex < monitorPages.length - 1) {
-      setCurrentPageIndex(currentPageIndex + 1);
+    if (actualCurrentPageIndex < monitorPages.length - 1) {
+      setTaskCurrentPageIndex(taskId, actualCurrentPageIndex + 1);
       setIsLiveMode(false);
     }
   };
 
   const handleLiveMode = () => {
     if (monitorPages.length > 0) {
-      setCurrentPageIndex(monitorPages.length - 1);
+      setTaskCurrentPageIndex(taskId, monitorPages.length - 1);
       setIsLiveMode(true);
     }
   };
 
   const handleResetToStart = () => {
-    setCurrentPageIndex(0);
+    setTaskCurrentPageIndex(taskId, 0);
     setIsLiveMode(false);
   };
 
