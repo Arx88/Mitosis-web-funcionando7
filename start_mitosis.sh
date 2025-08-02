@@ -482,7 +482,7 @@ check_mongodb() {
 
 check_ollama() {
     # Verificar ambos endpoints posibles
-    curl -s -f "https://bef4a4bb93d1.ngrok-free.app/api/tags" >/dev/null 2>&1 || \
+    curl -s -f "https://66bd0d09b557.ngrok-free.app/api/tags" >/dev/null 2>&1 || \
     curl -s -f "https://78d08925604a.ngrok-free.app/api/tags" >/dev/null 2>&1
 }
 
