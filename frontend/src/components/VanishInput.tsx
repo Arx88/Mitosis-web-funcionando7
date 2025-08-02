@@ -170,15 +170,34 @@ export const VanishInput: React.FC<VanishInputProps> = ({
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🔥 [VANISH-INPUT] handleSubmit called with:', {
+      inputValue: inputValue.trim(),
+      disabled,
+      hasOnSendMessage: !!onSendMessage
+    });
+    
     if (inputValue.trim() && !disabled) {
       const messageToSend = inputValue.trim();
-      await onSendMessage(messageToSend);
+      console.log('🔥 [VANISH-INPUT] Calling onSendMessage with:', messageToSend);
+      
+      try {
+        await onSendMessage(messageToSend);
+        console.log('✅ [VANISH-INPUT] onSendMessage completed successfully');
+      } catch (error) {
+        console.error('❌ [VANISH-INPUT] Error in onSendMessage:', error);
+      }
+      
       // Mantener el texto en el input temporalmente para que el usuario vea que se está procesando
       // Solo limpiar después de un breve delay
       setTimeout(() => {
         setInputValue('');
         adjustTextareaHeight();
       }, 500);
+    } else {
+      console.log('⚠️ [VANISH-INPUT] Submit blocked:', {
+        inputEmpty: !inputValue.trim(),
+        disabled
+      });
     }
   }, [inputValue, disabled, onSendMessage]);
 
