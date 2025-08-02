@@ -67,8 +67,8 @@
   "websocket_working": true,
   "backend_working": true,
   "diagnostics": {
-    "backend_url": "https://f9748e49-9c96-49dd-bee2-60b8cfdb3f15.preview.emergentagent.com",
-    "websocket_url": "https://f9748e49-9c96-49dd-bee2-60b8cfdb3f15.preview.emergentagent.com/api/socket.io/",
+    "backend_url": "https://38146bbb-fcab-42f6-9cbd-f49422f98546.preview.emergentagent.com",
+    "websocket_url": "https://38146bbb-fcab-42f6-9cbd-f49422f98546.preview.emergentagent.com/api/socket.io/",
     "task_created": true
   }
 }
