@@ -636,6 +636,7 @@ export const TerminalView = ({
     if (!socket || !taskId) return;
 
     console.log(`🔌 [TERMINAL-${taskId}] Setting up real-time WebSocket listeners`);
+    console.log(`🔌 [TERMINAL-${taskId}] Task ID for WebSocket join:`, taskId);
 
     // Unirse a la sala de la tarea
     joinTaskRoom(taskId);
