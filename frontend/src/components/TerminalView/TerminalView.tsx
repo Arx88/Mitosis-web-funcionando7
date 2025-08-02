@@ -1108,7 +1108,7 @@ export const TerminalView = ({
           </div>
           <div className="flex items-center gap-1">
             <Radio size={14} className="text-blue-400" />
-            <span>Página {currentPageIndex + 1} de {monitorPages.length}</span>
+            <span>Página {actualCurrentPageIndex + 1} de {monitorPages.length}</span>
           </div>
         </div>
         <button onClick={onFullscreen} className="p-1.5 rounded-md hover:bg-black/10">
