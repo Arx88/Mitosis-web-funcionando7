@@ -108,6 +108,8 @@ export const useWebSocket = (): UseWebSocketReturn => {
       clearInterval(pollingIntervalRef.current);
     }
     
+    console.log(`🔄 Starting HTTP polling fallback for task: ${taskId}`);
+    
     pollingIntervalRef.current = setInterval(async () => {
       try {
         const response = await fetch(`${API_CONFIG.backend.url}/api/agent/get-task-status/${taskId}`, {
@@ -118,25 +120,40 @@ export const useWebSocket = (): UseWebSocketReturn => {
         if (response.ok) {
           const data = await response.json();
           
-          // Simulate WebSocket events based on task status
+          // ✅ CRITICAL FIX: Stop polling for completed/failed tasks
+          if (data.status === 'completed' || data.status === 'failed') {
+            console.log(`🏁 Task ${taskId} is ${data.status}, stopping HTTP polling`);
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+              pollingIntervalRef.current = null;
+            }
+            setIsPollingFallback(false);
+            
+            // Send final event and stop
+            if (eventListenersRef.current) {
+              if (data.status === 'completed') {
+                eventListenersRef.current.task_completed?.(data);
+              } else {
+                eventListenersRef.current.task_failed?.(data);
+              }
+            }
+            return; // Exit interval
+          }
+          
+          // Only process active task status updates
           if (data.status && eventListenersRef.current) {
             switch (data.status) {
               case 'plan_generated':
                 eventListenersRef.current.task_started?.(data);
                 break;
               case 'executing':
+              case 'in_progress':
                 eventListenersRef.current.task_progress?.(data);
-                break;
-              case 'completed':
-                eventListenersRef.current.task_completed?.(data);
-                break;
-              case 'failed':
-                eventListenersRef.current.task_failed?.(data);
                 break;
             }
           }
 
-          // Handle step progress
+          // Handle step progress only for active tasks
           if (data.plan && Array.isArray(data.plan)) {
             data.plan.forEach((step: any) => {
               if (step.status === 'completed' && eventListenersRef.current.step_completed) {
@@ -146,12 +163,20 @@ export const useWebSocket = (): UseWebSocketReturn => {
               }
             });
           }
+        } else {
+          console.warn(`HTTP Polling: Failed to fetch task ${taskId} status`);
         }
       } catch (error) {
         console.error('HTTP Polling fallback error:', error);
+        // Stop polling on persistent errors
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+        setIsPollingFallback(false);
       }
-    }, 3000); // Poll every 3 seconds
-  }, [eventListenersRef.current]);
+    }, 5000); // ✅ Increased interval to 5 seconds to reduce server load
+  }, []);
 
   const joinTaskRoom = useCallback((taskId: string) => {
     setCurrentTaskId(taskId);
