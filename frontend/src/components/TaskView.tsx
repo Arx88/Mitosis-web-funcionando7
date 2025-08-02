@@ -428,7 +428,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       isTyping={isThinking}
       onFilesClick={handleFilesModal}
       onShareClick={handleShareModal}
-      disabled={isInitializing}
+      disabled={false} // ✅ TEMPORALMENTE DESHABILITAR isInitializing HASTA QUE LA INICIALIZACIÓN FUNCIONE CORRECTAMENTE
       task={task}
       onUpdateTask={handleUpdateTask}
     />
