@@ -574,7 +574,7 @@ if $backend_ok; then
     # Test 4: Verificación específica de Ollama desde frontend
     echo "🔍 Testing conexión Ollama desde frontend..."
     ollama_check_test=$(curl -s -X POST -H "Content-Type: application/json" \
-        -d '{"endpoint":"https://bef4a4bb93d1.ngrok-free.app"}' \
+        -d '{"endpoint":"https://66bd0d09b557.ngrok-free.app"}' \
         http://localhost:8001/api/agent/ollama/check 2>/dev/null || echo "error")
     if echo "$ollama_check_test" | grep -q "is_connected.*true\|connected.*true"; then
         echo "   ✅ Ollama frontend integration: FUNCIONANDO"
