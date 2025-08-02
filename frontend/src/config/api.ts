@@ -93,6 +93,7 @@ export const API_CONFIG: ApiConfig = {
     health: '/api/agent/health',
     startTaskExecution: '/api/agent/start-task-execution',
     getTaskPlan: '/api/agent/get-task-plan',
+    getAllTasks: '/api/agent/get-all-tasks',
     uploadFiles: '/api/agent/upload-files',
     downloadFile: '/api/agent/download'
   },
