@@ -167,7 +167,7 @@ Siempre explica lo que estás haciendo y por qué, para que el usuario pueda ent
     model: "llama3.1:8b",
     temperature: 0.7,
     maxTokens: 2048,
-    endpoint: "https://bef4a4bb93d1.ngrok-free.app"
+    endpoint: "https://66bd0d09b557.ngrok-free.app"
   },
   openrouter: {
     enabled: false,
