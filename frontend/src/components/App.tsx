@@ -136,7 +136,8 @@ export function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: title
+          message: title,
+          task_id: newTask.id  // 🔧 FIX: Enviar el task_id generado en frontend
         })
       });
 
