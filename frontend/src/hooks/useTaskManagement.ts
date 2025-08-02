@@ -280,6 +280,7 @@ export const useTaskManagement = () => {
     deleteTask,
     setActiveTask,
     updateTaskProgress,
+    loadAllTasks,  // ✅ NUEVA FUNCIÓN PARA CARGAR TAREAS
     
     // Operaciones especiales
     startTaskExecution
