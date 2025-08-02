@@ -193,12 +193,15 @@ export const useWebSocket = (): UseWebSocketReturn => {
   const leaveTaskRoom = useCallback((taskId: string) => {
     setCurrentTaskId(null);
     
+    console.log(`🚪 Leaving task room: ${taskId}`);
+    
     if (socket) {
       socket.emit('leave_task', { task_id: taskId });
     }
     
-    // Stop HTTP Polling fallback
+    // ✅ CRITICAL FIX: Always stop HTTP Polling when leaving task
     if (pollingIntervalRef.current) {
+      console.log(`🛑 Stopping HTTP polling for task: ${taskId}`);
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
     }
