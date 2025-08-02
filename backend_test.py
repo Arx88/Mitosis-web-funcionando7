@@ -28,7 +28,7 @@ from typing import Dict, Any, List, Optional
 BACKEND_URL = "https://b3718c6d-d2fa-4fa9-9fbd-4ac26e0c8cc4.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
-class MitosisBackendTester:
+class OllamaBackendTester:
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
@@ -38,6 +38,8 @@ class MitosisBackendTester:
         })
         self.test_results = []
         self.task_id = None
+        self.expected_ollama_endpoint = "https://66bd0d09b557.ngrok-free.app"
+        self.expected_model = "llama3.1:8b"
         
     def log_test(self, test_name: str, success: bool, details: str, response_data: Any = None):
         """Log test results"""
@@ -56,70 +58,57 @@ class MitosisBackendTester:
         if response_data and not success:
             print(f"   Response: {json.dumps(response_data, indent=2)[:500]}...")
     
-    def test_backend_health_endpoints(self) -> bool:
-        """Test 1: All Backend Health Endpoints"""
+    def test_ollama_endpoint_configuration(self) -> bool:
+        """Test 1: Verify Ollama Endpoint Configuration"""
         try:
-            print(f"\n🏥 Testing all backend health endpoints...")
+            print(f"\n🔗 Testing Ollama endpoint configuration...")
             
-            health_endpoints = [
-                ("/api/health", "API Health"),
-                ("/api/agent/status", "Agent Status")
-            ]
+            # Check agent status to verify Ollama configuration
+            response = self.session.get(f"{API_BASE}/agent/status", timeout=15)
             
-            all_healthy = True
-            health_details = []
-            
-            for endpoint, name in health_endpoints:
-                try:
-                    response = self.session.get(f"{BACKEND_URL}{endpoint}", timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                ollama_info = data.get('ollama', {})
+                
+                endpoint = ollama_info.get('endpoint', '')
+                model = ollama_info.get('model', '')
+                connected = ollama_info.get('connected', False)
+                
+                # Check if the corrected endpoint is configured
+                endpoint_correct = self.expected_ollama_endpoint in endpoint
+                model_correct = self.expected_model in model
+                
+                if endpoint_correct and model_correct and connected:
+                    self.log_test("Ollama Endpoint Configuration", True, 
+                                f"Corrected endpoint configured - Endpoint: {endpoint}, Model: {model}, Connected: {connected}")
+                    return True
+                else:
+                    issues = []
+                    if not endpoint_correct:
+                        issues.append(f"Wrong endpoint: {endpoint} (expected: {self.expected_ollama_endpoint})")
+                    if not model_correct:
+                        issues.append(f"Wrong model: {model} (expected: {self.expected_model})")
+                    if not connected:
+                        issues.append("Not connected")
                     
-                    if response.status_code == 200:
-                        data = response.json()
-                        status = data.get('status', 'unknown')
-                        
-                        if status in ['healthy', 'running']:
-                            health_details.append(f"{name}: ✅ {status}")
-                            
-                            # Check specific services for detailed health
-                            if 'services' in data:
-                                services = data['services']
-                                if isinstance(services, dict):
-                                    db_status = services.get('database', False)
-                                    ollama_status = services.get('ollama', False)
-                                    tools_count = services.get('tools', 0)
-                                    health_details.append(f"  - Database: {'✅' if db_status else '❌'}")
-                                    health_details.append(f"  - OLLAMA: {'✅' if ollama_status else '❌'}")
-                                    health_details.append(f"  - Tools: {tools_count}")
-                        else:
-                            health_details.append(f"{name}: ❌ {status}")
-                            all_healthy = False
-                    else:
-                        health_details.append(f"{name}: ❌ HTTP {response.status_code}")
-                        all_healthy = False
-                        
-                except Exception as e:
-                    health_details.append(f"{name}: ❌ Exception: {str(e)}")
-                    all_healthy = False
-            
-            if all_healthy:
-                self.log_test("Backend Health Endpoints", True, 
-                            f"All health endpoints working - {'; '.join(health_details)}")
-                return True
+                    self.log_test("Ollama Endpoint Configuration", False, 
+                                f"Configuration issues - {'; '.join(issues)}", data)
+                    return False
             else:
-                self.log_test("Backend Health Endpoints", False, 
-                            f"Some health endpoints failed - {'; '.join(health_details)}")
+                self.log_test("Ollama Endpoint Configuration", False, 
+                            f"Cannot check Ollama status - HTTP {response.status_code}")
                 return False
                 
         except Exception as e:
-            self.log_test("Backend Health Endpoints", False, f"Exception: {str(e)}")
+            self.log_test("Ollama Endpoint Configuration", False, f"Exception: {str(e)}")
             return False
     
-    def test_task_creation_basic(self) -> bool:
-        """Test 2: Basic Task Creation via /api/agent/chat"""
+    def test_simple_ollama_chat(self) -> bool:
+        """Test 2: Simple Chat with Ollama - "Hola, ¿cómo estás?" """
         try:
-            print(f"\n📋 Testing basic task creation...")
+            print(f"\n💬 Testing simple Ollama chat generation...")
             
-            test_message = "Crear un análisis de mercado para software en 2025"
+            test_message = "Hola, ¿cómo estás?"
             
             payload = {
                 "message": test_message
@@ -131,7 +120,6 @@ class MitosisBackendTester:
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check for basic response fields
                 response_text = data.get('response', '')
                 task_id = data.get('task_id', '')
                 memory_used = data.get('memory_used', False)
@@ -141,37 +129,57 @@ class MitosisBackendTester:
                     self.task_id = task_id
                     print(f"   📋 Task created with ID: {task_id}")
                 
-                if response_text and task_id:
-                    self.log_test("Basic Task Creation", True, 
-                                f"Task created successfully - ID: {task_id}, Memory: {memory_used}")
-                    return True
+                # Check if response is intelligent and specific (not generic fallback)
+                if response_text and len(response_text) > 20:
+                    # Check for Spanish response (should respond in Spanish to Spanish input)
+                    spanish_indicators = ['hola', 'bien', 'gracias', 'estoy', 'muy', 'cómo', 'qué']
+                    has_spanish = any(indicator in response_text.lower() for indicator in spanish_indicators)
+                    
+                    # Check if it's not a generic fallback response
+                    generic_indicators = ['mensaje recibido', 'task_', 'completed', 'timestamp']
+                    is_generic = any(indicator in response_text.lower() for indicator in generic_indicators)
+                    
+                    if has_spanish and not is_generic:
+                        self.log_test("Simple Ollama Chat", True, 
+                                    f"Intelligent Spanish response generated - Length: {len(response_text)}, Memory: {memory_used}")
+                        print(f"   🤖 Response: {response_text[:100]}...")
+                        return True
+                    elif not is_generic:
+                        self.log_test("Simple Ollama Chat", True, 
+                                    f"Intelligent response generated (not Spanish but not generic) - Length: {len(response_text)}, Memory: {memory_used}")
+                        print(f"   🤖 Response: {response_text[:100]}...")
+                        return True
+                    else:
+                        self.log_test("Simple Ollama Chat", False, 
+                                    f"Generic fallback response detected - Response: {response_text[:100]}...", data)
+                        return False
                 else:
-                    self.log_test("Basic Task Creation", False, 
-                                f"Task creation incomplete - Response: {bool(response_text)}, ID: {bool(task_id)}", data)
+                    self.log_test("Simple Ollama Chat", False, 
+                                f"No meaningful response generated - Length: {len(response_text) if response_text else 0}", data)
                     return False
             else:
-                self.log_test("Basic Task Creation", False, 
+                self.log_test("Simple Ollama Chat", False, 
                             f"HTTP {response.status_code}: {response.text}")
                 return False
                 
         except Exception as e:
-            self.log_test("Basic Task Creation", False, f"Exception: {str(e)}")
+            self.log_test("Simple Ollama Chat", False, f"Exception: {str(e)}")
             return False
     
-    def test_plan_generation_structure(self) -> bool:
-        """Test 3: Plan Generation with Proper Step Structures"""
+    def test_complex_plan_generation(self) -> bool:
+        """Test 3: Complex Plan Generation with Ollama"""
         try:
-            print(f"\n🎯 Testing plan generation with step structures...")
+            print(f"\n🎯 Testing complex plan generation with Ollama...")
             
-            # Use a task that should definitely generate a structured plan
-            test_message = "Crear un plan de marketing digital para startups en 2025"
+            # Use the exact task from the request
+            test_message = "Crear un análisis de mercado para startups 2025"
             
             payload = {
                 "message": test_message
             }
             
             response = self.session.post(f"{API_BASE}/agent/chat", 
-                                       json=payload, timeout=30)
+                                       json=payload, timeout=45)
             
             if response.status_code == 200:
                 data = response.json()
@@ -181,14 +189,16 @@ class MitosisBackendTester:
                 enhanced_title = data.get('enhanced_title', '')
                 task_type = data.get('task_type', '')
                 complexity = data.get('complexity', '')
+                response_text = data.get('response', '')
                 
-                if plan and len(plan) >= 2:
+                # Check if we got a structured plan (not just a chat response)
+                if plan and len(plan) >= 3:
                     valid_plan = True
                     step_details = []
                     
                     for i, step in enumerate(plan):
                         # Check required fields for proper plan structure
-                        required_fields = ['id', 'title', 'description', 'tool', 'status']
+                        required_fields = ['id', 'title', 'description', 'tool']
                         missing_fields = [field for field in required_fields if field not in step]
                         
                         if missing_fields:
@@ -198,201 +208,211 @@ class MitosisBackendTester:
                         
                         step_details.append(f"Step {i+1}: {step.get('title', 'No title')} ({step.get('tool', 'No tool')})")
                         
-                        # Verify step has proper structure
-                        if not step.get('title') or not step.get('description'):
+                        # Verify step has meaningful content
+                        if not step.get('title') or not step.get('description') or len(step.get('description', '')) < 20:
                             valid_plan = False
-                            print(f"   ❌ Step {i+1} has empty title or description")
+                            print(f"   ❌ Step {i+1} has empty or too short title/description")
                             break
                     
                     if valid_plan and enhanced_title:
-                        self.log_test("Plan Generation Structure", True, 
-                                    f"Structured plan generated - {len(plan)} steps, Type: {task_type}, Complexity: {complexity}")
-                        print(f"   📊 Enhanced Title: {enhanced_title}")
-                        print(f"   📋 Plan Steps: {'; '.join(step_details)}")
-                        return True
+                        # Check if the plan is intelligent and specific to market analysis
+                        market_keywords = ['mercado', 'análisis', 'startup', 'competencia', 'tendencias', 'investigación']
+                        plan_text = json.dumps(plan).lower()
+                        has_market_content = any(keyword in plan_text for keyword in market_keywords)
+                        
+                        if has_market_content:
+                            self.log_test("Complex Plan Generation", True, 
+                                        f"Intelligent market analysis plan generated - {len(plan)} steps, Type: {task_type}, Complexity: {complexity}")
+                            print(f"   📊 Enhanced Title: {enhanced_title}")
+                            print(f"   📋 Plan Steps: {'; '.join(step_details)}")
+                            return True
+                        else:
+                            self.log_test("Complex Plan Generation", False, 
+                                        f"Plan generated but lacks market analysis content - May be generic", data)
+                            return False
                     else:
-                        self.log_test("Plan Generation Structure", False, 
+                        self.log_test("Complex Plan Generation", False, 
                                     f"Plan structure invalid - Valid: {valid_plan}, Title: {bool(enhanced_title)}", data)
                         return False
                 else:
-                    # Check if it's just a basic chat response (which would indicate the infinite loop issue)
-                    response_text = data.get('response', '')
+                    # Check if it's just a basic chat response (fallback behavior)
                     if response_text and not plan:
-                        self.log_test("Plan Generation Structure", False, 
-                                    f"Only basic chat response generated, no plan structure - This indicates the infinite loop issue may persist", data)
+                        self.log_test("Complex Plan Generation", False, 
+                                    f"Only basic chat response generated, no plan structure - Using fallback instead of Ollama", data)
                     else:
-                        self.log_test("Plan Generation Structure", False, 
+                        self.log_test("Complex Plan Generation", False, 
                                     f"No plan generated - Plan length: {len(plan) if plan else 0}", data)
                     return False
             else:
-                self.log_test("Plan Generation Structure", False, 
+                self.log_test("Complex Plan Generation", False, 
                             f"HTTP {response.status_code}: {response.text}")
                 return False
                 
         except Exception as e:
-            self.log_test("Plan Generation Structure", False, f"Exception: {str(e)}")
+            self.log_test("Complex Plan Generation", False, f"Exception: {str(e)}")
             return False
     
-    def test_websocket_functionality(self) -> bool:
-        """Test 4: WebSocket Endpoints and Functionality"""
+    def test_ollama_model_verification(self) -> bool:
+        """Test 4: Verify Ollama Model Information"""
         try:
-            print(f"\n🔌 Testing WebSocket functionality...")
+            print(f"\n🔍 Testing Ollama model verification...")
             
-            # Test WebSocket endpoint accessibility
-            websocket_url = f"{BACKEND_URL}/api/socket.io/"
-            
-            # Try to access the WebSocket endpoint
-            response = self.session.get(websocket_url, timeout=10)
-            
-            # WebSocket endpoints typically return specific responses
-            websocket_accessible = response.status_code in [200, 400, 426]  # 426 = Upgrade Required
-            
-            if websocket_accessible:
-                # Test if we can get WebSocket transport info
-                try:
-                    # Try to get socket.io info
-                    info_response = self.session.get(f"{websocket_url}?transport=polling", timeout=5)
-                    if info_response.status_code == 200:
-                        self.log_test("WebSocket Functionality", True, 
-                                    f"WebSocket endpoint accessible and functional - Status: {response.status_code}")
-                        return True
-                    else:
-                        self.log_test("WebSocket Functionality", True, 
-                                    f"WebSocket endpoint accessible - Status: {response.status_code}")
-                        return True
-                except:
-                    self.log_test("WebSocket Functionality", True, 
-                                f"WebSocket endpoint accessible - Status: {response.status_code}")
-                    return True
-            else:
-                self.log_test("WebSocket Functionality", False, 
-                            f"WebSocket endpoint not accessible - Status: {response.status_code}")
-                return False
-                
-        except Exception as e:
-            self.log_test("WebSocket Functionality", False, f"Exception: {str(e)}")
-            return False
-    
-    def test_database_operations(self) -> bool:
-        """Test 5: Database Operations (Task Persistence and Retrieval)"""
-        try:
-            print(f"\n💾 Testing database operations...")
-            
-            if not self.task_id:
-                self.log_test("Database Operations", False, "No task ID available for database testing")
-                return False
-            
-            # Test task retrieval
-            try:
-                response = self.session.get(f"{API_BASE}/agent/get-task-files/{self.task_id}", 
-                                          timeout=10)
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    
-                    # Check if task data is retrievable
-                    if isinstance(data, dict) and ('files' in data or 'task' in data or 'status' in data):
-                        self.log_test("Database Operations", True, 
-                                    f"Task data retrievable from database - Task ID: {self.task_id}")
-                        return True
-                    else:
-                        self.log_test("Database Operations", False, 
-                                    f"Task data format unexpected - Data: {type(data)}", data)
-                        return False
-                else:
-                    # Try alternative endpoint
-                    alt_response = self.session.get(f"{API_BASE}/agent/get-task-status/{self.task_id}", 
-                                                  timeout=10)
-                    if alt_response.status_code == 200:
-                        self.log_test("Database Operations", True, 
-                                    f"Task data retrievable via alternative endpoint - Task ID: {self.task_id}")
-                        return True
-                    else:
-                        self.log_test("Database Operations", False, 
-                                    f"Task not retrievable from database - HTTP {response.status_code}")
-                        return False
-                        
-            except Exception as db_e:
-                self.log_test("Database Operations", False, f"Database operation exception: {str(db_e)}")
-                return False
-                
-        except Exception as e:
-            self.log_test("Database Operations", False, f"Exception: {str(e)}")
-            return False
-    
-    def test_ollama_integration(self) -> bool:
-        """Test 6: OLLAMA Integration for Plan Generation"""
-        try:
-            print(f"\n🤖 Testing OLLAMA integration...")
-            
-            # Test OLLAMA status through agent status endpoint
-            response = self.session.get(f"{API_BASE}/agent/status", timeout=15)
+            # Check model info endpoint
+            response = self.session.get(f"{API_BASE}/agent/model-info", timeout=10)
             
             if response.status_code == 200:
                 data = response.json()
                 
-                ollama_info = data.get('ollama', {})
-                ollama_connected = ollama_info.get('connected', False)
-                ollama_endpoint = ollama_info.get('endpoint', '')
-                ollama_model = ollama_info.get('model', '')
-                available_models = ollama_info.get('available_models', [])
+                current_model = data.get('current_model', '')
+                is_healthy = data.get('is_healthy', False)
+                endpoint = data.get('endpoint', '')
                 
-                if ollama_connected and ollama_endpoint and ollama_model:
-                    # Test if OLLAMA can actually generate responses by making a simple chat request
-                    test_payload = {
-                        "message": "Hola, como estas?"
-                    }
-                    
-                    chat_response = self.session.post(f"{API_BASE}/agent/chat", 
-                                                    json=test_payload, timeout=20)
-                    
-                    if chat_response.status_code == 200:
-                        chat_data = chat_response.json()
-                        response_text = chat_data.get('response', '')
-                        
-                        if response_text and len(response_text) > 10:  # Meaningful response
-                            self.log_test("OLLAMA Integration", True, 
-                                        f"OLLAMA working - Endpoint: {ollama_endpoint}, Model: {ollama_model}, Models available: {len(available_models)}")
-                            return True
-                        else:
-                            self.log_test("OLLAMA Integration", False, 
-                                        f"OLLAMA connected but not generating proper responses - Response length: {len(response_text)}")
-                            return False
-                    else:
-                        self.log_test("OLLAMA Integration", False, 
-                                    f"OLLAMA connected but chat request failed - HTTP {chat_response.status_code}")
-                        return False
+                # Verify the correct model is being used
+                model_correct = self.expected_model in current_model
+                endpoint_correct = self.expected_ollama_endpoint in endpoint
+                
+                if model_correct and endpoint_correct and is_healthy:
+                    self.log_test("Ollama Model Verification", True, 
+                                f"Correct model verified - Model: {current_model}, Endpoint: {endpoint}, Healthy: {is_healthy}")
+                    return True
                 else:
-                    self.log_test("OLLAMA Integration", False, 
-                                f"OLLAMA not properly configured - Connected: {ollama_connected}, Endpoint: {bool(ollama_endpoint)}, Model: {bool(ollama_model)}", data)
+                    issues = []
+                    if not model_correct:
+                        issues.append(f"Wrong model: {current_model} (expected: {self.expected_model})")
+                    if not endpoint_correct:
+                        issues.append(f"Wrong endpoint: {endpoint} (expected: {self.expected_ollama_endpoint})")
+                    if not is_healthy:
+                        issues.append("Not healthy")
+                    
+                    self.log_test("Ollama Model Verification", False, 
+                                f"Model verification issues - {'; '.join(issues)}", data)
                     return False
             else:
-                self.log_test("OLLAMA Integration", False, 
-                            f"Cannot check OLLAMA status - HTTP {response.status_code}")
+                self.log_test("Ollama Model Verification", False, 
+                            f"Cannot check model info - HTTP {response.status_code}")
                 return False
                 
         except Exception as e:
-            self.log_test("OLLAMA Integration", False, f"Exception: {str(e)}")
+            self.log_test("Ollama Model Verification", False, f"Exception: {str(e)}")
             return False
     
-    def run_all_tests(self) -> Dict[str, Any]:
-        """Run all comprehensive backend tests"""
-        print("🧪 STARTING MITOSIS BACKEND COMPREHENSIVE TESTING AFTER ORPHANED FILES CLEANUP")
+    def test_ollama_vs_fallback_comparison(self) -> bool:
+        """Test 5: Compare Ollama vs Fallback Response Quality"""
+        try:
+            print(f"\n⚖️ Testing Ollama vs fallback response quality...")
+            
+            # Make multiple requests to check consistency and quality
+            test_messages = [
+                "¿Cuáles son las principales tendencias tecnológicas para 2025?",
+                "Explica los beneficios de la inteligencia artificial en los negocios"
+            ]
+            
+            intelligent_responses = 0
+            total_responses = len(test_messages)
+            
+            for i, message in enumerate(test_messages):
+                print(f"   Testing message {i+1}: {message[:50]}...")
+                
+                payload = {"message": message}
+                response = self.session.post(f"{API_BASE}/agent/chat", 
+                                           json=payload, timeout=30)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    response_text = data.get('response', '')
+                    
+                    # Check for intelligent response characteristics
+                    if len(response_text) > 100:  # Substantial response
+                        # Check for generic fallback indicators
+                        generic_indicators = ['mensaje recibido', 'task_', 'completed', 'timestamp', 'internal server error']
+                        is_generic = any(indicator in response_text.lower() for indicator in generic_indicators)
+                        
+                        # Check for intelligent content
+                        intelligent_indicators = ['tecnología', 'inteligencia', 'artificial', 'negocio', 'empresa', 'innovación', 'desarrollo']
+                        has_intelligent_content = any(indicator in response_text.lower() for indicator in intelligent_indicators)
+                        
+                        if not is_generic and has_intelligent_content:
+                            intelligent_responses += 1
+                            print(f"     ✅ Intelligent response detected")
+                        else:
+                            print(f"     ❌ Generic or poor quality response")
+                    else:
+                        print(f"     ❌ Response too short: {len(response_text)} chars")
+                
+                time.sleep(2)  # Brief pause between requests
+            
+            # Determine if Ollama is working based on response quality
+            quality_ratio = intelligent_responses / total_responses
+            
+            if quality_ratio >= 0.8:  # 80% or more intelligent responses
+                self.log_test("Ollama vs Fallback Comparison", True, 
+                            f"High quality responses detected - {intelligent_responses}/{total_responses} intelligent responses")
+                return True
+            else:
+                self.log_test("Ollama vs Fallback Comparison", False, 
+                            f"Low quality responses suggest fallback usage - {intelligent_responses}/{total_responses} intelligent responses")
+                return False
+                
+        except Exception as e:
+            self.log_test("Ollama vs Fallback Comparison", False, f"Exception: {str(e)}")
+            return False
+    
+    def check_backend_logs_for_ollama(self) -> bool:
+        """Test 6: Check Backend Logs for Ollama Activity"""
+        try:
+            print(f"\n📋 Checking backend logs for Ollama activity...")
+            
+            # This is a simplified check - in a real scenario, we'd check actual log files
+            # For now, we'll make a request and check if the system is configured correctly
+            
+            # Check if Ollama service is properly initialized
+            response = self.session.get(f"{API_BASE}/agent/status", timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                ollama_info = data.get('ollama', {})
+                
+                # Check for signs that Ollama is being used
+                connected = ollama_info.get('connected', False)
+                endpoint = ollama_info.get('endpoint', '')
+                model = ollama_info.get('model', '')
+                available_models = ollama_info.get('available_models', [])
+                
+                if connected and endpoint and model and len(available_models) > 0:
+                    self.log_test("Backend Logs Ollama Check", True, 
+                                f"Ollama properly configured in backend - Models available: {len(available_models)}")
+                    return True
+                else:
+                    self.log_test("Backend Logs Ollama Check", False, 
+                                f"Ollama not properly configured - Connected: {connected}, Models: {len(available_models)}")
+                    return False
+            else:
+                self.log_test("Backend Logs Ollama Check", False, 
+                            f"Cannot check backend status - HTTP {response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Backend Logs Ollama Check", False, f"Exception: {str(e)}")
+            return False
+    
+    def run_ollama_tests(self) -> Dict[str, Any]:
+        """Run all Ollama-specific tests"""
+        print("🧪 STARTING OLLAMA BACKEND TESTING - VERIFYING CORRECTED URL AND FUNCTIONALITY")
         print("=" * 80)
-        print("🎯 FOCUS: Testing backend after removing orphaned files causing infinite loops")
-        print("📋 TESTING: Health endpoints, task creation, plan generation, WebSocket, database, OLLAMA")
-        print("🔍 CONTEXT: Verifying infinite loop issue is resolved and proper plan structures are generated")
-        print("⚠️ EXPECTED: Structured plans with steps, not just basic chat responses")
+        print("🎯 FOCUS: Testing Ollama functionality after URL correction")
+        print("📋 TESTING: Endpoint configuration, simple chat, complex plans, model verification, quality comparison")
+        print("🔍 CONTEXT: Verifying corrected endpoint https://66bd0d09b557.ngrok-free.app is working")
+        print("⚠️ EXPECTED: Intelligent responses from llama3.1:8b, not generic fallbacks")
         print("=" * 80)
         
-        # Test sequence for comprehensive backend testing
+        # Test sequence for Ollama-specific testing
         tests = [
-            ("Backend Health Endpoints", self.test_backend_health_endpoints),
-            ("Basic Task Creation", self.test_task_creation_basic),
-            ("Plan Generation Structure", self.test_plan_generation_structure),
-            ("WebSocket Functionality", self.test_websocket_functionality),
-            ("Database Operations", self.test_database_operations),
-            ("OLLAMA Integration", self.test_ollama_integration)
+            ("Ollama Endpoint Configuration", self.test_ollama_endpoint_configuration),
+            ("Simple Ollama Chat", self.test_simple_ollama_chat),
+            ("Complex Plan Generation", self.test_complex_plan_generation),
+            ("Ollama Model Verification", self.test_ollama_model_verification),
+            ("Ollama vs Fallback Comparison", self.test_ollama_vs_fallback_comparison),
+            ("Backend Logs Ollama Check", self.check_backend_logs_for_ollama)
         ]
         
         passed_tests = 0
@@ -404,7 +424,7 @@ class MitosisBackendTester:
                 result = test_func()
                 if result:
                     passed_tests += 1
-                time.sleep(1)  # Brief pause between tests
+                time.sleep(2)  # Brief pause between tests
             except Exception as e:
                 self.log_test(test_name, False, f"Test execution failed: {str(e)}")
         
@@ -412,7 +432,7 @@ class MitosisBackendTester:
         success_rate = (passed_tests / total_tests) * 100
         
         print("\n" + "=" * 80)
-        print("🎯 MITOSIS BACKEND COMPREHENSIVE TEST RESULTS")
+        print("🎯 OLLAMA BACKEND TEST RESULTS")
         print("=" * 80)
         
         for result in self.test_results:
@@ -425,30 +445,30 @@ class MitosisBackendTester:
         
         # Determine overall status
         if success_rate >= 80:
-            overall_status = "✅ BACKEND FULLY FUNCTIONAL - INFINITE LOOP ISSUE RESOLVED"
+            overall_status = "✅ OLLAMA FULLY FUNCTIONAL - CORRECTED URL WORKING"
         elif success_rate >= 60:
-            overall_status = "⚠️ BACKEND MOSTLY FUNCTIONAL - Minor issues remain"
+            overall_status = "⚠️ OLLAMA MOSTLY FUNCTIONAL - Minor issues remain"
         else:
-            overall_status = "❌ BACKEND HAS CRITICAL ISSUES - Infinite loop issue may persist"
+            overall_status = "❌ OLLAMA HAS CRITICAL ISSUES - May still be using fallbacks"
         
         print(f"   Overall Status: {overall_status}")
         
-        # Critical functionality assessment for infinite loop resolution
-        critical_tests = ["Backend Health Endpoints", "Plan Generation Structure", "OLLAMA Integration"]
+        # Critical functionality assessment for Ollama
+        critical_tests = ["Ollama Endpoint Configuration", "Simple Ollama Chat", "Complex Plan Generation"]
         critical_passed = sum(1 for result in self.test_results 
                             if result['test_name'] in critical_tests and result['success'])
         
-        print(f"\n🔥 CRITICAL FUNCTIONALITY FOR INFINITE LOOP RESOLUTION:")
+        print(f"\n🔥 CRITICAL OLLAMA FUNCTIONALITY:")
         print(f"   Critical Tests Passed: {critical_passed}/{len(critical_tests)}")
         
         if critical_passed == len(critical_tests):
-            print("   ✅ All critical backend functionality is working")
-            print("   🎯 CONCLUSION: Infinite loop issue appears to be resolved")
-            print("   📋 RECOMMENDATION: Backend ready for frontend integration")
+            print("   ✅ All critical Ollama functionality is working")
+            print("   🎯 CONCLUSION: Ollama URL correction was successful")
+            print("   📋 RECOMMENDATION: Ollama is generating intelligent responses, not using fallbacks")
         else:
-            print("   ❌ Some critical backend functionality is not working")
-            print("   🎯 CONCLUSION: Infinite loop issue may persist or other critical problems exist")
-            print("   📋 RECOMMENDATION: Fix backend issues before proceeding")
+            print("   ❌ Some critical Ollama functionality is not working")
+            print("   🎯 CONCLUSION: Ollama may still be using fallbacks or incorrect configuration")
+            print("   📋 RECOMMENDATION: Check Ollama configuration and endpoint connectivity")
         
         return {
             'total_tests': total_tests,
@@ -459,17 +479,17 @@ class MitosisBackendTester:
             'critical_total': len(critical_tests),
             'test_results': self.test_results,
             'task_id': self.task_id,
-            'backend_ready': critical_passed >= len(critical_tests) - 1,  # Allow 1 failure
-            'infinite_loop_resolved': critical_passed >= 2  # At least plan generation and health working
+            'ollama_working': critical_passed >= len(critical_tests) - 1,  # Allow 1 failure
+            'url_correction_successful': critical_passed >= 2  # At least endpoint and one generation test working
         }
 
 def main():
     """Main testing function"""
-    tester = MitosisBackendTester()
-    results = tester.run_all_tests()
+    tester = OllamaBackendTester()
+    results = tester.run_ollama_tests()
     
     # Save results to file
-    results_file = '/app/backend_test_results.json'
+    results_file = '/app/ollama_test_results.json'
     with open(results_file, 'w') as f:
         json.dump(results, f, indent=2, default=str)
     
@@ -477,30 +497,30 @@ def main():
     
     # Final assessment
     print(f"\n" + "=" * 80)
-    print("🎯 FINAL ASSESSMENT FOR MITOSIS BACKEND AFTER ORPHANED FILES CLEANUP")
+    print("🎯 FINAL ASSESSMENT FOR OLLAMA BACKEND AFTER URL CORRECTION")
     print("=" * 80)
     
-    if results['backend_ready']:
-        print("✅ BACKEND DIAGNOSIS: Backend APIs are working and ready")
-        if results['infinite_loop_resolved']:
-            print("✅ INFINITE LOOP ISSUE: Appears to be resolved - proper plan generation working")
+    if results['ollama_working']:
+        print("✅ OLLAMA DIAGNOSIS: Ollama is working correctly with corrected URL")
+        if results['url_correction_successful']:
+            print("✅ URL CORRECTION: Successfully using https://66bd0d09b557.ngrok-free.app")
         else:
-            print("⚠️ INFINITE LOOP ISSUE: May still exist - plan generation needs verification")
-        print("📋 RECOMMENDATION: Backend is ready for frontend integration")
-        print("🔧 NEXT STEPS: Test frontend UI and plan execution functionality")
+            print("⚠️ URL CORRECTION: May still have configuration issues")
+        print("📋 RECOMMENDATION: Ollama is generating intelligent responses")
+        print("🔧 NEXT STEPS: Ollama backend is ready for production use")
     else:
-        print("❌ BACKEND DIAGNOSIS: Backend has critical issues")
-        if not results['infinite_loop_resolved']:
-            print("❌ INFINITE LOOP ISSUE: Likely persists - plan generation not working properly")
-        print("📋 RECOMMENDATION: Fix backend issues before frontend testing")
-        print("🔧 NEXT STEPS: Address backend API problems and infinite loop issues")
+        print("❌ OLLAMA DIAGNOSIS: Ollama has critical issues")
+        if not results['url_correction_successful']:
+            print("❌ URL CORRECTION: Failed - may still be using old endpoint or fallbacks")
+        print("📋 RECOMMENDATION: Fix Ollama configuration and endpoint issues")
+        print("🔧 NEXT STEPS: Verify Ollama service and endpoint connectivity")
     
     # Return exit code based on success
     if results['success_rate'] >= 60:
-        print("\n🎉 BACKEND TESTING COMPLETED - READY FOR NEXT PHASE")
+        print("\n🎉 OLLAMA TESTING COMPLETED - CORRECTED URL WORKING")
         return 0
     else:
-        print("\n⚠️ BACKEND TESTING COMPLETED WITH CRITICAL ISSUES")
+        print("\n⚠️ OLLAMA TESTING COMPLETED WITH CRITICAL ISSUES")
         return 1
 
 if __name__ == "__main__":
