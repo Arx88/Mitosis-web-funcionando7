@@ -827,7 +827,7 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
     console.log('🎯 CONTEXT: createTask called with:', { title, iconType });
     
     const newTask: Task = {
-      id: `task-${Date.now()}`,
+      id: generateUniqueTaskId(),
       title,
       createdAt: new Date(),
       status: 'pending',
@@ -839,6 +839,13 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
     };
     
     console.log('🎯 CONTEXT: Created task object:', newTask.id);
+    
+    // ✅ VALIDAR TAREA ANTES DE AGREGARLA
+    if (!validateTask(newTask)) {
+      console.error('❌ CONTEXT: Task validation failed');
+      throw new Error('Invalid task created');
+    }
+    
     console.log('🎯 CONTEXT: Dispatching ADD_TASK...');
     
     dispatch({ type: 'ADD_TASK', payload: newTask });
