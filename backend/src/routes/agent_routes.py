@@ -6822,52 +6822,19 @@ def execute_step_real_original(task_id: str, step_id: str, step: dict):
         })
 
 def emit_step_event(task_id: str, event_type: str, data: dict):
-    """Helper function to emit step events - FIXED WITH DIRECT SOCKETIO IMPORT"""
-    logger.info(f"🔍 emit_step_event called: task_id={task_id}, event_type={event_type}")
-    
-    # SOLUCIÓN DIRECTA: Importar socketio directamente
-    from server import socketio
-    
+    """Función simplificada para emitir eventos"""
     try:
-        # Add more detailed event data for frontend
-        enhanced_data = {
-            **data,
-            'event_type': event_type,
-            'task_id': task_id,
-            'timestamp': datetime.now().isoformat()
-        }
-        
-        # EMITIR DIRECTAMENTE CON SOCKETIO
-        logger.info(f"📡 DIRECT EMIT: Emitting {event_type} for task {task_id}")
-        
-        # Emit to task room
-        socketio.emit(event_type, enhanced_data, room=task_id)
-        socketio.emit('task_progress', enhanced_data, room=task_id)
-        socketio.emit('step_update', enhanced_data, room=task_id)
-        socketio.emit('execution_update', enhanced_data, room=task_id)
-        
-        # Also emit activity for terminal visualization
-        socketio.emit('terminal_activity', {
-            'task_id': task_id,
-            'activity': f"[{event_type.upper()}] {data.get('title', 'Ejecutando paso')}",
-            'timestamp': datetime.now().isoformat(),
-            'type': event_type
-        }, room=task_id)
-        
-        logger.info(f"📡 DIRECT EMIT SUCCESS: All events emitted for task {task_id}")
-        
+        from flask import current_app
+        if hasattr(current_app, 'emit_task_event'):
+            current_app.emit_task_event(task_id, event_type, data)
+            logger.info(f"📡 Event emitted: {event_type} for task {task_id}")
+            return True
+        else:
+            logger.warning(f"⚠️ SocketIO not available, event not emitted: {event_type}")  
+            return False
     except Exception as e:
-        logger.error(f"❌ Error with direct socketio emit for task {task_id}: {e}")
-        import traceback
-        traceback.print_exc()
-        
-        # Fallback: Try with websocket_manager
-        try:
-            if hasattr(current_app, 'websocket_manager') and current_app.websocket_manager:
-                current_app.websocket_manager.emit_to_task(task_id, event_type, enhanced_data)
-                logger.info(f"📡 FALLBACK SUCCESS: Used websocket_manager for task {task_id}")
-        except Exception as fallback_error:
-            logger.error(f"❌ Fallback also failed for task {task_id}: {fallback_error}")
+        logger.error(f"❌ Error emitting event: {e}")
+        return False
 
 def generate_task_plan(title: str, task_id: str) -> Dict:
     """
