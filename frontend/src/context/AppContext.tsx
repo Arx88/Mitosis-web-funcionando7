@@ -969,7 +969,11 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
   }, []);
 
   const addTaskMonitorPage = useCallback((taskId: string, page: any) => {
-    dispatch({ type: 'ADD_TASK_MONITOR_PAGE', payload: { taskId, page } });
+    console.log(`🔧 [CONTEXT-DEBUG] Adding monitor page to task ${taskId}:`, page.title, page.type);
+    dispatch({
+      type: 'ADD_TASK_MONITOR_PAGE',  
+      payload: { taskId, page }
+    });
   }, []);
 
   const setTaskCurrentPageIndex = useCallback((taskId: string, pageIndex: number) => {
