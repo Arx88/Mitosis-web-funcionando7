@@ -58,6 +58,11 @@ export function App() {
     setActiveTask
   } = useTaskManagement();
   
+  // ✅ CALCULAR ACTIVE TASK - FIX CRÍTICO
+  const activeTask = useMemo(() => {
+    return tasks.find(task => task.id === activeTaskId) || null;
+  }, [tasks, activeTaskId]);
+  
   const { uploadFilesForTask } = useFileManagement(); // ✅ USAR HOOK ESPECÍFICO
   
   const {
