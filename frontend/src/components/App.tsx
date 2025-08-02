@@ -108,6 +108,8 @@ export function App() {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   
   const createTask = async (title: string, iconType?: string) => {
+    console.log('🚀 APP.TSX: createTask called with:', { title, iconType });
+    
     const newTask: Task = {
       id: `task-${Date.now()}`,
       title,
@@ -121,6 +123,8 @@ export function App() {
     };
     setTasks(prev => [...prev, newTask]);
     setActiveTaskId(newTask.id);
+    
+    console.log('🚀 APP.TSX: Task created in state:', newTask.id);
     
     // Generate plan automatically for the new task
     try {
