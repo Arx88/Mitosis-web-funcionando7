@@ -80,12 +80,35 @@ export const useWebSocket = (): UseWebSocketReturn => {
       setIsConnected(false);
       setConnectionType('disconnected');
       
-      // Activar HTTP polling automáticamente cuando WebSocket falla
-      setIsPollingFallback(true);
-      
-      if (currentTaskId) {
-        startHttpPollingFallback(currentTaskId);
+      // ✅ CRITICAL FIX: No activar HTTP polling automáticamente en timeout errors
+      // Solo activar polling si es un error de conectividad real, no timeout
+      if (!error.message?.includes('timeout')) {
+        console.log('🔄 Activating HTTP polling fallback for non-timeout error');
+        setIsPollingFallback(true);
+        
+        if (currentTaskId) {
+          startHttpPollingFallback(currentTaskId);
+        }
+      } else {
+        console.log('⏱️ Timeout error detected, will retry WebSocket connection automatically');
       }
+    });
+    
+    // ✅ CRITICAL FIX: Handle reconnection events
+    newSocket.on('reconnect', (attemptNumber) => {
+      console.log(`🔄 WebSocket reconnected after ${attemptNumber} attempts`);
+      setIsConnected(true);
+      setIsPollingFallback(false);
+      
+      // Clear any active polling if reconnected
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    });
+    
+    newSocket.on('reconnect_error', (error) => {
+      console.error('❌ WebSocket reconnection error:', error);
     });
     
     setSocket(newSocket);
