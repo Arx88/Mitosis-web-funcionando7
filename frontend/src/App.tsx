@@ -237,15 +237,22 @@ export function App() {
             activeTaskId={activeTaskId} // ✅ DESDE CONTEXT
             onTaskSelect={setActiveTask} // ✅ HOOK DEL CONTEXT
             onCreateTask={async (title, iconType) => {
-              // ✅ USAR HOOK CON BACKEND INTEGRATION - ARREGLA PROBLEMA 404
-              console.log('🎯 APP: Creating task with backend integration:', title);
+              console.log('🎯 APP: Creating task:', title);
               try {
-                const newTask = await createTaskWithMessage(title, iconType);
-                console.log('🎯 APP: Nueva tarea creada con backend correctamente:', newTask.id);
-                console.log('🎯 APP: Tasks array length after creation:', tasks.length);
-                return newTask;
+                // Si es solo "Nueva tarea" (placeholder), no llamar al backend todavía
+                if (title === 'Nueva tarea' || title.trim() === '') {
+                  console.log('🎯 APP: Creating placeholder task (no backend call)');
+                  const placeholderTask = createTask(title || 'Nueva tarea', iconType);
+                  return placeholderTask;
+                } else {
+                  // Solo llamar al backend cuando hay contenido real del usuario
+                  console.log('🎯 APP: Creating task with backend integration:', title);
+                  const newTask = await createTaskWithMessage(title, iconType);
+                  console.log('🎯 APP: Nueva tarea creada con backend correctamente:', newTask.id);
+                  return newTask;
+                }
               } catch (error) {
-                console.error('❌ Error creating task with backend:', error);
+                console.error('❌ Error creating task:', error);
                 // Fallback to context-only creation
                 const fallbackTask = createTask(title, iconType);
                 console.log('🎯 APP: Fallback task created:', fallbackTask.id);
