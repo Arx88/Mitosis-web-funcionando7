@@ -9,6 +9,13 @@ import { useAppContext } from '../context/AppContext';
 import { useWebSocket } from './useWebSocket';
 import { API_CONFIG } from '../config/api';
 import { Task, Message } from '../types';
+import { 
+  generateTempTaskId, 
+  preventDuplicateCreation, 
+  debounceTaskCreation,
+  validateTask,
+  debugTaskDuplication 
+} from '../utils/taskUtils';
 
 // ========================================================================
 // HOOK PRINCIPAL: OPERACIONES CRUD DE TAREAS - SIMPLIFICADO
