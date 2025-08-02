@@ -103,10 +103,12 @@ export const API_CONFIG: ApiConfig = {
       transports: ['polling', 'websocket'],     // TANTO POLLING COMO WEBSOCKET
       upgrade: true,              // PERMITIR upgrade a websocket
       reconnection: true,
-      reconnectionDelay: 2000,     // Delay más largo para estabilidad
-      reconnectionAttempts: 10, // More attempts for stability
-      timeout: 30000,           // Increased timeout
-      forceNew: true            // Force new connection each time
+      reconnectionDelay: 1000,     // Reducido para conexiones más rápidas
+      reconnectionAttempts: 5,     // Reducido para evitar spam
+      timeout: 10000,              // ✅ CRITICAL FIX: Timeout reducido para evitar timeouts largos
+      forceNew: false,             // ✅ CRITICAL FIX: No forzar nueva conexión cada vez
+      autoConnect: true,           // Auto conectar
+      rememberUpgrade: false       // No recordar upgrade para evitar problemas
     }
   }
 };
