@@ -200,10 +200,10 @@ try:
         cors_allowed_origins="*",  # SIMPLIFICADO: Permitir todos los orígenes temporalmente 
         cors_credentials=False,
         async_mode='eventlet',
-        logger=True,           # Habilitar logs para debugging
-        engineio_logger=True,  # Logs detallados de engine.io
-        ping_timeout=180,      # Aumentado para mayor estabilidad
-        ping_interval=90,      # Aumentado para mejor performance
+        logger=False,           # ✅ CRITICAL FIX: Disable excessive logging  
+        engineio_logger=False,  # ✅ CRITICAL FIX: Disable engine.io logging
+        ping_timeout=20,        # ✅ CRITICAL FIX: Reduced timeout to match frontend
+        ping_interval=10,       # ✅ CRITICAL FIX: More frequent pings for stability  
         transports=['polling', 'websocket'],    # POLLING PRIMERO para máxima compatibilidad
         allow_upgrades=True,   # PERMITIR upgrades para mejor conectividad
         path='/api/socket.io/',     # CRÍTICO: Con /api prefix para routing correcto a través del ingress
