@@ -290,7 +290,10 @@ function appReducer(state: GlobalAppState, action: AppAction): GlobalAppState {
         typingState: { 
           ...state.typingState, 
           [newTask.id]: false 
-        }
+        },
+        
+        // ✅ ESTABLECER INITIALIZATION STATE PARA NUEVA TAREA
+        initializingTaskId: newTask.id
       };
       
     case 'UPDATE_TASK':
