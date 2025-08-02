@@ -40,7 +40,7 @@ cd /app
 
 ## 🌐 ACCESO
 
-**Frontend**: https://04f64c50-55e4-46ef-bb25-ab20f4298f29.preview.emergentagent.com  
+**Frontend**: https://7ae20f51-337b-448c-97f9-960006d89615.preview.emergentagent.com  
 **Backend API**: http://localhost:8001  
 
 ---
