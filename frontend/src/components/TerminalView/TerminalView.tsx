@@ -1092,8 +1092,8 @@ export const TerminalView = ({
     return html;
   };
 
-  const currentPage = monitorPages[currentPageIndex];
-  const isLastPage = currentPageIndex === monitorPages.length - 1;
+  const currentPage = monitorPages[actualCurrentPageIndex];
+  const isLastPage = actualCurrentPageIndex === monitorPages.length - 1;
 
   return (
     <div data-id={dataId} className="flex flex-col h-full w-full bg-[#2a2a2b] text-[#dadada] p-4 font-sans text-base">
