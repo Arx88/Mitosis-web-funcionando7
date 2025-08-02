@@ -104,8 +104,8 @@ export const API_CONFIG: ApiConfig = {
       upgrade: true,              // PERMITIR upgrade a websocket
       reconnection: true,
       reconnectionDelay: 1000,     // Reducido para conexiones más rápidas
-      reconnectionAttempts: 5,     // Reducido para evitar spam
-      timeout: 10000,              // ✅ CRITICAL FIX: Timeout reducido para evitar timeouts largos
+      reconnectionAttempts: 3,     // ✅ CRITICAL FIX: Reducido para evitar spam de reconexiones
+      timeout: 5000,               // ✅ CRITICAL FIX: Timeout mucho más corto
       forceNew: false,             // ✅ CRITICAL FIX: No forzar nueva conexión cada vez
       autoConnect: true,           // Auto conectar
       rememberUpgrade: false       // No recordar upgrade para evitar problemas
