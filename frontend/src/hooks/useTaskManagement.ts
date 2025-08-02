@@ -150,14 +150,15 @@ export const useTaskManagement = () => {
               updatedTask 
             } 
           });
+          // ✅ UPDATE_TASK_ID ya actualiza activeTaskId automáticamente
+          console.log('🎯 [TASK-MANAGEMENT] Task ID migrated and activated:', backendTaskId);
         } else {
           // Solo actualizar la tarea si el ID no cambió
           dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
+          // En este caso sí necesitamos establecer activeTaskId manualmente
+          dispatch({ type: 'SET_ACTIVE_TASK', payload: backendTaskId });
+          console.log('🎯 [TASK-MANAGEMENT] Task updated and activated:', backendTaskId);
         }
-        
-        // ✅ PASO 9: ACTIVAR TAREA Y UNIRSE A WEBSOCKET ROOM (DESPUÉS DE ACTUALIZAR)
-        console.log('🎯 [TASK-MANAGEMENT] Activating task:', backendTaskId);
-        dispatch({ type: 'SET_ACTIVE_TASK', payload: backendTaskId });
         
         // 🚀 CRÍTICO: UNIRSE A LA ROOM DE WEBSOCKET INMEDIATAMENTE
         console.log('🔌 [TASK-MANAGEMENT] Joining WebSocket room for real-time updates:', backendTaskId);
