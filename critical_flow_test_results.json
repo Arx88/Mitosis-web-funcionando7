@@ -12,47 +12,108 @@
     {
       "test_name": "Chat Endpoint Response",
       "success": true,
-      "details": "Message processed successfully - Task ID: chat-1754184468, Response length: 66",
-      "timestamp": "2025-08-03T01:27:53.928618",
+      "details": "Message processed successfully - Task ID: chat-1754184582, Response length: 66",
+      "timestamp": "2025-08-03T01:29:49.558863",
       "response_data": null
     },
     {
       "test_name": "Plan Generation",
       "success": true,
       "details": "Complete plan generated - 3 valid steps, Enhanced title: Colores Primarios Fundamentales",
-      "timestamp": "2025-08-03T01:28:02.180533",
+      "timestamp": "2025-08-03T01:29:57.083474",
       "response_data": null
     },
     {
       "test_name": "Task Persistence",
       "success": false,
-      "details": "Task not found in database - 404 error (this is the main issue)",
-      "timestamp": "2025-08-03T01:28:04.191412",
-      "response_data": null
+      "details": "Task data incomplete - Success: True, Status: plan_generated, Title: False",
+      "timestamp": "2025-08-03T01:29:59.166027",
+      "response_data": {
+        "completed_steps": 0,
+        "created_at": "Sun, 03 Aug 2025 01:29:48 GMT",
+        "current_step": 0,
+        "plan": [
+          {
+            "active": true,
+            "completed": false,
+            "complexity": "baja",
+            "description": "Utilizar la herramienta web_search para buscar informaci\u00f3n sobre los colores primarios y su clasificaci\u00f3n.",
+            "estimated_time": "5-8 minutos",
+            "id": "step-1",
+            "parameters": {
+              "query": "colores primarios"
+            },
+            "start_time": "2025-08-03T01:29:54.556547",
+            "status": "in-progress",
+            "title": "Buscar definici\u00f3n de colores primarios",
+            "tool": "web_search"
+          },
+          {
+            "active": false,
+            "completed": false,
+            "complexity": "media",
+            "description": "Utilizar la herramienta analysis para identificar y clasificar los colores primarios m\u00e1s utilizados en dise\u00f1o gr\u00e1fico.",
+            "estimated_time": "8-10 minutos",
+            "id": "step-2",
+            "status": "pending",
+            "title": "Identificar los 3 colores primarios m\u00e1s comunes",
+            "tool": "analysis"
+          },
+          {
+            "active": false,
+            "completed": false,
+            "complexity": "baja",
+            "description": "Utilizar la herramienta creation para crear una lista con los 3 colores primarios identificados.",
+            "estimated_time": "5-8 minutos",
+            "id": "step-3",
+            "status": "pending",
+            "title": "Crear lista de colores primarios",
+            "tool": "creation"
+          },
+          {
+            "active": false,
+            "completed": false,
+            "complexity": "baja",
+            "description": "Utilizar la herramienta processing para entregar exactamente lo solicitado: una lista de 3 colores primarios.",
+            "estimated_time": "2-5 minutos",
+            "id": "step-4",
+            "status": "pending",
+            "title": "Entregar la lista de colores primarios",
+            "tool": "processing"
+          }
+        ],
+        "progress": 0,
+        "status": "plan_generated",
+        "success": true,
+        "task_id": "chat-1754184582",
+        "title": "",
+        "total_steps": 4,
+        "updated_at": "Sun, 03 Aug 2025 01:29:54 GMT"
+      }
     },
     {
       "test_name": "Task Execution Trigger",
       "success": true,
       "details": "Task execution triggered - Message: Real task execution started",
-      "timestamp": "2025-08-03T01:28:06.201308",
+      "timestamp": "2025-08-03T01:30:01.176897",
       "response_data": null
     },
     {
       "test_name": "WebSocket Infrastructure",
       "success": true,
       "details": "Backend healthy - WebSocket infrastructure should be available",
-      "timestamp": "2025-08-03T01:28:08.265772",
+      "timestamp": "2025-08-03T01:30:03.265900",
       "response_data": null
     },
     {
       "test_name": "End-to-End Flow",
       "success": false,
-      "details": "Task not persisted - HTTP 404",
-      "timestamp": "2025-08-03T01:28:20.279250",
+      "details": "Flow incomplete - Execution: True, Status: plan_generated, Progress: 0%",
+      "timestamp": "2025-08-03T01:30:18.768186",
       "response_data": null
     }
   ],
-  "task_id": "chat-1754184468",
+  "task_id": "chat-1754184582",
   "user_message": "Crea una lista de 3 colores primarios",
   "backend_working": true,
   "flow_complete": false
