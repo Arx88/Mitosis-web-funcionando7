@@ -177,10 +177,11 @@ try:
         app, 
         cors_allowed_origins="*",
         cors_credentials=False,
-        logger=False,
-        engineio_logger=False,
+        logger=True,
+        engineio_logger=True,
         path='/api/socket.io/',
-        transports=['polling']
+        transports=['polling', 'websocket'],
+        allow_upgrades=True
     )
     
     # Eventos WebSocket simplificados
