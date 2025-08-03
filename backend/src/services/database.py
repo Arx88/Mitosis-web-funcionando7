@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import os
 from typing import Dict, List, Optional, Any
 import json
-from src.utils.json_encoder import mongo_json_serializer
+# from src.utils.json_encoder import mongo_json_serializer  # Not needed for basic operations
 
 
 class DatabaseService:
