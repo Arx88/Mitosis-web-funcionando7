@@ -160,14 +160,16 @@ class AdvancedMemoryManager:
             raise
     
     async def retrieve_relevant_context(self, query: str, context_type: str = "all", 
-                                      max_results: int = 10) -> Dict[str, Any]:
+                                      max_results: int = 10, task_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Recupera contexto relevante de todos los tipos de memoria
+        UPGRADE AI: Modificado para filtrar por task_id y usar contexto actual
         
         Args:
             query: Consulta de búsqueda
             context_type: Tipo de contexto ('working', 'episodic', 'semantic', 'procedural', 'all')
             max_results: Número máximo de resultados
+            task_id: ID de tarea específico para filtrar (opcional)
             
         Returns:
             Diccionario con contexto relevante
@@ -176,8 +178,16 @@ class AdvancedMemoryManager:
             await self.initialize()
             
         try:
+            # UPGRADE AI: Obtener task_id actual si no se proporciona
+            if task_id is None:
+                current_context = get_current_task_context()
+                task_id = current_context.task_id if current_context else None
+            
+            log_with_context(logging.DEBUG, f"Recuperando contexto relevante para query: {query[:50]}...")
+            
             context = {
                 'query': query,
+                'task_id': task_id,  # UPGRADE AI: Incluir task_id en respuesta
                 'retrieved_at': datetime.now().isoformat(),
                 'working_memory': [],
                 'episodic_memory': [],
@@ -186,14 +196,14 @@ class AdvancedMemoryManager:
                 'synthesized_context': ''
             }
             
-            # Búsqueda en memoria de trabajo
+            # Búsqueda en memoria de trabajo (filtrada por task_id)
             if context_type in ['working', 'all']:
-                working_contexts = self.working_memory.search_contexts(query, max_results)
+                working_contexts = self.working_memory.search_contexts(query, max_results, task_id=task_id)
                 context['working_memory'] = working_contexts
             
-            # Búsqueda en memoria episódica
+            # Búsqueda en memoria episódica (filtrada por task_id)
             if context_type in ['episodic', 'all']:
-                similar_episodes = self.episodic_memory.search_episodes(query, max_results)
+                similar_episodes = self.episodic_memory.search_episodes(query, max_results, task_id=task_id)
                 context['episodic_memory'] = [
                     {
                         'id': ep.id,
