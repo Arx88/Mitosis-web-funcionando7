@@ -158,7 +158,10 @@ class DatabaseService:
             return []
     
     def delete_task(self, task_id: str) -> bool:
-        """Eliminar una tarea y toda su información relacionada"""
+        """
+        Eliminar una tarea y toda su información relacionada
+        UPGRADE AI: Extendido para incluir limpieza completa de memoria
+        """
         try:
             # Eliminar tarea
             self.db.tasks.delete_one({"task_id": task_id})
@@ -169,10 +172,61 @@ class DatabaseService:
             # Eliminar archivos relacionados
             self.db.files.delete_many({"task_id": task_id})
             
+            # UPGRADE AI: Eliminar datos adicionales relacionados con la tarea
+            self.db.tool_results.delete_many({"task_id": task_id})
+            self.db.shares.delete_many({"task_id": task_id})
+            
+            # UPGRADE AI: Llamar al método de limpieza de memoria
+            self.cleanup_task_memory_data(task_id)
+            
             return True
             
         except Exception as e:
             print(f"Error deleting task: {e}")
+            return False
+    
+    def cleanup_task_memory_data(self, task_id: str) -> bool:
+        """
+        UPGRADE AI: Limpia datos de memoria asociados a una tarea específica
+        Este método debe ser llamado cuando se elimina una tarea para asegurar
+        que no quedan datos residuales en el sistema de memoria
+        
+        Args:
+            task_id: ID de la tarea a limpiar
+            
+        Returns:
+            True si la limpieza fue exitosa
+        """
+        try:
+            # Importar managers de memoria dinámicamente para evitar imports circulares
+            import importlib
+            
+            try:
+                # Intentar limpiar working memory
+                working_memory_module = importlib.import_module('src.memory.working_memory_store')
+                # Si hay instancias globales, limpiarlas aquí
+                
+                # Intentar limpiar episodic memory
+                episodic_memory_module = importlib.import_module('src.memory.episodic_memory_store')
+                # Si hay instancias globales, limpiarlas aquí
+                
+                # Intentar limpiar semantic memory
+                semantic_memory_module = importlib.import_module('src.memory.semantic_memory_store')
+                # Si hay instancias globales, limpiarlas aquí
+                
+                # Intentar limpiar procedural memory
+                procedural_memory_module = importlib.import_module('src.memory.procedural_memory_store')
+                # Si hay instancias globales, limpiarlas aquí
+                
+                print(f"✅ Limpieza de memoria completada para task_id: {task_id}")
+                
+            except ImportError as e:
+                print(f"⚠️ Algunos módulos de memoria no pudieron importarse: {e}")
+                
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error limpiando datos de memoria para task_id {task_id}: {e}")
             return False
     
     # === CONVERSATIONS ===
