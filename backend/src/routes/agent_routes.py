@@ -5299,6 +5299,70 @@ def get_model_info():
             "status": "error"
         }), 500
 
+@agent_bp.route('/force-step-failure/<task_id>/<step_id>', methods=['POST'])
+def force_step_failure(task_id: str, step_id: str):
+    """
+    🔴 ENDPOINT DE DEBUG: Forzar que un paso falle para probar la UI de pasos fallidos
+    """
+    try:
+        task_data = get_task_data(task_id)
+        if not task_data:
+            return jsonify({'error': f'Task {task_id} not found'}), 404
+        
+        steps = task_data.get('plan', [])
+        step_found = False
+        
+        for step in steps:
+            if step.get('id') == step_id:
+                step_found = True
+                
+                # 🔴 FORZAR ESTADO DE FALLA
+                step['status'] = 'failed'
+                step['failed'] = True
+                step['completed'] = False
+                step['active'] = False
+                step['retry_exhausted'] = True
+                step['retry_count'] = 5
+                step['error_message'] = 'Paso forzado a fallar para testing'
+                step['result'] = {
+                    'success': False,
+                    'failed_definitively': True,
+                    'reason': 'Forzado a fallar para testing de UI',
+                    'error': 'Debug: Step forced to fail'
+                }
+                step['completed_time'] = datetime.now().isoformat()
+                
+                logger.warning(f"🔴 [DEBUG] Forzando falla del paso {step_id} en tarea {task_id}")
+                break
+        
+        if not step_found:
+            return jsonify({'error': f'Step {step_id} not found in task {task_id}'}), 404
+        
+        # Actualizar tarea en la base de datos
+        update_task_data(task_id, {'plan': steps})
+        
+        # ❌ EMITIR EVENTO WEBSOCKET - PASO FALLÓ
+        emit_step_event(task_id, 'step_failed', {
+            'step_id': step_id,
+            'title': f'Paso forzado a fallar (DEBUG)',
+            'error': 'Forzado a fallar para testing de UI',
+            'failed_definitively': True,
+            'retry_count': 5,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        return jsonify({
+            'success': True,
+            'message': f'Step {step_id} forced to fail for testing',
+            'task_id': task_id,
+            'step_id': step_id
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error forcing step failure: {str(e)}")
+        return jsonify({'error': f'Failed to force step failure: {str(e)}'}), 500
+
+
 @agent_bp.route('/status', methods=['GET'])
 def agent_status():
     """Status del agente"""
