@@ -147,7 +147,20 @@ def health_check():
 @agent_bp.route('/execute-step-detailed/<task_id>/<step_id>', methods=['POST'])
 def execute_single_step_detailed(task_id: str, step_id: str):
     """
-    Ejecutar un paso específico del plan de manera controlada y secuencial
+    🔄 EJECUTOR DE PASOS CON SISTEMA DE 5 REINTENTOS
+    
+    Ejecuta un paso específico del plan con control de reintentos robusto:
+    - Máximo 5 intentos por paso
+    - Contador persistente en base de datos
+    - Fallo completo de tarea después de 5 reintentos fallidos
+    - Logs detallados de cada intento
+    
+    Args:
+        task_id: ID de la tarea
+        step_id: ID del paso específico a ejecutar
+        
+    Returns:
+        JSON response con resultado de ejecución o error después de reintentos
     """
     try:
         # Obtener datos de la tarea
@@ -173,18 +186,25 @@ def execute_single_step_detailed(task_id: str, step_id: str):
         if step_index > 0:
             for i in range(step_index):
                 previous_step = steps[i]
-                if not previous_step.get('completed', False):
+                if not previous_step.get('completed', False) and not previous_step.get('status') == 'failed':
                     return jsonify({
                         'error': 'Los pasos anteriores deben completarse primero',
                         'blocking_step': previous_step.get('title'),
                         'must_complete_first': True
                     }), 400
         
-        # Verificar que el paso no esté ya completado
+        # 🚫 NUEVA VALIDACIÓN: Verificar que el paso no esté ya completado O fallido permanentemente
         if current_step.get('completed', False):
             return jsonify({
                 'error': 'Este paso ya está completado',
                 'step_already_completed': True
+            }), 400
+            
+        if current_step.get('status') == 'failed_after_retries':
+            return jsonify({
+                'error': f'Este paso ha fallado después de {MAX_STEP_RETRIES} reintentos y no puede ejecutarse más',
+                'step_failed_permanently': True,
+                'retry_count': current_step.get('retry_count', 0)
             }), 400
         
         logger.info(f"🔄 Ejecutando paso específico {step_index + 1}: {current_step['title']} para task {task_id}")
