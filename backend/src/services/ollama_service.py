@@ -37,6 +37,195 @@ class OllamaService:
         
         # 🆕 PROBLEMA 3: Configuración de parámetros por modelo
         self.model_configs = self._load_model_configs()
+        
+        # 🚦 INTEGRACIÓN CON GESTOR DE COLA
+        self.use_queue = os.getenv('OLLAMA_USE_QUEUE', 'true').lower() == 'true'
+        self._queue_manager = None  # Se inicializará lazy
+        
+        # Logging específico para cola
+        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+        
+        if self.use_queue:
+            self.logger.info("🚦 OllamaService configurado con sistema de cola activado")
+        else:
+            self.logger.warning("⚠️ OllamaService configurado SIN sistema de cola - pueden ocurrir problemas de concurrencia")
+    
+    def _get_queue_manager(self) -> Optional[OllamaQueueManager]:
+        """
+        🚦 OBTENER GESTOR DE COLA (LAZY LOADING)
+        
+        Inicializa el gestor de cola solo cuando es necesario
+        """
+        if not self.use_queue:
+            return None
+            
+        if self._queue_manager is None:
+            try:
+                self._queue_manager = get_ollama_queue_manager()
+                self.logger.info("🚦 Gestor de cola Ollama obtenido exitosamente")
+            except Exception as e:
+                self.logger.error(f"❌ Error obteniendo gestor de cola: {str(e)}")
+                return None
+                
+        return self._queue_manager
+    
+    async def _execute_with_queue(self, 
+                                 prompt: str, 
+                                 model: str, 
+                                 options: Dict[str, Any],
+                                 priority: RequestPriority = RequestPriority.NORMAL,
+                                 task_id: str = "",
+                                 step_id: str = "") -> Dict[str, Any]:
+        """
+        🚦 EJECUTAR LLAMADA A OLLAMA A TRAVÉS DE LA COLA
+        
+        Encapsula la llamada a Ollama dentro del sistema de cola para
+        controlar la concurrencia automáticamente.
+        
+        Args:
+            prompt: Prompt para Ollama
+            model: Modelo a utilizar
+            options: Opciones de generación
+            priority: Prioridad del request
+            task_id: ID de la tarea (para tracking)
+            step_id: ID del paso (para tracking)
+            
+        Returns:
+            Resultado de Ollama o error
+        """
+        queue_manager = self._get_queue_manager()
+        if not queue_manager:
+            self.logger.warning("⚠️ Gestor de cola no disponible, ejecutando llamada directa")
+            return await self._execute_direct_call(prompt, model, options)
+        
+        # Crear request para la cola
+        ollama_request = OllamaRequest(
+            task_id=task_id,
+            step_id=step_id,
+            prompt=prompt,
+            model=model,
+            options=options,
+            priority=priority,
+            timeout=self._get_model_config(model).get("request_timeout", 180)
+        )
+        
+        self.logger.info(f"🚦 Encolando request para modelo {model} (tarea: {task_id}, prioridad: {priority.name})")
+        
+        # Función callback que ejecuta la llamada real
+        async def execution_callback(request: OllamaRequest) -> Dict[str, Any]:
+            return await self._execute_direct_call(request.prompt, request.model, request.options)
+        
+        # Ejecutar a través de la cola
+        try:
+            result = await queue_manager.enqueue_request(ollama_request, execution_callback)
+            
+            # Log resultado
+            if 'error' in result:
+                self.logger.error(f"❌ Request {ollama_request.request_id} falló: {result.get('error')}")
+            else:
+                self.logger.info(f"✅ Request {ollama_request.request_id} completado exitosamente")
+            
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error en cola de Ollama: {str(e)}")
+            return {'error': str(e), 'error_type': 'queue_system_error'}
+    
+    async def _execute_direct_call(self, 
+                                  prompt: str, 
+                                  model: str, 
+                                  options: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🔧 EJECUTAR LLAMADA DIRECTA A OLLAMA (SIN COLA)
+        
+        Versión async de _call_ollama_api para uso dentro del sistema de cola.
+        Mantiene la misma lógica pero adaptada para async/await.
+        """
+        try:
+            # Usar la lógica existente pero adaptada para async
+            loop = asyncio.get_event_loop()
+            
+            # Ejecutar la llamada en un thread pool para no bloquear
+            result = await loop.run_in_executor(
+                None, 
+                self._call_ollama_api_sync, 
+                prompt, 
+                model, 
+                options
+            )
+            
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error en llamada directa a Ollama: {str(e)}")
+            return {'error': str(e), 'error_type': 'direct_call_error'}
+    
+    def _call_ollama_api_sync(self, prompt: str, model: str, options: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🔧 VERSIÓN SINCRÓNICA DE LA LLAMADA A OLLAMA
+        
+        Esta es la implementación original adaptada para ser llamada desde async
+        """
+        try:
+            model_config = self._get_model_config(model)
+            request_timeout = model_config.get("request_timeout", self.request_timeout)
+            
+            # Detectar si es una solicitud JSON y ajustar parámetros específicamente
+            is_json_request = any(keyword in prompt.lower() for keyword in ['json', '"steps"', 'genera un plan', 'plan de acción'])
+            
+            final_options = options.copy()
+            if is_json_request:
+                # Para solicitudes JSON, usar parámetros más estrictos
+                final_options['temperature'] = min(final_options.get('temperature', 0.7) * 0.5, 0.1)
+                final_options['top_p'] = min(final_options.get('top_p', 0.9) * 0.8, 0.7)
+                
+                # Agregar stops específicos para JSON si no están
+                current_stops = final_options.get('stop', [])
+                json_stops = ['```', '---', '}```', '}\n```']
+                final_options['stop'] = list(set(current_stops + json_stops))
+            
+            payload = {
+                "model": model,
+                "prompt": prompt,
+                "stream": False,
+                "options": final_options
+            }
+            
+            # Logging detallado para debug
+            self.logger.debug(f"🤖 Ollama Request - Model: {model}")
+            self.logger.debug(f"⚙️ Options: temp={final_options.get('temperature')}, timeout={request_timeout}s")
+            if is_json_request:
+                self.logger.debug(f"📋 JSON mode detected, using strict parameters")
+            
+            response = requests.post(
+                f"{self.base_url}/api/generate",
+                json=payload,
+                timeout=min(request_timeout, 180)  # Máximo 3 minutos para evitar cuelgues
+            )
+            
+            if response.status_code == 200:
+                return response.json()
+            else:
+                self.logger.error(f"❌ Ollama API returned error for model {model}: HTTP {response.status_code}")
+                return {
+                    'error': f"HTTP {response.status_code}: {response.text}"
+                }
+                
+        except Timeout:
+            self.logger.error(f"⏱️ Ollama API request timed out after {request_timeout} seconds for model {model}.")
+            return {
+                'error': f"Timeout después de {request_timeout} segundos para el modelo {model}. El modelo puede necesitar más tiempo para respuestas complejas."
+            }
+        except RequestException as e:
+            self.logger.error(f"🔌 Connection error to Ollama API for model {model}: {str(e)}")
+            return {
+                'error': f"Error de conexión: {str(e)}"
+            }
+        except Exception as e:
+            self.logger.error(f"💥 Unexpected error in Ollama API call for model {model}: {str(e)}")
+            return {
+                'error': f"Error inesperado: {str(e)}"
+            }
     
     def update_endpoint(self, new_endpoint: str) -> bool:
         """
