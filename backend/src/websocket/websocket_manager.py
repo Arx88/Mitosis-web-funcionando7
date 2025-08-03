@@ -188,10 +188,13 @@ class WebSocketManager:
                     self.socketio.emit('task_update', update_data, room=session_id)
                     logger.info(f"📡 Sent to individual session: {session_id}")
             
-            # Strategy 2: Broadcast to all connected clients for critical messages
-            if update_type in [UpdateType.LOG_MESSAGE, UpdateType.BROWSER_ACTIVITY, UpdateType.TASK_PROGRESS]:
-                self.socketio.emit('global_task_update', update_data)
-                logger.info(f"📡 Broadcasted {update_type.value} globally for task {task_id}")
+            # Strategy 2: ELIMINADA - Causa principal de contaminación entre tareas
+            # UPGRADE AI: Las emisiones globales han sido eliminadas para prevenir
+            # la contaminación de contenido entre tareas y el problema de "PENSANDO" 
+            # en todas las tareas simultáneamente
+            # Referencia: UpgradeAI.md Sección 4.2, Mejora 1
+            
+            # Todas las actualizaciones ahora se envían ÚNICAMENTE a la room específica de la tarea
             
             # Strategy 3: Store in session storage for retrieval
             if not hasattr(self, 'session_messages'):
