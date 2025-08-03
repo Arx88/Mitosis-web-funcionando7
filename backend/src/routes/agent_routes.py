@@ -2936,6 +2936,7 @@ Responde de manera específica y práctica.
 
 # Importar nuevo TaskManager para persistencia
 from ..services.task_manager import get_task_manager
+from src.services.ollama_queue_manager import get_ollama_queue_manager
 
 # Almacenamiento temporal para compartir conversaciones
 shared_conversations = {}
