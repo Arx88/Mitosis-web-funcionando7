@@ -218,20 +218,11 @@ Este documento registra el progreso de implementación del plan de mejoras defin
 - ✅ **🆕 Instant UI**: Cambios de tarea sin delay visual**
 
 **Timestamp Final:** 2025-01-08 12:00:00
-### ✅ 2025-01-08 11:50:00 - CORRECCIÓN ESTADO STALE EN FRONTEND  
-- **Problema:** Al cambiar de tarea, se muestra temporalmente el plan de acción de la tarea anterior
-- **Causa:** TaskView.tsx no limpiaba inmediatamente el plan al cambiar de tarea
-- **Solución:** Implementada limpieza inmediata del estado en cambio de tarea
-- **Estado:** ✅ RESUELTO
-- **Archivos Modificados:**
-  - `/app/frontend/src/components/TaskView.tsx` (líneas 188-262) ✅
-  - `/app/frontend/src/hooks/usePlanManager.ts` (líneas 129-140) ✅
-- **Mejoras Implementadas:**
-  - 🧹 **Limpieza Inmediata**: `setPlan([])` al cambiar de tarea para evitar mostrar datos anteriores
-  - 📋 **Plan Manager Mejorado**: Respuesta inmediata cuando se establece plan vacío
-  - 🔄 **UX Mejorada**: No más información incorrecta temporal durante cambios de tarea
-- **Progreso:** 95% → 100%
-- **Pruebas:** ✅ Testado con screenshot - cambio de tarea funciona correctamente
+### 🚨 2025-01-08 12:05:00 - PROBLEMA PERSISTE - ANÁLISIS PROFUNDO REQUERIDO
+- **Problema:** PERSISTE - Al cambiar de tarea, se sigue mostrando temporalmente información de la tarea anterior
+- **Fix Anterior:** Limpieza inmediata de plan implementada pero insuficiente
+- **Causa Sospechada:** Otros componentes (TerminalView, Monitor Pages, WebSocket state) mantienen información anterior
+- **Estado:** 🔧 INVESTIGACIÓN PROFUNDA EN CURSO
+- **Impacto:** UX degradada - información incorrecta mostrada temporalmente
 
-**Estado Final:** ✅ SISTEMA COMPLETAMENTE ACTUALIZADO Y OPERATIVO - UX PERFECTA
-**Referencia:** Implementación 100% conforme a UpgradeAI.md + mejoras adicionales de UX
+**Necesita:** Análisis completo del flujo de datos en cambio de tarea
