@@ -218,8 +218,17 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
     setInputValue('');
     setIsLoading(true);
 
+    // ✅ TIMEOUT SAFETY: Reset isLoading after maximum wait time
+    const timeoutId = setTimeout(() => {
+      console.warn('⚠️ TIMEOUT: Request taking too long, resetting isLoading state');
+      setIsLoading(false);
+    }, 30000); // 30 seconds timeout
+
     try {
       const response = await agentAPI.sendMessage(message, task?.id);
+      
+      // Clear timeout since we got a response
+      clearTimeout(timeoutId);
       
       if (response.response) {
         const assistantMessage: Message = {
