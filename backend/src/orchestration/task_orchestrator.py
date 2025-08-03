@@ -225,8 +225,7 @@ class TaskOrchestrator:
             # 16. Limpiar estado
             self._cleanup_orchestration(context.task_id)
             
-            logger.info(f"Orquestación completada para tarea: {context.task_id}, "
-                       f"éxito: {result.success}, tiempo: {result.total_execution_time:.2f}s")
+            log_with_context(logging.INFO, f"Orquestación completada - éxito: {result.success}, tiempo: {result.total_execution_time:.2f}s")
             
             return result
             
@@ -250,6 +249,11 @@ class TaskOrchestrator:
             self.orchestration_metrics["failed_tasks"] += 1
             
             return error_result
+            
+        finally:
+            # UPGRADE AI: Restablecer contexto de tarea en todos los casos
+            reset_current_task_context(token)
+            log_with_context(logging.DEBUG, "Contexto de tarea restablecido al finalizar orquestación")
     
     async def _create_execution_plan(self, context: OrchestrationContext) -> ExecutionPlan:
         """Crea un plan de ejecución usando DynamicTaskPlanner o fallback a planificación jerárquica"""
