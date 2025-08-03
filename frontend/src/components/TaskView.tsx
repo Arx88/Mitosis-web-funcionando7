@@ -587,7 +587,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       </div>
 
       {/* Panel derecho - Terminal - Responsive Width */}     
-      <div className="w-full sm:w-1/2 lg:w-2/5 xl:w-1/3 min-w-0 bg-[#1e1e1e] border-l border-[rgba(255,255,255,0.08)] flex-shrink-0" ref={monitorRef}>
+      <div className="w-full sm:w-1/2 lg:w-2/5 xl:w-1/3 min-w-0 max-w-[50%] bg-[#1e1e1e] border-l border-[rgba(255,255,255,0.08)] flex-shrink-0" ref={monitorRef}>
         {terminalView}
       </div>
 
