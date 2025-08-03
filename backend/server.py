@@ -94,6 +94,10 @@ from dotenv import load_dotenv
 import pymongo
 import logging
 
+# UPGRADE AI: Importar sistema de filtros de contexto de tarea
+sys.path.insert(0, '/app/backend/src')
+from src.utils.log_filters import configure_global_task_logging, setup_task_context_logging
+
 # Configurar logging más intenso
 logging.basicConfig(
     level=logging.DEBUG,
@@ -105,6 +109,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# UPGRADE AI: Configurar logging global con contexto de tarea
+try:
+    configure_global_task_logging(level=logging.INFO, compact_format=True)
+    logger.info("✅ Sistema de logging con contexto de tarea configurado")
+except Exception as e:
+    logger.error(f"❌ Error configurando logging con contexto de tarea: {e}")
+
 # Logging para terminal también
 terminal_logger = logging.getLogger('MITOSIS_TERMINAL')
 terminal_handler = logging.StreamHandler(sys.stdout)
@@ -113,6 +124,13 @@ terminal_formatter = logging.Formatter('%(asctime)s - [MITOSIS] - %(levelname)s 
 terminal_handler.setFormatter(terminal_formatter)
 terminal_logger.addHandler(terminal_handler)
 terminal_logger.setLevel(logging.INFO)
+
+# UPGRADE AI: Configurar terminal logger con filtros de contexto
+try:
+    setup_task_context_logging(terminal_logger, compact_format=True)
+    terminal_logger.info("✅ Terminal logger configurado con contexto de tarea")
+except Exception as e:
+    logger.error(f"❌ Error configurando terminal logger: {e}")
 
 terminal_logger.info("🚀 INICIANDO SERVIDOR CON LOGGING INTENSO - Sistema completo del agente")
 print("🚀 INICIANDO SERVIDOR CON LOGGING INTENSO - Sistema completo del agente")
