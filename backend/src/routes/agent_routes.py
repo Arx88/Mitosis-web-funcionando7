@@ -40,6 +40,9 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# 🔄 CONSTANTE PARA SISTEMA DE REINTENTOS
+MAX_STEP_RETRIES = 5
+
 # JSON Schema para validación de planes generados por Ollama
 # Mejora implementada según UPGRADE.md Sección 2: Validación de Esquemas JSON
 PLAN_SCHEMA = {
