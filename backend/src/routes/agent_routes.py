@@ -1036,7 +1036,13 @@ INSTRUCCIONES:
 GENERA LA RESPUESTA AHORA:
 """
         
-        result = ollama_service.generate_response(simplified_prompt, {'temperature': 0.5})
+        result = ollama_service.generate_response(
+            simplified_prompt, 
+            {'temperature': 0.5},
+            True,  # use_tools
+            task_id or "step_execution",  # task_id para tracking
+            step.get('id', 'unknown_step')     # step_id para tracking
+        )
         
         if result.get('error'):
             return {
