@@ -18,6 +18,13 @@ from .resource_manager import ResourceManager, ResourceRequest, ResourceType
 from .planning_algorithms import ExecutionPlan, TaskStep, PlanningStrategy
 from ..memory.advanced_memory_manager import AdvancedMemoryManager
 from ..tools.dynamic_task_planner import DynamicTaskPlanner, get_dynamic_task_planner
+from ..utils.task_context import (
+    set_current_task_context, 
+    reset_current_task_context, 
+    get_current_task_context,
+    OrchestrationContext as TaskContext,
+    log_with_context
+)
 
 logger = logging.getLogger(__name__)
 
