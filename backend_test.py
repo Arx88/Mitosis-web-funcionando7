@@ -104,7 +104,7 @@ class MitosisTaskDeletionTester:
                     self.log_test("2. Verify Task in List", True, details)
                     return True
                 else:
-                    available_tasks = [t.get('task_id', 'no-id') for t in tasks]
+                    available_tasks = [t.get('task_id') or t.get('id', 'no-id') for t in tasks]
                     details = f"Task {self.created_task_id} NOT found in list. Available tasks: {available_tasks[:5]}"
                     self.log_test("2. Verify Task in List", False, details)
                     return False
