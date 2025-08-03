@@ -448,7 +448,10 @@ class OllamaService:
     
     def generate_casual_response(self, prompt: str, context: Dict = None) -> Dict[str, Any]:
         """
-        Generar respuesta casual usando Ollama (sin planes ni herramientas)
+        🔄 GENERAR RESPUESTA CASUAL CON COLA OPCIONAL
+        
+        Genera respuesta casual usando Ollama (sin planes ni herramientas),
+        utilizando el sistema de cola si está habilitado.
         
         Args:
             prompt: Mensaje del usuario
@@ -472,8 +475,20 @@ class OllamaService:
             system_prompt = self._build_system_prompt(use_tools=False, conversation_mode=True)
             full_prompt = self._build_full_prompt(prompt, context, system_prompt)
             
-            # Hacer la llamada a Ollama
-            response = self._call_ollama_api(full_prompt)
+            # Determinar si usar cola o llamada directa
+            if self.use_queue:
+                # Usar cola con prioridad normal para conversaciones casuales
+                response = asyncio.run(self._execute_with_queue(
+                    prompt=full_prompt,
+                    model=self.get_current_model(),
+                    options=self._get_model_config(self.get_current_model()).get("options", {}),
+                    priority=RequestPriority.LOW,  # Baja prioridad para conversaciones casuales
+                    task_id="casual_conversation",
+                    step_id="casual_response"
+                ))
+            else:
+                # Llamada directa tradicional
+                response = self._call_ollama_api(full_prompt)
             
             if response.get('error'):
                 return {
@@ -493,7 +508,8 @@ class OllamaService:
                 'tool_calls': [],
                 'raw_response': response.get('response', ''),
                 'model': self.get_current_model(),
-                'timestamp': time.time()
+                'timestamp': time.time(),
+                'used_queue': self.use_queue
             }
             
         except Exception as e:
@@ -506,17 +522,22 @@ class OllamaService:
                 'error': str(e)
             }
 
-    def generate_response(self, prompt: str, context: Dict = None, use_tools: bool = True) -> Dict[str, Any]:
+    def generate_response(self, prompt: str, context: Dict = None, use_tools: bool = True, task_id: str = "", step_id: str = "") -> Dict[str, Any]:
         """
-        Generar respuesta usando Ollama real
+        🔄 GENERAR RESPUESTA CON COLA Y PRIORIZACIÓN INTELIGENTE
+        
+        Genera respuesta usando Ollama, con control automático de cola
+        y priorización basada en el tipo de contenido.
         
         Args:
             prompt: Mensaje del usuario
             context: Contexto adicional (historial, herramientas, etc.)
             use_tools: Si debe considerar el uso de herramientas
+            task_id: ID de la tarea (para tracking y priorización)
+            step_id: ID del paso (para tracking)
         
         Returns:
-            Dict con respuesta, tool_calls, y metadatos
+            Dict con respuesta, tool_calls, y metadatos incluyendo info de cola
         """
         if not self.is_healthy():
             return {
@@ -533,8 +554,27 @@ class OllamaService:
             system_prompt = self._build_system_prompt(use_tools, conversation_mode=False)
             full_prompt = self._build_full_prompt(prompt, context, system_prompt)
             
-            # Hacer la llamada a Ollama
-            response = self._call_ollama_api(full_prompt)
+            # 🔍 DETERMINAR PRIORIDAD AUTOMÁTICAMENTE
+            priority = self._determine_request_priority(prompt, context, task_id, step_id)
+            
+            # Determinar si usar cola o llamada directa
+            if self.use_queue:
+                # Usar cola con prioridad determinada automáticamente
+                response = asyncio.run(self._execute_with_queue(
+                    prompt=full_prompt,
+                    model=self.get_current_model(),
+                    options=self._get_model_config(self.get_current_model()).get("options", {}),
+                    priority=priority,
+                    task_id=task_id or "unknown_task",
+                    step_id=step_id or "unknown_step"
+                ))
+                
+                self.logger.info(f"🚦 Request procesado a través de cola (prioridad: {priority.name})")
+                
+            else:
+                # Llamada directa tradicional (sin cola)
+                response = self._call_ollama_api(full_prompt)
+                self.logger.warning("⚠️ Request procesado SIN cola - riesgo de problemas de concurrencia")
             
             if response.get('error'):
                 return {
@@ -543,7 +583,9 @@ class OllamaService:
                     'raw_response': "",
                     'model': self.get_current_model(),
                     'timestamp': time.time(),
-                    'error': response['error']
+                    'error': response['error'],
+                    'used_queue': self.use_queue,
+                    'priority': priority.name if self.use_queue else 'none'
                 }
             
             # Parsear la respuesta
@@ -554,7 +596,9 @@ class OllamaService:
                 'tool_calls': parsed_response['tool_calls'],
                 'raw_response': response.get('response', ''),
                 'model': self.get_current_model(),
-                'timestamp': time.time()
+                'timestamp': time.time(),
+                'used_queue': self.use_queue,
+                'priority': priority.name if self.use_queue else 'none'
             }
             
         except Exception as e:
@@ -564,8 +608,50 @@ class OllamaService:
                 'raw_response': "",
                 'model': self.get_current_model(),
                 'timestamp': time.time(),
-                'error': str(e)
+                'error': str(e),
+                'used_queue': self.use_queue
             }
+    
+    def _determine_request_priority(self, prompt: str, context: Dict, task_id: str, step_id: str) -> RequestPriority:
+        """
+        🔍 DETERMINAR PRIORIDAD DE REQUEST AUTOMÁTICAMENTE
+        
+        Analiza el contenido del prompt y contexto para asignar
+        la prioridad apropiada al request.
+        
+        Args:
+            prompt: Contenido del prompt
+            context: Contexto adicional
+            task_id: ID de la tarea
+            step_id: ID del paso
+            
+        Returns:
+            Prioridad apropiada para el request
+        """
+        prompt_lower = prompt.lower()
+        
+        # 🚨 CRÍTICO: Generación de planes iniciales
+        if any(keyword in prompt_lower for keyword in ['genera un plan', 'plan de acción', 'create_dynamic_plan']):
+            return RequestPriority.CRITICAL
+        
+        # 🔴 ALTA: Recuperación de errores o reintentos
+        if any(keyword in prompt_lower for keyword in ['error', 'falló', 'reintento', 'retry', 'recuperación']):
+            return RequestPriority.HIGH
+        
+        # 🔴 ALTA: Análisis o decisiones importantes
+        if any(keyword in prompt_lower for keyword in ['analizar', 'decidir', 'evaluar', 'importante', 'crítico']):
+            return RequestPriority.HIGH
+        
+        # 🟠 NORMAL: Ejecución de pasos de plan
+        if step_id and step_id != "unknown_step":
+            return RequestPriority.NORMAL
+        
+        # 🟡 BAJA: Conversaciones casuales o consultas generales
+        if any(keyword in prompt_lower for keyword in ['hola', 'saludo', 'información', 'explicar']):
+            return RequestPriority.LOW
+        
+        # Por defecto: NORMAL
+        return RequestPriority.NORMAL
     
     def _call_ollama_api(self, prompt: str, custom_options: Optional[Dict] = None) -> Dict[str, Any]:
         """
