@@ -573,6 +573,68 @@ def get_task_execution_results(task_id: str):
         logger.error(f"❌ Error obteniendo resultados de ejecución para task {task_id}: {str(e)}")
         return jsonify({'error': f'Error getting execution results: {str(e)}'}), 500
 
+def execute_simplified_step_retry(step: dict, message: str, task_id: str) -> dict:
+    """
+    🔄 FUNCIÓN DE RETRY SIMPLIFICADA PARA PASOS QUE REQUIEREN MÁS TRABAJO
+    Ejecuta una versión simplificada del paso con prompt más directo
+    """
+    try:
+        logger.info(f"🔄 Ejecutando retry simplificado para paso: {step.get('title', 'Sin título')}")
+        
+        # Obtener servicios necesarios
+        ollama_service = get_ollama_service()
+        
+        if not ollama_service or not ollama_service.is_healthy():
+            return {
+                'success': False,
+                'error': 'Servicio Ollama no disponible para retry',
+                'type': 'retry_error'
+            }
+        
+        # Prompt simplificado y directo
+        simplified_prompt = f"""
+TAREA SIMPLIFICADA: Completa directamente esta tarea específica.
+
+PASO A COMPLETAR: {step.get('title', 'Paso sin título')}
+DESCRIPCIÓN: {step.get('description', 'Sin descripción')}
+CONTEXTO: {message}
+
+INSTRUCCIONES:
+- Genera una respuesta directa y práctica
+- NO uses frases como "se realizará" o "se analizará"
+- Proporciona información concreta y útil
+- Mantén la respuesta enfocada y específica
+
+GENERA LA RESPUESTA AHORA:
+"""
+        
+        result = ollama_service.generate_response(simplified_prompt, {'temperature': 0.5})
+        
+        if result.get('error'):
+            return {
+                'success': False,
+                'error': f"Error en Ollama retry: {result['error']}",
+                'type': 'retry_ollama_error'
+            }
+        
+        content = result.get('response', 'Retry completado')
+        
+        return {
+            'success': True,
+            'type': 'simplified_retry',
+            'content': content,
+            'summary': f"✅ Retry simplificado completado - {len(content)} caracteres",
+            'retry_attempt': True
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error en retry simplificado: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'retry_execution_error'
+        }
+
 def execute_single_step_logic(step: dict, original_message: str, task_id: str) -> dict:
     """
     🧠 SISTEMA INTELIGENTE DE EJECUCIÓN DE PASOS
