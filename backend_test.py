@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-OLLAMA BACKEND TESTING - VERIFYING CORRECTED URL AND FUNCTIONALITY
-Testing specifically that Ollama is working correctly in the backend after correcting the URL.
+SISTEMA DE REINTENTOS - TESTING COMPLETO
+Testing del sistema de reintentos de pasos que fallan después de 5 intentos.
 
 SPECIFIC TESTING REQUEST:
-Probar específicamente que Ollama está funcionando correctamente en el backend después de haber corregido la URL incorrecta. Necesito verificar:
+Probar el sistema de reintentos de pasos que fallan después de 5 intentos:
 
-1. **Conexión de Ollama**: Verificar que el endpoint https://66bd0d09b557.ngrok-free.app está funcionando
-2. **Generación con Ollama**: Hacer una llamada real a /api/agent/chat con un mensaje simple como "Hola, ¿cómo estás?" para verificar que usa llama3.1:8b
-3. **Generación de planes**: Probar con una tarea compleja como "Crear un análisis de mercado para startups 2025" para verificar que genera planes detallados usando Ollama
-4. **Verificar logs**: Confirmar en los logs que se ve "Ollama Request - Model: llama3.1:8b" y respuestas exitosas
-5. **Comparar respuestas**: Las respuestas deben ser más inteligentes y específicas, no genéricas
+1. **Crear tarea que falle**: Crear una tarea que incluya un paso que falle intencionalmente 
+2. **Verificar reintentos automáticos**: Verificar que el sistema reintente automáticamente hasta 5 veces
+3. **Confirmar fallo permanente**: Confirmar que después de 5 reintentos, el paso se marque como "failed_after_retries"
+4. **Verificar frontend**: Verificar que esto se muestre correctamente en el frontend con icono de error y información de reintentos
 
-CONTEXTO: Anteriormente el agente estaba usando fallbacks porque tenía configurado un endpoint incorrecto de Ollama (bef4a4bb93d1 en lugar de 66bd0d09b557). Ya corregí la URL en el .env y reinicié el backend.
+CONTEXTO: El sistema de reintentos está implementado en /app/backend/src/routes/agent_routes.py con MAX_STEP_RETRIES = 5. 
+El frontend debe mostrar información de reintentos con icono de error (X roja) y texto indicando que falló después de reintentos.
 
-VERIFICAR: Que las respuestas sean realmente generadas por Ollama llama3.1:8b y no por fallbacks genéricos.
+VERIFICAR: Que el sistema maneje correctamente los fallos y muestre la información de reintentos en el frontend.
 """
 
 import requests
