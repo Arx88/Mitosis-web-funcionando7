@@ -516,77 +516,78 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   // ========================================================================
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full overflow-hidden">
       {/* Panel izquierdo - Chat */}
-      <div className="flex-1 flex flex-col bg-[#272728] border-r border-[rgba(255,255,255,0.08)]">
-        {/* Header del task */}
-        <div className="p-4 border-b border-[rgba(255,255,255,0.08)] bg-[#212122]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-semibold text-white truncate max-w-md">
+      <div className="flex-1 min-w-0 flex flex-col bg-[#272728] border-r border-[rgba(255,255,255,0.08)]">
+        {/* Header del task - Responsive Header */}
+        <div className="p-2 sm:p-4 border-b border-[rgba(255,255,255,0.08)] bg-[#212122]">
+          <div className="flex items-center justify-between flex-wrap sm:flex-nowrap gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <h2 className="text-base sm:text-xl font-semibold text-white truncate max-w-[200px] sm:max-w-md">
                 {task.title}
               </h2>
               {plan.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <div className="w-20 bg-[#3a3a3c] rounded-full h-2">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <div className="w-12 sm:w-20 bg-[#3a3a3c] rounded-full h-2">
                     <div 
                       className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                       style={{ width: `${taskStats.planProgress}%` }}
                     />
                   </div>
-                  <span className="text-xs text-gray-400">{taskStats.planProgress}%</span>
+                  <span className="text-xs text-gray-400 whitespace-nowrap">{taskStats.planProgress}%</span>
                 </div>
               )}
             </div>
             
-            {/* Action Buttons */}
-            <div className="flex items-center gap-2">
+            {/* Action Buttons - Responsive Stack */}
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               <button
                 onClick={handleToggleFavorite}
-                className={`p-2 rounded-lg transition-all duration-200 ${
+                className={`p-1 sm:p-2 rounded-lg transition-all duration-200 ${
                   task.isFavorite
                     ? 'text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20'
                     : 'text-gray-400 hover:text-yellow-400 hover:bg-yellow-400/10'
                 }`}
                 title={task.isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
               >
-                <Star className={`w-5 h-5 ${task.isFavorite ? 'fill-current' : ''}`} />
+                <Star className={`w-4 h-4 sm:w-5 sm:h-5 ${task.isFavorite ? 'fill-current' : ''}`} />
               </button>
               
               <button
                 onClick={handleFilesModal}
-                className="p-2 rounded-lg text-gray-400 hover:text-blue-400 hover:bg-blue-400/10 transition-all duration-200"
+                className="p-1 sm:p-2 rounded-lg text-gray-400 hover:text-blue-400 hover:bg-blue-400/10 transition-all duration-200"
                 title="Ver archivos generados"
               >
-                <Files className="w-5 h-5" />
+                <Files className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               
               <button
                 onClick={handleShareModal}
-                className="p-2 rounded-lg text-gray-400 hover:text-green-400 hover:bg-green-400/10 transition-all duration-200"
+                className="p-1 sm:p-2 rounded-lg text-gray-400 hover:text-green-400 hover:bg-green-400/10 transition-all duration-200"
                 title="Compartir conversación"
               >
-                <Share2 className="w-5 h-5" />
+                <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               
               {isConnected && (
-                <div className="flex items-center gap-2 ml-2 px-3 py-1 bg-green-500/10 rounded-full">
+                <div className="flex items-center gap-1 sm:gap-2 ml-1 sm:ml-2 px-2 sm:px-3 py-1 bg-green-500/10 rounded-full">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  <span className="text-xs text-green-400 font-medium">En vivo</span>
+                  <span className="text-xs text-green-400 font-medium hidden sm:inline">En vivo</span>
+                  <span className="text-xs text-green-400 font-medium sm:hidden">●</span>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Chat Interface */}
-        <div className="flex-1 overflow-hidden">
+        {/* Chat Interface - Responsive Container */}
+        <div className="flex-1 overflow-hidden min-h-0">
           {chatInterface}
         </div>
       </div>
 
-      {/* Panel derecho - Terminal */}     
-      <div className="w-1/2 bg-[#1e1e1e] border-l border-[rgba(255,255,255,0.08)]" ref={monitorRef}>
+      {/* Panel derecho - Terminal - Responsive Width */}     
+      <div className="w-full sm:w-1/2 lg:w-2/5 xl:w-1/3 min-w-0 bg-[#1e1e1e] border-l border-[rgba(255,255,255,0.08)] flex-shrink-0" ref={monitorRef}>
         {terminalView}
       </div>
 
