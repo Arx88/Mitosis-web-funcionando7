@@ -6085,9 +6085,9 @@ def start_task_execution(task_id: str):
                             
                             # 🚀 NUEVO: INTENTAR FORZAR COMPLETACIÓN DESPUÉS DE N INTENTOS
                             retry_count = step.get('retry_count', 0)
-                            if retry_count < 2:  # Máximo 2 intentos
+                            if retry_count < 5:  # Máximo 5 intentos
                                 step['retry_count'] = retry_count + 1
-                                logger.info(f"🔄 Reintentando paso {i+1}, intento {retry_count + 1}/2")
+                                logger.info(f"🔄 Reintentando paso {i+1}, intento {retry_count + 1}/5")
                                 
                                 # Re-ejecutar el paso con prompt más simple
                                 simplified_result = execute_simplified_step_retry(step, message, task_id)
