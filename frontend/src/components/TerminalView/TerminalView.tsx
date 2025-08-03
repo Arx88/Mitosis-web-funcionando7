@@ -1497,6 +1497,7 @@ export const TerminalView = ({
                       className={`group flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 ${
                         step.active ? 'bg-[rgba(59,130,246,0.1)] border border-[rgba(59,130,246,0.3)]' : 
                         step.completed ? 'bg-[rgba(34,197,94,0.08)] border border-[rgba(34,197,94,0.2)]' : 
+                        step.failed || step.status === 'failed' ? 'bg-[rgba(239,68,68,0.08)] border border-[rgba(239,68,68,0.2)]' : // 🔴 NUEVO: Estilo rojo para pasos fallidos
                         'border border-transparent'
                       }`}
                     >
