@@ -299,8 +299,15 @@ export const usePlanManager = ({
     socket.on('task_progress', handleTaskProgress);
     socket.on('task_completed', handleTaskCompleted);
 
+    // Start HTTP polling as backup
+    const stopPolling = startPolling();
+
     return () => {
-      console.log(`🧹 [PLAN-${taskId}] Cleaning up WebSocket listeners`);
+      console.log(`🧹 [PLAN-${taskId}] Cleaning up WebSocket listeners and polling`);
+      
+      // Stop polling
+      stopPolling();
+      
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('plan_updated', handlePlanUpdated);
