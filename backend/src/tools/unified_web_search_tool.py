@@ -750,37 +750,45 @@ except Exception as e:
                 # 🚀 MÚLTIPLES MÉTODOS DE EMISIÓN PARA MÁXIMA COMPATIBILIDAD
                 success_count = 0
                 
-                # MÉTODO 1: WebSocket manager del servidor Flask directamente
+                # MÉTODO 1: Usar SocketIO directamente desde el módulo
                 try:
-                    from flask import current_app
-                    if current_app and hasattr(current_app, 'websocket_manager'):
-                        ws_manager = current_app.websocket_manager
-                        if ws_manager and ws_manager.is_initialized:
-                            # Emitir como log_message para terminal
-                            ws_manager.send_log_message(self.task_id, "info", message)
-                            
-                            # Emitir como browser_activity para navegación específica
-                            ws_manager.send_browser_activity(
-                                self.task_id, 
-                                "navigation_progress", 
-                                "https://web-search-in-progress", 
-                                message, 
-                                ""
-                            )
-                            
-                            # Emitir como task_progress para progreso general
-                            ws_manager.send_task_progress(
-                                self.task_id,
-                                50.0,  # Progreso estimado
-                                1,     # Paso actual
-                                1,     # Total pasos
-                                "Navegación Web en Tiempo Real"
-                            )
-                            
-                            success_count += 1
-                            logger.info(f"✅ FLASK APP WebSocket: Mensaje emitido exitosamente")
-                except Exception as ws_error:
-                    logger.warning(f"⚠️ Flask App WebSocket error: {ws_error}")
+                    # Importar el socketio del servidor principal
+                    import server
+                    if hasattr(server, 'socketio') and server.socketio:
+                        room = f"task_{self.task_id}"
+                        server.socketio.emit('task_progress', {
+                            'step_id': getattr(self, 'current_step_id', 'web-search'),
+                            'activity': message,
+                            'progress_percentage': 50,
+                            'timestamp': datetime.now().isoformat()
+                        }, room=room)
+                        
+                        server.socketio.emit('log_message', {
+                            'task_id': self.task_id,
+                            'level': 'info',
+                            'message': message,
+                            'timestamp': datetime.now().isoformat()
+                        }, room=room)
+                        
+                        success_count += 1
+                        logger.info(f"✅ DIRECT SocketIO: Message sent to room {room}")
+                except Exception as direct_error:
+                    logger.warning(f"⚠️ Direct SocketIO error: {direct_error}")
+                
+                # MÉTODO 2: Usar Flask app si está disponible
+                try:
+                    from flask import current_app, has_app_context
+                    if has_app_context() and hasattr(current_app, 'emit_task_event'):
+                        current_app.emit_task_event(self.task_id, 'task_progress', {
+                            'step_id': getattr(self, 'current_step_id', 'web-search'),
+                            'activity': message,
+                            'progress_percentage': 50,
+                            'timestamp': datetime.now().isoformat()
+                        })
+                        success_count += 1
+                        logger.info(f"✅ FLASK APP WebSocket: Message sent successfully")
+                except Exception as flask_error:
+                    logger.warning(f"⚠️ Flask App WebSocket error: {flask_error}")
                 
                 # MÉTODO 2: WebSocket manager global como fallback
                 if success_count == 0:
