@@ -518,7 +518,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   return (
     <div className="flex h-full overflow-hidden">
       {/* Panel izquierdo - Chat */}
-      <div className="flex-1 min-w-0 flex flex-col bg-[#272728] border-r border-[rgba(255,255,255,0.08)]">
+      <div className="flex-1 min-w-0 flex flex-col bg-[#272728] border-r border-[rgba(255,255,255,0.08)] overflow-hidden">
         {/* Header del task - Responsive Header */}
         <div className="p-2 sm:p-4 border-b border-[rgba(255,255,255,0.08)] bg-[#212122]">
           <div className="flex items-center justify-between flex-wrap sm:flex-nowrap gap-2">
