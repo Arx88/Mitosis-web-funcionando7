@@ -937,7 +937,7 @@ def get_task_status(task_id):
     """
     try:
         # Buscar la tarea en la base de datos
-        task = db.tasks.find_one({"task_id": task_id}) if db else None
+        task = db.tasks.find_one({"task_id": task_id}) if db is not None else None
         
         if not task:
             return jsonify({
