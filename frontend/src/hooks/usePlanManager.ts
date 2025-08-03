@@ -127,8 +127,20 @@ export const usePlanManager = ({
   }, [taskId, updateTaskPlan, onPlanUpdate, onTaskComplete]);
 
   const setPlan = useCallback((newSteps: TaskStep[]) => {
+    console.log(`🔄 [PLAN-${taskId}] setPlan called with ${newSteps.length} steps`);
+    
+    // UPGRADE AI: Limpieza inmediata para evitar mostrar datos de tarea anterior
+    if (newSteps.length === 0) {
+      console.log(`🧹 [PLAN-${taskId}] Setting empty plan - clearing previous task state`);
+      // Actualizar inmediatamente en el Context para limpiar estado anterior
+      updateTaskPlan(taskId, []);
+      onPlanUpdate?.([]);
+    } else {
+      console.log(`📋 [PLAN-${taskId}] Setting plan with ${newSteps.length} steps`);
+    }
+    
     updatePlan(newSteps, 'setPlan');
-  }, [updatePlan]);
+  }, [taskId, updatePlan, updateTaskPlan, onPlanUpdate]);
 
   // ========================================================================
   // FUNCIONES DE CONTROL DE STEPS
