@@ -226,6 +226,17 @@ export const TerminalView = ({
   
   const actualCurrentPageIndex = getTaskCurrentPageIndex(taskId);
 
+  // UPGRADE AI: Actualizar estadísticas de paginación cuando cambian las monitor pages
+  useEffect(() => {
+    if (taskId && monitorPages.length >= 0) {
+      console.log(`📊 [PAGINATION-UPDATE] Updating pagination stats for task ${taskId}: ${monitorPages.length} pages`);
+      setPaginationStats(prev => ({
+        ...prev,
+        totalPages: monitorPages.length
+      }));
+    }
+  }, [monitorPages.length, taskId]);
+
   // Función para cargar el informe final - FIXED: Proper error handling and content loading
   const loadFinalReport = async (taskId: string) => {
     try {
