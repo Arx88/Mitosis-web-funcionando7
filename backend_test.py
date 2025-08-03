@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://3d6d9a18-97d5-4f55-820d-6bc83fae60e1.preview.emergentagent.com"
+BACKEND_URL = "https://5c7a52ee-93ff-4253-9926-2782833a1452.preview.emergentagent.com"
 SPECIFIC_TASK_ID = "task-1754249098561-1-241"
 
 class MitosisBackendTester:
