@@ -168,13 +168,15 @@ class EpisodicMemoryStore:
             logger.error(f"Error obteniendo episodios recientes: {e}")
             return []
     
-    def search_episodes(self, query: str, limit: int = 10) -> List[Episode]:
+    def search_episodes(self, query: str, limit: int = 10, task_id: Optional[str] = None) -> List[Episode]:
         """
         Busca episodios por contenido
+        UPGRADE AI: Modificado para soportar filtrado por task_id
         
         Args:
             query: Consulta de búsqueda
-            limit: Número máximo de resultados
+            limit: Número máximo de resultados  
+            task_id: ID de tarea para filtrar resultados (opcional)
             
         Returns:
             Lista de episodios coincidentes
@@ -184,6 +186,12 @@ class EpisodicMemoryStore:
             query_lower = query.lower()
             
             for episode in self.episodes.values():
+                # UPGRADE AI: Filtrar por task_id si se proporciona
+                if task_id is not None:
+                    episode_task_id = episode.context.get('task_id') if hasattr(episode, 'context') else None
+                    if episode_task_id != task_id:
+                        continue
+                
                 # Buscar en título, descripción y tags
                 if (query_lower in episode.title.lower() or 
                     query_lower in episode.description.lower() or
