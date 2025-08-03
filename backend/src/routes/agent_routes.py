@@ -672,6 +672,45 @@ def retry_step_endpoint(task_id: str, step_id: str):
             'error_type': 'retry_system_error'
         }), 500
 
+@agent_bp.route('/ollama-queue-status', methods=['GET'])
+def get_ollama_queue_status():
+    """
+    📊 ENDPOINT PARA MONITOREAR ESTADO DE LA COLA DE OLLAMA
+    
+    Proporciona información detallada sobre el estado actual de la cola
+    de Ollama, incluyendo estadísticas de rendimiento y requests activos.
+    
+    Returns:
+        JSON con estado de la cola, estadísticas y métricas
+    """
+    try:
+        queue_manager = get_ollama_queue_manager()
+        
+        # Obtener estado actual de la cola
+        status = asyncio.run(queue_manager.get_queue_status())
+        
+        # Agregar información adicional
+        status['endpoint_info'] = {
+            'path': '/api/ollama-queue-status',
+            'description': 'Monitor de cola de Ollama en tiempo real',
+            'updated_at': datetime.now().isoformat()
+        }
+        
+        return jsonify({
+            'success': True,
+            'queue_status': status,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo estado de cola Ollama: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'error_type': 'queue_status_error',
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 @agent_bp.route('/get-all-tasks', methods=['GET'])
 def get_all_tasks():
     """
