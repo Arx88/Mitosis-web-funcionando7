@@ -12,7 +12,7 @@ Test the WebSocket CORS fix that was just applied to the Mitosis backend. Specif
 4. **Health Check**: Verify all backend services are still working after the CORS changes
 5. **Task Creation**: Test that task creation still works properly with the new CORS configuration
 
-**Backend URL**: https://3d10b636-0cc4-4cae-86b2-4d045d292b07.preview.emergentagent.com
+**Backend URL**: https://7d400244-56cf-4207-9df0-dc8711a7609e.preview.emergentagent.com
 **Expected Outcome**: WebSocket connections should work without CORS policy errors, allowing real-time communication between frontend and backend.
 
 **Key Changes Made**:
@@ -31,8 +31,8 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL from environment
-BACKEND_URL = "https://3d10b636-0cc4-4cae-86b2-4d045d292b07.preview.emergentagent.com"
-FRONTEND_URL = "https://3d10b636-0cc4-4cae-86b2-4d045d292b07.preview.emergentagent.com"
+BACKEND_URL = "https://7d400244-56cf-4207-9df0-dc8711a7609e.preview.emergentagent.com"
+FRONTEND_URL = "https://7d400244-56cf-4207-9df0-dc8711a7609e.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class MitosisWebSocketCORSTester:

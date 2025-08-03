@@ -10,17 +10,17 @@
 #### 1. **Detección Automática de URL Real**
 ```bash
 # El script ahora detecta automáticamente la URL real del frontend
-if curl -s --max-time 5 https://3d10b636-0cc4-4cae-86b2-4d045d292b07.preview.emergentagent.com >/dev/null 2>&1; then
-    REAL_FRONTEND_URL="https://3d10b636-0cc4-4cae-86b2-4d045d292b07.preview.emergentagent.com"
+if curl -s --max-time 5 https://7d400244-56cf-4207-9df0-dc8711a7609e.preview.emergentagent.com >/dev/null 2>&1; then
+    REAL_FRONTEND_URL="https://7d400244-56cf-4207-9df0-dc8711a7609e.preview.emergentagent.com"
 else
-    REAL_FRONTEND_URL="https://3d10b636-0cc4-4cae-86b2-4d045d292b07.preview.emergentagent.com"
+    REAL_FRONTEND_URL="https://7d400244-56cf-4207-9df0-dc8711a7609e.preview.emergentagent.com"
 fi
 ```
 
 #### 2. **Configuración Dinámica de CORS**
 ```bash
 # Actualiza automáticamente el server.py con URLs correctas
-CORS_URLS="\"https://3d10b636-0cc4-4cae-86b2-4d045d292b07.preview.emergentagent.com\""
+CORS_URLS="\"https://7d400244-56cf-4207-9df0-dc8711a7609e.preview.emergentagent.com\""
 
 sed -i '/^FRONTEND_ORIGINS = \[/,/^\]/c\
 FRONTEND_ORIGINS = [\
