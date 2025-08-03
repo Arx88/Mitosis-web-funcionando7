@@ -47,6 +47,7 @@ export const useWebSocket = (): UseWebSocketReturn => {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionType, setConnectionType] = useState<'websocket' | 'polling' | 'disconnected'>('disconnected');
   const eventListenersRef = useRef<Partial<WebSocketEvents>>({});
+  const pendingRoomsRef = useRef<Set<string>>(new Set()); // ✅ TRACK PENDING ROOMS
 
   useEffect(() => {
     const wsConfig = getWebSocketConfig();
@@ -59,6 +60,16 @@ export const useWebSocket = (): UseWebSocketReturn => {
       console.log('✅ WebSocket connected successfully');
       setIsConnected(true);
       setConnectionType(newSocket.io.engine.transport.name as 'websocket' | 'polling');
+      
+      // ✅ AUTO-JOIN PENDING ROOMS
+      const pendingRooms = Array.from(pendingRoomsRef.current);
+      if (pendingRooms.length > 0) {
+        console.log('🎯 Auto-joining pending rooms:', pendingRooms);
+        pendingRooms.forEach(taskId => {
+          newSocket.emit('join_task', { task_id: taskId });
+          console.log('🔗 Auto-joined room:', taskId);
+        });
+      }
     });
     
     newSocket.on('disconnect', (reason) => {
@@ -75,6 +86,14 @@ export const useWebSocket = (): UseWebSocketReturn => {
     
     newSocket.on('connection_status', (data) => {
       console.log('📡 Connection status received:', data);
+    });
+    
+    newSocket.on('joined_task', (data) => {
+      console.log('✅ Successfully joined task room:', data);
+      // Remove from pending once joined
+      if (data.task_id) {
+        pendingRoomsRef.current.delete(data.task_id);
+      }
     });
     
     setSocket(newSocket);
