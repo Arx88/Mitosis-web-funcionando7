@@ -201,7 +201,17 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
   }, []);
 
   const handleSendMessage = useCallback(async (message: string) => {
-    if (!message.trim() || isLoading) return;
+    console.log('🚀 ChatInterface: handleSendMessage called', { message: message.substring(0, 50), isLoading });
+    
+    if (!message.trim()) {
+      console.warn('⚠️ ChatInterface: Empty message, ignoring');
+      return;
+    }
+    
+    if (isLoading) {
+      console.warn('⚠️ ChatInterface: Already loading, ignoring new message');
+      return;
+    }
 
     const userMessage: Message = {
       id: `msg-${Date.now()}`,
@@ -210,6 +220,8 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
       timestamp: new Date()
     };
 
+    console.log('📤 ChatInterface: Adding user message to chat');
+    
     // Actualizar mensajes inmediatamente para UI responsive
     if (onUpdateMessages) {
       onUpdateMessages([...messages, userMessage]);
@@ -217,15 +229,18 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
 
     setInputValue('');
     setIsLoading(true);
+    console.log('⏳ ChatInterface: isLoading set to true');
 
-    // ✅ TIMEOUT SAFETY: Reset isLoading after maximum wait time
+    // ✅ TIMEOUT SAFETY: Reset isLoading after shorter wait time
     const timeoutId = setTimeout(() => {
-      console.warn('⚠️ TIMEOUT: Request taking too long, resetting isLoading state');
+      console.warn('⚠️ TIMEOUT: Request taking too long (15s), resetting isLoading state');
       setIsLoading(false);
-    }, 30000); // 30 seconds timeout
+    }, 15000); // Reducido a 15 segundos
 
     try {
+      console.log('📡 ChatInterface: Sending message to backend');
       const response = await agentAPI.sendMessage(message, task?.id);
+      console.log('📨 ChatInterface: Received response from backend:', { hasResponse: !!response.response, hasPlan: !!response.plan });
       
       // Clear timeout since we got a response
       clearTimeout(timeoutId);
@@ -242,12 +257,14 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
           links: response.links
         };
 
+        console.log('🤖 ChatInterface: Adding assistant message to chat');
         if (onUpdateMessages) {
           onUpdateMessages([...messages, userMessage, assistantMessage]);
         }
 
         // Si hay un plan generado, actualizar la tarea
         if (response.plan && onUpdateTask) {
+          console.log('📋 ChatInterface: Plan received, updating task');
           onUpdateTask((currentTask: any) => ({
             ...currentTask,
             plan: response.plan,
@@ -258,29 +275,9 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
             onTaskPlanGenerated(response.plan);
           }
 
-          // Iniciar automáticamente la ejecución del plan
-          if (task?.id) {
-            try {
-              console.log('🚀 Starting automatic plan execution for task:', task.id);
-              const executionResponse = await fetch(`${API_CONFIG.backend.url}/api/agent/start-task-execution/${task.id}`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                }
-              });
-              
-              if (executionResponse.ok) {
-                console.log('✅ Plan execution started successfully');
-                if (onLogToTerminal) {
-                  onLogToTerminal('🚀 Plan execution started automatically', 'info');
-                }
-              } else {
-                console.error('❌ Failed to start plan execution:', executionResponse.status);
-              }
-            } catch (executionError) {
-              console.error('❌ Error starting plan execution:', executionError);
-            }
-          }
+          // NOTA: La ejecución automática ahora se maneja en el backend
+          // El endpoint /start-task-execution no es necesario desde ChatInterface
+          console.log('ℹ️ ChatInterface: Plan updated, execution handled automatically by backend');
         }
 
         // Log de herramientas al terminal
@@ -293,6 +290,7 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
           });
         }
       } else {
+        console.warn('⚠️ ChatInterface: No response received from backend');
         // Si no hay respuesta válida del backend
         const errorMessage: Message = {
           id: `msg-${Date.now() + 1}`,
@@ -310,7 +308,7 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
         }
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ ChatInterface: Error sending message:', error);
       
       // Clear timeout on error as well
       clearTimeout(timeoutId);
