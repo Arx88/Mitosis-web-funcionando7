@@ -562,8 +562,48 @@ def execute_single_step_detailed(task_id: str, step_id: str):
                 }), 400
         
     except Exception as e:
-        logger.error(f"❌ Error ejecutando paso {step_id}: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        """
+        🚫 MANEJO DE ERRORES CRÍTICOS DEL SISTEMA
+        
+        Maneja errores que ocurren fuera del sistema de reintentos
+        (errores de DB, validación, WebSocket, etc.)
+        """
+        error_message = str(e)
+        logger.error(f"❌ Error crítico ejecutando paso {step_id} de tarea {task_id}: {error_message}")
+        
+        try:
+            # Intentar actualizar el estado del paso si es posible
+            task_data = get_task_data(task_id)
+            if task_data:
+                steps = task_data.get('plan', [])
+                for step in steps:
+                    if step.get('id') == step_id:
+                        step['active'] = False
+                        step['status'] = 'system_error'
+                        step['system_error'] = error_message
+                        step['error_time'] = datetime.now().isoformat()
+                        break
+                
+                update_task_data(task_id, {'plan': steps})
+                
+                # Emitir evento de error crítico
+                emit_step_event(task_id, 'system_error', {
+                    'step_id': step_id,
+                    'error': error_message,
+                    'error_type': 'system_error',
+                    'activity': f"Error crítico del sistema en paso: {error_message}",
+                    'timestamp': datetime.now().isoformat()
+                })
+                
+        except Exception as emit_error:
+            logger.error(f"❌ Error adicional al reportar error principal: {str(emit_error)}")
+        
+        return jsonify({
+            'success': False,
+            'error': error_message,
+            'error_type': 'system_error',
+            'message': 'Error crítico del sistema. Contacta al administrador si persiste.'
+        }), 500
 
 @agent_bp.route('/get-all-tasks', methods=['GET'])
 def get_all_tasks():
