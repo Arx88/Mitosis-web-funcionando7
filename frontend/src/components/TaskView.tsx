@@ -211,12 +211,49 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       setShowFilesModal(false);
       setShowShareModal(false);
       
-      // Si hay un plan inicial, establecerlo
+  // Si hay un plan inicial, establecerlo
       if (task.plan && task.plan.length > 0) {
         console.log(`📋 [PLAN-INIT] Loading existing plan with ${task.plan.length} steps`);
+        console.log(`📋 [PLAN-INIT] Plan details:`, task.plan.map(step => ({
+          id: step.id,
+          title: step.title,
+          active: step.active,
+          completed: step.completed,
+          status: step.status
+        })));
         setPlan(task.plan);
+        
+        // ✅ CRITICAL FIX: Force plan manager to recognize the plan immediately
+        console.log(`📋 [PLAN-INIT] Plan set, forcing plan manager update`);
       } else {
-        console.log(`📋 [PLAN-INIT] No plan found for task ${task.id}`);
+        console.log(`📋 [PLAN-INIT] No plan found for task ${task.id}, checking backend...`);
+        
+        // ✅ FALLBACK: If no plan in task, try to fetch from backend
+        const fetchTaskPlan = async () => {
+          try {
+            const response = await fetch(`${API_CONFIG.backend.url}/api/agent/get-all-tasks`);
+            if (response.ok) {
+              const data = await response.json();
+              const backendTask = data.tasks?.find(t => t.id === task.id);
+              if (backendTask?.plan && backendTask.plan.length > 0) {
+                console.log(`📋 [PLAN-FALLBACK] Found plan in backend with ${backendTask.plan.length} steps`);
+                setPlan(backendTask.plan);
+                
+                // Also update the task in context
+                onUpdateTask((currentTask: Task) => ({
+                  ...currentTask,
+                  plan: backendTask.plan
+                }));
+              } else {
+                console.log(`📋 [PLAN-FALLBACK] No plan found in backend for task ${task.id}`);
+              }
+            }
+          } catch (error) {
+            console.error(`❌ [PLAN-FALLBACK] Error fetching task plan from backend:`, error);
+          }
+        };
+        
+        fetchTaskPlan();
       }
       
       console.log(`✅ [TASKVIEW-SWITCH] Switch complete - data isolated`);
