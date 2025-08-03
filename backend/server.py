@@ -179,6 +179,7 @@ try:
         cors_credentials=False,
         logger=False,
         engineio_logger=False,
+        path='/api/socket.io/',
         transports=['polling']
     )
     
