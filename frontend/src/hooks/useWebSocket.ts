@@ -90,7 +90,32 @@ export const useWebSocket = (): UseWebSocketReturn => {
       console.log('🔗 Joining task room:', taskId);
       socket.emit('join_task', { task_id: taskId });
     } else {
-      console.warn('⚠️ Cannot join room - socket not connected');
+      console.warn('⚠️ Cannot join room - socket not connected, will retry when connected');
+      // ✅ RETRY LOGIC: Reintentar cuando se conecte
+      const retryJoin = () => {
+        if (socket && socket.connected) {
+          console.log('🔄 Retrying join task room:', taskId);
+          socket.emit('join_task', { task_id: taskId });
+        } else {
+          setTimeout(retryJoin, 500); // Reintentar en 500ms
+        }
+      };
+      
+      // Reintentar inmediatamente y también cuando se conecte
+      setTimeout(retryJoin, 100);
+      
+      // También escuchar el evento connect para unirse automáticamente
+      const handleDelayedJoin = () => {
+        if (taskId && socket && socket.connected) {
+          console.log('🎯 Auto-joining task room on connect:', taskId);
+          socket.emit('join_task', { task_id: taskId });
+        }
+      };
+      
+      socket?.on('connect', handleDelayedJoin);
+      
+      // Cleanup
+      return () => socket?.off('connect', handleDelayedJoin);
     }
   }, [socket, isConnected]);
 
