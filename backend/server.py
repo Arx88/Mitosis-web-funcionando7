@@ -177,15 +177,14 @@ try:
         app, 
         cors_allowed_origins="*",
         cors_credentials=False,
-        async_mode='threading',
+        async_mode='eventlet',
         logger=True,
         engineio_logger=True,
         ping_timeout=20,
         ping_interval=10,
         transports=['polling', 'websocket'],
         allow_upgrades=True,
-        path='/api/socket.io/',
-        manage_session=False
+        path='/api/socket.io/'
     )
     
     # Eventos WebSocket simplificados
