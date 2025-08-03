@@ -417,9 +417,10 @@ def get_task_status(task_id: str):
             'stats': {
                 'total_steps': len(steps),
                 'completed_steps': completed_steps,
+                'failed_steps': failed_steps,  # 🔴 NUEVO: Incluir pasos fallidos en estadísticas
                 'in_progress_steps': in_progress_steps,
                 'active_steps': active_steps,
-                'remaining_steps': len(steps) - completed_steps
+                'remaining_steps': len(steps) - completed_steps - failed_steps  # 🔴 AJUSTAR: restar también fallidos
             },
             'current_step': next((i for i, step in enumerate(steps) if step.get('active', False)), None),
             'message': task_data.get('message', ''),
