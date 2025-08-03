@@ -2440,26 +2440,20 @@ def evaluate_step_completion_with_agent(step: dict, step_result: dict, original_
                 }
         
         elif tool_name in ['analysis', 'processing', 'creation']:
-            # Para análisis/procesamiento: Validación real del contenido
-            if success and content and len(str(content)) > 30:
+            # 🔧 FIX: Evaluación mucho más permisiva para análisis/procesamiento
+            if success:
+                # Si success=True, SIEMPRE permitir continuar independientemente del contenido
                 return {
                     'step_completed': True,
                     'should_continue': False,
-                    'reason': 'Análisis/procesamiento completado con contenido válido',
+                    'reason': 'Análisis/procesamiento completado exitosamente',
                     'feedback': 'Paso completado correctamente'
-                }
-            elif success:  # Success básico pero contenido limitado
-                return {
-                    'step_completed': True,
-                    'should_continue': False,
-                    'reason': 'Análisis/procesamiento ejecutado correctamente',
-                    'feedback': 'Paso ejecutado exitosamente'
                 }
             else:
                 return {
                     'step_completed': False,
                     'should_continue': True,
-                    'reason': 'Análisis/procesamiento incompleto o falló',
+                    'reason': 'Análisis/procesamiento falló explícitamente',
                     'feedback': 'Se necesita completar el análisis/procesamiento'
                 }
         
