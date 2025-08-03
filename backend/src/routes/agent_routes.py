@@ -7846,3 +7846,64 @@ def is_casual_conversation(message: str) -> bool:
 
 
 # FIN del archivo - función duplicada removida
+
+@agent_bp.route('/delete-task/<task_id>', methods=['DELETE'])
+def delete_task_endpoint(task_id: str):
+    """
+    🗑️ ENDPOINT PARA ELIMINAR TAREAS
+    
+    Elimina completamente una tarea de la base de datos MongoDB.
+    Esto resuelve el problema donde las tareas eliminadas en el frontend
+    vuelven a aparecer al recargar la página.
+    
+    Args:
+        task_id: ID de la tarea a eliminar
+        
+    Returns:
+        JSON response con el resultado de la eliminación
+    """
+    try:
+        logger.info(f"🗑️ Eliminando tarea: {task_id}")
+        
+        # Obtener task manager
+        task_manager = get_task_manager()
+        if not task_manager:
+            return jsonify({'error': 'Task manager not available'}), 500
+        
+        # Verificar que la tarea existe antes de eliminar
+        task_data = get_task_data(task_id)
+        if not task_data:
+            logger.warning(f"⚠️ Tarea {task_id} no encontrada para eliminar")
+            return jsonify({'error': f'Task {task_id} not found'}), 404
+        
+        # Eliminar tarea de la base de datos
+        success = task_manager.delete_task(task_id)
+        
+        if success:
+            logger.info(f"✅ Tarea {task_id} eliminada exitosamente de la base de datos")
+            
+            # Limpiar cache si existe
+            if hasattr(task_manager, 'active_cache') and task_id in task_manager.active_cache:
+                del task_manager.active_cache[task_id]
+                logger.info(f"🧹 Cache limpiado para tarea {task_id}")
+            
+            return jsonify({
+                'success': True,
+                'message': f'Task {task_id} deleted successfully',
+                'task_id': task_id,
+                'timestamp': datetime.now().isoformat()
+            })
+        else:
+            logger.error(f"❌ Error eliminando tarea {task_id} de la base de datos")
+            return jsonify({
+                'error': f'Failed to delete task {task_id} from database',
+                'success': False
+            }), 500
+        
+    except Exception as e:
+        logger.error(f"❌ Error en endpoint de eliminación para task {task_id}: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'success': False,
+            'error_type': 'delete_task_error'
+        }), 500
