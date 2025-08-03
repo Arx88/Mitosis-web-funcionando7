@@ -671,6 +671,8 @@ def retry_step_endpoint(task_id: str, step_id: str):
             'error_type': 'retry_system_error'
         }), 500
 
+@agent_bp.route('/get-all-tasks', methods=['GET'])
+def get_all_tasks():
     """
     🔄 ENDPOINT PARA OBTENER TODAS LAS TAREAS
     Devuelve todas las tareas almacenadas en la base de datos
