@@ -133,13 +133,15 @@ class WorkingMemoryStore:
             logger.error(f"Error obteniendo contextos recientes: {e}")
             return []
     
-    def search_contexts(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+    def search_contexts(self, query: str, limit: int = 5, task_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Busca contextos por contenido
+        UPGRADE AI: Modificado para soportar filtrado por task_id
         
         Args:
             query: Consulta de búsqueda
             limit: Número máximo de resultados
+            task_id: ID de tarea para filtrar resultados (opcional)
             
         Returns:
             Lista de contextos coincidentes
@@ -151,6 +153,12 @@ class WorkingMemoryStore:
             query_lower = query.lower()
             
             for context_id, context_entry in self.store.items():
+                # UPGRADE AI: Filtrar por task_id si se proporciona
+                if task_id is not None:
+                    entry_task_id = context_entry['data'].get('task_id')
+                    if entry_task_id != task_id:
+                        continue
+                
                 # Búsqueda simple en contenido
                 content_str = json.dumps(context_entry['data']).lower()
                 
@@ -160,7 +168,8 @@ class WorkingMemoryStore:
                         'data': context_entry['data'],
                         'created_at': context_entry['created_at'],
                         'last_accessed': context_entry['last_accessed'],
-                        'access_count': context_entry['access_count']
+                        'access_count': context_entry['access_count'],
+                        'task_id': context_entry['data'].get('task_id', 'unknown')  # UPGRADE AI: Incluir task_id en respuesta
                     })
                     
                     if len(results) >= limit:
