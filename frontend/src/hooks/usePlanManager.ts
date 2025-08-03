@@ -176,27 +176,59 @@ export const usePlanManager = ({
 
   useEffect(() => {
     if (!taskId || !socket) {
-      console.log(`🔌 [PLAN-${taskId}] WebSocket not available, skipping setup`);
+      console.log(`⚠️ [PLAN-${taskId || 'NO-ID'}] Missing requirements - taskId:`, !!taskId, 'socket:', !!socket);
       return;
     }
 
-    console.log(`🔌 [PLAN-${taskId}] Setting up WebSocket listeners`);
-
-    // ✅ CRITICAL FIX: Only join room once per task
+    console.log(`🌐 [PLAN-${taskId}] Setting up WebSocket connection and polling`);
     let isJoined = false;
-    
+
     const setupConnection = () => {
-      if (!isJoined) {
-        console.log(`🎯 [PLAN-${taskId}] Joining WebSocket room`);
-        joinTaskRoom(taskId);
-        isJoined = true;
-      }
+      if (!socket || !taskId || isJoined) return;
+      
+      console.log(`🔗 [PLAN-${taskId}] Setting up connection`);
+      joinTaskRoom(taskId);
+      isJoined = true;
     };
 
-    // Setup connection if socket is connected
-    if (socket.connected) {
-      setupConnection();
-    }
+    // ✅ CRITICAL FIX: Add HTTP polling as backup
+    const startPolling = () => {
+      const pollInterval = setInterval(async () => {
+        try {
+          console.log(`🔄 [PLAN-${taskId}] Polling for updates...`);
+          const response = await fetch(`${API_CONFIG.backend.url}/api/agent/get-all-tasks`);
+          if (response.ok) {
+            const data = await response.json();
+            const currentTask = data.tasks?.find((t: any) => t.id === taskId);
+            
+            if (currentTask?.plan && Array.isArray(currentTask.plan)) {
+              console.log(`📊 [PLAN-${taskId}] Polling found plan with ${currentTask.plan.length} steps`);
+              
+              const newSteps = currentTask.plan.map((step: any) => ({
+                id: step.id,
+                title: step.title,
+                description: step.description,
+                tool: step.tool,
+                status: step.status,
+                estimated_time: step.estimated_time,
+                completed: step.completed || false,
+                active: step.active || false,
+                result: step.result
+              }));
+              
+              updatePlan(newSteps, 'http-polling');
+            }
+          }
+        } catch (error) {
+          console.error(`❌ [PLAN-${taskId}] Polling error:`, error);
+        }
+      }, 3000); // Poll every 3 seconds
+
+      return () => {
+        console.log(`🛑 [PLAN-${taskId}] Stopping polling`);
+        clearInterval(pollInterval);
+      };
+    };
 
     // Listen for connection events
     const onConnect = () => {
