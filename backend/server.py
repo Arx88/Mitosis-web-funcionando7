@@ -129,6 +129,39 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 app.config['START_TIME'] = time.time()
 
+# 🚦 INICIALIZACIÓN DEL GESTOR DE COLA DE OLLAMA
+def initialize_ollama_queue():
+    """
+    🚀 INICIALIZAR GESTOR DE COLA DE OLLAMA EN BACKGROUND
+    
+    Inicializa el sistema de cola de Ollama en un thread separado
+    para evitar bloquear el inicio de la aplicación Flask.
+    """
+    try:
+        from src.services.ollama_queue_manager import initialize_ollama_queue_manager
+        
+        def async_init():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(initialize_ollama_queue_manager())
+                print("🚦 ✅ Sistema de cola Ollama inicializado exitosamente")
+            except Exception as e:
+                print(f"🚦 ❌ Error inicializando cola Ollama: {str(e)}")
+            finally:
+                loop.close()
+        
+        # Ejecutar en thread separado
+        init_thread = threading.Thread(target=async_init, daemon=True)
+        init_thread.start()
+        print("🚦 🔄 Inicializando sistema de cola Ollama en background...")
+        
+    except Exception as e:
+        print(f"🚦 ❌ Error crítico inicializando cola Ollama: {str(e)}")
+
+# Inicializar cola de Ollama al arrancar
+initialize_ollama_queue()
+
 # Configurar CORS - CONFIGURACIÓN ULTRA-DINÁMICA PARA WEBSOCKET
 
 CORS(app, resources={
