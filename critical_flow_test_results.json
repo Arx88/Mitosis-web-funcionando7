@@ -1,0 +1,59 @@
+{
+  "total_tests": 6,
+  "passed_tests": 4,
+  "success_rate": 66.66666666666666,
+  "overall_status": "\u26a0\ufe0f BACKEND PARTIALLY WORKING - Some critical issues",
+  "root_cause": "Task persistence failure",
+  "critical_failures": [
+    "Task Persistence",
+    "End-to-End Flow"
+  ],
+  "test_results": [
+    {
+      "test_name": "Chat Endpoint Response",
+      "success": true,
+      "details": "Message processed successfully - Task ID: chat-1754184258, Response length: 66",
+      "timestamp": "2025-08-03T01:24:26.356307",
+      "response_data": null
+    },
+    {
+      "test_name": "Plan Generation",
+      "success": true,
+      "details": "Complete plan generated - 3 valid steps, Enhanced title: An\u00e1lisis de Colores Primarios",
+      "timestamp": "2025-08-03T01:24:35.193665",
+      "response_data": null
+    },
+    {
+      "test_name": "Task Persistence",
+      "success": false,
+      "details": "Cannot check task persistence - HTTP 500: {\"error\":\"Database objects do not implement truth value testing or bool(). Please compare with None instead: database is not None\",\"success\":false,\"task_id\":\"chat-1754184258\"}\n",
+      "timestamp": "2025-08-03T01:24:37.201266",
+      "response_data": null
+    },
+    {
+      "test_name": "Task Execution Trigger",
+      "success": true,
+      "details": "Task execution triggered - Message: Real task execution started",
+      "timestamp": "2025-08-03T01:24:39.210181",
+      "response_data": null
+    },
+    {
+      "test_name": "WebSocket Infrastructure",
+      "success": true,
+      "details": "Backend healthy - WebSocket infrastructure should be available",
+      "timestamp": "2025-08-03T01:24:41.269890",
+      "response_data": null
+    },
+    {
+      "test_name": "End-to-End Flow",
+      "success": false,
+      "details": "Task not persisted - HTTP 500",
+      "timestamp": "2025-08-03T01:24:51.776100",
+      "response_data": null
+    }
+  ],
+  "task_id": "chat-1754184258",
+  "user_message": "Crea una lista de 3 colores primarios",
+  "backend_working": true,
+  "flow_complete": false
+}
