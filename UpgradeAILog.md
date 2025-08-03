@@ -215,5 +215,12 @@ Este documento registra el progreso de implementación del plan de mejoras defin
 - ✅ **Memory Efficient**: Limpieza automática previene memory leaks
 
 **Timestamp Final:** 2025-01-08 11:45:00
-**Estado:** ✅ SISTEMA COMPLETAMENTE ACTUALIZADO Y OPERATIVO
-**Referencia:** Implementación 100% conforme a UpgradeAI.md especificaciones
+### 🚨 2025-01-08 11:50:00 - PROBLEMA DETECTADO POR USUARIO
+- **Problema:** Al cambiar de tarea, se muestra temporalmente el plan de acción de la tarea anterior
+- **Causa:** Estado del frontend no se limpia inmediatamente al cambiar de tarea
+- **Estado:** 🔧 REQUIERE CORRECCIÓN INMEDIATA
+- **Sección UpgradeAI.md:** 5.1.4 - "Gestión de Estado de Terminal por Tarea"
+- **Impacto:** UX degradada - información incorrecta mostrada temporalmente
+
+**Estado:** 🚧 CORRECCIÓN EN PROGRESO - 95% COMPLETADO
+**Referencia:** Implementación pendiente de fix frontend para estado stale
