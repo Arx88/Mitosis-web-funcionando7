@@ -1561,6 +1561,28 @@ export const TerminalView = ({
                                 `${liveTimers[step.id] || '00:00'}`}
                           </span>
                         )}
+                        
+                        {/* ✅ NUEVO: Mostrar información de reintentos */}
+                        {(step.retry_count && step.retry_count > 0) && (
+                          <span className={`block text-xs mt-0.5 transition-all duration-200 ${
+                            step.failed || step.status === 'failed' ? 'text-red-400 font-medium' : 
+                            step.status === 'pending_retry' ? 'text-yellow-400 font-medium' :
+                            'text-orange-400 font-medium'
+                          }`}>
+                            {step.status === 'failed_after_retries' || (step.failed && step.retry_count >= 5) ? 
+                              `❌ Falló después de ${step.retry_count} reintentos` : 
+                              step.status === 'pending_retry' ? 
+                                `🔄 Reintentando... (intento ${step.retry_count}/5)` :
+                                `⚠️ ${step.retry_count} reintento${step.retry_count > 1 ? 's' : ''}`}
+                          </span>
+                        )}
+                        
+                        {/* ✅ NUEVO: Mostrar error si está disponible */}
+                        {(step.failed || step.status === 'failed' || step.status === 'failed_after_retries') && step.last_error && (
+                          <span className="block text-xs mt-0.5 text-red-300 opacity-75 truncate" title={step.last_error}>
+                            🚨 {step.last_error}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
