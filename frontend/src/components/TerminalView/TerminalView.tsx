@@ -354,6 +354,23 @@ export const TerminalView = ({
     console.log(`  - TaskId: ${taskId}`);
     console.log(`  - TaskTitle: ${taskTitle}`);
     
+    // UPGRADE AI: PROBLEMA ESTADO STALE - Verificar si es cambio real de tarea
+    if (lastTaskIdRef.current && lastTaskIdRef.current !== (dataId || '')) {
+      console.log(`🧹 [TERMINAL-RESET] REAL TASK SWITCH - Clearing previous task state immediately`);
+      
+      // UPGRADE AI: Limpiar monitor pages inmediatamente al cambiar de tarea
+      if (taskId && lastTaskIdRef.current !== taskId) {
+        console.log(`🧹 [TERMINAL-RESET] Clearing monitor pages for previous task`);
+        // No mostrar datos de tarea anterior - usar páginas vacías temporalmente
+        setPaginationStats({
+          totalPages: 0, // UPGRADE AI: Empezar con 0 páginas hasta que se cargan las nuevas
+          currentPage: 1,
+          limit: 20,
+          offset: 0
+        });
+      }
+    }
+    
     console.log(`🔄 [TERMINAL-RESET] Resetting terminal state for task: ${dataId}`);
     setTerminalOutput([]);
     setCurrentExecutingTool(null);
@@ -365,12 +382,16 @@ export const TerminalView = ({
     setIsLiveMode(true);
     setIsSystemOnline(false);
     setInitializationStep(0);
-    setPaginationStats({
-      totalPages: monitorPages.length, // Usar datos del Context
-      currentPage: 1,
-      limit: 20,
-      offset: 0
-    });
+    
+    // UPGRADE AI: Solo establecer totalPages basado en monitorPages si NO es cambio de tarea
+    if (!lastTaskIdRef.current || lastTaskIdRef.current === (dataId || '')) {
+      setPaginationStats({
+        totalPages: monitorPages.length, // Usar datos del Context solo si no hay cambio de tarea
+        currentPage: 1,
+        limit: 20,
+        offset: 0
+      });
+    }
     
     // Limpiar timers de pasos anteriores
     Object.values(stepTimers).forEach(timer => {
