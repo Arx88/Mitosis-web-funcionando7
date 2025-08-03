@@ -71,8 +71,8 @@ fix_environment_variables() {
         # Verificar URL del backend
         if ! grep -q "REACT_APP_BACKEND_URL\|VITE_BACKEND_URL" /app/frontend/.env; then
             cat >> /app/frontend/.env << EOF
-REACT_APP_BACKEND_URL=https://158be43a-d067-4263-a237-b024aaad0e09.preview.emergentagent.com
-VITE_BACKEND_URL=https://158be43a-d067-4263-a237-b024aaad0e09.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://3d10b636-0cc4-4cae-86b2-4d045d292b07.preview.emergentagent.com
+VITE_BACKEND_URL=https://3d10b636-0cc4-4cae-86b2-4d045d292b07.preview.emergentagent.com
 EOF
             log_success "URLs del backend añadidas al frontend .env"
         fi
