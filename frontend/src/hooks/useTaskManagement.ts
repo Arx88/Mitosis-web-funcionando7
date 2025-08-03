@@ -285,23 +285,46 @@ export const useTaskManagement = () => {
   
   const loadAllTasks = useCallback(async () => {
     try {
-      console.log('📋 Loading all tasks from backend...');
+      console.log('📋 [LOAD-TASKS] Starting to load all tasks from backend...');
       
       const response = await fetch(`${API_CONFIG.backend.url}/api/agent/get-all-tasks`);
       
       if (response.ok) {
         const data = await response.json();
-        console.log('📋 Tasks loaded successfully:', data.count);
+        console.log('📋 [LOAD-TASKS] Raw data from backend:', {
+          count: data.count,
+          tasksLength: data.tasks?.length || 0
+        });
+        
+        // ✅ CRITICAL FIX: Log each task's plan data
+        if (data.tasks && Array.isArray(data.tasks)) {
+          data.tasks.forEach((task, index) => {
+            console.log(`📋 [LOAD-TASKS] Task ${index + 1}:`, {
+              id: task.id,
+              title: task.title,
+              plan: task.plan ? {
+                length: task.plan.length,
+                hasSteps: task.plan.length > 0,
+                completedSteps: task.plan.filter(s => s.completed).length,
+                activeSteps: task.plan.filter(s => s.active).length
+              } : 'NO PLAN'
+            });
+          });
+        }
+        
+        console.log('📋 [LOAD-TASKS] Tasks loaded successfully, dispatching SET_TASKS');
         
         // Actualizar las tareas en el estado
         dispatch({ type: 'SET_TASKS', payload: data.tasks || [] });
+        
+        console.log('📋 [LOAD-TASKS] SET_TASKS dispatched, tasks should now be in context');
         return data.tasks || [];
       } else {
-        console.error('❌ Failed to load tasks:', response.status);
+        console.error('❌ [LOAD-TASKS] Failed to load tasks:', response.status);
         return [];
       }
     } catch (error) {
-      console.error('❌ Error loading tasks:', error);
+      console.error('❌ [LOAD-TASKS] Error loading tasks:', error);
       return [];
     }
   }, [dispatch]);
