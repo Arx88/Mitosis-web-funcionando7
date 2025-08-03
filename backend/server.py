@@ -936,8 +936,12 @@ def get_task_status(task_id):
         JSON con el estado de la tarea: status, progress, current_step, etc.
     """
     try:
-        # Buscar la tarea en la base de datos
-        task = db.tasks.find_one({"task_id": task_id}) if db is not None else None
+        # Use TaskManager to get task data
+        sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+        from src.services.task_manager import TaskManager
+        
+        task_manager = TaskManager()
+        task = task_manager.get_task(task_id)
         
         if not task:
             return jsonify({
