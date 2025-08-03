@@ -6116,24 +6116,34 @@ def start_task_execution(task_id: str):
                                     step['completed'] = True  # Marcar como completado para no bloquear
                                     step['result'] = simplified_result or {'success': False, 'forced': True}
                             else:
-                                # 🚀 AFTER 2 RETRIES, FORCE COMPLETION TO AVOID BLOCKING
-                                logger.warning(f"🚫 Forzando completación del paso {i+1} después de {retry_count} intentos")
-                                step['status'] = 'completed_with_issues'
-                                step['completed'] = True  # Forzar completación
+                                # 🚀 AFTER 5 RETRIES, MARK AS DEFINITIVELY FAILED WITH RED X
+                                logger.error(f"🚫 PASO {i+1} FALLÓ DEFINITIVAMENTE después de {retry_count} intentos")
+                                step['status'] = 'failed'  # Estado de falla definitiva
+                                step['completed'] = False  # NO marcar como completado
                                 step['active'] = False
-                                step['result'] = step_result or {'success': False, 'forced': True, 'reason': 'Max retries reached'}
+                                step['failed'] = True  # Indicador específico de falla
+                                step['retry_exhausted'] = True  # Indicar que se agotaron los retries
+                                step['result'] = step_result or {
+                                    'success': False, 
+                                    'failed_definitively': True, 
+                                    'reason': f'Paso falló después de {retry_count} intentos',
+                                    'error': 'Max retries reached - definitively failed'
+                                }
                                 step['completed_time'] = datetime.now().isoformat()
-                                step['forced_completion'] = True
+                                step['error_message'] = f"Falló después de {retry_count} intentos"
                                 
-                                # ✅ EMITIR EVENTO WEBSOCKET - PASO FORZADO
-                                emit_step_event(task_id, 'step_completed', {
+                                # ❌ EMITIR EVENTO WEBSOCKET - PASO FALLÓ CON X ROJA
+                                emit_step_event(task_id, 'step_failed', {
                                     'step_id': step['id'],
-                                    'title': step.get('title', 'Paso completado (forzado)'),
+                                    'title': step.get('title', 'Paso falló definitivamente'),
                                     'result': step['result'],
+                                    'error': f'Falló después de {retry_count} intentos',
+                                    'failed_definitively': True,
+                                    'retry_count': retry_count,
                                     'timestamp': datetime.now().isoformat()
                                 })
                             
-                            # 🚀 CRÍTICO: CONTINUAR CON EL SIGUIENTE PASO (NO BREAK)
+                            # 🚀 CRÍTICO: CONTINUAR CON EL SIGUIENTE PASO INCLUSO SI FALLÓ
                             logger.info(f"🔄 Continuando con el siguiente paso después de procesar paso {i+1}")
                         
                         # Actualizar tarea
