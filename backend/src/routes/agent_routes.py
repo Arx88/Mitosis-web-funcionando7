@@ -43,6 +43,142 @@ logger = logging.getLogger(__name__)
 # 🔄 CONSTANTE PARA SISTEMA DE REINTENTOS
 MAX_STEP_RETRIES = 5
 
+# 🔄 FUNCIONES AUXILIARES PARA SISTEMA DE REINTENTOS
+
+def track_step_retry(task_id: str, step_id: str, current_step: dict, error_message: str) -> dict:
+    """
+    🔍 RASTREADOR DE REINTENTOS POR PASO
+    
+    Incrementa el contador de reintentos para un paso específico y determina
+    si debe continuar reintentando o marcar como fallido permanentemente.
+    
+    Args:
+        task_id: ID de la tarea
+        step_id: ID del paso
+        current_step: Datos actuales del paso
+        error_message: Mensaje de error del intento fallido
+        
+    Returns:
+        dict: Estado actualizado del paso con información de reintentos
+    """
+    # Inicializar contadores si no existen
+    retry_count = current_step.get('retry_count', 0) + 1
+    retry_attempts = current_step.get('retry_attempts', [])
+    
+    # Registrar este intento fallido
+    retry_attempt = {
+        'attempt_number': retry_count,
+        'timestamp': datetime.now().isoformat(),
+        'error_message': error_message,
+        'duration': 0  # Se puede calcular si se necesita
+    }
+    retry_attempts.append(retry_attempt)
+    
+    # Actualizar estado del paso
+    current_step['retry_count'] = retry_count
+    current_step['retry_attempts'] = retry_attempts
+    current_step['last_error'] = error_message
+    current_step['last_retry_timestamp'] = datetime.now().isoformat()
+    
+    # Determinar si se alcanzó el límite de reintentos
+    if retry_count >= MAX_STEP_RETRIES:
+        current_step['status'] = 'failed_after_retries'
+        current_step['failed_permanently'] = True
+        current_step['final_error'] = error_message
+        current_step['failed_at'] = datetime.now().isoformat()
+        
+        logger.error(f"🚫 Paso {step_id} de tarea {task_id} FALLÓ PERMANENTEMENTE después de {retry_count} reintentos")
+        logger.error(f"🚫 Error final: {error_message}")
+        
+        return {
+            'should_retry': False,
+            'step_failed_permanently': True,
+            'retry_count': retry_count,
+            'max_retries_reached': True
+        }
+    else:
+        current_step['status'] = 'pending_retry'
+        current_step['will_retry'] = True
+        
+        logger.warning(f"⚠️ Paso {step_id} de tarea {task_id} falló (intento {retry_count}/{MAX_STEP_RETRIES})")
+        logger.warning(f"⚠️ Error: {error_message}")
+        logger.info(f"🔄 Se reintentará automáticamente en unos segundos...")
+        
+        return {
+            'should_retry': True,
+            'step_failed_permanently': False,
+            'retry_count': retry_count,
+            'max_retries_reached': False,
+            'remaining_retries': MAX_STEP_RETRIES - retry_count
+        }
+
+def fail_task_due_to_step_failure(task_id: str, step_id: str, step_title: str, final_error: str) -> None:
+    """
+    💀 MARCADOR DE FALLO COMPLETO DE TAREA
+    
+    Marca una tarea completa como fallida cuando un paso específico
+    alcanza el máximo de reintentos permitidos.
+    
+    Args:
+        task_id: ID de la tarea a fallar
+        step_id: ID del paso que causó el fallo
+        step_title: Título del paso que falló
+        final_error: Mensaje de error final
+    """
+    try:
+        # Actualizar estado de la tarea
+        task_update = {
+            'status': 'failed_step_retries',
+            'failed_at': datetime.now().isoformat(),
+            'failure_reason': f'Paso "{step_title}" falló después de {MAX_STEP_RETRIES} reintentos',
+            'failed_step_id': step_id,
+            'final_error_message': final_error,
+            'retry_limit_exceeded': True
+        }
+        
+        update_task_data(task_id, task_update)
+        
+        # Emitir evento WebSocket para notificar al frontend
+        emit_step_event(task_id, 'task_failed_retries', {
+            'task_id': task_id,
+            'failed_step_id': step_id,
+            'failed_step_title': step_title,
+            'final_error': final_error,
+            'retry_count': MAX_STEP_RETRIES,
+            'message': f'La tarea ha sido detenida: paso "{step_title}" falló después de {MAX_STEP_RETRIES} reintentos',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        logger.error(f"💀 TAREA {task_id} FALLIDA COMPLETAMENTE")
+        logger.error(f"💀 Paso causante: {step_title} (ID: {step_id})")
+        logger.error(f"💀 Error final: {final_error}")
+        
+    except Exception as e:
+        logger.error(f"❌ Error al marcar tarea {task_id} como fallida: {str(e)}")
+
+def reset_step_for_retry(current_step: dict) -> None:
+    """
+    🔄 PREPARADOR DE PASO PARA REINTENTO
+    
+    Resetea el estado de un paso para prepararlo para un nuevo intento,
+    manteniendo el historial de reintentos.
+    
+    Args:
+        current_step: Datos del paso a resetear
+    """
+    # Resetear estados de ejecución, pero mantener información de reintentos
+    current_step['active'] = False
+    current_step['status'] = 'pending'  # Volver a estado inicial
+    current_step['result'] = None
+    current_step['error'] = None
+    
+    # Mantener información de reintentos intacta
+    # current_step['retry_count'] se mantiene
+    # current_step['retry_attempts'] se mantiene
+    # current_step['last_error'] se mantiene
+    
+    logger.info(f"🔄 Paso preparado para reintento #{current_step.get('retry_count', 0) + 1}")
+
 # JSON Schema para validación de planes generados por Ollama
 # Mejora implementada según UPGRADE.md Sección 2: Validación de Esquemas JSON
 PLAN_SCHEMA = {
