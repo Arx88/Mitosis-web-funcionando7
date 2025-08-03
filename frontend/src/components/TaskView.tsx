@@ -183,7 +183,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   // EFECTOS DE INICIALIZACIÓN Y RESETEO POR TAREA
   // ========================================================================
 
-  // RESET COMPLETO cuando cambia la tarea ID - SIN RESETEAR CONTEXT (ya está aislado)
+  // RESET COMPLETO cuando cambia la tarea ID - UPGRADE AI: LIMPIEZA INMEDIATA
   const lastTaskIdRef = useRef<string>('');
   useEffect(() => {
     if (task.id !== lastTaskIdRef.current) {
@@ -192,6 +192,16 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       console.log(`🔄 [TASKVIEW-SWITCH] Task status: ${task.status}`);
       console.log(`🔄 [TASKVIEW-SWITCH] Task messages: ${task.messages?.length || 0}`);
       console.log(`🔄 [TASKVIEW-SWITCH] Task plan: ${task.plan?.length || 0} steps`);
+      
+      // UPGRADE AI: LIMPIEZA INMEDIATA DEL ESTADO ANTERIOR
+      console.log(`🧹 [TASKVIEW-SWITCH] CLEARING PREVIOUS TASK STATE IMMEDIATELY`);
+      
+      // Limpiar plan inmediatamente para evitar mostrar plan anterior
+      setPlan([]);
+      
+      // Limpiar estado UI local
+      setShowFilesModal(false);
+      setShowShareModal(false);
       
       // Log estado del Context aislado
       const contextMessages = getMessages(task.id);
@@ -207,12 +217,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       
       lastTaskIdRef.current = task.id;
       
-      // NO RESETEAR CONTEXT - Ya está aislado por taskId
-      // Solo resetear estado UI local
-      setShowFilesModal(false);
-      setShowShareModal(false);
-      
-  // Si hay un plan inicial, establecerlo
+      // UPGRADE AI: ESTABLECER PLAN DE LA NUEVA TAREA INMEDIATAMENTE O MOSTRAR VACÍO
       if (task.plan && task.plan.length > 0) {
         console.log(`📋 [PLAN-INIT] Loading existing plan with ${task.plan.length} steps`);
         console.log(`📋 [PLAN-INIT] Plan details:`, task.plan.map(step => ({
@@ -224,12 +229,15 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         })));
         setPlan(task.plan);
         
-        // ✅ CRITICAL FIX: Force plan manager to recognize the plan immediately
-        console.log(`📋 [PLAN-INIT] Plan set, forcing plan manager update`);
+        console.log(`📋 [PLAN-INIT] Plan set immediately, forcing plan manager update`);
       } else {
-        console.log(`📋 [PLAN-INIT] No plan found for task ${task.id}, checking backend...`);
+        console.log(`📋 [PLAN-INIT] No plan found for task ${task.id}, showing empty state while checking backend...`);
         
-        // ✅ FALLBACK: If no plan in task, try to fetch from backend
+        // UPGRADE AI: Mantener plan vacío mientras se busca en backend
+        // No mostrar información de la tarea anterior
+        setPlan([]);
+        
+        // FALLBACK: If no plan in task, try to fetch from backend
         const fetchTaskPlan = async () => {
           try {
             const response = await fetch(`${API_CONFIG.backend.url}/api/agent/get-all-tasks`);
@@ -247,17 +255,21 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
                 }));
               } else {
                 console.log(`📋 [PLAN-FALLBACK] No plan found in backend for task ${task.id}`);
+                // Mantener plan vacío
+                setPlan([]);
               }
             }
           } catch (error) {
             console.error(`❌ [PLAN-FALLBACK] Error fetching task plan from backend:`, error);
+            // En caso de error, mantener plan vacío 
+            setPlan([]);
           }
         };
         
         fetchTaskPlan();
       }
       
-      console.log(`✅ [TASKVIEW-SWITCH] Switch complete - data isolated`);
+      console.log(`✅ [TASKVIEW-SWITCH] Switch complete - data isolated, previous state cleared`);
     }
   }, [task.id, task.plan, setPlan, getMessages, getTerminalLogs, getMonitorPages, getFiles]);
 
