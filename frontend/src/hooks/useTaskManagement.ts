@@ -314,8 +314,23 @@ export const useTaskManagement = () => {
         
         console.log('📋 [LOAD-TASKS] Tasks loaded successfully, dispatching SET_TASKS');
         
+        // 🔧 NORMALIZAR TAREAS: Asegurar que todas las tareas tengan la estructura correcta
+        const normalizedTasks = (data.tasks || []).map(task => ({
+          ...task,
+          messages: Array.isArray(task.messages) ? task.messages : [], // ✅ Asegurar que messages sea siempre un array
+          plan: Array.isArray(task.plan) ? task.plan : [],
+          terminalCommands: Array.isArray(task.terminalCommands) ? task.terminalCommands : [],
+          title: task.title || 'Tarea sin título',
+          status: task.status || 'pending',
+          createdAt: task.createdAt || new Date().toISOString(),
+          progress: typeof task.progress === 'number' ? task.progress : 0,
+          isFavorite: Boolean(task.isFavorite)
+        }));
+        
+        console.log('📋 [LOAD-TASKS] Tasks normalized, dispatching SET_TASKS with', normalizedTasks.length, 'tasks');
+        
         // Actualizar las tareas en el estado
-        dispatch({ type: 'SET_TASKS', payload: data.tasks || [] });
+        dispatch({ type: 'SET_TASKS', payload: normalizedTasks });
         
         console.log('📋 [LOAD-TASKS] SET_TASKS dispatched, tasks should now be in context');
         return data.tasks || [];
