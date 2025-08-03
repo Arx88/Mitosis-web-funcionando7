@@ -1096,61 +1096,63 @@ export const TerminalView = ({
   const isLastPage = actualCurrentPageIndex === monitorPages.length - 1;
 
   return (
-    <div data-id={dataId} className="flex flex-col h-full w-full bg-[#2a2a2b] text-[#dadada] p-4 font-sans text-base">
-      {/* Header - Rediseñado para Monitor */}
-      <div className="flex items-center gap-2 mb-4">
-        <Monitor size={20} className="text-blue-400" />
-        <div className="flex-1 text-lg font-semibold">{title}</div>
-        <div className="flex items-center gap-3 text-sm text-[#7f7f7f]">
+    <div data-id={dataId} className="flex flex-col h-full w-full bg-[#2a2a2b] text-[#dadada] p-2 sm:p-4 font-sans text-sm sm:text-base overflow-hidden">
+      {/* Header - Responsive Design */}
+      <div className="flex items-center gap-2 mb-2 sm:mb-4 flex-wrap sm:flex-nowrap">
+        <Monitor size={16} className="text-blue-400 sm:w-5 sm:h-5 flex-shrink-0" />
+        <div className="flex-1 text-base sm:text-lg font-semibold truncate min-w-0">{title}</div>
+        <div className="flex items-center gap-1 sm:gap-3 text-xs sm:text-sm text-[#7f7f7f] flex-shrink-0">
           <div className="flex items-center gap-1">
             <div className={`w-2 h-2 rounded-full ${isSystemOnline ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-            <span>{isSystemOnline ? 'ONLINE' : 'OFFLINE'}</span>
+            <span className="hidden sm:inline">{isSystemOnline ? 'ONLINE' : 'OFFLINE'}</span>
+            <span className="sm:hidden">{isSystemOnline ? '●' : '●'}</span>
           </div>
           <div className="flex items-center gap-1">
-            <Radio size={14} className="text-blue-400" />
-            <span>Página {actualCurrentPageIndex + 1} de {monitorPages.length}</span>
+            <Radio size={12} className="text-blue-400 sm:w-3.5 sm:h-3.5" />
+            <span className="whitespace-nowrap">{actualCurrentPageIndex + 1}/{monitorPages.length}</span>
           </div>
         </div>
-        <button onClick={onFullscreen} className="p-1.5 rounded-md hover:bg-black/10">
-          <Maximize2 size={20} className="text-[#7f7f7f]" />
+        <button onClick={onFullscreen} className="p-1 sm:p-1.5 rounded-md hover:bg-black/10 flex-shrink-0">
+          <Maximize2 size={16} className="text-[#7f7f7f] sm:w-5 sm:h-5" />
         </button>
       </div>
 
-      {/* Tool Execution Status */}
+      {/* Tool Execution Status - Responsive */}
       {currentExecutingTool && isLive && (
-        <div className="mb-4 p-3 bg-[#2a2a2b] rounded-lg border border-blue-400/30">
+        <div className="mb-2 sm:mb-4 p-2 sm:p-3 bg-[#2a2a2b] rounded-lg border border-blue-400/30">
           <div className="flex items-center gap-2 mb-2">
-            <Activity className="w-4 h-4 text-blue-400 animate-pulse" />
-            <span className="text-sm font-medium text-blue-400">Herramienta en Ejecución</span>
+            <Activity className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400 animate-pulse flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-blue-400">Ejecutando</span>
           </div>
           <ToolExecutionDetails
             tool={currentExecutingTool.tool}
             parameters={currentExecutingTool.parameters}
             status="executing"
             showDetailedView={true}
-            className="text-sm"
+            className="text-xs sm:text-sm"
           />
         </div>
       )}
 
-      {/* Monitor Display */}
-      <div className="flex-1 flex flex-col bg-[#383739] rounded-lg border border-black/30 overflow-hidden">
-        {/* Monitor Header */}
-        <div className="h-10 flex items-center px-4 border-b border-white/10 bg-[#383739]">
-          <div className="flex-1 text-center">
-            <span className="text-sm font-medium text-[#dadada]">
+      {/* Monitor Display - Responsive Container */}
+      <div className="flex-1 flex flex-col bg-[#383739] rounded-lg border border-black/30 overflow-hidden min-h-0">
+        {/* Monitor Header - Responsive */}
+        <div className="h-8 sm:h-10 flex items-center px-2 sm:px-4 border-b border-white/10 bg-[#383739]">
+          <div className="flex-1 text-center min-w-0">
+            <span className="text-xs sm:text-sm font-medium text-[#dadada] truncate block">
               {currentPage ? currentPage.title : 'Monitor Mitosis'}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-xs text-[#7f7f7f]">
+          <div className="flex items-center gap-1 sm:gap-2 text-xs text-[#7f7f7f] flex-shrink-0">
             {currentPage && (
               <>
-                <FileText className="w-3 h-3" />
-                <span>{currentPage.metadata?.lineCount || 0} líneas</span>
+                <FileText className="w-3 h-3 hidden sm:block" />
+                <span className="hidden sm:inline">{currentPage.metadata?.lineCount || 0} líneas</span>
+                <span className="sm:hidden">{currentPage.metadata?.lineCount || 0}L</span>
                 {currentPage.metadata?.fileSize && (
-                  <span>• {Math.round(currentPage.metadata.fileSize / 1024)} KB</span>
+                  <span className="hidden sm:inline">• {Math.round(currentPage.metadata.fileSize / 1024)} KB</span>
                 )}
-                <span className={`px-2 py-1 rounded text-xs ${
+                <span className={`px-1 sm:px-2 py-0.5 sm:py-1 rounded text-xs ${
                   currentPage.metadata?.status === 'success' ? 'bg-green-500/20 text-green-400' :
                   currentPage.metadata?.status === 'error' ? 'bg-red-500/20 text-red-400' :
                   'bg-yellow-500/20 text-yellow-400'
@@ -1162,8 +1164,8 @@ export const TerminalView = ({
           </div>
         </div>
         
-        {/* Monitor Content - Expandido para usar todo el ancho */}
-        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar w-full" ref={monitorRef}>
+        {/* Monitor Content - Responsive Scrollable Container */}
+        <div className="flex-1 overflow-y-auto p-2 sm:p-4 custom-scrollbar w-full min-h-0" ref={monitorRef}>
           {/* Show initialization steps when initializing - MINIMALIST COMPUTER DESIGN */}
           {isInitializing && !isSystemOnline && (
             <div className="flex items-center justify-center h-full w-full">
