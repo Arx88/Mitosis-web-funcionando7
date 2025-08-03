@@ -895,8 +895,41 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
     }
   }, []);
   
-  const deleteTask = useCallback((taskId: string) => {
-    dispatch({ type: 'DELETE_TASK', payload: taskId });
+  const deleteTask = useCallback(async (taskId: string) => {
+    try {
+      // 🗑️ LLAMAR AL BACKEND PARA ELIMINAR LA TAREA DE LA BASE DE DATOS
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
+      const response = await fetch(`${backendUrl}/api/agent/delete-task/${taskId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // ✅ ELIMINACIÓN EXITOSA EN BACKEND - Ahora eliminar del estado local
+        dispatch({ type: 'DELETE_TASK', payload: taskId });
+        console.log(`✅ Tarea ${taskId} eliminada exitosamente del backend y frontend`);
+      } else {
+        throw new Error(result.error || 'Failed to delete task from backend');
+      }
+      
+    } catch (error) {
+      console.error(`❌ Error eliminando tarea ${taskId}:`, error);
+      
+      // 🚨 FALLBACK: Si el backend falla, al menos eliminar del estado local
+      // para que la UX no se rompa completamente
+      dispatch({ type: 'DELETE_TASK', payload: taskId });
+      
+      // Mostrar error al usuario (opcional - podrías agregar un toast)
+      console.warn(`⚠️ Tarea eliminada del frontend pero no del backend: ${error}`);
+    }
   }, []);
   
   const setActiveTask = useCallback((taskId: string | null) => {
