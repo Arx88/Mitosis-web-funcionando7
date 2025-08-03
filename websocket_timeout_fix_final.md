@@ -156,7 +156,7 @@ mongodb                          RUNNING   pid 5582
 - ✅ Error handling robusto
 - ✅ Performance optimizado
 - ✅ Logging controlado y útil
-- ✅ Acceso externo funcional: https://c4f5be8b-db00-42e6-8dcc-7c4a057ac882.preview.emergentagent.com
+- ✅ Acceso externo funcional: https://158be43a-d067-4263-a237-b024aaad0e09.preview.emergentagent.com
 
 ---
 
