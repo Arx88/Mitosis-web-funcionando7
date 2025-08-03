@@ -131,12 +131,32 @@ class TaskOrchestrator:
         }
     
     async def orchestrate_task(self, context: OrchestrationContext) -> OrchestrationResult:
-        """Orquesta la ejecución completa de una tarea"""
+        """
+        Orquesta la ejecución completa de una tarea con contexto aislado
+        UPGRADE AI: Implementa propagación de contexto para aislamiento de tareas
+        """
         
         logger.info(f"Iniciando orquestación de tarea: {context.task_id}")
         
         start_time = time.time()
         self.orchestration_metrics["total_tasks"] += 1
+        
+        # UPGRADE AI: Convertir contexto existente a TaskContext para propagación
+        task_context = TaskContext(
+            task_id=context.task_id,
+            user_id=context.user_id,
+            session_id=context.session_id,
+            task_description=context.task_description,
+            priority=context.priority,
+            timeout=context.timeout,
+            constraints=context.constraints,
+            preferences=context.preferences,
+            metadata=context.metadata
+        )
+        
+        # UPGRADE AI: Establecer contexto de tarea para propagación a todos los componentes
+        token = set_current_task_context(task_context)
+        log_with_context(logging.INFO, "Contexto de tarea establecido para orquestación")
         
         try:
             # 1. Validar contexto
