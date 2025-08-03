@@ -605,8 +605,72 @@ def execute_single_step_detailed(task_id: str, step_id: str):
             'message': 'Error crítico del sistema. Contacta al administrador si persiste.'
         }), 500
 
-@agent_bp.route('/get-all-tasks', methods=['GET'])
-def get_all_tasks():
+@agent_bp.route('/retry-step/<task_id>/<step_id>', methods=['POST'])
+def retry_step_endpoint(task_id: str, step_id: str):
+    """
+    🔄 ENDPOINT PARA REINTENTOS AUTOMÁTICOS
+    
+    Endpoint dedicado para manejar reintentos de pasos fallidos.
+    Es llamado automáticamente por el frontend cuando un paso falla
+    y aún tiene reintentos disponibles.
+    
+    Args:
+        task_id: ID de la tarea
+        step_id: ID del paso a reintentar
+        
+    Returns:
+        JSON response redirigiendo a execute_single_step_detailed
+    """
+    try:
+        logger.info(f"🔄 Solicitud de reintento para paso {step_id} de tarea {task_id}")
+        
+        # Validar que el paso existe y está en estado de reintento
+        task_data = get_task_data(task_id)
+        if not task_data:
+            return jsonify({'error': f'Task {task_id} not found'}), 404
+        
+        steps = task_data.get('plan', [])
+        current_step = None
+        
+        for step in steps:
+            if step.get('id') == step_id:
+                current_step = step
+                break
+        
+        if not current_step:
+            return jsonify({'error': f'Step {step_id} not found'}), 404
+        
+        # Validar que el paso está en estado apropiado para reintento
+        step_status = current_step.get('status', '')
+        if step_status not in ['pending_retry', 'pending', 'failed']:
+            return jsonify({
+                'error': f'Step {step_id} is not in a retryable state (status: {step_status})',
+                'step_status': step_status
+            }), 400
+        
+        # Validar que no se haya excedido el límite de reintentos
+        retry_count = current_step.get('retry_count', 0)
+        if retry_count >= MAX_STEP_RETRIES:
+            return jsonify({
+                'error': f'Step {step_id} has exceeded maximum retries ({MAX_STEP_RETRIES})',
+                'retry_count': retry_count,
+                'max_retries': MAX_STEP_RETRIES
+            }), 400
+        
+        # Pequeño delay para evitar reintentos muy rápidos
+        import time
+        time.sleep(1)  # 1 segundo de delay
+        
+        # Redirigir a la función principal de ejecución
+        return execute_single_step_detailed(task_id, step_id)
+        
+    except Exception as e:
+        logger.error(f"❌ Error en endpoint de reintento para paso {step_id}: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'error_type': 'retry_system_error'
+        }), 500
+
     """
     🔄 ENDPOINT PARA OBTENER TODAS LAS TAREAS
     Devuelve todas las tareas almacenadas en la base de datos
