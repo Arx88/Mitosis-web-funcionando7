@@ -12,14 +12,14 @@ SPECIFIC TESTS NEEDED:
 1. Socket.IO CORS Headers: Test /socket.io/ endpoint with Origin header to verify Access-Control-Allow-Origin is returned
 2. Socket.IO OPTIONS Preflight: Test OPTIONS request to /socket.io/ to verify preflight CORS headers are returned  
 3. WebSocket Connection Simulation: Verify that a WebSocket handshake request to /socket.io/ gets proper CORS headers
-4. Origin Validation: Test with the specific frontend origin (https://e2860351-3f36-4a5a-8e08-706eca54fe3b.preview.emergentagent.com) to ensure it's allowed
+4. Origin Validation: Test with the specific frontend origin (https://c4f5be8b-db00-42e6-8dcc-7c4a057ac882.preview.emergentagent.com) to ensure it's allowed
 
 CRITICAL CHANGES MADE:
 - Added @app.before_request handler for Socket.IO CORS preflight
 - Added @app.after_request handler to add CORS headers to Socket.IO responses  
 - Explicit CORS headers for Socket.IO: Access-Control-Allow-Origin, Access-Control-Allow-Methods, Access-Control-Allow-Headers
 
-Backend URL: https://e2860351-3f36-4a5a-8e08-706eca54fe3b.preview.emergentagent.com
+Backend URL: https://c4f5be8b-db00-42e6-8dcc-7c4a057ac882.preview.emergentagent.com
 
 Expected Outcome: Socket.IO endpoint should now return proper CORS headers, resolving the 
 "Access to XMLHttpRequest has been blocked by CORS policy" error that was preventing WebSocket connections.
@@ -34,8 +34,8 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Backend URL and frontend origin for CORS testing
-BACKEND_URL = "https://e2860351-3f36-4a5a-8e08-706eca54fe3b.preview.emergentagent.com"
-FRONTEND_ORIGIN = "https://e2860351-3f36-4a5a-8e08-706eca54fe3b.preview.emergentagent.com"
+BACKEND_URL = "https://c4f5be8b-db00-42e6-8dcc-7c4a057ac882.preview.emergentagent.com"
+FRONTEND_ORIGIN = "https://c4f5be8b-db00-42e6-8dcc-7c4a057ac882.preview.emergentagent.com"
 SOCKET_IO_ENDPOINT = f"{BACKEND_URL}/socket.io/"
 
 class SocketIOCORSTester:
@@ -228,7 +228,7 @@ class SocketIOCORSTester:
             # Test with the exact frontend origin
             test_origins = [
                 FRONTEND_ORIGIN,
-                "https://e2860351-3f36-4a5a-8e08-706eca54fe3b.preview.emergentagent.com",  # Alternative origin
+                "https://c4f5be8b-db00-42e6-8dcc-7c4a057ac882.preview.emergentagent.com",  # Alternative origin
                 "http://localhost:3000",  # Development origin
                 "https://invalid-origin.com"  # Should be rejected or handled gracefully
             ]

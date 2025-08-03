@@ -73,7 +73,7 @@ code-server                      RUNNING   pid 3673
 - ✅ No se detectaron loops infinitos en 15 segundos de monitoreo
 
 ### ✅ **Acceso Externo Funcional:**
-- ✅ Frontend: https://e2860351-3f36-4a5a-8e08-706eca54fe3b.preview.emergentagent.com
+- ✅ Frontend: https://c4f5be8b-db00-42e6-8dcc-7c4a057ac882.preview.emergentagent.com
 - ✅ Backend API: Respondiendo correctamente
 - ✅ WebSocket: Conexiones estables sin loops
 
