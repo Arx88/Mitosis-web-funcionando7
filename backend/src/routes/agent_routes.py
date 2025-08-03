@@ -346,6 +346,7 @@ def get_task_status(task_id: str):
         
         # Calcular estadísticas del plan
         completed_steps = sum(1 for step in steps if step.get('completed', False))
+        failed_steps = sum(1 for step in steps if step.get('status') == 'failed')  # 🔴 NUEVO: Contar pasos fallidos
         in_progress_steps = sum(1 for step in steps if step.get('status') == 'in-progress')
         active_steps = sum(1 for step in steps if step.get('active', False))
         
