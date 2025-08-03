@@ -6822,8 +6822,8 @@ def execute_task_steps_sequentially(task_id: str, steps: list):
                     with open(log_file, "a") as f:
                         f.write(f"✅ STEP {i+1} COMPLETED - AGENT APPROVED\n")
                 elif execution_result and not execution_result.get('agent_approved', True):
-                    print(f"⏸️ Agent requires more work on step {i+1} - STOPPING EXECUTION")
-                    logger.info(f"⏸️ Agent requires more work on step {i+1}, stopping execution")
+                    print(f"🔄 Agent requires more work on step {i+1} - ATTEMPTING RETRY")
+                    logger.info(f"🔄 Agent requires more work on step {i+1}, attempting retry")
                     
                     # 🚨 EMIT STEP NEEDS MORE WORK EVENT
                     emit_step_event(task_id, 'step_needs_work', {
@@ -6832,16 +6832,71 @@ def execute_task_steps_sequentially(task_id: str, steps: list):
                         'total_steps': len(steps),
                         'title': step.get('title', 'Unnamed'),
                         'status': 'needs_more_work',
-                        'message': f'El paso {i+1} requiere más trabajo',
+                        'message': f'El paso {i+1} requiere más trabajo - reintentando',
                         'feedback': execution_result.get('evaluation', {}).get('feedback', 'No specific feedback'),
                         'timestamp': datetime.now().isoformat()
                     })
                     
                     with open(log_file, "a") as f:
-                        f.write(f"⏸️ STEP {i+1} REQUIRES MORE WORK - AGENT FEEDBACK: {execution_result.get('evaluation', {}).get('feedback', 'No specific feedback')}\n")
-                        f.write(f"🛑 EXECUTION STOPPED - Agent requires more work\n")
+                        f.write(f"🔄 STEP {i+1} REQUIRES MORE WORK - AGENT FEEDBACK: {execution_result.get('evaluation', {}).get('feedback', 'No specific feedback')}\n")
+                        f.write(f"🔄 ATTEMPTING RETRY FOR STEP {i+1}...\n")
                     
-                    break  # Parar la ejecución de pasos subsecuentes
+                    # Instead of breaking, let's retry the step up to 3 times
+                    max_retries = 3
+                    retry_count = 0
+                    step_completed = False
+                    
+                    while retry_count < max_retries and not step_completed:
+                        retry_count += 1
+                        print(f"🔄 RETRY ATTEMPT {retry_count}/{max_retries} for step {i+1}")
+                        
+                        with open(log_file, "a") as f:
+                            f.write(f"🔄 RETRY ATTEMPT {retry_count}/{max_retries} for step {i+1}\n")
+                        
+                        time.sleep(2)  # Brief delay between retries
+                        
+                        # Retry execution
+                        retry_result = execute_step_internal(step_id, step)
+                        
+                        if retry_result and retry_result.get('agent_approved', True):
+                            print(f"✅ RETRY SUCCESSFUL for step {i+1}")
+                            step_completed = True
+                            
+                            # Update step status using existing update_task_data function
+                            step['completed'] = True
+                            step['success'] = True
+                            step['result'] = retry_result
+                            step['execution_details'] = {
+                                'completed_at': datetime.now().isoformat(),
+                                'retries_needed': retry_count
+                            }
+                            update_task_data(task_id, {'plan': steps})
+                            
+                            # Emit success event
+                            emit_step_event(task_id, 'step_completed', {
+                                'step_id': step_id,
+                                'step_number': i + 1,
+                                'total_steps': len(steps),
+                                'title': step.get('title', 'Unnamed'),
+                                'status': 'completed',
+                                'result': retry_result,
+                                'retries_used': retry_count,
+                                'timestamp': datetime.now().isoformat()
+                            })
+                            
+                            with open(log_file, "a") as f:
+                                f.write(f"✅ STEP {i+1} COMPLETED AFTER {retry_count} RETRIES\n")
+                            
+                        elif retry_count >= max_retries:
+                            print(f"❌ MAX RETRIES REACHED for step {i+1} - STOPPING EXECUTION")
+                            
+                            with open(log_file, "a") as f:
+                                f.write(f"❌ MAX RETRIES ({max_retries}) REACHED for step {i+1} - STOPPING EXECUTION\n")
+                            
+                            break  # Exit the main execution loop after max retries
+                    
+                    if not step_completed:
+                        break  # Stop execution if step couldn't be completed after retries
                 else:
                     # Error en la ejecución
                     print(f"❌ Error in step {i+1}: {execution_result.get('error', 'Unknown error')}")
