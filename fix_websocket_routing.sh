@@ -17,7 +17,7 @@ curl -s "http://localhost:8001/socket.io/?EIO=4&transport=polling" | head -1
 
 # Verificar conexión WebSocket externa
 echo "🔍 Testear WebSocket externo..."
-curl -s "https://7c8244f3-e97e-49c3-bcd4-bb7b083f759d.preview.emergentagent.com/socket.io/?EIO=4&transport=polling" | head -1
+curl -s "https://e2860351-3f36-4a5a-8e08-706eca54fe3b.preview.emergentagent.com/socket.io/?EIO=4&transport=polling" | head -1
 
 # Crear archivo de configuración para el routing correcto
 echo "🔧 Creando configuración de routing WebSocket..."

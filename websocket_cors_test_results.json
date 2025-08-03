@@ -30,7 +30,7 @@
     {
       "test_name": "Task Creation with CORS",
       "success": true,
-      "details": "Task creation working with CORS - Task ID: chat-1753812174, CORS Origin: https://7c8244f3-e97e-49c3-bcd4-bb7b083f759d.preview.emergentagent.com",
+      "details": "Task creation working with CORS - Task ID: chat-1753812174, CORS Origin: https://e2860351-3f36-4a5a-8e08-706eca54fe3b.preview.emergentagent.com",
       "timestamp": "2025-07-29T18:03:02.689244",
       "response_data": null
     },
@@ -44,7 +44,7 @@
     {
       "test_name": "CORS Test Endpoint",
       "success": true,
-      "details": "CORS test endpoint working - Status: CORS test successful, Origin: https://7c8244f3-e97e-49c3-bcd4-bb7b083f759d.preview.emergentagent.com, CORS headers present: True",
+      "details": "CORS test endpoint working - Status: CORS test successful, Origin: https://e2860351-3f36-4a5a-8e08-706eca54fe3b.preview.emergentagent.com, CORS headers present: True",
       "timestamp": "2025-07-29T18:03:04.713565",
       "response_data": null
     },
