@@ -345,6 +345,25 @@ def execute_single_step_detailed(task_id: str, step_id: str):
         
         logger.info(f"🔄 Ejecutando paso específico {step_index + 1}: {current_step['title']} para task {task_id}")
         
+        # 🔄 PREPARAR INFORMACIÓN DE REINTENTOS
+        retry_count = current_step.get('retry_count', 0)
+        is_retry = retry_count > 0
+        
+        if is_retry:
+            logger.info(f"🔄 Este es un REINTENTO #{retry_count} para el paso {step_id}")
+            
+            # Emitir evento especial para reintento
+            emit_step_event(task_id, 'step_retry_started', {
+                'step_id': current_step.get('id'),
+                'step_index': step_index,
+                'title': current_step.get('title', 'Paso reintentado'),
+                'retry_count': retry_count,
+                'max_retries': MAX_STEP_RETRIES,
+                'activity': f"Reintentando paso {step_index + 1}: {current_step.get('title', 'Sin título')} (intento #{retry_count})",
+                'progress_percentage': int((step_index / len(steps)) * 100),
+                'timestamp': datetime.now().isoformat()
+            })
+        
         # Marcar paso como en progreso
         current_step['active'] = True
         current_step['status'] = 'in-progress'
@@ -353,94 +372,194 @@ def execute_single_step_detailed(task_id: str, step_id: str):
         # Actualizar en persistencia ANTES de emitir evento
         update_task_data(task_id, {'plan': steps})
         
-        # 🚀 EMITIR EVENTO WEBSOCKET PARA EL PASO INICIADO
-        emit_step_event(task_id, 'step_started', {
-            'step_id': current_step.get('id'),
-            'step_index': step_index,
-            'title': current_step.get('title', 'Paso iniciado'),
-            'description': current_step.get('description', ''),
-            'activity': f"Iniciando paso {step_index + 1}: {current_step.get('title', 'Sin título')}",
-            'progress_percentage': int((step_index / len(steps)) * 100),
-            'timestamp': datetime.now().isoformat()
-        })
-        
-        # Ejecutar el paso específico
-        step_result = execute_single_step_logic(current_step, task_data.get('message', ''), task_id)
-        
-        # Actualizar resultado del paso
-        current_step['active'] = False
-        current_step['completed'] = True
-        current_step['status'] = 'completed'
-        current_step['result'] = step_result
-        current_step['completed_time'] = datetime.now().isoformat()
-        
-        # 🚀 CRÍTICO FIX: ACTIVAR AUTOMÁTICAMENTE EL SIGUIENTE PASO CON DELAY
-        next_step_activated = False
-        if step_index + 1 < len(steps):
-            next_step = steps[step_index + 1]
-            next_step['active'] = True
-            next_step['status'] = 'ready'  # 🔧 FIX: Estado intermedio antes de 'in-progress'  
-            next_step_activated = True
-            logger.info(f"🔄 Activando automáticamente el siguiente paso: {next_step.get('title', 'Sin título')}")
-        
-        # Actualizar en persistencia ANTES de emitir eventos
-        update_task_data(task_id, {'plan': steps})
-        
-        # 🚀 EMITIR EVENTO WEBSOCKET PARA EL PASO COMPLETADO PRIMERO
-        emit_step_event(task_id, 'step_completed', {
-            'step_id': current_step.get('id'),
-            'step_index': step_index,
-            'title': current_step.get('title', 'Paso completado'),
-            'result': step_result,
-            'activity': f"Completado paso {step_index + 1}: {current_step.get('title', 'Sin título')}",
-            'progress_percentage': int(((step_index + 1) / len(steps)) * 100),
-            'timestamp': datetime.now().isoformat()
-        })
-        
-        # 🚀 DELAY Y LUEGO EMITIR EVENTO PARA EL SIGUIENTE PASO ACTIVADO  
-        if next_step_activated:
-            # Pequeño delay para asegurar que el frontend procese el step_completed primero
-            import time
-            time.sleep(0.1)  # 100ms delay
-            
-            # Actualizar el siguiente paso a 'in-progress'
-            next_step = steps[step_index + 1] 
-            next_step['status'] = 'in-progress'
-            next_step['start_time'] = datetime.now().isoformat()
-            
-            # Actualizar en persistencia
-            update_task_data(task_id, {'plan': steps})
-            
-            # 🚀 EMITIR EVENTO WEBSOCKET PARA EL SIGUIENTE PASO ACTIVADO
+        # 🚀 EMITIR EVENTO WEBSOCKET PARA EL PASO INICIADO (solo si no es reintento)
+        if not is_retry:
             emit_step_event(task_id, 'step_started', {
-                'step_id': next_step.get('id'),
-                'step_index': step_index + 1,
-                'title': next_step.get('title', 'Siguiente paso'),
-                'description': next_step.get('description', ''),
-                'activity': f"Activando paso {step_index + 2}: {next_step.get('title', 'Sin título')}",
-                'progress_percentage': int(((step_index + 1) / len(steps)) * 100),
+                'step_id': current_step.get('id'),
+                'step_index': step_index,
+                'title': current_step.get('title', 'Paso iniciado'),
+                'description': current_step.get('description', ''),
+                'activity': f"Iniciando paso {step_index + 1}: {current_step.get('title', 'Sin título')}",
+                'progress_percentage': int((step_index / len(steps)) * 100),
                 'timestamp': datetime.now().isoformat()
             })
         
-        # Verificar si todos los pasos están completados
-        all_completed = all(step.get('completed', False) for step in steps)
+        # 🔄 EJECUCIÓN DEL PASO CON MANEJO DE ERRORES Y REINTENTOS
+        step_execution_success = False
+        step_result = None
+        execution_error = None
         
-        response_data = {
-            'success': True,
-            'step_result': step_result,
-            'step_completed': True,
-            'all_steps_completed': all_completed,
-            'next_step_activated': next_step_activated,
-            'next_step': steps[step_index + 1] if step_index + 1 < len(steps) else None
-        }
+        try:
+            # Ejecutar el paso específico
+            step_result = execute_single_step_logic(current_step, task_data.get('message', ''), task_id)
+            
+            # Validar que el resultado no sea None o vacío
+            if step_result is None or (isinstance(step_result, str) and step_result.strip() == ''):
+                raise Exception("El paso devolvió un resultado vacío o None")
+            
+            # Si llegamos aquí, la ejecución fue exitosa
+            step_execution_success = True
+            logger.info(f"✅ Paso {step_id} ejecutado exitosamente")
+            
+        except Exception as e:
+            execution_error = str(e)
+            step_execution_success = False
+            logger.error(f"❌ Error en ejecución del paso {step_id}: {execution_error}")
         
-        if all_completed:
-            # Marcar tarea como completada
-            update_task_data(task_id, {'status': 'completed', 'completed_at': datetime.now().isoformat()})
-            response_data['task_completed'] = True
-            logger.info(f"🎉 Tarea {task_id} completada - todos los pasos ejecutados")
-        
-        return jsonify(response_data)
+        # 🔄 MANEJO DE RESULTADO: ÉXITO O REINTENTO/FALLO
+        if step_execution_success:
+            # ✅ ÉXITO: Actualizar paso como completado y limpiar información de reintentos
+            current_step['active'] = False
+            current_step['completed'] = True
+            current_step['status'] = 'completed'
+            current_step['result'] = step_result
+            current_step['completed_time'] = datetime.now().isoformat()
+            
+            # Limpiar información de errores de reintentos previos si existía
+            if 'retry_count' in current_step:
+                current_step['resolved_after_retries'] = True
+                current_step['resolution_attempt'] = current_step.get('retry_count', 0)
+            
+            logger.info(f"✅ Paso {step_id} completado exitosamente en intento #{retry_count + 1}")
+            
+            # 🚀 ACTIVAR AUTOMÁTICAMENTE EL SIGUIENTE PASO
+            next_step_activated = False
+            if step_index + 1 < len(steps):
+                next_step = steps[step_index + 1]
+                next_step['active'] = True
+                next_step['status'] = 'ready'
+                next_step_activated = True
+                logger.info(f"🔄 Activando automáticamente el siguiente paso: {next_step.get('title', 'Sin título')}")
+            
+            # Actualizar en persistencia ANTES de emitir eventos
+            update_task_data(task_id, {'plan': steps})
+            
+            # 🚀 EMITIR EVENTO WEBSOCKET PARA EL PASO COMPLETADO
+            emit_step_event(task_id, 'step_completed', {
+                'step_id': current_step.get('id'),
+                'step_index': step_index,
+                'title': current_step.get('title', 'Paso completado'),
+                'result': step_result,
+                'activity': f"Completado paso {step_index + 1}: {current_step.get('title', 'Sin título')}",
+                'progress_percentage': int(((step_index + 1) / len(steps)) * 100),
+                'was_retry_success': is_retry,
+                'retry_count': retry_count if is_retry else 0,
+                'timestamp': datetime.now().isoformat()
+            })
+            
+            # 🚀 ACTIVAR SIGUIENTE PASO CON DELAY  
+            if next_step_activated:
+                import time
+                time.sleep(0.1)  # 100ms delay
+                
+                next_step = steps[step_index + 1] 
+                next_step['status'] = 'in-progress'
+                next_step['start_time'] = datetime.now().isoformat()
+                
+                update_task_data(task_id, {'plan': steps})
+                
+                emit_step_event(task_id, 'step_started', {
+                    'step_id': next_step.get('id'),
+                    'step_index': step_index + 1,
+                    'title': next_step.get('title', 'Siguiente paso'),
+                    'description': next_step.get('description', ''),
+                    'activity': f"Activando paso {step_index + 2}: {next_step.get('title', 'Sin título')}",
+                    'progress_percentage': int(((step_index + 1) / len(steps)) * 100),
+                    'timestamp': datetime.now().isoformat()
+                })
+            
+            # Verificar si todos los pasos están completados
+            all_completed = all(step.get('completed', False) for step in steps)
+            
+            response_data = {
+                'success': True,
+                'step_result': step_result,
+                'step_completed': True,
+                'all_steps_completed': all_completed,
+                'next_step_activated': next_step_activated,
+                'next_step': steps[step_index + 1] if step_index + 1 < len(steps) else None,
+                'was_retry_success': is_retry,
+                'retry_count': retry_count if is_retry else 0
+            }
+            
+            if all_completed:
+                update_task_data(task_id, {'status': 'completed', 'completed_at': datetime.now().isoformat()})
+                response_data['task_completed'] = True
+                logger.info(f"🎉 Tarea {task_id} completada - todos los pasos ejecutados")
+            
+            return jsonify(response_data)
+            
+        else:
+            # ❌ FALLO: Manejar reintentos o fallo permanente
+            
+            # Rastrear este intento fallido
+            retry_info = track_step_retry(task_id, step_id, current_step, execution_error)
+            
+            # Actualizar estado en persistencia
+            update_task_data(task_id, {'plan': steps})
+            
+            if retry_info['should_retry']:
+                # 🔄 REINTENTAR: Emitir evento de reintento programado
+                
+                emit_step_event(task_id, 'step_retry_scheduled', {
+                    'step_id': current_step.get('id'),
+                    'step_index': step_index,
+                    'title': current_step.get('title', 'Paso a reintentar'),
+                    'error': execution_error,
+                    'retry_count': retry_info['retry_count'],
+                    'remaining_retries': retry_info['remaining_retries'],
+                    'max_retries': MAX_STEP_RETRIES,
+                    'activity': f"Error en paso {step_index + 1}. Se reintentará automáticamente (intento {retry_info['retry_count']}/{MAX_STEP_RETRIES})",
+                    'will_retry_automatically': True,
+                    'timestamp': datetime.now().isoformat()
+                })
+                
+                # Preparar paso para reintento
+                reset_step_for_retry(current_step)
+                update_task_data(task_id, {'plan': steps})
+                
+                return jsonify({
+                    'success': False,
+                    'step_completed': False,
+                    'should_retry': True,
+                    'retry_count': retry_info['retry_count'],
+                    'remaining_retries': retry_info['remaining_retries'],
+                    'max_retries': MAX_STEP_RETRIES,
+                    'error': execution_error,
+                    'message': f'Paso falló en intento {retry_info["retry_count"]}. Se reintentará automáticamente.',
+                    'retry_scheduled': True
+                })
+                
+            else:
+                # 💀 FALLO PERMANENTE: Marcar tarea como fallida
+                
+                step_title = current_step.get('title', f'Paso {step_index + 1}')
+                fail_task_due_to_step_failure(task_id, step_id, step_title, execution_error)
+                
+                # Emitir evento final de fallo
+                emit_step_event(task_id, 'step_failed_permanently', {
+                    'step_id': current_step.get('id'),
+                    'step_index': step_index,
+                    'title': step_title,
+                    'final_error': execution_error,
+                    'retry_count': retry_info['retry_count'],
+                    'max_retries': MAX_STEP_RETRIES,
+                    'activity': f"Paso {step_index + 1} ha fallado permanentemente después de {MAX_STEP_RETRIES} reintentos",
+                    'task_stopped': True,
+                    'timestamp': datetime.now().isoformat()
+                })
+                
+                return jsonify({
+                    'success': False,
+                    'step_completed': False,
+                    'step_failed_permanently': True,
+                    'task_failed': True,
+                    'retry_count': retry_info['retry_count'],
+                    'max_retries': MAX_STEP_RETRIES,
+                    'final_error': execution_error,
+                    'message': f'Paso "{step_title}" falló después de {MAX_STEP_RETRIES} reintentos. La tarea ha sido detenida.',
+                    'task_stopped': True
+                }), 400
         
     except Exception as e:
         logger.error(f"❌ Error ejecutando paso {step_id}: {str(e)}")
