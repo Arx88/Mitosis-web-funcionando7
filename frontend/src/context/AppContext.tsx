@@ -458,9 +458,15 @@ function appReducer(state: GlobalAppState, action: AppAction): GlobalAppState {
       };
       
     case 'TOGGLE_SIDEBAR':
+      const newCollapsedState = action.payload !== undefined ? action.payload : !state.sidebarCollapsed;
+      console.log('🔧 [CONTEXT] TOGGLE_SIDEBAR:', {
+        current: state.sidebarCollapsed,
+        payload: action.payload,
+        new: newCollapsedState
+      });
       return {
         ...state,
-        sidebarCollapsed: action.payload !== undefined ? action.payload : !state.sidebarCollapsed
+        sidebarCollapsed: newCollapsedState
       };
       
     case 'SET_TERMINAL_SIZE':
