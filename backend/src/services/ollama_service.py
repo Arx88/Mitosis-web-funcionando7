@@ -1,15 +1,31 @@
 """
-Servicio de integración con Ollama - Versión Real
-Conecta directamente con Ollama para generar respuestas
+Servicio de integración con Ollama - Versión con Cola de Concurrencia
+Conecta directamente con Ollama para generar respuestas, usando un sistema
+de cola para gestionar llamadas concurrentes y evitar saturación.
+
+🔄 NUEVA FUNCIONALIDAD: Sistema de Cola de Concurrencia
+- Integración transparente con OllamaQueueManager
+- Control automático de llamadas concurrentes
+- Priorización inteligente de requests
+- Métricas de rendimiento y monitoreo
 """
 
 import json
 import time
 import os
 import logging
+import asyncio
 from typing import Dict, List, Optional, Any
 import requests
 from requests.exceptions import RequestException, Timeout
+
+# 🚦 IMPORTACIÓN DEL GESTOR DE COLA
+from .ollama_queue_manager import (
+    OllamaQueueManager, 
+    OllamaRequest, 
+    RequestPriority,
+    get_ollama_queue_manager
+)
 
 class OllamaService:
     def __init__(self, base_url: str = None):
