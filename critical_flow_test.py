@@ -27,7 +27,7 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 
 # Backend URL from environment
-BACKEND_URL = "https://812df669-341c-4e0c-88be-55ef79256b5b.preview.emergentagent.com"
+BACKEND_URL = "https://7c8244f3-e97e-49c3-bcd4-bb7b083f759d.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class CriticalFlowTester:

@@ -11,7 +11,7 @@ def test_websocket_connection():
     print("🔌 Testing WebSocket connection to Mitosis backend...")
     
     # URL del backend
-    backend_url = "https://812df669-341c-4e0c-88be-55ef79256b5b.preview.emergentagent.com"
+    backend_url = "https://7c8244f3-e97e-49c3-bcd4-bb7b083f759d.preview.emergentagent.com"
     
     # 1. Probar HTTP polling primero
     print("\n1. Testing HTTP polling...")
