@@ -548,8 +548,9 @@ export const useUIState = () => {
   const { state, dispatch } = useAppContext();
   
   const toggleSidebar = useCallback((collapsed?: boolean) => {
+    console.log('🔧 [UI-STATE] toggleSidebar called with:', collapsed, 'current:', state.sidebarCollapsed);
     dispatch({ type: 'TOGGLE_SIDEBAR', payload: collapsed });
-  }, [dispatch]);
+  }, [dispatch, state.sidebarCollapsed]);
   
   const setTerminalSize = useCallback((size: number) => {
     dispatch({ type: 'SET_TERMINAL_SIZE', payload: size });
