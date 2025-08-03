@@ -8,6 +8,7 @@ import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useWebSocket } from './useWebSocket';
 import { TaskStep } from '../types';
 import { useAppContext } from '../context/AppContext';
+import { API_CONFIG } from '../config/api';
 
 interface PlanManagerProps {
   taskId: string;
