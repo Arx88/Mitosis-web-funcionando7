@@ -103,6 +103,22 @@ export const validateTask = (task: any): boolean => {
     return false;
   }
   
+  // ✅ CRITICAL FIX: Log and preserve plan data
+  if (task.plan && Array.isArray(task.plan) && task.plan.length > 0) {
+    console.log(`📋 [VALIDATE-TASK] Task ${task.id} has valid plan with ${task.plan.length} steps`);
+    task.plan.forEach((step, index) => {
+      if (step.completed) {
+        console.log(`  ✅ Step ${index + 1}: ${step.title} (COMPLETED)`);
+      } else if (step.active) {
+        console.log(`  🟡 Step ${index + 1}: ${step.title} (ACTIVE)`);
+      } else {
+        console.log(`  ⏸️  Step ${index + 1}: ${step.title} (PENDING)`);
+      }
+    });
+  } else {
+    console.log(`📋 [VALIDATE-TASK] Task ${task.id} has no plan or empty plan`);
+  }
+  
   return true;
 };
 
