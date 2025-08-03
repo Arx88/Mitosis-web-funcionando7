@@ -6856,7 +6856,7 @@ def execute_task_steps_sequentially(task_id: str, steps: list):
                         time.sleep(2)  # Brief delay between retries
                         
                         # Retry execution
-                        retry_result = execute_step_internal(step_id, step)
+                        retry_result = execute_step_internal(task_id, step_id, step)
                         
                         if retry_result and retry_result.get('agent_approved', True):
                             print(f"✅ RETRY SUCCESSFUL for step {i+1}")
