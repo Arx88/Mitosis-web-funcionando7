@@ -354,6 +354,8 @@ def get_task_status(task_id: str):
         task_status = 'pending'
         if completed_steps == len(steps) and len(steps) > 0:
             task_status = 'completed'
+        elif failed_steps > 0 and (completed_steps + failed_steps) == len(steps):
+            task_status = 'completed_with_failures'  # 🔴 NUEVO: Estado para tareas con fallos
         elif in_progress_steps > 0 or active_steps > 0:
             task_status = 'executing'  # Frontend espera 'executing' no 'in_progress'
         elif completed_steps > 0:
