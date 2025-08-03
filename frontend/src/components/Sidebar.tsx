@@ -108,7 +108,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       const matchesSearch = task.title.toLowerCase().includes(query) ||
-        task.messages.some(message => message.content.toLowerCase().includes(query));
+        (task.messages && Array.isArray(task.messages) && task.messages.some(message => message.content.toLowerCase().includes(query)));
       if (!matchesSearch) return false;
     }
     
