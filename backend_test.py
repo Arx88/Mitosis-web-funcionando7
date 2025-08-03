@@ -91,7 +91,9 @@ class MitosisTaskDeletionTester:
                 # Look for our created task
                 task_found = False
                 for task in tasks:
-                    if task.get('task_id') == self.created_task_id:
+                    # Check both task_id and id fields
+                    task_id = task.get('task_id') or task.get('id')
+                    if task_id == self.created_task_id:
                         task_found = True
                         task_title = task.get('title', 'No title')
                         task_status = task.get('status', 'unknown')
