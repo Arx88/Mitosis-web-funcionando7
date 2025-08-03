@@ -312,6 +312,9 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
     } catch (error) {
       console.error('Error sending message:', error);
       
+      // Clear timeout on error as well
+      clearTimeout(timeoutId);
+      
       const errorMessage: Message = {
         id: `msg-${Date.now() + 1}`,
         content: 'Error de conexión',
@@ -319,7 +322,7 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
         timestamp: new Date(),
         status: {
           type: 'error',
-          message: 'No se pudo conectar con el servidor'
+          message: 'No se pudo conectar con el servidor. Intenta nuevamente.'
         }
       };
 
@@ -327,7 +330,10 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
         onUpdateMessages([...messages, userMessage, errorMessage]);
       }
     } finally {
+      // ✅ SAFETY: Always reset isLoading regardless of success or failure
+      clearTimeout(timeoutId);
       setIsLoading(false);
+      console.log('🔄 ChatInterface: isLoading reset to false');
     }
   }, [messages, onUpdateMessages, isLoading, task?.id, onUpdateTask, onTaskPlanGenerated, onLogToTerminal]);
 
