@@ -1530,6 +1530,7 @@ export const TerminalView = ({
                       <div className="flex-1 min-w-0">
                         <span className={`block text-sm transition-all duration-200 leading-tight ${
                           step.completed ? 'line-through text-[#8f8f8f] font-medium' : 
+                          step.failed || step.status === 'failed' ? 'text-red-400 font-medium' : // 🔴 NUEVO: Texto rojo para pasos fallidos
                           step.active ? 'text-blue-400 font-semibold' : 
                           'text-[#DADADA] group-hover:text-white font-medium'
                         }`}>
