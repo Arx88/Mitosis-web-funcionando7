@@ -82,6 +82,7 @@ class AdvancedMemoryManager:
     async def store_experience(self, experience: Dict[str, Any]):
         """
         Almacena una experiencia completa en múltiples tipos de memoria
+        UPGRADE AI: Modificado para incluir task_id en todas las operaciones de memoria
         
         Args:
             experience: Diccionario con datos de la experiencia
@@ -90,6 +91,10 @@ class AdvancedMemoryManager:
             await self.initialize()
             
         try:
+            # UPGRADE AI: Obtener contexto de tarea actual
+            current_context = get_current_task_context()
+            task_id = current_context.task_id if current_context else experience.get('task_id', 'unknown')
+            
             # Extraer información de la experiencia
             task_context = experience.get('context', {})
             execution_steps = experience.get('execution_steps', [])
@@ -97,9 +102,19 @@ class AdvancedMemoryManager:
             success = experience.get('success', False)
             execution_time = experience.get('execution_time', 0)
             
+            # UPGRADE AI: Asegurar que task_id esté presente en todos los datos
+            task_context['task_id'] = task_id
+            for step in execution_steps:
+                step['task_id'] = task_id
+            for outcome in outcomes:
+                outcome['task_id'] = task_id
+            
+            log_with_context(logging.INFO, f"Almacenando experiencia con {len(execution_steps)} pasos")
+            
             # 1. Almacenar en memoria de trabajo (contexto inmediato)
-            context_id = f"ctx_{datetime.now().timestamp()}"
+            context_id = f"ctx_{task_id}_{datetime.now().timestamp()}"
             self.working_memory.store_context(context_id, {
+                'task_id': task_id,  # UPGRADE AI: Agregar task_id explícito
                 'task_context': task_context,
                 'execution_summary': {
                     'steps_count': len(execution_steps),
@@ -110,7 +125,7 @@ class AdvancedMemoryManager:
             })
             
             # 2. Almacenar en memoria episódica
-            episode_id = f"ep_{datetime.now().timestamp()}"
+            episode_id = f"ep_{task_id}_{datetime.now().timestamp()}"
             episode = Episode(
                 id=episode_id,
                 title=f"Tarea: {task_context.get('task_type', 'general')}",
