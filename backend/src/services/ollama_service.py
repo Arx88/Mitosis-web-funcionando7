@@ -655,8 +655,13 @@ class OllamaService:
     
     def _call_ollama_api(self, prompt: str, custom_options: Optional[Dict] = None) -> Dict[str, Any]:
         """
-        Hacer llamada real a la API de Ollama con parámetros optimizados por modelo específico
-        PROBLEMA 3: Implementación de configuración dinámica por modelo
+        🔧 HACER LLAMADA A API DE OLLAMA (COMPATIBILIDAD)
+        
+        Método de compatibilidad que redirige a la implementación
+        sincrónica para mantener el código existente funcionando.
+        
+        NOTA: Este método se mantiene para compatibilidad, pero se
+        recomienda usar generate_response() que incluye el sistema de cola.
         """
         try:
             current_model_name = self.get_current_model()
@@ -665,69 +670,16 @@ class OllamaService:
             # Obtener opciones base del modelo
             model_options = model_config.get("options", {}).copy()
             
-            # Detectar si es una solicitud JSON y ajustar parámetros específicamente
-            is_json_request = any(keyword in prompt.lower() for keyword in ['json', '"steps"', 'genera un plan', 'plan de acción'])
-            
-            if is_json_request:
-                # Para solicitudes JSON, usar parámetros más estrictos
-                model_options['temperature'] = min(model_options.get('temperature', 0.7) * 0.5, 0.1)  # Reducir temperatura para JSON
-                model_options['top_p'] = min(model_options.get('top_p', 0.9) * 0.8, 0.7)  # Más restrictivo
-                
-                # Agregar stops específicos para JSON si no están
-                current_stops = model_options.get('stop', [])
-                json_stops = ['```', '---', '}```', '}\n```']
-                model_options['stop'] = list(set(current_stops + json_stops))
-            
             # Fusionar con opciones personalizadas si se proporcionan
             if custom_options:
                 model_options.update(custom_options)
             
-            # Determinar el timeout de la solicitud usando configuración por modelo
-            request_timeout = model_config.get("request_timeout", self.request_timeout)
+            # Usar la implementación sincrónica
+            return self._call_ollama_api_sync(prompt, current_model_name, model_options)
             
-            payload = {
-                "model": current_model_name,
-                "prompt": prompt,
-                "stream": False,
-                "options": model_options  # 🆕 Usar las opciones específicas del modelo
-            }
-            
-            # Logging detallado para debug
-            logger = logging.getLogger(__name__)
-            logger.debug(f"🤖 Ollama Request - Model: {current_model_name}")
-            logger.debug(f"⚙️ Options: temp={model_options.get('temperature')}, top_p={model_options.get('top_p')}, timeout={request_timeout}s")
-            if is_json_request:
-                logger.debug(f"📋 JSON mode detected, using strict parameters")
-            
-            response = requests.post(
-                f"{self.base_url}/api/generate",
-                json=payload,
-                timeout=min(request_timeout, 180)  # 🆕 Máximo 3 minutos para evitar cuelgues
-            )
-            
-            if response.status_code == 200:
-                return response.json()
-            else:
-                logger.error(f"❌ Ollama API returned error for model {current_model_name}: HTTP {response.status_code}")
-                return {
-                    'error': f"HTTP {response.status_code}: {response.text}"
-                }
-                
-        except Timeout:
-            logger = logging.getLogger(__name__)
-            logger.error(f"⏱️ Ollama API request timed out after {request_timeout} seconds for model {current_model_name}.")
-            return {
-                'error': f"Timeout después de {request_timeout} segundos para el modelo {current_model_name}. El modelo puede necesitar más tiempo para respuestas complejas."
-            }
-        except RequestException as e:
-            logger = logging.getLogger(__name__)
-            logger.error(f"🔌 Connection error to Ollama API for model {current_model_name}: {str(e)}")
-            return {
-                'error': f"Error de conexión: {str(e)}"
-            }
         except Exception as e:
             logger = logging.getLogger(__name__)
-            logger.error(f"💥 Unexpected error in Ollama API call for model {current_model_name}: {str(e)}")
+            logger.error(f"💥 Error en _call_ollama_api: {str(e)}")
             return {
                 'error': f"Error inesperado: {str(e)}"
             }
