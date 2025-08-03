@@ -234,9 +234,35 @@ const initialState: GlobalAppState = {
 function appReducer(state: GlobalAppState, action: AppAction): GlobalAppState {
   switch (action.type) {
     case 'SET_TASKS':
-      console.log('🔄 [CONTEXT] SET_TASKS: Cleaning and validating tasks');
+      console.log('🔄 [CONTEXT] SET_TASKS: Starting validation and cleaning');
+      console.log('🔄 [CONTEXT] SET_TASKS: Received payload:', {
+        isArray: Array.isArray(action.payload),
+        count: action.payload?.length || 0,
+        payload: action.payload
+      });
+      
       const cleanedTasks = removeDuplicateTasks(action.payload || []);
+      console.log('🔄 [CONTEXT] SET_TASKS: Cleaned tasks:', {
+        originalCount: action.payload?.length || 0,
+        cleanedCount: cleanedTasks.length
+      });
+      
+      // ✅ CRITICAL FIX: Log each task's plan after cleaning
+      cleanedTasks.forEach((task, index) => {
+        if (task.plan && Array.isArray(task.plan) && task.plan.length > 0) {
+          console.log(`🔄 [CONTEXT] Task ${index + 1} (${task.id}) plan:`, {
+            stepsCount: task.plan.length,
+            completed: task.plan.filter(s => s.completed).length,
+            active: task.plan.filter(s => s.active).length,
+            pending: task.plan.filter(s => !s.completed && !s.active).length
+          });
+        } else {
+          console.log(`🔄 [CONTEXT] Task ${index + 1} (${task.id}): NO PLAN OR EMPTY PLAN`);
+        }
+      });
+      
       debugTaskDuplication(cleanedTasks, 'SET_TASKS');
+      console.log('✅ [CONTEXT] SET_TASKS: Tasks processed and ready');
       
       return {
         ...state,
