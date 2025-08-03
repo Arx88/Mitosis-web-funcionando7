@@ -1,6 +1,7 @@
 """
 Gestor avanzado de memoria para el agente autónomo
 Integra múltiples tipos de memoria y proporciona interfaz unificada
+UPGRADE AI: Modificado para usar contexto de tareas y filtrado por task_id
 """
 
 import asyncio
@@ -15,6 +16,7 @@ from .semantic_memory_store import SemanticMemoryStore, SemanticConcept, Semanti
 from .procedural_memory_store import ProceduralMemoryStore, Procedure, ToolStrategy
 from .semantic_indexer import SemanticIndexer
 from .embedding_service import EmbeddingService
+from ..utils.task_context import get_current_task_context, log_with_context
 
 logger = logging.getLogger(__name__)
 
