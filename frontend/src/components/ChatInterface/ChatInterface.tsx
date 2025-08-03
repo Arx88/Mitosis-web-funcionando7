@@ -192,6 +192,25 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  // ✅ DEBUGGING: Log component state changes
+  useEffect(() => {
+    console.log('🔧 ChatInterface state change:', {
+      isLoading,
+      disabled,
+      effective_disabled: disabled || isLoading,
+      messagesCount: messages.length,
+      taskId: task?.id
+    });
+  }, [isLoading, disabled, messages.length, task?.id]);
+
+  // ✅ SAFETY: Reset isLoading on component mount to ensure clean state
+  useEffect(() => {
+    if (isLoading) {
+      console.log('🔄 ChatInterface: Resetting isLoading to false on mount');
+      setIsLoading(false);
+    }
+  }, [task?.id]); // Reset when task changes
+
   // ========================================================================
   // CALLBACKS MEMOIZADOS
   // ========================================================================
