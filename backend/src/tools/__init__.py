@@ -82,14 +82,9 @@ try:
 except ImportError:
     pass
 
-# Herramientas con Browser-use y navegación inteligente
+# Herramienta unificada de navegación web (con browser-use integrado)
 try:
     from .unified_web_search_tool import UnifiedWebSearchTool
-except ImportError:
-    pass
-
-try:
-    from .ai_navigation_tool import AINavigationTool
 except ImportError:
     pass
 
