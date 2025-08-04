@@ -1264,6 +1264,41 @@ export const TerminalView = ({
         
         {/* Monitor Content - Responsive Scrollable Container */}
         <div className="flex-1 overflow-y-auto p-2 sm:p-4 custom-scrollbar w-full min-h-0" ref={monitorRef}>
+          
+          {/* Browser Visual - Screenshots en Tiempo Real */}
+          {currentScreenshot && (
+            <div className="mb-4 p-3 bg-[#2a2a2b] rounded-lg border border-purple-400/30">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                <span className="text-sm font-medium text-purple-400">🌐 Navegación en Tiempo Real</span>
+                <span className="text-xs text-gray-400 ml-auto">
+                  {browserScreenshots.length > 0 ? 
+                    new Date(browserScreenshots[browserScreenshots.length - 1].timestamp).toLocaleTimeString() 
+                    : 'Ahora'
+                  }
+                </span>
+              </div>
+              <div className="space-y-2">
+                {browserScreenshots.length > 0 && (
+                  <div className="text-xs text-gray-300">
+                    {browserScreenshots[browserScreenshots.length - 1].step}
+                  </div>
+                )}
+                <img 
+                  src={currentScreenshot} 
+                  alt="Navegación browser-use en tiempo real" 
+                  className="rounded-lg max-w-full h-auto border border-[#404040] shadow-lg"
+                  style={{ maxHeight: '300px', maxWidth: '100%' }}
+                />
+                {browserScreenshots.length > 1 && (
+                  <div className="text-xs text-gray-400 text-center">
+                    Screenshot {browserScreenshots.length} de la navegación
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
           {/* Show initialization steps when initializing - MINIMALIST COMPUTER DESIGN */}
           {isInitializing && !isSystemOnline && (
             <div className="flex items-center justify-center h-full w-full">
