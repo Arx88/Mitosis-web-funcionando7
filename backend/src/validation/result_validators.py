@@ -29,23 +29,42 @@ def validate_web_search_result(result: dict) -> Tuple[str, str]:
         if result.get('error'):
             return 'failure', f'Error en búsqueda: {result["error"]}'
         
+        # CORREGIDO: Verificar tanto estructura nueva como legacy
         search_results = result.get('search_results', [])
-        if not search_results:
-            return 'warning', 'La búsqueda no arrojó resultados.'
+        results_count = result.get('results_count', 0) 
+        content = result.get('content', '')
+        data = result.get('data', {})
         
-        # Verificar que los resultados tengan la estructura esperada
-        valid_results = 0
-        for res in search_results:
-            if isinstance(res, dict) and all(k in res for k in ['title', 'link']):
-                valid_results += 1
+        # Si results_count es 0 y no hay content real, es un fallo
+        if results_count == 0 and not content.strip():
+            return 'failure', 'La búsqueda no arrojó resultados reales. El sistema reportó éxito pero no recopiló información.'
         
-        if valid_results == 0:
-            return 'failure', 'Los resultados de búsqueda no tienen formato válido.'
+        # Si data está vacío y content está vacío, es un fallo
+        if not data and not content.strip():
+            return 'failure', 'La búsqueda no recopiló información real. Datos y contenido están vacíos.'
         
-        if valid_results < len(search_results) / 2:
-            return 'warning', f'Solo {valid_results} de {len(search_results)} resultados son válidos.'
+        # Verificar el contenido si existe
+        if content and len(content.strip()) < 50:
+            return 'warning', 'La búsqueda recopiló muy poca información (menos de 50 caracteres).'
         
-        return 'success', f'Búsqueda exitosa, {valid_results} resultados válidos encontrados.'
+        # Verificar search_results si existen (estructura legacy)
+        if search_results:
+            valid_results = 0
+            for res in search_results:
+                if isinstance(res, dict) and all(k in res for k in ['title', 'link']):
+                    valid_results += 1
+            
+            if valid_results == 0:
+                return 'failure', 'Los resultados de búsqueda no tienen formato válido.'
+            
+            return 'success', f'Búsqueda exitosa, {valid_results} resultados válidos encontrados.'
+        
+        # Si llegamos aquí, verificamos si tenemos contenido real
+        if content and len(content.strip()) >= 50:
+            return 'success', f'Búsqueda completada con contenido válido ({len(content)} caracteres).'
+        
+        # Si no hay resultados válidos en ningún formato
+        return 'failure', 'La búsqueda no produjo resultados válidos en ningún formato esperado.'
         
     except Exception as e:
         logger.error(f"Error validating web search result: {str(e)}")
