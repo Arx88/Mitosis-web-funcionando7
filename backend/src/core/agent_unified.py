@@ -677,6 +677,31 @@ Responde de forma directa, amigable y concisa."""
                 step.result = result
                 step.status = TaskStatus.COMPLETED
                 terminal_logger.info(f"✅ Paso completado: {step.title}")
+                
+                # 🔄 CRITICAL FIX: Persist step completion to database
+                try:
+                    # Update step status in database
+                    await self.task_manager_service.update_task_step_status(
+                        task.id, step.id, "completed", result
+                    )
+                    
+                    # Update task-level progress counters
+                    completed_steps = sum(1 for s in task.steps if s.status == TaskStatus.COMPLETED)
+                    current_step_index = next((i for i, s in enumerate(task.steps) if s.status != TaskStatus.COMPLETED), len(task.steps))
+                    
+                    # Persist updated counters to database
+                    await self.task_manager_service.update_task(task.id, {
+                        'completed_steps': completed_steps,
+                        'current_step': current_step_index,
+                        'updated_at': datetime.now().isoformat()
+                    })
+                    
+                    terminal_logger.info(f"💾 Estado persistido: {completed_steps}/{len(task.steps)} pasos completados")
+                    
+                except Exception as persist_error:
+                    terminal_logger.error(f"⚠️ Error persisting step completion: {persist_error}")
+                    # Don't fail the step execution if persistence fails
+                
                 return True
             else:
                 step.error = f"Herramienta no disponible: {step.tool}"
