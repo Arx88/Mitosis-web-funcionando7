@@ -51,7 +51,7 @@ class AINavigationTool(BaseTool):
             ),
             ParameterDefinition(
                 name="extract_data",
-                type="boolean",
+                param_type="boolean",
                 description="Si extraer datos estructurados de las páginas visitadas",
                 required=False,
                 default=False
