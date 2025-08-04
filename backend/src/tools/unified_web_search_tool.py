@@ -264,7 +264,7 @@ class UnifiedWebSearchTool(BaseTool):
             
             # 🛠️ PASO 2: FALLBACK A PLAYWRIGHT DIRECTO (MÉTODO SECUNDARIO)
             self._emit_progress_eventlet("🎭 Método fallback: Playwright directo + scraping robusto")
-            results = self._run_playwright_search(query, search_engine, max_results)
+            results = self._run_playwright_fallback_search(query, search_engine, max_results)
             
             # PASO 3: VERIFICAR SI LOS RESULTADOS SON REALES
             if results and len(results) > 0:
