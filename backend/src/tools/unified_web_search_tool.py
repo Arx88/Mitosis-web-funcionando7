@@ -1850,7 +1850,7 @@ except Exception as e:
                     'timestamp': datetime.now().isoformat()
                 }
                 
-                room = f"task_{self.task_id}"
+                room = self.task_id
                 
                 with open('/tmp/websocket_comprehensive.log', 'a') as f:
                     f.write(f"BROWSER_VISUAL_STEP_3_FALLBACK_EMIT: room={room}, enhanced_data={enhanced_data}\n")
