@@ -1465,6 +1465,40 @@ except Exception as e:
         except Exception:
             return ""
     
+    def _emit_browser_activity(self, activity_type: str, url: str, description: str, screenshot_data: str = None):
+        """🌐 Emit browser activity events via WebSocket for TaskView terminal"""
+        try:
+            if WEBSOCKET_AVAILABLE and self.task_id:
+                from ..websocket.websocket_manager import get_websocket_manager
+                websocket_manager = get_websocket_manager()
+                
+                # Emit browser_activity event specifically for TaskView terminal
+                websocket_manager.send_browser_activity(
+                    task_id=self.task_id,
+                    activity_type=activity_type,  # 'navigation_start', 'content_processing', 'step_success', etc.
+                    url=url or 'about:blank',
+                    description=description,
+                    screenshot_data=screenshot_data
+                )
+                
+                # Also emit as terminal event for live display
+                websocket_manager.emit_terminal_event(
+                    task_id=self.task_id,
+                    event_type='browser_navigation',
+                    data={
+                        'type': 'web-browsing',
+                        'activity': activity_type,
+                        'url': url,
+                        'description': description,
+                        'timestamp': datetime.now().isoformat(),
+                        'screenshot': screenshot_data
+                    }
+                )
+                
+        except Exception as ws_error:
+            # Si WebSocket falla, continuar con logging normal
+            self._emit_progress_eventlet(f"🌐 NAVEGACIÓN WEB: {description}")
+    
     def _emit_progress_eventlet(self, message: str):
         """📡 EMITIR PROGRESO COMPATIBLE CON EVENTLET - VERSIÓN MEJORADA PARA NAVEGACIÓN EN TIEMPO REAL"""
         try:
