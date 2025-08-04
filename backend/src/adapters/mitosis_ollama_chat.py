@@ -159,13 +159,61 @@ class MitosisOllamaChatModel(BaseChatModel):
                         json_end = response_text.find("```", json_start)
                         json_str = response_text[json_start:json_end].strip()
                         parsed_data = json.loads(json_str)
-                        return ChatInvokeCompletion(response=output_format(**parsed_data))
+                        
+                        # Crear usage para respuesta estructurada
+                        from browser_use.llm.views import ChatInvokeUsage
+                        prompt_text = "\n".join([msg.content if isinstance(msg.content, str) else str(msg.content) for msg in messages])
+                        prompt_tokens = max(1, len(prompt_text.split()))
+                        completion_tokens = max(1, len(response_text.split()))
+                        total_tokens = prompt_tokens + completion_tokens
+                        
+                        usage = ChatInvokeUsage(
+                            prompt_tokens=prompt_tokens,
+                            prompt_cached_tokens=None,
+                            prompt_cache_creation_tokens=None, 
+                            prompt_image_tokens=None,
+                            completion_tokens=completion_tokens,
+                            total_tokens=total_tokens
+                        )
+                        
+                        return ChatInvokeCompletion(completion=output_format(**parsed_data), usage=usage)
                     else:
                         # Fallback: usar respuesta como string
-                        return ChatInvokeCompletion(response=response_text)
+                        from browser_use.llm.views import ChatInvokeUsage
+                        prompt_text = "\n".join([msg.content if isinstance(msg.content, str) else str(msg.content) for msg in messages])
+                        prompt_tokens = max(1, len(prompt_text.split()))
+                        completion_tokens = max(1, len(response_text.split()))
+                        total_tokens = prompt_tokens + completion_tokens
+                        
+                        usage = ChatInvokeUsage(
+                            prompt_tokens=prompt_tokens,
+                            prompt_cached_tokens=None,
+                            prompt_cache_creation_tokens=None, 
+                            prompt_image_tokens=None,
+                            completion_tokens=completion_tokens,
+                            total_tokens=total_tokens
+                        )
+                        
+                        return ChatInvokeCompletion(completion=response_text, usage=usage)
                 except Exception as e:
                     logger.warning(f"⚠️ No se pudo parsear formato estructurado: {e}")
-                    return ChatInvokeCompletion(response=response_text)
+                    # Fallback con usage
+                    from browser_use.llm.views import ChatInvokeUsage
+                    prompt_text = "\n".join([msg.content if isinstance(msg.content, str) else str(msg.content) for msg in messages])
+                    prompt_tokens = max(1, len(prompt_text.split()))
+                    completion_tokens = max(1, len(response_text.split()))
+                    total_tokens = prompt_tokens + completion_tokens
+                    
+                    usage = ChatInvokeUsage(
+                        prompt_tokens=prompt_tokens,
+                        prompt_cached_tokens=None,
+                        prompt_cache_creation_tokens=None, 
+                        prompt_image_tokens=None,
+                        completion_tokens=completion_tokens,
+                        total_tokens=total_tokens
+                    )
+                    
+                    return ChatInvokeCompletion(completion=response_text, usage=usage)
             
             # Crear objeto de usage con valores estimados
             from browser_use.llm.views import ChatInvokeUsage
