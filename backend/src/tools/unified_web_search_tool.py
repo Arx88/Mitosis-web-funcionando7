@@ -621,6 +621,207 @@ REGLAS IMPORTANTES:
             self._emit_progress_eventlet(f"❌ Error ejecutando browser-use inteligente: {str(e)}")
             raise
     
+    def _run_playwright_fallback_search(self, query: str, search_engine: str, max_results: int) -> List[Dict[str, Any]]:
+        """🎭 PLAYWRIGHT FALLBACK DIRECTO para cuando browser-use falla"""
+        import asyncio
+        from urllib.parse import quote_plus
+        
+        async def async_playwright_fallback_search():
+            try:
+                self._emit_progress_eventlet("🎭 Iniciando Playwright como método fallback...")
+                
+                # Import playwright
+                try:
+                    from playwright.async_api import async_playwright
+                except ImportError:
+                    self._emit_progress_eventlet("❌ Playwright no disponible")
+                    raise Exception("Playwright no está instalado")
+                
+                # Configurar URL de búsqueda
+                encoded_query = quote_plus(query)
+                search_urls = {
+                    'google': f'https://www.google.com/search?q={encoded_query}',
+                    'bing': f'https://www.bing.com/search?q={encoded_query}&count=20',
+                    'duckduckgo': f'https://duckduckgo.com/?q={encoded_query}'
+                }
+                
+                search_url = search_urls.get(search_engine, search_urls['google'])
+                self._emit_progress_eventlet(f"🌐 NAVEGACIÓN WEB: Navegando a {search_engine}...")
+                
+                results = []
+                
+                async with async_playwright() as p:
+                    # Configuración robusta para contenedores
+                    browser = await p.chromium.launch(
+                        headless=True,
+                        args=[
+                            '--no-sandbox',
+                            '--disable-setuid-sandbox',
+                            '--disable-dev-shm-usage',
+                            '--disable-gpu',
+                            '--disable-software-rasterizer'
+                        ]
+                    )
+                    
+                    try:
+                        context = await browser.new_context(
+                            viewport={'width': 1920, 'height': 800},
+                            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+                        )
+                        
+                        page = await context.new_page()
+                        page.set_default_timeout(15000)
+                        
+                        self._emit_progress_eventlet("🌐 NAVEGACIÓN WEB: ✅ Navegador iniciado correctamente")
+                        
+                        # Navegar a la URL
+                        await page.goto(search_url, wait_until='networkidle')
+                        await page.wait_for_timeout(2000)
+                        
+                        current_url = page.url
+                        self._emit_progress_eventlet(f"🌐 NAVEGACIÓN WEB: ✅ Página cargada: {current_url[:50]}...")
+                        
+                        self._emit_progress_eventlet("🔍 Extrayendo resultados de búsqueda...")
+                        
+                        # Extraer resultados según motor de búsqueda
+                        if search_engine == 'google':
+                            # Selectores de Google
+                            result_elements = await page.query_selector_all('div.g')
+                            self._emit_progress_eventlet(f"📊 Google: {len(result_elements)} elementos encontrados")
+                            
+                            for i, element in enumerate(result_elements[:max_results]):
+                                try:
+                                    self._emit_progress_eventlet(f"📄 Procesando resultado Google {i+1}/{min(len(result_elements), max_results)}...")
+                                    
+                                    title_element = await element.query_selector('h3')
+                                    title = await title_element.text_content() if title_element else ''
+                                    
+                                    link_element = await element.query_selector('a')
+                                    url = await link_element.get_attribute('href') if link_element else ''
+                                    
+                                    snippet_elements = await element.query_selector_all('.VwiC3b, .s3v9rd')
+                                    snippet = ''
+                                    for snip_elem in snippet_elements:
+                                        snippet_text = await snip_elem.text_content()
+                                        if snippet_text:
+                                            snippet += snippet_text + ' '
+                                    
+                                    if title and url and url.startswith('http'):
+                                        results.append({
+                                            'title': title.strip(),
+                                            'url': url.strip(),
+                                            'snippet': snippet.strip()[:300],
+                                            'source': 'google',
+                                            'method': 'playwright_fallback'
+                                        })
+                                        self._emit_progress_eventlet(f"✅ Resultado {i+1}: {title[:40]}...")
+                                except Exception as e:
+                                    self._emit_progress_eventlet(f"⚠️ Error procesando resultado Google {i+1}: {str(e)}")
+                                    continue
+                        
+                        elif search_engine == 'bing':
+                            # Selectores de Bing
+                            result_elements = await page.query_selector_all('li.b_algo')
+                            self._emit_progress_eventlet(f"📊 Bing: {len(result_elements)} elementos encontrados")
+                            
+                            for i, element in enumerate(result_elements[:max_results]):
+                                try:
+                                    self._emit_progress_eventlet(f"📄 Procesando resultado Bing {i+1}/{min(len(result_elements), max_results)}...")
+                                    
+                                    title_element = await element.query_selector('h2')
+                                    title = await title_element.text_content() if title_element else ''
+                                    
+                                    link_element = await element.query_selector('h2 a')
+                                    url = await link_element.get_attribute('href') if link_element else ''
+                                    
+                                    snippet_element = await element.query_selector('.b_caption')
+                                    snippet = await snippet_element.text_content() if snippet_element else ''
+                                    
+                                    if title and url and url.startswith('http'):
+                                        results.append({
+                                            'title': title.strip(),
+                                            'url': url.strip(),
+                                            'snippet': snippet.strip()[:300],
+                                            'source': 'bing',
+                                            'method': 'playwright_fallback'
+                                        })
+                                        self._emit_progress_eventlet(f"✅ Resultado {i+1}: {title[:40]}...")
+                                except Exception as e:
+                                    self._emit_progress_eventlet(f"⚠️ Error procesando resultado Bing {i+1}: {str(e)}")
+                                    continue
+                        
+                        elif search_engine == 'duckduckgo':
+                            # Selectores de DuckDuckGo
+                            result_elements = await page.query_selector_all('article[data-testid="result"]')
+                            self._emit_progress_eventlet(f"📊 DuckDuckGo: {len(result_elements)} elementos encontrados")
+                            
+                            for i, element in enumerate(result_elements[:max_results]):
+                                try:
+                                    self._emit_progress_eventlet(f"📄 Procesando resultado DDG {i+1}/{min(len(result_elements), max_results)}...")
+                                    
+                                    title_element = await element.query_selector('[data-testid="result-title-a"]')
+                                    title = await title_element.text_content() if title_element else ''
+                                    
+                                    link_element = await element.query_selector('[data-testid="result-title-a"]')
+                                    url = await link_element.get_attribute('href') if link_element else ''
+                                    
+                                    snippet_element = await element.query_selector('[data-testid="result-snippet"]')
+                                    snippet = await snippet_element.text_content() if snippet_element else ''
+                                    
+                                    if title and url and url.startswith('http'):
+                                        results.append({
+                                            'title': title.strip(),
+                                            'url': url.strip(),
+                                            'snippet': snippet.strip()[:300],
+                                            'source': 'duckduckgo',
+                                            'method': 'playwright_fallback'
+                                        })
+                                        self._emit_progress_eventlet(f"✅ Resultado {i+1}: {title[:40]}...")
+                                except Exception as e:
+                                    self._emit_progress_eventlet(f"⚠️ Error procesando resultado DDG {i+1}: {str(e)}")
+                                    continue
+                        
+                        self._emit_progress_eventlet(f"🎭 Playwright fallback completado: {len(results)} resultados extraídos")
+                        return results
+                        
+                    finally:
+                        await context.close()
+                        await browser.close()
+                        
+            except Exception as e:
+                self._emit_progress_eventlet(f"❌ Error en Playwright fallback: {str(e)}")
+                raise
+        
+        # Ejecutar función async con manejo de event loops
+        try:
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # Si ya hay un loop corriendo, usar thread
+                    import threading
+                    import concurrent.futures
+                    
+                    def run_in_thread():
+                        new_loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(new_loop)
+                        try:
+                            return new_loop.run_until_complete(async_playwright_fallback_search())
+                        finally:
+                            new_loop.close()
+                    
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future = executor.submit(run_in_thread)
+                        return future.result(timeout=60)  # 1 minuto timeout para fallback
+                else:
+                    return loop.run_until_complete(async_playwright_fallback_search())
+            except RuntimeError:
+                # No hay loop, crear uno nuevo
+                return asyncio.run(async_playwright_fallback_search())
+                
+        except Exception as e:
+            self._emit_progress_eventlet(f"❌ Error ejecutando Playwright fallback: {str(e)}")
+            return []
+    
     def _run_legacy_search(self, query: str, search_engine: str, 
                          max_results: int, extract_content: bool) -> List[Dict[str, Any]]:
         """🔄 MÉTODO LEGACY DE BÚSQUEDA WEB (fallback cuando browser-use no está disponible)"""
