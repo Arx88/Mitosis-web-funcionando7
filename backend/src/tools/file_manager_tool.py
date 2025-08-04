@@ -10,19 +10,17 @@ from pathlib import Path
 from typing import Dict, Any, List
 import time
 
-from .base_tool import BaseTool, ParameterDefinition, ToolExecutionResult
+from .base_tool import BaseTool, ParameterDefinition, ToolExecutionResult, register_tool
 
+@register_tool
 class FileManagerTool(BaseTool):
     def __init__(self):
-        super().__init__()
+        super().__init__(
+            name="file_manager",
+            description="Gestiona archivos y directorios de forma segura"
+        )
     
-    def get_name(self) -> str:
-        return "file_manager"
-    
-    def get_description(self) -> str:
-        return "Gestiona archivos y directorios de forma segura"
-    
-    def get_parameters(self) -> List[ParameterDefinition]:
+    def _define_parameters(self) -> List[ParameterDefinition]:
         return [
             ParameterDefinition(
                 name="action",
@@ -80,38 +78,7 @@ class FileManagerTool(BaseTool):
         
         return {'valid': True}
     
-    def get_description(self) -> str:
-        return self.description
-    
-    def get_parameters(self) -> List[Dict[str, Any]]:
-        return self.parameters
-    
-    def validate_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Validar parámetros de entrada"""
-        if not isinstance(parameters, dict):
-            return {'valid': False, 'error': 'Parameters must be a dictionary'}
-        
-        if 'action' not in parameters:
-            return {'valid': False, 'error': 'action parameter is required'}
-        
-        if 'path' not in parameters:
-            return {'valid': False, 'error': 'path parameter is required'}
-        
-        action = parameters['action']
-        valid_actions = ['read', 'write', 'create', 'delete', 'list', 'copy', 'move', 'mkdir']
-        
-        if action not in valid_actions:
-            return {'valid': False, 'error': f'action must be one of: {valid_actions}'}
-        
-        if action in ['write', 'create'] and 'content' not in parameters:
-            return {'valid': False, 'error': f'content parameter is required for {action}'}
-        
-        if action in ['copy', 'move'] and 'destination' not in parameters:
-            return {'valid': False, 'error': f'destination parameter is required for {action}'}
-        
-        return {'valid': True}
-    
-    def execute(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
+    def _execute_tool(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> ToolExecutionResult:
         """Ejecutar operación de gestión de archivos"""
         if config is None:
             config = {}
