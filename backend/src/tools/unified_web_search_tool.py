@@ -309,15 +309,32 @@ class UnifiedWebSearchTool(BaseTool):
                 
                 self._emit_progress_eventlet("✅ LLM configurado correctamente para browser-use")
                 
-                # Construir tarea de búsqueda inteligente específica
-                search_task = f"""Search for "{query}" on {search_engine}.com and extract the top {max_results} search results. 
-                
-For each result, extract:
-- Title of the page/article
-- URL link 
-- Brief description/snippet (1-2 sentences)
+                # Construir tarea de búsqueda inteligente específica para extraer URLs reales
+                search_task = f"""Search for "{query}" on {search_engine}.com and extract the top {max_results} search results with REAL URLs.
 
-Return the results in a clear, structured format."""
+CRITICAL: I need REAL, ACTUAL URLs from the search results, not example URLs.
+
+Steps to follow:
+1. Navigate to {search_engine}.com
+2. Enter the search query: "{query}"
+3. Wait for results to load
+4. Extract the following from each of the top {max_results} results:
+   - The ACTUAL clickable URL (href attribute) - this is CRITICAL
+   - The title text of the search result
+   - The description/snippet text shown in the search result
+
+Format your response with clear sections for each result:
+Result 1:
+URL: [actual complete URL]
+Title: [actual title]
+Description: [actual description]
+
+Result 2:
+URL: [actual complete URL] 
+Title: [actual title]
+Description: [actual description]
+
+IMPORTANT: The URLs must be real, complete, clickable links from the actual search results, not placeholder or example URLs."""
                 
                 self._emit_progress_eventlet(f"🧠 IA ejecutará tarea: {search_task[:100]}...")
                 
