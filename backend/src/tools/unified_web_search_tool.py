@@ -611,19 +611,24 @@ Devuelve los resultados en el mismo formato, pero mejorados."""
                     results.append(result)
                     self._emit_progress_eventlet(f"📄 Resultado Bing {i+1}: {title[:50]}...")
             
-            # VALIDACIÓN CRÍTICA: Solo devolver si tenemos resultados reales
-            if not results:
-                self._emit_progress_eventlet("❌ No se encontraron resultados reales, el parsing falló")
-                raise Exception("Parsing failed - no real search results found")
+            # VALIDACIÓN MEJORADA: Aceptar resultados parciales
+            valid_results = []
+            for result in results:
+                url = result.get('url', '')
+                title = result.get('title', '')
+                # Filtrar solo resultados con URL válida y título
+                if url and title and not url.startswith('https://example.com'):
+                    # Decodificar entidades HTML en títulos
+                    import html
+                    result['title'] = html.unescape(title)
+                    valid_results.append(result)
             
-            # Verificar que los URLs no sean simulados
-            real_results = [r for r in results if not r.get('url', '').startswith('https://example.com')]
-            if not real_results:
-                self._emit_progress_eventlet("❌ Todos los resultados son simulados")
-                raise Exception("All results are simulated - real search failed")
+            if not valid_results:
+                self._emit_progress_eventlet("❌ No se encontraron resultados válidos después del filtrado")
+                raise Exception("No valid search results found after filtering")
             
-            self._emit_progress_eventlet(f"✅ Búsqueda real completada: {len(real_results)} resultados obtenidos")
-            return real_results
+            self._emit_progress_eventlet(f"✅ Búsqueda real completada: {len(valid_results)} resultados válidos de {len(results)} extraídos")
+            return valid_results
             
         except Exception as e:
             self._emit_progress_eventlet(f"❌ Error en requests search: {str(e)}")
