@@ -420,9 +420,13 @@ class UnifiedWebSearchTool(BaseTool):
             
             self._emit_progress_eventlet("🔧 Ejecutando browser-use en subprocess separado (solución event loop)")
             
-            # 🚀 SOLUCIÓN CRÍTICA: Emitir eventos browser_visual ANTES de iniciar subprocess
+            # 🚀 SOLUCIÓN CRÍTICA: Emitir eventos browser_visual DESPUÉS de dar tiempo al frontend
             
-            # Emitir evento inicial inmediatamente
+            # ⏳ CRITICAL FIX: Esperar 2 segundos para que frontend se una a la room
+            self._emit_progress_eventlet("⏳ Esperando que frontend se conecte a room WebSocket...")
+            time.sleep(2)
+            
+            # Emitir evento inicial después del delay
             self._emit_browser_visual({
                 'type': 'navigation_start',
                 'message': '🚀 NAVEGACIÓN VISUAL INICIADA: Browser-use comenzando navegación',
