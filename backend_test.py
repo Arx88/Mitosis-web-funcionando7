@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-BACKEND TESTING SUITE FOR MITOSIS TASK EXECUTION PIPELINE
-Testing complete task execution pipeline to diagnose why tasks get stuck at step 1
+BACKEND TESTING SUITE FOR MITOSIS WEB SEARCH FUNCTIONALITY FIX
+Testing the corrected web_search tool to verify real results are obtained instead of simulated ones
+Focus: Verify that "Parsing failed - no real search results found" error is resolved
 """
 
 import requests
@@ -10,6 +11,7 @@ import time
 import sys
 from datetime import datetime
 import threading
+import re
 
 # Configuration
 BACKEND_URL = "https://a717afdc-db49-49fa-be46-b6317fa09683.preview.emergentagent.com"
