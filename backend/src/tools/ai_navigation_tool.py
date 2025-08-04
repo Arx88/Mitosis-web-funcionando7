@@ -12,7 +12,7 @@ CARACTERÍSTICAS:
 import asyncio
 import logging
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from datetime import datetime
 
 # Importaciones de base tool system
