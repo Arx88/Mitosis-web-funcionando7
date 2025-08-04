@@ -13,6 +13,26 @@ import threading
 from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+FRONTEND_ORIGINS = [
+    # 🌐 URL DETECTADA DINÁMICAMENTE
+    "https://27da83ee-75a6-434a-a74f-6b24f6d2f58d.preview.emergentagent.com",
+    
+    # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
+    "https://27da83ee-75a6-434a-a74f-6b24f6d2f58d.preview.emergentagent.com",
+    
+    # 🏠 DESARROLLO LOCAL
+    "http://localhost:3000",
+    "http://localhost:5173", 
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    
+    # 📱 PREVIEW DOMAINS COMUNES
+    "https://27da83ee-75a6-434a-a74f-6b24f6d2f58d.preview.emergentagent.com",
+    "https://27da83ee-75a6-434a-a74f-6b24f6d2f58d.preview.emergentagent.com",
+    
+    # 🌟 FALLBACK UNIVERSAL (último recurso)
+    "*"
+]
 # CONFIGURACIÓN DINÁMICA DE CORS - DETECTA AUTOMÁTICAMENTE LA URL DEL ENTORNO
 def get_dynamic_cors_origins():
     """Detecta automáticamente las URLs permitidas para CORS"""
@@ -1192,23 +1212,3 @@ if __name__ == '__main__':
     app.run(host=HOST, port=PORT, debug=DEBUG)
 
 
-FRONTEND_ORIGINS = [
-    # 🌐 URL DETECTADA DINÁMICAMENTE
-    "https://27da83ee-75a6-434a-a74f-6b24f6d2f58d.preview.emergentagent.com",
-    
-    # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
-    "https://27da83ee-75a6-434a-a74f-6b24f6d2f58d.preview.emergentagent.com",
-    
-    # 🏠 DESARROLLO LOCAL
-    "http://localhost:3000",
-    "http://localhost:5173", 
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
-    
-    # 📱 PREVIEW DOMAINS COMUNES
-    "https://27da83ee-75a6-434a-a74f-6b24f6d2f58d.preview.emergentagent.com",
-    "https://27da83ee-75a6-434a-a74f-6b24f6d2f58d.preview.emergentagent.com",
-    
-    # 🌟 FALLBACK UNIVERSAL (último recurso)
-    "*"
-]
