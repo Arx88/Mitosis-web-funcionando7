@@ -6807,6 +6807,30 @@ def execute_task_steps_sequentially(task_id: str, steps: list):
                     print(f"✅ execute_step_internal completed for step {i+1} - AGENT APPROVED")
                     logger.info(f"✅ Step {i+1} approved by agent, moving to next step...")
                     
+                    # 🔄 CRITICAL FIX: Mark step as completed and update database
+                    step['completed'] = True
+                    step['success'] = True
+                    step['result'] = execution_result
+                    step['execution_details'] = {
+                        'completed_at': datetime.now().isoformat()
+                    }
+                    
+                    # Update task progress counters
+                    completed_steps = sum(1 for s in steps if s.get('completed', False))
+                    current_step_index = min(i + 1, len(steps) - 1)  # Next step or last step
+                    
+                    # Update database with completed step and progress
+                    try:
+                        update_task_data(task_id, {
+                            'plan': steps,
+                            'completed_steps': completed_steps,
+                            'current_step': current_step_index,
+                            'updated_at': datetime.now().isoformat()
+                        })
+                        print(f"💾 Database updated: {completed_steps}/{len(steps)} steps completed, current_step: {current_step_index}")
+                    except Exception as update_error:
+                        print(f"⚠️ Error updating database: {update_error}")
+                    
                     # 🚨 EMIT STEP COMPLETED EVENT
                     emit_step_event(task_id, 'step_completed', {
                         'step_id': step_id,
