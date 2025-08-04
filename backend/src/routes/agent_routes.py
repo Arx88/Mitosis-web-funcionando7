@@ -7212,11 +7212,7 @@ def execute_step_real(task_id: str, step_id: str, step: dict):
                     'max_results': 5
                 }
             elif tool == 'creation':
-                mapped_tool = 'web_search'  # Usar web_search para investigar sobre creación
-                tool_params = {
-                    'query': f"crear contenido {title} {description}",
-                    'max_results': 3
-                }
+                mapped_tool = 'file_manager'  # Usar file_manager para crear archivos
                 filename = f"generated_content_{task_id}_{step_id}.md"
                 # Generate more sophisticated content using Ollama
                 try:
