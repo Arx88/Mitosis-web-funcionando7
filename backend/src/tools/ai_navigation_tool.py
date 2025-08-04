@@ -34,31 +34,35 @@ logger = logging.getLogger(__name__)
 class AINavigationTool(BaseTool):
     """🤖 Herramienta de navegación inteligente con browser-use"""
     
+    def _define_parameters(self) -> List[ParameterDefinition]:
+        """Define los parámetros de la herramienta"""
+        return [
+            ParameterDefinition(
+                name="task_description",
+                type="string",
+                description="Descripción en lenguaje natural de la tarea de navegación (ej: 'buscar información sobre IA en Google')",
+                required=True
+            ),
+            ParameterDefinition(
+                name="url",
+                type="string", 
+                description="URL inicial opcional (si no se especifica, la IA decidirá dónde navegar)",
+                required=False
+            ),
+            ParameterDefinition(
+                name="extract_data",
+                type="boolean",
+                description="Si extraer datos estructurados de las páginas visitadas",
+                required=False,
+                default=False
+            )
+        ]
+
     def __init__(self):
         super().__init__(
             name="ai_navigation",
             description="🤖 Navegación web inteligente usando AI con browser-use Agent. Permite ejecutar tareas de navegación usando lenguaje natural.",
-            parameters=[
-                ParameterDefinition(
-                    name="task_description",
-                    type="string",
-                    description="Descripción en lenguaje natural de la tarea de navegación (ej: 'buscar información sobre IA en Google')",
-                    required=True
-                ),
-                ParameterDefinition(
-                    name="url",
-                    type="string", 
-                    description="URL inicial opcional (si no se especifica, la IA decidirá dónde navegar)",
-                    required=False
-                ),
-                ParameterDefinition(
-                    name="extract_data",
-                    type="boolean",
-                    description="Si extraer datos estructurados de las páginas visitadas",
-                    required=False,
-                    default=False
-                )
-            ]
+            parameters=self._define_parameters()
         )
         self.browser_manager = None
         self.websocket_manager = None
