@@ -603,24 +603,78 @@ Be precise and focus on the most relevant search results.'''
             except:
                 pass  # Silenciar errores de screenshots
         
-        # Ejecutar navegación y enviar eventos en tiempo real
+        # 🚀 EJECUTAR NAVEGACIÓN CON SCREENSHOTS EN TIEMPO REAL
         navigation_task = agent.run(max_steps=6)
         
-        # ENVIAR EVENTOS DE NAVEGACIÓN EN TIEMPO REAL
-        for step in range(6):
-            await asyncio.sleep(2)  # Esperar entre eventos
-            await send_websocket_event(websocket_manager, 'browser_visual', {{
-                'type': 'navigation_progress',
-                'message': f'🌐 NAVEGACIÓN PASO {{step+1}}/6: Agente navegando {{clean_query}}',
-                'step': f'Navegación paso {{step+1}}/6',
-                'timestamp': datetime.now().isoformat(),
-                'url': search_url
-            }})
+        # 📸 TASK PARALELA: Capturar screenshots durante navegación
+        async def capture_real_screenshots():
+            \"\"\"Capturar screenshots reales durante navegación\"\"\"
+            await asyncio.sleep(3)  # Esperar que navegador se inicialice
             
-            await send_websocket_event(websocket_manager, 'terminal_activity', {{
-                'message': f'🌐 NAVEGACIÓN WEB: Paso {{step+1}}/6 ejecutándose...',
-                'timestamp': datetime.now().isoformat()
-            }})
+            for step in range(6):
+                try:
+                    await asyncio.sleep(4)  # Esperar entre capturas
+                    
+                    # 🔍 MÉTODO 1: Intentar obtener screenshot desde browser session
+                    if hasattr(agent, 'browser_session') and agent.browser_session:
+                        try:
+                            browser = agent.browser_session.browser
+                            if browser:
+                                pages = await browser.pages()
+                                if pages and len(pages) > 0:
+                                    page = pages[0]
+                                    screenshot_bytes = await page.screenshot(
+                                        type='png', 
+                                        full_page=False,
+                                        quality=50
+                                    )
+                                    screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
+                                    
+                                    # ✅ ENVIAR SCREENSHOT VIA WEBSOCKET
+                                    await send_websocket_event(websocket_manager, 'browser_visual', {{
+                                        'type': 'browser_screenshot',
+                                        'task_id': TASK_ID,
+                                        'screenshot': f'data:image/png;base64,{{screenshot_base64}}',
+                                        'step': f'📸 Screenshot paso {{step + 1}}/6',
+                                        'message': f'🌐 NAVEGACIÓN EN TIEMPO REAL: Screenshot {{step + 1}}',
+                                        'timestamp': datetime.now().isoformat(),
+                                        'url': page.url if hasattr(page, 'url') else search_url
+                                    }})
+                                    
+                                    await send_websocket_event(websocket_manager, 'terminal_activity', {{
+                                        'message': f'📸 SCREENSHOT CAPTURADO: Paso {{step + 1}}/6 - Navegación visual',
+                                        'timestamp': datetime.now().isoformat()
+                                    }})
+                                    
+                                    print(f\"✅ Screenshot {{step+1}} capturado y enviado via WebSocket\")
+                                    continue
+                        except Exception as screenshot_error:
+                            print(f\"⚠️ Error capturando screenshot método 1: {{screenshot_error}}\")
+                    
+                    # 🔍 MÉTODO 2: Screenshot simulado si browser no disponible
+                    await send_websocket_event(websocket_manager, 'browser_visual', {{
+                        'type': 'navigation_progress',
+                        'task_id': TASK_ID,
+                        'message': f'🌐 NAVEGACIÓN PASO {{step+1}}/6: Agente navegando {{clean_query}}',
+                        'step': f'Navegación paso {{step+1}}/6',
+                        'timestamp': datetime.now().isoformat(),
+                        'url': search_url,
+                        'navigation_active': True
+                    }})
+                    
+                    await send_websocket_event(websocket_manager, 'terminal_activity', {{
+                        'message': f'🌐 NAVEGACIÓN WEB: Paso {{step+1}}/6 - Capturando navegación...',
+                        'timestamp': datetime.now().isoformat()
+                    }})
+                    
+                    print(f\"📝 Evento de navegación {{step+1}} enviado\")
+                    
+                except Exception as capture_error:
+                    print(f\"❌ Error en captura paso {{step+1}}: {{capture_error}}\")
+                    continue
+        
+        # 🚀 EJECUTAR NAVEGACIÓN Y SCREENSHOTS EN PARALELO
+        screenshot_task = asyncio.create_task(capture_real_screenshots())
         
         # Esperar que navegación termine
         result = await navigation_task
