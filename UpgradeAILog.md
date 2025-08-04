@@ -31,7 +31,7 @@ Este documento registra el progreso de implementación del plan de mejoras defin
 - Ollama: ✅ Conectado (llama3.1:8b)
 - WebSockets: ✅ Habilitado con eventlet
 
-**URL Externa:** https://5c7a52ee-93ff-4253-9926-2782833a1452.preview.emergentagent.com
+**URL Externa:** https://01d1fb0a-2191-4491-bcee-9ff51b1eaedd.preview.emergentagent.com
 
 ---
 
