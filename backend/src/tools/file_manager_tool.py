@@ -88,6 +88,57 @@ class FileManagerTool(BaseTool):
         
         try:
             if action == 'read':
+                result = self._read_file(path, parameters.get('encoding', 'utf-8'))
+            elif action == 'write':
+                result = self._write_file(path, parameters['content'], parameters.get('encoding', 'utf-8'))
+            elif action == 'create':
+                result = self._create_file(path, parameters['content'], parameters.get('encoding', 'utf-8'))
+            elif action == 'delete':
+                result = self._delete_path(path)
+            elif action == 'list':
+                result = self._list_directory(path)
+            elif action == 'copy':
+                result = self._copy_path(path, parameters['destination'])
+            elif action == 'move':
+                result = self._move_path(path, parameters['destination'])
+            elif action == 'mkdir':
+                result = self._create_directory(path)
+            else:
+                return ToolExecutionResult(
+                    success=False,
+                    data={'error': 'Invalid action specified'},
+                    metadata={'action': action, 'path': path}
+                )
+            
+            # Si el resultado tiene 'error', es un fallo
+            if 'error' in result:
+                return ToolExecutionResult(
+                    success=False,
+                    data=result,
+                    metadata={'action': action, 'path': path}
+                )
+            else:
+                return ToolExecutionResult(
+                    success=True,
+                    data=result,
+                    metadata={'action': action, 'path': path}
+                )
+                
+        except Exception as e:
+            return ToolExecutionResult(
+                success=False,
+                data={'error': str(e)},
+                metadata={'action': action, 'path': path, 'exception': type(e).__name__}
+            )
+        """Ejecutar operación de gestión de archivos"""
+        if config is None:
+            config = {}
+        
+        action = parameters['action']
+        path = parameters['path']
+        
+        try:
+            if action == 'read':
                 return self._read_file(path, parameters.get('encoding', 'utf-8'))
             elif action == 'write':
                 return self._write_file(path, parameters['content'], parameters.get('encoding', 'utf-8'))
