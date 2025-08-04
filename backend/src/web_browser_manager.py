@@ -570,8 +570,13 @@ class WebBrowserManager:
                     f"🔍 Extrayendo datos: {task_description}"
                 )
                 
-                # Execute extraction with browser-use Agent
-                result = await self.browser_use_agent.run(extract_task)
+                # Execute extraction with browser-use Agent with explicit max_steps
+                try:
+                    result = await self.browser_use_agent.run(extract_task, max_steps=2)
+                except TypeError as te:
+                    # Fallback if max_steps is already configured elsewhere
+                    logger.warning(f"browser-use max_steps conflict in extract_data, using default: {te}")
+                    result = await self.browser_use_agent.run(extract_task)
                 
                 # Process result into structured data
                 extracted_data = {
