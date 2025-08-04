@@ -243,27 +243,29 @@ detect_current_url() {
         fi
     fi
     
-    # Método 4: Verificar archivo de configuración existente
+    # Método 4: Verificar archivo de configuración existente Y probar conectividad
     if [ -f "/app/frontend/.env" ]; then
         local existing_url=$(grep -E "^(VITE_BACKEND_URL|REACT_APP_BACKEND_URL)=" /app/frontend/.env 2>/dev/null | head -1 | cut -d'=' -f2 | tr -d '"' | tr -d "'")
-        if [[ "$existing_url" == https://20f98609-c85c-4bbb-901c-f3f7f815356e.preview.emergentagent.com ]]; then
-            detected_url="$existing_url"
-            echo "CONFIG_FILE"
-            return 0
+        if [[ "$existing_url" == https://*preview.emergentagent.com* ]]; then
+            # Verificar si la URL responde
+            if curl -s --max-time 3 --connect-timeout 1 "$existing_url" >/dev/null 2>&1; then
+                detected_url="$existing_url"
+                echo "CONFIG_FILE_VERIFIED"
+                return 0
+            fi
         fi
     fi
     
-    # Método 5: Test de conectividad con patrones comunes
-    local test_patterns=(
-        "https://20f98609-c85c-4bbb-901c-f3f7f815356e.preview.emergentagent.com"
-        "https://20f98609-c85c-4bbb-901c-f3f7f815356e.preview.emergentagent.com"
+    # Método 5: Probar URLs comunes basadas en patrones observados
+    local common_patterns=(
+        "https://mitosis-executor-5.preview.emergentagent.com"
         "https://20f98609-c85c-4bbb-901c-f3f7f815356e.preview.emergentagent.com"
     )
     
-    for test_url in "${test_patterns[@]}"; do
-        if curl -s --max-time 2 --connect-timeout 1 "$test_url" >/dev/null 2>&1; then
+    for test_url in "${common_patterns[@]}"; do
+        if curl -s --max-time 3 --connect-timeout 1 "$test_url" >/dev/null 2>&1; then
             detected_url="$test_url"
-            echo "CONNECTIVITY"
+            echo "COMMON_PATTERN"
             return 0
         fi
     done
