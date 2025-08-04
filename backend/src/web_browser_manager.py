@@ -151,8 +151,8 @@ class WebBrowserManager:
                 )
             )
             
-            # Initialize browser-use Agent with our LLM
-            self.browser_use_agent = Agent(
+            # Create Agent
+            agent = Agent(
                 task="Navegación web inteligente para el usuario",
                 llm=self.llm_model,
                 browser_session=self.browser_session,
@@ -160,6 +160,42 @@ class WebBrowserManager:
                 max_failures=3,   # Resilience
                 save_conversation_path=f"/tmp/browser_conversations/{self.task_id}.json"
             )
+            
+            # Create a wrapper to fix the max_steps issue
+            class BrowserUseAgentWrapper:
+                def __init__(self, agent):
+                    self._agent = agent
+                    
+                async def run(self, task, max_steps=None, **kwargs):
+                    """Wrapper run method that ensures max_steps is always an integer"""
+                    # If max_steps is provided, ensure it's an integer
+                    if max_steps is not None:
+                        if isinstance(max_steps, str):
+                            max_steps = int(max_steps)
+                        elif not isinstance(max_steps, int):
+                            max_steps = int(max_steps)
+                    else:
+                        max_steps = 3  # Default value as integer
+                    
+                    # Patch the agent's run method temporarily to fix the bug
+                    original_run = self._agent.run
+                    
+                    async def patched_run(task_str, **run_kwargs):
+                        # Force max_steps to be an integer in the actual call
+                        run_kwargs['max_steps'] = max_steps
+                        
+                        # Call the original method without our wrapper parameters
+                        return await original_run.__func__(self._agent, task_str, **run_kwargs)
+                    
+                    # Execute with the patched method
+                    return await patched_run(task)
+                
+                def __getattr__(self, name):
+                    """Delegate other attributes to the wrapped agent"""
+                    return getattr(self._agent, name)
+            
+            # Wrap the agent to fix the max_steps bug
+            self.browser_use_agent = BrowserUseAgentWrapper(agent)
             
             logger.info("✅ browser-use Agent inicializado exitosamente")
             
