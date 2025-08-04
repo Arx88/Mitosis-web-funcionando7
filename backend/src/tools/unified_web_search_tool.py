@@ -812,6 +812,17 @@ if __name__ == "__main__":
                         if result_data.get('success', False):
                             self._emit_progress_eventlet("✅ Browser-use subprocess exitoso!")
                             
+                            # 🚀 EMITIR EVENTO DE NAVEGACIÓN FINALIZADA CON SCREENSHOT
+                            self._emit_browser_visual({
+                                'type': 'navigation_complete',
+                                'message': '✅ NAVEGACIÓN BROWSER-USE COMPLETADA',
+                                'step': '✅ Navegación completada exitosamente',
+                                'timestamp': time.time(),
+                                'url': f'https://www.bing.com/search?q={query.replace(" ", "+")}',
+                                'navigation_active': False,
+                                'screenshot': self._generate_completion_screenshot()  # Generar screenshot de finalización
+                            })
+                            
                             # Crear resultado estructurado
                             content = result_data.get('content', '')
                             return [{
