@@ -403,18 +403,26 @@ Be intelligent about how you navigate - adapt to the page layout and find the be
                 
                 # Crear callback para eventos de progreso en tiempo real
                 async def on_step_start(step_info):
-                    if hasattr(step_info, 'url'):
+                    step_number = getattr(step_info, 'step_number', '?')
+                    if hasattr(step_info, 'url') and step_info.url and step_info.url != 'about:blank':
                         self._emit_progress_eventlet(f"🌐 NAVEGACIÓN WEB: Accediendo a {step_info.url}")
+                        # Emit WebSocket browser_activity event
+                        self._emit_browser_activity('navigation_start', step_info.url, f"Navegando a {step_info.url}")
                     else:
-                        self._emit_progress_eventlet(f"🌐 NAVEGACIÓN WEB: Iniciando paso {getattr(step_info, 'step_number', '?')}")
+                        self._emit_progress_eventlet(f"🌐 NAVEGACIÓN WEB: Iniciando paso {step_number}")
+                        # Emit general browser activity
+                        self._emit_browser_activity('step_start', '', f"Iniciando paso de navegación {step_number}")
                 
                 async def on_step_end(step_info):
                     if hasattr(step_info, 'success') and step_info.success:
                         self._emit_progress_eventlet(f"✅ NAVEGACIÓN WEB: Paso completado exitosamente")
-                    elif hasattr(step_info, 'url'):
+                        self._emit_browser_activity('step_success', '', "Paso de navegación completado exitosamente")
+                    elif hasattr(step_info, 'url') and step_info.url and step_info.url != 'about:blank':
                         self._emit_progress_eventlet(f"🔄 NAVEGACIÓN WEB: Procesando contenido de {step_info.url}")
+                        self._emit_browser_activity('content_processing', step_info.url, f"Procesando contenido de {step_info.url}")
                     else:
                         self._emit_progress_eventlet(f"🔄 NAVEGACIÓN WEB: Paso procesado")
+                        self._emit_browser_activity('step_processed', '', "Paso de navegación procesado")
                 
                 agent = Agent(
                     task=intelligent_task,
