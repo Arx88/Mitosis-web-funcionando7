@@ -143,6 +143,33 @@ class WebBrowserManager:
         try:
             logger.info("🚀 Inicializando browser-use Agent...")
             
+            # Import browser-use components
+            from browser_use import Agent
+            from browser_use.browser.session import BrowserSession
+            from browser_use.browser.profile import BrowserProfile
+            
+            # MONKEY PATCH: Fix the max_steps bug globally
+            original_run = Agent.run
+            async def fixed_run(self, max_steps=100, on_step_start=None, on_step_end=None):
+                # Ensure max_steps is always an integer
+                if isinstance(max_steps, str):
+                    try:
+                        max_steps = int(max_steps)
+                    except ValueError:
+                        max_steps = 100
+                elif not isinstance(max_steps, int):
+                    try:
+                        max_steps = int(max_steps)
+                    except (ValueError, TypeError):
+                        max_steps = 100
+                
+                # Call the original method with corrected parameters
+                return await original_run(self, max_steps=max_steps, on_step_start=on_step_start, on_step_end=on_step_end)
+            
+            # Apply the monkey patch globally
+            Agent.run = fixed_run
+            logger.info("✅ browser-use Agent monkey patch aplicado exitosamente")
+            
             # Create browser session
             self.browser_session = BrowserSession(
                 headless=True,
