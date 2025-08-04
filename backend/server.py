@@ -300,30 +300,32 @@ try:
     def handle_disconnect():
         logger.info(f"❌ Client disconnected: {request.sid}")
     
-    @socketio.on('join_task')
-    def handle_join_task(data):
-        task_id = data.get('task_id')
-        if task_id:
-            join_room(f"task_{task_id}")
-            logger.info(f"🔗 Client {request.sid} joined task room: {task_id}")
-            
-            # ✅ CRITICAL FIX: Confirmar join y notificar que está listo para browser_visual
-            emit('joined_task', {
-                'task_id': task_id, 
-                'room': f"task_{task_id}",
-                'ready_for_browser_visual': True,  # 🔥 NEW: Confirmación explícita
-                'timestamp': time.time()
-            })
-            
-            # 🚀 NUEVA FUNCIONALIDAD: Almacenar clients activos por task
-            if not hasattr(app, 'active_task_clients'):
-                app.active_task_clients = {}
-            
-            if task_id not in app.active_task_clients:
-                app.active_task_clients[task_id] = set()
-            
-            app.active_task_clients[task_id].add(request.sid)
-            logger.info(f"🔗 Client {request.sid} ready for browser_visual events in task {task_id}")
+    # 🚫 COMMENTED OUT - This handler conflicts with websocket_manager.py handler
+    # Use websocket_manager.py join_task handler instead to avoid room name conflicts
+    # @socketio.on('join_task')
+    # def handle_join_task(data):
+    #     task_id = data.get('task_id')
+    #     if task_id:
+    #         join_room(f"task_{task_id}")
+    #         logger.info(f"🔗 Client {request.sid} joined task room: {task_id}")
+    #         
+    #         # ✅ CRITICAL FIX: Confirmar join y notificar que está listo para browser_visual
+    #         emit('joined_task', {
+    #             'task_id': task_id, 
+    #             'room': f"task_{task_id}",
+    #             'ready_for_browser_visual': True,  # 🔥 NEW: Confirmación explícita
+    #             'timestamp': time.time()
+    #         })
+    #         
+    #         # 🚀 NUEVA FUNCIONALIDAD: Almacenar clients activos por task
+    #         if not hasattr(app, 'active_task_clients'):
+    #             app.active_task_clients = {}
+    #         
+    #         if task_id not in app.active_task_clients:
+    #             app.active_task_clients[task_id] = set()
+    #         
+    #         app.active_task_clients[task_id].add(request.sid)
+    #         logger.info(f"🔗 Client {request.sid} ready for browser_visual events in task {task_id}")
     
     @socketio.on('leave_task')
     def handle_leave_task(data):
