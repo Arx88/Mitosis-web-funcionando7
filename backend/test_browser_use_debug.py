@@ -41,7 +41,36 @@ async def test_browser_use():
             model="llama3.1:8b"
         )
         
-        print("✅ Modelo LLM creado exitosamente")
+        print("🔧 Probando OllamaService directamente...")
+        
+        # Primero probar OllamaService solo
+        try:
+            test_response = ollama_service.generate_response(
+                prompt="Say hello", 
+                context={}, 
+                use_tools=False
+            )
+            print(f"✅ OllamaService directo funciona: {type(test_response)}")
+            if isinstance(test_response, dict):
+                print(f"   Claves: {list(test_response.keys())}")
+        except Exception as e:
+            print(f"❌ Error en OllamaService directo: {str(e)}")
+            import traceback
+            traceback.print_exc()
+        
+        print("🔧 Probando MitosisOllamaChatModel directamente...")
+        
+        # Probar nuestro adaptador directamente
+        try:
+            from browser_use.llm.messages import UserMessage
+            test_messages = [UserMessage(content="Say hello")]
+            
+            test_response = await llm_model.ainvoke(test_messages)
+            print(f"✅ MitosisOllamaChatModel funciona: {test_response}")
+        except Exception as e:
+            print(f"❌ Error en MitosisOllamaChatModel: {str(e)}")
+            import traceback
+            traceback.print_exc()
         
         # Crear sesión de browser primero
         browser_session = BrowserSession(
