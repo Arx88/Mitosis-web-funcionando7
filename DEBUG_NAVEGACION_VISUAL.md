@@ -76,37 +76,45 @@ emitting event "browser_visual" to task_debug-visual-1754329132 [/]
 Después de este análisis intensivo he identificado **EXACTAMENTE** el problema:
 
 ### ✅ **LO QUE FUNCIONA PERFECTAMENTE**:
-- ✅ Backend genera y envía eventos `browser_visual` (confirmado en logs)
+- ✅ Backend genera eventos `browser_visual` (función `_emit_browser_visual()` funciona)
 - ✅ WebSocket connection establecida correctamente  
 - ✅ Room management funciona (task_xxx format correcto)
 - ✅ Browser-use navega correctamente y genera screenshots
-- ✅ Función `_emit_browser_visual()` se ejecuta sin errores
+- ✅ Frontend se conecta al WebSocket y se une a rooms correctamente
+- ✅ Frontend tiene handlers para `browser_visual` configurados correctamente
 
-### ❌ **EL PROBLEMA REAL**:  
-**Los eventos `browser_visual` NO LLEGAN al frontend cliente**
+### 🔥 **PROBLEMA RAÍZ IDENTIFICADO**:  
+**`⚠️ Global WebSocket manager not available or initialized for task temp-task-1754329285643-1-2904`**
+
+**El WebSocket Manager global NO está disponible en el contexto donde se ejecuta `_emit_browser_visual()`**
 
 **Evidencia**:
-- Backend: `emitting event "browser_visual" to task_xxx` ✅ (múltiples confirmaciones)
-- Frontend: NO hay logs `📸 [WEBSOCKET-RECEIVED] browser_visual` ❌
-- Transport: Eventos se pierden entre servidor y cliente
-
-### 🔍 **CAUSAS PROBABLES**:
-1. **Frontend WebSocket Handlers**: browser_visual handler missing/broken
-2. **Room Subscription Timing**: Frontend no se une a room antes del emit  
-3. **SocketIO Transport Issue**: Eventos filtrados en transmisión
-4. **Frontend TypeScript Interface**: Definición incorrecta (ya corregida pero posible regresión)
+- Backend logs: `⚠️ Global WebSocket manager not available or initialized` ❌
+- Navegación funciona pero los eventos no se pueden emitir ❌
+- Frontend preparado para recibir pero backend no puede enviar ❌
 
 ---
 
-## 🚨 **SIGUIENTE PASO CRÍTICO**
+## 🚨 **SOLUCIÓN IDENTIFICADA**
 
-**URGENTE**: Verificar el lado del FRONTEND
-1. ✅ Confirmar que frontend se conecta a WebSocket
-2. ❌ Verificar que frontend se une al room correcto (task_xxxx)  
-3. ❌ Confirmar que el handler `browser_visual` está definido
-4. ❌ Verificar logs de consola del navegador por errores
+**EL PROBLEMA**: En `unified_web_search_tool.py` línea ~1759, la función `_emit_browser_visual()` no puede acceder al WebSocket Manager global porque:
 
-**EL PROBLEMA NO ESTÁ EN EL BACKEND - ESTÁ EN EL FRONTEND**
+1. **Flask App Context Issue**: `current_app.socketio` no está disponible en el contexto de ejecución de herramientas
+2. **Websocket Manager Initialization**: El manager global no se inicializa correctamente para herramientas background
+3. **Scope Issue**: Las herramientas web se ejecutan en un contexto diferente al servidor Flask principal
+
+**LA SOLUCIÓN**: Pasar explícitamente el WebSocket Manager desde el contexto principal o inicializarlo correctamente en el contexto de herramientas.
+
+---
+
+## 🔧 **PRÓXIMOS PASOS PARA SOLUCIONAR**
+
+1. **Verificar inicialización del WebSocket Manager en server.py**
+2. **Asegurar que websocket_manager se pase correctamente a las herramientas** 
+3. **Modificar `_emit_browser_visual()` para usar el manager correcto**
+4. **Probar la comunicación end-to-end**
+
+**EL PROBLEMA NO ESTÁ EN EL FRONTEND - ESTÁ EN LA INICIALIZACIÓN DEL WEBSOCKET MANAGER EN EL BACKEND**
 
 ---
 
