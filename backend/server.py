@@ -331,6 +331,25 @@ try:
     app.emit_task_event = emit_task_event
     logger.info("✅ SocketIO inicializado exitosamente")
     
+    # ✅ CRITICAL FIX: Inicializar WebSocket Manager
+    try:
+        from src.websocket.websocket_manager import initialize_websocket, get_websocket_manager
+        websocket_manager = initialize_websocket(app)
+        app.websocket_manager = websocket_manager
+        logger.info(f"✅ WebSocket Manager inicializado exitosamente - is_initialized: {websocket_manager.is_initialized}")
+        print(f"✅ WebSocket Manager inicializado exitosamente - is_initialized: {websocket_manager.is_initialized}")
+        
+        # Verificar que se puede obtener el manager global
+        global_manager = get_websocket_manager()
+        logger.info(f"✅ Global WebSocket Manager verificado - is_initialized: {global_manager.is_initialized}")
+        print(f"✅ Global WebSocket Manager verificado - is_initialized: {global_manager.is_initialized}")
+        
+    except Exception as ws_error:
+        logger.error(f"❌ Error inicializando WebSocket Manager: {ws_error}")
+        print(f"❌ Error inicializando WebSocket Manager: {ws_error}")
+        import traceback
+        traceback.print_exc()
+    
 except Exception as e:
     logger.error(f"❌ Error inicializando SocketIO: {e}")
     socketio = None
