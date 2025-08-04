@@ -66,11 +66,15 @@ class AINavigationTool(BaseTool):
         self.browser_manager = None
         self.websocket_manager = None
         
-    def _execute_tool(self, task_description: str, url: Optional[str] = None, 
-                     extract_data: bool = False, **kwargs) -> ToolExecutionResult:
+    def _execute_tool(self, parameters: Dict[str, Any], config: Dict[str, Any]) -> ToolExecutionResult:
         """
         🤖 Ejecutar navegación inteligente usando browser-use (método sincrónico para BaseTool)
         """
+        # Extraer parámetros
+        task_description = parameters.get('task_description', '')
+        url = parameters.get('url')
+        extract_data = parameters.get('extract_data', False)
+        
         # Ejecutar el método async usando asyncio
         try:
             loop = asyncio.get_event_loop()
@@ -78,13 +82,13 @@ class AINavigationTool(BaseTool):
                 # Si ya hay un loop ejecutándose, crear uno nuevo en un hilo separado
                 import concurrent.futures
                 with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(asyncio.run, self.execute(task_description, url, extract_data, **kwargs))
+                    future = executor.submit(asyncio.run, self.execute(task_description, url, extract_data, **parameters))
                     return future.result()
             else:
-                return loop.run_until_complete(self.execute(task_description, url, extract_data, **kwargs))
+                return loop.run_until_complete(self.execute(task_description, url, extract_data, **parameters))
         except RuntimeError:
             # Si no hay loop, crear uno
-            return asyncio.run(self.execute(task_description, url, extract_data, **kwargs))
+            return asyncio.run(self.execute(task_description, url, extract_data, **parameters))
 
     def _emit_progress(self, message: str, level: str = "info"):
         """Emitir progreso via WebSocket"""
