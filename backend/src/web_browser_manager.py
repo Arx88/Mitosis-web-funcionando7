@@ -313,52 +313,76 @@ class WebBrowserManager:
                 f"📨 Response: {response.status} {response.url}"
             )
 
-    def navigate(self, url: str, wait_for_load: bool = True):
+    # ========================================================================
+    # NAVEGACIÓN PRINCIPAL CON BROWSER-USE AGENT
+    # ========================================================================
+
+    async def navigate(self, url: str, task_description: str = None):
         """
-        Navigate to a URL with real-time event tracking
+        🤖 Navigate to URL using browser-use Agent with AI intelligence
         
         Args:
             url: URL to navigate to
-            wait_for_load: Whether to wait for page load completion
+            task_description: Optional task description for context
         """
         if not self.is_initialized:
             raise RuntimeError("Browser not initialized. Call initialize_browser() first.")
         
         try:
+            logger.info(f"🚀 Navegando a {url} con browser-use Agent...")
+            
+            self.current_url = url
+            self.current_task = task_description or f"Navegar a {url}"
+            
+            # Send navigation start event
+            self.websocket_manager.send_browser_activity(
+                self.task_id,
+                "navigation_started", 
+                url, 
+                "Iniciando navegación inteligente", 
+                ""
+            )
+            
             self.websocket_manager.send_log_message(
                 self.task_id, 
                 "info", 
-                f"🚀 Navegando a: {url}"
+                f"🤖 Iniciando navegación inteligente a: {url}"
             )
             
-            # Send URL change event before navigation
-            self._on_url_changed(url)
-            
-            if self.browser_type == "playwright":
-                self.page.goto(url, wait_until='networkidle' if wait_for_load else 'commit')
-            elif self.browser_type == "selenium":
-                self.driver.get(url)
-                if wait_for_load:
-                    time.sleep(2)  # Basic wait for Selenium
+            if self.browser_type == "browser-use":
+                # Use browser-use Agent for intelligent navigation
+                navigation_task = f"Navigate to {url}"
+                if task_description:
+                    navigation_task += f" and {task_description}"
                 
-                # Manual event triggering for Selenium
-                current_url = self.driver.current_url
-                title = self.driver.title
-                screenshot_path = self._take_screenshot()
+                # Execute task with browser-use Agent
+                result = await self.browser_use_agent.run(navigation_task)
                 
+                # Get current page info after navigation
+                current_url = await self._get_current_url_async()
+                page_title = await self._get_page_title_async()
+                screenshot_path = await self._take_screenshot_async()
+                
+                # Send completion event
                 self.websocket_manager.send_browser_activity(
-                    self.task_id, 
-                    "page_loaded", 
+                    self.task_id,
+                    "navigation_completed", 
                     current_url, 
-                    title, 
+                    page_title, 
                     screenshot_path
                 )
                 
                 self.websocket_manager.send_log_message(
                     self.task_id, 
                     "info", 
-                    f"📄 Página cargada (Selenium): {title} ({current_url})"
+                    f"✅ Navegación completada: {page_title} ({current_url})"
                 )
+                
+                return result
+                
+            else:
+                # Fallback to legacy navigation
+                return self._navigate_legacy(url)
             
         except Exception as e:
             error_msg = f"❌ Error navegando a {url}: {str(e)}"
@@ -366,29 +390,66 @@ class WebBrowserManager:
             self.websocket_manager.send_log_message(self.task_id, "error", error_msg)
             raise
 
-    def click_element(self, selector: str):
-        """Click an element with real-time tracking"""
+    async def click_element(self, selector: str, description: str = None):
+        """
+        🤖 Click element using browser-use Agent with AI understanding
+        
+        Args:
+            selector: CSS selector or description of element to click
+            description: Human-readable description for better AI understanding
+        """
         try:
-            if self.browser_type == "playwright":
-                self.page.click(selector)
-            elif self.browser_type == "selenium":
-                from selenium.webdriver.common.by import By
-                element = self.driver.find_element(By.CSS_SELECTOR, selector)
-                element.click()
+            logger.info(f"🖱️ Haciendo click con browser-use Agent: {selector}")
             
-            self.websocket_manager.send_browser_activity(
-                self.task_id, 
-                "click", 
-                self.get_current_url(), 
-                f"Click en: {selector}", 
-                ""
-            )
-            
-            self.websocket_manager.send_log_message(
-                self.task_id, 
-                "info", 
-                f"👆 Click realizado en: {selector}"
-            )
+            if self.browser_type == "browser-use":
+                # Use AI to understand and click element
+                click_task = f"Click on the element with selector '{selector}'"
+                if description:
+                    click_task += f" which is described as: {description}"
+                
+                # Send click start event
+                self.websocket_manager.send_browser_activity(
+                    self.task_id,
+                    "click_started", 
+                    await self._get_current_url_async(), 
+                    f"Clicking: {description or selector}", 
+                    ""
+                )
+                
+                self.websocket_manager.send_log_message(
+                    self.task_id, 
+                    "info", 
+                    f"🖱️ Haciendo click inteligente: {description or selector}"
+                )
+                
+                # Execute click with browser-use Agent
+                result = await self.browser_use_agent.run(click_task)
+                
+                # Get updated page info after click
+                current_url = await self._get_current_url_async()
+                page_title = await self._get_page_title_async()
+                screenshot_path = await self._take_screenshot_async()
+                
+                # Send completion event
+                self.websocket_manager.send_browser_activity(
+                    self.task_id,
+                    "click_completed", 
+                    current_url, 
+                    page_title, 
+                    screenshot_path
+                )
+                
+                self.websocket_manager.send_log_message(
+                    self.task_id, 
+                    "info", 
+                    f"✅ Click completado: {description or selector}"
+                )
+                
+                return result
+                
+            else:
+                # Fallback to legacy click
+                return self._click_element_legacy(selector)
             
         except Exception as e:
             error_msg = f"❌ Error haciendo click en {selector}: {str(e)}"
@@ -396,36 +457,229 @@ class WebBrowserManager:
             self.websocket_manager.send_log_message(self.task_id, "error", error_msg)
             raise
 
-    def type_text(self, selector: str, text: str):
-        """Type text in an element with real-time tracking"""
+    async def type_text(self, selector: str, text: str, description: str = None):
+        """
+        🤖 Type text using browser-use Agent with AI understanding
+        
+        Args:
+            selector: CSS selector or description of input field
+            text: Text to type
+            description: Human-readable description for better AI understanding  
+        """
         try:
-            if self.browser_type == "playwright":
-                self.page.fill(selector, text)
-            elif self.browser_type == "selenium":
-                from selenium.webdriver.common.by import By
-                element = self.driver.find_element(By.CSS_SELECTOR, selector)
-                element.clear()
-                element.send_keys(text)
+            logger.info(f"⌨️ Escribiendo texto con browser-use Agent: {selector}")
             
-            self.websocket_manager.send_browser_activity(
-                self.task_id, 
-                "input", 
-                self.get_current_url(), 
-                f"Texto introducido en: {selector}", 
-                ""
-            )
-            
-            self.websocket_manager.send_log_message(
-                self.task_id, 
-                "info", 
-                f"⌨️ Texto introducido en {selector}: {text[:50]}..."
-            )
+            if self.browser_type == "browser-use":
+                # Use AI to understand and type in element
+                type_task = f"Type the text '{text}' into the element with selector '{selector}'"
+                if description:
+                    type_task += f" which is described as: {description}"
+                
+                # Send typing start event
+                self.websocket_manager.send_browser_activity(
+                    self.task_id,
+                    "typing_started", 
+                    await self._get_current_url_async(), 
+                    f"Typing in: {description or selector}", 
+                    ""
+                )
+                
+                self.websocket_manager.send_log_message(
+                    self.task_id, 
+                    "info", 
+                    f"⌨️ Escribiendo texto inteligente: {text[:50]}... en {description or selector}"
+                )
+                
+                # Execute typing with browser-use Agent
+                result = await self.browser_use_agent.run(type_task)
+                
+                # Get updated page info after typing
+                current_url = await self._get_current_url_async()
+                page_title = await self._get_page_title_async()
+                screenshot_path = await self._take_screenshot_async()
+                
+                # Send completion event
+                self.websocket_manager.send_browser_activity(
+                    self.task_id,
+                    "typing_completed", 
+                    current_url, 
+                    page_title, 
+                    screenshot_path
+                )
+                
+                self.websocket_manager.send_log_message(
+                    self.task_id, 
+                    "info", 
+                    f"✅ Texto introducido: {text[:50]}... en {description or selector}"
+                )
+                
+                return result
+                
+            else:
+                # Fallback to legacy typing
+                return self._type_text_legacy(selector, text)
             
         except Exception as e:
             error_msg = f"❌ Error escribiendo en {selector}: {str(e)}"
             logger.error(error_msg)
             self.websocket_manager.send_log_message(self.task_id, "error", error_msg)
             raise
+
+    async def extract_data(self, task_description: str) -> Dict[str, Any]:
+        """
+        🤖 Extract data from current page using browser-use Agent intelligence
+        
+        Args:
+            task_description: Description of what data to extract
+            
+        Returns:
+            Dict containing extracted data
+        """
+        try:
+            logger.info(f"🔍 Extrayendo datos con browser-use Agent: {task_description}")
+            
+            if self.browser_type == "browser-use":
+                # Use AI to extract data intelligently
+                extract_task = f"Extract data from the current page: {task_description}"
+                
+                # Send extraction start event
+                self.websocket_manager.send_browser_activity(
+                    self.task_id,
+                    "extraction_started", 
+                    await self._get_current_url_async(), 
+                    f"Extracting: {task_description}", 
+                    ""
+                )
+                
+                self.websocket_manager.send_log_message(
+                    self.task_id, 
+                    "info", 
+                    f"🔍 Extrayendo datos: {task_description}"
+                )
+                
+                # Execute extraction with browser-use Agent
+                result = await self.browser_use_agent.run(extract_task)
+                
+                # Process result into structured data
+                extracted_data = {
+                    "task": task_description,
+                    "url": await self._get_current_url_async(),
+                    "timestamp": datetime.now().isoformat(),
+                    "result": result,
+                    "success": True
+                }
+                
+                # Send completion event
+                screenshot_path = await self._take_screenshot_async()
+                self.websocket_manager.send_browser_activity(
+                    self.task_id,
+                    "extraction_completed", 
+                    extracted_data["url"], 
+                    f"Data extracted: {task_description}", 
+                    screenshot_path
+                )
+                
+                self.websocket_manager.send_log_message(
+                    self.task_id, 
+                    "info", 
+                    f"✅ Datos extraídos exitosamente: {task_description}"
+                )
+                
+                return extracted_data
+                
+            else:
+                # Fallback to legacy extraction (basic)
+                return self._extract_data_legacy(task_description)
+            
+        except Exception as e:
+            error_msg = f"❌ Error extrayendo datos: {str(e)}"
+            logger.error(error_msg)
+            self.websocket_manager.send_log_message(self.task_id, "error", error_msg)
+            return {
+                "task": task_description,
+                "error": str(e),
+                "success": False,
+                "timestamp": datetime.now().isoformat()
+            }
+
+    async def perform_complex_task(self, task_description: str) -> Dict[str, Any]:
+        """
+        🤖 Perform complex multi-step browser task using browser-use Agent
+        
+        Args:
+            task_description: Natural language description of the task to perform
+            
+        Returns:
+            Dict containing task results
+        """
+        try:
+            logger.info(f"🎯 Ejecutando tarea compleja: {task_description}")
+            
+            if self.browser_type == "browser-use":
+                # Send task start event
+                self.websocket_manager.send_browser_activity(
+                    self.task_id,
+                    "complex_task_started", 
+                    await self._get_current_url_async(), 
+                    f"Starting: {task_description}", 
+                    ""
+                )
+                
+                self.websocket_manager.send_log_message(
+                    self.task_id, 
+                    "info", 
+                    f"🎯 Iniciando tarea compleja: {task_description}"
+                )
+                
+                # Execute complex task with browser-use Agent
+                result = await self.browser_use_agent.run(task_description)
+                
+                # Get final page info
+                current_url = await self._get_current_url_async()
+                page_title = await self._get_page_title_async()
+                screenshot_path = await self._take_screenshot_async()
+                
+                # Process result
+                task_result = {
+                    "task": task_description,
+                    "url": current_url,
+                    "title": page_title,
+                    "timestamp": datetime.now().isoformat(),
+                    "result": result,
+                    "success": True
+                }
+                
+                # Send completion event
+                self.websocket_manager.send_browser_activity(
+                    self.task_id,
+                    "complex_task_completed", 
+                    current_url, 
+                    page_title, 
+                    screenshot_path
+                )
+                
+                self.websocket_manager.send_log_message(
+                    self.task_id, 
+                    "info", 
+                    f"✅ Tarea compleja completada: {task_description}"
+                )
+                
+                return task_result
+                
+            else:
+                # No fallback for complex tasks - require browser-use
+                raise RuntimeError("Complex tasks require browser-use Agent. Please use browser_type='browser-use'")
+            
+        except Exception as e:
+            error_msg = f"❌ Error ejecutando tarea compleja: {str(e)}"
+            logger.error(error_msg)
+            self.websocket_manager.send_log_message(self.task_id, "error", error_msg)
+            return {
+                "task": task_description,
+                "error": str(e),
+                "success": False,
+                "timestamp": datetime.now().isoformat()
+            }
 
     def get_page_content(self) -> str:
         """Get current page content"""
