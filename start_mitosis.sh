@@ -34,7 +34,7 @@ fi
 echo "🎭 Verificando Playwright..."
 if ! pip list | grep -q "playwright"; then
     echo "⚡ Instalando Playwright..."
-    pip install playwright==1.45.0
+    pip install playwright==1.54.0
 fi
 
 # Verificar e instalar Selenium
@@ -43,6 +43,17 @@ if ! pip list | grep -q "selenium"; then
     echo "⚡ Instalando Selenium..."
     pip install selenium==4.15.0
     echo "selenium==4.15.0" >> requirements.txt
+fi
+
+# CRÍTICO: Actualizar browser-use y pydantic para compatibilidad
+echo "🔧 Verificando compatibilidad Pydantic/browser-use..."
+CURRENT_PYDANTIC=$(pip show pydantic 2>/dev/null | grep Version | cut -d' ' -f2)
+if [[ "$CURRENT_PYDANTIC" < "2.11.0" ]]; then
+    echo "⚡ Actualizando Pydantic y browser-use para compatibilidad..."
+    pip install --upgrade "pydantic>=2.11.5" "browser-use>=0.5.9"
+    # Actualizar requirements.txt
+    sed -i 's/pydantic==.*/pydantic>=2.11.5/' requirements.txt
+    echo "browser-use>=0.5.9" >> requirements.txt
 fi
 
 # Instalar navegadores Playwright (Chrome principalmente)
