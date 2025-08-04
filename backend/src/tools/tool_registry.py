@@ -55,6 +55,7 @@ class ToolRegistry:
             try:
                 # Importar módulo usando método alternativo
                 module_name = f"src.tools.{python_file.stem}"
+                module = None
                 try:
                     module = importlib.import_module(module_name)
                 except ImportError:
@@ -62,8 +63,9 @@ class ToolRegistry:
                     sys.path.insert(0, str(python_file.parent))
                     module = importlib.import_module(python_file.stem)
                     sys.path.pop(0)
-                    
-                    # Buscar clases que hereden de BaseTool
+                
+                # Buscar clases que hereden de BaseTool (MOVED OUTSIDE except block)
+                if module:
                     for name, obj in inspect.getmembers(module, inspect.isclass):
                         if (obj != BaseTool and 
                             issubclass(obj, BaseTool) and 
