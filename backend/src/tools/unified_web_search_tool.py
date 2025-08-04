@@ -372,9 +372,15 @@ class UnifiedWebSearchTool(BaseTool):
                 # Configurar LLM con Ollama
                 self._emit_progress_eventlet("🧠 Configurando LLM con Ollama para navegación inteligente...")
                 
+                # Obtener URL base de Ollama desde variables de entorno
+                import os
+                ollama_base_url = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
+                if not ollama_base_url.endswith('/v1'):
+                    ollama_base_url += '/v1'
+                
                 llm = ChatOpenAI(
                     model="llama3.1:8b",
-                    base_url="https://66bd0d09b557.ngrok-free.app/v1",
+                    base_url=ollama_base_url,
                     api_key="ollama"
                 )
                 
