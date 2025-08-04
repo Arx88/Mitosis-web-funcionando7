@@ -245,7 +245,7 @@ class UnifiedWebSearchTool(BaseTool):
             # ✨ USAR BROWSER-USE REAL - NAVEGACIÓN VERDADERA
             if BROWSER_USE_AVAILABLE:
                 self._emit_progress_eventlet("🚀 Iniciando navegación browser-use REAL en tiempo real...")
-                results = self._run_browser_use_search_original(query, search_engine, max_results, extract_content)
+                results = self._run_browser_use_search_original(query, search_engine, max_results, extract_content, self.task_id)
                 if results and len(results) > 0:
                     self._emit_progress_eventlet(f"✅ browser-use REAL exitoso: {len(results)} resultados")
                     return results
