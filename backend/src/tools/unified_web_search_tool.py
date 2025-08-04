@@ -1791,19 +1791,56 @@ except Exception as e:
             print(f"⚠️ No task_id for browser_visual: {data}")
             return False
         
-        # PASO 3: Intentar método Flask SocketIO directo
+        # PASO 3: Intentar método Flask SocketIO SEGURO (NEW)
         try:
             from flask import current_app
             
             with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                f.write(f"BROWSER_VISUAL_STEP_3: Attempting Flask current_app method\n")
+                f.write(f"BROWSER_VISUAL_STEP_3: Attempting Flask SAFE SocketIO method\n")
                 f.flush()
             
-            # Verificar si current_app y socketio están disponibles
+            # 🚀 CRITICAL FIX: Usar método seguro que verifica clientes listos
+            if hasattr(current_app, 'emit_browser_visual_safe'):
+                enhanced_data = {
+                    **data,
+                    'task_id': self.task_id,
+                    'timestamp': datetime.now().isoformat()
+                }
+                
+                with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                    f.write(f"BROWSER_VISUAL_STEP_3_SAFE: Using safe emit method for task {self.task_id}\n")
+                    f.flush()
+                
+                # Usar método seguro que verifica clientes
+                result = current_app.emit_browser_visual_safe(self.task_id, data)
+                
+                with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                    f.write(f"BROWSER_VISUAL_STEP_3_SAFE_RESULT: Safe emit result: {result}\n")
+                    f.flush()
+                
+                if result:
+                    print(f"✅ BROWSER_VISUAL EVENT SENT SAFELY: {data.get('type')} to task {self.task_id}")
+                    
+                    # Mensaje de confirmación en terminal
+                    terminal_message = f"📸 NAVEGACIÓN VISUAL: {data.get('message', 'Screenshot capturado')}"
+                    self._emit_progress_eventlet(terminal_message)
+                    
+                    with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                        f.write(f"=== EMIT_BROWSER_VISUAL END (SAFE_SUCCESS) ===\n\n")
+                        f.flush()
+                    
+                    return True
+                else:
+                    with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                        f.write(f"BROWSER_VISUAL_STEP_3_SAFE_FAIL: No ready clients for task {self.task_id}\n")
+                        f.flush()
+                    print(f"⚠️ No ready clients for browser_visual in task {self.task_id}")
+            
+            # Fallback a método anterior si el seguro no está disponible
             app_available = hasattr(current_app, 'socketio') and current_app.socketio
             
             with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                f.write(f"BROWSER_VISUAL_STEP_3_CHECK: app_available={app_available}\n")
+                f.write(f"BROWSER_VISUAL_STEP_3_FALLBACK: app_available={app_available}\n")
                 f.flush()
             
             if app_available:
@@ -1816,7 +1853,7 @@ except Exception as e:
                 room = f"task_{self.task_id}"
                 
                 with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                    f.write(f"BROWSER_VISUAL_STEP_3_EMIT: room={room}, enhanced_data={enhanced_data}\n")
+                    f.write(f"BROWSER_VISUAL_STEP_3_FALLBACK_EMIT: room={room}, enhanced_data={enhanced_data}\n")
                     f.flush()
                 
                 # Emitir browser_visual
@@ -1829,17 +1866,17 @@ except Exception as e:
                 }, room=room)
                 
                 with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                    f.write(f"BROWSER_VISUAL_STEP_3_SUCCESS: Flask SocketIO emit results: {result1}, {result2}\n")
+                    f.write(f"BROWSER_VISUAL_STEP_3_FALLBACK_SUCCESS: Flask SocketIO emit results: {result1}, {result2}\n")
                     f.flush()
                 
-                print(f"✅ BROWSER_VISUAL EVENT SENT via Flask SocketIO: {data.get('type')} to room {room}")
+                print(f"✅ BROWSER_VISUAL EVENT SENT via Flask SocketIO FALLBACK: {data.get('type')} to room {room}")
                 
                 # Mensaje de confirmación en terminal
                 terminal_message = f"📸 NAVEGACIÓN VISUAL: {data.get('message', 'Screenshot capturado')}"
                 self._emit_progress_eventlet(terminal_message)
                 
                 with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                    f.write(f"=== EMIT_BROWSER_VISUAL END (FLASK_SUCCESS) ===\n\n")
+                    f.write(f"=== EMIT_BROWSER_VISUAL END (FALLBACK_SUCCESS) ===\n\n")
                     f.flush()
                 
                 return True
