@@ -699,9 +699,14 @@ async def run_browser_use_subprocess():
         print("🤖 [SUBPROCESS] Inicializando browser-use en subprocess...")
         
         # Configurar LLM
+        import os
+        ollama_base_url = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
+        if not ollama_base_url.endswith('/v1'):
+            ollama_base_url += '/v1'
+            
         llm = ChatOpenAI(
             model="llama3.1:8b",
-            base_url="https://66bd0d09b557.ngrok-free.app/v1",
+            base_url=ollama_base_url,
             api_key="ollama"
         )
         
