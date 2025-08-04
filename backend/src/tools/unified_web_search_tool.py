@@ -566,10 +566,7 @@ Be precise and focus on the most relevant search results.'''
             'step': 'Iniciando navegación browser-use'
         }})
         
-        # 🚀 SCREENSHOT CAPTURE INTEGRATION DENTRO DEL SUBPROCESS
-        screenshot_task = asyncio.create_task(capture_real_screenshots_in_subprocess())
-        
-        # Función para capturar screenshots desde subprocess browser-use
+        # 📸 DEFINIR FUNCIÓN DE SCREENSHOTS ANTES DE USARLA
         async def capture_real_screenshots_in_subprocess():
             \"\"\"Capturar screenshots desde subprocess usando archivos temporales\"\"\"
             await asyncio.sleep(5)  # Esperar que subprocess browser-use se inicie
@@ -631,6 +628,9 @@ Be precise and focus on the most relevant search results.'''
                 except Exception as capture_error:
                     print(f"❌ Error captura visual paso {{step+1}}: {{capture_error}}")
                     continue
+        
+        # 🚀 SCREENSHOT CAPTURE INTEGRATION DENTRO DEL SUBPROCESS
+        screenshot_task = asyncio.create_task(capture_real_screenshots_in_subprocess())
         
         # 🚀 EJECUTAR NAVEGACIÓN CON SCREENSHOTS PARALELOS EN SUBPROCESS
         navigation_task = agent.run(max_steps=6)
