@@ -678,6 +678,7 @@ import sys
 import json
 import traceback
 from datetime import datetime
+import base64
 
 # Agregar directorio backend al path
 sys.path.insert(0, '/app/backend')
@@ -686,6 +687,39 @@ sys.path.insert(0, '/app/backend')
 QUERY = "{safe_query}"
 MAX_RESULTS = {max_results}
 SEARCH_ENGINE = "{search_engine}"
+TASK_ID = "{task_id or 'unknown'}"
+
+async def capture_and_send_screenshot(page, step_description="", websocket_manager=None):
+    try:
+        if not page:
+            return
+            
+        # Capturar screenshot
+        screenshot_bytes = await page.screenshot(type='png', full_page=False)
+        screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
+        
+        # Crear evento de navegación visual
+        visual_event = {{
+            'type': 'browser_screenshot',
+            'screenshot': f'data:image/png;base64,{{screenshot_base64}}',
+            'step': step_description,
+            'timestamp': datetime.now().isoformat(),
+            'query': QUERY,
+            'url': page.url if hasattr(page, 'url') else 'unknown'
+        }}
+        
+        # Emitir evento visual vía WebSocket
+        if websocket_manager and TASK_ID != "unknown":
+            try:
+                websocket_manager.emit_to_task(TASK_ID, 'browser_visual', visual_event)
+                print(f"📸 [VISUAL] Screenshot enviado: {{step_description}}")
+            except Exception as ws_error:
+                print(f"⚠️ Error enviando screenshot via WebSocket: {{str(ws_error)}}")
+        else:
+            print(f"📸 [VISUAL] Screenshot capturado: {{step_description}}")
+            
+    except Exception as e:
+        print(f"⚠️ Error capturando screenshot: {{str(e)}}")
 
 async def run_browser_use_subprocess():
     try:
@@ -696,6 +730,15 @@ async def run_browser_use_subprocess():
         from browser_use.browser.profile import BrowserProfile
         
         print("🤖 [SUBPROCESS] Inicializando browser-use en subprocess...")
+        
+        # Importar WebSocket manager
+        try:
+            from src.websocket.websocket_manager import WebSocketManager
+            websocket_manager = WebSocketManager()
+            print("✅ [WEBSOCKET] WebSocket manager inicializado")
+        except Exception as ws_error:
+            print(f"⚠️ WebSocket manager no disponible: {{str(ws_error)}}")
+            websocket_manager = None
         
         # Configurar LLM
         import os
