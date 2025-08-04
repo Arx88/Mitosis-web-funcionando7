@@ -183,8 +183,8 @@ is only available from another source
 🏗️ Construyendo frontend en modo producción...
 🔧 Detectando URL real del entorno automáticamente...
    ⚠️ URL detectada no válida, aplicando corrección...
-   📍 URL corregida: https://6a42dbad-573b-4631-929d-0d271703ed7e.preview.emergentagent.com
-✅ URL FINAL DETECTADA: https://6a42dbad-573b-4631-929d-0d271703ed7e.preview.emergentagent.com
+   📍 URL corregida: https://3557fb62-dfca-4444-882b-168260dbca68.preview.emergentagent.com
+✅ URL FINAL DETECTADA: https://3557fb62-dfca-4444-882b-168260dbca68.preview.emergentagent.com
    🔍 Método de detección: HOSTNAME_FALLBACK
 🌐 Configurando variables de entorno dinámicamente...
 ✅ Variables de entorno configuradas correctamente
@@ -195,11 +195,11 @@ is only available from another source
       - "http://127.0.0.1:5173"
       - "http://localhost:3000"
       - "http://localhost:5173"
-      - "https://6a42dbad-573b-4631-929d-0d271703ed7e.preview.emergentagent.com"
+      - "https://3557fb62-dfca-4444-882b-168260dbca68.preview.emergentagent.com"
       - "*"
    ✅ Configuración CORS reemplazada exitosamente
    ✅ CORS configurado con máxima compatibilidad
-   🎯 URL principal detectada: https://6a42dbad-573b-4631-929d-0d271703ed7e.preview.emergentagent.com
+   🎯 URL principal detectada: https://3557fb62-dfca-4444-882b-168260dbca68.preview.emergentagent.com
    🔄 Wildcard incluido para dominios *.preview.emergentagent.com
    🏠 URLs de desarrollo local incluidas
    🌟 Fallback universal (*) como último recurso
@@ -256,19 +256,19 @@ Done in 11.85s.
       ℹ️ Nota: Sistema usa Playwright Web Search como primaria
 🔍 Testing pipeline completo con mensaje de prueba...
    ✅ Pipeline completo chat: FUNCIONANDO
-🔍 Testing CORS WebSocket con URL real detectada: https://6a42dbad-573b-4631-929d-0d271703ed7e.preview.emergentagent.com...
+🔍 Testing CORS WebSocket con URL real detectada: https://3557fb62-dfca-4444-882b-168260dbca68.preview.emergentagent.com...
    ✅ CORS WebSocket: FUNCIONANDO PERFECTAMENTE
-      🔗 URL frontend detectada y configurada: https://6a42dbad-573b-4631-929d-0d271703ed7e.preview.emergentagent.com
+      🔗 URL frontend detectada y configurada: https://3557fb62-dfca-4444-882b-168260dbca68.preview.emergentagent.com
       ✅ Headers CORS: Configurados correctamente
 🔍 Testing CORS con múltiples orígenes posibles...
-      ⚠️ CORS para https://6a42dbad-573b-4631-929d-0d271703ed7e.preview.emergentagent.com: Verificando
-      ⚠️ CORS para https://6a42dbad-573b-4631-929d-0d271703ed7e.preview.emergentagent.com: Verificando
+      ⚠️ CORS para https://3557fb62-dfca-4444-882b-168260dbca68.preview.emergentagent.com: Verificando
+      ⚠️ CORS para https://3557fb62-dfca-4444-882b-168260dbca68.preview.emergentagent.com: Verificando
       ⚠️ CORS para http://localhost:3000: Verificando
       📊 CORS Success Rate: 0/3 orígenes funcionando
 ==============================================================
 🎯 VALIDACIÓN ESPECÍFICA DE HERRAMIENTAS DE BÚSQUEDA:
    ✅ Variables de entorno corregidas (sin duplicación /api)
-   ✅ URL frontend detectada automáticamente: https://6a42dbad-573b-4631-929d-0d271703ed7e.preview.emergentagent.com
+   ✅ URL frontend detectada automáticamente: https://3557fb62-dfca-4444-882b-168260dbca68.preview.emergentagent.com
    ✅ CORS WebSocket configurado dinámicamente
    ✅ Tavily API Key: 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
    ✅ Playwright Web Search: Funcional y priorizada
@@ -285,7 +285,7 @@ Done in 11.85s.
 🔧 BACKEND: Flask + gunicorn + eventlet (SocketIO optimizado)
 🎭 TESTING: Playwright + Selenium + Chrome instalados
 ==============================================================
-📍 URL Externa: https://6a42dbad-573b-4631-929d-0d271703ed7e.preview.emergentagent.com
+📍 URL Externa: https://3557fb62-dfca-4444-882b-168260dbca68.preview.emergentagent.com
 📍 Backend API: http://localhost:8001
 📍 Frontend Local: http://localhost:3000
 ==============================================================
@@ -343,7 +343,7 @@ mongodb                          RUNNING   pid 939, uptime 0:00:50
 ✅ WEBSOCKETS: SocketIO habilitado para tiempo real
 
 🚀 APLICACIÓN 100% LISTA PARA PRODUCCIÓN
-🌐 URL: https://6a42dbad-573b-4631-929d-0d271703ed7e.preview.emergentagent.com
+🌐 URL: https://3557fb62-dfca-4444-882b-168260dbca68.preview.emergentagent.com
 
 🎉 AGENTE GENERAL MITOSIS COMPLETAMENTE OPERATIVO
    📱 Accesible desde cualquier dispositivo
