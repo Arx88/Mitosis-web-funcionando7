@@ -42,14 +42,19 @@ except ImportError:
 @register_tool
 class UnifiedWebSearchTool(BaseTool):
     """
-    🔍 HERRAMIENTA WEB UNIFICADA CON VISUALIZACIÓN EN TIEMPO REAL
+    🔍 HERRAMIENTA WEB UNIFICADA CON NAVEGACIÓN INTELIGENTE BROWSER-USE
     
-    Características:
-    - ✅ Búsqueda web potente usando Playwright
+    Características principales:
+    - 🤖 **Browser-use Agent**: Navegación inteligente con IA cuando está disponible
+    - ✅ Búsqueda web potente usando Playwright como fallback
     - ✅ Screenshots automáticos en cada paso
-    - ✅ Eventos WebSocket progresivos  
-    - ✅ Visualización terminal en tiempo real
-    - ✅ Nombre único "web_search" (coincide con planes)
+    - ✅ Eventos WebSocket progresivos en tiempo real
+    - ✅ Procesamiento inteligente de contenido web
+    - ✅ Manejo automático de JavaScript y contenido dinámico
+    
+    **Prioridad de herramientas:**
+    1. Browser-use Agent (navegación con IA) 🥇
+    2. Playwright + Tavily (búsqueda tradicional) 🥈
     """
     
     def __init__(self):
