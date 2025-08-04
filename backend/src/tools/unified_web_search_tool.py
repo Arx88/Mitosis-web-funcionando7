@@ -477,10 +477,31 @@ async def run_browser_use_subprocess():
             }}
         )
         
-        # Crear tarea de búsqueda inteligente
-        search_url = f"https://www.bing.com/search?q={{QUERY.replace(' ', '+')}}"
+        # 🔧 SOLUCIÓN: Extraer keywords limpios del query para navegación correcta
+        def extract_clean_keywords(query_text):
+            \"\"\"Extraer 2-4 keywords principales para búsqueda efectiva\"\"\"
+            import re
+            
+            # Remover texto de instrucciones comunes
+            clean_text = query_text.lower()
+            clean_text = re.sub(r'buscar información sobre|utilizar la herramienta|web_search para|información actualizada|específica sobre|el estado de|en el año', '', clean_text)
+            clean_text = re.sub(r'\\d{{4}}', '2025', clean_text)  # Normalizar año
+            
+            # Extraer keywords significativos
+            words = re.findall(r'\\b[a-záéíóúñ]{{3,}}\\b', clean_text)
+            
+            # Filtrar palabras comunes
+            stop_words = {{'sobre', 'para', 'con', 'una', 'del', 'las', 'los', 'que', 'esta', 'este'}}
+            keywords = [w for w in words if w not in stop_words]
+            
+            # Tomar los primeros 3-4 keywords más relevantes
+            return ' '.join(keywords[:4]) if keywords else 'inteligencia artificial 2025'
         
-        intelligent_task = f'''Navigate to {{search_url}} and search for: "{{QUERY}}"
+        # Generar query limpio y navegable
+        clean_query = extract_clean_keywords(QUERY)
+        search_url = f"https://www.bing.com/search?q={{{{clean_query.replace(' ', '+')}}}}"
+        
+        intelligent_task = f'''Navigate to {{{{search_url}}}} and search for: "{{{{clean_query}}}}"
 
 TASK:
 1. Go to Bing search engine
