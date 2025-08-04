@@ -224,34 +224,47 @@ class UnifiedWebSearchTool(BaseTool):
     def _execute_search_with_visualization(self, query: str, search_engine: str, 
                                          max_results: int, extract_content: bool) -> List[Dict[str, Any]]:
         """
-        🔍 EJECUTOR PRINCIPAL DE BÚSQUEDA CON VISUALIZACIÓN
-        Implementa búsqueda web usando AI con visualización en tiempo real
+        🔍 EJECUTOR PRINCIPAL DE BÚSQUEDA CON VISUALIZACIÓN - BROWSER-USE PRIORIZADO
+        Implementa búsqueda web usando browser-use + Ollama con visualización en tiempo real
         """
         
-        # PASO 1: INICIALIZACIÓN CON PRIORIDAD CORREGIDA
-        self._emit_progress_eventlet(f"🤖 Iniciando búsqueda inteligente...")
+        # PASO 1: INICIALIZACIÓN CON BROWSER-USE COMO PRIORIDAD
+        self._emit_progress_eventlet(f"🤖 Iniciando búsqueda inteligente con browser-use + Ollama...")
         self._emit_progress_eventlet(f"🔍 Consulta: '{query}'")
         self._emit_progress_eventlet(f"🌐 Motor de búsqueda: {search_engine}")
         
         try:
-            # PASO 2: USAR REQUESTS SEARCH COMO MÉTODO PRINCIPAL (más confiable)
-            self._emit_progress_eventlet("🌐 Ejecutando búsqueda web real...")
-            results = self._requests_search(query, search_engine, max_results)
+            # PASO 2: USAR BROWSER-USE COMO MÉTODO PRINCIPAL
+            if BROWSER_MANAGER_AVAILABLE:
+                self._emit_progress_eventlet("✨ Usando browser-use como método principal...")
+                results = self._run_browser_use_search(query, search_engine, max_results, extract_content)
+            else:
+                self._emit_progress_eventlet("⚠️ browser-use no disponible, usando fallback...")
+                results = self._requests_search(query, search_engine, max_results)
             
             # PASO 3: VERIFICAR SI LOS RESULTADOS SON REALES
-            if results and all(not r.get('url', '').startswith('https://example.com') for r in results):
-                self._emit_progress_eventlet(f"✅ Búsqueda real completada: {len(results)} resultados obtenidos")
-                
-                # Mostrar muestra de resultados en tiempo real
-                for i, result in enumerate(results[:3]):  # Primeros 3 resultados
-                    self._emit_progress_eventlet(f"   📄 Resultado {i+1}: {result.get('title', 'Sin título')[:50]}...")
-                
-                if len(results) > 3:
-                    self._emit_progress_eventlet(f"   📚 Y {len(results) - 3} resultados adicionales encontrados")
+            if results and len(results) > 0:
+                # Verificar que no sean URLs simuladas
+                real_results = [r for r in results if not r.get('url', '').startswith('https://example.com')]
+                if real_results:
+                    self._emit_progress_eventlet(f"✅ Búsqueda real completada: {len(real_results)} resultados obtenidos")
+                    
+                    # Mostrar muestra de resultados en tiempo real
+                    for i, result in enumerate(real_results[:3]):  # Primeros 3 resultados
+                        method = result.get('method', 'unknown')
+                        self._emit_progress_eventlet(f"   📄 Resultado {i+1} ({method}): {result.get('title', 'Sin título')[:50]}...")
+                    
+                    if len(real_results) > 3:
+                        self._emit_progress_eventlet(f"   📚 Y {len(real_results) - 3} resultados adicionales encontrados")
+                    
+                    return real_results
+                else:
+                    self._emit_progress_eventlet("⚠️ Todos los resultados son simulados")
             else:
                 self._emit_progress_eventlet("⚠️ Búsqueda completada sin resultados reales")
             
-            return results
+            # Si llegamos aquí, no hay resultados reales - fallar correctamente
+            raise Exception("No se pudieron obtener resultados reales de búsqueda")
             
         except Exception as e:
             self._emit_progress_eventlet(f"❌ Error durante búsqueda: {str(e)}")
