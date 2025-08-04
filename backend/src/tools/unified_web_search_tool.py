@@ -541,68 +541,8 @@ class UnifiedWebSearchTool(BaseTool):
                 }
             ]
 
-    def _playwright_search(self, query: str, search_engine: str, max_results: int) -> List[Dict[str, Any]]:
-        """Búsqueda usando Playwright (método legacy)"""
-        from playwright.sync_api import sync_playwright
-        from urllib.parse import quote_plus
-        
-        results = []
-        encoded_query = quote_plus(query)
-        
-        if search_engine == 'google':
-            search_url = f"https://www.google.com/search?q={encoded_query}"
-        else:
-            search_url = f"https://www.bing.com/search?q={encoded_query}"
-        
-        self._emit_progress_eventlet(f"🌐 Navegando a {search_engine}: {search_url[:60]}...")
-        
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-dev-shm-usage'])
-            try:
-                page = browser.new_page()
-                page.goto(search_url, wait_until='networkidle')
-                
-                # Extraer resultados básicos
-                if search_engine == 'bing':
-                    elements = page.query_selector_all('li.b_algo')[:max_results]
-                    for element in elements:
-                        try:
-                            title_elem = element.query_selector('h2')
-                            link_elem = element.query_selector('h2 a')
-                            snippet_elem = element.query_selector('.b_caption')
-                            
-                            if title_elem and link_elem:
-                                results.append({
-                                    'title': title_elem.text_content().strip(),
-                                    'url': link_elem.get_attribute('href'),
-                                    'snippet': snippet_elem.text_content().strip() if snippet_elem else '',
-                                    'source': 'bing'
-                                })
-                        except:
-                            continue
-                else:  # Google
-                    elements = page.query_selector_all('div.g')[:max_results]
-                    for element in elements:
-                        try:
-                            title_elem = element.query_selector('h3')
-                            link_elem = element.query_selector('a')
-                            snippet_elem = element.query_selector('.VwiC3b')
-                            
-                            if title_elem and link_elem:
-                                results.append({
-                                    'title': title_elem.text_content().strip(),
-                                    'url': link_elem.get_attribute('href'),
-                                    'snippet': snippet_elem.text_content().strip() if snippet_elem else '',
-                                    'source': 'google'
-                                })
-                        except:
-                            continue
-                            
-            finally:
-                browser.close()
-        
-        self._emit_progress_eventlet(f"✅ Búsqueda Playwright completada: {len(results)} resultados")
-        return results
+    # REMOVIDO: _playwright_search - causaba conflictos con greenlet/eventlet
+    # Reemplazado por _requests_search para compatibilidad total
 
     def _tavily_search(self, query: str, max_results: int) -> List[Dict[str, Any]]:
         """Búsqueda usando Tavily (fallback final)"""
