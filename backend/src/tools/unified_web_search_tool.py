@@ -24,6 +24,14 @@ try:
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
+# Verificar browser-use directamente
+try:
+    from browser_use import Agent
+    from browser_use.llm import ChatOpenAI
+    BROWSER_USE_AVAILABLE = True
+except ImportError:
+    BROWSER_USE_AVAILABLE = False
+
 # Importar WebBrowserManager refactorizado para visualización en tiempo real con browser-use
 try:
     from ..web_browser_manager import WebBrowserManager  # Nuevo WebBrowserManager con browser-use
