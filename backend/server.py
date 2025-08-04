@@ -15,10 +15,10 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 FRONTEND_ORIGINS = [
     # 🌐 URL DETECTADA DINÁMICAMENTE
-    "https://01d1fb0a-2191-4491-bcee-9ff51b1eaedd.preview.emergentagent.com",
+    "https://da6b6894-ede2-4d4a-95d6-2882357b5107.preview.emergentagent.com",
     
     # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
-    "https://01d1fb0a-2191-4491-bcee-9ff51b1eaedd.preview.emergentagent.com",
+    "https://da6b6894-ede2-4d4a-95d6-2882357b5107.preview.emergentagent.com",
     
     # 🏠 DESARROLLO LOCAL
     "http://localhost:3000",
@@ -27,8 +27,8 @@ FRONTEND_ORIGINS = [
     "http://127.0.0.1:5173",
     
     # 📱 PREVIEW DOMAINS COMUNES
-    "https://01d1fb0a-2191-4491-bcee-9ff51b1eaedd.preview.emergentagent.com",
-    "https://01d1fb0a-2191-4491-bcee-9ff51b1eaedd.preview.emergentagent.com",
+    "https://da6b6894-ede2-4d4a-95d6-2882357b5107.preview.emergentagent.com",
+    "https://da6b6894-ede2-4d4a-95d6-2882357b5107.preview.emergentagent.com",
     
     # 🌟 FALLBACK UNIVERSAL (último recurso)
     "*"
@@ -50,14 +50,14 @@ def get_current_environment_url():
             # Extraer ID del container/hostname para formar URL
             if 'agent-env-' in hostname:
                 env_id = hostname.replace('agent-env-', '')
-                return f"https://01d1fb0a-2191-4491-bcee-9ff51b1eaedd.preview.emergentagent.com"
+                return f"https://da6b6894-ede2-4d4a-95d6-2882357b5107.preview.emergentagent.com"
             elif '-' in hostname and len(hostname) > 20:
-                return f"https://01d1fb0a-2191-4491-bcee-9ff51b1eaedd.preview.emergentagent.com"
+                return f"https://da6b6894-ede2-4d4a-95d6-2882357b5107.preview.emergentagent.com"
     except:
         pass
     
     # Método 3: Fallback usando patrón común
-    return "https://01d1fb0a-2191-4491-bcee-9ff51b1eaedd.preview.emergentagent.com"
+    return "https://da6b6894-ede2-4d4a-95d6-2882357b5107.preview.emergentagent.com"
 
 # Generar CORS origins dinámicamente
 CURRENT_ENV_URL = get_current_environment_url()
@@ -76,14 +76,14 @@ def get_dynamic_cors_origins():
         "http://127.0.0.1:5173",
         
         # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS DE EMERGENT - SIN HARDCODING
-        "https://01d1fb0a-2191-4491-bcee-9ff51b1eaedd.preview.emergentagent.com",
+        "https://da6b6894-ede2-4d4a-95d6-2882357b5107.preview.emergentagent.com",
         
         # 🌟 FALLBACK UNIVERSAL (último recurso)
         "*"
     ]
     
     # Agregar la URL detectada dinámicamente si está disponible
-    if CURRENT_ENV_URL and CURRENT_ENV_URL != "https://01d1fb0a-2191-4491-bcee-9ff51b1eaedd.preview.emergentagent.com":
+    if CURRENT_ENV_URL and CURRENT_ENV_URL != "https://da6b6894-ede2-4d4a-95d6-2882357b5107.preview.emergentagent.com":
         base_origins.insert(0, CURRENT_ENV_URL)
     
     return base_origins

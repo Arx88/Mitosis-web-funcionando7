@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://01d1fb0a-2191-4491-bcee-9ff51b1eaedd.preview.emergentagent.com"
+BACKEND_URL = "https://da6b6894-ede2-4d4a-95d6-2882357b5107.preview.emergentagent.com"
 
 class MitosisTaskDeletionTester:
     def __init__(self):
