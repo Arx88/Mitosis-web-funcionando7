@@ -14,8 +14,8 @@ from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 FRONTEND_ORIGINS = [
-    # 🌐 URL DETECTADA DINÁMICAMENTE
-    "https://20f98609-c85c-4bbb-901c-f3f7f815356e.preview.emergentagent.com",
+    # 🌐 URL REAL DEL FRONTEND DETECTADA
+    "https://mitosis-executor-5.preview.emergentagent.com",
     
     # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
     "https://20f98609-c85c-4bbb-901c-f3f7f815356e.preview.emergentagent.com",
@@ -26,8 +26,8 @@ FRONTEND_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
     
-    # 📱 PREVIEW DOMAINS COMUNES
-    "https://20f98609-c85c-4bbb-901c-f3f7f815356e.preview.emergentagent.com",
+    # 📱 PREVIEW DOMAINS ADICIONALES
+    "https://mitosis-executor-5.preview.emergentagent.com",
     "https://20f98609-c85c-4bbb-901c-f3f7f815356e.preview.emergentagent.com",
     
     # 🌟 FALLBACK UNIVERSAL (último recurso)
