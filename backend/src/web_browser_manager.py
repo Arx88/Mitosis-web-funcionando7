@@ -392,8 +392,8 @@ class WebBrowserManager:
                 if task_description:
                     navigation_task += f" and {task_description}"
                 
-                # Execute task with browser-use Agent
-                result = await self.browser_use_agent.run(navigation_task, max_steps=3)
+                # Execute task with browser-use Agent (use default max_steps)
+                result = await self.browser_use_agent.run(navigation_task)
                 
                 # Get current page info after navigation
                 current_url = await self._get_current_url_async()
