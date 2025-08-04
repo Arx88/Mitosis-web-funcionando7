@@ -134,10 +134,4 @@ uuid7==0.1.0
 distro==1.9.0
 aiofiles==24.1.0
 anthropic==0.60.0
-portalocker==3.2.0
-browser-use==0.5.9
-psutil==7.0.0
-pydantic==2.11.7
-pydantic-settings==2.10.1
-pydantic_core==2.33.2
-tenacity==8.5.0
+portalocker==2.10.1
