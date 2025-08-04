@@ -1,6 +1,12 @@
 """
-Web Browser Manager for Real-time Web Navigation Tracking
-Implements Playwright and Selenium integration for browser automation with real-time event capture
+Web Browser Manager with browser-use Integration for Real-time Web Navigation Tracking
+Implements browser-use Agent for intelligent browser automation with real-time event capture
+
+🔄 REFACTORED FOR BROWSER-USE INTEGRATION
+- Integrates browser-use Agent for AI-powered navigation
+- Maintains backward compatibility with existing WebSocket events  
+- Preserves screenshot functionality and real-time monitoring
+- Uses MitosisOllamaChatModel for LLM integration
 """
 
 import os
@@ -8,42 +14,90 @@ import sys
 import time
 import base64
 import json
+import asyncio
 import logging
-from typing import Dict, Any, Optional, Callable
+from typing import Dict, Any, Optional, Callable, List
 from datetime import datetime
 from pathlib import Path
+
+# browser-use imports
+from browser_use import Agent
+from browser_use.browser.session import BrowserSession
+from browser_use.browser.profile import BrowserProfile
+
+# Mitosis imports
+from .adapters.mitosis_ollama_chat import MitosisOllamaChatModel
+from .services.ollama_service import OllamaService
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 class WebBrowserManager:
     """
-    Comprehensive web browser manager supporting both Playwright and Selenium
-    with real-time event capture and WebSocket integration
+    🤖 AI-Powered Web Browser Manager using browser-use
+    
+    Features:
+    - browser-use Agent for intelligent navigation
+    - Real-time WebSocket event capture
+    - Screenshot functionality preserved
+    - Backward compatible API
+    - Integration with Mitosis LLM stack
     """
     
-    def __init__(self, websocket_manager, task_id: str, browser_type: str = "playwright"):
+    def __init__(
+        self, 
+        websocket_manager, 
+        task_id: str, 
+        ollama_service: Optional[OllamaService] = None,
+        browser_type: str = "browser-use"
+    ):
         """
-        Initialize WebBrowserManager
+        Initialize WebBrowserManager with browser-use integration
         
         Args:
             websocket_manager: WebSocketManager instance for real-time updates
             task_id: Task ID for event tracking
-            browser_type: 'playwright' or 'selenium'
+            ollama_service: OllamaService instance for LLM integration
+            browser_type: 'browser-use' (new default) or 'playwright' (legacy)
         """
         self.websocket_manager = websocket_manager
         self.task_id = task_id
         self.browser_type = browser_type
+        
+        # browser-use components
+        self.browser_use_agent: Optional[Agent] = None
+        self.browser_session: Optional[BrowserSession] = None
+        self.llm_model: Optional[MitosisOllamaChatModel] = None
+        
+        # Legacy Playwright/Selenium support
         self.browser = None
-        self.page = None  # For Playwright
-        self.driver = None  # For Selenium
+        self.page = None  # For Playwright fallback
+        self.driver = None  # For Selenium fallback
+        
+        # State management
         self.is_initialized = False
+        self.current_url = ""
+        self.current_task = ""
         
         # Create screenshots directory
         self.screenshots_dir = Path(f"/tmp/screenshots/{task_id}")
         self.screenshots_dir.mkdir(parents=True, exist_ok=True)
         
-        logger.info(f"🌐 WebBrowserManager initialized for task {task_id} using {browser_type}")
+        # Initialize LLM model
+        if ollama_service:
+            self.llm_model = MitosisOllamaChatModel.create_from_mitosis_config(
+                ollama_service=ollama_service,
+                model="llama3.1:8b"
+            )
+        else:
+            # Fallback: create new OllamaService
+            self.llm_model = MitosisOllamaChatModel(
+                model="llama3.1:8b",
+                host="https://66bd0d09b557.ngrok-free.app"
+            )
+        
+        logger.info(f"🤖 WebBrowserManager initialized for task {task_id} using {browser_type}")
+        logger.info(f"🧠 LLM Model: {self.llm_model.name}")
 
     def initialize_browser(self):
         """Initialize browser instance with event listeners"""
