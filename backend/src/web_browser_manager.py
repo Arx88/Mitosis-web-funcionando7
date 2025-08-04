@@ -178,8 +178,8 @@ class WebBrowserManager:
                 )
             )
             
-            # Create Agent
-            agent = Agent(
+            # Create agent with the fixed run method (monkey patched)
+            self.browser_use_agent = Agent(
                 task="Navegación web inteligente para el usuario",
                 llm=self.llm_model,
                 browser_session=self.browser_session,
@@ -187,47 +187,6 @@ class WebBrowserManager:
                 max_failures=3,   # Resilience
                 save_conversation_path=f"/tmp/browser_conversations/{self.task_id}.json"
             )
-            
-            # Create a wrapper to fix the max_steps issue
-            class BrowserUseAgentWrapper:
-                def __init__(self, agent):
-                    self._agent = agent
-                    
-                async def run(self, task, **kwargs):
-                    """Wrapper run method that fixes max_steps conflicts"""
-                    # Store the original run method
-                    original_run = self._agent.__class__.run
-                    
-                    # Create a patched version that ensures max_steps is always an integer
-                    async def patched_run(self_inner, max_steps=100, on_step_start=None, on_step_end=None):
-                        # Ensure max_steps is an integer
-                        if isinstance(max_steps, str):
-                            max_steps = int(max_steps)
-                        elif not isinstance(max_steps, int):
-                            max_steps = int(max_steps)
-                        
-                        # Call the original method with corrected max_steps
-                        return await original_run(self_inner, max_steps=max_steps, on_step_start=on_step_start, on_step_end=on_step_end)
-                    
-                    # Temporarily patch the method
-                    self._agent.__class__.run = patched_run
-                    
-                    try:
-                        # Remove any max_steps from kwargs to avoid conflicts
-                        kwargs.pop('max_steps', None)
-                        
-                        # Call the patched method
-                        return await self._agent.run(**kwargs)
-                    finally:
-                        # Restore the original method
-                        self._agent.__class__.run = original_run
-                
-                def __getattr__(self, name):
-                    """Delegate other attributes to the wrapped agent"""
-                    return getattr(self._agent, name)
-            
-            # Wrap the agent to fix the max_steps bug
-            self.browser_use_agent = BrowserUseAgentWrapper(agent)
             
             logger.info("✅ browser-use Agent inicializado exitosamente")
             
