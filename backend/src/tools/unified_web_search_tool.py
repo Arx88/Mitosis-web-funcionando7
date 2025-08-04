@@ -275,13 +275,7 @@ class UnifiedWebSearchTool(BaseTool):
                 results = self._run_browser_use_search_original(query, search_engine, max_results, extract_content, self.task_id)
                 
                 # FINALIZAR NAVEGACIÓN VISUAL
-                self._emit_browser_visual({
-                    'type': 'navigation_complete',
-                    'message': '✅ NAVEGACIÓN BROWSER-USE COMPLETADA',
-                    'step': 'Navegación completada exitosamente',
-                    'timestamp': datetime.now().isoformat(),
-                    'url': f'https://www.{search_engine}.com'
-                })
+                self._emit_progress("✅ NAVEGACIÓN VISUAL: browser-use navegación completada exitosamente")
                 
                 if results and len(results) > 0:
                     self._emit_progress_eventlet(f"✅ browser-use REAL exitoso: {len(results)} resultados")
