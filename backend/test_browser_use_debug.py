@@ -66,10 +66,26 @@ async def test_browser_use():
         
         # Test simple - navegar a una página
         print("🚀 Probando navegación a Google...")
-        result = await agent.run("Navigate to https://www.google.com")
         
-        print(f"✅ Test completado exitosamente: {result}")
-        return True
+        try:
+            result = await agent.run("Navigate to https://www.google.com")
+            print(f"✅ Test completado exitosamente: {result}")
+            return True
+        except Exception as e:
+            print(f"❌ Error específico en agent.run(): {str(e)}")
+            print(f"❌ Tipo de error: {type(e)}")
+            import traceback
+            traceback.print_exc()
+            
+            # Intentar llamada más simple
+            print("🔄 Probando tarea más simple...")
+            try:
+                simple_result = await agent.run("Say hello")
+                print(f"✅ Tarea simple exitosa: {simple_result}")
+            except Exception as e2:
+                print(f"❌ Error en tarea simple también: {str(e2)}")
+            
+            return False
         
     except Exception as e:
         print(f"❌ Error durante test: {str(e)}")
