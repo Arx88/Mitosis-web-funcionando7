@@ -390,24 +390,16 @@ class UnifiedWebSearchTool(BaseTool):
                 search_url = search_urls.get(search_engine, search_urls['google']).format(query.replace(' ', '+'))
                 
                 # Crear tarea inteligente para el agente
-                intelligent_task = f"""
-Navigate to {search_url} and perform an intelligent web search for: "{query}"
+                intelligent_task = f"""Navigate to {search_url} and search for information about: "{query}"
 
 INSTRUCTIONS:
 1. Go to the search engine website
-2. Wait for the page to fully load
+2. Wait for the page to fully load  
 3. Look for search results on the page
 4. Extract the top {max_results} most relevant search results
-5. For each result, extract:
-   - Title (the main heading/link)
-   - URL (the actual web address)  
-   - Snippet/Description (the preview text)
+5. For each result, extract the title and URL
 6. Focus on results that are most relevant to the query: "{query}"
-7. Avoid any ads, sponsored content, or irrelevant results
-8. Return structured information about each result found
-
-Be intelligent about how you navigate - adapt to the page layout and find the best results.
-"""
+7. Return structured information about each result found"""
                 
                 self._emit_progress_eventlet(f"🌐 Iniciando navegación inteligente a: {search_engine}")
                 self._emit_progress_eventlet(f"🔍 Tarea: Búsqueda inteligente para '{query[:50]}...'")
