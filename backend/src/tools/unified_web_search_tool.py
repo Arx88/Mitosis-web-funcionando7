@@ -24,9 +24,10 @@ try:
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
-# Importar WebBrowserManager para visualización en tiempo real
+# Importar WebBrowserManager refactorizado para visualización en tiempo real con browser-use
 try:
-    from ..web_browser_manager import WebBrowserManager
+    from ..web_browser_manager import WebBrowserManager  # Nuevo WebBrowserManager con browser-use
+    from ..services.ollama_service import OllamaService
     BROWSER_MANAGER_AVAILABLE = True
 except ImportError:
     BROWSER_MANAGER_AVAILABLE = False
