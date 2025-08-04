@@ -96,7 +96,7 @@ protobuf==4.25.3
 # Fix for ChromaDB dependencies
 onnxruntime==1.18.1
 grpcio==1.65.1
-pydantic==2.8.2
+pydantic==2.11.7
 
 # Fix for memory system
 typing-extensions==4.12.2
