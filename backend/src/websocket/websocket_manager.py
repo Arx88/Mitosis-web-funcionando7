@@ -49,16 +49,25 @@ class WebSocketManager:
     def initialize(self, app: Flask):
         """Initialize WebSocket with Flask app"""
         self.app = app
-        self.socketio = SocketIO(
-            app, 
-            cors_allowed_origins="*",
-            async_mode='eventlet',
-            logger=False,
-            engineio_logger=False,
-            ping_timeout=60,  # 60 segundos para ping timeout
-            ping_interval=25,  # 25 segundos entre pings
-            max_http_buffer_size=1000000  # 1MB buffer
-        )
+        
+        # 🚀 CRITICAL FIX: Use existing SocketIO instance from app instead of creating new one
+        if hasattr(app, 'socketio') and app.socketio:
+            logger.info("📡 Using existing SocketIO instance from app")
+            self.socketio = app.socketio
+        else:
+            logger.info("🔧 Creating new SocketIO instance")
+            self.socketio = SocketIO(
+                app, 
+                cors_allowed_origins="*",
+                async_mode='eventlet',
+                logger=False,
+                engineio_logger=False,
+                ping_timeout=60,  # 60 segundos para ping timeout
+                ping_interval=25,  # 25 segundos entre pings
+                max_http_buffer_size=1000000  # 1MB buffer
+            )
+            app.socketio = self.socketio
+        
         self.setup_event_handlers()
         self.is_initialized = True
         logger.info("WebSocket Manager initialized")
