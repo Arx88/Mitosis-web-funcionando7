@@ -7206,25 +7206,67 @@ def execute_step_real(task_id: str, step_id: str, step: dict):
                     'num_results': 5
                 }
             elif tool in ['analysis', 'data_analysis', 'synthesis']:
-                # CORREGIDO: Usar ollama para análisis real en lugar de web_search
-                mapped_tool = 'ollama_chat'  # Usar ollama para análisis
-                analysis_prompt = f"""
-Analiza detalladamente la siguiente información para completar la tarea: "{title}"
-Descripción: {description}
+                # CORREGIDO: Como no hay herramienta ollama_chat, usar procesamiento directo con Ollama
+                mapped_tool = None  # Procesamiento directo sin herramienta
+                
+                try:
+                    ollama_service = get_ollama_service()
+                    if ollama_service and ollama_service.is_healthy():
+                        analysis_prompt = f"""
+Analiza detalladamente la información sobre: "{title}"
+Descripción de la tarea: {description}
 
-INSTRUCCIONES IMPORTANTES:
-1. Proporciona un análisis real y detallado, no un resumen de pasos
-2. Si necesitas información específica que no tienes, indica exactamente qué información falta
-3. El análisis debe ser sustantivo y específico al tema solicitado
-4. Responde SOLO con el análisis detallado, no con instrucciones o planes
+INSTRUCCIONES:
+1. Si es sobre Pokémon: proporciona datos específicos sobre especies, tipos, habilidades, evoluciones
+2. Si es sobre otro tema: proporciona análisis sustantivo y específico
+3. NO des instrucciones ni pasos, DA EL ANÁLISIS REAL
+4. Mínimo 300 palabras de contenido sustantivo
+5. Incluye datos concretos y específicos del tema solicitado
 
-Tema a analizar: {title}
-Contexto: {description}
+Responde SOLO con el análisis detallado:
 """
-                tool_params = {
-                    'message': analysis_prompt,
-                    'model': 'llama3.1:8b'
-                }
+                        ollama_response = ollama_service.generate_response(analysis_prompt, {'temperature': 0.7})
+                        analysis_content = ollama_response.get('response', '')
+                        
+                        if analysis_content and len(analysis_content.strip()) > 100:
+                            step_result = {
+                                'success': True,
+                                'type': 'analysis',
+                                'summary': f'Análisis completado: {len(analysis_content)} caracteres generados',
+                                'content': analysis_content,
+                                'response': analysis_content,  # Para compatibilidad con validador
+                                'tool_used': 'ollama_analysis_direct',
+                                'analysis_length': len(analysis_content),
+                                'data': {'analysis': analysis_content}
+                            }
+                        else:
+                            step_result = {
+                                'success': False,
+                                'type': 'analysis',
+                                'summary': 'Análisis falló - contenido insuficiente generado',
+                                'error': 'Ollama no generó contenido suficiente para el análisis',
+                                'content': '',
+                                'tool_used': 'ollama_analysis_direct'
+                            }
+                    else:
+                        step_result = {
+                            'success': False,
+                            'type': 'analysis',
+                            'summary': 'Análisis falló - Ollama no disponible',
+                            'error': 'Servicio Ollama no disponible para análisis',
+                            'content': '',
+                            'tool_used': 'ollama_analysis_direct'
+                        }
+                except Exception as e:
+                    logger.error(f"Error en análisis directo con Ollama: {e}")
+                    step_result = {
+                        'success': False,
+                        'type': 'analysis',
+                        'summary': f'Error en análisis: {str(e)}',
+                        'error': str(e),
+                        'content': '',
+                        'tool_used': 'ollama_analysis_direct'
+                    }
             elif tool == 'creation':
                 mapped_tool = 'file_manager'  # Usar file_manager para crear archivos
                 filename = f"generated_content_{task_id}_{step_id}.md"
