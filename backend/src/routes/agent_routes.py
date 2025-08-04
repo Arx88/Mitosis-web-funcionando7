@@ -7348,10 +7348,38 @@ Tarea ID: {task_id}
                     'content': f"# Informe de Entrega: {title}\n\nDescripción: {description}\n\n*Este es el informe de entrega final.*\nFecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
                 }
             elif tool == 'processing':
-                mapped_tool = 'web_search'
+                # CORRECCIÓN: Usar Ollama para processing inteligente, no web_search
+                mapped_tool = 'ollama_processing'
+                # Obtener todo el contexto de la tarea para procesamiento final
+                full_context = ""
+                try:
+                    task_data = get_task_data(task_id)
+                    if task_data:
+                        original_message = task_data.get('original_message', '')
+                        full_context += f"Tarea original: {original_message}\n\n"
+                        
+                        if 'plan' in task_data:
+                            full_context += "Información recopilada en pasos anteriores:\n"
+                            for prev_step in task_data['plan']:
+                                if prev_step.get('completed') and 'result' in prev_step:
+                                    step_title = prev_step.get('title', 'Paso')
+                                    full_context += f"\n=== {step_title} ===\n"
+                                    
+                                    result = prev_step.get('result', {})
+                                    if 'data' in result and isinstance(result['data'], dict):
+                                        data_content = result['data']
+                                        if 'content' in data_content and isinstance(data_content['content'], dict):
+                                            content_obj = data_content['content']
+                                            if 'results' in content_obj:
+                                                for res in content_obj['results']:
+                                                    full_context += f"• {res.get('title', 'Información')}: {res.get('snippet', '')}\n"
+                except Exception as e:
+                    logger.warning(f"Error extracting context for processing: {e}")
+                
+                processing_prompt = f"Completa la siguiente tarea con todo el contexto recopilado:\n\nTarea: {title}\nDescripción: {description}\n\nContexto completo:\n{full_context}\n\nGenera el resultado final completo y detallado que responda exactamente a lo solicitado en la tarea original."
                 tool_params = {
-                    'query': f"análisis procesado resumen {title} {description}",
-                    'max_results': 3
+                    'prompt': processing_prompt,
+                    'max_tokens': 1500
                 }
             # Add more mappings for other tool types as needed
             else:
