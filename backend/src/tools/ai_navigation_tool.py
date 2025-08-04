@@ -39,13 +39,13 @@ class AINavigationTool(BaseTool):
         return [
             ParameterDefinition(
                 name="task_description",
-                type="string",
+                param_type="string",
                 description="Descripción en lenguaje natural de la tarea de navegación (ej: 'buscar información sobre IA en Google')",
                 required=True
             ),
             ParameterDefinition(
                 name="url",
-                type="string", 
+                param_type="string", 
                 description="URL inicial opcional (si no se especifica, la IA decidirá dónde navegar)",
                 required=False
             ),
