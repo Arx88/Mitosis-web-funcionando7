@@ -200,34 +200,56 @@ class UnifiedWebSearchTool(BaseTool):
             self._cleanup_browser_manager()
     
     def _initialize_real_time_components(self) -> bool:
-        """🔧 INICIALIZAR COMPONENTES PARA VISUALIZACIÓN EN TIEMPO REAL - FORZADO PARA MOSTRAR NAVEGACIÓN"""
+        """🔧 INICIALIZAR COMPONENTES PARA VISUALIZACIÓN EN TIEMPO REAL - SOLUCIÓN CRÍTICA WEBSOCKET"""
         try:
-            # FORZAR INICIALIZACIÓN DE WEBSOCKET MANAGER
+            # SOLUCIÓN CRÍTICA: Acceder al WebSocket manager desde Flask app context
             if self.task_id:
                 try:
-                    # Obtener WebSocket manager del Flask app directamente
-                    from flask import current_app
-                    if current_app and hasattr(current_app, 'websocket_manager'):
-                        self.websocket_manager = current_app.websocket_manager
-                        self._emit_progress_eventlet("🚀 WebSocket FORZADO para navegación en tiempo real")
+                    # Método 1: Obtener desde Flask app context directo
+                    from flask import g
+                    if hasattr(g, 'app') and hasattr(g.app, 'websocket_manager'):
+                        self.websocket_manager = g.app.websocket_manager
+                        self._emit_progress_eventlet("🚀 WebSocket DIRECTO desde Flask g.app")
                         return True
                     
-                    # Fallback a WebSocket manager global - SIEMPRE INTENTAR
-                    self.websocket_manager = get_websocket_manager()
-                    self._emit_progress_eventlet("🚀 WebSocket GLOBAL FORZADO para navegación en tiempo real")
-                    return True
+                    # Método 2: Importar y usar el manager global inicializado
+                    try:
+                        from ..websocket.websocket_manager import websocket_manager
+                        if websocket_manager and websocket_manager.is_initialized:
+                            self.websocket_manager = websocket_manager
+                            self._emit_progress_eventlet("🚀 WebSocket GLOBAL inicializado encontrado")
+                            return True
+                    except ImportError:
+                        pass
+                    
+                    # Método 3: Crear nuevo manager si es necesario
+                    from ..websocket.websocket_manager import WebSocketManager
+                    self.websocket_manager = WebSocketManager()
+                    # Necesitamos la app Flask para inicializarlo, así que buscaremos en el contexto
+                    
+                    # Método 4: Acceder via current_app con contexto de aplicación
+                    try:
+                        from flask import current_app
+                        with current_app.app_context():
+                            if hasattr(current_app, 'websocket_manager'):
+                                self.websocket_manager = current_app.websocket_manager
+                                self._emit_progress_eventlet("🚀 WebSocket via current_app context")
+                                return True
+                    except RuntimeError:
+                        # No hay contexto de aplicación activo
+                        pass
                         
+                    self._emit_progress_eventlet("⚠️ WebSocket no disponible, usando logging directo")
+                    
                 except Exception as ws_error:
-                    # NO FALLAR - continuar con emulación
-                    self._emit_progress_eventlet(f"⚠️ WebSocket error, continuando con logging directo: {str(ws_error)}")
+                    self._emit_progress_eventlet(f"⚠️ WebSocket error: {str(ws_error)}")
             
-            # SIEMPRE RETORNAR TRUE para forzar visualización
-            self._emit_progress_eventlet("✅ Navegación FORZADA para mostrar progreso paso a paso")
+            # SIEMPRE RETORNAR TRUE para continuar con visualización
+            self._emit_progress_eventlet("✅ Componentes inicializados (con o sin WebSocket)")
             return True
             
         except Exception as e:
-            # NUNCA FALLAR - siempre intentar mostrar progreso
-            self._emit_progress_eventlet(f"⚠️ Error general, continuando: {str(e)}")
+            self._emit_progress_eventlet(f"⚠️ Error inicializando componentes: {str(e)}")
             return True
     
     def _execute_search_with_visualization(self, query: str, search_engine: str, 
