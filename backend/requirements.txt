@@ -139,6 +139,6 @@ portalocker==2.10.1
 # =============================================================================
 ollama==0.5.1
 langchain==0.3.7
-langchain-ollama==0.2.4
+langchain-ollama==0.3.6
 langchain-core==0.3.18
 langchain-community==0.3.7
