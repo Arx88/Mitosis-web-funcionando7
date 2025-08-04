@@ -122,12 +122,14 @@ class MitosisOllamaChatModel(BaseChatModel):
                 "stop": ["USER:", "SYSTEM:", "\n\nUSER:", "\n\nSYSTEM:"]
             }
             
-            # Llamar a OllamaService de manera asíncrona
+            # Llamar a OllamaService de manera asíncrona (sin pasar model, se usa internamente)
             response_data = await asyncio.to_thread(
                 self.ollama_service.generate_response,
                 prompt=prompt,
-                model=self.model,
-                **options
+                context={},
+                use_tools=False,  # Para browser-use, no usar herramientas por ahora
+                task_id="browser-use",
+                step_id="llm-call"
             )
             
             # Extraer respuesta del resultado
