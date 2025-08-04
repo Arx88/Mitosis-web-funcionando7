@@ -2017,50 +2017,196 @@ except Exception as e:
             return []
 
     def _emit_progress(self, message: str):
-        """📡 EMITIR PROGRESO EN TIEMPO REAL VIA WEBSOCKET - CORREGIDO PARA VISUALIZACIÓN EN TERMINAL"""
+        """📡 LOGGING COMPREHENSIVO: Rastrear exactamente donde se rompe el flujo WebSocket"""
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        
+        # PASO 1: LOG INICIAL - Siempre funciona
         try:
-            if self.task_id:
-                import logging
-                from datetime import datetime
+            with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                f.write(f"\n=== EMIT_PROGRESS START ===\n")
+                f.write(f"TIMESTAMP: {timestamp}\n")
+                f.write(f"MESSAGE: {message}\n")
+                f.write(f"SELF_TASK_ID: {getattr(self, 'task_id', 'NONE')}\n")
+                f.flush()
+        except Exception as log_error:
+            print(f"❌ CRITICAL: Cannot write to log file: {log_error}")
+        
+        # PASO 2: Verificar task_id
+        if not hasattr(self, 'task_id') or not self.task_id:
+            try:
+                with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                    f.write(f"STEP_2_FAIL: No task_id available - hasattr: {hasattr(self, 'task_id')}, value: {getattr(self, 'task_id', 'NONE')}\n")
+                    f.write(f"=== EMIT_PROGRESS END (NO_TASK_ID) ===\n\n")
+                    f.flush()
+            except:
+                pass
+            print(f"⚠️ No task_id for message: {message}")
+            return
+        
+        # PASO 3: LOG - task_id disponible
+        try:
+            with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                f.write(f"STEP_3_SUCCESS: task_id available: {self.task_id}\n")
+                f.flush()
+        except:
+            pass
+        
+        # PASO 4: Importar módulos necesarios
+        try:
+            import logging
+            from datetime import datetime
+            from ..websocket.websocket_manager import get_websocket_manager
+            
+            with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                f.write(f"STEP_4_SUCCESS: Modules imported successfully\n")
+                f.flush()
                 
-                # SOLUCIÓN CORRECTA: Usar websocket_manager global
-                from ..websocket.websocket_manager import get_websocket_manager
+        except Exception as import_error:
+            try:
+                with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                    f.write(f"STEP_4_FAIL: Import error: {str(import_error)}\n")
+                    f.write(f"=== EMIT_PROGRESS END (IMPORT_ERROR) ===\n\n")
+                    f.flush()
+            except:
+                pass
+            print(f"❌ Import error: {import_error}")
+            return
+        
+        # PASO 5: Obtener logger
+        try:
+            logger = logging.getLogger(__name__)
+            logger.info(f"🔍 WEB SEARCH PROGRESS: {message} for task {self.task_id}")
+            
+            with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                f.write(f"STEP_5_SUCCESS: Logger obtained and used\n")
+                f.flush()
                 
-                logger = logging.getLogger(__name__)
-                logger.info(f"🔍 WEB SEARCH PROGRESS: {message} for task {self.task_id}")
+        except Exception as logger_error:
+            try:
+                with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                    f.write(f"STEP_5_FAIL: Logger error: {str(logger_error)}\n")
+                    f.flush()
+            except:
+                pass
+        
+        # PASO 6: CRÍTICO - Obtener WebSocket manager
+        try:
+            websocket_manager = get_websocket_manager()
+            
+            # Log detallado del manager
+            manager_info = {
+                'exists': websocket_manager is not None,
+                'type': type(websocket_manager).__name__ if websocket_manager else None,
+                'is_initialized': getattr(websocket_manager, 'is_initialized', 'NO_ATTR') if websocket_manager else False,
+                'has_send_log_message': hasattr(websocket_manager, 'send_log_message') if websocket_manager else False,
+                'has_send_browser_activity': hasattr(websocket_manager, 'send_browser_activity') if websocket_manager else False,
+                'methods': [m for m in dir(websocket_manager) if not m.startswith('_')] if websocket_manager else []
+            }
+            
+            with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                f.write(f"STEP_6_SUCCESS: WebSocket manager info: {manager_info}\n")
+                f.flush()
                 
-                # Obtener websocket manager global
-                websocket_manager = get_websocket_manager()
-                
-                if websocket_manager and websocket_manager.is_initialized:
-                    # 🔥 FIX CRÍTICO: Enviar como log_message para que aparezca en terminal
-                    websocket_manager.send_log_message(self.task_id, "info", message)
-                    
-                    # También enviar como browser activity si es navegación
-                    if any(keyword in message.lower() for keyword in ['navegando', 'página', 'screenshot', 'navegador']):
-                        websocket_manager.send_browser_activity(
+        except Exception as manager_error:
+            try:
+                with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                    f.write(f"STEP_6_FAIL: WebSocket manager error: {str(manager_error)}\n")
+                    f.write(f"=== EMIT_PROGRESS END (MANAGER_ERROR) ===\n\n")
+                    f.flush()
+            except:
+                pass
+            print(f"❌ WebSocket manager error: {manager_error}")
+            return
+        
+        # PASO 7: CRÍTICO - Verificar si manager está disponible y inicializado
+        if not websocket_manager:
+            try:
+                with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                    f.write(f"STEP_7_FAIL: WebSocket manager is None\n")
+                    f.write(f"=== EMIT_PROGRESS END (MANAGER_NONE) ===\n\n")
+                    f.flush()
+            except:
+                pass
+            print(f"⚠️ WebSocket manager is None for task {self.task_id}")
+            return
+        
+        if not getattr(websocket_manager, 'is_initialized', False):
+            try:
+                with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                    f.write(f"STEP_7_FAIL: WebSocket manager not initialized - is_initialized: {getattr(websocket_manager, 'is_initialized', 'NO_ATTR')}\n")
+                    f.write(f"=== EMIT_PROGRESS END (MANAGER_NOT_INITIALIZED) ===\n\n")
+                    f.flush()
+            except:
+                pass
+            print(f"⚠️ Global WebSocket manager not initialized for task {self.task_id}")
+            return
+        
+        # PASO 8: SUCCESS - Manager disponible, intentar enviar mensajes
+        try:
+            with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                f.write(f"STEP_8_START: Manager available and initialized, attempting to send messages\n")
+                f.flush()
+            
+            # Intentar send_log_message
+            if hasattr(websocket_manager, 'send_log_message'):
+                try:
+                    result = websocket_manager.send_log_message(self.task_id, "info", message)
+                    with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                        f.write(f"STEP_8_LOG_SUCCESS: send_log_message result: {result}\n")
+                        f.flush()
+                except Exception as log_msg_error:
+                    with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                        f.write(f"STEP_8_LOG_FAIL: send_log_message error: {str(log_msg_error)}\n")
+                        f.flush()
+            else:
+                with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                    f.write(f"STEP_8_LOG_NO_METHOD: send_log_message method not available\n")
+                    f.flush()
+            
+            # Intentar send_browser_activity si es navegación
+            if any(keyword in message.lower() for keyword in ['navegando', 'página', 'screenshot', 'navegador']):
+                if hasattr(websocket_manager, 'send_browser_activity'):
+                    try:
+                        result = websocket_manager.send_browser_activity(
                             self.task_id, 
                             "navigation_progress", 
                             "https://web-search", 
                             message, 
                             ""
                         )
-                    
-                    logger.info(f"📡 WEB SEARCH PROGRESS EMITTED TO TERMINAL: {message[:50]}... to task {self.task_id}")
-                else:
-                    logger.warning(f"⚠️ Global WebSocket manager not available or initialized for task {self.task_id}")
-                    # Fallback: escribir a archivo para debug
-                    try:
-                        with open('/tmp/websocket_debug.log', 'a') as f:
-                            f.write(f"[{datetime.now()}] WEBSOCKET MANAGER NOT AVAILABLE: {message}\n")
+                        with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                            f.write(f"STEP_8_BROWSER_SUCCESS: send_browser_activity result: {result}\n")
                             f.flush()
-                    except:
-                        pass
+                    except Exception as browser_error:
+                        with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                            f.write(f"STEP_8_BROWSER_FAIL: send_browser_activity error: {str(browser_error)}\n")
+                            f.flush()
+                else:
+                    with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                        f.write(f"STEP_8_BROWSER_NO_METHOD: send_browser_activity method not available\n")
+                        f.flush()
+            
+            # Log final de éxito
+            try:
+                if hasattr(logger, 'info'):
+                    logger.info(f"📡 WEB SEARCH PROGRESS EMITTED TO TERMINAL: {message[:50]}... to task {self.task_id}")
+            except:
+                pass
                 
-        except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"❌ Error emitting web search progress via global manager: {e}")
+            with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                f.write(f"STEP_8_COMPLETE: Message emission completed successfully\n")
+                f.write(f"=== EMIT_PROGRESS END (SUCCESS) ===\n\n")
+                f.flush()
+                
+        except Exception as emission_error:
+            try:
+                with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                    f.write(f"STEP_8_FAIL: Emission error: {str(emission_error)}\n")
+                    f.write(f"=== EMIT_PROGRESS END (EMISSION_ERROR) ===\n\n")
+                    f.flush()
+            except:
+                pass
+            print(f"❌ Error emitting web search progress: {emission_error}")
             import traceback
             traceback.print_exc()
     
