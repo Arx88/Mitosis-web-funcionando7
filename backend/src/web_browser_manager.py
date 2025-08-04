@@ -165,14 +165,14 @@ class WebBrowserManager:
             class BrowserUseAgentWrapper:
                 def __init__(self, agent):
                     self._agent = agent
-                    # Store the original run method
-                    self._original_run = self._agent.run
-                    # Monkey patch the agent's run method to fix the max_steps bug
-                    self._patch_run_method()
                     
-                def _patch_run_method(self):
-                    """Patch the run method to ensure max_steps is always an integer"""
-                    async def patched_run(max_steps=100, on_step_start=None, on_step_end=None):
+                async def run(self, task, **kwargs):
+                    """Wrapper run method that fixes max_steps conflicts"""
+                    # Store the original run method
+                    original_run = self._agent.__class__.run
+                    
+                    # Create a patched version that ensures max_steps is always an integer
+                    async def patched_run(self_inner, max_steps=100, on_step_start=None, on_step_end=None):
                         # Ensure max_steps is an integer
                         if isinstance(max_steps, str):
                             max_steps = int(max_steps)
@@ -180,18 +180,20 @@ class WebBrowserManager:
                             max_steps = int(max_steps)
                         
                         # Call the original method with corrected max_steps
-                        return await self._original_run(max_steps=max_steps, on_step_start=on_step_start, on_step_end=on_step_end)
+                        return await original_run(self_inner, max_steps=max_steps, on_step_start=on_step_start, on_step_end=on_step_end)
                     
-                    # Replace the agent's run method
-                    self._agent.run = patched_run
+                    # Temporarily patch the method
+                    self._agent.__class__.run = patched_run
                     
-                async def run(self, task, **kwargs):
-                    """Wrapper run method that delegates to the patched run method"""
-                    # Remove any max_steps from kwargs to avoid conflicts
-                    kwargs.pop('max_steps', None)
-                    
-                    # Call the patched method
-                    return await self._agent.run(**kwargs)
+                    try:
+                        # Remove any max_steps from kwargs to avoid conflicts
+                        kwargs.pop('max_steps', None)
+                        
+                        # Call the patched method
+                        return await self._agent.run(**kwargs)
+                    finally:
+                        # Restore the original method
+                        self._agent.__class__.run = original_run
                 
                 def __getattr__(self, name):
                     """Delegate other attributes to the wrapped agent"""
