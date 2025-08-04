@@ -2117,6 +2117,10 @@ except Exception as e:
 
     def _emit_progress(self, message: str):
         """📡 LOGGING COMPREHENSIVO: Rastrear exactamente donde se rompe el flujo WebSocket"""
+        
+        # IMPORTAR PRIMERO ANTES DE USAR
+        from datetime import datetime
+        
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         
         # PASO 1: LOG INICIAL - Siempre funciona
@@ -2153,7 +2157,6 @@ except Exception as e:
         # PASO 4: Importar módulos necesarios
         try:
             import logging
-            from datetime import datetime
             from ..websocket.websocket_manager import get_websocket_manager
             
             with open('/tmp/websocket_comprehensive.log', 'a') as f:
