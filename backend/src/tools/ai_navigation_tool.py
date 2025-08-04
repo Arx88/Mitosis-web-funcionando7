@@ -61,8 +61,7 @@ class AINavigationTool(BaseTool):
     def __init__(self):
         super().__init__(
             name="ai_navigation",
-            description="🤖 Navegación web inteligente usando AI con browser-use Agent. Permite ejecutar tareas de navegación usando lenguaje natural.",
-            parameters=self._define_parameters()
+            description="🤖 Navegación web inteligente usando AI con browser-use Agent. Permite ejecutar tareas de navegación usando lenguaje natural."
         )
         self.browser_manager = None
         self.websocket_manager = None
