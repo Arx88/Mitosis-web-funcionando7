@@ -7,12 +7,12 @@ en lugar de hacer búsquedas web irrelevantes.
 import logging
 import sys
 import os
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 # Add the backend src directory to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from tools.base_tool import BaseTool, register_tool
+from tools.base_tool import BaseTool, ParameterDefinition, ToolExecutionResult, register_tool
 from services.ollama_service import OllamaService
 
 logger = logging.getLogger(__name__)
@@ -24,33 +24,34 @@ class OllamaAnalysisTool(BaseTool):
     Genera análisis detallados basados en datos previos y contexto
     """
     
-    @classmethod
-    def get_name(cls) -> str:
-        return "ollama_analysis"
+    def __init__(self):
+        super().__init__(
+            name="ollama_analysis",
+            description="Realiza análisis inteligentes usando Ollama basado en contexto previo"
+        )
     
-    @classmethod
-    def get_description(cls) -> str:
-        return "Realiza análisis inteligentes usando Ollama basado en contexto previo"
+    def _define_parameters(self) -> List[ParameterDefinition]:
+        """Definir parámetros específicos del análisis Ollama"""
+        return [
+            ParameterDefinition(
+                name="prompt",
+                param_type="string",
+                required=True,
+                description="Prompt para el análisis inteligente",
+                min_value=10  # Mínimo 10 caracteres
+            ),
+            ParameterDefinition(
+                name="max_tokens",
+                param_type="integer",
+                required=False,
+                description="Máximo número de tokens para la respuesta",
+                default=1000,
+                min_value=100,
+                max_value=4000
+            )
+        ]
     
-    @classmethod
-    def get_parameters_schema(cls) -> Dict[str, Any]:
-        return {
-            "type": "object",
-            "properties": {
-                "prompt": {
-                    "type": "string",
-                    "description": "Prompt para el análisis inteligente"
-                },
-                "max_tokens": {
-                    "type": "integer",
-                    "description": "Máximo número de tokens para la respuesta",
-                    "default": 1000
-                }
-            },
-            "required": ["prompt"]
-        }
-    
-    def execute(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
+    def _execute_tool(self, parameters: Dict[str, Any], config: Dict[str, Any]) -> ToolExecutionResult:
         """
         Ejecutar análisis usando Ollama
         """
