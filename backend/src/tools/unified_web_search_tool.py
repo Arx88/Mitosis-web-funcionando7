@@ -242,12 +242,12 @@ class UnifiedWebSearchTool(BaseTool):
         self._emit_progress_eventlet(f"🌐 Motor de búsqueda: {search_engine}")
         
         try:
-            # ✨ FORZAR BROWSER-USE SIEMPRE - SIN FALLBACK
+            # ✨ USAR BROWSER-USE REAL - NAVEGACIÓN VERDADERA
             if BROWSER_USE_AVAILABLE:
-                self._emit_progress_eventlet("🚀 FORZANDO navegación browser-use en tiempo real...")
-                results = self._run_browser_use_search_forced(query, search_engine, max_results, extract_content)
+                self._emit_progress_eventlet("🚀 Iniciando navegación browser-use REAL en tiempo real...")
+                results = self._run_browser_use_search_original(query, search_engine, max_results, extract_content)
                 if results and len(results) > 0:
-                    self._emit_progress_eventlet(f"✅ browser-use FORZADO exitoso: {len(results)} resultados")
+                    self._emit_progress_eventlet(f"✅ browser-use REAL exitoso: {len(results)} resultados")
                     return results
             
             # SOLO SI BROWSER-USE NO ESTÁ DISPONIBLE
