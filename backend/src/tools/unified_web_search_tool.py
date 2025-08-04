@@ -352,7 +352,7 @@ class UnifiedWebSearchTool(BaseTool):
         return results
         
     def _run_browser_use_search_original(self, query: str, search_engine: str, max_results: int, extract_content: bool, task_id: str = None) -> List[Dict[str, Any]]:
-        """🤖 EJECUTAR BÚSQUEDA USANDO BROWSER-USE VERDADERO + OLLAMA IA INTELIGENTE"""
+        """🤖 EJECUTAR BÚSQUEDA USANDO BROWSER-USE VERDADERO VIA SUBPROCESS - NO EVENT LOOP CONFLICTS"""
         
         import asyncio
         
