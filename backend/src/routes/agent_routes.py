@@ -7237,41 +7237,52 @@ def execute_step_real(task_id: str, step_id: str, step: dict):
                                     # Buscar en múltiples ubicaciones posibles
                                     search_data = None
                                     
-                                    # Buscar en 'data'
-                                    if 'data' in result and isinstance(result['data'], list):
-                                        search_data = result['data']
-                                    # Buscar en 'tool_result'
-                                    elif 'tool_result' in result and isinstance(result['tool_result'], dict):
-                                        tool_res = result['tool_result']
-                                        if 'data' in tool_res and isinstance(tool_res['data'], list):
-                                            search_data = tool_res['data']
-                                        elif isinstance(tool_res, list):
-                                            search_data = tool_res
-                                    # Buscar en 'content' 
-                                    elif 'content' in result and isinstance(result['content'], dict):
-                                        content = result['content']
-                                        if 'data' in content and isinstance(content['data'], list):
-                                            search_data = content['data']
-                                        elif 'results' in content and isinstance(content['results'], list):
-                                            search_data = content['results']
+                                    # 1. Buscar en 'data.results'
+                                    if 'data' in result and isinstance(result['data'], dict):
+                                        data_obj = result['data']
+                                        if 'results' in data_obj and isinstance(data_obj['results'], list):
+                                            search_data = data_obj['results']
+                                        # 2. Buscar en 'data.content.results'
+                                        elif 'content' in data_obj and isinstance(data_obj['content'], dict):
+                                            content = data_obj['content']
+                                            if 'results' in content and isinstance(content['results'], list):
+                                                search_data = content['results']
+                                            elif 'search_results' in content and isinstance(content['search_results'], list):
+                                                search_data = content['search_results']
+                                        # 3. Buscar en 'data.search_results'
+                                        elif 'search_results' in data_obj and isinstance(data_obj['search_results'], list):
+                                            search_data = data_obj['search_results']
+                                        # 4. Buscar en 'data.tool_result'
+                                        elif 'tool_result' in data_obj and isinstance(data_obj['tool_result'], dict):
+                                            tool_res = data_obj['tool_result']
+                                            if 'results' in tool_res and isinstance(tool_res['results'], list):
+                                                search_data = tool_res['results']
+                                            elif 'search_results' in tool_res and isinstance(tool_res['search_results'], list):
+                                                search_data = tool_res['search_results']
                                     
                                     if search_data and isinstance(search_data, list):
                                         real_research_data += f"\n\n=== DATOS DE INVESTIGACIÓN REAL - PASO {prev_step.get('id', '?')} ===\n"
+                                        real_research_data += f"**Fuente**: {prev_step.get('title', 'Investigación web')}\n\n"
                                         for i, item in enumerate(search_data[:5], 1):
                                             if isinstance(item, dict):
                                                 title_item = item.get('title', 'Sin título')
                                                 snippet = item.get('snippet', item.get('description', item.get('content', '')))
                                                 url = item.get('url', item.get('link', ''))
-                                                real_research_data += f"\n{i}. **{title_item}**\n"
+                                                real_research_data += f"\n**{i}. {title_item}**\n"
                                                 if snippet:
-                                                    real_research_data += f"   {snippet}\n"
+                                                    real_research_data += f"   📄 {snippet}\n"
                                                 if url:
-                                                    real_research_data += f"   Fuente: {url}\n"
+                                                    real_research_data += f"   🔗 Fuente: {url}\n"
+                                                real_research_data += "\n"
                                     else:
                                         # Debug: mostrar estructura del resultado para debugging
                                         logger.info(f"🔍 DEBUG: Result structure for {prev_step.get('id')}: {list(result.keys())}")
-                                        if 'content' in result:
-                                            logger.info(f"🔍 DEBUG: Content keys: {list(result['content'].keys()) if isinstance(result['content'], dict) else type(result['content'])}")
+                                        if 'data' in result:
+                                            data_debug = result['data']
+                                            if isinstance(data_debug, dict):
+                                                logger.info(f"🔍 DEBUG: Data keys: {list(data_debug.keys())}")
+                                                if 'content' in data_debug and isinstance(data_debug['content'], dict):
+                                                    logger.info(f"🔍 DEBUG: Content keys: {list(data_debug['content'].keys())}")
                     
                     if not real_research_data:
                         real_research_data = "\n\n=== ADVERTENCIA ===\nNo se encontraron datos de investigación de pasos anteriores.\nEsto indica un problema en la preservación de datos entre pasos.\n"
