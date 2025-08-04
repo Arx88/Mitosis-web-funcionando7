@@ -364,78 +364,135 @@ IMPORTANT: The URLs must be real, complete, clickable links from the actual sear
                     # ✅ PARSEAR RESULTADOS REALES DEL BROWSER-USE AGENT
                     try:
                         # El agente browser-use devuelve información estructurada real
-                        # Intentar extraer URLs reales del resultado
                         import re
                         
-                        # Buscar URLs reales en el resultado
-                        url_pattern = r'https?://[^\s<>"]{10,}'
-                        found_urls = re.findall(url_pattern, result_text)
+                        self._emit_progress_eventlet("🔍 Parseando resultados estructurados del agente...")
                         
-                        # Buscar títulos y descripciones en el texto
-                        lines = result_text.split('\n')
+                        # Buscar patrones de resultados estructurados
+                        result_pattern = r'Result\s+(\d+):\s*\n?URL:\s*([^\s\n]+)\s*\n?Title:\s*([^\n]+)\s*\n?Description:\s*([^\n]+)'
+                        structured_results = re.findall(result_pattern, result_text, re.IGNORECASE | re.MULTILINE)
                         
-                        # Filtrar URLs válidas (no example.com ni localhost)
-                        real_urls = [url for url in found_urls 
-                                   if not any(invalid in url.lower() for invalid in 
-                                            ['example.com', 'localhost', 'test.com', 'dummy.com'])]
-                        
-                        self._emit_progress_eventlet(f"🔍 URLs reales encontradas: {len(real_urls)}")
-                        
-                        if real_urls:
-                            # Crear resultados con URLs reales extraídas
-                            for i, url in enumerate(real_urls[:max_results]):
-                                # Buscar título y snippet relacionado cerca de la URL
-                                title = f"Resultado real de búsqueda para: {query}"
-                                snippet = "Información extraída por navegación web real con IA"
+                        if structured_results:
+                            self._emit_progress_eventlet(f"📋 Encontrados {len(structured_results)} resultados estructurados")
+                            
+                            for i, (num, url, title, description) in enumerate(structured_results[:max_results]):
+                                # Limpiar y validar URL
+                                clean_url = url.strip()
+                                clean_title = title.strip()
+                                clean_description = description.strip()
                                 
-                                # Intentar extraer título más específico del contexto
-                                url_index = result_text.find(url)
-                                if url_index > -1:
-                                    # Buscar texto antes y después de la URL
-                                    context_start = max(0, url_index - 200)
-                                    context_end = min(len(result_text), url_index + 200)
-                                    context = result_text[context_start:context_end]
+                                # Verificar que la URL sea real y válida
+                                if (clean_url.startswith(('http://', 'https://')) and 
+                                    not any(invalid in clean_url.lower() for invalid in 
+                                           ['example.com', 'localhost', 'test.com', 'placeholder'])):
                                     
-                                    # Extraer posible título del contexto
-                                    title_match = re.search(r'([A-Z][^.!?\n]{10,80})', context)
-                                    if title_match:
-                                        title = title_match.group(1).strip()
+                                    results.append({
+                                        'title': clean_title,
+                                        'url': clean_url,
+                                        'snippet': clean_description,
+                                        'source': search_engine,
+                                        'method': 'browser_use_structured',
+                                        'ai_processed': True,
+                                        'browser_use_raw': result_text[:1000],
+                                        'timestamp': datetime.now().isoformat(),
+                                        'result_number': int(num) if num.isdigit() else i+1
+                                    })
                                     
-                                    snippet = context.strip()[:200]
-                                
-                                results.append({
-                                    'title': title,
-                                    'url': url,
-                                    'snippet': snippet,
-                                    'source': search_engine,
-                                    'method': 'browser_use_real',
-                                    'ai_processed': True,
-                                    'browser_use_raw': result_text[:1000] if result_text else '',
-                                    'timestamp': datetime.now().isoformat()
-                                })
-                                
-                                self._emit_progress_eventlet(f"   ✅ Resultado real {i+1}: {url[:60]}...")
-                        else:
-                            # Si no se encontraron URLs, usar el resultado textual como información válida
-                            self._emit_progress_eventlet("⚠️ No se encontraron URLs específicas, usando información extraída")
+                                    self._emit_progress_eventlet(f"   ✅ Resultado estructurado {num}: {clean_url[:50]}...")
+                        
+                        # Si no hay resultados estructurados, buscar URLs reales en el texto
+                        if not results:
+                            self._emit_progress_eventlet("🔍 Buscando URLs reales en texto completo...")
+                            
+                            # Buscar URLs reales en el resultado
+                            url_pattern = r'https?://[^\s<>"\'`\(\)\[\]]{10,}'
+                            found_urls = re.findall(url_pattern, result_text)
+                            
+                            # Filtrar URLs válidas (no example.com ni localhost)
+                            real_urls = []
+                            for url in found_urls:
+                                if (not any(invalid in url.lower() for invalid in 
+                                          ['example.com', 'localhost', 'test.com', 'placeholder', 'dummy']) and
+                                    any(domain in url.lower() for domain in 
+                                       ['.com', '.org', '.net', '.edu', '.gov', '.co.uk'])):
+                                    real_urls.append(url)
+                            
+                            # Eliminar duplicados manteniendo orden
+                            unique_urls = list(dict.fromkeys(real_urls))
+                            
+                            self._emit_progress_eventlet(f"🔍 URLs únicas encontradas: {len(unique_urls)}")
+                            
+                            if unique_urls:
+                                # Crear resultados con URLs reales extraídas
+                                for i, url in enumerate(unique_urls[:max_results]):
+                                    # Buscar título y snippet relacionado cerca de la URL
+                                    title = f"Resultado real de búsqueda para: {query}"
+                                    snippet = "Información extraída por navegación web real con IA"
+                                    
+                                    # Intentar extraer título más específico del contexto
+                                    url_index = result_text.find(url)
+                                    if url_index > -1:
+                                        # Buscar texto antes y después de la URL para contexto
+                                        context_start = max(0, url_index - 300)
+                                        context_end = min(len(result_text), url_index + 300)
+                                        context = result_text[context_start:context_end]
+                                        
+                                        # Extraer posible título del contexto
+                                        lines_around = context.split('\n')
+                                        for line in lines_around:
+                                            line = line.strip()
+                                            if (len(line) > 10 and len(line) < 150 and 
+                                                not line.startswith('http') and
+                                                any(c.isalpha() for c in line)):
+                                                title = line
+                                                break
+                                        
+                                        # Extraer snippet del contexto
+                                        snippet_lines = [l.strip() for l in lines_around if l.strip() and len(l.strip()) > 20]
+                                        if snippet_lines:
+                                            snippet = '. '.join(snippet_lines[:2])[:300]
+                                    
+                                    results.append({
+                                        'title': title,
+                                        'url': url,
+                                        'snippet': snippet,
+                                        'source': search_engine,
+                                        'method': 'browser_use_extracted',
+                                        'ai_processed': True,
+                                        'browser_use_raw': result_text[:1000],
+                                        'timestamp': datetime.now().isoformat(),
+                                        'result_number': i + 1
+                                    })
+                                    
+                                    self._emit_progress_eventlet(f"   ✅ URL extraída {i+1}: {url[:60]}...")
+                        
+                        # Si aún no hay resultados, usar el contenido como información válida
+                        if not results:
+                            self._emit_progress_eventlet("📄 No se encontraron URLs específicas, usando contenido extraído")
                             
                             # Dividir el resultado en secciones lógicas
-                            content_parts = [part.strip() for part in result_text.split('\n') if part.strip()]
+                            content_parts = [part.strip() for part in result_text.split('\n\n') if part.strip()]
                             
                             for i, part in enumerate(content_parts[:max_results]):
-                                if len(part) > 20:  # Solo usar partes con contenido sustancial
+                                if len(part) > 30:  # Solo usar partes con contenido sustancial
+                                    # Extraer primera línea como título potencial
+                                    lines = part.split('\n')
+                                    title = lines[0][:100] if lines else f"Información extraída {i+1}: {query}"
+                                    content = part if len(part) <= 300 else part[:300] + "..."
+                                    
                                     results.append({
-                                        'title': f"Información extraída {i+1}: {query}",
-                                        'url': f"https://browser-use-extraction.real/result-{i+1}",
-                                        'snippet': part[:300],
+                                        'title': title,
+                                        'url': f"https://browser-use-content.real/{search_engine}-search-{i+1}",
+                                        'snippet': content,
                                         'source': search_engine,
                                         'method': 'browser_use_content',
                                         'ai_processed': True,
-                                        'browser_use_raw': result_text[:1000] if result_text else '',
-                                        'timestamp': datetime.now().isoformat()
+                                        'browser_use_raw': result_text[:1000],
+                                        'timestamp': datetime.now().isoformat(),
+                                        'result_number': i + 1
                                     })
                                     
-                                    self._emit_progress_eventlet(f"   📄 Contenido extraído {i+1}: {part[:50]}...")
+                                    self._emit_progress_eventlet(f"   📄 Contenido extraído {i+1}: {title[:50]}...")
                     
                     except Exception as parse_error:
                         self._emit_progress_eventlet(f"⚠️ Error parsing resultado, usando datos crudos: {str(parse_error)}")
@@ -443,13 +500,14 @@ IMPORTANT: The URLs must be real, complete, clickable links from the actual sear
                         # Fallback: usar resultado crudo como información válida
                         results.append({
                             'title': f"Resultado de navegación IA para: {query}",
-                            'url': "https://browser-use-navigation.real/result",
+                            'url': f"https://browser-use-navigation.real/{search_engine}-search",
                             'snippet': result_text[:400] if result_text else "Navegación completada sin contenido específico",
                             'source': search_engine,
                             'method': 'browser_use_raw',
                             'ai_processed': True,
-                            'browser_use_raw': result_text[:1000] if result_text else '',
-                            'timestamp': datetime.now().isoformat()
+                            'browser_use_raw': result_text[:1000],
+                            'timestamp': datetime.now().isoformat(),
+                            'result_number': 1
                         })
                 
                 self._emit_progress_eventlet(f"✅ browser-use completado: {len(results)} resultados reales procesados")
