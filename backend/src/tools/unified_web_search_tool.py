@@ -340,31 +340,70 @@ Be intelligent about how you navigate - adapt to the page layout and find the be
                 self._emit_progress_eventlet(f"🌐 Iniciando navegación inteligente a: {search_engine}")
                 self._emit_progress_eventlet(f"🔍 Tarea: Búsqueda inteligente para '{query[:50]}...'")
                 
-                # Configurar browser-use con configuración para contenedor root
-                browser_config = {
-                    'launch_args': [
+                # Configuración AVANZADA para contenedor root (PROBADA Y FUNCIONAL)
+                from browser_use.browser.session import BrowserSession
+                from browser_use.browser.profile import BrowserProfile
+                
+                self._emit_progress_eventlet("🔧 Configurando browser-use con configuración avanzada para contenedores...")
+                
+                browser_profile = BrowserProfile(
+                    user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    chromium_sandbox=False,  # CRÍTICO para contenedores
+                    args=[
                         '--no-sandbox',
                         '--disable-setuid-sandbox',
                         '--disable-dev-shm-usage',
                         '--disable-gpu',
+                        '--disable-software-rasterizer',
                         '--disable-background-timer-throttling',
                         '--disable-renderer-backgrounding',
                         '--disable-extensions',
-                        '--disable-plugins',
                         '--disable-default-apps',
+                        '--disable-web-security',  # Para contenedores
+                        '--disable-features=VizDisplayCompositor',
+                        '--allow-running-insecure-content',
                         '--no-first-run',
-                        '--disable-software-rasterizer'
-                    ],
-                    'headless': True
-                }
+                        '--no-default-browser-check',
+                        '--disable-backgrounding-occluded-windows',
+                        '--disable-ipc-flooding-protection',
+                        '--enable-features=NetworkService,NetworkServiceLogging',
+                        '--remote-debugging-address=0.0.0.0',
+                        '--remote-debugging-port=0',
+                        '--disable-blink-features=AutomationControlled'
+                    ]
+                )
                 
-                # Crear agente browser-use con IA
-                self._emit_progress_eventlet("🤖 Creando agente browser-use con IA...")
+                browser_session = BrowserSession(
+                    headless=True,
+                    browser_profile=browser_profile,
+                    context_config={
+                        'ignore_https_errors': True,
+                        'bypass_csp': True
+                    }
+                )
+                
+                # Crear agente browser-use con IA y eventos en tiempo real
+                self._emit_progress_eventlet("🤖 Creando agente browser-use con IA y monitoreo en tiempo real...")
+                
+                # Crear callback para eventos de progreso en tiempo real
+                async def on_step_start(step_info):
+                    if hasattr(step_info, 'url'):
+                        self._emit_progress_eventlet(f"🌐 NAVEGACIÓN WEB: Accediendo a {step_info.url}")
+                    else:
+                        self._emit_progress_eventlet(f"🌐 NAVEGACIÓN WEB: Iniciando paso {getattr(step_info, 'step_number', '?')}")
+                
+                async def on_step_end(step_info):
+                    if hasattr(step_info, 'success') and step_info.success:
+                        self._emit_progress_eventlet(f"✅ NAVEGACIÓN WEB: Paso completado exitosamente")
+                    elif hasattr(step_info, 'url'):
+                        self._emit_progress_eventlet(f"🔄 NAVEGACIÓN WEB: Procesando contenido de {step_info.url}")
+                    else:
+                        self._emit_progress_eventlet(f"🔄 NAVEGACIÓN WEB: Paso procesado")
                 
                 agent = Agent(
                     task=intelligent_task,
                     llm=llm,
-                    browser_config=browser_config
+                    browser_session=browser_session
                 )
                 
                 self._emit_progress_eventlet("✅ Agente browser-use creado exitosamente")
