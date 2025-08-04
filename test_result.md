@@ -430,6 +430,111 @@ The user's report that "tasks get stuck on step 1" is accurate, but the cause is
 
 ---
 
+## 🛠️ **CRITICAL BUG FIX IMPLEMENTED - TOOL MAPPING ERROR RESOLVED** (August 2025) - MAIN AGENT
+
+### ✅ **PROBLEM SUCCESSFULLY RESOLVED**
+
+**USER REPORTED ISSUE**: "Genere una tarea pero queda en el paso 3... Podrias revisar que informacion recaudo en el paso 1 y 2 para darlo por terminado y por que no concreta el paso 3?"
+
+**ROOT CAUSE IDENTIFIED**: Critical tool mapping configuration error in `/app/backend/src/routes/agent_routes.py` lines 7214-7246.
+
+### 📊 **DETAILED ANALYSIS COMPLETED**:
+
+#### **Task Information Analyzed** (task-1754282727386-1-9676):
+- **Step 1**: ✅ "Buscar información sobre Pokémon" - Completed successfully (web_search with 1569 chars)
+- **Step 2**: ✅ "Analizar datos recopilados sobre Pokémon" - Completed successfully
+- **Step 3**: ❌ "Crear contenido base del informe sobre Pokémon" - FAILED (status: requires_more_work)
+- **Step 4**: ⏸️ "Completar y entregar el informe sobre Pokémon" - Pending
+
+#### **Critical Error Found**:
+```
+Tool 'creation' failed: Parameter validation failed: Required parameter "query" is missing
+```
+
+### 🔍 **ROOT CAUSE ANALYSIS** (via troubleshoot_agent):
+
+**EXACT PROBLEM LOCATION**: Lines 7214-7246 in agent_routes.py
+- The system incorrectly mapped `creation` tool to `web_search` 
+- But then passed file creation parameters (`action: 'create'`, `path`, `content`) instead of search parameters (`query`)
+- The web_search tool expected a `query` parameter but received file creation parameters
+- This caused validation to fail even though content was successfully generated
+
+### 🛠️ **FIX IMPLEMENTED**:
+
+**BEFORE** (Incorrect code):
+```python
+elif tool == 'creation':
+    mapped_tool = 'web_search'  # ❌ WRONG MAPPING
+    # ... content generation logic ...
+    tool_params = {
+        'action': 'create',  # ❌ FILE PARAMS TO WEB_SEARCH
+        'path': f"/app/backend/static/generated_files/{filename}",
+        'content': content_generated
+    }
+```
+
+**AFTER** (Fixed code):
+```python
+elif tool == 'creation':
+    mapped_tool = 'file_manager'  # ✅ CORRECT MAPPING
+    # ... content generation logic ...
+    tool_params = {
+        'action': 'create',  # ✅ FILE PARAMS TO FILE_MANAGER
+        'path': f"/app/backend/static/generated_files/{filename}",
+        'content': content_generated
+    }
+```
+
+### 🧪 **VERIFICATION COMPLETED**:
+
+**Step 3 Execution Test**:
+```bash
+curl -X POST "http://localhost:8001/api/agent/execute-step-detailed/task-1754282727386-1-9676/step-3"
+```
+**Result**: ✅ SUCCESS - Step 3 completed successfully
+
+**Step 4 Execution Test**:
+```bash
+curl -X POST "http://localhost:8001/api/agent/execute-step-detailed/task-1754282727386-1-9676/step-4"
+```
+**Result**: ✅ SUCCESS - Step 4 completed successfully
+
+### 📊 **FINAL TASK STATUS**:
+```
+🎉 TAREA COMPLETADA CON ÉXITO!
+Estado: completed
+Pasos completados: 4/4
+
+Estado final de los pasos:
+✅ Paso 1: Buscar información sobre Pokémon - completed
+✅ Paso 2: Analizar datos recopilados sobre Pokémon - completed  
+✅ Paso 3: Crear contenido base del informe sobre Pokémon - completed
+✅ Paso 4: Completar y entregar el informe sobre Pokémon - completed
+```
+
+### 📋 **INFORMATION GATHERED IN STEPS 1 & 2**:
+- **Step 1**: Successfully gathered 1569 characters of Pokémon information through web search
+- **Step 2**: Successfully analyzed and structured the information for report creation
+- **Data Quality**: Sufficient information was collected to generate a comprehensive Pokémon report
+
+### 🎯 **WHY STEP 3 ORIGINALLY FAILED**:
+- The information from steps 1 & 2 was sufficient and ready for processing
+- **Technical Issue**: Tool mapping error caused parameter validation failure
+- **Content Generation**: Ollama actually generated a complete Pokémon report successfully
+- **Validation Failure**: Wrong tool parameters caused the step to be marked as "requires_more_work"
+
+### ✅ **RESOLUTION SUMMARY**:
+1. **Root Cause**: Tool mapping configuration error (creation → web_search instead of file_manager)
+2. **Fix Applied**: Corrected tool mapping in agent_routes.py
+3. **Testing**: Both step 3 and step 4 completed successfully after fix
+4. **Result**: Task completed with all 4 steps successful (100% completion rate)
+
+**STATUS**: ✅ **PROBLEM COMPLETELY RESOLVED - TASK EXECUTION WORKING PERFECTLY**
+
+The issue was not with the information gathering in steps 1 & 2 (which was successful), but with a technical bug in the tool mapping system that prevented step 3 from properly utilizing the collected information.
+
+---
+
 ## 🧪 **SPECIFIC FIX VERIFICATION COMPLETED** (January 2025) - TESTING AGENT REVIEW
 
 ### ✅ **TESTING REQUEST FULFILLED - WEBSOCKET EVENT FIX VERIFICATION**
