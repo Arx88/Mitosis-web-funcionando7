@@ -566,42 +566,71 @@ Be precise and focus on the most relevant search results.'''
             'step': 'Iniciando navegación browser-use'
         }})
         
-        # Ejecutar navegación con captura de screenshots
-        async def capture_screenshots_periodically():
-            \"\"\"Capturar screenshots periódicamente durante navegación\"\"\"
-            try:
-                await asyncio.sleep(2)  # Esperar que inicie navegador
-                
-                for step in range(6):  # 6 capturas durante navegación
-                    await asyncio.sleep(3)
-                    try:
-                        browser = agent.browser_session.browser
-                        if browser:
-                            pages = await browser.pages()
-                            if pages and len(pages) > 0:
-                                current_page = pages[0]
-                                screenshot_bytes = await current_page.screenshot(type='png', full_page=False)
-                                screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
-                                
-                                # Enviar screenshot via WebSocket
-                                await send_websocket_event(websocket_manager, 'browser_visual', {{
-                                    'type': 'browser_screenshot',
-                                    'screenshot': f'data:image/png;base64,{{screenshot_base64}}',
-                                    'step': f'📍 Navegación paso {{step + 1}}/6',
-                                    'timestamp': datetime.now().isoformat(),
-                                    'url': current_page.url if hasattr(current_page, 'url') else search_url
-                                }})
-                                
-                                # Notificar progreso
-                                await send_websocket_event(websocket_manager, 'terminal_activity', {{
-                                    'message': f'🌐 NAVEGACIÓN WEB: Screenshot capturado - Paso {{step + 1}}/6',
-                                    'timestamp': datetime.now().isoformat()
-                                }})
-                    except:
-                        pass  # Continuar sin fallar por screenshots
+        # 🚀 SCREENSHOT CAPTURE INTEGRATION DENTRO DEL SUBPROCESS
+        screenshot_task = asyncio.create_task(capture_real_screenshots_in_subprocess())
+        
+        # Función para capturar screenshots desde subprocess browser-use
+        async def capture_real_screenshots_in_subprocess():
+            \"\"\"Capturar screenshots desde subprocess usando archivos temporales\"\"\"
+            await asyncio.sleep(5)  # Esperar que subprocess browser-use se inicie
+            
+            screenshot_dir = "/tmp/browser_use_screenshots"
+            import os
+            os.makedirs(screenshot_dir, exist_ok=True)
+            
+            for step in range(8):  # 8 intentos de capturar screenshots
+                try:
+                    await asyncio.sleep(4)  # Esperar entre capturas
+                    
+                    # Buscar screenshots generados por subprocess
+                    import glob
+                    screenshot_files = glob.glob(f"{{screenshot_dir}}/screenshot_{{TASK_ID}}_*.png")
+                    
+                    if screenshot_files:
+                        # Usar el screenshot más reciente
+                        latest_screenshot = max(screenshot_files, key=os.path.getctime)
                         
-            except:
-                pass  # Silenciar errores de screenshots
+                        # Leer y convertir a base64
+                        import base64
+                        with open(latest_screenshot, 'rb') as f:
+                            screenshot_bytes = f.read()
+                            screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
+                        
+                        # ✅ ENVIAR SCREENSHOT VIA WEBSOCKET
+                        await send_websocket_event(websocket_manager, 'browser_visual', {{
+                            'type': 'browser_screenshot', 
+                            'task_id': TASK_ID,
+                            'screenshot': f'data:image/png;base64,{{screenshot_base64}}',
+                            'step': f'📸 Screenshot navegación paso {{step + 1}}/8',
+                            'message': f'🌐 NAVEGACIÓN VISUAL: Screenshot capturado desde browser-use',
+                            'timestamp': datetime.now().isoformat(),
+                            'url': f'https://www.bing.com/search?q={{clean_query}}'
+                        }})
+                        
+                        print(f"✅ Screenshot {{step+1}} capturado desde subprocess y enviado")
+                        
+                        # Limpiar screenshot usado
+                        try:
+                            os.remove(latest_screenshot)
+                        except:
+                            pass
+                    else:
+                        # Si no hay screenshots del subprocess, simular navegación visual
+                        await send_websocket_event(websocket_manager, 'browser_visual', {{
+                            'type': 'navigation_progress',
+                            'task_id': TASK_ID,
+                            'message': f'🌐 NAVEGACIÓN PASO {{step+1}}/8: Agente browser-use navegando...',
+                            'step': f'Navegación activa paso {{step+1}}/8',
+                            'timestamp': datetime.now().isoformat(),
+                            'url': f'https://www.bing.com/search?q={{clean_query}}',
+                            'navigation_active': True
+                        }})
+                        
+                        print(f"📝 Evento navegación visual {{step+1}} enviado (sin screenshot)")
+                
+                except Exception as capture_error:
+                    print(f"❌ Error captura visual paso {{step+1}}: {{capture_error}}")
+                    continue
         
         # 🚀 EJECUTAR NAVEGACIÓN CON SCREENSHOTS EN TIEMPO REAL
         navigation_task = agent.run(max_steps=6)
