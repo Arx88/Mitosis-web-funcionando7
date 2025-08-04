@@ -764,7 +764,7 @@ if __name__ == "__main__":
                 self._emit_progress_eventlet("🚀 Lanzando navegación browser-use autónoma...")
                 
                 process = subprocess.run([
-                    'python', temp_script_path
+                    '/root/.venv/bin/python', temp_script_path
                 ], capture_output=True, text=True, timeout=120, cwd='/app/backend')
                 
                 if process.returncode == 0:
