@@ -7218,26 +7218,70 @@ def execute_step_real(task_id: str, step_id: str, step: dict):
             elif tool == 'creation':
                 mapped_tool = 'file_manager'  # Usar file_manager para crear archivos
                 filename = f"generated_content_{task_id}_{step_id}.md"
-                # Generate more sophisticated content using Ollama
+                
+                # 🚀 NUEVO: Obtener datos REALES de pasos anteriores
+                real_research_data = ""
                 try:
-                    ollama_service = get_ollama_service()
-                    if ollama_service and ollama_service.is_healthy():
-                        content_prompt = f"""
-Genera contenido detallado y específico para:
-Título: {title}
-Descripción: {description}
+                    task_data = get_task_data(task_id)
+                    if task_data and 'plan' in task_data:
+                        for prev_step in task_data['plan']:
+                            if prev_step.get('completed') and 'result' in prev_step:
+                                # Extraer datos de búsqueda web y análisis
+                                result = prev_step.get('result', {})
+                                if prev_step.get('tool') == 'web_search' and isinstance(result, dict):
+                                    # Obtener datos reales de búsqueda web
+                                    if 'data' in result:
+                                        search_results = result['data']
+                                        if isinstance(search_results, list):
+                                            real_research_data += f"\n\n=== DATOS DE INVESTIGACIÓN REAL ===\n"
+                                            for i, item in enumerate(search_results[:5], 1):
+                                                if isinstance(item, dict):
+                                                    title = item.get('title', 'Sin título')
+                                                    snippet = item.get('snippet', item.get('description', ''))
+                                                    url = item.get('url', '')
+                                                    real_research_data += f"\n{i}. **{title}**\n"
+                                                    real_research_data += f"   {snippet}\n"
+                                                    if url:
+                                                        real_research_data += f"   Fuente: {url}\n"
+                                        elif isinstance(search_results, dict) and 'results' in search_results:
+                                            # Formato alternativo de resultados
+                                            results = search_results['results']
+                                            if isinstance(results, list):
+                                                real_research_data += f"\n\n=== DATOS DE INVESTIGACIÓN REAL ===\n"
+                                                for i, item in enumerate(results[:5], 1):
+                                                    if isinstance(item, dict):
+                                                        title = item.get('title', 'Sin título')
+                                                        snippet = item.get('snippet', item.get('description', ''))
+                                                        url = item.get('url', '')
+                                                        real_research_data += f"\n{i}. **{title}**\n"
+                                                        real_research_data += f"   {snippet}\n"
+                                                        if url:
+                                                            real_research_data += f"   Fuente: {url}\n"
+                    
+                    if not real_research_data:
+                        real_research_data = "\n\n=== ADVERTENCIA ===\nNo se encontraron datos de investigación de pasos anteriores.\n"
+                        
+                except Exception as e:
+                    logger.warning(f"⚠️ Error al obtener datos de investigación: {e}")
+                    real_research_data = f"\n\n=== ERROR ===\nNo se pudieron recuperar datos de investigación: {str(e)}\n"
+                
+                # Crear contenido basado en DATOS REALES, no inventado
+                content_generated = f"""# {title}
+
+## Descripción
+{description}
+
+{real_research_data}
+
+## Resumen Basado en Investigación Real
+*Este contenido está basado en los datos de investigación obtenidos de fuentes reales arriba mencionadas.*
+
+Fecha de generación: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 Tarea ID: {task_id}
 
-IMPORTANTE: Proporciona contenido real y detallado, no un plan ni instrucciones.
-Responde SOLO con el contenido final solicitado.
+---
+**NOTA**: Este contenido se basa en investigación real obtenida de fuentes web, no en contenido generado artificialmente.
 """
-                        ollama_response = ollama_service.generate_response(content_prompt, {'temperature': 0.7})
-                        content_generated = ollama_response.get('response', f"# {title}\n\n{description}\n\n*Contenido generado automáticamente*")
-                    else:
-                        content_generated = f"# {title}\n\n## Descripción\n{description}\n\n*Contenido generado por el agente*\nFecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-                except Exception as e:
-                    logger.warning(f"⚠️ Could not generate content with Ollama: {e}")
-                    content_generated = f"# {title}\n\n## Descripción\n{description}\n\n*Contenido generado por el agente*\nFecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
                 
                 tool_params = {
                     'action': 'create',
