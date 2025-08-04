@@ -7206,67 +7206,15 @@ def execute_step_real(task_id: str, step_id: str, step: dict):
                     'num_results': 5
                 }
             elif tool in ['analysis', 'data_analysis', 'synthesis']:
-                # CORREGIDO: Como no hay herramienta ollama_chat, usar procesamiento directo con Ollama
-                mapped_tool = None  # Procesamiento directo sin herramienta
-                
-                try:
-                    ollama_service = get_ollama_service()
-                    if ollama_service and ollama_service.is_healthy():
-                        analysis_prompt = f"""
-Analiza detalladamente la información sobre: "{title}"
-Descripción de la tarea: {description}
-
-INSTRUCCIONES:
-1. Si es sobre Pokémon: proporciona datos específicos sobre especies, tipos, habilidades, evoluciones
-2. Si es sobre otro tema: proporciona análisis sustantivo y específico
-3. NO des instrucciones ni pasos, DA EL ANÁLISIS REAL
-4. Mínimo 300 palabras de contenido sustantivo
-5. Incluye datos concretos y específicos del tema solicitado
-
-Responde SOLO con el análisis detallado:
-"""
-                        ollama_response = ollama_service.generate_response(analysis_prompt, {'temperature': 0.7})
-                        analysis_content = ollama_response.get('response', '')
-                        
-                        if analysis_content and len(analysis_content.strip()) > 100:
-                            step_result = {
-                                'success': True,
-                                'type': 'analysis',
-                                'summary': f'Análisis completado: {len(analysis_content)} caracteres generados',
-                                'content': analysis_content,
-                                'response': analysis_content,  # Para compatibilidad con validador
-                                'tool_used': 'ollama_analysis_direct',
-                                'analysis_length': len(analysis_content),
-                                'data': {'analysis': analysis_content}
-                            }
-                        else:
-                            step_result = {
-                                'success': False,
-                                'type': 'analysis',
-                                'summary': 'Análisis falló - contenido insuficiente generado',
-                                'error': 'Ollama no generó contenido suficiente para el análisis',
-                                'content': '',
-                                'tool_used': 'ollama_analysis_direct'
-                            }
-                    else:
-                        step_result = {
-                            'success': False,
-                            'type': 'analysis',
-                            'summary': 'Análisis falló - Ollama no disponible',
-                            'error': 'Servicio Ollama no disponible para análisis',
-                            'content': '',
-                            'tool_used': 'ollama_analysis_direct'
-                        }
-                except Exception as e:
-                    logger.error(f"Error en análisis directo con Ollama: {e}")
-                    step_result = {
-                        'success': False,
-                        'type': 'analysis',
-                        'summary': f'Error en análisis: {str(e)}',
-                        'error': str(e),
-                        'content': '',
-                        'tool_used': 'ollama_analysis_direct'
-                    }
+                # CORREGIDO: Usar web_search (herramienta REAL) para análisis
+                mapped_tool = 'web_search' 
+                # Crear query específico para análisis del tema
+                analysis_query = f"análisis detallado {title} {description}".replace(':', '').replace('Analizar datos sobre', '').strip()
+                tool_params = {
+                    'query': analysis_query,
+                    'num_results': 5,
+                    'extract_content': True
+                }
             elif tool == 'creation':
                 mapped_tool = 'file_manager'  # Usar file_manager para crear archivos
                 filename = f"generated_content_{task_id}_{step_id}.md"
