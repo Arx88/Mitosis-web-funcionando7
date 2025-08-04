@@ -1738,23 +1738,38 @@ except Exception as e:
             self._emit_progress_eventlet(f"🌐 NAVEGACIÓN WEB: {description}")
     
     def _emit_browser_visual(self, data):
-        """Emitir eventos de navegación visual en tiempo real"""
+        """🔥 EMITIR EVENTOS DE NAVEGACIÓN VISUAL EN TIEMPO REAL - SOLUCIÓN CRÍTICA PARA BROWSER_VISUAL"""
         try:
             if hasattr(self, 'websocket_manager') and self.websocket_manager and self.task_id:
                 # Agregar task_id al data
-                data['task_id'] = self.task_id
-                self.websocket_manager.emit_to_task(self.task_id, 'browser_visual', data)
+                enhanced_data = {
+                    **data,
+                    'task_id': self.task_id,
+                    'timestamp': datetime.now().isoformat()
+                }
+                self.websocket_manager.emit_to_task(self.task_id, 'browser_visual', enhanced_data)
                 
                 # También emitir como terminal_activity para máxima visibilidad
                 terminal_data = {
-                    'message': data.get('message', 'Navegación en progreso'),
-                    'timestamp': data.get('timestamp', datetime.now().isoformat()),
-                    'task_id': self.task_id
+                    'message': f"📸 NAVEGACIÓN VISUAL: {data.get('message', 'Screenshot capturado')}",
+                    'timestamp': datetime.now().isoformat(),
+                    'level': 'info'
                 }
                 self.websocket_manager.emit_to_task(self.task_id, 'terminal_activity', terminal_data)
+                
+                print(f"✅ BROWSER_VISUAL EVENT SENT: {data.get('type')} to task {self.task_id}")
+                
+            else:
+                # Fallback: emitir al menos como mensaje de progreso
+                message = f"📸 {data.get('message', 'Navegación visual')}"
+                self._emit_progress_eventlet(message)
+                print(f"⚠️ BROWSER_VISUAL FALLBACK: {message}")
+                
         except Exception as e:
-            # Fallar silenciosamente para no interrumpir búsqueda
-            pass
+            # No fallar por errores de WebSocket - solo logear
+            error_msg = f"❌ Error emitiendo browser_visual: {str(e)}"
+            print(error_msg)
+            self._emit_progress_eventlet(error_msg)
 
     def _emit_progress_eventlet(self, message: str):
         """📡 EMITIR PROGRESO COMPATIBLE CON EVENTLET - VERSIÓN MEJORADA PARA NAVEGACIÓN EN TIEMPO REAL"""
