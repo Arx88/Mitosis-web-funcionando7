@@ -344,6 +344,34 @@ try:
             logger.error(f"❌ Error emitting event: {e}")
             return False
     
+    # 🚀 NUEVA FUNCIÓN: Verificar si hay clientes listos para browser_visual
+    def has_ready_clients_for_task(task_id: str) -> bool:
+        """Verificar si hay clientes conectados y listos para recibir browser_visual"""
+        if not hasattr(app, 'active_task_clients'):
+            return False
+        
+        active_clients = app.active_task_clients.get(task_id, set())
+        logger.info(f"🔍 Task {task_id} has {len(active_clients)} active clients: {list(active_clients)}")
+        return len(active_clients) > 0
+    
+    # 🚀 NUEVA FUNCIÓN: Emitir browser_visual con verificación de clientes
+    def emit_browser_visual_safe(task_id: str, data: dict) -> bool:
+        """Emitir evento browser_visual solo si hay clientes listos"""
+        if not has_ready_clients_for_task(task_id):
+            logger.warning(f"⚠️ No ready clients for browser_visual in task {task_id} - skipping event")
+            return False
+        
+        room = f"task_{task_id}"
+        enhanced_data = {
+            **data,
+            'task_id': task_id,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        logger.info(f"📸 Emitting browser_visual to room {room} with {len(app.active_task_clients.get(task_id, set()))} ready clients")
+        socketio.emit('browser_visual', enhanced_data, room=room)
+        return True
+    
     app.socketio = socketio
     app.emit_task_event = emit_task_event
     logger.info("✅ SocketIO inicializado exitosamente")
