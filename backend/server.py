@@ -374,6 +374,8 @@ try:
     
     app.socketio = socketio
     app.emit_task_event = emit_task_event
+    app.has_ready_clients_for_task = has_ready_clients_for_task  # 🚀 NEW
+    app.emit_browser_visual_safe = emit_browser_visual_safe      # 🚀 NEW
     logger.info("✅ SocketIO inicializado exitosamente")
     
     # ✅ CRITICAL FIX: Inicializar WebSocket Manager
