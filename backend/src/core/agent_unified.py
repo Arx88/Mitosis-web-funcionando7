@@ -680,8 +680,8 @@ Responde de forma directa, amigable y concisa."""
                 
                 # 🔄 CRITICAL FIX: Persist step completion to database
                 try:
-                    # Update step status in database
-                    await self.task_manager_service.update_task_step_status(
+                    # Update step status in database (synchronous call)
+                    self.task_manager_service.update_task_step_status(
                         task.id, step.id, "completed", result
                     )
                     
@@ -689,8 +689,8 @@ Responde de forma directa, amigable y concisa."""
                     completed_steps = sum(1 for s in task.steps if s.status == TaskStatus.COMPLETED)
                     current_step_index = next((i for i, s in enumerate(task.steps) if s.status != TaskStatus.COMPLETED), len(task.steps))
                     
-                    # Persist updated counters to database
-                    await self.task_manager_service.update_task(task.id, {
+                    # Persist updated counters to database (synchronous call)
+                    self.task_manager_service.update_task(task.id, {
                         'completed_steps': completed_steps,
                         'current_step': current_step_index,
                         'updated_at': datetime.now().isoformat()
