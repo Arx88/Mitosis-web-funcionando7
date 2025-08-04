@@ -7206,10 +7206,24 @@ def execute_step_real(task_id: str, step_id: str, step: dict):
                     'num_results': 5
                 }
             elif tool in ['analysis', 'data_analysis', 'synthesis']:
-                mapped_tool = 'web_search'  # Usar web_search para análisis de datos
+                # CORREGIDO: Usar ollama para análisis real en lugar de web_search
+                mapped_tool = 'ollama_chat'  # Usar ollama para análisis
+                analysis_prompt = f"""
+Analiza detalladamente la siguiente información para completar la tarea: "{title}"
+Descripción: {description}
+
+INSTRUCCIONES IMPORTANTES:
+1. Proporciona un análisis real y detallado, no un resumen de pasos
+2. Si necesitas información específica que no tienes, indica exactamente qué información falta
+3. El análisis debe ser sustantivo y específico al tema solicitado
+4. Responde SOLO con el análisis detallado, no con instrucciones o planes
+
+Tema a analizar: {title}
+Contexto: {description}
+"""
                 tool_params = {
-                    'query': f"análisis datos mercado {title} {description}",
-                    'max_results': 5
+                    'message': analysis_prompt,
+                    'model': 'llama3.1:8b'
                 }
             elif tool == 'creation':
                 mapped_tool = 'file_manager'  # Usar file_manager para crear archivos
