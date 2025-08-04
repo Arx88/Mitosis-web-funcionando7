@@ -378,6 +378,21 @@ except Exception as e:
             logger.error(f"Chat error: {e}")
             return jsonify({"error": "Internal server error"}), 500
     
+    @agent_bp.route('/get-all-tasks', methods=['GET'])
+    def get_all_tasks():
+        """Endpoint de tareas básico de fallback"""
+        try:
+            # Respuesta básica para las tareas
+            tasks = {
+                "tasks": [],
+                "total": 0,
+                "timestamp": datetime.now().isoformat()
+            }
+            return jsonify(tasks), 200
+        except Exception as e:
+            logger.error(f"Get all tasks error: {e}")
+            return jsonify({"error": "Internal server error"}), 500
+    
     @agent_bp.route('/status', methods=['GET'])
     def agent_status():
         """Status del agente"""
