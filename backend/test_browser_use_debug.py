@@ -89,16 +89,6 @@ async def test_browser_use():
         
         # Ahora probar con nuestro modelo
         
-        # Crear sesión de browser
-        browser_session = BrowserSession(
-            headless=True,
-            browser_profile=BrowserProfile(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-            )
-        )
-        
-        print("✅ Sesión de browser creada")
-        
         # Crear Agent - con parámetros más específicos
         print("🔧 Creando Agent con configuración detallada...")
         
