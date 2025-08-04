@@ -242,13 +242,29 @@ class UnifiedWebSearchTool(BaseTool):
         self._emit_progress_eventlet(f"🌐 Motor de búsqueda: {search_engine}")
         
         try:
-            # PASO 2: USAR BROWSER-USE COMO MÉTODO PRINCIPAL
+            # ✨ PASO 1: PRIORIZAR BROWSER-USE COMO MÉTODO PRINCIPAL
             if BROWSER_USE_AVAILABLE:
-                self._emit_progress_eventlet("✨ Usando browser-use como método principal...")
-                results = self._run_browser_use_search(query, search_engine, max_results, extract_content)
+                self._emit_progress_eventlet("🚀 Método principal: browser-use + IA en tiempo real")
+                try:
+                    results = self._run_browser_use_search(query, search_engine, max_results, extract_content)
+                    if results and len(results) > 0:
+                        # Verificar que browser-use haya tenido éxito
+                        real_results = [r for r in results if not r.get('url', '').startswith('https://example.com')]
+                        if real_results:
+                            self._emit_progress_eventlet(f"✅ browser-use exitoso: {len(real_results)} resultados reales")
+                            return real_results
+                    
+                    self._emit_progress_eventlet("⚠️ browser-use no produjo resultados reales, intentando fallback...")
+                    
+                except Exception as browser_use_error:
+                    self._emit_progress_eventlet(f"❌ Error en browser-use: {str(browser_use_error)}")
+                    self._emit_progress_eventlet("🔄 Cambiando a método fallback: Playwright directo...")
             else:
-                self._emit_progress_eventlet("⚠️ browser-use no disponible, usando fallback...")
-                results = self._requests_search(query, search_engine, max_results)
+                self._emit_progress_eventlet("⚠️ browser-use no disponible, usando fallback directo...")
+            
+            # 🛠️ PASO 2: FALLBACK A PLAYWRIGHT DIRECTO (MÉTODO SECUNDARIO)
+            self._emit_progress_eventlet("🎭 Método fallback: Playwright directo + scraping robusto")
+            results = self._run_playwright_search(query, search_engine, max_results)
             
             # PASO 3: VERIFICAR SI LOS RESULTADOS SON REALES
             if results and len(results) > 0:
