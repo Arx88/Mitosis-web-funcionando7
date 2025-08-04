@@ -30,6 +30,7 @@ interface WebSocketEvents {
   task_update: (data: any) => void;
   progress_update: (data: any) => void;
   agent_activity: (data: any) => void;
+  browser_visual: (data: any) => void; // 🔥 CRITICAL FIX - Add browser_visual event support
 }
 
 interface UseWebSocketReturn {
