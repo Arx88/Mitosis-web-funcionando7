@@ -321,10 +321,14 @@ Return the results in a clear, structured format."""
                 
                 self._emit_progress_eventlet(f"🧠 IA ejecutará tarea: {search_task[:100]}...")
                 
-                # Crear agente browser-use
+                # Crear agente browser-use con configuración para root
                 agent = Agent(
                     task=search_task,
-                    llm=llm
+                    llm=llm,
+                    browser_config={
+                        'launch_args': ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+                        'headless': True
+                    }
                 )
                 
                 self._emit_progress_eventlet("🌐 Ejecutando navegación inteligente con IA...")
