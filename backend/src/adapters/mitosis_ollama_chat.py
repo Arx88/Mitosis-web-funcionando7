@@ -41,7 +41,14 @@ class MitosisOllamaChatModel(BaseChatModel):
         """Inicializar OllamaService después de la creación del dataclass"""
         if self.ollama_service is None:
             self.ollama_service = OllamaService(base_url=self.host)
+        
+        # Configurar el modelo específico en el servicio
+        success = self.ollama_service.set_model(self.model)
+        if not success:
+            logger.warning(f"⚠️ No se pudo configurar el modelo {self.model}, usando por defecto")
+        
         logger.info(f"🤖 MitosisOllamaChatModel inicializado - Model: {self.model}, Host: {self.host}")
+        logger.info(f"🧠 Modelo activo en OllamaService: {self.ollama_service.get_current_model()}")
 
     @property
     def provider(self) -> str:
