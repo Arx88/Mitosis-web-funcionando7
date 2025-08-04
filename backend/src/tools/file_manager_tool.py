@@ -130,35 +130,6 @@ class FileManagerTool(BaseTool):
                 data={'error': str(e)},
                 metadata={'action': action, 'path': path, 'exception': type(e).__name__}
             )
-        """Ejecutar operación de gestión de archivos"""
-        if config is None:
-            config = {}
-        
-        action = parameters['action']
-        path = parameters['path']
-        
-        try:
-            if action == 'read':
-                return self._read_file(path, parameters.get('encoding', 'utf-8'))
-            elif action == 'write':
-                return self._write_file(path, parameters['content'], parameters.get('encoding', 'utf-8'))
-            elif action == 'create':
-                return self._create_file(path, parameters['content'], parameters.get('encoding', 'utf-8'))
-            elif action == 'delete':
-                return self._delete_path(path)
-            elif action == 'list':
-                return self._list_directory(path)
-            elif action == 'copy':
-                return self._copy_path(path, parameters['destination'])
-            elif action == 'move':
-                return self._move_path(path, parameters['destination'])
-            elif action == 'mkdir':
-                return self._create_directory(path)
-            else:
-                return {'error': 'Invalid action specified'}
-                
-        except Exception as e:
-            return {'error': str(e), 'action': action, 'path': path}
     
     def _read_file(self, path: str, encoding: str = 'utf-8') -> Dict[str, Any]:
         """Leer archivo"""
