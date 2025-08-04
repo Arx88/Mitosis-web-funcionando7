@@ -3296,14 +3296,14 @@ def get_tool_manager():
     from ..tools.tool_manager import get_tool_manager as get_global_tool_manager
     return get_global_tool_manager()
 
-# ✅ FUNCIÓN HELPER PARA WebBrowserManager - SEGÚN UpgardeRef.md SECCIÓN 4.1
-def create_web_browser_manager(task_id: str, browser_type: str = "playwright"):
+# ✅ FUNCIÓN HELPER PARA WebBrowserManager - ACTUALIZADA PARA BROWSER-USE
+def create_web_browser_manager(task_id: str, browser_type: str = "browser-use"):
     """
-    Crear instancia de WebBrowserManager con integración de WebSocket
+    Crear instancia de WebBrowserManager con integración browser-use y WebSocket
     
     Args:
         task_id: ID de la tarea para tracking de eventos
-        browser_type: 'playwright' (default) o 'selenium'
+        browser_type: 'browser-use' (default), 'playwright' o 'selenium'
     
     Returns:
         WebBrowserManager instance o None si no está disponible
@@ -3318,29 +3318,21 @@ def create_web_browser_manager(task_id: str, browser_type: str = "playwright"):
         if websocket_manager is None:
             logger.warning("⚠️ WebSocketManager no disponible - WebBrowserManager funcionará sin eventos tiempo real")
         
-        # Crear configuración para el navegador
-        import importlib.util
+        # Obtener OllamaService si está disponible
+        ollama_service = None
+        try:
+            from ..services.ollama_service import OllamaService
+            ollama_service = OllamaService()
+            logger.info("✅ OllamaService obtenido para browser-use integration")
+        except Exception as e:
+            logger.warning(f"⚠️ OllamaService no disponible: {e}")
         
-        # Importar directamente desde el archivo correcto
-        spec = importlib.util.spec_from_file_location("web_browser_manager", "/app/backend/web_browser_manager.py")
-        web_browser_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(web_browser_module)
-        
-        BrowserConfig = web_browser_module.BrowserConfig
-        BrowserType = web_browser_module.BrowserType
-        WebBrowserManagerClass = web_browser_module.WebBrowserManager
-        
-        # Configurar tipo de navegador
-        if browser_type.lower() == "selenium":
-            browser_config = BrowserConfig(browser_type=BrowserType.CHROMIUM)
-        else:
-            browser_config = BrowserConfig(browser_type=BrowserType.CHROMIUM)
-        
-        # Crear instancia de WebBrowserManager con integración WebSocket
-        browser_manager = WebBrowserManagerClass(
-            config=browser_config,
+        # Crear instancia de WebBrowserManager con integración browser-use
+        browser_manager = WebBrowserManager(
             websocket_manager=websocket_manager,
-            task_id=task_id
+            task_id=task_id,
+            ollama_service=ollama_service,
+            browser_type=browser_type
         )
         
         logger.info(f"✅ WebBrowserManager creado para task {task_id} usando {browser_type}")
