@@ -605,34 +605,212 @@ REGLAS IMPORTANTES:
                 self._emit_progress_eventlet(f"❌ Error en navegación browser-use: {str(e)}")
                 raise
         
-        # Ejecutar función async con manejo robusto de event loops
+        # 🔥 SOLUTION: Ejecutar browser-use en subprocess separado para evitar conflictos de event loop
         try:
+            # Usar subprocess para ejecutar browser-use de forma aislada
+            import subprocess
+            import tempfile
+            import os
+            import json
+            
+            self._emit_progress_eventlet("🔧 Ejecutando browser-use en subprocess separado (solución event loop)")
+            
+            # Crear script temporal para browser-use
+            browser_use_script = f'''
+import asyncio
+import sys
+import json
+import traceback
+from datetime import datetime
+
+# Agregar directorio backend al path
+sys.path.insert(0, '/app/backend')
+
+async def run_browser_use_subprocess():
+    try:
+        # Import dentro del subprocess para evitar conflictos
+        from browser_use import Agent
+        from browser_use.llm import ChatOpenAI
+        from browser_use.browser.session import BrowserSession
+        from browser_use.browser.profile import BrowserProfile
+        
+        print("🤖 [SUBPROCESS] Inicializando browser-use en subprocess...")
+        
+        # Configurar LLM
+        llm = ChatOpenAI(
+            model="llama3.1:8b",
+            base_url="https://66bd0d09b557.ngrok-free.app/v1",
+            api_key="ollama"
+        )
+        
+        # Configurar browser profile para contenedores
+        browser_profile = BrowserProfile(
+            user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            chromium_sandbox=False,
+            args=[
+                '--no-sandbox',
+                '--disable-setuid-sandbox', 
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--disable-software-rasterizer',
+                '--disable-background-timer-throttling',
+                '--disable-renderer-backgrounding',
+                '--disable-extensions',
+                '--disable-default-apps',
+                '--disable-web-security',
+                '--disable-features=VizDisplayCompositor',
+                '--allow-running-insecure-content',
+                '--no-first-run',
+                '--no-default-browser-check',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-ipc-flooding-protection',
+                '--enable-features=NetworkService,NetworkServiceLogging',
+                '--remote-debugging-address=0.0.0.0',
+                '--remote-debugging-port=0',
+                '--disable-blink-features=AutomationControlled'
+            ]
+        )
+        
+        browser_session = BrowserSession(
+            headless=True,
+            browser_profile=browser_profile,
+            context_config={{
+                'ignore_https_errors': True,
+                'bypass_csp': True
+            }}
+        )
+        
+        # Crear tarea inteligente
+        query = "{query}"
+        max_results = {max_results}
+        search_engine = "{search_engine}"
+        search_url = f"https://www.bing.com/search?q={{query.replace(' ', '+')}}"
+        
+        intelligent_task = f"""
+Navigate to {{search_url}} and perform an intelligent web search for: "{{query}}"
+
+INSTRUCTIONS:
+1. Go to the search engine website
+2. Wait for the page to fully load
+3. Look for search results on the page
+4. Extract the top {{max_results}} most relevant search results
+5. For each result, extract:
+   - Title (the main heading/link)
+   - URL (the actual web address)  
+   - Snippet/Description (the preview text)
+6. Focus on results that are most relevant to the query: "{{query}}"
+7. Avoid any ads, sponsored content, or irrelevant results
+8. Return structured information about each result found
+
+Be intelligent about how you navigate - adapt to the page layout and find the best results.
+"""
+        
+        # Crear agente
+        agent = Agent(
+            task=intelligent_task,
+            llm=llm,
+            browser_session=browser_session
+        )
+        
+        print("🚀 [SUBPROCESS] Iniciando navegación autónoma...")
+        
+        # Ejecutar navegación
+        result = await agent.run(max_steps=5)
+        
+        print("✅ [SUBPROCESS] Navegación completada!")
+        
+        # Procesar resultado
+        content = ""
+        if result and hasattr(result, 'extracted_content'):
+            content = result.extracted_content
+        elif result and hasattr(result, 'output'):
+            content = result.output
+        else:
+            content = str(result)
+        
+        # Retornar resultado estructurado
+        return {{
+            'success': True,
+            'content': str(content),
+            'method': 'browser_use_subprocess',
+            'timestamp': datetime.now().isoformat()
+        }}
+        
+    except Exception as e:
+        error_msg = f"Error en subprocess browser-use: {{str(e)}}"
+        print(f"❌ [SUBPROCESS] {{error_msg}}")
+        traceback.print_exc()
+        return {{
+            'success': False,
+            'error': error_msg,
+            'method': 'browser_use_subprocess_error'
+        }}
+
+if __name__ == "__main__":
+    result = asyncio.run(run_browser_use_subprocess())
+    print(json.dumps(result))
+'''
+            
+            # Escribir script temporal
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_file:
+                temp_file.write(browser_use_script)
+                temp_script_path = temp_file.name
+            
             try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    # Si ya hay un loop corriendo, usar thread
-                    import threading
-                    import concurrent.futures
-                    
-                    def run_in_thread():
-                        new_loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(new_loop)
-                        try:
-                            return new_loop.run_until_complete(async_browser_use_intelligent_search())
-                        finally:
-                            new_loop.close()
-                    
-                    with concurrent.futures.ThreadPoolExecutor() as executor:
-                        future = executor.submit(run_in_thread)
-                        return future.result(timeout=180)  # 3 minutos timeout para IA
-                else:
-                    return loop.run_until_complete(async_browser_use_intelligent_search())
-            except RuntimeError:
-                # No hay loop, crear uno nuevo
-                return asyncio.run(async_browser_use_intelligent_search())
+                # Ejecutar subprocess con timeout
+                self._emit_progress_eventlet("🚀 Lanzando navegación browser-use autónoma...")
                 
+                process = subprocess.run([
+                    'python', temp_script_path
+                ], capture_output=True, text=True, timeout=120, cwd='/app/backend')
+                
+                if process.returncode == 0:
+                    # Parse resultado JSON del subprocess
+                    try:
+                        result_data = json.loads(process.stdout.strip().split('\\n')[-1])
+                        
+                        if result_data.get('success', False):
+                            self._emit_progress_eventlet("✅ Browser-use subprocess exitoso!")
+                            
+                            # Crear resultado estructurado
+                            content = result_data.get('content', '')
+                            return [{{
+                                'title': f'Navegación inteligente: {{query[:50]}}',
+                                'url': f'https://www.bing.com/search?q={{query.replace(" ", "+")}}',
+                                'snippet': content[:400] + "..." if len(content) > 400 else content,
+                                'source': search_engine,
+                                'method': 'browser_use_subprocess',
+                                'ai_navigation': True,
+                                'full_content': content[:2000],
+                                'timestamp': datetime.now().isoformat()
+                            }}]
+                        else:
+                            error = result_data.get('error', 'Error desconocido en subprocess')
+                            self._emit_progress_eventlet(f"❌ Browser-use subprocess error: {{error}}")
+                            raise Exception(error)
+                            
+                    except (json.JSONDecodeError, KeyError) as parse_error:
+                        self._emit_progress_eventlet(f"❌ Error parseando resultado subprocess: {{str(parse_error)}}")
+                        self._emit_progress_eventlet(f"Stdout: {{process.stdout[:200]}}")
+                        raise Exception("Error parseando resultado de browser-use subprocess")
+                
+                else:
+                    error_output = process.stderr or process.stdout
+                    self._emit_progress_eventlet(f"❌ Browser-use subprocess falló: {{error_output[:300]}}")
+                    raise Exception(f"Subprocess browser-use falló con código {{process.returncode}}")
+                
+            finally:
+                # Limpiar archivo temporal
+                try:
+                    os.unlink(temp_script_path)
+                except:
+                    pass
+                    
+        except subprocess.TimeoutExpired:
+            self._emit_progress_eventlet("⏰ Browser-use subprocess timeout - usando fallback")
+            raise Exception("Browser-use subprocess timeout después de 2 minutos")
         except Exception as e:
-            self._emit_progress_eventlet(f"❌ Error ejecutando browser-use inteligente: {str(e)}")
+            self._emit_progress_eventlet(f"❌ Error en browser-use subprocess: {{str(e)}}")
             raise
     
     def _run_playwright_fallback_search(self, query: str, search_engine: str, max_results: int) -> List[Dict[str, Any]]:
