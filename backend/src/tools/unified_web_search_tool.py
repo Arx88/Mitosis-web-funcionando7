@@ -1762,36 +1762,66 @@ except Exception as e:
     def _emit_browser_visual(self, data):
         """🔥 EMITIR EVENTOS DE NAVEGACIÓN VISUAL EN TIEMPO REAL - SOLUCIÓN CRÍTICA PARA BROWSER_VISUAL"""
         try:
+            # SOLUCIÓN CRÍTICA: Usar el SocketIO directamente del Flask app
+            try:
+                from flask import current_app
+                
+                # Usar el SocketIO que ya está inicializado en server.py
+                if hasattr(current_app, 'socketio') and current_app.socketio and self.task_id:
+                    enhanced_data = {
+                        **data,
+                        'task_id': self.task_id,
+                        'timestamp': datetime.now().isoformat()
+                    }
+                    
+                    # Emitir directamente usando el SocketIO de Flask app
+                    room = f"task_{self.task_id}"
+                    current_app.socketio.emit('browser_visual', enhanced_data, room=room)
+                    
+                    # También emitir como evento genérico para máxima compatibilidad
+                    current_app.socketio.emit('task_update', {
+                        'type': 'browser_visual',
+                        'data': enhanced_data
+                    }, room=room)
+                    
+                    print(f"✅ BROWSER_VISUAL EVENT SENT via Flask SocketIO: {data.get('type')} to room {room}")
+                    
+                    # Mensaje de confirmación en terminal
+                    terminal_message = f"📸 NAVEGACIÓN VISUAL: {data.get('message', 'Screenshot capturado')}"
+                    self._emit_progress_eventlet(terminal_message)
+                    
+                    return True
+                    
+            except RuntimeError as ctx_error:
+                # No hay contexto de aplicación
+                print(f"⚠️ No Flask app context: {ctx_error}")
+                
+            except Exception as socketio_error:
+                print(f"⚠️ SocketIO error: {socketio_error}")
+            
+            # FALLBACK: Emitir via método original si SocketIO falla
             if hasattr(self, 'websocket_manager') and self.websocket_manager and self.task_id:
-                # Agregar task_id al data
                 enhanced_data = {
                     **data,
                     'task_id': self.task_id,
                     'timestamp': datetime.now().isoformat()
                 }
                 self.websocket_manager.emit_to_task(self.task_id, 'browser_visual', enhanced_data)
+                print(f"✅ BROWSER_VISUAL EVENT SENT via WebSocket Manager: {data.get('type')}")
+                return True
                 
-                # También emitir como terminal_activity para máxima visibilidad
-                terminal_data = {
-                    'message': f"📸 NAVEGACIÓN VISUAL: {data.get('message', 'Screenshot capturado')}",
-                    'timestamp': datetime.now().isoformat(),
-                    'level': 'info'
-                }
-                self.websocket_manager.emit_to_task(self.task_id, 'terminal_activity', terminal_data)
-                
-                print(f"✅ BROWSER_VISUAL EVENT SENT: {data.get('type')} to task {self.task_id}")
-                
-            else:
-                # Fallback: emitir al menos como mensaje de progreso
-                message = f"📸 {data.get('message', 'Navegación visual')}"
-                self._emit_progress_eventlet(message)
-                print(f"⚠️ BROWSER_VISUAL FALLBACK: {message}")
+            # FALLBACK 2: Solo mensaje de progreso
+            message = f"📸 NAVEGACIÓN VISUAL: {data.get('message', 'Screenshot capturado')}"
+            self._emit_progress_eventlet(message)
+            print(f"⚠️ BROWSER_VISUAL FALLBACK: {message}")
+            return False
                 
         except Exception as e:
             # No fallar por errores de WebSocket - solo logear
             error_msg = f"❌ Error emitiendo browser_visual: {str(e)}"
             print(error_msg)
             self._emit_progress_eventlet(error_msg)
+            return False
 
     def _generate_completion_screenshot(self):
         """🖼️ Generar screenshot de demo para completar navegación visual"""
