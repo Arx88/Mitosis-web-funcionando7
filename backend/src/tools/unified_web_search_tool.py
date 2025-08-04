@@ -613,7 +613,15 @@ Be precise and focus on the most relevant search results.'''
         except:
             pass
         
-        # Notificar finalización
+        # Notificar finalización con navegación visual
+        await send_websocket_event(websocket_manager, 'browser_visual', {{
+            'type': 'navigation_complete',
+            'message': '✅ NAVEGACIÓN BROWSER-USE COMPLETADA',
+            'step': '✅ Navegación completada exitosamente',
+            'timestamp': datetime.now().isoformat(),
+            'url': search_url
+        }})
+        
         await send_websocket_event(websocket_manager, 'terminal_activity', {{
             'message': '✅ NAVEGACIÓN WEB: Navegación browser-use completada exitosamente',
             'timestamp': datetime.now().isoformat()
