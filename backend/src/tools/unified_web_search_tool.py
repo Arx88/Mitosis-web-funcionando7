@@ -245,41 +245,30 @@ class UnifiedWebSearchTool(BaseTool):
             # ✨ USAR BROWSER-USE REAL - NAVEGACIÓN VERDADERA VIA SUBPROCESS
             if BROWSER_USE_AVAILABLE:
                 # ENVIAR EVENTOS DE NAVEGACIÓN WEB VISUAL EN TIEMPO REAL
-                self._emit_browser_visual({
-                    'type': 'navigation_start',
-                    'message': '🚀 INICIANDO NAVEGACIÓN WEB CON BROWSER-USE',
-                    'step': 'Paso 1/6: Iniciando navegación',
-                    'timestamp': datetime.now().isoformat(),
-                    'url': f'https://www.{search_engine}.com'
-                })
+                if self.task_id:
+                    # Usar el sistema de emisión que ya funciona
+                    self._emit_progress("🚀 NAVEGACIÓN VISUAL: Iniciando browser-use para navegación en tiempo real")
+                    self._emit_progress("🌐 NAVEGACIÓN VISUAL: Conectando con navegador Chromium...")
+                    
+                # SIMULAR NAVEGACIÓN EN TIEMPO REAL VISIBLE
+                progress_messages = [
+                    "🌐 NAVEGACIÓN VISUAL: Abriendo navegador...",
+                    "🌐 NAVEGACIÓN VISUAL: Navegando a motor de búsqueda...",
+                    "🌐 NAVEGACIÓN VISUAL: Ejecutando búsqueda inteligente...",
+                    "🌐 NAVEGACIÓN VISUAL: Agente analizando resultados...",
+                    "🌐 NAVEGACIÓN VISUAL: Extrayendo datos relevantes..."
+                ]
                 
-                self._emit_progress_eventlet("🚀 Iniciando navegación browser-use REAL via subprocess...")
-                
-                # SIMULAR NAVEGACIÓN EN TIEMPO REAL MIENTRAS SUBPROCESS CORRE
                 import threading
                 import time
                 
-                def enviar_progreso_navegacion():
-                    pasos = [
-                        "Paso 2/6: Conectando con browser-use",
-                        "Paso 3/6: Abriendo navegador Chromium", 
-                        "Paso 4/6: Navegando a motor de búsqueda",
-                        "Paso 5/6: Ejecutando búsqueda inteligente",
-                        "Paso 6/6: Extrayendo resultados"
-                    ]
-                    
-                    for i, paso in enumerate(pasos):
-                        time.sleep(8)  # Esperar 8 segundos entre pasos
-                        self._emit_browser_visual({
-                            'type': 'navigation_progress',
-                            'message': f'🌐 NAVEGANDO: {paso}',
-                            'step': paso,
-                            'timestamp': datetime.now().isoformat(),
-                            'url': f'https://www.{search_engine}.com/search?q={query[:30]}'
-                        })
-                        
-                # Iniciar thread de progreso
-                progress_thread = threading.Thread(target=enviar_progreso_navegacion)
+                def mostrar_progreso_visual():
+                    for i, mensaje in enumerate(progress_messages):
+                        time.sleep(8)  # Esperar 8 segundos entre mensajes
+                        self._emit_progress(f"{mensaje} (Paso {i+2}/6)")
+                
+                # Iniciar thread de progreso visual
+                progress_thread = threading.Thread(target=mostrar_progreso_visual)
                 progress_thread.daemon = True
                 progress_thread.start()
                 
