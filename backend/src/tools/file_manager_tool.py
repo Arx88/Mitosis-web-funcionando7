@@ -106,8 +106,8 @@ class FileManagerTool(BaseTool):
             else:
                 return ToolExecutionResult(
                     success=False,
-                    data={'error': 'Invalid action specified'},
-                    metadata={'action': action, 'path': path}
+                    data={'error': 'Invalid action specified', 'action': action, 'path': path},
+                    error='Invalid action specified'
                 )
             
             # Si el resultado tiene 'error', es un fallo
@@ -115,20 +115,19 @@ class FileManagerTool(BaseTool):
                 return ToolExecutionResult(
                     success=False,
                     data=result,
-                    metadata={'action': action, 'path': path}
+                    error=result['error']
                 )
             else:
                 return ToolExecutionResult(
                     success=True,
-                    data=result,
-                    metadata={'action': action, 'path': path}
+                    data=result
                 )
                 
         except Exception as e:
             return ToolExecutionResult(
                 success=False,
-                data={'error': str(e)},
-                metadata={'action': action, 'path': path, 'exception': type(e).__name__}
+                data={'error': str(e), 'action': action, 'path': path, 'exception': type(e).__name__},
+                error=str(e)
             )
     
     def _read_file(self, path: str, encoding: str = 'utf-8') -> Dict[str, Any]:
