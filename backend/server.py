@@ -13,26 +13,59 @@ import threading
 from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-FRONTEND_ORIGINS = [
-    # 🌐 URL REAL DEL FRONTEND DETECTADA
-    "https://mitosis-executor-5.preview.emergentagent.com",
+# CONFIGURACIÓN DINÁMICA DE CORS - DETECTA AUTOMÁTICAMENTE LA URL DEL ENTORNO
+def get_dynamic_cors_origins():
+    """Detecta automáticamente las URLs permitidas para CORS"""
+    import socket
+    import os
     
-    # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
-    "https://20f98609-c85c-4bbb-901c-f3f7f815356e.preview.emergentagent.com",
+    base_origins = [
+        # 🏠 DESARROLLO LOCAL SIEMPRE
+        "http://localhost:3000",
+        "http://localhost:5173", 
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+    ]
     
-    # 🏠 DESARROLLO LOCAL
-    "http://localhost:3000",
-    "http://localhost:5173", 
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
+    # Detectar URL del entorno actual
+    preview_origins = []
     
-    # 📱 PREVIEW DOMAINS ADICIONALES
-    "https://mitosis-executor-5.preview.emergentagent.com",
-    "https://20f98609-c85c-4bbb-901c-f3f7f815356e.preview.emergentagent.com",
+    # Método 1: Variables de entorno
+    if os.environ.get('EMERGENT_PREVIEW_URL'):
+        preview_origins.append(os.environ.get('EMERGENT_PREVIEW_URL'))
+    if os.environ.get('PREVIEW_URL'):
+        preview_origins.append(os.environ.get('PREVIEW_URL'))
     
-    # 🌟 FALLBACK UNIVERSAL (último recurso)
-    "*"
-]
+    # Método 2: Detectar desde hostname
+    try:
+        hostname = socket.gethostname()
+        if hostname.startswith('agent-env-'):
+            container_id = hostname.replace('agent-env-', '')
+            # URLs comunes basadas en el patrón observado
+            preview_patterns = [
+                f"https://mitosis-executor-5.preview.emergentagent.com",
+                f"https://{container_id}.preview.emergentagent.com"
+            ]
+            preview_origins.extend(preview_patterns)
+    except:
+        pass
+    
+    # URLs adicionales comunes
+    preview_origins.extend([
+        "https://20f98609-c85c-4bbb-901c-f3f7f815356e.preview.emergentagent.com",
+        "https://mitosis-executor-5.preview.emergentagent.com"
+    ])
+    
+    # Combinar y eliminar duplicados
+    all_origins = base_origins + preview_origins
+    unique_origins = list(set(all_origins))
+    
+    # Agregar wildcard como fallback
+    unique_origins.append("*")
+    
+    return unique_origins
+
+FRONTEND_ORIGINS = get_dynamic_cors_origins()
 # CONFIGURACIÓN DINÁMICA DE CORS - DETECTA AUTOMÁTICAMENTE LA URL DEL ENTORNO
 def get_current_environment_url():
     """Detecta la URL del entorno actual dinámicamente"""
