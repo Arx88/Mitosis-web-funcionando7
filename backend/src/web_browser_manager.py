@@ -99,13 +99,17 @@ class WebBrowserManager:
         logger.info(f"🤖 WebBrowserManager initialized for task {task_id} using {browser_type}")
         logger.info(f"🧠 LLM Model: {self.llm_model.name}")
 
-    def initialize_browser(self):
-        """Initialize browser instance with event listeners"""
+    async def initialize_browser(self):
+        """
+        🚀 Initialize browser-use Agent with async support
+        """
         try:
-            if self.browser_type == "playwright":
-                self._initialize_playwright()
+            if self.browser_type == "browser-use":
+                await self._initialize_browser_use()
+            elif self.browser_type == "playwright":
+                self._initialize_playwright_legacy()
             elif self.browser_type == "selenium":
-                self._initialize_selenium()
+                self._initialize_selenium_legacy()
             else:
                 raise ValueError(f"Unsupported browser type: {self.browser_type}")
             
@@ -113,8 +117,10 @@ class WebBrowserManager:
             self.websocket_manager.send_log_message(
                 self.task_id, 
                 "info", 
-                f"🌐 Navegador {self.browser_type} inicializado correctamente"
+                f"🤖 Navegador {self.browser_type} inicializado correctamente"
             )
+            
+            logger.info(f"✅ {self.browser_type} browser initialized successfully")
             
         except Exception as e:
             error_msg = f"❌ Error inicializando navegador {self.browser_type}: {str(e)}"
@@ -122,8 +128,48 @@ class WebBrowserManager:
             self.websocket_manager.send_log_message(self.task_id, "error", error_msg)
             raise
 
-    def _initialize_playwright(self):
-        """Initialize Playwright browser with event listeners"""
+    async def _initialize_browser_use(self):
+        """
+        🤖 Initialize browser-use Agent with Mitosis LLM integration
+        """
+        try:
+            logger.info("🚀 Inicializando browser-use Agent...")
+            
+            # Create browser session
+            self.browser_session = BrowserSession(
+                headless=True,
+                browser_profile=BrowserProfile(
+                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+                )
+            )
+            
+            # Initialize browser-use Agent with our LLM
+            self.browser_use_agent = Agent(
+                task="Navegación web inteligente para el usuario",
+                llm=self.llm_model,
+                browser_session=self.browser_session,
+                use_vision=True,  # Enable vision for better understanding
+                max_failures=3,   # Resilience
+                save_conversation_path=f"/tmp/browser_conversations/{self.task_id}.json"
+            )
+            
+            logger.info("✅ browser-use Agent inicializado exitosamente")
+            
+            # Send initialization event
+            self.websocket_manager.send_browser_activity(
+                self.task_id,
+                "browser_initialized", 
+                "", 
+                "browser-use Agent", 
+                ""
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Error inicializando browser-use Agent: {e}")
+            raise
+
+    def _initialize_playwright_legacy(self):
+        """🔄 Legacy Playwright initialization (backward compatibility)"""
         try:
             from playwright.sync_api import sync_playwright
             
@@ -145,18 +191,18 @@ class WebBrowserManager:
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             })
             
-            # Setup event listeners
+            # Setup event listeners for legacy mode
             self._setup_playwright_listeners()
             
-            logger.info("✅ Playwright browser initialized successfully")
+            logger.info("✅ Legacy Playwright browser initialized successfully")
             
         except ImportError:
             raise ImportError("Playwright no está instalado. Use: pip install playwright && playwright install")
         except Exception as e:
             raise Exception(f"Error inicializando Playwright: {str(e)}")
 
-    def _initialize_selenium(self):
-        """Initialize Selenium browser with basic setup"""
+    def _initialize_selenium_legacy(self):
+        """🔄 Legacy Selenium initialization (backward compatibility)"""
         try:
             from selenium import webdriver
             from selenium.webdriver.chrome.service import Service as ChromeService
@@ -174,7 +220,7 @@ class WebBrowserManager:
             service = ChromeService(ChromeDriverManager().install())
             self.driver = webdriver.Chrome(service=service, options=options)
             
-            logger.info("✅ Selenium browser initialized successfully")
+            logger.info("✅ Legacy Selenium browser initialized successfully")
             
         except ImportError:
             raise ImportError("Selenium no está instalado. Use: pip install selenium webdriver-manager")
