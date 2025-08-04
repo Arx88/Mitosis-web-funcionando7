@@ -82,41 +82,7 @@ async def test_browser_use():
         
         print("✅ Sesión de browser creada")
         
-        print("🧪 Probando con modelo de prueba simple...")
-        
-        # Crear un modelo simple de prueba
-        class SimpleLLM:
-            def __init__(self):
-                self.name = "simple-test"
-                self.provider = "test"
-                self.model_name = "test"
-                
-            async def ainvoke(self, messages, output_format=None):
-                from browser_use.llm.views import ChatInvokeCompletion
-                return ChatInvokeCompletion(response="Test response")
-        
-        simple_llm = SimpleLLM()
-        print("✅ Modelo simple creado")
-        
-        # Probar con modelo simple
-        simple_agent = Agent(
-            task="Test básico",
-            llm=simple_llm,
-            browser_session=browser_session,
-            use_vision=False,
-            max_failures=1
-        )
-        print("✅ Agent simple creado")
-        
-        try:
-            simple_result = await simple_agent.run("Say hello")
-            print(f"✅ Test con modelo simple exitoso: {simple_result}")
-        except Exception as e:
-            print(f"❌ Error con modelo simple también: {str(e)}")
-            import traceback
-            traceback.print_exc()
-        
-        # Ahora probar con nuestro modelo
+        # Ahora probar con nuestro modelo corregido directamente
         
         # Crear Agent - con parámetros más específicos
         print("🔧 Creando Agent con configuración detallada...")
