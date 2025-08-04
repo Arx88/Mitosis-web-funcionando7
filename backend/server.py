@@ -346,8 +346,8 @@ except Exception as e:
     import traceback
     traceback.print_exc()
     
-    terminal_logger.warning("⚠️ Fallback a rutas básicas...")
-    print("⚠️ Fallback a rutas básicas...")
+    terminal_logger.warning("⚠️ Usando rutas básicas de fallback...")
+    print("⚠️ Usando rutas básicas de fallback...")
     
     AGENT_ROUTES_LOADED = False
     from flask import Blueprint
