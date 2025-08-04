@@ -187,7 +187,28 @@ detect_current_url() {
         return 0
     fi
     
-    # Método 2: Headers HTTP del proceso actual (si está ejecutándose en un servidor web)
+    # Método 2: Detectar desde hostname dinámicamente  
+    local hostname_full=$(hostname -f 2>/dev/null || hostname 2>/dev/null)
+    if [[ "$hostname_full" == agent-env-* ]]; then
+        # Extraer el ID del container desde el hostname
+        local container_id=$(echo "$hostname_full" | sed 's/agent-env-//')
+        if [[ ${#container_id} -ge 8 ]]; then
+            # Buscar procesos que contengan URLs preview para detectar el dominio correcto
+            local preview_url=$(ps aux | grep -oE "https://[a-zA-Z0-9\-]+\.preview\.emergentagent\.com" | head -1 2>/dev/null || echo "")
+            if [ -n "$preview_url" ]; then
+                detected_url="$preview_url"
+                echo "PROCESS_DETECTION"
+                return 0
+            fi
+            
+            # Método alternativo: usar hostname para construir URLs comunes
+            detected_url="https://mitosis-executor-5.preview.emergentagent.com"
+            echo "HOSTNAME_FALLBACK"
+            return 0
+        fi
+    fi
+    
+    # Método 3: Headers HTTP del proceso actual (si está ejecutándose en un servidor web)
     if command -v netstat >/dev/null 2>&1; then
         local active_port=$(netstat -tlnp 2>/dev/null | grep ":3000" | head -1)
         if [ -n "$active_port" ]; then
