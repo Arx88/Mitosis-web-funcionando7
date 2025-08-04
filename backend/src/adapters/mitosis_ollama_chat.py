@@ -237,8 +237,21 @@ class MitosisOllamaChatModel(BaseChatModel):
             
         except Exception as e:
             logger.error(f"❌ Error en MitosisOllamaChatModel.ainvoke: {str(e)}")
+            
+            # Crear usage básico para caso de error
+            from browser_use.llm.views import ChatInvokeUsage
+            usage = ChatInvokeUsage(
+                prompt_tokens=1,
+                prompt_cached_tokens=None,
+                prompt_cache_creation_tokens=None, 
+                prompt_image_tokens=None,
+                completion_tokens=1,
+                total_tokens=2
+            )
+            
             return ChatInvokeCompletion(
-                response="Lo siento, hubo un problema procesando tu solicitud. Por favor intenta de nuevo."
+                completion="Lo siento, hubo un problema procesando tu solicitud. Por favor intenta de nuevo.",
+                usage=usage
             )
 
     def get_client(self):
