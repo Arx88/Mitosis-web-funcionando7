@@ -615,8 +615,11 @@ REGLAS IMPORTANTES:
             
             self._emit_progress_eventlet("🔧 Ejecutando browser-use en subprocess separado (solución event loop)")
             
-            # Crear script temporal para browser-use
-            browser_use_script = f'''
+            # Crear script temporal para browser-use con variables sustituidas
+            # Pre-procesar query para evitar problemas con comillas
+            safe_query = query.replace('"', "'")
+            
+            browser_use_script = f"""
 import asyncio
 import sys
 import json
@@ -625,6 +628,11 @@ from datetime import datetime
 
 # Agregar directorio backend al path
 sys.path.insert(0, '/app/backend')
+
+# Variables de configuración
+QUERY = "{safe_query}"
+MAX_RESULTS = {max_results}
+SEARCH_ENGINE = "{search_engine}"
 
 async def run_browser_use_subprocess():
     try:
@@ -681,29 +689,24 @@ async def run_browser_use_subprocess():
         )
         
         # Crear tarea inteligente
-        query = "{query}"
-        max_results = {max_results}
-        search_engine = "{search_engine}"
-        search_url = f"https://www.bing.com/search?q={{query.replace(' ', '+')}}"
+        search_url = f"https://www.bing.com/search?q={{QUERY.replace(' ', '+')}}"
         
-        intelligent_task = f"""
-Navigate to {{search_url}} and perform an intelligent web search for: "{{query}}"
+        intelligent_task = f'''Navigate to {{search_url}} and perform an intelligent web search for: "{{QUERY}}"
 
 INSTRUCTIONS:
 1. Go to the search engine website
 2. Wait for the page to fully load
 3. Look for search results on the page
-4. Extract the top {{max_results}} most relevant search results
+4. Extract the top {{MAX_RESULTS}} most relevant search results
 5. For each result, extract:
    - Title (the main heading/link)
    - URL (the actual web address)  
    - Snippet/Description (the preview text)
-6. Focus on results that are most relevant to the query: "{{query}}"
+6. Focus on results that are most relevant to the query: "{{QUERY}}"
 7. Avoid any ads, sponsored content, or irrelevant results
 8. Return structured information about each result found
 
-Be intelligent about how you navigate - adapt to the page layout and find the best results.
-"""
+Be intelligent about how you navigate - adapt to the page layout and find the best results.'''
         
         # Crear agente
         agent = Agent(
@@ -749,7 +752,7 @@ Be intelligent about how you navigate - adapt to the page layout and find the be
 if __name__ == "__main__":
     result = asyncio.run(run_browser_use_subprocess())
     print(json.dumps(result))
-'''
+"""
             
             # Escribir script temporal
             with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_file:
