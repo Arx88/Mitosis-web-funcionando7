@@ -343,8 +343,24 @@ IMPORTANT: The URLs must be real, complete, clickable links from the actual sear
                     task=search_task,
                     llm=llm,
                     browser_config={
-                        'launch_args': ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-                        'headless': True
+                        'launch_args': [
+                            '--no-sandbox', 
+                            '--disable-setuid-sandbox', 
+                            '--disable-dev-shm-usage',
+                            '--disable-gpu',
+                            '--disable-background-timer-throttling',
+                            '--disable-renderer-backgrounding',
+                            '--disable-extensions',
+                            '--disable-plugins',
+                            '--disable-default-apps',
+                            '--no-first-run',
+                            '--no-zygote',
+                            '--single-process',
+                            '--disable-software-rasterizer'
+                        ],
+                        'headless': True,
+                        'force_viewport': True,
+                        'viewport': {'width': 1920, 'height': 1080}
                     }
                 )
                 
