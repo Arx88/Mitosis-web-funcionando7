@@ -114,7 +114,7 @@ class UnifiedWebSearchTool(BaseTool):
         
         # Extraer parámetros
         query = parameters.get('query', '').strip()
-        max_results = parameters.get('max_results', 8)
+        max_results = int(parameters.get('max_results', 8))  # Asegurar que sea entero
         search_engine = parameters.get('search_engine', 'bing')
         extract_content = parameters.get('extract_content', True)
         
