@@ -53,13 +53,19 @@ async def test_browser_use():
         
         print("✅ Sesión de browser creada")
         
-        # Crear Agent
+        # Crear Agent - con parámetros más específicos
+        print("🔧 Creando Agent con configuración detallada...")
+        
+        # Crear directorio para conversaciones si no existe
+        os.makedirs("/tmp/browser_conversations", exist_ok=True)
+        
         agent = Agent(
             task="Navegación web básica",
             llm=llm_model,
             browser_session=browser_session,
-            use_vision=True,
-            max_failures=3
+            use_vision=False,  # Probar sin vision primero
+            max_failures=1,    # Reducir failures para debug
+            save_conversation_path=None  # Sin guardar conversación por ahora
         )
         
         print("✅ Agent de browser-use creado exitosamente")
