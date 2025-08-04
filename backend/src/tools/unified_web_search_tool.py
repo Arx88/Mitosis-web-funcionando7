@@ -776,8 +776,8 @@ Be intelligent about how you navigate - adapt to the page layout and find the be
         
         print("🚀 [SUBPROCESS] Iniciando navegación autónoma...")
         
-        # Ejecutar navegación
-        result = await agent.run(max_steps=5)
+        # Ejecutar navegación con más pasos para mejor captura
+        result = await agent.run(max_steps=8)
         
         print("✅ [SUBPROCESS] Navegación completada!")
         
