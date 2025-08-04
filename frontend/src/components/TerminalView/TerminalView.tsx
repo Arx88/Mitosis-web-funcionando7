@@ -946,6 +946,9 @@ export const TerminalView = ({
       },
       browser_visual: (data: any) => {
         console.log(`📸 [WEBSOCKET-RECEIVED] browser_visual for task ${taskId}:`, data);
+        console.log(`🔍 [DEBUG] Task ID usado: ${taskId}`);
+        console.log(`🔍 [DEBUG] Data completa recibida:`, JSON.stringify(data, null, 2));
+        console.warn(`🚨 [BROWSER_VISUAL_DEBUG] Evento recibido en frontend!`);
         handleBrowserVisual(data);
       }
     };
