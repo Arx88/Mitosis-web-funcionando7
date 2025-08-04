@@ -105,7 +105,7 @@ async def test_browser_use():
         print("🚀 Probando navegación a Google...")
         
         try:
-            result = await agent.run("Navigate to https://www.google.com")
+            result = await agent.run()  # Sin parámetros, usa valores por defecto
             print(f"✅ Test completado exitosamente: {result}")
             return True
         except Exception as e:
@@ -114,13 +114,15 @@ async def test_browser_use():
             import traceback
             traceback.print_exc()
             
-            # Intentar llamada más simple
-            print("🔄 Probando tarea más simple...")
+            # Intentar llamada con max_steps explícito
+            print("🔄 Probando con max_steps explícito...")
             try:
-                simple_result = await agent.run("Say hello")
+                simple_result = await agent.run(max_steps=5)
                 print(f"✅ Tarea simple exitosa: {simple_result}")
+                return True
             except Exception as e2:
-                print(f"❌ Error en tarea simple también: {str(e2)}")
+                print(f"❌ Error con max_steps también: {str(e2)}")
+                traceback.print_exc()
             
             return False
         
