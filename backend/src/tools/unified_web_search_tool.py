@@ -581,7 +581,7 @@ Devuelve los resultados en el mismo formato, pero mejorados."""
                 # Patrones mejorados para Bing
                 # Nuevo patrón más específico para títulos y URLs de Bing
                 title_pattern = r'<h2[^>]*><a[^>]*href="([^"]*)"[^>]*>([^<]*)</a></h2>'
-                desc_pattern = r'<p[^>]*class="[^"]*b_lineclamp[^"]*"[^>]*>([^<]*)</p>'
+                desc_pattern = r'<p[^>]*class="[^"]*b_lineclamp2?[^"]*"[^>]*>([^<]*)</p>'
                 
                 titles = re.findall(title_pattern, html, re.IGNORECASE | re.DOTALL)
                 descriptions = re.findall(desc_pattern, html, re.IGNORECASE | re.DOTALL)
