@@ -790,6 +790,138 @@ The user's report that "tasks get stuck on step 1" is accurate, but the cause is
 
 ---
 
+## 🚨 **INVESTIGACIÓN CRÍTICA: PROBLEMA DE BÚSQUEDAS SIMULADAS EN LUGAR DE REALES** (August 2025) - MAIN AGENT ANALYSIS
+
+### ❌ **PROBLEMA REPORTADO POR USUARIO**
+
+**DESCRIPCIÓN**: El agente genera informes simulados en lugar de ejecutar tareas reales. Los documentos entregados no cumplen estándares porque son informes SOBRE la tarea, no la TAREA EN SÍ MISMA.
+
+**EVIDENCIA EN LOGS**: 
+- Sistema usa `method: 'fallback_results'` en lugar de búsquedas reales
+- URLs simuladas: `https://example.com/search-result-1`, `https://example.com/search-result-2`
+- Mensaje en logs: `⚠️ Parsing falló, generando resultados básicos`
+
+### 🔍 **INVESTIGACIÓN TÉCNICA COMPLETA**
+
+#### **1. ESTADO ACTUAL DE DEPENDENCIAS**:
+```
+✅ Python: 3.11.13 (Compatible con browser-use)
+✅ browser-use: 0.5.9 (INSTALADO)
+✅ playwright: 1.54.0 (INSTALADO) 
+❌ ollama: NOT INSTALLED (PROBLEMA CRÍTICO)
+❌ langchain: NOT INSTALLED (PROBLEMA CRÍTICO)
+❌ langchain-ollama: NOT INSTALLED (PROBLEMA CRÍTICO)
+⚠️ tavily-python: 0.3.5 (DEBE SER ELIMINADO)
+```
+
+#### **2. COMPATIBILIDAD BROWSER-USE + OLLAMA**:
+
+**HALLAZGOS DE INVESTIGACIÓN 2025**:
+- browser-use requiere Python 3.11+ (✅ CUMPLIDO)
+- browser-use usa LangChain para LLM integration
+- **DEPENDENCIAS FALTANTES CRÍTICAS**: 
+  - `langchain-ollama` (para conectar browser-use con Ollama)
+  - `ollama` python client 
+  - LangChain core packages
+
+**DOCUMENTACIÓN OFICIAL**:
+- browser-use requiere un LLM provider (OpenAI, Anthropic, o Ollama via LangChain)
+- Para Ollama: necesita `langchain-ollama` package
+- Configuración: `ChatOllama(model="llama3.1:8b")`
+
+#### **3. ANÁLISIS DEL CÓDIGO ACTUAL**:
+
+**PROBLEMA IDENTIFICADO**: 
+- `/app/backend/src/tools/unified_web_search_tool.py` usa Tavily como prioridad
+- browser-use está disponible pero no se puede usar sin LangChain
+- Sistema cae en fallback de scraping que falla
+- No hay integración correcta Ollama + browser-use
+
+**LÍNEAS PROBLEMÁTICAS**:
+```python
+# Línea 552: Tavily tiene prioridad incorrecta
+tavily_api_key = os.environ.get('TAVILY_API_KEY')
+if tavily_api_key:
+    # Usa Tavily en lugar de browser-use real
+    
+# Línea 238: browser-use no funciona sin LangChain
+if BROWSER_MANAGER_AVAILABLE:
+    results = self._run_browser_use_search(...)
+# BROWSER_MANAGER_AVAILABLE probablemente es False
+```
+
+#### **4. ARQUITECTURA OBJETIVO (SIN TAVILY)**:
+
+```
+FLUJO CORRECTO:
+1. Usuario solicita tarea
+2. browser-use + Playwright navega web REAL
+3. LangChain + Ollama procesa información
+4. Resultados REALES (no simulados)
+
+FLUJO ACTUAL (ROTO):
+1. Usuario solicita tarea
+2. browser-use falla (sin LangChain)
+3. Tavily falla o no prioritaria
+4. Scraping falla (parsing error)
+5. Fallback simulado ❌
+```
+
+### 🛠️ **PLAN DE CORRECCIÓN DOCUMENTADO**:
+
+#### **FASE 1: ELIMINAR TAVILY COMPLETAMENTE**
+- [ ] Remover tavily-python de requirements.txt
+- [ ] Eliminar todas las referencias a TAVILY_API_KEY
+- [ ] Limpiar funciones _tavily_search()
+- [ ] Remover lógica de fallback a Tavily
+
+#### **FASE 2: INSTALAR DEPENDENCIAS FALTANTES**
+- [ ] Instalar `ollama` python client
+- [ ] Instalar `langchain` y `langchain-ollama`
+- [ ] Verificar compatibilidad versiones
+- [ ] Configurar integración browser-use + Ollama
+
+#### **FASE 3: RECONFIGURAR PRIORIDADES DE BÚSQUEDA**
+- [ ] browser-use + Playwright como método primario
+- [ ] Ollama como LLM provider para browser-use
+- [ ] Eliminar todos los fallbacks simulados
+- [ ] Testing exhaustivo con búsquedas reales
+
+#### **FASE 4: VALIDACIÓN Y TESTING**
+- [ ] Probar búsqueda real de información
+- [ ] Verificar que NO hay resultados simulados
+- [ ] Confirmar URLs reales (no example.com)
+- [ ] Testing end-to-end completo
+
+### ⚠️ **NOTAS CRÍTICAS PARA CONTINUACIÓN**:
+
+1. **COMPATIBILIDAD CONFIRMADA**: browser-use + Ollama SÍ es compatible via LangChain
+2. **DEPENDENCIAS FALTANTES**: Sin langchain-ollama, browser-use no puede usar Ollama
+3. **TAVILY PROBLEMÁTICO**: Debe ser eliminado completamente
+4. **PRIORIDAD CORRECTA**: browser-use debe ser método primario, no fallback
+
+### 📋 **EVIDENCIA DE INVESTIGACIÓN**:
+
+**LOGS DE FALLBACK ACTUAL**:
+```
+🌐 NAVEGACIÓN WEB: ⚠️ Browser-use no disponible, usando método legacy...
+🌐 NAVEGACIÓN WEB: ⚠️ Parsing falló, generando resultados básicos
+method: 'fallback_results'
+```
+
+**CONFIGURACIÓN NECESARIA**:
+```python
+from langchain_ollama import ChatOllama
+from browser_use import Agent
+
+llm = ChatOllama(model="llama3.1:8b", base_url="https://66bd0d09b557.ngrok-free.app")
+agent = Agent(task="search task", llm=llm)
+```
+
+**ESTADO**: ❌ **INVESTIGACIÓN COMPLETA - PROBLEMA IDENTIFICADO - LISTO PARA CORRECCIÓN**
+
+---
+
 ## 🧪 **CRITICAL TASK DELETION TESTING COMPLETED** (January 2025) - TESTING AGENT REVIEW
 
 ### ❌ **TESTING REQUEST FULFILLED - CRITICAL REACT ERROR PREVENTS TASK DELETION TESTING**
