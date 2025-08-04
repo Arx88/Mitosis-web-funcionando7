@@ -594,8 +594,8 @@ class WebBrowserManager:
                     f"🔍 Extrayendo datos: {task_description}"
                 )
                 
-                # Execute extraction with browser-use Agent
-                result = await self.browser_use_agent.run(extract_task, max_steps=2)
+                # Execute extraction with browser-use Agent (use default max_steps)
+                result = await self.browser_use_agent.run(extract_task)
                 
                 # Process result into structured data
                 extracted_data = {
