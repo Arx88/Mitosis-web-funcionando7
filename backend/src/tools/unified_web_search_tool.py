@@ -820,8 +820,9 @@ if __name__ == "__main__":
                         raise Exception("Error parseando resultado de browser-use subprocess")
                 
                 else:
-                    error_output = process.stderr or process.stdout
-                    self._emit_progress_eventlet(f"❌ Browser-use subprocess falló: {error_output[:300]}")
+                    error_output = process.stderr or process.stdout or "No output"
+                    error_preview = error_output[:300] if error_output else "No error output"
+                    self._emit_progress_eventlet(f"❌ Browser-use subprocess falló: {error_preview}")
                     raise Exception(f"Subprocess browser-use falló con código {process.returncode}")
                 
             finally:
