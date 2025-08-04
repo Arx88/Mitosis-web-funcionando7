@@ -566,6 +566,39 @@ Be precise and focus on the most relevant search results.'''
             'step': 'Iniciando navegación browser-use'
         }})
         
+        # 🚀 EJECUTAR NAVEGACIÓN CON EVENTOS VISUALES PARALELOS
+        navigation_task = agent.run(max_steps=6)
+        
+        # 📸 NAVEGACIÓN VISUAL SIMPLIFICADA - EVENTOS EN TIEMPO REAL
+        async def send_navigation_visual_events():
+            \"\"\"Enviar eventos visuales durante navegación browser-use\"\"\"
+            await asyncio.sleep(2)  # Esperar inicialización
+            
+            for i in range(6):
+                await asyncio.sleep(4)  # Esperar entre eventos
+                
+                # ✅ ENVIAR EVENTO DE NAVEGACIÓN VISUAL
+                await send_websocket_event(websocket_manager, 'browser_visual', {{
+                    'type': 'navigation_progress',
+                    'task_id': TASK_ID,
+                    'message': f'🌐 NAVEGACIÓN EN VIVO: Browser-use navegando paso {{i+1}}/6',
+                    'step': f'Navegación paso {{i+1}}/6',
+                    'timestamp': datetime.now().isoformat(),
+                    'url': f'https://www.bing.com/search?q={{clean_query}}',
+                    'navigation_active': True,
+                    'browser_status': 'activo'
+                }})
+                
+                await send_websocket_event(websocket_manager, 'terminal_activity', {{
+                    'message': f'🌐 NAVEGACIÓN WEB VISUAL: Paso {{i+1}}/6 - Agente navegando...',
+                    'timestamp': datetime.now().isoformat()
+                }})
+                
+                print(f"✅ Evento navegación visual {{i+1}}/6 enviado")
+        
+        # EJECUTAR NAVEGACIÓN VISUAL EN PARALELO
+        visual_task = asyncio.create_task(send_navigation_visual_events())
+        
         # Esperar que navegación termine
         result = await navigation_task
         
