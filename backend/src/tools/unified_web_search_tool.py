@@ -392,7 +392,7 @@ class UnifiedWebSearchTool(BaseTool):
             return []
             
     def _requests_search(self, query: str, search_engine: str, max_results: int) -> List[Dict[str, Any]]:
-        """🌐 BÚSQUEDA USANDO REQUESTS (compatible con eventlet/greenlet)"""
+        """🌐 BÚSQUEDA USANDO REQUESTS (compatible con eventlet/greenlet) - SIN FALLBACKS SIMULADOS"""
         try:
             import requests
             from urllib.parse import quote_plus
@@ -405,97 +405,116 @@ class UnifiedWebSearchTool(BaseTool):
             
             # Headers para evitar detección de bots
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Accept-Encoding': 'gzip, deflate',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9,es;q=0.8',
+                'Accept-Encoding': 'gzip, deflate, br',
                 'DNT': '1',
                 'Connection': 'keep-alive',
                 'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'none',
+                'Cache-Control': 'max-age=0'
             }
             
-            # Construir URL según motor de búsqueda
-            if search_engine == 'bing':
-                search_url = f"https://www.bing.com/search?q={encoded_query}"
-                self._emit_progress_eventlet(f"🌐 Navegando a bing: {search_url[:50]}...")
+            # Construir URL según motor de búsqueda  
+            if search_engine == 'google':
+                search_url = f"https://www.google.com/search?q={encoded_query}&num={max_results}"
+                self._emit_progress_eventlet(f"🌐 Navegando a Google: {search_url[:80]}...")
             else:
-                search_url = f"https://www.bing.com/search?q={encoded_query}"  # Default a Bing
-                self._emit_progress_eventlet(f"🌐 Usando Bing como motor por defecto")
+                search_url = f"https://www.bing.com/search?q={encoded_query}&count={max_results}"
+                self._emit_progress_eventlet(f"🌐 Navegando a Bing: {search_url[:80]}...")
             
             # Realizar búsqueda
-            response = requests.get(search_url, headers=headers, timeout=10)
+            response = requests.get(search_url, headers=headers, timeout=15)
             response.raise_for_status()
             
             self._emit_progress_eventlet(f"✅ Respuesta recibida: {response.status_code}")
             
-            # Parse básico de resultados usando regex (más simple que BeautifulSoup)
+            # Parse mejorado de resultados usando regex más robustos
             html = response.text
             
-            # Patrones para extraer resultados de Bing
-            if search_engine == 'bing' or True:  # Default a Bing
-                # Buscar enlaces en Bing
+            if search_engine == 'google':
+                # Patrones para Google
+                title_url_pattern = r'<h3[^>]*><a[^>]*href="([^"]*)"[^>]*>([^<]*)</a></h3>'
+                desc_pattern = r'<span[^>]*class="[^"]*VuuXrf[^"]*"[^>]*>([^<]*)</span>'
+                
+                title_urls = re.findall(title_url_pattern, html, re.IGNORECASE | re.DOTALL)
+                descriptions = re.findall(desc_pattern, html, re.IGNORECASE | re.DOTALL)
+                
+                self._emit_progress_eventlet(f"🔍 Google - Encontrados {len(title_urls)} enlaces, {len(descriptions)} descripciones")
+                
+                for i, (url, title) in enumerate(title_urls[:max_results]):
+                    if url.startswith('/url?q='):
+                        # Limpiar URL de Google
+                        url = url.split('/url?q=')[1].split('&')[0]
+                    
+                    snippet = descriptions[i] if i < len(descriptions) else "Sin descripción disponible"
+                    
+                    result = {
+                        'title': title.strip(),
+                        'url': url,
+                        'snippet': snippet.strip(),
+                        'source': 'google',
+                        'method': 'requests_real',
+                        'rank': i + 1
+                    }
+                    results.append(result)
+                    self._emit_progress_eventlet(f"📄 Resultado Google {i+1}: {title[:50]}...")
+                    
+            else:
+                # Patrones mejorados para Bing
+                # Nuevo patrón más específico para títulos y URLs de Bing
                 title_pattern = r'<h2[^>]*><a[^>]*href="([^"]*)"[^>]*>([^<]*)</a></h2>'
                 desc_pattern = r'<p[^>]*class="[^"]*b_lineclamp[^"]*"[^>]*>([^<]*)</p>'
                 
                 titles = re.findall(title_pattern, html, re.IGNORECASE | re.DOTALL)
                 descriptions = re.findall(desc_pattern, html, re.IGNORECASE | re.DOTALL)
                 
-                self._emit_progress_eventlet(f"🔍 Encontrados {len(titles)} títulos, {len(descriptions)} descripciones")
+                self._emit_progress_eventlet(f"🔍 Bing - Encontrados {len(titles)} títulos, {len(descriptions)} descripciones")
                 
-                # Construir resultados
+                # Construir resultados solo si encontramos datos reales
                 for i, (url, title) in enumerate(titles[:max_results]):
                     # Limpiar URL si tiene redirección de Bing
                     clean_url = url
                     if 'bing.com/ck/a' in url:
-                        # Extraer URL real de redirección de Bing
                         import urllib.parse
                         parsed = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
                         if 'u' in parsed:
                             clean_url = parsed['u'][0]
                     
-                    snippet = descriptions[i] if i < len(descriptions) else "Descripción no disponible"
+                    snippet = descriptions[i] if i < len(descriptions) else "Sin descripción disponible"
                     
                     result = {
                         'title': title.strip(),
                         'url': clean_url,
                         'snippet': snippet.strip(),
-                        'source': search_engine,
-                        'method': 'requests_search',
+                        'source': 'bing',
+                        'method': 'requests_real',
                         'rank': i + 1
                     }
                     results.append(result)
-                    
-                    self._emit_progress_eventlet(f"📄 Resultado {i+1}: {title[:50]}...")
+                    self._emit_progress_eventlet(f"📄 Resultado Bing {i+1}: {title[:50]}...")
             
-            # Fallback: crear al menos algunos resultados básicos si el parsing falla
+            # VALIDACIÓN CRÍTICA: Solo devolver si tenemos resultados reales
             if not results:
-                self._emit_progress_eventlet("⚠️ Parsing falló, generando resultados básicos")
-                for i in range(min(3, max_results)):
-                    results.append({
-                        'title': f"Información sobre {query} - Resultado {i+1}",
-                        'url': f"https://example.com/search-result-{i+1}",
-                        'snippet': f"Información relevante sobre {query} encontrada en la búsqueda web.",
-                        'source': search_engine,
-                        'method': 'fallback_results',
-                        'rank': i + 1
-                    })
+                self._emit_progress_eventlet("❌ No se encontraron resultados reales, el parsing falló")
+                raise Exception("Parsing failed - no real search results found")
             
-            self._emit_progress_eventlet(f"✅ Búsqueda completada: {len(results)} resultados obtenidos")
-            return results
+            # Verificar que los URLs no sean simulados
+            real_results = [r for r in results if not r.get('url', '').startswith('https://example.com')]
+            if not real_results:
+                self._emit_progress_eventlet("❌ Todos los resultados son simulados")
+                raise Exception("All results are simulated - real search failed")
+            
+            self._emit_progress_eventlet(f"✅ Búsqueda real completada: {len(real_results)} resultados obtenidos")
+            return real_results
             
         except Exception as e:
             self._emit_progress_eventlet(f"❌ Error en requests search: {str(e)}")
-            # Fallback final: resultados simulados para no fallar completamente
-            return [
-                {
-                    'title': f"Búsqueda sobre {query}",
-                    'url': "https://example.com/search-fallback",
-                    'snippet': f"Información general sobre {query} (fallback debido a error de red)",
-                    'source': search_engine,
-                    'method': 'error_fallback',
-                    'rank': 1
-                }
-            ]
+            # NO MORE FALLBACKS - Si falla, falla realmente
+            raise Exception(f"Real search failed: {str(e)}")
 
     # REMOVIDO: _playwright_search - causaba conflictos con greenlet/eventlet
     # Reemplazado por _requests_search para compatibilidad total
