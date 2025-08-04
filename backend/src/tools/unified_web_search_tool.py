@@ -655,9 +655,44 @@ if __name__ == "__main__":
                                     continue
                         
                         if not json_line:
-                            self._emit_progress_eventlet("❌ No se encontró JSON válido en la salida del subprocess")
-                            self._emit_progress_eventlet(f"Salida completa: {process.stdout[:300]}")
-                            raise Exception("No se encontró resultado JSON válido del subprocess")
+                            # Buscar por contenido JSON parcial si no se encuentra línea completa
+                            stdout_content = process.stdout.strip()
+                            if 'success' in stdout_content and 'content' in stdout_content:
+                                # Intentar parsear JSON parcial como caso especial
+                                try:
+                                    # Si el JSON está truncado, buscar el contenido manualmente
+                                    if '"success": true' in stdout_content:
+                                        # Extraer contenido manualmente del stdout truncado
+                                        self._emit_progress_eventlet("🔧 Parsing JSON truncado manualmente...")
+                                        import re
+                                        content_match = re.search(r'"content": "(.*?)"', stdout_content[:2000])
+                                        if content_match:
+                                            extracted_content = content_match.group(1)[:500]  # Limitar contenido
+                                            
+                                            # Crear resultado exitoso manual
+                                            result_data = {
+                                                'success': True,
+                                                'content': extracted_content,
+                                                'method': 'browser_use_subprocess_manual_parsing',
+                                                'query': query,
+                                                'search_engine': search_engine,
+                                                'timestamp': datetime.now().isoformat(),
+                                                'parsing_note': 'JSON truncado parseado manualmente'
+                                            }
+                                            
+                                            self._emit_progress_eventlet("✅ JSON truncado parseado exitosamente!")
+                                        else:
+                                            raise Exception("No se pudo extraer contenido del JSON truncado")
+                                    else:
+                                        raise Exception("JSON no indica éxito")
+                                except Exception as manual_error:
+                                    self._emit_progress_eventlet(f"❌ Error en parsing manual: {str(manual_error)}")
+                                    self._emit_progress_eventlet(f"Salida completa (primeros 500 chars): {stdout_content[:500]}")
+                                    raise Exception("No se encontró resultado JSON válido del subprocess")
+                            else:
+                                self._emit_progress_eventlet("❌ No se encontró JSON válido en la salida del subprocess")
+                                self._emit_progress_eventlet(f"Salida completa (primeros 500 chars): {stdout_content[:500]}")
+                                raise Exception("No se encontró resultado JSON válido del subprocess")
                         
                         result_data = json.loads(json_line)
                         
