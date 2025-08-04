@@ -457,10 +457,12 @@ Be intelligent about how you navigate - adapt to the page layout and find the be
                             if search_engine in final_url or query.lower() in final_url.lower():
                                 successful_navigation = True
                                 self._emit_progress_eventlet(f"✅ NAVEGACIÓN WEB: URL objetivo alcanzada: {final_url}")
+                                self._emit_browser_activity('url_reached', final_url, f'URL objetivo alcanzada: {final_url}')
                                 break
                 
                 if not successful_navigation:
                     self._emit_progress_eventlet(f"⚠️ NAVEGACIÓN WEB: URL final: {final_url or 'unknown'}")
+                    self._emit_browser_activity('navigation_warning', final_url or '', f'URL final: {final_url or "unknown"}')
                 
                 # Procesar resultado de browser-use
                 raw_results = []
