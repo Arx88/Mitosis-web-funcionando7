@@ -91,7 +91,7 @@ async def test_browser_use():
         os.makedirs("/tmp/browser_conversations", exist_ok=True)
         
         agent = Agent(
-            task="Navegación web básica",
+            task="Navigate to https://www.google.com and tell me what you see",  # Tarea completa aquí
             llm=llm_model,
             browser_session=browser_session,
             use_vision=False,  # Probar sin vision primero
