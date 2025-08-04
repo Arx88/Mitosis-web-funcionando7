@@ -170,11 +170,19 @@ class WebBrowserManager:
             Agent.run = fixed_run
             logger.info("✅ browser-use Agent monkey patch aplicado exitosamente")
             
-            # Create browser session
+            # Create browser session with proper Chrome arguments for containers
             self.browser_session = BrowserSession(
                 headless=True,
                 browser_profile=BrowserProfile(
-                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                    chromium_sandbox=False,  # Disable sandbox for container environments
+                    args=[
+                        '--no-sandbox',
+                        '--disable-dev-shm-usage', 
+                        '--disable-gpu',
+                        '--disable-web-security',
+                        '--disable-blink-features=AutomationControlled'
+                    ]
                 )
             )
             
