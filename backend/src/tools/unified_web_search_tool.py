@@ -243,7 +243,7 @@ class UnifiedWebSearchTool(BaseTool):
         
         try:
             # PASO 2: USAR BROWSER-USE COMO MÉTODO PRINCIPAL
-            if BROWSER_MANAGER_AVAILABLE:
+            if BROWSER_USE_AVAILABLE:
                 self._emit_progress_eventlet("✨ Usando browser-use como método principal...")
                 results = self._run_browser_use_search(query, search_engine, max_results, extract_content)
             else:
