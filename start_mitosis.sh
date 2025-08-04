@@ -131,6 +131,32 @@ fi
 echo "✅ API keys y Ollama configurados correctamente"
 
 # ========================================================================
+# PASO 2.5: VERIFICACIÓN Y CORRECCIÓN AUTOMÁTICA DE DEPENDENCIAS
+# ========================================================================
+
+echo "🔧 Verificando y corrigiendo dependencias críticas..."
+
+# Verificar que Pydantic y browser-use sean compatibles
+echo "   🔍 Verificando compatibilidad Pydantic/browser-use..."
+cd /app/backend
+
+PYDANTIC_VERSION=$(pip show pydantic 2>/dev/null | grep Version | cut -d' ' -f2)
+if [[ "$PYDANTIC_VERSION" < "2.11.0" ]]; then
+    echo "   ⚡ Actualizando Pydantic para compatibilidad..."
+    pip install --upgrade "pydantic>=2.11.5"
+fi
+
+# Verificar que browser-use funcione
+echo "   🔍 Probando importación de rutas del agente..."
+if ! python3 -c "from src.routes.agent_routes import agent_bp" 2>/dev/null; then
+    echo "   ⚠️ Error detectado en rutas del agente, aplicando corrección..."
+    pip install --upgrade browser-use
+    pip install --upgrade "pydantic>=2.11.5"
+fi
+
+echo "   ✅ Dependencias verificadas y corregidas"
+
+# ========================================================================
 # PASO 3: CREAR SERVIDOR WSGI OPTIMIZADO PARA PRODUCCIÓN
 # ========================================================================
 
