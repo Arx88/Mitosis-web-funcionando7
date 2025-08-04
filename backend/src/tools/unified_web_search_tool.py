@@ -406,13 +406,33 @@ Be intelligent about how you navigate - adapt to the page layout and find the be
                     browser_session=browser_session
                 )
                 
-                self._emit_progress_eventlet("✅ Agente browser-use creado exitosamente")
-                self._emit_progress_eventlet("🚀 Iniciando navegación autónoma con IA...")
+                self._emit_progress_eventlet("✅ Agente browser-use creado exitosamente con configuración avanzada")
+                self._emit_progress_eventlet("🚀 Iniciando navegación autónoma con IA y monitoreo en tiempo real...")
                 
-                # Ejecutar la navegación inteligente
-                result = await agent.run()
+                # Ejecutar la navegación inteligente con callbacks de progreso
+                result = await agent.run(
+                    max_steps=5,  # Permitir más pasos para búsquedas complejas
+                    on_step_start=on_step_start,
+                    on_step_end=on_step_end
+                )
                 
-                self._emit_progress_eventlet("🎯 Navegación IA completada, procesando resultados...")
+                self._emit_progress_eventlet("🎯 Navegación IA completada exitosamente, procesando resultados...")
+                
+                # Verificar si la navegación fue exitosa analizando el historial
+                successful_navigation = False
+                final_url = None
+                
+                if hasattr(result, 'history'):
+                    for entry in result.history:
+                        if hasattr(entry, 'state') and hasattr(entry.state, 'url'):
+                            final_url = entry.state.url
+                            if search_engine in final_url or query.lower() in final_url.lower():
+                                successful_navigation = True
+                                self._emit_progress_eventlet(f"✅ NAVEGACIÓN WEB: URL objetivo alcanzada: {final_url}")
+                                break
+                
+                if not successful_navigation:
+                    self._emit_progress_eventlet(f"⚠️ NAVEGACIÓN WEB: URL final: {final_url or 'unknown'}")
                 
                 # Procesar resultado de browser-use
                 raw_results = []
