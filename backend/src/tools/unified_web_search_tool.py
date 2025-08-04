@@ -768,9 +768,29 @@ if __name__ == "__main__":
                 ], capture_output=True, text=True, timeout=120, cwd='/app/backend')
                 
                 if process.returncode == 0:
-                    # Parse resultado JSON del subprocess
+                    # Parse resultado JSON del subprocess - buscar solo la línea JSON válida
                     try:
-                        result_data = json.loads(process.stdout.strip().split('\\n')[-1])
+                        # Filtrar líneas para encontrar el JSON válido
+                        output_lines = process.stdout.strip().split('\\n')
+                        json_line = None
+                        
+                        # Buscar de abajo hacia arriba para encontrar la línea JSON
+                        for line in reversed(output_lines):
+                            line = line.strip()
+                            if line.startswith('{') and line.endswith('}'):
+                                try:
+                                    json.loads(line)  # Verificar que sea JSON válido
+                                    json_line = line
+                                    break
+                                except json.JSONDecodeError:
+                                    continue
+                        
+                        if not json_line:
+                            self._emit_progress_eventlet("❌ No se encontró JSON válido en la salida del subprocess")
+                            self._emit_progress_eventlet(f"Salida completa: {process.stdout[:300]}")
+                            raise Exception("No se encontró resultado JSON válido del subprocess")
+                        
+                        result_data = json.loads(json_line)
                         
                         if result_data.get('success', False):
                             self._emit_progress_eventlet("✅ Browser-use subprocess exitoso!")
@@ -794,7 +814,7 @@ if __name__ == "__main__":
                             
                     except (json.JSONDecodeError, KeyError) as parse_error:
                         self._emit_progress_eventlet(f"❌ Error parseando resultado subprocess: {str(parse_error)}")
-                        self._emit_progress_eventlet(f"Stdout: {process.stdout[:200]}")
+                        self._emit_progress_eventlet(f"Stdout: {process.stdout[:400]}")
                         raise Exception("Error parseando resultado de browser-use subprocess")
                 
                 else:
