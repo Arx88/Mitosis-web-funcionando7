@@ -26,8 +26,16 @@ from browser_use.browser.session import BrowserSession
 from browser_use.browser.profile import BrowserProfile
 
 # Mitosis imports
-from .adapters.mitosis_ollama_chat import MitosisOllamaChatModel
-from .services.ollama_service import OllamaService
+try:
+    from .adapters.mitosis_ollama_chat import MitosisOllamaChatModel
+    from .services.ollama_service import OllamaService
+except ImportError:
+    # Fallback para cuando se importa directamente
+    import sys
+    import os
+    sys.path.append(os.path.dirname(__file__))
+    from adapters.mitosis_ollama_chat import MitosisOllamaChatModel
+    from services.ollama_service import OllamaService
 
 # Configure logging
 logger = logging.getLogger(__name__)
