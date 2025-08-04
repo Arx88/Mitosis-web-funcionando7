@@ -12,6 +12,7 @@ IMPLEMENTA: WEBUPGRADE.md Fase 2 - Unified Web Search Tool
 import asyncio
 import time
 import os
+import base64
 from typing import Dict, List, Any
 from datetime import datetime
 from urllib.parse import urljoin
