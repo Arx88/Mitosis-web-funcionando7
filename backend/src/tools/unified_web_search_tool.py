@@ -1771,6 +1771,28 @@ except Exception as e:
             print(error_msg)
             self._emit_progress_eventlet(error_msg)
 
+    def _generate_completion_screenshot(self):
+        """🖼️ Generar screenshot de demo para completar navegación visual"""
+        try:
+            # Por ahora, generar un screenshot de demostración
+            # En una implementación completa, se tomaría del browser real
+            
+            import base64
+            from io import BytesIO
+            
+            # Crear un screenshot simbólico (1x1 pixel transparente PNG)
+            # En implementación real, esto vendría del browser-use
+            demo_png_bytes = base64.b64decode(
+                'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+            )
+            
+            # Codificar como data URL
+            demo_screenshot = base64.b64encode(demo_png_bytes).decode('utf-8')
+            return f'data:image/png;base64,{demo_screenshot}'
+            
+        except Exception as e:
+            print(f"⚠️ Error generando screenshot de demo: {e}")
+            return None
     def _emit_progress_eventlet(self, message: str):
         """📡 EMITIR PROGRESO COMPATIBLE CON EVENTLET - VERSIÓN MEJORADA PARA NAVEGACIÓN EN TIEMPO REAL"""
         try:
