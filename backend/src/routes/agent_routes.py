@@ -7211,14 +7211,31 @@ def execute_step_real(task_id: str, step_id: str, step: dict):
                     'num_results': 5
                 }
             elif tool in ['analysis', 'data_analysis', 'synthesis']:
-                # CORREGIDO: Usar web_search (herramienta REAL) para análisis
-                mapped_tool = 'web_search' 
-                # Crear query específico para análisis del tema
-                analysis_query = f"análisis detallado {title} {description}".replace(':', '').replace('Analizar datos sobre', '').strip()
+                # CORRECCIÓN: Usar Ollama para análisis inteligente, no web_search
+                mapped_tool = 'ollama_analysis'
+                # Obtener datos de pasos anteriores para análisis
+                previous_data = ""
+                try:
+                    task_data = get_task_data(task_id)
+                    if task_data and 'plan' in task_data:
+                        for prev_step in task_data['plan']:
+                            if prev_step.get('completed') and 'result' in prev_step:
+                                result = prev_step.get('result', {})
+                                if 'data' in result and isinstance(result['data'], dict):
+                                    data_content = result['data']
+                                    if 'content' in data_content and isinstance(data_content['content'], dict):
+                                        content_obj = data_content['content']
+                                        if 'results' in content_obj:
+                                            for res in content_obj['results']:
+                                                if 'snippet' in res:
+                                                    previous_data += f"- {res.get('title', 'Info')}: {res.get('snippet', '')}\n"
+                except Exception as e:
+                    logger.warning(f"Error extracting previous data for analysis: {e}")
+                
+                analysis_prompt = f"Realiza un análisis detallado sobre: {title}\n\nDescripción: {description}\n\nDatos disponibles:\n{previous_data}\n\nGenera un análisis completo y estructurado."
                 tool_params = {
-                    'query': analysis_query,
-                    'num_results': 5,
-                    'extract_content': True
+                    'prompt': analysis_prompt,
+                    'max_tokens': 1000
                 }
             elif tool == 'creation':
                 mapped_tool = 'file_manager'  # Usar file_manager para crear archivos
