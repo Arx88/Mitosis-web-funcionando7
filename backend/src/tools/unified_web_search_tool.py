@@ -440,6 +440,8 @@ class UnifiedWebSearchTool(BaseTool):
             def emit_visual_progress():
                 """Emitir progreso visual durante navegación subprocess"""
                 for i in range(3):
+                    # ⏳ Dar tiempo entre eventos para que se procesen correctamente
+                    time.sleep(1)
                     # Emitir inmediatamente sin threading
                     self._emit_browser_visual({
                         'type': 'navigation_progress',
@@ -450,10 +452,8 @@ class UnifiedWebSearchTool(BaseTool):
                         'navigation_active': True,
                         'progress': int((i+1)/3 * 100)
                     })
-                    
-                    # Solo el primer evento es inmediato, los demás se ejecutarán después
-                    if i == 0:
-                        break
+                    print(f"🌐 EVENTO VISUAL {i+1} ENVIADO con delay")
+                    self._emit_progress_eventlet(f"📸 Enviando evento visual {i+1}/3...")
             
             # Emitir primer evento de progreso inmediatamente
             emit_visual_progress()
