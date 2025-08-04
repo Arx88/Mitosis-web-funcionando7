@@ -572,12 +572,27 @@ Be precise and focus on the most relevant search results.'''
             except:
                 pass  # Silenciar errores de screenshots
         
-        # Ejecutar navegación y screenshots en paralelo
+        # Ejecutar navegación y enviar eventos en tiempo real
         navigation_task = agent.run(max_steps=6)
-        screenshot_task = capture_screenshots_periodically()
         
-        # Esperar que ambas tareas terminen
-        result, _ = await asyncio.gather(navigation_task, screenshot_task, return_exceptions=True)
+        # ENVIAR EVENTOS DE NAVEGACIÓN EN TIEMPO REAL
+        for step in range(6):
+            await asyncio.sleep(2)  # Esperar entre eventos
+            await send_websocket_event(websocket_manager, 'browser_visual', {{
+                'type': 'navigation_progress',
+                'message': f'🌐 NAVEGACIÓN PASO {{step+1}}/6: Agente navegando {{clean_query}}',
+                'step': f'Navegación paso {{step+1}}/6',
+                'timestamp': datetime.now().isoformat(),
+                'url': search_url
+            }})
+            
+            await send_websocket_event(websocket_manager, 'terminal_activity', {{
+                'message': f'🌐 NAVEGACIÓN WEB: Paso {{step+1}}/6 ejecutándose...',
+                'timestamp': datetime.now().isoformat()
+            }})
+        
+        # Esperar que navegación termine
+        result = await navigation_task
         
         # Screenshot final
         try:
