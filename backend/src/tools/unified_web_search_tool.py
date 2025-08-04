@@ -1758,6 +1758,10 @@ except Exception as e:
     
     def _emit_browser_visual(self, data):
         """🔥 LOGGING COMPREHENSIVO: Rastrear eventos browser_visual paso a paso"""
+        
+        # IMPORTAR PRIMERO ANTES DE USAR
+        from datetime import datetime
+        
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         
         # PASO 1: LOG INICIAL de browser_visual
