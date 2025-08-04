@@ -58,12 +58,6 @@ class OllamaProcessingTool(BaseTool):
             prompt = parameters.get('prompt', '')
             max_tokens = parameters.get('max_tokens', 1500)
             
-            if not prompt:
-                return {
-                    'success': False,
-                    'error': 'Prompt es requerido para el procesamiento'
-                }
-            
             # Crear instancia de OllamaService
             ollama_service = OllamaService()
             
@@ -85,25 +79,21 @@ class OllamaProcessingTool(BaseTool):
             if response and 'response' in response:
                 processed_content = response['response']
                 
-                return {
-                    'success': True,
+                result_data = {
                     'type': 'processing',
                     'content': processed_content,
                     'summary': f"Procesamiento completado: {len(processed_content)} caracteres generados",
                     'tool_used': 'ollama_processing',
                     'final_result': processed_content,
-                    'processed_content': processed_content
+                    'processed_content': processed_content,
+                    'prompt_length': len(prompt),
+                    'response_length': len(processed_content)
                 }
+                
+                return self._create_success_result(result_data)
             else:
-                return {
-                    'success': False,
-                    'error': 'No se pudo generar contenido procesado con Ollama',
-                    'details': response
-                }
+                return self._create_error_result(f'No se pudo generar contenido procesado con Ollama: {response}')
                 
         except Exception as e:
             logger.error(f"Error en procesamiento Ollama: {e}")
-            return {
-                'success': False,
-                'error': f'Error interno en procesamiento: {str(e)}'
-            }
+            return self._create_error_result(f'Error interno en procesamiento: {str(e)}')
