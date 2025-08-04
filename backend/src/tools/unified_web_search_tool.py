@@ -273,6 +273,46 @@ class UnifiedWebSearchTool(BaseTool):
         
         import asyncio
         
+        # 🔧 Función para obtener la configuración actual del agente
+        def get_configured_llm():
+            """
+            Obtiene el modelo LLM configurado por el usuario (no hardcodeado)
+            """
+            try:
+                from flask import current_app
+                from ..services.ollama_service import get_ollama_service
+                from ..adapters.mitosis_ollama_chat import MitosisOllamaChatModel
+                
+                # Obtener configuración activa del usuario
+                active_config = getattr(current_app, 'active_config', {})
+                
+                # Determinar proveedor configurado
+                ollama_config = active_config.get('ollama', {})
+                openrouter_config = active_config.get('openrouter', {})
+                
+                if openrouter_config.get('enabled', False):
+                    # TODO: Implementar OpenRouter cuando esté disponible
+                    self._emit_progress_eventlet("⚠️ OpenRouter configurado pero no implementado aún, usando Ollama")
+                    
+                # Usar el servicio Ollama existente (configurado por el usuario)
+                ollama_service = get_ollama_service()
+                if not ollama_service:
+                    self._emit_progress_eventlet("❌ No hay servicio LLM configurado")
+                    return None
+                
+                # Crear modelo usando el servicio configurado (no hardcodear modelo)
+                current_model = ollama_service.get_current_model()
+                self._emit_progress_eventlet(f"🤖 Usando modelo configurado: {current_model}")
+                
+                return MitosisOllamaChatModel.create_from_mitosis_config(
+                    ollama_service=ollama_service,
+                    model=current_model  # Usar el modelo que el usuario configuró
+                )
+                
+            except Exception as e:
+                self._emit_progress_eventlet(f"❌ Error obteniendo LLM configurado: {str(e)}")
+                return None
+
         async def async_browser_use_search():
             """Función async para usar browser-use"""
             try:
