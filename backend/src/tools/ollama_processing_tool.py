@@ -6,12 +6,12 @@ Genera contenido final procesado basado en todo el contexto de la tarea
 import logging
 import sys
 import os
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 # Add the backend src directory to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from tools.base_tool import BaseTool, register_tool
+from tools.base_tool import BaseTool, ParameterDefinition, ToolExecutionResult, register_tool
 from services.ollama_service import OllamaService
 
 logger = logging.getLogger(__name__)
@@ -23,33 +23,34 @@ class OllamaProcessingTool(BaseTool):
     Genera contenido final procesado basado en todo el contexto de la tarea
     """
     
-    @classmethod
-    def get_name(cls) -> str:
-        return "ollama_processing"
+    def __init__(self):
+        super().__init__(
+            name="ollama_processing",
+            description="Procesa y genera contenido final usando Ollama basado en todo el contexto"
+        )
     
-    @classmethod
-    def get_description(cls) -> str:
-        return "Procesa y genera contenido final usando Ollama basado en todo el contexto"
+    def _define_parameters(self) -> List[ParameterDefinition]:
+        """Definir parámetros específicos del procesamiento Ollama"""
+        return [
+            ParameterDefinition(
+                name="prompt",
+                param_type="string",
+                required=True,
+                description="Prompt completo para el procesamiento final",
+                min_value=10  # Mínimo 10 caracteres
+            ),
+            ParameterDefinition(
+                name="max_tokens",
+                param_type="integer",
+                required=False,
+                description="Máximo número de tokens para la respuesta",
+                default=1500,
+                min_value=100,
+                max_value=4000
+            )
+        ]
     
-    @classmethod
-    def get_parameters_schema(cls) -> Dict[str, Any]:
-        return {
-            "type": "object",
-            "properties": {
-                "prompt": {
-                    "type": "string",
-                    "description": "Prompt completo para el procesamiento final"
-                },
-                "max_tokens": {
-                    "type": "integer",
-                    "description": "Máximo número de tokens para la respuesta",
-                    "default": 1500
-                }
-            },
-            "required": ["prompt"]
-        }
-    
-    def execute(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
+    def _execute_tool(self, parameters: Dict[str, Any], config: Dict[str, Any]) -> ToolExecutionResult:
         """
         Ejecutar procesamiento final usando Ollama
         """
