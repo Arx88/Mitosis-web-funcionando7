@@ -569,33 +569,62 @@ Be precise and focus on the most relevant search results.'''
         # 🚀 EJECUTAR NAVEGACIÓN CON EVENTOS VISUALES PARALELOS
         navigation_task = agent.run(max_steps=6)
         
-        # 📸 NAVEGACIÓN VISUAL SIMPLIFICADA - EVENTOS EN TIEMPO REAL
+        # 📸 NAVEGACIÓN VISUAL SIMPLIFICADA - EVENTOS CON SCREENSHOTS REALES
         async def send_navigation_visual_events():
-            \"\"\"Enviar eventos visuales durante navegación browser-use\"\"\"
-            await asyncio.sleep(2)  # Esperar inicialización
+            \"\"\"Enviar eventos visuales CON SCREENSHOTS durante navegación browser-use\"\"\"
+            await asyncio.sleep(3)  # Esperar inicialización del navegador
             
             for i in range(6):
                 await asyncio.sleep(4)  # Esperar entre eventos
                 
-                # ✅ ENVIAR EVENTO DE NAVEGACIÓN VISUAL CON TASK_ID
-                await send_websocket_event(websocket_manager, 'browser_visual', {{
-                    'type': 'navigation_progress', 
+                screenshot_base64 = None
+                
+                # INTENTAR CAPTURAR SCREENSHOT REAL DEL NAVEGADOR
+                try:
+                    if hasattr(agent, 'browser_session') and agent.browser_session:
+                        browser = agent.browser_session.browser
+                        if browser:
+                            pages = await browser.pages()
+                            if pages and len(pages) > 0:
+                                page = pages[0] 
+                                screenshot_bytes = await page.screenshot(
+                                    type='png',
+                                    full_page=False,
+                                    quality=40  # Calidad baja para velocidad
+                                )
+                                screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
+                                print(f"✅ Screenshot REAL capturado para paso {{i+1}}")
+                except Exception as e:
+                    print(f"⚠️ No se pudo capturar screenshot paso {{i+1}}: {{e}}")
+                
+                # ✅ ENVIAR EVENTO CON O SIN SCREENSHOT
+                event_data = {{
+                    'type': 'browser_screenshot' if screenshot_base64 else 'navigation_progress',
                     'task_id': TASK_ID,  # CRÍTICO: task_id para que frontend no filtre
                     'message': f'🌐 NAVEGACIÓN EN VIVO: Browser-use navegando paso {{i+1}}/6',
                     'step': f'Navegación paso {{i+1}}/6', 
                     'timestamp': datetime.now().isoformat(),
                     'url': f'https://www.bing.com/search?q={{clean_query}}',
                     'navigation_active': True,
-                    'browser_status': 'activo',
-                    'screenshot': None  # Placeholder para screenshots futuros
-                }})
+                    'browser_status': 'activo'
+                }}
+                
+                if screenshot_base64:
+                    event_data['screenshot'] = f'data:image/png;base64,{{screenshot_base64}}'
+                    print(f"📸 Enviando screenshot paso {{i+1}} via WebSocket")
+                else:
+                    print(f"📝 Enviando evento de progreso paso {{i+1}}")
+                
+                await send_websocket_event(websocket_manager, 'browser_visual', event_data)
                 
                 await send_websocket_event(websocket_manager, 'terminal_activity', {{
                     'message': f'🌐 NAVEGACIÓN WEB VISUAL: Paso {{i+1}}/6 - Agente navegando...',
                     'timestamp': datetime.now().isoformat()
                 }})
                 
-                print(f"✅ Evento navegación visual {{i+1}}/6 enviado")
+                print(f"✅ Evento navegación visual {{i+1}}/6 enviado CON task_id")
+            
+            print("🎯 Navegación visual completada - 6 eventos enviados")
         
         # EJECUTAR NAVEGACIÓN VISUAL EN PARALELO
         visual_task = asyncio.create_task(send_navigation_visual_events())
