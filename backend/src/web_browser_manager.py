@@ -681,27 +681,345 @@ class WebBrowserManager:
                 "timestamp": datetime.now().isoformat()
             }
 
+    # ========================================================================
+    # MÉTODOS AUXILIARES PARA BROWSER-USE
+    # ========================================================================
+
+    async def _get_current_url_async(self) -> str:
+        """Get current URL async for browser-use"""
+        try:
+            if self.browser_use_agent and hasattr(self.browser_use_agent, 'browser_session'):
+                # Try to get URL from browser-use session
+                if hasattr(self.browser_use_agent.browser_session, 'page'):
+                    page = self.browser_use_agent.browser_session.page
+                    if page:
+                        return page.url
+            return self.current_url
+        except Exception as e:
+            logger.warning(f"Could not get current URL: {e}")
+            return self.current_url or ""
+
+    async def _get_page_title_async(self) -> str:
+        """Get page title async for browser-use"""
+        try:
+            if self.browser_use_agent and hasattr(self.browser_use_agent, 'browser_session'):
+                if hasattr(self.browser_use_agent.browser_session, 'page'):
+                    page = self.browser_use_agent.browser_session.page
+                    if page:
+                        return await page.title()
+            return "Página sin título"
+        except Exception as e:
+            logger.warning(f"Could not get page title: {e}")
+            return "Página sin título"
+
+    async def _take_screenshot_async(self) -> str:
+        """Take screenshot async for browser-use"""
+        try:
+            if self.browser_use_agent and hasattr(self.browser_use_agent, 'browser_session'):
+                if hasattr(self.browser_use_agent.browser_session, 'page'):
+                    page = self.browser_use_agent.browser_session.page
+                    if page:
+                        timestamp = int(time.time() * 1000)
+                        filename = f"browser_use_screenshot_{timestamp}.png"
+                        screenshot_path = self.screenshots_dir / filename
+                        
+                        await page.screenshot(path=str(screenshot_path), quality=20, full_page=False)
+                        
+                        # Return relative URL for frontend access
+                        return f"/api/files/screenshots/{self.task_id}/{filename}"
+            return ""
+        except Exception as e:
+            logger.warning(f"Could not take screenshot: {e}")
+            return ""
+
+    # ========================================================================
+    # MÉTODOS LEGACY PARA BACKWARD COMPATIBILITY
+    # ========================================================================
+
+    def _navigate_legacy(self, url: str, wait_for_load: bool = True):
+        """Legacy navigation for Playwright/Selenium"""
+        self._on_url_changed(url)
+        
+        if self.browser_type == "playwright":
+            self.page.goto(url, wait_until='networkidle' if wait_for_load else 'commit')
+        elif self.browser_type == "selenium":
+            self.driver.get(url)
+            if wait_for_load:
+                time.sleep(2)
+            
+            # Manual event triggering for Selenium
+            current_url = self.driver.current_url
+            title = self.driver.title
+            screenshot_path = self._take_screenshot()
+            
+            self.websocket_manager.send_browser_activity(
+                self.task_id, 
+                "page_loaded", 
+                current_url, 
+                title, 
+                screenshot_path
+            )
+
+    def _click_element_legacy(self, selector: str):
+        """Legacy click for Playwright/Selenium"""
+        if self.browser_type == "playwright":
+            self.page.click(selector)
+        elif self.browser_type == "selenium":
+            from selenium.webdriver.common.by import By
+            element = self.driver.find_element(By.CSS_SELECTOR, selector)
+            element.click()
+        
+        self.websocket_manager.send_browser_activity(
+            self.task_id, 
+            "click", 
+            self.get_current_url(), 
+            f"Click en: {selector}", 
+            ""
+        )
+
+    def _type_text_legacy(self, selector: str, text: str):
+        """Legacy typing for Playwright/Selenium"""
+        if self.browser_type == "playwright":
+            self.page.fill(selector, text)
+        elif self.browser_type == "selenium":
+            from selenium.webdriver.common.by import By
+            element = self.driver.find_element(By.CSS_SELECTOR, selector)
+            element.clear()
+            element.send_keys(text)
+        
+        self.websocket_manager.send_browser_activity(
+            self.task_id, 
+            "input", 
+            self.get_current_url(), 
+            f"Texto introducido en: {selector}", 
+            ""
+        )
+
+    def _extract_data_legacy(self, task_description: str) -> Dict[str, Any]:
+        """Legacy data extraction (basic)"""
+        try:
+            content = self.get_page_content()
+            return {
+                "task": task_description,
+                "url": self.get_current_url(),
+                "content_length": len(content),
+                "timestamp": datetime.now().isoformat(),
+                "method": "legacy",
+                "success": True
+            }
+        except Exception as e:
+            return {
+                "task": task_description,
+                "error": str(e),
+                "success": False,
+                "timestamp": datetime.now().isoformat()
+            }
+
+    # ========================================================================
+    # UTILIDADES Y MÉTODOS DE COMPATIBILIDAD
+    # ========================================================================
+
     def get_page_content(self) -> str:
-        """Get current page content"""
+        """Get current page content (sync for backward compatibility)"""
         try:
             if self.browser_type == "playwright":
                 return self.page.content()
             elif self.browser_type == "selenium":
                 return self.driver.page_source
+            elif self.browser_type == "browser-use":
+                # For browser-use, we'll need to implement this differently
+                logger.warning("get_page_content not directly supported with browser-use. Use extract_data instead.")
+                return ""
         except Exception as e:
             logger.error(f"Error getting page content: {e}")
             return ""
 
     def get_current_url(self) -> str:
-        """Get current URL"""
+        """Get current URL (sync for backward compatibility)"""
         try:
             if self.browser_type == "playwright":
                 return self.page.url if self.page else ""
             elif self.browser_type == "selenium":
                 return self.driver.current_url if self.driver else ""
+            elif self.browser_type == "browser-use":
+                return self.current_url
         except Exception as e:
             logger.error(f"Error getting current URL: {e}")
             return ""
+
+    def get_page_title(self) -> str:
+        """Get page title (sync for backward compatibility)"""
+        try:
+            if self.browser_type == "playwright":
+                return self.page.title() if self.page else ""
+            elif self.browser_type == "selenium":
+                return self.driver.title if self.driver else ""
+            elif self.browser_type == "browser-use":
+                # For browser-use, this would need async call - return cached or empty
+                return "Título no disponible en modo síncrono"
+        except Exception as e:
+            logger.error(f"Error getting page title: {e}")
+            return ""
+
+    def _take_screenshot(self) -> str:
+        """Take screenshot (sync for backward compatibility)"""
+        try:
+            timestamp = int(time.time() * 1000)
+            filename = f"screenshot_{timestamp}.png"
+            screenshot_path = self.screenshots_dir / filename
+            
+            if self.browser_type == "playwright":
+                self.page.screenshot(path=str(screenshot_path), quality=20, full_page=False)
+            elif self.browser_type == "selenium":
+                self.driver.save_screenshot(str(screenshot_path))
+            elif self.browser_type == "browser-use":
+                # browser-use screenshots need async - skip for sync calls
+                logger.warning("Screenshot skipped for browser-use in sync mode. Use async methods.")
+                return ""
+            
+            return f"/api/files/screenshots/{self.task_id}/{filename}"
+            
+        except Exception as e:
+            logger.error(f"Error taking screenshot: {e}")
+            return ""
+
+    # ========================================================================
+    # CLEANUP Y CIERRE
+    # ========================================================================
+
+    async def close(self):
+        """Close browser and cleanup resources"""
+        try:
+            if self.browser_use_agent:
+                # Close browser-use agent
+                if hasattr(self.browser_use_agent, 'browser_session'):
+                    if hasattr(self.browser_use_agent.browser_session, 'close'):
+                        await self.browser_use_agent.browser_session.close()
+                logger.info("✅ browser-use Agent closed")
+            
+            if self.browser:
+                # Close legacy Playwright browser
+                self.browser.close()
+                if hasattr(self, 'playwright_instance'):
+                    self.playwright_instance.stop()
+                logger.info("✅ Legacy Playwright browser closed")
+            
+            if self.driver:
+                # Close legacy Selenium driver
+                self.driver.quit()
+                logger.info("✅ Legacy Selenium driver closed")
+            
+            self.is_initialized = False
+            
+            self.websocket_manager.send_log_message(
+                self.task_id, 
+                "info", 
+                "🔒 Navegador cerrado correctamente"
+            )
+            
+        except Exception as e:
+            logger.error(f"Error closing browser: {e}")
+
+    def __del__(self):
+        """Cleanup when object is destroyed"""
+        try:
+            if self.is_initialized:
+                # Run async close in sync context if needed
+                if self.browser_type == "browser-use":
+                    # For browser-use, we need async cleanup
+                    logger.warning("browser-use cleanup requires async context. Use close() method explicitly.")
+                else:
+                    # Sync cleanup for legacy browsers
+                    if self.browser:
+                        self.browser.close()
+                        if hasattr(self, 'playwright_instance'):
+                            self.playwright_instance.stop()
+                    if self.driver:
+                        self.driver.quit()
+        except Exception as e:
+            logger.error(f"Error in WebBrowserManager destructor: {e}")
+
+    # ========================================================================
+    # MÉTODOS DE COMPATIBILIDAD CON PLAYWRIGHT LISTENER SYSTEM
+    # ========================================================================
+
+    def _setup_playwright_listeners(self):
+        """Setup Playwright event listeners for legacy mode"""
+        if not self.page:
+            return
+        
+        def on_url_changed(url):
+            self._on_url_changed(url)
+        
+        def on_page_loaded():
+            self._on_page_loaded()
+        
+        def on_request(request):
+            self._on_request(request)
+        
+        def on_response(response):
+            self._on_response(response)
+        
+        self.page.on("load", lambda: on_page_loaded())
+        self.page.on("domcontentloaded", lambda: self._on_dom_ready())
+
+    def _on_url_changed(self, url: str):
+        """Handle URL change event (legacy)"""
+        self.websocket_manager.send_browser_activity(
+            self.task_id, 
+            "url_changed", 
+            url, 
+            "", 
+            ""
+        )
+        logger.info(f"🔄 URL changed: {url}")
+
+    def _on_page_loaded(self):
+        """Handle page load event (legacy)"""
+        current_url = self.get_current_url()
+        title = self.get_page_title()
+        screenshot_path = self._take_screenshot()
+        
+        self.websocket_manager.send_browser_activity(
+            self.task_id, 
+            "page_loaded", 
+            current_url, 
+            title, 
+            screenshot_path
+        )
+        
+        self.websocket_manager.send_log_message(
+            self.task_id, 
+            "info", 
+            f"📄 Página cargada: {title} ({current_url})"
+        )
+
+    def _on_dom_ready(self):
+        """Handle DOM content loaded event (legacy)"""
+        current_url = self.get_current_url()
+        self.websocket_manager.send_log_message(
+            self.task_id, 
+            "info", 
+            f"🔧 DOM listo: {current_url}"
+        )
+
+    def _on_request(self, request):
+        """Handle network request event (legacy)"""
+        if request.resource_type in ['document', 'xhr', 'fetch']:
+            self.websocket_manager.send_log_message(
+                self.task_id, 
+                "debug", 
+                f"📡 Request: {request.method} {request.url}"
+            )
+
+    def _on_response(self, response):
+        """Handle network response event (legacy)"""
+        if response.request.resource_type in ['document', 'xhr', 'fetch']:
+            self.websocket_manager.send_log_message(
+                self.task_id, 
+                "debug", 
+                f"📨 Response: {response.status} {response.url}"
+            )
 
     def get_page_title(self) -> str:
         """Get current page title"""
