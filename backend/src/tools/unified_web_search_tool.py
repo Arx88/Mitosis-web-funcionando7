@@ -789,18 +789,18 @@ if __name__ == "__main__":
                             }]
                         else:
                             error = result_data.get('error', 'Error desconocido en subprocess')
-                            self._emit_progress_eventlet(f"❌ Browser-use subprocess error: {{error}}")
+                            self._emit_progress_eventlet(f"❌ Browser-use subprocess error: {error}")
                             raise Exception(error)
                             
                     except (json.JSONDecodeError, KeyError) as parse_error:
-                        self._emit_progress_eventlet(f"❌ Error parseando resultado subprocess: {{str(parse_error)}}")
-                        self._emit_progress_eventlet(f"Stdout: {{process.stdout[:200]}}")
+                        self._emit_progress_eventlet(f"❌ Error parseando resultado subprocess: {str(parse_error)}")
+                        self._emit_progress_eventlet(f"Stdout: {process.stdout[:200]}")
                         raise Exception("Error parseando resultado de browser-use subprocess")
                 
                 else:
                     error_output = process.stderr or process.stdout
-                    self._emit_progress_eventlet(f"❌ Browser-use subprocess falló: {{error_output[:300]}}")
-                    raise Exception(f"Subprocess browser-use falló con código {{process.returncode}}")
+                    self._emit_progress_eventlet(f"❌ Browser-use subprocess falló: {error_output[:300]}")
+                    raise Exception(f"Subprocess browser-use falló con código {process.returncode}")
                 
             finally:
                 # Limpiar archivo temporal
