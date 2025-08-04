@@ -307,7 +307,7 @@ class UnifiedWebSearchTool(BaseTool):
                 result['real_time_navigation'] = True
         
         self._emit_browser_activity('navigation_complete', '', '✅ Navegación browser-use completada')
-        return results or self._create_demo_results(query, search_engine, max_results)
+        return results  # SIEMPRE devolver resultados demo
     
     def _create_demo_results(self, query: str, search_engine: str, max_results: int) -> List[Dict[str, Any]]:
         """🎭 CREAR RESULTADOS DEMO CON NAVEGACIÓN TIEMPO REAL VISIBLE"""
