@@ -399,13 +399,8 @@ class WebBrowserManager:
                 if task_description:
                     navigation_task += f" and {task_description}"
                 
-                # Execute task with browser-use Agent with explicit max_steps
-                try:
-                    result = await self.browser_use_agent.run(navigation_task, max_steps=3)
-                except TypeError as te:
-                    # Fallback if max_steps is already configured elsewhere
-                    logger.warning(f"browser-use max_steps conflict, using default: {te}")
-                    result = await self.browser_use_agent.run(navigation_task)
+                # Execute task with browser-use Agent
+                result = await self.browser_use_agent.run(navigation_task, max_steps=3)
                 
                 # Get current page info after navigation
                 current_url = await self._get_current_url_async()
