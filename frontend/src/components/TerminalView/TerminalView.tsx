@@ -826,8 +826,23 @@ export const TerminalView = ({
 
     const handleBrowserVisual = (data: any) => {
       console.log(`📸 [BROWSER-VISUAL-${taskId}] Screenshot received:`, data);
+      console.warn(`🔍 [TASK_ID_DEBUG] Frontend taskId: "${taskId}"`);
+      console.warn(`🔍 [TASK_ID_DEBUG] Data task_id: "${data?.task_id}"`);
+      console.warn(`🔍 [TASK_ID_DEBUG] IDs coinciden: ${data?.task_id === taskId}`);
       
-      if (!data || data.task_id !== taskId) return;
+      if (!data) {
+        console.error(`❌ [BROWSER_VISUAL_ERROR] Data is null/undefined`);
+        return;
+      }
+      
+      if (data.task_id !== taskId) {
+        console.error(`❌ [BROWSER_VISUAL_ERROR] Task ID mismatch - dropping event`);
+        console.error(`   Expected: "${taskId}"`);
+        console.error(`   Received: "${data.task_id}"`);
+        return;
+      }
+      
+      console.log(`✅ [BROWSER_VISUAL_SUCCESS] Processing browser visual event`);
       
       try {
         // Agregar screenshot al estado
