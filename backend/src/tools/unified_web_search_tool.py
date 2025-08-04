@@ -813,8 +813,10 @@ if __name__ == "__main__":
                             raise Exception(error)
                             
                     except (json.JSONDecodeError, KeyError) as parse_error:
-                        self._emit_progress_eventlet(f"❌ Error parseando resultado subprocess: {str(parse_error)}")
-                        self._emit_progress_eventlet(f"Stdout: {process.stdout[:400]}")
+                        error_msg = str(parse_error)
+                        stdout_preview = process.stdout[:400] if process.stdout else "No output"
+                        self._emit_progress_eventlet(f"❌ Error parseando resultado subprocess: {error_msg}")
+                        self._emit_progress_eventlet(f"Stdout: {stdout_preview}")
                         raise Exception("Error parseando resultado de browser-use subprocess")
                 
                 else:
