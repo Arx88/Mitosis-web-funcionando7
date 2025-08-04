@@ -7127,7 +7127,12 @@ def execute_step_internal(task_id: str, step_id: str, step: dict):
                 'agent_evaluation': agent_evaluation,
                 'timestamp': datetime.now().isoformat()
             })
-            return {'success': True, 'agent_approved': True, 'evaluation': agent_evaluation}
+            return {
+                'success': True, 
+                'agent_approved': True, 
+                'evaluation': agent_evaluation,
+                'data': step_result  # ✅ CRÍTICO: Preservar datos reales del tool
+            }
         else:
             emit_step_event(task_id, 'step_needs_more_work', {
                 'step_id': step_id,
