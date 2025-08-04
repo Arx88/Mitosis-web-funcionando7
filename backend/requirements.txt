@@ -123,6 +123,7 @@ rpds-py==0.26.0
 gunicorn==21.2.0
 selenium==4.15.0
 pydantic-settings==2.10.1
+bubus==1.4.7
 webdriver-manager==4.0.1  # ✅ PARA WebBrowserManager SELENIUM SUPPORT
 pytest-asyncio==1.1.0
 pytest-mock==3.14.1
