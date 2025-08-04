@@ -664,8 +664,9 @@ REGLAS IMPORTANTES:
         if BROWSER_MANAGER_AVAILABLE and task_id:
             self._emit_progress_eventlet("📸 Iniciando navegación browser-use con captura visual...")
             try:
-                # Importar browser-use aquí para navegación visual
+                # Importar dependencias necesarias
                 import asyncio
+                import os
                 from browser_use import Agent
                 from browser_use.llm import ChatOpenAI
                 from browser_use.browser.session import BrowserSession
