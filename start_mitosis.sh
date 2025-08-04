@@ -239,7 +239,7 @@ detect_current_url() {
             fi
             
             # Método alternativo: usar hostname para construir URLs comunes
-            detected_url="https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com"
+            detected_url="https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com"
             echo "HOSTNAME_FALLBACK"
             return 0
         fi
@@ -284,8 +284,8 @@ detect_current_url() {
     
     # Método 5: Probar URLs comunes basadas en patrones observados
     local common_patterns=(
-        "https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com"
-        "https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com"
+        "https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com"
+        "https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com"
     )
     
     for test_url in "${common_patterns[@]}"; do
@@ -332,11 +332,11 @@ case $DETECTION_METHOD in
         # Generar URL basada en contexto del container
         CONTAINER_ID=$(cat /proc/self/cgroup 2>/dev/null | grep docker | head -1 | sed 's/.*\///' | head -c 12 2>/dev/null || echo "")
         if [[ ${#CONTAINER_ID} -ge 8 ]]; then
-            REAL_FRONTEND_URL="https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com"
+            REAL_FRONTEND_URL="https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com"
             echo "   📍 URL generada desde container context: $REAL_FRONTEND_URL"
         else
             # Usar patrón que funciona con múltiples entornos
-            REAL_FRONTEND_URL="https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com"
+            REAL_FRONTEND_URL="https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com"
             echo "   📍 URL de fallback seguro: $REAL_FRONTEND_URL"
         fi
         ;;
@@ -345,7 +345,7 @@ esac
 # Validación final: asegurar que la URL es válida
 if [[ ! "$REAL_FRONTEND_URL" =~ ^https://.*\.preview\.emergentagent\.com$ ]]; then
     echo "   ⚠️ URL detectada no válida, aplicando corrección..."
-    REAL_FRONTEND_URL="https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com"
+    REAL_FRONTEND_URL="https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com"
     echo "   📍 URL corregida: $REAL_FRONTEND_URL"
 fi
 
@@ -389,7 +389,7 @@ echo "   🌐 Generando lista completa de URLs permitidas..."
 # URLs base siempre incluidas
 BASE_CORS_URLS=(
     "\"$REAL_FRONTEND_URL\""  # URL detectada dinámicamente
-    "\"https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com\""  # Wildcard para todos los previews
+    "\"https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com\""  # Wildcard para todos los previews
     "\"http://localhost:3000\""
     "\"http://localhost:5173\""
     "\"http://127.0.0.1:3000\""
@@ -398,17 +398,17 @@ BASE_CORS_URLS=(
 
 # URLs adicionales basadas en patrones comunes
 ADDITIONAL_CORS_URLS=(
-    "\"https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com\""
-    "\"https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com\""
+    "\"https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com\""
+    "\"https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com\""
 )
 
 # Generar variaciones de la URL detectada
 if [[ "$REAL_FRONTEND_URL" =~ ^https://([^.]+)\.preview\.emergentagent\.com$ ]]; then
     APP_NAME="${BASH_REMATCH[1]}"
     ADDITIONAL_CORS_URLS+=(
-        "\"https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com\""
-        "\"https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com\""
-        "\"https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com\""
+        "\"https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com\""
+        "\"https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com\""
+        "\"https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com\""
     )
 fi
 
@@ -434,7 +434,7 @@ FRONTEND_ORIGINS = [
     "$REAL_FRONTEND_URL",
     
     # 🔧 WILDCARD PARA TODOS LOS PREVIEW DOMAINS  
-    "https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com",
+    "https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com",
     
     # 🏠 DESARROLLO LOCAL
     "http://localhost:3000",
@@ -443,8 +443,8 @@ FRONTEND_ORIGINS = [
     "http://127.0.0.1:5173",
     
     # 📱 PREVIEW DOMAINS COMUNES
-    "https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com",
-    "https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com",
+    "https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com",
+    "https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com",
     
     # 🌟 FALLBACK UNIVERSAL (último recurso)
     "*"
@@ -746,7 +746,7 @@ if $backend_ok; then
     echo "🔍 Testing CORS con múltiples orígenes posibles..."
     CORS_TEST_URLS=(
         "$REAL_FRONTEND_URL"
-        "https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com"
+        "https://e27bb7c9-0aac-4400-bac8-b6436e299b91.preview.emergentagent.com"
         "http://localhost:3000"
     )
     
