@@ -62,11 +62,11 @@ class OllamaAnalysisTool(BaseTool):
             # Crear instancia de OllamaService
             ollama_service = OllamaService()
             
-            # Configurar parámetros de generación
-            generation_params = {
+            # Configurar contexto para generar respuesta
+            context = {
+                'system_prompt': "Eres un asistente experto en análisis. Proporciona análisis detallados, estructurados y útiles basados en la información proporcionada.",
                 'max_tokens': max_tokens,
-                'temperature': 0.7,
-                'system_prompt': "Eres un asistente experto en análisis. Proporciona análisis detallados, estructurados y útiles basados en la información proporcionada."
+                'temperature': 0.7
             }
             
             # Generar respuesta usando Ollama
@@ -74,7 +74,10 @@ class OllamaAnalysisTool(BaseTool):
             
             response = ollama_service.generate_response(
                 prompt=prompt,
-                **generation_params
+                context=context,
+                use_tools=False,
+                task_id=self.current_task_id or "analysis",
+                step_id="analysis_step"
             )
             
             if response and 'response' in response:
