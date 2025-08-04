@@ -90,6 +90,18 @@ export const TerminalView = ({
   const { socket, isConnected, joinTaskRoom, addEventListeners, removeEventListeners } = useWebSocket();
 
   // ========================================================================
+  // ESTADO PARA VISUALIZACIÓN BROWSER-USE
+  // ========================================================================
+  const [browserScreenshots, setBrowserScreenshots] = useState<Array<{
+    id: string;
+    screenshot: string;
+    step: string;
+    timestamp: string;
+    url?: string;
+  }>>([]);
+  const [currentScreenshot, setCurrentScreenshot] = useState<string | null>(null);
+
+  // ========================================================================
   // ESTADO LOCAL MÍNIMO - SOLO PARA UI
   // ========================================================================
   
