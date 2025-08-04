@@ -242,9 +242,9 @@ class UnifiedWebSearchTool(BaseTool):
         self._emit_progress_eventlet(f"🌐 Motor de búsqueda: {search_engine}")
         
         try:
-            # ✨ USAR BROWSER-USE REAL - NAVEGACIÓN VERDADERA
+            # ✨ USAR BROWSER-USE REAL - NAVEGACIÓN VERDADERA VIA SUBPROCESS
             if BROWSER_USE_AVAILABLE:
-                self._emit_progress_eventlet("🚀 Iniciando navegación browser-use REAL en tiempo real...")
+                self._emit_progress_eventlet("🚀 Iniciando navegación browser-use REAL via subprocess...")
                 results = self._run_browser_use_search_original(query, search_engine, max_results, extract_content, self.task_id)
                 if results and len(results) > 0:
                     self._emit_progress_eventlet(f"✅ browser-use REAL exitoso: {len(results)} resultados")
