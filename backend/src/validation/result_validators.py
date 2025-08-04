@@ -138,25 +138,33 @@ def validate_ollama_analysis_result(result: dict) -> Tuple[str, str]:
         if result.get('error'):
             return 'failure', f'Error en análisis: {result["error"]}'
         
-        content = result.get('response', '')
+        # CORREGIDO: Verificar tanto 'response' como 'content' (estructura real)
+        content = result.get('response', '') or result.get('content', '')
+        
         if not content:
-            return 'failure', 'El análisis no generó contenido.'
+            return 'failure', 'El análisis no generó contenido real. Campo response y content están vacíos.'
         
         # Verificar longitud mínima de contenido
         if len(content.strip()) < 50:
-            return 'warning', 'El análisis generado es muy corto (menos de 50 caracteres).'
+            return 'failure', 'El análisis generado es muy corto (menos de 50 caracteres). No constituye un análisis real.'
         
         # Verificar que no sea solo texto genérico o de error
         error_indicators = [
             'no puedo', 'cannot', 'unable to', 'error', 'problema',
-            'disculpa', 'sorry', 'lo siento', 'no es posible'
+            'disculpa', 'sorry', 'lo siento', 'no es posible', 'paso completado',
+            'generic', 'genérico', 'no hay información'
         ]
         
         content_lower = content.lower()
         error_count = sum(1 for indicator in error_indicators if indicator in content_lower)
         
         if error_count > 2:  # Demasiadas palabras de error
-            return 'failure', 'El análisis de Ollama indica errores o incapacidad para completar la tarea.'
+            return 'failure', 'El análisis de Ollama indica errores, falta de capacidad o es demasiado genérico.'
+        
+        # Verificar que no sea solo "Paso completado" u otro texto genérico
+        generic_phrases = ['paso completado', 'task completed', 'generic response', 'default response']
+        if any(phrase in content_lower for phrase in generic_phrases):
+            return 'failure', 'El análisis es solo un mensaje genérico, no contiene análisis real.'
         
         # Verificar que tenga estructura de análisis (párrafos, puntos, etc.)
         has_structure = any([
