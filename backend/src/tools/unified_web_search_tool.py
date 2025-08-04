@@ -499,9 +499,10 @@ async def run_browser_use_subprocess():
         
         # Generar query limpio y navegable
         clean_query = extract_clean_keywords(QUERY)
-        search_url = f"https://www.bing.com/search?q={{{{clean_query.replace(' ', '+')}}}}"
+        clean_query_url = clean_query.replace(' ', '+')
+        search_url = f"https://www.bing.com/search?q={{clean_query_url}}"
         
-        intelligent_task = f'''Navigate to {{{{search_url}}}} and search for: "{{{{clean_query}}}}"
+        intelligent_task = f'''Navigate to {{search_url}} and search for: "{{clean_query}}"
 
 TASK:
 1. Go to Bing search engine
