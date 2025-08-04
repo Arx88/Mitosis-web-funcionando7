@@ -522,8 +522,17 @@ Be precise and focus on the most relevant search results.'''
         
         # Notificar progreso via WebSocket
         await send_websocket_event(websocket_manager, 'terminal_activity', {{
-            'message': f'🌐 NAVEGACIÓN WEB: Iniciando búsqueda para "{{QUERY[:50]}}"',
+            'message': f'🌐 NAVEGACIÓN WEB EN TIEMPO REAL: Iniciando búsqueda para "{{clean_query}}"',
             'timestamp': datetime.now().isoformat()
+        }})
+        
+        # ENVIAR EVENTO DE NAVEGACIÓN VISUAL INMEDIATAMENTE
+        await send_websocket_event(websocket_manager, 'browser_visual', {{
+            'type': 'navigation_live',
+            'message': f'🚀 AGENTE NAVEGANDO: {{clean_query}}',
+            'url': search_url,
+            'timestamp': datetime.now().isoformat(),
+            'step': 'Iniciando navegación browser-use'
         }})
         
         # Ejecutar navegación con captura de screenshots
