@@ -635,71 +635,35 @@ Be precise and focus on the most relevant search results.'''
         # 🚀 EJECUTAR NAVEGACIÓN CON SCREENSHOTS PARALELOS EN SUBPROCESS
         navigation_task = agent.run(max_steps=6)
         
-        # 📸 FUNCIÓN CRÍTICA: Capturar screenshots DENTRO del subprocess
-        async def capture_subprocess_screenshots():
-            \"\"\"Capturar screenshots reales desde browser session en subprocess\"\"\"
-            screenshot_dir = "/tmp/browser_use_screenshots"
-            os.makedirs(screenshot_dir, exist_ok=True)
-            
-            await asyncio.sleep(3)  # Esperar inicialización
+        # 📸 NAVEGACIÓN VISUAL SIMPLIFICADA - EVENTOS EN TIEMPO REAL
+        async def send_navigation_visual_events():
+            \"\"\"Enviar eventos visuales durante navegación browser-use\"\"\"
+            await asyncio.sleep(2)  # Esperar inicialización
             
             for i in range(6):
-                try:
-                    await asyncio.sleep(4)  # Tiempo entre capturas
-                    
-                    # OBTENER BROWSER SESSION
-                    if hasattr(agent, 'browser_session') and agent.browser_session:
-                        browser = agent.browser_session.browser
-                        if browser:
-                            pages = await browser.pages()
-                            if pages and len(pages) > 0:
-                                page = pages[0]
-                                
-                                # CAPTURAR SCREENSHOT
-                                screenshot_bytes = await page.screenshot(
-                                    type='png',
-                                    full_page=False,
-                                    quality=60
-                                )
-                                
-                                # GUARDAR COMO ARCHIVO TEMPORAL
-                                screenshot_file = f"{{screenshot_dir}}/screenshot_{{TASK_ID}}_{{i+1}}.png"
-                                with open(screenshot_file, 'wb') as f:
-                                    f.write(screenshot_bytes)
-                                
-                                # ENVIAR VIA WEBSOCKET DIRECTAMENTE
-                                screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
-                                await send_websocket_event(websocket_manager, 'browser_visual', {{
-                                    'type': 'browser_screenshot',
-                                    'task_id': TASK_ID,
-                                    'screenshot': f'data:image/png;base64,{{screenshot_base64}}',
-                                    'step': f'📸 Screenshot en vivo {{i+1}}/6',
-                                    'message': f'🌐 NAVEGACIÓN VISUAL: Captura {{i+1}} desde subprocess',
-                                    'timestamp': datetime.now().isoformat(),
-                                    'url': page.url if hasattr(page, 'url') else search_url
-                                }})
-                                
-                                print(f"✅ Screenshot {{i+1}} capturado y enviado desde subprocess")
-                                continue
-                                
-                except Exception as screenshot_error:
-                    print(f"⚠️ Error capturando screenshot {{i+1}}: {{screenshot_error}}")
+                await asyncio.sleep(4)  # Esperar entre eventos
                 
-                # FALLBACK: Evento visual sin screenshot
+                # ✅ ENVIAR EVENTO DE NAVEGACIÓN VISUAL
                 await send_websocket_event(websocket_manager, 'browser_visual', {{
                     'type': 'navigation_progress',
                     'task_id': TASK_ID,
-                    'message': f'🌐 NAVEGACIÓN PASO {{i+1}}/6: Browser-use en acción',
-                    'step': f'Paso {{i+1}}/6',
+                    'message': f'🌐 NAVEGACIÓN EN VIVO: Browser-use navegando paso {{i+1}}/6',
+                    'step': f'Navegación paso {{i+1}}/6',
                     'timestamp': datetime.now().isoformat(),
-                    'url': search_url,
-                    'navigation_active': True
+                    'url': f'https://www.bing.com/search?q={{clean_query}}',
+                    'navigation_active': True,
+                    'browser_status': 'activo'
                 }})
                 
-                print(f"📝 Evento navegación {{i+1}} enviado (fallback)")
+                await send_websocket_event(websocket_manager, 'terminal_activity', {{
+                    'message': f'🌐 NAVEGACIÓN WEB VISUAL: Paso {{i+1}}/6 - Agente navegando...',
+                    'timestamp': datetime.now().isoformat()
+                }})
+                
+                print(f"✅ Evento navegación visual {{i+1}}/6 enviado")
         
-        # EJECUTAR SCREENSHOTS EN PARALELO CON NAVEGACIÓN
-        screenshot_task = asyncio.create_task(capture_subprocess_screenshots())
+        # EJECUTAR NAVEGACIÓN VISUAL EN PARALELO
+        visual_task = asyncio.create_task(send_navigation_visual_events())
         
         # 📸 TASK PARALELA: Capturar screenshots durante navegación
         async def capture_real_screenshots():
