@@ -577,16 +577,17 @@ Be precise and focus on the most relevant search results.'''
             for i in range(6):
                 await asyncio.sleep(4)  # Esperar entre eventos
                 
-                # ✅ ENVIAR EVENTO DE NAVEGACIÓN VISUAL
+                # ✅ ENVIAR EVENTO DE NAVEGACIÓN VISUAL CON TASK_ID
                 await send_websocket_event(websocket_manager, 'browser_visual', {{
-                    'type': 'navigation_progress',
-                    'task_id': TASK_ID,
+                    'type': 'navigation_progress', 
+                    'task_id': TASK_ID,  # CRÍTICO: task_id para que frontend no filtre
                     'message': f'🌐 NAVEGACIÓN EN VIVO: Browser-use navegando paso {{i+1}}/6',
-                    'step': f'Navegación paso {{i+1}}/6',
+                    'step': f'Navegación paso {{i+1}}/6', 
                     'timestamp': datetime.now().isoformat(),
                     'url': f'https://www.bing.com/search?q={{clean_query}}',
                     'navigation_active': True,
-                    'browser_status': 'activo'
+                    'browser_status': 'activo',
+                    'screenshot': None  # Placeholder para screenshots futuros
                 }})
                 
                 await send_websocket_event(websocket_manager, 'terminal_activity', {{
