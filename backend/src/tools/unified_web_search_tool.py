@@ -224,27 +224,23 @@ class UnifiedWebSearchTool(BaseTool):
     def _execute_search_with_visualization(self, query: str, search_engine: str, 
                                          max_results: int, extract_content: bool) -> List[Dict[str, Any]]:
         """
-        🤖 BÚSQUEDA CON NAVEGACIÓN INTELIGENTE USANDO BROWSER-USE
+        🔍 EJECUTOR PRINCIPAL DE BÚSQUEDA CON VISUALIZACIÓN
         Implementa búsqueda web usando AI con visualización en tiempo real
         """
         
-        # PASO 1: INICIALIZACIÓN CON BROWSER-USE
-        self._emit_progress_eventlet(f"🤖 Iniciando búsqueda inteligente con browser-use Agent...")
+        # PASO 1: INICIALIZACIÓN CON PRIORIDAD CORREGIDA
+        self._emit_progress_eventlet(f"🤖 Iniciando búsqueda inteligente...")
         self._emit_progress_eventlet(f"🔍 Consulta: '{query}'")
         self._emit_progress_eventlet(f"🌐 Motor de búsqueda: {search_engine}")
         
         try:
-            # PASO 2: USAR BROWSER-USE PARA NAVEGACIÓN INTELIGENTE
-            if BROWSER_MANAGER_AVAILABLE:
-                results = self._run_browser_use_search(query, search_engine, max_results, extract_content)
-            else:
-                # Fallback a método legacy si browser-use no está disponible
-                self._emit_progress_eventlet("⚠️ Browser-use no disponible, usando método legacy...")
-                results = self._run_legacy_search(query, search_engine, max_results, extract_content)
+            # PASO 2: USAR REQUESTS SEARCH COMO MÉTODO PRINCIPAL (más confiable)
+            self._emit_progress_eventlet("🌐 Ejecutando búsqueda web real...")
+            results = self._requests_search(query, search_engine, max_results)
             
-            # PASO 3: FINALIZACIÓN CON PROGRESO EN TIEMPO REAL
-            if results:
-                self._emit_progress_eventlet(f"✅ Búsqueda inteligente completada: {len(results)} resultados obtenidos")
+            # PASO 3: VERIFICAR SI LOS RESULTADOS SON REALES
+            if results and all(not r.get('url', '').startswith('https://example.com') for r in results):
+                self._emit_progress_eventlet(f"✅ Búsqueda real completada: {len(results)} resultados obtenidos")
                 
                 # Mostrar muestra de resultados en tiempo real
                 for i, result in enumerate(results[:3]):  # Primeros 3 resultados
@@ -253,19 +249,14 @@ class UnifiedWebSearchTool(BaseTool):
                 if len(results) > 3:
                     self._emit_progress_eventlet(f"   📚 Y {len(results) - 3} resultados adicionales encontrados")
             else:
-                self._emit_progress_eventlet("⚠️ Búsqueda completada sin resultados")
+                self._emit_progress_eventlet("⚠️ Búsqueda completada sin resultados reales")
             
             return results
             
         except Exception as e:
-            self._emit_progress_eventlet(f"❌ Error durante búsqueda inteligente: {str(e)}")
-            # Fallback a método legacy en caso de error
-            try:
-                self._emit_progress_eventlet("🔄 Intentando método de búsqueda alternativo...")
-                return self._run_legacy_search(query, search_engine, max_results, extract_content)
-            except Exception as fallback_error:
-                self._emit_progress_eventlet(f"❌ Error en método alternativo: {str(fallback_error)}")
-                raise e
+            self._emit_progress_eventlet(f"❌ Error durante búsqueda: {str(e)}")
+            # NO fallback a resultados simulados - mejor devolver error
+            raise e
 
     def _run_browser_use_search(self, query: str, search_engine: str, 
                                max_results: int, extract_content: bool) -> List[Dict[str, Any]]:
