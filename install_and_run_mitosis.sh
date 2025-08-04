@@ -140,7 +140,7 @@ echo -e "${GREEN}║                          🎊 ¡INSTALACIÓN EXITOSA! 🎊 
 echo -e "${GREEN}╚══════════════════════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "${CYAN}🌐 ENLACES DE ACCESO:${NC}"
-echo -e "   Frontend: ${YELLOW}https://6838eb4f-3fc9-46a8-a9ba-6c90e4867a5f.preview.emergentagent.com${NC}"
+echo -e "   Frontend: ${YELLOW}https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com${NC}"
 echo -e "   Backend:  ${YELLOW}http://localhost:8001${NC}"
 echo ""
 echo -e "${CYAN}🛠️  COMANDOS ÚTILES:${NC}"

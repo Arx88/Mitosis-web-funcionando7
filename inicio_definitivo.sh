@@ -176,7 +176,7 @@ sudo supervisorctl status
 echo ""
 echo "🎉 MITOSIS INICIADO EXITOSAMENTE"
 echo "============================================================="
-echo "Frontend: https://6838eb4f-3fc9-46a8-a9ba-6c90e4867a5f.preview.emergentagent.com"
+echo "Frontend: https://7cb64236-53b4-4adb-8933-7f408df97529.preview.emergentagent.com"
 echo "Backend API: http://localhost:8001"
 echo "============================================================="
 echo "✅ Backend: $(curl -s http://localhost:8001/health >/dev/null && echo 'FUNCIONANDO' || echo 'VERIFICAR LOGS')"
