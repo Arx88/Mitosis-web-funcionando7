@@ -681,6 +681,18 @@ if __name__ == "__main__":
                                             }
                                             
                                             self._emit_progress_eventlet("✅ JSON truncado parseado exitosamente!")
+                                            
+                                            # Crear resultado estructurado directamente y retornar
+                                            return [{
+                                                'title': f'Navegación inteligente (manual): {query[:50]}',
+                                                'url': f'https://www.bing.com/search?q={query.replace(" ", "+")}',
+                                                'snippet': extracted_content[:400] + "..." if len(extracted_content) > 400 else extracted_content,
+                                                'source': search_engine,
+                                                'method': 'browser_use_subprocess_manual',
+                                                'ai_navigation': True,
+                                                'full_content': extracted_content[:2000],
+                                                'timestamp': datetime.now().isoformat()
+                                            }]
                                         else:
                                             raise Exception("No se pudo extraer contenido del JSON truncado")
                                     else:
