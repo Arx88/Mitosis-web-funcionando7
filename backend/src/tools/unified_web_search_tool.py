@@ -431,7 +431,10 @@ Be intelligent about how you navigate - adapt to the page layout and find the be
                 )
                 
                 self._emit_progress_eventlet("✅ Agente browser-use creado exitosamente con configuración avanzada")
+                self._emit_browser_activity('agent_created', '', 'Agente browser-use creado con configuración avanzada para contenedores')
+                
                 self._emit_progress_eventlet("🚀 Iniciando navegación autónoma con IA y monitoreo en tiempo real...")
+                self._emit_browser_activity('navigation_start', search_url, f'Iniciando navegación autónoma a {search_engine}')
                 
                 # Ejecutar la navegación inteligente con callbacks de progreso
                 result = await agent.run(
@@ -441,6 +444,7 @@ Be intelligent about how you navigate - adapt to the page layout and find the be
                 )
                 
                 self._emit_progress_eventlet("🎯 Navegación IA completada exitosamente, procesando resultados...")
+                self._emit_browser_activity('navigation_complete', '', 'Navegación autónoma completada, procesando resultados')
                 
                 # Verificar si la navegación fue exitosa analizando el historial
                 successful_navigation = False
