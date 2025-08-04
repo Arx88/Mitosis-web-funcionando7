@@ -1727,6 +1727,25 @@ except Exception as e:
             # Si WebSocket falla, continuar con logging normal
             self._emit_progress_eventlet(f"🌐 NAVEGACIÓN WEB: {description}")
     
+    def _emit_browser_visual(self, data):
+        """Emitir eventos de navegación visual en tiempo real"""
+        try:
+            if hasattr(self, 'websocket_manager') and self.websocket_manager and self.task_id:
+                # Agregar task_id al data
+                data['task_id'] = self.task_id
+                self.websocket_manager.emit_to_task(self.task_id, 'browser_visual', data)
+                
+                # También emitir como terminal_activity para máxima visibilidad
+                terminal_data = {
+                    'message': data.get('message', 'Navegación en progreso'),
+                    'timestamp': data.get('timestamp', datetime.now().isoformat()),
+                    'task_id': self.task_id
+                }
+                self.websocket_manager.emit_to_task(self.task_id, 'terminal_activity', terminal_data)
+        except Exception as e:
+            # Fallar silenciosamente para no interrumpir búsqueda
+            pass
+
     def _emit_progress_eventlet(self, message: str):
         """📡 EMITIR PROGRESO COMPATIBLE CON EVENTLET - VERSIÓN MEJORADA PARA NAVEGACIÓN EN TIEMPO REAL"""
         try:
