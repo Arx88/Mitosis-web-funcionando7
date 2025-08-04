@@ -427,8 +427,18 @@ class UnifiedWebSearchTool(BaseTool):
         try:
             self._emit_progress_eventlet("🔄 Ejecutando búsqueda con método legacy...")
             
-            # SOLUCIÓN PARA GREENLET/EVENTLET: Usar requests en lugar de Playwright
-            # Esto evita el conflicto con Flask-SocketIO + eventlet
+            # PRIORIDAD 1: Usar Tavily API (más confiable que scraping)
+            tavily_api_key = os.environ.get('TAVILY_API_KEY')
+            if tavily_api_key:
+                self._emit_progress_eventlet("✨ Usando Tavily API para búsqueda real...")
+                tavily_results = self._tavily_search(query, max_results)
+                if tavily_results:
+                    return tavily_results
+                else:
+                    self._emit_progress_eventlet("⚠️ Tavily no devolvió resultados, intentando fallback...")
+            
+            # PRIORIDAD 2: Fallback a requests/scraping si Tavily falla
+            self._emit_progress_eventlet("🔄 Usando scraping como fallback...")
             return self._requests_search(query, search_engine, max_results)
                 
         except Exception as e:
