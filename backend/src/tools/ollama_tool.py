@@ -5,9 +5,15 @@ en lugar de hacer búsquedas web irrelevantes.
 """
 
 import logging
+import sys
+import os
 from typing import Dict, Any
-from .base_tool import BaseTool, tool_decorator
-from ..services.ollama_service import OllamaService
+
+# Add the backend src directory to the path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from tools.base_tool import BaseTool, tool_decorator
+from services.ollama_service import OllamaService
 
 logger = logging.getLogger(__name__)
 
