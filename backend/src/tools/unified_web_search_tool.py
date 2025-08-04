@@ -836,7 +836,7 @@ if __name__ == "__main__":
             self._emit_progress_eventlet("⏰ Browser-use subprocess timeout - usando fallback")
             raise Exception("Browser-use subprocess timeout después de 2 minutos")
         except Exception as e:
-            self._emit_progress_eventlet(f"❌ Error en browser-use subprocess: {{str(e)}}")
+            self._emit_progress_eventlet(f"❌ Error en browser-use subprocess: {str(e)}")
             raise
     
     def _run_playwright_fallback_search(self, query: str, search_engine: str, max_results: int) -> List[Dict[str, Any]]:
