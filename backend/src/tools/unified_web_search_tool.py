@@ -339,13 +339,22 @@ class UnifiedWebSearchTool(BaseTool):
                     
                     self._emit_progress_eventlet(f"🧠 IA ejecutando: {search_task}")
                     
-                    # Ejecutar búsqueda con IA
-                    search_url = f"https://www.{search_engine}.com"
-                    navigation_result = await browser_manager.navigate(search_url, search_task)
-                    
-                    # Extraer datos de resultados
-                    extraction_task = f"Extract the top {max_results} search results with titles, URLs, and snippets"
-                    extracted_data = await browser_manager.extract_data(extraction_task)
+                    try:
+                        # Ejecutar búsqueda con IA
+                        search_url = f"https://www.{search_engine}.com"
+                        self._emit_progress_eventlet(f"🌐 Navegando a URL: {search_url}")
+                        navigation_result = await browser_manager.navigate(search_url, search_task)
+                        self._emit_progress_eventlet(f"✅ Navegación completada: {type(navigation_result)}")
+                        
+                        # Extraer datos de resultados
+                        extraction_task = f"Extract the top {max_results} search results with titles, URLs, and snippets"
+                        self._emit_progress_eventlet(f"🔍 Iniciando extracción: {extraction_task}")
+                        extracted_data = await browser_manager.extract_data(extraction_task)
+                        self._emit_progress_eventlet(f"✅ Extracción completada: {type(extracted_data)}")
+                        
+                    except Exception as nav_error:
+                        self._emit_progress_eventlet(f"❌ Error durante navegación/extracción: {str(nav_error)}")
+                        raise nav_error
                     
                     self._emit_progress_eventlet("✅ Extracción de datos completada")
                     
