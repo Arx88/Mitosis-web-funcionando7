@@ -281,70 +281,38 @@ class UnifiedWebSearchTool(BaseTool):
 
     def _run_browser_use_search(self, query: str, search_engine: str, 
                                max_results: int, extract_content: bool) -> List[Dict[str, Any]]:
-        """🤖 EJECUTAR BÚSQUEDA USANDO BROWSER-USE AGENT + OLLAMA - FIXED CONFIGURATION"""
+        """🤖 EJECUTAR BÚSQUEDA USANDO PLAYWRIGHT + OLLAMA - ALTERNATIVA ROBUSTA"""
         
         import asyncio
         
-        async def async_browser_use_search():
-            """Función async para usar browser-use con Ollama (configuración corregida)"""
+        async def async_playwright_ollama_search():
+            """Función async para usar Playwright + Ollama para búsquedas reales"""
             try:
-                self._emit_progress_eventlet("🚀 Inicializando browser-use Agent con Ollama...")
+                self._emit_progress_eventlet("🚀 Inicializando navegación Playwright + Ollama...")
                 
-                # ✅ CONFIGURACIÓN CORRECTA: Usar ChatOpenAI de browser_use.llm
-                from browser_use.llm import ChatOpenAI
-                from browser_use import Agent
+                if not PLAYWRIGHT_AVAILABLE:
+                    raise Exception("Playwright no está disponible")
                 
-                # Configurar LLM usando API compatible OpenAI de Ollama
-                ollama_base_url = os.environ.get('OLLAMA_BASE_URL', 'https://66bd0d09b557.ngrok-free.app')
-                ollama_model = os.environ.get('OLLAMA_DEFAULT_MODEL', 'llama3.1:8b')
+                # Importar Playwright
+                from playwright.async_api import async_playwright
                 
-                self._emit_progress_eventlet(f"🤖 Configurando Ollama: {ollama_model} en {ollama_base_url}/v1")
+                # Configurar URL de búsqueda
+                search_urls = {
+                    'google': 'https://www.google.com/search?q={}',
+                    'bing': 'https://www.bing.com/search?q={}',
+                    'duckduckgo': 'https://duckduckgo.com/?q={}'
+                }
                 
-                # Crear LLM compatible con browser-use
-                llm = ChatOpenAI(
-                    model=ollama_model,
-                    base_url=f"{ollama_base_url}/v1",  # Importante: agregar /v1 para compatibilidad OpenAI
-                    api_key="ollama"  # Requerido pero no usado
-                )
+                search_url = search_urls.get(search_engine, search_urls['google']).format(query.replace(' ', '+'))
                 
-                self._emit_progress_eventlet("✅ LLM configurado correctamente para browser-use")
+                self._emit_progress_eventlet(f"🌐 Navegando a: {search_url}")
                 
-                # Construir tarea de búsqueda inteligente específica para extraer URLs reales
-                search_task = f"""Search for "{query}" on {search_engine}.com and extract the top {max_results} search results with REAL URLs.
-
-CRITICAL: I need REAL, ACTUAL URLs from the search results, not example URLs.
-
-Steps to follow:
-1. Navigate to {search_engine}.com
-2. Enter the search query: "{query}"
-3. Wait for results to load
-4. Extract the following from each of the top {max_results} results:
-   - The ACTUAL clickable URL (href attribute) - this is CRITICAL
-   - The title text of the search result
-   - The description/snippet text shown in the search result
-
-Format your response with clear sections for each result:
-Result 1:
-URL: [actual complete URL]
-Title: [actual title]
-Description: [actual description]
-
-Result 2:
-URL: [actual complete URL] 
-Title: [actual title]
-Description: [actual description]
-
-IMPORTANT: The URLs must be real, complete, clickable links from the actual search results, not placeholder or example URLs."""
-                
-                self._emit_progress_eventlet(f"🧠 IA ejecutará tarea: {search_task[:100]}...")
-                
-                # Crear agente browser-use con configuración para root
-                agent = Agent(
-                    task=search_task,
-                    llm=llm,
-                    browser_config={
-                        'launch_args': [
-                            '--no-sandbox', 
+                # Inicializar Playwright con configuración para root
+                async with async_playwright() as p:
+                    browser = await p.chromium.launch(
+                        headless=True,
+                        args=[
+                            '--no-sandbox',
                             '--disable-setuid-sandbox', 
                             '--disable-dev-shm-usage',
                             '--disable-gpu',
@@ -354,183 +322,135 @@ IMPORTANT: The URLs must be real, complete, clickable links from the actual sear
                             '--disable-plugins',
                             '--disable-default-apps',
                             '--no-first-run',
-                            '--no-zygote',
-                            '--single-process',
                             '--disable-software-rasterizer'
-                        ],
-                        'headless': True,
-                        'force_viewport': True,
-                        'viewport': {'width': 1920, 'height': 1080}
-                    }
-                )
-                
-                self._emit_progress_eventlet("🌐 Ejecutando navegación inteligente con IA...")
-                
-                # Ejecutar búsqueda real
-                result = await agent.run()
-                
-                self._emit_progress_eventlet("✅ Navegación completada, procesando resultados...")
-                
-                # Procesar resultados del agente IA para extraer URLs y datos REALES
-                results = []
-                if result:
-                    result_text = str(result)
-                    self._emit_progress_eventlet(f"📄 Resultado obtenido: {len(result_text)} caracteres")
+                        ]
+                    )
                     
-                    # ✅ PARSEAR RESULTADOS REALES DEL BROWSER-USE AGENT
-                    try:
-                        # El agente browser-use devuelve información estructurada real
-                        import re
-                        
-                        self._emit_progress_eventlet("🔍 Parseando resultados estructurados del agente...")
-                        
-                        # Buscar patrones de resultados estructurados
-                        result_pattern = r'Result\s+(\d+):\s*\n?URL:\s*([^\s\n]+)\s*\n?Title:\s*([^\n]+)\s*\n?Description:\s*([^\n]+)'
-                        structured_results = re.findall(result_pattern, result_text, re.IGNORECASE | re.MULTILINE)
-                        
-                        if structured_results:
-                            self._emit_progress_eventlet(f"📋 Encontrados {len(structured_results)} resultados estructurados")
+                    self._emit_progress_eventlet("✅ Navegador Playwright iniciado correctamente")
+                    
+                    context = await browser.new_context(
+                        viewport={'width': 1920, 'height': 1080},
+                        user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+                    )
+                    
+                    page = await context.new_page()
+                    
+                    # Navegar a la página de búsqueda
+                    self._emit_progress_eventlet("🔍 Cargando página de búsqueda...")
+                    await page.goto(search_url, wait_until='networkidle', timeout=30000)
+                    
+                    self._emit_progress_eventlet("✅ Página cargada, extrayendo resultados...")
+                    
+                    # Esperar a que los resultados carguen
+                    await page.wait_for_timeout(3000)
+                    
+                    # Extraer resultados según el motor de búsqueda
+                    if search_engine == 'google':
+                        results_selector = 'div[data-async-context] div.g, div.g'
+                        title_selector = 'h3'
+                        link_selector = 'a[href^="http"]'
+                        snippet_selector = '.VwiC3b, .s3v9rd, .st'
+                    elif search_engine == 'bing':
+                        results_selector = '.b_algo'
+                        title_selector = 'h2 a'
+                        link_selector = 'h2 a'
+                        snippet_selector = '.b_caption p'
+                    else:  # duckduckgo
+                        results_selector = '.result'
+                        title_selector = '.result__title a'
+                        link_selector = '.result__title a'
+                        snippet_selector = '.result__snippet'
+                    
+                    # Extraer elementos de resultados
+                    result_elements = await page.query_selector_all(results_selector)
+                    self._emit_progress_eventlet(f"📋 Encontrados {len(result_elements)} elementos de resultados")
+                    
+                    raw_results = []
+                    for i, element in enumerate(result_elements[:max_results * 2]):  # Obtener más para filtrar
+                        try:
+                            # Extraer título
+                            title_elem = await element.query_selector(title_selector)
+                            title = await title_elem.inner_text() if title_elem else f"Resultado {i+1}"
                             
-                            for i, (num, url, title, description) in enumerate(structured_results[:max_results]):
-                                # Limpiar y validar URL
-                                clean_url = url.strip()
-                                clean_title = title.strip()
-                                clean_description = description.strip()
+                            # Extraer URL
+                            link_elem = await element.query_selector(link_selector)
+                            url = await link_elem.get_attribute('href') if link_elem else ""
+                            
+                            # Extraer snippet
+                            snippet_elem = await element.query_selector(snippet_selector)
+                            snippet = await snippet_elem.inner_text() if snippet_elem else ""
+                            
+                            if url and not any(invalid in url.lower() for invalid in ['example.com', 'localhost', 'javascript:']):
+                                raw_results.append({
+                                    'title': title.strip(),
+                                    'url': url.strip(),
+                                    'snippet': snippet.strip()[:300],
+                                    'source': search_engine,
+                                    'method': 'playwright_real',
+                                    'timestamp': datetime.now().isoformat()
+                                })
                                 
-                                # Verificar que la URL sea real y válida
-                                if (clean_url.startswith(('http://', 'https://')) and 
-                                    not any(invalid in clean_url.lower() for invalid in 
-                                           ['example.com', 'localhost', 'test.com', 'placeholder'])):
-                                    
-                                    results.append({
-                                        'title': clean_title,
-                                        'url': clean_url,
-                                        'snippet': clean_description,
-                                        'source': search_engine,
-                                        'method': 'browser_use_structured',
-                                        'ai_processed': True,
-                                        'browser_use_raw': result_text[:1000],
-                                        'timestamp': datetime.now().isoformat(),
-                                        'result_number': int(num) if num.isdigit() else i+1
-                                    })
-                                    
-                                    self._emit_progress_eventlet(f"   ✅ Resultado estructurado {num}: {clean_url[:50]}...")
+                                self._emit_progress_eventlet(f"   ✅ Resultado {len(raw_results)}: {title[:50]}...")
+                                
+                                if len(raw_results) >= max_results:
+                                    break
                         
-                        # Si no hay resultados estructurados, buscar URLs reales en el texto
-                        if not results:
-                            self._emit_progress_eventlet("🔍 Buscando URLs reales en texto completo...")
-                            
-                            # Buscar URLs reales en el resultado
-                            url_pattern = r'https?://[^\s<>"\'`\(\)\[\]]{10,}'
-                            found_urls = re.findall(url_pattern, result_text)
-                            
-                            # Filtrar URLs válidas (no example.com ni localhost)
-                            real_urls = []
-                            for url in found_urls:
-                                if (not any(invalid in url.lower() for invalid in 
-                                          ['example.com', 'localhost', 'test.com', 'placeholder', 'dummy']) and
-                                    any(domain in url.lower() for domain in 
-                                       ['.com', '.org', '.net', '.edu', '.gov', '.co.uk'])):
-                                    real_urls.append(url)
-                            
-                            # Eliminar duplicados manteniendo orden
-                            unique_urls = list(dict.fromkeys(real_urls))
-                            
-                            self._emit_progress_eventlet(f"🔍 URLs únicas encontradas: {len(unique_urls)}")
-                            
-                            if unique_urls:
-                                # Crear resultados con URLs reales extraídas
-                                for i, url in enumerate(unique_urls[:max_results]):
-                                    # Buscar título y snippet relacionado cerca de la URL
-                                    title = f"Resultado real de búsqueda para: {query}"
-                                    snippet = "Información extraída por navegación web real con IA"
-                                    
-                                    # Intentar extraer título más específico del contexto
-                                    url_index = result_text.find(url)
-                                    if url_index > -1:
-                                        # Buscar texto antes y después de la URL para contexto
-                                        context_start = max(0, url_index - 300)
-                                        context_end = min(len(result_text), url_index + 300)
-                                        context = result_text[context_start:context_end]
-                                        
-                                        # Extraer posible título del contexto
-                                        lines_around = context.split('\n')
-                                        for line in lines_around:
-                                            line = line.strip()
-                                            if (len(line) > 10 and len(line) < 150 and 
-                                                not line.startswith('http') and
-                                                any(c.isalpha() for c in line)):
-                                                title = line
-                                                break
-                                        
-                                        # Extraer snippet del contexto
-                                        snippet_lines = [l.strip() for l in lines_around if l.strip() and len(l.strip()) > 20]
-                                        if snippet_lines:
-                                            snippet = '. '.join(snippet_lines[:2])[:300]
-                                    
-                                    results.append({
-                                        'title': title,
-                                        'url': url,
-                                        'snippet': snippet,
-                                        'source': search_engine,
-                                        'method': 'browser_use_extracted',
-                                        'ai_processed': True,
-                                        'browser_use_raw': result_text[:1000],
-                                        'timestamp': datetime.now().isoformat(),
-                                        'result_number': i + 1
-                                    })
-                                    
-                                    self._emit_progress_eventlet(f"   ✅ URL extraída {i+1}: {url[:60]}...")
-                        
-                        # Si aún no hay resultados, usar el contenido como información válida
-                        if not results:
-                            self._emit_progress_eventlet("📄 No se encontraron URLs específicas, usando contenido extraído")
-                            
-                            # Dividir el resultado en secciones lógicas
-                            content_parts = [part.strip() for part in result_text.split('\n\n') if part.strip()]
-                            
-                            for i, part in enumerate(content_parts[:max_results]):
-                                if len(part) > 30:  # Solo usar partes con contenido sustancial
-                                    # Extraer primera línea como título potencial
-                                    lines = part.split('\n')
-                                    title = lines[0][:100] if lines else f"Información extraída {i+1}: {query}"
-                                    content = part if len(part) <= 300 else part[:300] + "..."
-                                    
-                                    results.append({
-                                        'title': title,
-                                        'url': f"https://browser-use-content.real/{search_engine}-search-{i+1}",
-                                        'snippet': content,
-                                        'source': search_engine,
-                                        'method': 'browser_use_content',
-                                        'ai_processed': True,
-                                        'browser_use_raw': result_text[:1000],
-                                        'timestamp': datetime.now().isoformat(),
-                                        'result_number': i + 1
-                                    })
-                                    
-                                    self._emit_progress_eventlet(f"   📄 Contenido extraído {i+1}: {title[:50]}...")
+                        except Exception as e:
+                            self._emit_progress_eventlet(f"   ⚠️ Error procesando elemento {i}: {str(e)}")
+                            continue
                     
-                    except Exception as parse_error:
-                        self._emit_progress_eventlet(f"⚠️ Error parsing resultado, usando datos crudos: {str(parse_error)}")
+                    await browser.close()
+                    
+                    self._emit_progress_eventlet(f"🎯 Extraídos {len(raw_results)} resultados reales")
+                    
+                    # Si tenemos resultados, procesarlos con Ollama para mejorar calidad
+                    if raw_results and len(raw_results) > 0:
+                        self._emit_progress_eventlet("🧠 Procesando resultados con IA para mejorar calidad...")
                         
-                        # Fallback: usar resultado crudo como información válida
-                        results.append({
-                            'title': f"Resultado de navegación IA para: {query}",
-                            'url': f"https://browser-use-navigation.real/{search_engine}-search",
-                            'snippet': result_text[:400] if result_text else "Navegación completada sin contenido específico",
-                            'source': search_engine,
-                            'method': 'browser_use_raw',
-                            'ai_processed': True,
-                            'browser_use_raw': result_text[:1000],
-                            'timestamp': datetime.now().isoformat(),
-                            'result_number': 1
-                        })
-                
-                self._emit_progress_eventlet(f"✅ browser-use completado: {len(results)} resultados reales procesados")
-                return results
+                        try:
+                            # Usar OllamaService para procesar y mejorar resultados
+                            from ..services.ollama_service import OllamaService
+                            ollama_service = OllamaService()
+                            
+                            # Preparar contexto de resultados para Ollama
+                            results_context = "\n\n".join([
+                                f"Resultado {i+1}:\nTítulo: {r['title']}\nURL: {r['url']}\nDescripción: {r['snippet']}"
+                                for i, r in enumerate(raw_results[:3])
+                            ])
+                            
+                            processing_prompt = f"""Analiza estos resultados de búsqueda para "{query}" y mejora la información:
+
+{results_context}
+
+TAREAS:
+1. Verifica que las URLs sean reales y relevantes para la consulta
+2. Mejora los títulos si es necesario para que sean más descriptivos
+3. Mejora las descripciones con información más útil
+4. Mantén SIEMPRE las URLs originales tal como están
+
+Devuelve los resultados en el mismo formato, pero mejorados."""
+
+                            enhanced_response = await ollama_service.generate_response(
+                                processing_prompt,
+                                system_prompt="Eres un experto en procesar resultados de búsqueda web para hacerlos más útiles y informativos.",
+                                model="llama3.1:8b"
+                            )
+                            
+                            self._emit_progress_eventlet(f"✅ Resultados procesados por IA: {len(enhanced_response)} caracteres")
+                            
+                            # Combinar resultados originales con mejoras de IA
+                            for i, result in enumerate(raw_results):
+                                result['ai_enhanced'] = True
+                                result['ai_context'] = enhanced_response[:500] if enhanced_response else ""
+                            
+                        except Exception as ai_error:
+                            self._emit_progress_eventlet(f"⚠️ Error en procesamiento IA: {str(ai_error)}")
+                            # Continuar con resultados sin procesar
+                    
+                    return raw_results[:max_results]
                     
             except Exception as e:
-                self._emit_progress_eventlet(f"❌ Error en browser-use search: {str(e)}")
+                self._emit_progress_eventlet(f"❌ Error en navegación Playwright: {str(e)}")
                 raise
         
         # Ejecutar función async con manejo robusto de event loops
@@ -546,21 +466,21 @@ IMPORTANT: The URLs must be real, complete, clickable links from the actual sear
                         new_loop = asyncio.new_event_loop()
                         asyncio.set_event_loop(new_loop)
                         try:
-                            return new_loop.run_until_complete(async_browser_use_search())
+                            return new_loop.run_until_complete(async_playwright_ollama_search())
                         finally:
                             new_loop.close()
                     
                     with concurrent.futures.ThreadPoolExecutor() as executor:
                         future = executor.submit(run_in_thread)
-                        return future.result(timeout=120)  # 2 minutos timeout para browser-use
+                        return future.result(timeout=120)  # 2 minutos timeout
                 else:
-                    return loop.run_until_complete(async_browser_use_search())
+                    return loop.run_until_complete(async_playwright_ollama_search())
             except RuntimeError:
                 # No hay loop, crear uno nuevo
-                return asyncio.run(async_browser_use_search())
+                return asyncio.run(async_playwright_ollama_search())
                 
         except Exception as e:
-            self._emit_progress_eventlet(f"❌ Error ejecutando búsqueda browser-use: {str(e)}")
+            self._emit_progress_eventlet(f"❌ Error ejecutando búsqueda Playwright + Ollama: {str(e)}")
             raise
     
     def _run_legacy_search(self, query: str, search_engine: str, 
