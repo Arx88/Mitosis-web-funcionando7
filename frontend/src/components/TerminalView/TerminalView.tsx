@@ -893,6 +893,10 @@ export const TerminalView = ({
       agent_activity: (data: any) => {
         console.log(`🤖 [WEBSOCKET-RECEIVED] agent_activity for task ${taskId}:`, data);
         handleTaskUpdate(data);
+      },
+      browser_visual: (data: any) => {
+        console.log(`📸 [WEBSOCKET-RECEIVED] browser_visual for task ${taskId}:`, data);
+        handleBrowserVisual(data);
       }
     };
 
