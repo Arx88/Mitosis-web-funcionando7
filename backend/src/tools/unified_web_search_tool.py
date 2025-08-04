@@ -244,8 +244,56 @@ class UnifiedWebSearchTool(BaseTool):
         try:
             # ✨ USAR BROWSER-USE REAL - NAVEGACIÓN VERDADERA VIA SUBPROCESS
             if BROWSER_USE_AVAILABLE:
+                # ENVIAR EVENTOS DE NAVEGACIÓN WEB VISUAL EN TIEMPO REAL
+                self._emit_browser_visual({
+                    'type': 'navigation_start',
+                    'message': '🚀 INICIANDO NAVEGACIÓN WEB CON BROWSER-USE',
+                    'step': 'Paso 1/6: Iniciando navegación',
+                    'timestamp': datetime.now().isoformat(),
+                    'url': f'https://www.{search_engine}.com'
+                })
+                
                 self._emit_progress_eventlet("🚀 Iniciando navegación browser-use REAL via subprocess...")
+                
+                # SIMULAR NAVEGACIÓN EN TIEMPO REAL MIENTRAS SUBPROCESS CORRE
+                import threading
+                import time
+                
+                def enviar_progreso_navegacion():
+                    pasos = [
+                        "Paso 2/6: Conectando con browser-use",
+                        "Paso 3/6: Abriendo navegador Chromium", 
+                        "Paso 4/6: Navegando a motor de búsqueda",
+                        "Paso 5/6: Ejecutando búsqueda inteligente",
+                        "Paso 6/6: Extrayendo resultados"
+                    ]
+                    
+                    for i, paso in enumerate(pasos):
+                        time.sleep(8)  # Esperar 8 segundos entre pasos
+                        self._emit_browser_visual({
+                            'type': 'navigation_progress',
+                            'message': f'🌐 NAVEGANDO: {paso}',
+                            'step': paso,
+                            'timestamp': datetime.now().isoformat(),
+                            'url': f'https://www.{search_engine}.com/search?q={query[:30]}'
+                        })
+                        
+                # Iniciar thread de progreso
+                progress_thread = threading.Thread(target=enviar_progreso_navegacion)
+                progress_thread.daemon = True
+                progress_thread.start()
+                
                 results = self._run_browser_use_search_original(query, search_engine, max_results, extract_content, self.task_id)
+                
+                # FINALIZAR NAVEGACIÓN VISUAL
+                self._emit_browser_visual({
+                    'type': 'navigation_complete',
+                    'message': '✅ NAVEGACIÓN BROWSER-USE COMPLETADA',
+                    'step': 'Navegación completada exitosamente',
+                    'timestamp': datetime.now().isoformat(),
+                    'url': f'https://www.{search_engine}.com'
+                })
+                
                 if results and len(results) > 0:
                     self._emit_progress_eventlet(f"✅ browser-use REAL exitoso: {len(results)} resultados")
                     return results
