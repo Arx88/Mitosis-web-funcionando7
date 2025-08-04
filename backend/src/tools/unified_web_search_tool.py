@@ -771,9 +771,9 @@ REGLAS IMPORTANTES:
             except Exception as visual_error:
                 self._emit_progress_eventlet(f"❌ Error en navegación visual: {str(visual_error)}")
         
-        # FALLBACK: Usar subprocess original si navegación visual falla
+        # SOLUCIÓN PRINCIPAL: Usar subprocess para evitar event loop conflicts
         try:
-            # Usar subprocess para ejecutar browser-use de forma aislada
+            # Ejecutar browser-use en subprocess separado - SOLUCIÓN DEFINITIVA AL EVENT LOOP CONFLICT
             import subprocess
             import tempfile
             import os
