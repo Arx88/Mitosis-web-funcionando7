@@ -816,12 +816,53 @@ Be intelligent about how you navigate - adapt to the page layout and find the be
             browser_session=browser_session
         )
         
-        print("🚀 [SUBPROCESS] Iniciando navegación autónoma...")
+        print("🚀 [SUBPROCESS] Iniciando navegación con captura visual...")
         
-        # Ejecutar navegación con más pasos para mejor captura
-        result = await agent.run(max_steps=8)
+        # Hook para capturar screenshots durante navegación
+        async def capture_navigation_screenshots():
+            try:
+                # Dar tiempo a que se inicialice el navegador
+                await asyncio.sleep(1)
+                
+                # Obtener páginas del navegador
+                browser = agent.browser_session.browser
+                if browser:
+                    pages = await browser.pages()
+                    if pages:
+                        current_page = pages[0]
+                        
+                        # Screenshot inicial
+                        await capture_and_send_screenshot(current_page, "🚀 Navegador iniciado", websocket_manager)
+                        
+                        # Monitorear navegación con screenshots periódicos
+                        for step_num in range(8):  # 8 capturas durante navegación
+                            await asyncio.sleep(2)  # Cada 2 segundos
+                            try:
+                                await capture_and_send_screenshot(current_page, f"📍 Navegación paso {{step_num + 1}}/8", websocket_manager)
+                            except Exception as step_err:
+                                print(f"⚠️ Error en screenshot paso {{step_num}}: {{str(step_err)}}")
+                                
+            except Exception as screenshot_err:
+                print(f"⚠️ Error en captura de screenshots: {{str(screenshot_err)}}")
         
-        print("✅ [SUBPROCESS] Navegación completada!")
+        # Ejecutar navegación y capturas en paralelo
+        navigation_task = agent.run(max_steps=8)
+        screenshot_task = capture_navigation_screenshots()
+        
+        # Ejecutar ambas tareas concurrentemente
+        result, _ = await asyncio.gather(navigation_task, screenshot_task, return_exceptions=True)
+        
+        # Screenshot final
+        try:
+            browser = agent.browser_session.browser
+            if browser:
+                pages = await browser.pages()
+                if pages:
+                    await capture_and_send_screenshot(pages[0], "✅ Navegación completada", websocket_manager)
+        except Exception as final_screenshot_err:
+            print(f"⚠️ Error en screenshot final: {{str(final_screenshot_err)}}")
+        
+        print("✅ [SUBPROCESS] Navegación con visualización completada!")
         
         # Procesar resultado
         content = ""
