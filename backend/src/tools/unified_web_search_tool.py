@@ -2004,7 +2004,7 @@ except Exception as e:
                     # Importar el socketio del servidor principal
                     import server
                     if hasattr(server, 'socketio') and server.socketio:
-                        room = f"task_{self.task_id}"
+                        room = self.task_id
                         server.socketio.emit('task_progress', {
                             'step_id': getattr(self, 'current_step_id', 'web-search'),
                             'activity': message,
