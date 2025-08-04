@@ -430,10 +430,18 @@ TAREAS:
 
 Devuelve los resultados en el mismo formato, pero mejorados."""
 
-                            enhanced_response = await ollama_service.generate_response(
+                            # Crear contexto adecuado para generate_response
+                            context = {
+                                'system_prompt': "Eres un experto en procesar resultados de búsqueda web para hacerlos más útiles y informativos.",
+                                'model_preference': "llama3.1:8b"
+                            }
+                            
+                            enhanced_response = ollama_service.generate_response(
                                 processing_prompt,
-                                system_prompt="Eres un experto en procesar resultados de búsqueda web para hacerlos más útiles y informativos.",
-                                model="llama3.1:8b"
+                                context=context,
+                                use_tools=False,
+                                task_id=self.task_id or "web_search",
+                                step_id="ai_processing"
                             )
                             
                             self._emit_progress_eventlet(f"✅ Resultados procesados por IA: {len(enhanced_response)} caracteres")
