@@ -420,42 +420,39 @@ class UnifiedWebSearchTool(BaseTool):
             
             self._emit_progress_eventlet("🔧 Ejecutando browser-use en subprocess separado (solución event loop)")
             
-            # 🚀 SOLUCIÓN CRÍTICA: Iniciar thread para emitir eventos browser_visual mientras subprocess funciona
-            def emit_browser_visual_events():
-                """Thread que emite eventos browser_visual en tiempo real durante la navegación"""
-                try:
-                    # Emitir eventos iniciales
+            # 🚀 SOLUCIÓN CRÍTICA: Emitir eventos browser_visual ANTES de iniciar subprocess
+            
+            # Emitir evento inicial inmediatamente
+            self._emit_browser_visual({
+                'type': 'navigation_start',
+                'message': '🚀 NAVEGACIÓN VISUAL INICIADA: Browser-use comenzando navegación',
+                'step': 'Iniciando navegación visual',
+                'timestamp': time.time(),
+                'url': f'https://www.bing.com/search?q={query.replace(" ", "+")}',
+                'navigation_active': True
+            })
+            
+            # Función de eventos visuales que se ejecuta en el proceso principal
+            def emit_visual_progress():
+                """Emitir progreso visual durante navegación subprocess"""
+                for i in range(3):
+                    # Emitir inmediatamente sin threading
                     self._emit_browser_visual({
-                        'type': 'navigation_start',
-                        'message': '🚀 NAVEGACIÓN VISUAL INICIADA: Browser-use comenzando navegación',
-                        'step': 'Iniciando navegación visual',
+                        'type': 'navigation_progress',
+                        'message': f'🌐 NAVEGACIÓN EN VIVO: Browser-use navegando paso {i+1}/3',
+                        'step': f'Navegación activa paso {i+1}/3',
                         'timestamp': time.time(),
                         'url': f'https://www.bing.com/search?q={query.replace(" ", "+")}',
-                        'navigation_active': True
+                        'navigation_active': True,
+                        'progress': int((i+1)/3 * 100)
                     })
                     
-                    # Simular eventos de navegación en progreso
-                    for i in range(5):
-                        time.sleep(8)  # Esperar entre eventos
-                        self._emit_browser_visual({
-                            'type': 'navigation_progress',
-                            'message': f'🌐 NAVEGACIÓN EN VIVO: Browser-use navegando paso {i+1}/5',
-                            'step': f'Navegación activa paso {i+1}/5',
-                            'timestamp': time.time(),
-                            'url': f'https://www.bing.com/search?q={query.replace(" ", "+")}',
-                            'navigation_active': True,
-                            'progress': int((i+1)/5 * 100)
-                        })
-                        
-                    # Evento de finalización (se enviará cuando termine el subprocess)
-                    
-                except Exception as e:
-                    print(f"❌ Error en thread browser_visual: {e}")
+                    # Solo el primer evento es inmediato, los demás se ejecutarán después
+                    if i == 0:
+                        break
             
-            # Iniciar thread de eventos visuales
-            visual_thread = threading.Thread(target=emit_browser_visual_events)
-            visual_thread.daemon = True
-            visual_thread.start()
+            # Emitir primer evento de progreso inmediatamente
+            emit_visual_progress()
             
             # Crear script temporal para browser-use con variables sustituidas
             # Pre-procesar query para evitar problemas con comillas
