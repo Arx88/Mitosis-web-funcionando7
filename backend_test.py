@@ -12,7 +12,7 @@ from datetime import datetime
 import threading
 
 # Configuration
-BACKEND_URL = "https://9c70dd25-883a-44bc-ae98-3d538f3038b0.preview.emergentagent.com"
+BACKEND_URL = "https://3d092019-3c45-466c-bb18-8983e62a18bc.preview.emergentagent.com"
 
 class MitosisTaskExecutionTester:
     def __init__(self):
