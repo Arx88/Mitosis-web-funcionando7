@@ -5789,6 +5789,15 @@ def force_step_failure(task_id: str, step_id: str):
 @agent_bp.route('/status', methods=['GET'])
 def agent_status():
     """Status del agente"""
+    # Obtener el número real de herramientas disponibles
+    tools_count = 2  # Default fallback
+    try:
+        tool_manager = get_tool_manager()
+        available_tools = tool_manager.get_available_tools()
+        tools_count = len(available_tools)
+    except Exception as e:
+        logger.warning(f"Error getting tools count: {e}")
+    
     return jsonify({
         'status': 'running',
         'timestamp': datetime.now().isoformat(),
@@ -5798,7 +5807,7 @@ def agent_status():
             'endpoint': os.getenv('OLLAMA_BASE_URL', 'https://66bd0d09b557.ngrok-free.app'),
             'model': os.getenv('OLLAMA_DEFAULT_MODEL', 'llama3.1:8b')
         },
-        'tools': 12,
+        'tools': tools_count,
         'memory': {
             'enabled': True,
             'initialized': True
