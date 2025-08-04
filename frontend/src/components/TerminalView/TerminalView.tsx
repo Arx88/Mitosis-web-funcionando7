@@ -824,6 +824,56 @@ export const TerminalView = ({
       }
     };
 
+    const handleBrowserVisual = (data: any) => {
+      console.log(`📸 [BROWSER-VISUAL-${taskId}] Screenshot received:`, data);
+      
+      if (!data || data.task_id !== taskId) return;
+      
+      try {
+        // Agregar screenshot al estado
+        const newScreenshot = {
+          id: `screenshot-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          screenshot: data.screenshot,
+          step: data.step || 'Navegación',
+          timestamp: data.timestamp || new Date().toISOString(),
+          url: data.url
+        };
+        
+        setBrowserScreenshots(prev => {
+          const updated = [...prev, newScreenshot];
+          // Mantener solo los últimos 10 screenshots para rendimiento
+          return updated.slice(-10);
+        });
+        
+        // Actualizar screenshot actual
+        setCurrentScreenshot(data.screenshot);
+        
+        // Crear página de monitor para navegación visual
+        const visualPage: MonitorPage = {
+          id: `browser-visual-${Date.now()}`,
+          title: `🌐 ${data.step || 'Navegación Web'}`,
+          content: `# Navegación Web en Tiempo Real\n\n## ${data.step || 'Navegación'}\n\n**Timestamp:** ${new Date(data.timestamp).toLocaleTimeString()}\n**URL:** ${data.url || 'Desconocida'}\n\n![Screenshot](${data.screenshot})\n\n---\n\n*Captura automática de navegación browser-use*`,
+          type: 'web-browsing',
+          timestamp: new Date(data.timestamp),
+          metadata: {
+            status: 'success',
+            url: data.url,
+            screenshotUrl: data.screenshot
+          }
+        };
+        
+        // Agregar página de navegación visual al monitor
+        addTaskMonitorPage(taskId, visualPage);
+        
+        // Actualizar terminal output
+        setTerminalOutput(prev => [...prev, `📸 ${data.step || 'Screenshot capturado'} - ${new Date(data.timestamp).toLocaleTimeString()}`]);
+        
+      } catch (error) {
+        console.error(`❌ [BROWSER-VISUAL-${taskId}] Error procesando screenshot:`, error);
+        setTerminalOutput(prev => [...prev, `❌ Error procesando navegación visual: ${error}`]);
+      }
+    };
+
     // Manejador genérico para eventos task_update
     const handleTaskUpdate = (data: any) => {
       console.log(`🔄 [TASK-${taskId}] Task update received:`, data);
