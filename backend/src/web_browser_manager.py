@@ -177,18 +177,11 @@ class WebBrowserManager:
                     else:
                         max_steps = 3  # Default value as integer
                     
-                    # Patch the agent's run method temporarily to fix the bug
-                    original_run = self._agent.run
+                    # Remove max_steps from kwargs if it exists to avoid duplicate argument
+                    kwargs.pop('max_steps', None)
                     
-                    async def patched_run(task_str, **run_kwargs):
-                        # Force max_steps to be an integer in the actual call
-                        run_kwargs['max_steps'] = max_steps
-                        
-                        # Call the original method without our wrapper parameters
-                        return await original_run.__func__(self._agent, task_str, **run_kwargs)
-                    
-                    # Execute with the patched method
-                    return await patched_run(task)
+                    # Call the original method with corrected max_steps
+                    return await self._agent.run(task, max_steps=max_steps, **kwargs)
                 
                 def __getattr__(self, name):
                     """Delegate other attributes to the wrapped agent"""
