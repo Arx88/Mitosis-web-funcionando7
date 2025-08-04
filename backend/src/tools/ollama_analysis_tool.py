@@ -59,12 +59,6 @@ class OllamaAnalysisTool(BaseTool):
             prompt = parameters.get('prompt', '')
             max_tokens = parameters.get('max_tokens', 1000)
             
-            if not prompt:
-                return {
-                    'success': False,
-                    'error': 'Prompt es requerido para el análisis'
-                }
-            
             # Crear instancia de OllamaService
             ollama_service = OllamaService()
             
@@ -86,24 +80,20 @@ class OllamaAnalysisTool(BaseTool):
             if response and 'response' in response:
                 analysis_content = response['response']
                 
-                return {
-                    'success': True,
+                result_data = {
                     'type': 'analysis',
                     'content': analysis_content,
                     'summary': f"Análisis completado: {len(analysis_content)} caracteres generados",
                     'tool_used': 'ollama_analysis',
-                    'analysis_result': analysis_content
+                    'analysis_result': analysis_content,
+                    'prompt_length': len(prompt),
+                    'response_length': len(analysis_content)
                 }
+                
+                return self._create_success_result(result_data)
             else:
-                return {
-                    'success': False,
-                    'error': 'No se pudo generar análisis con Ollama',
-                    'details': response
-                }
+                return self._create_error_result(f'No se pudo generar análisis con Ollama: {response}')
                 
         except Exception as e:
             logger.error(f"Error en análisis Ollama: {e}")
-            return {
-                'success': False,
-                'error': f'Error interno en análisis: {str(e)}'
-            }
+            return self._create_error_result(f'Error interno en análisis: {str(e)}')
