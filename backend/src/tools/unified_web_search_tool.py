@@ -777,16 +777,16 @@ if __name__ == "__main__":
                             
                             # Crear resultado estructurado
                             content = result_data.get('content', '')
-                            return [{{
-                                'title': f'Navegación inteligente: {{query[:50]}}',
-                                'url': f'https://www.bing.com/search?q={{query.replace(" ", "+")}}',
+                            return [{
+                                'title': f'Navegación inteligente: {query[:50]}',
+                                'url': f'https://www.bing.com/search?q={query.replace(" ", "+")}',
                                 'snippet': content[:400] + "..." if len(content) > 400 else content,
                                 'source': search_engine,
                                 'method': 'browser_use_subprocess',
                                 'ai_navigation': True,
                                 'full_content': content[:2000],
                                 'timestamp': datetime.now().isoformat()
-                            }}]
+                            }]
                         else:
                             error = result_data.get('error', 'Error desconocido en subprocess')
                             self._emit_progress_eventlet(f"❌ Browser-use subprocess error: {{error}}")
