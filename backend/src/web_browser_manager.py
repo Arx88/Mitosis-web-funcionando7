@@ -166,22 +166,13 @@ class WebBrowserManager:
                 def __init__(self, agent):
                     self._agent = agent
                     
-                async def run(self, task, max_steps=None, **kwargs):
-                    """Wrapper run method that ensures max_steps is always an integer"""
-                    # If max_steps is provided, ensure it's an integer
-                    if max_steps is not None:
-                        if isinstance(max_steps, str):
-                            max_steps = int(max_steps)
-                        elif not isinstance(max_steps, int):
-                            max_steps = int(max_steps)
-                    else:
-                        max_steps = 3  # Default value as integer
-                    
-                    # Remove max_steps from kwargs if it exists to avoid duplicate argument
+                async def run(self, task, **kwargs):
+                    """Wrapper run method that fixes max_steps conflicts"""
+                    # Remove any max_steps from kwargs to avoid conflicts
                     kwargs.pop('max_steps', None)
                     
-                    # Call the original method with corrected max_steps
-                    return await self._agent.run(task, max_steps=max_steps, **kwargs)
+                    # Call the original method using only positional arguments and safe kwargs
+                    return await self._agent.run(task, **kwargs)
                 
                 def __getattr__(self, name):
                     """Delegate other attributes to the wrapped agent"""
