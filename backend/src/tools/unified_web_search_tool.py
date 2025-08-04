@@ -658,7 +658,119 @@ REGLAS IMPORTANTES:
                 self._emit_progress_eventlet(f"❌ Error en navegación browser-use: {str(e)}")
                 raise
         
-        # 🔥 SOLUTION: Ejecutar browser-use en subprocess separado para evitar conflictos de event loop
+        # 🚀 SOLUCIÓN ALTERNATIVA: Implementar navegación visual directamente en el proceso principal
+        
+        # Si browser-use está disponible, ejecutar con navegación visual
+        if BROWSER_MANAGER_AVAILABLE and task_id:
+            self._emit_progress_eventlet("📸 Iniciando navegación browser-use con captura visual...")
+            try:
+                # Importar browser-use aquí para navegación visual
+                import asyncio
+                from browser_use import Agent
+                from browser_use.llm import ChatOpenAI
+                from browser_use.browser.session import BrowserSession
+                from browser_use.browser.profile import BrowserProfile
+                import tempfile
+                import base64
+                
+                # Configurar LLM
+                ollama_base_url = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
+                if not ollama_base_url.endswith('/v1'):
+                    ollama_base_url += '/v1'
+                    
+                llm = ChatOpenAI(
+                    model="llama3.1:8b",
+                    base_url=ollama_base_url,
+                    api_key="ollama"
+                )
+                
+                # Configurar browser profile
+                browser_profile = BrowserProfile(
+                    user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36',
+                    chromium_sandbox=False,
+                    args=[
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-gpu',
+                        '--headless'
+                    ]
+                )
+                
+                browser_session = BrowserSession(
+                    headless=True,
+                    browser_profile=browser_profile
+                )
+                
+                # Crear tarea de navegación
+                search_url = f"https://www.bing.com/search?q={query.replace(' ', '+')}"
+                search_task = f"Navigate to {search_url} and search for information about: {query}"
+                
+                agent = Agent(
+                    task=search_task,
+                    llm=llm,
+                    browser_session=browser_session
+                )
+                
+                self._emit_progress_eventlet("📸 Ejecutando navegación visual con screenshots...")
+                
+                # Función para capturar screenshots
+                async def capture_visual_navigation():
+                    try:
+                        # Ejecutar navegación
+                        result = await agent.run(max_steps=5)
+                        
+                        # Obtener browser para capturar screenshots
+                        browser = agent.browser_session.browser
+                        if browser:
+                            pages = await browser.pages()
+                            if pages:
+                                current_page = pages[0]
+                                
+                                # Capturar screenshot final
+                                screenshot_bytes = await current_page.screenshot(type='png', full_page=False)
+                                screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
+                                
+                                # Crear evento visual
+                                visual_event = {
+                                    'task_id': task_id,
+                                    'type': 'browser_screenshot',
+                                    'screenshot': f'data:image/png;base64,{screenshot_base64}',
+                                    'step': f'Navegación completada: {query[:50]}...',
+                                    'timestamp': datetime.now().isoformat(),
+                                    'url': current_page.url if hasattr(current_page, 'url') else search_url
+                                }
+                                
+                                # Emitir via WebSocket
+                                try:
+                                    from src.websocket.websocket_manager import WebSocketManager
+                                    ws_manager = WebSocketManager()
+                                    ws_manager.emit_to_task(task_id, 'browser_visual', visual_event)
+                                    self._emit_progress_eventlet(f"📸 Screenshot enviado exitosamente para tarea {task_id}")
+                                except Exception as ws_error:
+                                    self._emit_progress_eventlet(f"⚠️ Error enviando screenshot: {str(ws_error)}")
+                        
+                        return result
+                        
+                    except Exception as e:
+                        self._emit_progress_eventlet(f"❌ Error en navegación visual: {str(e)}")
+                        return None
+                
+                # Ejecutar navegación visual
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    result = loop.run_until_complete(capture_visual_navigation())
+                    if result:
+                        self._emit_progress_eventlet("✅ Navegación visual browser-use completada exitosamente")
+                        return [{'title': 'Navegación Visual Browser-use', 'url': search_url, 'snippet': str(result)[:400], 'method': 'browser_use_visual', 'timestamp': datetime.now().isoformat()}]
+                finally:
+                    loop.close()
+                    
+            except Exception as visual_error:
+                self._emit_progress_eventlet(f"❌ Error en navegación visual: {str(visual_error)}")
+        
+        # FALLBACK: Usar subprocess original si navegación visual falla
         try:
             # Usar subprocess para ejecutar browser-use de forma aislada
             import subprocess
