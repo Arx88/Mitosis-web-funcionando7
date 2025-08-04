@@ -145,3 +145,4 @@ langchain-community==0.3.7
 markdown-pdf==1.7
 posthog==6.3.3
 google-api-core==2.25.1
+PyMuPDF==1.26.3
