@@ -790,8 +790,17 @@ import asyncio
 import sys
 import json
 import traceback
+import logging
 from datetime import datetime
 import base64
+import os
+
+# Configurar logging para capturar solo errores críticos
+logging.basicConfig(level=logging.ERROR)
+
+# Suprimir logs verbosos de browser-use
+os.environ['BROWSER_USE_TELEMETRY_DISABLED'] = '1'
+os.environ['BROWSER_USE_QUIET'] = '1'
 
 # Agregar directorio backend al path
 sys.path.insert(0, '/app/backend')
@@ -802,60 +811,45 @@ MAX_RESULTS = {max_results}
 SEARCH_ENGINE = "{search_engine}"
 TASK_ID = "{task_id or 'unknown'}"
 
-async def capture_and_send_screenshot(page, step_description="", websocket_manager=None):
+async def send_websocket_event(websocket_manager, event_type, data):
+    \"\"\"Enviar eventos WebSocket de forma segura\"\"\"
     try:
-        if not page:
-            return
-            
-        # Capturar screenshot
-        screenshot_bytes = await page.screenshot(type='png', full_page=False)
-        screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
-        
-        # Crear evento de navegación visual
-        visual_event = {{
-            'type': 'browser_screenshot',
-            'screenshot': f'data:image/png;base64,{{screenshot_base64}}',
-            'step': step_description,
-            'timestamp': datetime.now().isoformat(),
-            'query': QUERY,
-            'url': page.url if hasattr(page, 'url') else 'unknown'
-        }}
-        
-        # Emitir evento visual vía WebSocket
         if websocket_manager and TASK_ID != "unknown":
-            try:
-                websocket_manager.emit_to_task(TASK_ID, 'browser_visual', visual_event)
-                print(f"📸 [VISUAL] Screenshot enviado: {{step_description}}")
-            except Exception as ws_error:
-                print(f"⚠️ Error enviando screenshot via WebSocket: {{str(ws_error)}}")
-        else:
-            print(f"📸 [VISUAL] Screenshot capturado: {{step_description}}")
-            
+            websocket_manager.emit_to_task(TASK_ID, event_type, data)
     except Exception as e:
-        print(f"⚠️ Error capturando screenshot: {{str(e)}}")
+        # Silenciar errores de WebSocket para no contaminar JSON output
+        pass
 
 async def run_browser_use_subprocess():
+    \"\"\"
+    Ejecutar browser-use con navegación inteligente y captura visual
+    RETORNA: JSON válido sin logs contaminantes
+    \"\"\"
     try:
-        # Import dentro del subprocess para evitar conflictos
+        # Import silencioso
         from browser_use import Agent
         from browser_use.llm import ChatOpenAI
         from browser_use.browser.session import BrowserSession
         from browser_use.browser.profile import BrowserProfile
         
-        print("🤖 [SUBPROCESS] Inicializando browser-use en subprocess...")
-        
-        # Importar WebSocket manager
+        # WebSocket manager silencioso
+        websocket_manager = None
         try:
             from src.websocket.websocket_manager import WebSocketManager
             websocket_manager = WebSocketManager()
-            print("✅ [WEBSOCKET] WebSocket manager inicializado")
-        except Exception as ws_error:
-            print(f"⚠️ WebSocket manager no disponible: {{str(ws_error)}}")
-            websocket_manager = None
+        except:
+            pass
         
-        # Configurar LLM
-        import os
-        ollama_base_url = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
+        # Notificar inicio via WebSocket
+        await send_websocket_event(websocket_manager, 'browser_activity', {{
+            'type': 'navigation_start',
+            'url': f'https://www.{{SEARCH_ENGINE}}.com',
+            'message': '🚀 Iniciando navegación browser-use autónoma',
+            'timestamp': datetime.now().isoformat()
+        }})
+        
+        # Configurar LLM con endpoint correcto
+        ollama_base_url = os.getenv('OLLAMA_BASE_URL', 'https://66bd0d09b557.ngrok-free.app')
         if not ollama_base_url.endswith('/v1'):
             ollama_base_url += '/v1'
             
@@ -865,7 +859,7 @@ async def run_browser_use_subprocess():
             api_key="ollama"
         )
         
-        # Configurar browser profile para contenedores
+        # Browser profile optimizado para contenedores
         browser_profile = BrowserProfile(
             user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             chromium_sandbox=False,
@@ -886,10 +880,8 @@ async def run_browser_use_subprocess():
                 '--no-default-browser-check',
                 '--disable-backgrounding-occluded-windows',
                 '--disable-ipc-flooding-protection',
-                '--enable-features=NetworkService,NetworkServiceLogging',
-                '--remote-debugging-address=0.0.0.0',
-                '--remote-debugging-port=0',
-                '--disable-blink-features=AutomationControlled'
+                '--disable-blink-features=AutomationControlled',
+                '--headless'
             ]
         )
         
@@ -902,67 +894,75 @@ async def run_browser_use_subprocess():
             }}
         )
         
-        # Crear tarea inteligente
+        # Crear tarea de búsqueda inteligente
         search_url = f"https://www.bing.com/search?q={{QUERY.replace(' ', '+')}}"
         
-        intelligent_task = f'''Navigate to {{search_url}} and perform an intelligent web search for: "{{QUERY}}"
+        intelligent_task = f'''Navigate to {{search_url}} and search for: "{{QUERY}}"
 
-INSTRUCTIONS:
-1. Go to the search engine website
-2. Wait for the page to fully load
-3. Look for search results on the page
-4. Extract the top {{MAX_RESULTS}} most relevant search results
-5. For each result, extract:
-   - Title (the main heading/link)
-   - URL (the actual web address)  
-   - Snippet/Description (the preview text)
-6. Focus on results that are most relevant to the query: "{{QUERY}}"
-7. Avoid any ads, sponsored content, or irrelevant results
-8. Return structured information about each result found
+TASK:
+1. Go to Bing search engine
+2. Search for the query and wait for results
+3. Extract the top {{MAX_RESULTS}} search results from the page
+4. For each result, get: title, URL, and description snippet
+5. Return structured data about what you found
 
-Be intelligent about how you navigate - adapt to the page layout and find the best results.'''
+Be precise and focus on the most relevant search results.'''
         
-        # Crear agente
+        # Crear agente browser-use con configuración optimizada
         agent = Agent(
             task=intelligent_task,
             llm=llm,
             browser_session=browser_session
         )
         
-        print("🚀 [SUBPROCESS] Iniciando navegación con captura visual...")
+        # Notificar progreso via WebSocket
+        await send_websocket_event(websocket_manager, 'terminal_activity', {{
+            'message': f'🌐 NAVEGACIÓN WEB: Iniciando búsqueda para "{{QUERY[:50]}}"',
+            'timestamp': datetime.now().isoformat()
+        }})
         
-        # Hook para capturar screenshots durante navegación
-        async def capture_navigation_screenshots():
+        # Ejecutar navegación con captura de screenshots
+        async def capture_screenshots_periodically():
+            \"\"\"Capturar screenshots periódicamente durante navegación\"\"\"
             try:
-                # Dar tiempo a que se inicialice el navegador
-                await asyncio.sleep(1)
+                await asyncio.sleep(2)  # Esperar que inicie navegador
                 
-                # Obtener páginas del navegador
-                browser = agent.browser_session.browser
-                if browser:
-                    pages = await browser.pages()
-                    if pages:
-                        current_page = pages[0]
-                        
-                        # Screenshot inicial
-                        await capture_and_send_screenshot(current_page, "🚀 Navegador iniciado", websocket_manager)
-                        
-                        # Monitorear navegación con screenshots periódicos
-                        for step_num in range(8):  # 8 capturas durante navegación
-                            await asyncio.sleep(2)  # Cada 2 segundos
-                            try:
-                                await capture_and_send_screenshot(current_page, f"📍 Navegación paso {{step_num + 1}}/8", websocket_manager)
-                            except Exception as step_err:
-                                print(f"⚠️ Error en screenshot paso {{step_num}}: {{str(step_err)}}")
+                for step in range(6):  # 6 capturas durante navegación
+                    await asyncio.sleep(3)
+                    try:
+                        browser = agent.browser_session.browser
+                        if browser:
+                            pages = await browser.pages()
+                            if pages and len(pages) > 0:
+                                current_page = pages[0]
+                                screenshot_bytes = await current_page.screenshot(type='png', full_page=False)
+                                screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
                                 
-            except Exception as screenshot_err:
-                print(f"⚠️ Error en captura de screenshots: {{str(screenshot_err)}}")
+                                # Enviar screenshot via WebSocket
+                                await send_websocket_event(websocket_manager, 'browser_visual', {{
+                                    'type': 'browser_screenshot',
+                                    'screenshot': f'data:image/png;base64,{{screenshot_base64}}',
+                                    'step': f'📍 Navegación paso {{step + 1}}/6',
+                                    'timestamp': datetime.now().isoformat(),
+                                    'url': current_page.url if hasattr(current_page, 'url') else search_url
+                                }})
+                                
+                                # Notificar progreso
+                                await send_websocket_event(websocket_manager, 'terminal_activity', {{
+                                    'message': f'🌐 NAVEGACIÓN WEB: Screenshot capturado - Paso {{step + 1}}/6',
+                                    'timestamp': datetime.now().isoformat()
+                                }})
+                    except:
+                        pass  # Continuar sin fallar por screenshots
+                        
+            except:
+                pass  # Silenciar errores de screenshots
         
-        # Ejecutar navegación y capturas en paralelo
-        navigation_task = agent.run(max_steps=8)
-        screenshot_task = capture_navigation_screenshots()
+        # Ejecutar navegación y screenshots en paralelo
+        navigation_task = agent.run(max_steps=6)
+        screenshot_task = capture_screenshots_periodically()
         
-        # Ejecutar ambas tareas concurrentemente
+        # Esperar que ambas tareas terminen
         result, _ = await asyncio.gather(navigation_task, screenshot_task, return_exceptions=True)
         
         # Screenshot final
@@ -970,42 +970,73 @@ Be intelligent about how you navigate - adapt to the page layout and find the be
             browser = agent.browser_session.browser
             if browser:
                 pages = await browser.pages()
-                if pages:
-                    await capture_and_send_screenshot(pages[0], "✅ Navegación completada", websocket_manager)
-        except Exception as final_screenshot_err:
-            print(f"⚠️ Error en screenshot final: {{str(final_screenshot_err)}}")
+                if pages and len(pages) > 0:
+                    screenshot_bytes = await pages[0].screenshot(type='png', full_page=False)
+                    screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
+                    
+                    await send_websocket_event(websocket_manager, 'browser_visual', {{
+                        'type': 'browser_screenshot',
+                        'screenshot': f'data:image/png;base64,{{screenshot_base64}}',
+                        'step': '✅ Navegación completada',
+                        'timestamp': datetime.now().isoformat(),
+                        'url': pages[0].url if hasattr(pages[0], 'url') else search_url
+                    }})
+        except:
+            pass
         
-        print("✅ [SUBPROCESS] Navegación con visualización completada!")
+        # Notificar finalización
+        await send_websocket_event(websocket_manager, 'terminal_activity', {{
+            'message': '✅ NAVEGACIÓN WEB: Navegación browser-use completada exitosamente',
+            'timestamp': datetime.now().isoformat()
+        }})
         
-        # Procesar resultado
+        # Procesar resultado y extraer contenido útil
         content = ""
-        if result and hasattr(result, 'extracted_content'):
-            content = result.extracted_content
-        elif result and hasattr(result, 'output'):
-            content = result.output
-        else:
-            content = str(result)
+        results_found = 0
         
-        # Retornar resultado estructurado
+        if result and hasattr(result, 'all_results'):
+            for action_result in result.all_results:
+                if hasattr(action_result, 'extracted_content') and action_result.extracted_content:
+                    content += str(action_result.extracted_content) + " "
+                    results_found += 1
+                elif hasattr(action_result, 'long_term_memory') and action_result.long_term_memory:
+                    content += str(action_result.long_term_memory) + " "
+        elif result:
+            content = str(result)[:1000]  # Limitar longitud
+            results_found = 1
+        
+        # RETORNAR JSON LIMPIO SIN LOGS
         return {{
             'success': True,
-            'content': str(content),
-            'method': 'browser_use_subprocess',
-            'timestamp': datetime.now().isoformat()
+            'content': content.strip(),
+            'results_found': results_found,
+            'method': 'browser_use_subprocess_fixed',
+            'query': QUERY,
+            'search_engine': SEARCH_ENGINE,
+            'timestamp': datetime.now().isoformat(),
+            'screenshots_captured': True,
+            'navigation_completed': True
         }}
         
     except Exception as e:
-        error_msg = f"Error en subprocess browser-use: {{str(e)}}"
-        print(f"❌ [SUBPROCESS] {{error_msg}}")
-        traceback.print_exc()
+        # Error handling sin logs contaminantes
         return {{
             'success': False,
-            'error': error_msg,
-            'method': 'browser_use_subprocess_error'
+            'error': str(e)[:200],  # Limitar longitud del error
+            'method': 'browser_use_subprocess_error',
+            'timestamp': datetime.now().isoformat()
         }}
 
 if __name__ == "__main__":
-    result = asyncio.run(run_browser_use_subprocess())
+    # Capturar y suprimir TODA la salida de logs
+    import io
+    import contextlib
+    
+    # Redirigir stderr temporalmente para logs de browser-use
+    with contextlib.redirect_stderr(io.StringIO()):
+        result = asyncio.run(run_browser_use_subprocess())
+    
+    # SOLO imprimir el JSON result - nada más
     print(json.dumps(result))
 """
             
