@@ -544,49 +544,7 @@ class UnifiedWebSearchTool(BaseTool):
     # REMOVIDO: _playwright_search - causaba conflictos con greenlet/eventlet
     # Reemplazado por _requests_search para compatibilidad total
 
-    def _tavily_search(self, query: str, max_results: int) -> List[Dict[str, Any]]:
-        """Búsqueda usando Tavily (fallback final)"""
-        try:
-            import requests
-            
-            tavily_api_key = os.environ.get('TAVILY_API_KEY')
-            if not tavily_api_key:
-                self._emit_progress_eventlet("⚠️ Tavily API key no encontrada")
-                return []
-            
-            self._emit_progress_eventlet("🔍 Ejecutando búsqueda con Tavily API...")
-            
-            response = requests.post(
-                "https://api.tavily.com/search",
-                json={
-                    "api_key": tavily_api_key,
-                    "query": query,
-                    "search_depth": "basic",
-                    "max_results": max_results
-                },
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                results = []
-                for item in data.get('results', []):
-                    results.append({
-                        'title': item.get('title', ''),
-                        'url': item.get('url', ''),
-                        'snippet': item.get('content', '')[:200],
-                        'source': 'tavily'
-                    })
-                
-                self._emit_progress_eventlet(f"✅ Búsqueda Tavily completada: {len(results)} resultados")
-                return results
-            else:
-                self._emit_progress_eventlet(f"❌ Error Tavily API: {response.status_code}")
-                return []
-                
-        except Exception as e:
-            self._emit_progress_eventlet(f"❌ Error en Tavily: {str(e)}")
-            return []
+    # REMOVED: _tavily_search - Tavily completely eliminated from application
 
     def _run_async_search_with_visualization(self, query: str, search_engine: str, 
                                            max_results: int, extract_content: bool) -> List[Dict[str, Any]]:
