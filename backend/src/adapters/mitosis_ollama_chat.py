@@ -14,7 +14,14 @@ from browser_use.llm.messages import UserMessage, SystemMessage, AssistantMessag
 from browser_use.llm.views import ChatInvokeCompletion
 
 # Importación del OllamaService de Mitosis
-from ..services.ollama_service import OllamaService
+try:
+    from ..services.ollama_service import OllamaService
+except ImportError:
+    # Fallback para cuando se importa directamente
+    import sys
+    import os
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    from services.ollama_service import OllamaService
 
 logger = logging.getLogger(__name__)
 
