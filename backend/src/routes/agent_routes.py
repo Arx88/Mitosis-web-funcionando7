@@ -687,7 +687,27 @@ def get_ollama_queue_status():
         queue_manager = get_ollama_queue_manager()
         
         # Obtener estado actual de la cola
-        status = asyncio.run(queue_manager.get_queue_status())
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Si ya hay un loop corriendo, crear un nuevo thread
+                import concurrent.futures
+                
+                def run_async():
+                    new_loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(new_loop)
+                    try:
+                        return new_loop.run_until_complete(queue_manager.get_queue_status())
+                    finally:
+                        new_loop.close()
+                
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(run_async)
+                    status = future.result(timeout=10)
+            else:
+                status = asyncio.run(queue_manager.get_queue_status())
+        except Exception as e:
+            status = {"error": f"No se pudo obtener estado: {str(e)}", "active_requests": 0, "pending_requests": 0}
         
         # Agregar información adicional
         status['endpoint_info'] = {
