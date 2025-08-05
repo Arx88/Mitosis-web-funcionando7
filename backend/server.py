@@ -642,64 +642,72 @@ def apply_configuration():
             return jsonify({"success": False, "error": "Config is required"}), 400
         
         new_config = data['config']
+        logger.info(f"🔧 Received config: {new_config}")
         
         # 🔧 FIX PROBLEMA 2: Aplicar configuración de Ollama CON MODELO + CONFIGURACIÓN CENTRALIZADA
         if 'ollama' in new_config:
             ollama_config = new_config['ollama']
             logger.info(f"🔧 Processing Ollama config: {ollama_config}")
             
-            # 🚀 IMPORTAR Y USAR CONFIGURACIÓN CENTRALIZADA
-            from src.config.ollama_config import get_ollama_config
-            central_config = get_ollama_config()
-            logger.info(f"🔧 Central config loaded: {central_config.get_full_config()}")
-            
-            # Actualizar endpoint si se proporciona
-            if 'endpoint' in ollama_config:
-                old_endpoint = central_config.endpoint
-                # Actualizar en configuración centralizada (PERSISTENTE)
-                central_config.endpoint = ollama_config['endpoint']
-                logger.info(f"✅ Endpoint actualizado en configuración centralizada: {old_endpoint} → {ollama_config['endpoint']}")
+            try:
+                # 🚀 IMPORTAR Y USAR CONFIGURACIÓN CENTRALIZADA
+                from src.config.ollama_config import get_ollama_config
+                central_config = get_ollama_config()
+                logger.info(f"🔧 Central config loaded successfully")
                 
-                # También actualizar en el servicio (RUNTIME)
-                if hasattr(app, 'ollama_service') and app.ollama_service:
-                    success = app.ollama_service.update_endpoint(ollama_config['endpoint'])
-                    logger.info(f"🔧 Service endpoint update success: {success}")
-                    if not success:
-                        logger.warning(f"Failed to update Ollama endpoint to {ollama_config['endpoint']}")
-            
-            # 🚀 CRÍTICO FIX: Actualizar modelo activo cuando se cambie desde el frontend
-            if 'model' in ollama_config:
-                new_model = ollama_config['model']
-                old_model_central = central_config.model
+                # Actualizar endpoint si se proporciona
+                if 'endpoint' in ollama_config:
+                    old_endpoint = central_config.endpoint
+                    # Actualizar en configuración centralizada (PERSISTENTE)
+                    central_config.endpoint = ollama_config['endpoint']
+                    logger.info(f"✅ Endpoint actualizado en configuración centralizada: {old_endpoint} → {ollama_config['endpoint']}")
+                    
+                    # También actualizar en el servicio (RUNTIME)
+                    if hasattr(app, 'ollama_service') and app.ollama_service:
+                        success = app.ollama_service.update_endpoint(ollama_config['endpoint'])
+                        logger.info(f"🔧 Service endpoint update success: {success}")
+                        if not success:
+                            logger.warning(f"Failed to update Ollama endpoint to {ollama_config['endpoint']}")
                 
-                # Actualizar en configuración centralizada (PERSISTENTE)
-                central_config.model = new_model
-                logger.info(f"✅ Modelo actualizado en configuración centralizada: {old_model_central} → {new_model}")
+                # 🚀 CRÍTICO FIX: Actualizar modelo activo cuando se cambie desde el frontend
+                if 'model' in ollama_config:
+                    new_model = ollama_config['model']
+                    old_model_central = central_config.model
+                    
+                    # Actualizar en configuración centralizada (PERSISTENTE)
+                    central_config.model = new_model
+                    logger.info(f"✅ Modelo actualizado en configuración centralizada: {old_model_central} → {new_model}")
+                    
+                    # También actualizar en el servicio (RUNTIME)
+                    if hasattr(app, 'ollama_service') and app.ollama_service:
+                        # Actualizar el modelo actual del servicio FORZADAMENTE
+                        old_model = app.ollama_service.get_current_model()
+                        success = app.ollama_service.set_model(new_model)  # Usar set_model que ahora fuerza el cambio
+                        
+                        logger.info(f"🔄 Modelo Ollama actualizado desde configuración: {old_model} → {new_model} (success: {success})")
+                        print(f"🔄 Modelo Ollama actualizado desde configuración: {old_model} → {new_model} (success: {success})")
+                        
+                        # También actualizar la variable de entorno para persistencia
+                        os.environ['OLLAMA_DEFAULT_MODEL'] = new_model
+                        logger.info(f"✅ Environment variable updated: OLLAMA_DEFAULT_MODEL={new_model}")
+                        
+                        # Verificar que efectivamente se cambió
+                        current_after_change = app.ollama_service.get_current_model()
+                        logger.info(f"🔍 Verificación post-cambio: {current_after_change}")
+                        print(f"🔍 Verificación post-cambio: {current_after_change}")
+                    else:
+                        logger.error("❌ ollama_service no disponible para cambio de modelo")
+                        print("❌ ollama_service no disponible para cambio de modelo")
                 
-                # También actualizar en el servicio (RUNTIME)
-                if hasattr(app, 'ollama_service') and app.ollama_service:
-                    # Actualizar el modelo actual del servicio FORZADAMENTE
-                    old_model = app.ollama_service.get_current_model()
-                    success = app.ollama_service.set_model(new_model)  # Usar set_model que ahora fuerza el cambio
-                    
-                    logger.info(f"🔄 Modelo Ollama actualizado desde configuración: {old_model} → {new_model} (success: {success})")
-                    print(f"🔄 Modelo Ollama actualizado desde configuración: {old_model} → {new_model} (success: {success})")
-                    
-                    # También actualizar la variable de entorno para persistencia
-                    os.environ['OLLAMA_DEFAULT_MODEL'] = new_model
-                    logger.info(f"✅ Environment variable updated: OLLAMA_DEFAULT_MODEL={new_model}")
-                    
-                    # Verificar que efectivamente se cambió
-                    current_after_change = app.ollama_service.get_current_model()
-                    logger.info(f"🔍 Verificación post-cambio: {current_after_change}")
-                    print(f"🔍 Verificación post-cambio: {current_after_change}")
-                else:
-                    logger.error("❌ ollama_service no disponible para cambio de modelo")
-                    print("❌ ollama_service no disponible para cambio de modelo")
-            
-            # Verificar configuración final
-            final_config = central_config.get_full_config()
-            logger.info(f"🎯 Final central config: endpoint={final_config['endpoint']}, model={final_config['model']}")
+                # Verificar configuración final
+                final_config = central_config.get_full_config()
+                logger.info(f"🎯 Final central config: endpoint={final_config['endpoint']}, model={final_config['model']}")
+                
+            except Exception as e:
+                logger.error(f"❌ Error procesando configuración de Ollama: {str(e)}")
+                logger.error(f"❌ Traceback: {traceback.format_exc()}")
+        else:
+            logger.info("🔧 No Ollama config in request")
         
         # Verificar nueva configuración
         ollama_connected = False
