@@ -682,18 +682,26 @@ async def run_browser_use_subprocess():
             
             # Remover texto de instrucciones comunes
             clean_text = query_text.lower()
-            clean_text = re.sub(r'buscar información sobre|utilizar la herramienta|web_search para|información actualizada|específica sobre|el estado de|en el año', '', clean_text)
+            clean_text = re.sub(r'buscar información sobre|utilizar la herramienta|web_search para|información actualizada|específica sobre|el estado de|en el año|noticias relacionadas con|en el año', '', clean_text)
             clean_text = re.sub(r'\\d{{4}}', '2025', clean_text)  # Normalizar año
             
-            # Extraer keywords significativos
-            words = re.findall(r'\\b[a-záéíóúñ]{{3,}}\\b', clean_text)
+            # Extraer keywords significativos - corregir regex
+            words = re.findall(r'\\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{{3,}}\\b', clean_text)
             
-            # Filtrar palabras comunes
-            stop_words = {{'sobre', 'para', 'con', 'una', 'del', 'las', 'los', 'que', 'esta', 'este'}}
-            keywords = [w for w in words if w not in stop_words]
+            # Filtrar palabras comunes extendida
+            stop_words = {{'sobre', 'para', 'con', 'una', 'del', 'las', 'los', 'que', 'esta', 'este', 'año', 'información', 'buscar', 'utilizar', 'herramienta', 'web', 'search', 'actualizada', 'relacionadas', 'noticias'}}
+            keywords = [w for w in words if w not in stop_words and len(w) > 2]
             
-            # Tomar los primeros 3-4 keywords más relevantes
-            return ' '.join(keywords[:4]) if keywords else 'inteligencia artificial 2025'
+            # Si encontramos keywords, tomar los primeros 3-4
+            if keywords:
+                return ' '.join(keywords[:4])
+            else:
+                # Si no hay keywords, intentar extraer nombres propios
+                proper_nouns = re.findall(r'\\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+\\b', query_text)
+                if proper_nouns:
+                    return ' '.join(proper_nouns[:3])
+                else:
+                    return 'noticias 2025'
         
         # Generar query limpio y navegable
         clean_query = extract_clean_keywords(QUERY)
