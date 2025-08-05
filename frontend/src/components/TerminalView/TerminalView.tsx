@@ -1307,48 +1307,112 @@ export const TerminalView = ({
         {/* Monitor Content - Responsive Scrollable Container */}
         <div className="flex-1 overflow-y-auto p-2 sm:p-4 custom-scrollbar w-full min-h-0" ref={monitorRef}>
           
-          {/* Browser Visual - Screenshots en Tiempo Real */}
-          {currentScreenshot && (
+          {/* Browser Visual - Galería de Screenshots en Tiempo Real */}
+          {(currentScreenshot || browserScreenshots.length > 0) && (
             <div className="mb-4 p-3 bg-[#2a2a2b] rounded-lg border border-purple-400/30">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-                <span className="text-sm font-medium text-purple-400">🌐 Navegación en Tiempo Real</span>
-                <span className="text-xs text-gray-400 ml-auto">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                  <span className="text-sm font-medium text-purple-400">🌐 Navegación en Tiempo Real</span>
+                  <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">
+                    {browserScreenshots.length} capturas
+                  </span>
+                </div>
+                <span className="text-xs text-gray-400">
                   {browserScreenshots.length > 0 ? 
                     new Date(browserScreenshots[browserScreenshots.length - 1].timestamp).toLocaleTimeString() 
                     : 'Ahora'
                   }
                 </span>
               </div>
-              <div className="space-y-2">
-                {browserScreenshots.length > 0 && (
-                  <div className="text-xs text-gray-300">
-                    {browserScreenshots[browserScreenshots.length - 1].step}
+              
+              <div className="space-y-3">
+                {/* Screenshot principal (más reciente) */}
+                {currentScreenshot && (
+                  <div className="space-y-2">
+                    {browserScreenshots.length > 0 && (
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs text-gray-300 font-medium">
+                          📸 {browserScreenshots[browserScreenshots.length - 1].step}
+                        </div>
+                        {browserScreenshots[browserScreenshots.length - 1].url && (
+                          <a 
+                            href={browserScreenshots[browserScreenshots.length - 1].url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-400 hover:text-blue-300 underline max-w-48 truncate"
+                          >
+                            {browserScreenshots[browserScreenshots.length - 1].url}
+                          </a>
+                        )}
+                      </div>
+                    )}
+                    <img 
+                      src={currentScreenshot} 
+                      alt="Navegación browser-use en tiempo real" 
+                      className="rounded-lg max-w-full h-auto border border-[#404040] shadow-lg cursor-pointer transition-transform hover:scale-105"
+                      style={{ 
+                        maxHeight: '600px',
+                        maxWidth: '100%',
+                        minHeight: '400px',
+                        objectFit: 'contain'
+                      }}
+                      onClick={() => {
+                        window.open(currentScreenshot, '_blank');
+                      }}
+                      onError={(e) => {
+                        console.error('Error loading screenshot:', e);
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
                   </div>
                 )}
-                <img 
-                  src={currentScreenshot} 
-                  alt="Navegación browser-use en tiempo real" 
-                  className="rounded-lg max-w-full h-auto border border-[#404040] shadow-lg cursor-pointer transition-transform hover:scale-105"
-                  style={{ 
-                    maxHeight: '600px',  // Aumentar de 300px a 600px
-                    maxWidth: '100%',
-                    minHeight: '400px',   // Altura mínima para mejor visualización
-                    objectFit: 'contain'  // Mantener proporciones
-                  }}
-                  onClick={() => {
-                    // Abrir imagen en nueva pestaña para ver en full resolution
-                    window.open(currentScreenshot, '_blank');
-                  }}
-                  onError={(e) => {
-                    console.error('Error loading screenshot:', e);
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
-                />
+                
+                {/* Galería de screenshots anteriores */}
                 {browserScreenshots.length > 1 && (
-                  <div className="text-xs text-gray-400 text-center">
-                    Screenshot {browserScreenshots.length} de la navegación
+                  <div className="border-t border-[rgba(255,255,255,0.1)] pt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-xs text-gray-400 font-medium">📚 Capturas Anteriores</div>
+                      <div className="text-xs text-gray-500">{browserScreenshots.length - 1} más</div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                      {browserScreenshots.slice(0, -1).reverse().slice(0, 6).map((screenshot, index) => (
+                        <div 
+                          key={screenshot.id} 
+                          className="relative group cursor-pointer"
+                          onClick={() => window.open(screenshot.screenshot, '_blank')}
+                        >
+                          <img 
+                            src={screenshot.screenshot}
+                            alt={`Screenshot ${index + 1}`}
+                            className="w-full h-20 object-cover rounded border border-[#404040] group-hover:border-purple-400/50 transition-all"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
+                            <span className="text-xs text-white font-medium">Ver completa</span>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-1">
+                            <div className="text-xs text-gray-200 truncate">
+                              {screenshot.step}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {new Date(screenshot.timestamp).toLocaleTimeString()}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {browserScreenshots.length > 7 && (
+                      <div className="text-center mt-2">
+                        <span className="text-xs text-gray-500">
+                          + {browserScreenshots.length - 7} capturas más...
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
