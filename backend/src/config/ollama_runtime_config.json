@@ -1,4 +1,4 @@
 {
-  "endpoint": "http://localhost:7777",
-  "model": "qwen2.5:latest"
+  "endpoint": "http://localhost:54321",
+  "model": "gemma2:latest"
 }
