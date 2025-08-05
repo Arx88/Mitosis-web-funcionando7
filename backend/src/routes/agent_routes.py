@@ -40,6 +40,9 @@ except ImportError:
     # Fallback if UpdateType is not available
     UpdateType = None
 
+# Import Ollama configuration functions
+from ..config.ollama_config import get_ollama_config, get_ollama_endpoint, get_ollama_model
+
 logger = logging.getLogger(__name__)
 
 # 🔄 CONSTANTE PARA SISTEMA DE REINTENTOS
