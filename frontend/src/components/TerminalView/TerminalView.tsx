@@ -88,6 +88,25 @@ export const TerminalView = ({
 
   // ✅ WEBSOCKET HOOK PARA NUEVOS EVENTOS DE TIEMPO REAL - SEGÚN UpgardeRef.md SECCIÓN 5.3
   const { socket, isConnected, joinTaskRoom, addEventListeners, removeEventListeners } = useWebSocket();
+  
+  // 🔧 FORCE WEBSOCKET CONNECTION - DEBUG FIX
+  useEffect(() => {
+    console.log('🔍 DEBUG WebSocket Status:', { 
+      socketExists: !!socket, 
+      isConnected, 
+      socketId: socket?.id 
+    });
+    
+    if (socket && !isConnected) {
+      console.log('🔧 Attempting manual WebSocket connection...');
+      socket.connect();
+    }
+    
+    // Agregar socket al window para debug
+    if (socket) {
+      (window as any).socket = socket;
+    }
+  }, [socket, isConnected]);
 
   // ========================================================================
   // ESTADO PARA VISUALIZACIÓN BROWSER-USE
