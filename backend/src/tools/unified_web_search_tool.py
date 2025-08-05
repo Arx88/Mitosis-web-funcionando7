@@ -330,38 +330,54 @@ class UnifiedWebSearchTool(BaseTool):
             if REAL_TIME_BROWSER_AVAILABLE and self.task_id:
                 self._emit_progress_eventlet("🎬 Activando navegación en tiempo real con screenshots continuos...")
                 
-                # Crear instancia del RealTimeBrowserTool
-                from .real_time_browser_tool import RealTimeBrowserTool
-                real_time_browser = RealTimeBrowserTool()
-                
-                # Preparar tarea de navegación específica para búsqueda
-                search_url = f'https://www.{search_engine}.com'
-                search_task = f"Buscar información sobre '{query}' en {search_engine} y explorar los primeros resultados"
-                
-                # Ejecutar navegación en tiempo real con captura continua
-                navigation_result = real_time_browser._execute_tool(
-                    parameters={
-                        'task_description': search_task,
-                        'start_url': search_url,
-                        'capture_interval': 2,  # Screenshot cada 2 segundos
-                        'max_duration': 45     # 45 segundos de navegación
-                    },
-                    config={
-                        'task_id': self.task_id
-                    }
-                )
-                
-                if navigation_result.success:
-                    navigation_data = navigation_result.data
-                    self._emit_progress_eventlet(f"✅ Navegación en tiempo real completada: {navigation_data.get('screenshots_captured', 0)} screenshots capturados")
+                # Verificar que RealTimeBrowserTool esté disponible
+                try:
+                    from .real_time_browser_tool import RealTimeBrowserTool
+                    self._emit_progress_eventlet("✅ RealTimeBrowserTool importado exitosamente")
                     
-                    # Extraer resultados de la navegación real
-                    results = self._extract_results_from_real_navigation(navigation_data, query, search_engine, max_results)
+                    # Crear instancia del RealTimeBrowserTool
+                    real_time_browser = RealTimeBrowserTool()
+                    self._emit_progress_eventlet("✅ Instancia RealTimeBrowserTool creada")
                     
-                    self._emit_progress_eventlet(f"📊 Extracción completada: {len(results)} resultados obtenidos")
-                    return results
-                else:
-                    self._emit_progress_eventlet(f"⚠️ Error en navegación en tiempo real: {navigation_result.error}")
+                    # Preparar tarea de navegación específica para búsqueda
+                    search_url = f'https://www.{search_engine}.com'
+                    search_task = f"Buscar información sobre '{query}' en {search_engine} y explorar los primeros resultados con screenshots continuos"
+                    
+                    self._emit_progress_eventlet(f"🌐 Preparando navegación: {search_task[:80]}...")
+                    
+                    # Ejecutar navegación en tiempo real con captura continua
+                    navigation_result = real_time_browser._execute_tool(
+                        parameters={
+                            'task_description': search_task,
+                            'start_url': search_url,
+                            'capture_interval': 2,  # Screenshot cada 2 segundos
+                            'max_duration': 45     # 45 segundos de navegación
+                        },
+                        config={
+                            'task_id': self.task_id
+                        }
+                    )
+                    
+                    self._emit_progress_eventlet("✅ Navegación en tiempo real ejecutada")
+                    
+                    if navigation_result and hasattr(navigation_result, 'success') and navigation_result.success:
+                        navigation_data = navigation_result.data
+                        self._emit_progress_eventlet(f"✅ Navegación en tiempo real completada: {navigation_data.get('screenshots_captured', 0)} screenshots capturados")
+                        
+                        # Extraer resultados de la navegación real
+                        results = self._extract_results_from_real_navigation(navigation_data, query, search_engine, max_results)
+                        
+                        self._emit_progress_eventlet(f"📊 Extracción completada: {len(results)} resultados obtenidos")
+                        return results
+                    else:
+                        error_msg = navigation_result.error if hasattr(navigation_result, 'error') else "Error desconocido"
+                        self._emit_progress_eventlet(f"⚠️ Error en navegación en tiempo real: {error_msg}")
+                        # Continuar con fallback
+                        
+                except ImportError as ie:
+                    self._emit_progress_eventlet(f"❌ Error importando RealTimeBrowserTool: {str(ie)}")
+                except Exception as e:
+                    self._emit_progress_eventlet(f"❌ Error en RealTimeBrowserTool: {str(e)}")
                     # Continuar con fallback
             
             # FALLBACK A PLAYWRIGHT SI NO HAY NAVEGACIÓN EN TIEMPO REAL
