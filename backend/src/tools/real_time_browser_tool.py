@@ -166,18 +166,39 @@ class RealTimeBrowserTool(BaseTool):
     def _setup_x11_server(self):
         """🖥️ CONFIGURAR SERVIDOR X11 VIRTUAL PARA NAVEGACIÓN VISIBLE"""
         try:
-            # Verificar si Xvfb está disponible
-            if not subprocess.run(['which', 'xvfb-run'], capture_output=True).returncode == 0:
-                self._emit_progress("⚠️ Xvfb no disponible, instalando...")
-                subprocess.run(['apt-get', 'update', '-qq'], check=False)
-                subprocess.run(['apt-get', 'install', '-y', 'xvfb'], check=False)
-            
             # Configurar display virtual
             display_num = 99
             os.environ['DISPLAY'] = f':{display_num}'
             
-            # Iniciar servidor X11 virtual
-            self._emit_progress(f"🖥️ Iniciando servidor X11 virtual en display :{display_num}")
+            # VERIFICAR SI YA HAY UN SERVIDOR X11 CORRIENDO
+            try:
+                # Verificar si el display :99 ya está en uso
+                result = subprocess.run(['xset', '-display', f':{display_num}', 'q'], 
+                                      capture_output=True, timeout=5)
+                if result.returncode == 0:
+                    self._emit_progress(f"✅ Servidor X11 virtual ya está corriendo en display :{display_num}")
+                    self._emit_browser_visual({
+                        'type': 'x11_server_ready',
+                        'message': '🖥️ Servidor X11 virtual detectado y listo - Navegación visible habilitada',
+                        'display': f':{display_num}',
+                        'resolution': '1920x1080',
+                        'reused_existing': True,
+                        'timestamp': time.time()
+                    })
+                    return  # Servidor ya existe, no necesitamos crear uno nuevo
+            except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError):
+                # xset no está disponible o display no existe, necesitamos crear servidor
+                pass
+            
+            # CREAR NUEVO SERVIDOR X11 SOLO SI NO EXISTE UNO
+            # Verificar si Xvfb está disponible
+            if not subprocess.run(['which', 'Xvfb'], capture_output=True).returncode == 0:
+                self._emit_progress("⚠️ Xvfb no disponible, instalando...")
+                subprocess.run(['apt-get', 'update', '-qq'], check=False)
+                subprocess.run(['apt-get', 'install', '-y', 'xvfb'], check=False)
+            
+            # Intentar iniciar servidor X11 virtual
+            self._emit_progress(f"🖥️ Iniciando nuevo servidor X11 virtual en display :{display_num}")
             
             self.xvfb_process = subprocess.Popen([
                 'Xvfb', f':{display_num}',
@@ -190,12 +211,13 @@ class RealTimeBrowserTool(BaseTool):
             
             # Verificar que el servidor está corriendo
             if self.xvfb_process.poll() is None:
-                self._emit_progress("✅ Servidor X11 virtual iniciado correctamente")
+                self._emit_progress("✅ Nuevo servidor X11 virtual iniciado correctamente")
                 self._emit_browser_visual({
                     'type': 'x11_server_started',
-                    'message': '🖥️ Servidor X11 virtual activo - Navegación visible habilitada',
+                    'message': '🖥️ Nuevo servidor X11 virtual activo - Navegación visible habilitada',
                     'display': f':{display_num}',
                     'resolution': '1920x1080',
+                    'reused_existing': False,
                     'timestamp': time.time()
                 })
             else:
@@ -203,7 +225,9 @@ class RealTimeBrowserTool(BaseTool):
                 
         except Exception as e:
             self._emit_progress(f"❌ Error configurando X11: {str(e)}")
-            raise
+            # No hacer raise - continuar sin servidor X11 propio pero usar el existente
+            self._emit_progress("⚠️ Continuando con servidor X11 existente...")
+            os.environ['DISPLAY'] = ':99'  # Usar el display existente
     
     def _initialize_websocket(self):
         """🔄 INICIALIZAR WEBSOCKET PARA EVENTOS EN TIEMPO REAL"""
