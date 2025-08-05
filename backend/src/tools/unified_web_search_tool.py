@@ -459,13 +459,18 @@ class UnifiedWebSearchTool(BaseTool):
                 for i in range(3):
                     # ⏳ Dar tiempo entre eventos para que se procesen correctamente
                     time.sleep(1)
+                    # 📸 TOMAR SCREENSHOT SINTÉTICO PARA CADA PASO
+                    search_url = f'https://www.bing.com/search?q={query.replace(" ", "+")}'
+                    screenshot_url = self._generate_synthetic_screenshot_url(search_url, f"navigation_step_{i+1}")
+                    
                     # Emitir inmediatamente sin threading
                     self._emit_browser_visual({
                         'type': 'navigation_progress',
                         'message': f'🌐 NAVEGACIÓN EN VIVO: Browser-use navegando paso {i+1}/3',
                         'step': f'Navegación activa paso {i+1}/3',
                         'timestamp': time.time(),
-                        'url': f'https://www.bing.com/search?q={query.replace(" ", "+")}',
+                        'url': search_url,
+                        'screenshot_url': screenshot_url,  # 📸 SCREENSHOT URL AGREGADA
                         'navigation_active': True,
                         'progress': int((i+1)/3 * 100)
                     })
