@@ -2441,7 +2441,7 @@ import sys
 
 async def take_screenshot():
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-dev-shm-usage'])
+        browser = await p.chromium.launch(headless=False, args=['--no-sandbox', '--disable-dev-shm-usage'])  # 🚀 NAVEGACIÓN VISUAL
         page = await browser.new_page()
         page.set_default_timeout(8000)
         try:
