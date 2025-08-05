@@ -5832,7 +5832,7 @@ def agent_status():
         'active_tasks': len(active_task_plans),
         'ollama': {
             'connected': True,
-            'endpoint': os.getenv('OLLAMA_BASE_URL', 'https://66bd0d09b557.ngrok-free.app'),
+            'endpoint': get_ollama_endpoint(),
             'model': os.getenv('OLLAMA_DEFAULT_MODEL', 'llama3.1:8b')
         },
         'tools': tools_count,
