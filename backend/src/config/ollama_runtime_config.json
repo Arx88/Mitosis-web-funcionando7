@@ -1,4 +1,4 @@
 {
-  "endpoint": "http://localhost:54321",
-  "model": "gemma2:latest"
+  "endpoint": "https://e8da53409283.ngrok-free.app",
+  "model": "gpt-oss:20b"
 }
