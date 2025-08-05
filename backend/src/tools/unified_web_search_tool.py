@@ -618,8 +618,11 @@ async def run_browser_use_subprocess():
             ]
         )
         
+        # 🖥️ CONFIGURAR DISPLAY X11 VIRTUAL PARA NAVEGACIÓN VISIBLE
+        os.environ['DISPLAY'] = ':99'
+        
         browser_session = BrowserSession(
-            headless=True,  # 🚀 VOLVER A HEADLESS PERO CON NAVEGACIÓN VISUAL MEJORADA
+            headless=False,  # 🚀 NAVEGACIÓN VISIBLE CON SERVIDOR X11 VIRTUAL
             browser_profile=browser_profile,
             context_config={{
                 'ignore_https_errors': True,
