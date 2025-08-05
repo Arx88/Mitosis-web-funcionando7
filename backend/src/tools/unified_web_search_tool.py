@@ -1529,7 +1529,7 @@ except Exception as e:
         
         async with async_playwright() as p:
             browser = await p.chromium.launch(
-                headless=True,
+                headless=False,  # 🚀 NAVEGACIÓN VISUAL EN TIEMPO REAL
                 args=['--no-sandbox', '--disable-dev-shm-usage']
             )
             
