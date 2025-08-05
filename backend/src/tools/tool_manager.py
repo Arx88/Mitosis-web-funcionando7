@@ -91,8 +91,13 @@ class ToolManager:
     def execute_tool(self, tool_name: str, parameters: Dict[str, Any], 
                     config: Dict[str, Any] = None, task_id: str = None) -> Dict[str, Any]:
         """
-        Ejecutar herramienta
-        Interfaz compatible con código existente pero usando ToolRegistry
+        Ejecutar herramienta con parámetros dados
+        
+        Args:
+            tool_name: Nombre de la herramienta
+            parameters: Parámetros de entrada
+            config: Configuración adicional (incluye task_id para navegación visual)
+            task_id: ID de tarea para navegación visual
         """
         if not self._initialized:
             self.initialize()
@@ -105,6 +110,11 @@ class ToolManager:
         # 🔧 FIX CRÍTICO: Agregar task_id al config para herramientas de navegación en tiempo real
         if task_id:
             final_config['task_id'] = task_id
+        
+        # 🌐 ACTIVAR NAVEGACIÓN VISUAL PARA HERRAMIENTAS WEB
+        if tool_name in ['web_search', 'unified_web_search'] and final_config.get('task_id'):
+            final_config['enable_visual_navigation'] = True
+            logger.info(f"🎬 Navegación visual activada para {tool_name} con task_id: {final_config['task_id']}")
         
         # Log de ejecución
         logger.info(f"Executing tool '{tool_name}' with parameters: {parameters}")
