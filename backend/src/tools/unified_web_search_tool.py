@@ -131,6 +131,13 @@ class UnifiedWebSearchTool(BaseTool):
         search_engine = parameters.get('search_engine', 'bing')
         extract_content = parameters.get('extract_content', True)
         
+        # 🔧 LIMPIAR QUERY ANTES DE USARLO - aplicar extract_clean_keywords aquí también
+        if len(query) > 50:  # Si el query es muy largo, limpiarlo
+            clean_query = self._extract_clean_keywords_static(query)
+            if clean_query and len(clean_query) < len(query):
+                query = clean_query
+                print(f"🔧 Query limpiado: '{query}' (original era muy largo)")
+        
         # Obtener task_id del config si está disponible
         self.task_id = config.get('task_id') if config else None
         
