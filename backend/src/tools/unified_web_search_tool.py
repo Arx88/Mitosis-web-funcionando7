@@ -44,9 +44,13 @@ except ImportError:
 # Importar WebSocket manager para eventos en tiempo real
 try:
     from ..websocket.websocket_manager import get_websocket_manager
+    from .real_time_browser_tool import RealTimeBrowserTool
+    from .visual_browser_events import create_browser_visual_manager
     WEBSOCKET_AVAILABLE = True
+    REAL_TIME_BROWSER_AVAILABLE = True
 except ImportError:
     WEBSOCKET_AVAILABLE = False
+    REAL_TIME_BROWSER_AVAILABLE = False
 
 @register_tool
 class UnifiedWebSearchTool(BaseTool):
