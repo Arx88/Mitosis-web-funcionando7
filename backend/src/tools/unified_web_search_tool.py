@@ -1324,7 +1324,7 @@ async def search_with_playwright_realtime(query, search_engine, max_results, pro
     
     async with async_playwright() as p:
         browser = await p.chromium.launch(
-            headless=True,
+            headless=False,  # 🚀 NAVEGACIÓN VISUAL EN TIEMPO REAL
             args=['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
         )
         
