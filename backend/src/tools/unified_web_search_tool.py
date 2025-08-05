@@ -478,16 +478,27 @@ class UnifiedWebSearchTool(BaseTool):
             
             # Función de eventos visuales que se ejecuta en el proceso principal
             def emit_visual_progress():
-                """Emitir progreso visual durante navegación subprocess"""
+                """Emitir progreso visual durante navegación subprocess como mensajes normales"""
                 for i in range(3):
                     # ⏳ Dar tiempo entre eventos para que se procesen correctamente
                     time.sleep(1)
                     # 📸 TOMAR SCREENSHOT SINTÉTICO PARA CADA PASO
                     search_url = f'https://www.bing.com/search?q={query.replace(" ", "+")}'
                     screenshot_url = self._generate_synthetic_screenshot_url(search_url, f"navigation_step_{i+1}")
-                    print(f"🔍 DEBUG: Screenshot URL para step {i+1}: '{screenshot_url}'")
                     
-                    # Emitir inmediatamente sin threading
+                    # 🚀 ENVIAR COMO PROGRESO NORMAL en lugar de browser_visual
+                    self._emit_progress_eventlet(f"# 🌐 Navegación Web en Tiempo Real")
+                    self._emit_progress_eventlet(f"## Navegación activa paso {i+1}/3")
+                    self._emit_progress_eventlet(f"**Timestamp:** {datetime.now().strftime('%H:%M:%S')}")
+                    self._emit_progress_eventlet(f"**URL:** {search_url}")
+                    self._emit_progress_eventlet(f"![Screenshot]({screenshot_url})")
+                    self._emit_progress_eventlet("---")
+                    self._emit_progress_eventlet("*Captura automática de navegación browser-use*")
+                    self._emit_progress_eventlet("")  # Línea vacía para separación
+                    
+                    print(f"🌐 EVENTO VISUAL COMO PROGRESO {i+1} ENVIADO")
+                    
+                    # También intentar enviar browser_visual original
                     self._emit_browser_visual({
                         'type': 'navigation_progress',
                         'message': f'🌐 NAVEGACIÓN EN VIVO: Browser-use navegando paso {i+1}/3',
@@ -498,7 +509,6 @@ class UnifiedWebSearchTool(BaseTool):
                         'navigation_active': True,
                         'progress': int((i+1)/3 * 100)
                     })
-                    print(f"🌐 EVENTO VISUAL {i+1} ENVIADO con delay")
                     self._emit_progress_eventlet(f"📸 Enviando evento visual {i+1}/3...")
             
             # Emitir primer evento de progreso inmediatamente
