@@ -234,13 +234,26 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
           if (data.type === 'browser_visual' && data.data && data.data.task_id === task.id) {
             console.log(`📸 [BROWSER_VISUAL via task_update] Processing:`, data.data);
             
-            // Procesar como browser_visual normal
             const visualData = data.data;
+            
+            // ✅ VALIDACIÓN: Verificar que tenga datos mínimos requeridos
+            if (!visualData.url && !visualData.step && !visualData.message && !visualData.screenshot_url && !visualData.screenshot) {
+              console.log(`📸 [BROWSER_VISUAL via task_update] Empty or incomplete data, skipping:`, visualData);
+              return;
+            }
+            
+            // ✅ VALIDACIÓN: Verificar timestamp válido
+            const eventTimestamp = visualData.timestamp ? new Date(visualData.timestamp * 1000) : new Date();
+            if (eventTimestamp.getFullYear() < 2020) {
+              console.log(`📸 [BROWSER_VISUAL via task_update] Invalid timestamp detected, using current time`);
+            }
+            
+            // Procesar como browser_visual normal
             const visualMessage = `# 🌐 Navegación Web en Tiempo Real
 
 ## ${visualData.step || 'Navegación activa'}
 
-**Timestamp:** ${new Date().toLocaleTimeString()}
+**Timestamp:** ${eventTimestamp.getFullYear() > 2020 ? eventTimestamp.toLocaleTimeString() : new Date().toLocaleTimeString()}
 **URL:** ${visualData.url || 'N/A'}
 
 ![Screenshot](${visualData.screenshot_url || visualData.screenshot || '/api/placeholder-screenshot.png'})
@@ -255,7 +268,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
               id: `browser_visual_${Date.now()}`,
               title: visualData.step || 'Navegación Visual',
               content: visualMessage,
-              timestamp: new Date(),
+              timestamp: eventTimestamp.getFullYear() > 2020 ? eventTimestamp : new Date(),
               type: 'browser_visual'
             });
           }
