@@ -12,7 +12,7 @@ import { useMessagesManagement, useTerminalManagement, useFileManagement } from 
 import { useAppContext } from '../context/AppContext';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { API_CONFIG } from '../config/api';
-import { Star, Files, Share2 } from 'lucide-react';
+import { Star, Files, Share2, GripVertical } from 'lucide-react';
 
 interface TaskViewProps {
   task: Task;
