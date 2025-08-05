@@ -364,6 +364,16 @@ class UnifiedWebSearchTool(BaseTool):
                         navigation_data = navigation_result.data
                         self._emit_progress_eventlet(f"✅ Navegación en tiempo real completada: {navigation_data.get('screenshots_captured', 0)} screenshots capturados")
                         
+                        # DEBUG: Ver estructura de navigation_data
+                        try:
+                            with open('/tmp/websocket_debug.log', 'a') as f:
+                                f.write(f"[{datetime.now()}] NAVIGATION_DATA DEBUG: {navigation_data}\n")
+                                f.write(f"[{datetime.now()}] NAVIGATION_DATA TYPE: {type(navigation_data)}\n")
+                                f.write(f"[{datetime.now()}] NAVIGATION_DATA KEYS: {list(navigation_data.keys()) if isinstance(navigation_data, dict) else 'No dict'}\n")
+                                f.flush()
+                        except:
+                            pass
+                        
                         # Extraer resultados de la navegación real
                         results = self._extract_results_from_real_navigation(navigation_data, query, search_engine, max_results)
                         
