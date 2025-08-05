@@ -84,6 +84,12 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   
   // Configurar event listeners para browser_visual
   useEffect(() => {
+    console.log(`🔌 [WEBSOCKET-DEBUG] useEffect triggered:`, { 
+      hasSocket: !!socket, 
+      isConnected, 
+      taskId: task.id 
+    });
+    
     if (socket && isConnected && task.id) {
       console.log(`🔌 [WEBSOCKET] Setting up browser_visual listeners for task ${task.id}`);
       
