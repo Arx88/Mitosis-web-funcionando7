@@ -595,15 +595,32 @@ class RealTimeBrowserTool(BaseTool):
                             
                             results['screenshots'].append(screenshot_data)
                             
-                            # Emitir evento browser_visual con screenshot real
+                            # 📸 EMITIR EVENTO BROWSER_VISUAL INMEDIATO CON SCREENSHOT DE ALTA RESOLUCIÓN
                             self._emit_browser_visual({
                                 'type': 'screenshot_captured_real',
-                                'message': f'📸 Screenshot real #{screenshot_count + 1} capturado',
+                                'message': f'📸 Screenshot #{screenshot_count + 1} - Navegación en tiempo real',
                                 'screenshot_url': screenshot_path,
                                 'screenshot_index': screenshot_count,
                                 'current_url': screenshot_data['url'],
-                                'timestamp': time.time()
+                                'timestamp': time.time(),
+                                'resolution': '1920x1080',  # Información de resolución
+                                'quality': 'high',  # Indicador de calidad
+                                'capture_type': 'real_time_navigation',
+                                'step_description': f'Captura automática durante navegación web paso {screenshot_count + 1}'
                             })
+                            
+                            # 🚀 TAMBIÉN EMITIR COMO PROGRESS_UPDATE PARA MEJOR COMPATIBILIDAD
+                            if self.websocket_manager:
+                                try:
+                                    self.websocket_manager.emit_to_task(self.task_id, 'progress_update', {
+                                        'type': 'navigation_screenshot',
+                                        'message': f'📸 Navegación web: Screenshot #{screenshot_count + 1} capturado',
+                                        'screenshot_url': screenshot_path,
+                                        'current_url': screenshot_data['url'],
+                                        'timestamp': time.time()
+                                    })
+                                except Exception as e:
+                                    self._emit_progress(f"⚠️ Error emitiendo progress_update: {str(e)}")
                             
                             screenshot_count += 1
                     
