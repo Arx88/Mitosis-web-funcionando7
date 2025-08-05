@@ -950,7 +950,7 @@ if __name__ == "__main__":
                 async with async_playwright() as p:
                     # Configuración robusta para contenedores
                     browser = await p.chromium.launch(
-                        headless=False,  # 🚀 NAVEGACIÓN VISUAL EN TIEMPO REAL
+                        headless=True,  # 🚀 HEADLESS CON NAVEGACIÓN VISUAL
                         args=[
                             '--no-sandbox',
                             '--disable-setuid-sandbox',
