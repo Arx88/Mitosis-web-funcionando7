@@ -463,21 +463,18 @@ class UnifiedWebSearchTool(BaseTool):
             
             time.sleep(1)  # Extra segundo de seguridad
             
-            # Emitir evento inicial después del delay
+            # 🚀 SOLUCIÓN DEFINITIVA: Enviar también como progress_update que SÍ llega al frontend
             search_url = f'https://www.bing.com/search?q={query.replace(" ", "+")}'
-            # 📸 TOMAR SCREENSHOT SINTÉTICO PARA EVENTOS VISUALES
             screenshot_url = self._generate_synthetic_screenshot_url(search_url, "navigation_start")
-            print(f"🔍 DEBUG: Screenshot URL para navigation_start: '{screenshot_url}'")
+            self._emit_progress_eventlet(f"📸 NAVEGACIÓN VISUAL INICIADA: {search_url}")
             
-            self._emit_browser_visual({
-                'type': 'navigation_start',
-                'message': '🚀 NAVEGACIÓN VISUAL INICIADA: Browser-use comenzando navegación',
-                'step': 'Iniciando navegación visual',
-                'timestamp': time.time(),
-                'url': search_url,
-                'screenshot_url': screenshot_url,  # 📸 SCREENSHOT URL AGREGADA
-                'navigation_active': True
-            })
+            # También emitir como mensaje de progreso normal que SÍ funciona
+            self._emit_progress_eventlet("# 🌐 Navegación Web en Tiempo Real")
+            self._emit_progress_eventlet(f"## Iniciando navegación visual")
+            self._emit_progress_eventlet(f"**URL:** {search_url}")
+            self._emit_progress_eventlet(f"**Screenshot:** {screenshot_url}")
+            self._emit_progress_eventlet("---")
+            self._emit_progress_eventlet("*Captura automática de navegación browser-use iniciada*")
             
             # Función de eventos visuales que se ejecuta en el proceso principal
             def emit_visual_progress():
