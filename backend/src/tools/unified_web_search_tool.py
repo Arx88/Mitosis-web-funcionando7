@@ -438,9 +438,30 @@ class UnifiedWebSearchTool(BaseTool):
             
             # 🚀 SOLUCIÓN CRÍTICA: Emitir eventos browser_visual DESPUÉS de dar tiempo al frontend
             
-            # ⏳ CRITICAL FIX: Esperar 2 segundos para que frontend se una a la room
+            # ⏳ CRITICAL FIX: Esperar MÁS TIEMPO para que frontend se una a la room
             self._emit_progress_eventlet("⏳ Esperando que frontend se conecte a room WebSocket...")
-            time.sleep(2)
+            
+            # Verificar conexión del frontend por hasta 10 segundos
+            max_wait = 10
+            for i in range(max_wait):
+                time.sleep(1)
+                # Intentar emitir un evento de prueba para verificar conectividad
+                try:
+                    from flask import current_app
+                    if hasattr(current_app, 'socketio'):
+                        # Verificar si hay clientes en la room
+                        clients_in_room = len(current_app.socketio.server.manager.get_participants(current_app.socketio.server.eio.namespace, self.task_id))
+                        self._emit_progress_eventlet(f"📊 Clientes conectados a room {self.task_id}: {clients_in_room}")
+                        if clients_in_room > 0:
+                            self._emit_progress_eventlet(f"✅ Frontend conectado después de {i+1} segundos!")
+                            break
+                except Exception as e:
+                    self._emit_progress_eventlet(f"❌ Error verificando conexiones: {e}")
+                    
+                if i == max_wait - 1:
+                    self._emit_progress_eventlet("⚠️ Continúo sin verificar conexión frontend")
+            
+            time.sleep(1)  # Extra segundo de seguridad
             
             # Emitir evento inicial después del delay
             search_url = f'https://www.bing.com/search?q={query.replace(" ", "+")}'
