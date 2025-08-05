@@ -848,7 +848,7 @@ export const TerminalView = ({
         // Agregar screenshot al estado
         const newScreenshot = {
           id: `screenshot-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          screenshot: data.screenshot,
+          screenshot: data.screenshot_url || data.screenshot,  // 🔧 FIX: Usar screenshot_url primero
           step: data.step || 'Navegación',
           timestamp: data.timestamp || new Date().toISOString(),
           url: data.url
@@ -860,20 +860,20 @@ export const TerminalView = ({
           return updated.slice(-10);
         });
         
-        // Actualizar screenshot actual
-        setCurrentScreenshot(data.screenshot);
+        // Actualizar screenshot actual (FIX: usar screenshot_url)
+        setCurrentScreenshot(data.screenshot_url || data.screenshot);
         
         // Crear página de monitor para navegación visual
         const visualPage: MonitorPage = {
           id: `browser-visual-${Date.now()}`,
           title: `🌐 ${data.step || 'Navegación Web'}`,
-          content: `# Navegación Web en Tiempo Real\n\n## ${data.step || 'Navegación'}\n\n**Timestamp:** ${new Date(data.timestamp).toLocaleTimeString()}\n**URL:** ${data.url || 'Desconocida'}\n\n![Screenshot](${data.screenshot})\n\n---\n\n*Captura automática de navegación browser-use*`,
+          content: `# Navegación Web en Tiempo Real\n\n## ${data.step || 'Navegación'}\n\n**Timestamp:** ${new Date(data.timestamp).toLocaleTimeString()}\n**URL:** ${data.url || 'Desconocida'}\n\n![Screenshot](${data.screenshot_url || data.screenshot || 'undefined'})\n\n---\n\n*Captura automática de navegación browser-use*`,
           type: 'web-browsing',
           timestamp: new Date(data.timestamp),
           metadata: {
             status: 'success',
             url: data.url,
-            screenshotUrl: data.screenshot
+            screenshotUrl: data.screenshot_url || data.screenshot  // 🔧 FIX: Usar screenshot_url primero
           }
         };
         
