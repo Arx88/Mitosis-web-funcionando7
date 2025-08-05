@@ -442,6 +442,7 @@ class UnifiedWebSearchTool(BaseTool):
             search_url = f'https://www.bing.com/search?q={query.replace(" ", "+")}'
             # 📸 TOMAR SCREENSHOT SINTÉTICO PARA EVENTOS VISUALES
             screenshot_url = self._generate_synthetic_screenshot_url(search_url, "navigation_start")
+            print(f"🔍 DEBUG: Screenshot URL para navigation_start: '{screenshot_url}'")
             
             self._emit_browser_visual({
                 'type': 'navigation_start',
