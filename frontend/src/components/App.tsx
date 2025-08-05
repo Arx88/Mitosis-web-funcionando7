@@ -33,7 +33,7 @@ Siempre explica lo que estás haciendo y por qué, para que el usuario pueda ent
     model: "gpt-oss:20b",
     temperature: 0.7,
     maxTokens: 2048,
-    endpoint: "https://bef4a4bb93d1.ngrok-free.app"
+    endpoint: "https://e8da53409283.ngrok-free.app"
   },
   openrouter: {
     enabled: false,
