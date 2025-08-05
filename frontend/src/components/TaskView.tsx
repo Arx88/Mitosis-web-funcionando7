@@ -191,7 +191,8 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       return () => {
         clearInterval(retryInterval);
       };
-    }, [socket, isConnected, task.id, joinTaskRoom, addEventListeners, logToTerminal, addMonitorPage]);
+    } // <-- Cerrar el if (socket && task.id)
+  }, [socket, isConnected, task.id, joinTaskRoom, addEventListeners, logToTerminal, addMonitorPage]);
   
   // ========================================================================
   // PLAN MANAGER SIMPLIFICADO - USANDO CONTEXT AISLADO
