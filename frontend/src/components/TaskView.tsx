@@ -71,7 +71,68 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   const [showFilesModal, setShowFilesModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   
+  // ========================================================================
+  // ESTADO PARA REDIMENSIONAMIENTO RESPONSIVO
+  // ========================================================================
+  const [chatWidthPercent, setChatWidthPercent] = useState(40); // 40% por defecto (más pequeño)
+  const [isResizing, setIsResizing] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  
   const monitorRef = useRef<HTMLDivElement>(null);
+  const resizeRef = useRef<HTMLDivElement>(null);
+  
+  // Detectar tamaño de ventana para responsiveness
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  // Lógica responsive para colapsar elementos según el espacio
+  const getResponsiveLayout = () => {
+    const isMobile = windowWidth < 768;
+    const isTablet = windowWidth < 1024;
+    const isSmallDesktop = windowWidth < 1200;
+    
+    if (isMobile) {
+      return {
+        shouldCollapseChat: true,
+        shouldCollapseSidebar: true,
+        minChatWidth: 300,
+        maxChatWidth: windowWidth - 100,
+        defaultChatWidth: windowWidth > 600 ? 35 : 30
+      };
+    } else if (isTablet) {
+      return {
+        shouldCollapseChat: false,
+        shouldCollapseSidebar: windowWidth < 900,
+        minChatWidth: 350,
+        maxChatWidth: windowWidth * 0.7,
+        defaultChatWidth: 35
+      };
+    } else if (isSmallDesktop) {
+      return {
+        shouldCollapseChat: false,
+        shouldCollapseSidebar: false,
+        minChatWidth: 400,
+        maxChatWidth: windowWidth * 0.65,
+        defaultChatWidth: 40
+      };
+    } else {
+      return {
+        shouldCollapseChat: false,
+        shouldCollapseSidebar: false,
+        minChatWidth: 450,
+        maxChatWidth: windowWidth * 0.6,
+        defaultChatWidth: 40
+      };
+    }
+  };
+  
+  const responsiveLayout = getResponsiveLayout();
   
   // Memory manager aislado por tarea (conservado)
   const { hasActiveMemory, getMemoryStats } = useIsolatedMemoryManager({ taskId: task.id });
