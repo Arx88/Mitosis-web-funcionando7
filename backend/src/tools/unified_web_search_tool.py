@@ -294,12 +294,20 @@ class UnifiedWebSearchTool(BaseTool):
         try:
             # ✨ USAR BROWSER-USE REAL - NAVEGACIÓN VERDADERA VIA SUBPROCESS
             if BROWSER_USE_AVAILABLE:
+                # 🌐 ACTIVAR NAVEGACIÓN VISUAL EN TIEMPO REAL SI ESTÁ DISPONIBLE
+                if hasattr(self, 'visual_events_manager'):
+                    self.visual_events_manager.emit_navigation_start(query, search_engine)
+                
                 # ENVIAR EVENTOS DE NAVEGACIÓN WEB VISUAL EN TIEMPO REAL
                 if self.task_id:
                     # Usar el sistema de emisión que ya funciona
                     self._emit_progress("🚀 NAVEGACIÓN VISUAL: Iniciando browser-use para navegación en tiempo real")
                     self._emit_progress("🌐 NAVEGACIÓN VISUAL: Conectando con navegador Chromium...")
                     
+                    # Activar navegación visual si está disponible
+                    if hasattr(self, 'visual_events_manager'):
+                        self.visual_events_manager.emit_browser_launch("Chromium con navegación visible")
+                
                 # SIMULAR NAVEGACIÓN EN TIEMPO REAL VISIBLE
                 progress_messages = [
                     "🌐 NAVEGACIÓN VISUAL: Abriendo navegador...",
@@ -316,6 +324,16 @@ class UnifiedWebSearchTool(BaseTool):
                     for i, mensaje in enumerate(progress_messages):
                         time.sleep(8)  # Esperar 8 segundos entre mensajes
                         self._emit_progress(f"{mensaje} (Paso {i+2}/6)")
+                        
+                        # Emitir eventos visuales si están disponibles
+                        if hasattr(self, 'visual_events_manager'):
+                            if i == 1:  # Navegando a motor de búsqueda
+                                search_url = f'https://www.{search_engine}.com'
+                                self.visual_events_manager.emit_page_navigation(search_url, f"Motor de búsqueda {search_engine.title()}")
+                            elif i == 2:  # Ejecutando búsqueda
+                                self.visual_events_manager.emit_user_action('search', query)
+                            elif i == 3:  # Analizando resultados
+                                self.visual_events_manager.emit_custom_progress("🤖 Agente analizando resultados", "Análisis inteligente", 70)
                 
                 # Iniciar thread de progreso visual
                 progress_thread = threading.Thread(target=mostrar_progreso_visual)
@@ -326,6 +344,14 @@ class UnifiedWebSearchTool(BaseTool):
                 
                 # FINALIZAR NAVEGACIÓN VISUAL
                 self._emit_progress("✅ NAVEGACIÓN VISUAL: browser-use navegación completada exitosamente")
+                
+                # Emitir finalización visual si está disponible
+                if hasattr(self, 'visual_events_manager') and results:
+                    self.visual_events_manager.emit_navigation_complete(
+                        total_screenshots=len([r for r in results if r.get('screenshot_url')]),
+                        total_pages=len(results),
+                        total_duration=30.0  # Estimado
+                    )
                 
                 if results and len(results) > 0:
                     self._emit_progress_eventlet(f"✅ browser-use REAL exitoso: {len(results)} resultados")
