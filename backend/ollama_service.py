@@ -44,7 +44,11 @@ class OllamaService:
     def detect_models(self) -> List[OllamaModel]:
         """Detecta automáticamente todos los modelos de Ollama instalados"""
         try:
-            response = requests.get(f"{self.base_url}/api/tags", timeout=10)
+            headers = {}
+            if 'ngrok' in self.base_url:
+                headers['ngrok-skip-browser-warning'] = 'true'
+                
+            response = requests.get(f"{self.base_url}/api/tags", timeout=10, headers=headers)
             response.raise_for_status()
             
             data = response.json()
