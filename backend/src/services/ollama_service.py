@@ -599,14 +599,44 @@ class OllamaService:
             # Determinar si usar cola o llamada directa
             if self.use_queue:
                 # Usar cola con prioridad determinada automáticamente
-                response = asyncio.run(self._execute_with_queue(
-                    prompt=full_prompt,
-                    model=self.get_current_model(),
-                    options=self._get_model_config(self.get_current_model()).get("options", {}),
-                    priority=priority,
-                    task_id=task_id or "unknown_task",
-                    step_id=step_id or "unknown_step"
-                ))
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        # Si ya hay un loop corriendo, crear un nuevo thread
+                        import concurrent.futures
+                        import threading
+                        
+                        def run_async():
+                            new_loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(new_loop)
+                            try:
+                                return new_loop.run_until_complete(self._execute_with_queue(
+                                    prompt=full_prompt,
+                                    model=self.get_current_model(),
+                                    options=self._get_model_config(self.get_current_model()).get("options", {}),
+                                    priority=priority,
+                                    task_id=task_id or "unknown_task",
+                                    step_id=step_id or "unknown_step"
+                                ))
+                            finally:
+                                new_loop.close()
+                        
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            future = executor.submit(run_async)
+                            response = future.result(timeout=60)
+                    else:
+                        response = asyncio.run(self._execute_with_queue(
+                            prompt=full_prompt,
+                            model=self.get_current_model(),
+                            options=self._get_model_config(self.get_current_model()).get("options", {}),
+                            priority=priority,
+                            task_id=task_id or "unknown_task",
+                            step_id=step_id or "unknown_step"
+                        ))
+                except Exception as e:
+                    self.logger.error(f"❌ Error en execute con cola: {e}")
+                    # Fallback a llamada directa
+                    response = self._make_request(full_prompt, stream=False)
                 
                 self.logger.info(f"🚦 Request procesado a través de cola (prioridad: {priority.name})")
                 
