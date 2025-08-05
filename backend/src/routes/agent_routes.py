@@ -16,6 +16,7 @@ import requests
 import re
 import jsonschema
 import asyncio
+import concurrent.futures
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 # ✅ IMPORTAR WebBrowserManager PARA VISUALIZACIÓN EN TIEMPO REAL - SEGÚN UpgardeRef.md SECCIÓN 4.1
