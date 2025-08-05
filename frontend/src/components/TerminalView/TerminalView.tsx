@@ -1329,8 +1329,22 @@ export const TerminalView = ({
                 <img 
                   src={currentScreenshot} 
                   alt="Navegación browser-use en tiempo real" 
-                  className="rounded-lg max-w-full h-auto border border-[#404040] shadow-lg"
-                  style={{ maxHeight: '300px', maxWidth: '100%' }}
+                  className="rounded-lg max-w-full h-auto border border-[#404040] shadow-lg cursor-pointer transition-transform hover:scale-105"
+                  style={{ 
+                    maxHeight: '600px',  // Aumentar de 300px a 600px
+                    maxWidth: '100%',
+                    minHeight: '400px',   // Altura mínima para mejor visualización
+                    objectFit: 'contain'  // Mantener proporciones
+                  }}
+                  onClick={() => {
+                    // Abrir imagen en nueva pestaña para ver en full resolution
+                    window.open(currentScreenshot, '_blank');
+                  }}
+                  onError={(e) => {
+                    console.error('Error loading screenshot:', e);
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
                 />
                 {browserScreenshots.length > 1 && (
                   <div className="text-xs text-gray-400 text-center">
