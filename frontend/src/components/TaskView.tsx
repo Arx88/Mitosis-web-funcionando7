@@ -348,6 +348,46 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   }, [getFiles, task.id]);
   
   const taskMonitorPages = useMemo(() => {
+  
+  // ========================================================================
+  // HANDLERS DE REDIMENSIONAMIENTO RESPONSIVO
+  // ========================================================================
+  
+  // Handler para iniciar el redimensionamiento
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    
+    const startX = e.clientX;
+    const startWidth = (chatWidthPercent / 100) * windowWidth;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaX = e.clientX - startX;
+      const newWidth = startWidth + deltaX;
+      const newWidthPercent = Math.min(Math.max((newWidth / windowWidth) * 100, 
+        (responsiveLayout.minChatWidth / windowWidth) * 100), 
+        (responsiveLayout.maxChatWidth / windowWidth) * 100);
+      
+      setChatWidthPercent(newWidthPercent);
+    };
+    
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [chatWidthPercent, windowWidth, responsiveLayout]);
+  
+  // Ajustar el ancho cuando cambia el tamaño de ventana
+  useEffect(() => {
+    if (chatWidthPercent === 40 || chatWidthPercent === 35 || chatWidthPercent === 30) {
+      setChatWidthPercent(responsiveLayout.defaultChatWidth);
+    }
+  }, [windowWidth, responsiveLayout]);
+  
     const pages = getMonitorPages(task.id);
     console.log(`📺 [MONITOR-PAGES] Task ${task.id} has ${pages.length} monitor pages in context`);
     return pages;
