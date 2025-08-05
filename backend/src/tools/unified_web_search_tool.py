@@ -591,7 +591,7 @@ async def run_browser_use_subprocess():
         )
         
         browser_session = BrowserSession(
-            headless=False,  # 🚀 NAVEGACIÓN VISUAL EN TIEMPO REAL
+            headless=True,  # 🚀 VOLVER A HEADLESS PERO CON NAVEGACIÓN VISUAL MEJORADA
             browser_profile=browser_profile,
             context_config={{
                 'ignore_https_errors': True,
