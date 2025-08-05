@@ -8,11 +8,8 @@ import sys
 import os
 from typing import Dict, Any, List
 
-# Add the backend src directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-
-from tools.base_tool import BaseTool, ParameterDefinition, ToolExecutionResult, register_tool
-from services.ollama_service import OllamaService
+from .base_tool import BaseTool, ParameterDefinition, ToolExecutionResult, register_tool
+from ..services.ollama_service import OllamaService
 
 logger = logging.getLogger(__name__)
 
