@@ -86,9 +86,9 @@ class RealTimeBrowserTool(BaseTool):
                 param_type="integer", 
                 required=False,
                 description="Intervalo de captura de screenshots en segundos",
-                default=2,
+                default=1,  # Captura cada 1 segundo para más screenshots
                 min_value=1,
-                max_value=10
+                max_value=5  # Máximo 5 segundos para navegación más fluida
             ),
             ParameterDefinition(
                 name="max_duration",
