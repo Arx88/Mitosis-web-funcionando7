@@ -528,6 +528,9 @@ from datetime import datetime
 import base64
 import os
 
+# 🖥️ CONFIGURAR DISPLAY X11 VIRTUAL ANTES DE CUALQUIER IMPORT
+os.environ['DISPLAY'] = ':99'
+
 # Configurar logging para capturar solo errores críticos
 logging.basicConfig(level=logging.ERROR)
 
