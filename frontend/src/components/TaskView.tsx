@@ -77,6 +77,73 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   const { hasActiveMemory, getMemoryStats } = useIsolatedMemoryManager({ taskId: task.id });
 
   // ========================================================================
+  // WEBSOCKET SETUP PARA BROWSER_VISUAL EVENTS - CRÍTICO
+  // ========================================================================
+  
+  const { socket, isConnected, joinTaskRoom, addEventListeners } = useWebSocket();
+  
+  // Configurar event listeners para browser_visual
+  useEffect(() => {
+    if (socket && isConnected && task.id) {
+      console.log(`🔌 [WEBSOCKET] Setting up browser_visual listeners for task ${task.id}`);
+      
+      // Join task room
+      joinTaskRoom(task.id);
+      
+      // Add browser_visual event listener
+      addEventListeners({
+        browser_visual: (data) => {
+          console.log(`📸 [BROWSER_VISUAL] Event received for task ${task.id}:`, data);
+          
+          if (data.task_id === task.id) {
+            const visualMessage = `
+# Navegación Web en Tiempo Real
+
+## ${data.step || 'Navegación activa'}
+
+**Timestamp:** ${new Date().toLocaleTimeString()}
+
+**URL:** ${data.url || 'N/A'}
+
+![Screenshot](${data.screenshot_url || data.screenshot || 'undefined'})
+
+---
+
+*Captura automática de navegación browser-use*
+`;
+            
+            // Add visual message to terminal
+            logToTerminal(visualMessage, 'info');
+            
+            // También crear una página de monitor específica
+            addMonitorPage({
+              id: `browser_visual_${Date.now()}`,
+              title: data.step || 'Navegación Visual',
+              content: visualMessage,
+              timestamp: new Date(),
+              type: 'browser_visual'
+            });
+            
+            console.log(`📸 [BROWSER_VISUAL] Visual message added to terminal`);
+          } else {
+            console.log(`📸 [BROWSER_VISUAL] Event for different task (${data.task_id}), ignoring`);
+          }
+        },
+        
+        // También escuchar browser_activity como fallback
+        browser_activity: (data) => {
+          console.log(`🌐 [BROWSER_ACTIVITY] Event received:`, data);
+          if (data.task_id === task.id) {
+            logToTerminal(`🌐 Browser Activity: ${data.description || 'Navigation event'}`, 'info');
+          }
+        }
+      });
+      
+      console.log(`✅ [WEBSOCKET] browser_visual listeners configured for task ${task.id}`);
+    }
+  }, [socket, isConnected, task.id, joinTaskRoom, addEventListeners, logToTerminal, addMonitorPage]);
+  
+  // ========================================================================
   // PLAN MANAGER SIMPLIFICADO - USANDO CONTEXT AISLADO
   // ========================================================================
 
