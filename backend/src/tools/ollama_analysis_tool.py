@@ -69,11 +69,14 @@ class OllamaAnalysisTool(BaseTool):
             # Generar respuesta usando Ollama
             logger.info(f"🧠 Iniciando análisis con Ollama - Prompt: {prompt[:100]}...")
             
+            # Usar task_id del contexto si está disponible, sino usar "analysis"
+            task_id = config.get('task_id', 'analysis')
+            
             response = ollama_service.generate_response(
                 prompt=prompt,
                 context=context,
                 use_tools=False,
-                task_id=self.current_task_id or "analysis",
+                task_id=task_id,
                 step_id="analysis_step"
             )
             
