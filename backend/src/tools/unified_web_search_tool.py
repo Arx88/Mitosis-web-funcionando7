@@ -430,19 +430,28 @@ class UnifiedWebSearchTool(BaseTool):
         results = []
         
         try:
-            # Obtener datos de navegación
-            pages_visited = navigation_data.get('pages_visited', [])
-            screenshots = navigation_data.get('screenshots', [])
-            actions_performed = navigation_data.get('actions_performed', [])
+            # CORREGIR: Los datos están en navigation_results
+            navigation_results = navigation_data.get('navigation_results', {})
             
-            self._emit_progress_eventlet(f"📊 Procesando navegación: {len(pages_visited)} páginas visitadas, {len(screenshots)} screenshots")
+            # Obtener datos de navegación desde la ubicación correcta
+            pages_visited = navigation_results.get('pages_visited', [])
+            screenshots = navigation_results.get('screenshots', [])
+            actions_performed = navigation_results.get('actions_performed', [])
+            
+            self._emit_progress_eventlet(f"📊 Procesando navegación CORRECTA: {len(pages_visited)} páginas visitadas, {len(screenshots)} screenshots")
             
             # Crear resultados basados en páginas visitadas
             for i, page_data in enumerate(pages_visited[:max_results]):
-                # Buscar screenshot correspondiente
+                # Buscar screenshot correspondiente a esta página
                 screenshot_url = None
+                page_url = page_data.get('url', '')
+                page_timestamp = page_data.get('timestamp', 0)
+                
+                # Encontrar el screenshot más cercano temporalmente a esta página
                 for screenshot in screenshots:
-                    if abs(screenshot.get('timestamp', 0) - page_data.get('timestamp', 0)) < 5:  # Dentro de 5 segundos
+                    screenshot_timestamp = screenshot.get('timestamp', 0)
+                    if (screenshot.get('url', '') == page_url or 
+                        abs(screenshot_timestamp - page_timestamp) < 5):  # Dentro de 5 segundos
                         screenshot_url = screenshot.get('path', '')
                         break
                 
@@ -451,9 +460,9 @@ class UnifiedWebSearchTool(BaseTool):
                     screenshot_url = screenshots[-1].get('path', '')
                 
                 result = {
-                    'title': page_data.get('title', f'Página {i+1} - {search_engine}'),
-                    'url': page_data.get('url', ''),
-                    'snippet': f'Información encontrada mediante navegación en tiempo real en {search_engine}. Capturada durante búsqueda de "{query}".',
+                    'title': page_data.get('title', f'Página navegada {i+1} - {search_engine}'),
+                    'url': page_url,
+                    'snippet': f'Información encontrada mediante navegación en tiempo real en {search_engine}. Página visitada durante búsqueda de "{query}".',
                     'source': search_engine,
                     'method': 'real_time_navigation',  # MARCA COMO NAVEGACIÓN REAL
                     'screenshot_url': screenshot_url,
@@ -463,42 +472,71 @@ class UnifiedWebSearchTool(BaseTool):
                         'pages_visited': len(pages_visited),
                         'screenshots_taken': len(screenshots),
                         'actions_performed': len(actions_performed),
-                        'real_time_capture': True
+                        'real_time_capture': True,
+                        'page_index': i
                     }
                 }
                 results.append(result)
                 
-                self._emit_progress_eventlet(f"   📄 Resultado real {i+1}: {result['title'][:50]}...")
+                self._emit_progress_eventlet(f"   📄 Resultado real {i+1}: {result['title'][:50]}... [Screenshot: {'✅' if screenshot_url else '❌'}]")
             
-            # Si no hay suficientes páginas visitadas, crear resultados basados en screenshots
-            if len(results) < max_results and screenshots:
-                for i, screenshot in enumerate(screenshots[len(results):max_results]):
-                    screenshot_result = {
-                        'title': f'Captura de búsqueda {search_engine} #{i+1}',
-                        'url': screenshot.get('url', f'https://www.{search_engine}.com'),
-                        'snippet': f'Screenshot real capturado durante navegación de búsqueda "{query}" en {search_engine}.',
-                        'source': search_engine,
-                        'method': 'screenshot_extraction',
-                        'screenshot_url': screenshot.get('path', ''),
-                        'screenshot_captured': True,
-                        'timestamp': screenshot.get('timestamp', time.time()),
-                        'navigation_data': {
-                            'screenshot_index': screenshot.get('index', i),
-                            'real_time_capture': True,
-                            'from_screenshot': True
+            # Si no hay suficientes páginas visitadas, crear resultados basados en screenshots únicos
+            pages_count = len(results)
+            if pages_count < max_results and screenshots:
+                # Agrupar screenshots por URL única
+                screenshots_by_url = {}
+                for screenshot in screenshots:
+                    url = screenshot.get('url', '')
+                    if url not in screenshots_by_url:
+                        screenshots_by_url[url] = screenshot
+                
+                # Crear resultados adicionales para URLs únicas con screenshots
+                for i, (url, screenshot) in enumerate(screenshots_by_url.items()):
+                    if len(results) >= max_results:
+                        break
+                        
+                    # Solo agregar si no es una página que ya procesamos
+                    already_processed = any(result['url'] == url for result in results)
+                    if not already_processed:
+                        screenshot_result = {
+                            'title': f'Captura navegación {search_engine} #{len(results)+1}',
+                            'url': url,
+                            'snippet': f'Screenshot real capturado durante navegación de búsqueda "{query}" en {search_engine}.',
+                            'source': search_engine,
+                            'method': 'screenshot_extraction',
+                            'screenshot_url': screenshot.get('path', ''),
+                            'screenshot_captured': True,
+                            'timestamp': screenshot.get('timestamp', time.time()),
+                            'navigation_data': {
+                                'screenshot_index': screenshot.get('index', i),
+                                'real_time_capture': True,
+                                'from_screenshot': True,
+                                'url_captured': url
+                            }
                         }
-                    }
-                    results.append(screenshot_result)
-                    
-                    self._emit_progress_eventlet(f"   📸 Resultado screenshot {i+1}: Captura en tiempo real")
+                        results.append(screenshot_result)
+                        
+                        self._emit_progress_eventlet(f"   📸 Screenshot único {len(results)}: {url[:50]}...")
             
             # Asegurar que todos los resultados tengan el marcado correcto
             for result in results:
                 result['real_time_navigation'] = True
                 result['visual_navigation_enabled'] = True
                 result['continuous_screenshots'] = True
+                result['x11_server_used'] = navigation_data.get('x11_server_used', False)
             
-            self._emit_progress_eventlet(f"✅ Extracción completada: {len(results)} resultados con navegación en tiempo real")
+            self._emit_progress_eventlet(f"✅ Extracción CORREGIDA completada: {len(results)} resultados con navegación en tiempo real")
+            
+            # DEBUG: Log de resultados finales
+            try:
+                with open('/tmp/websocket_debug.log', 'a') as f:
+                    f.write(f"[{datetime.now()}] RESULTADOS FINALES: {len(results)} resultados\n")
+                    for i, result in enumerate(results):
+                        f.write(f"[{datetime.now()}] Resultado {i+1}: {result.get('title', 'No title')} | Screenshot: {result.get('screenshot_url', 'No screenshot')}\n")
+                    f.flush()
+            except:
+                pass
+            
             return results
             
         except Exception as e:
@@ -510,7 +548,7 @@ class UnifiedWebSearchTool(BaseTool):
                 'snippet': f'Navegación en tiempo real realizada para "{query}" - Screenshots capturados durante el proceso.',
                 'source': search_engine,
                 'method': 'real_time_navigation_basic',
-                'screenshot_captured': len(navigation_data.get('screenshots', [])) > 0,
+                'screenshot_captured': len(navigation_data.get('navigation_results', {}).get('screenshots', [])) > 0,
                 'real_time_navigation': True,
                 'timestamp': time.time()
             }]
