@@ -639,7 +639,8 @@ class OllamaService:
                 except Exception as e:
                     self.logger.error(f"❌ Error en execute con cola: {e}")
                     # Fallback a llamada directa
-                    response = self._make_request(full_prompt, stream=False)
+                    response = self._call_ollama_api_sync(full_prompt, self.get_current_model(), 
+                                                         self._get_model_config(self.get_current_model()).get("options", {}))
                 
                 self.logger.info(f"🚦 Request procesado a través de cola (prioridad: {priority.name})")
                 
