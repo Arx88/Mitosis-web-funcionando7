@@ -2467,7 +2467,9 @@ except Exception as e:
                             print(f"❌ Error tomando screenshot: {screenshot_error}")
                             return ""
                         
-                        return f"/api/files/screenshots/{self.task_id}/{screenshot_name}"
+                        screenshot_url = f"/api/files/screenshots/{self.task_id}/{screenshot_name}"
+                        print(f"✅ Screenshot URL generada: {screenshot_url}")
+                        return screenshot_url
                 
                 # Ejecutar screenshot async
                 loop = asyncio.new_event_loop()
