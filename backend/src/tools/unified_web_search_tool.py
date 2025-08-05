@@ -587,7 +587,7 @@ async def run_browser_use_subprocess():
         )
         
         browser_session = BrowserSession(
-            headless=True,
+            headless=False,  # 🚀 NAVEGACIÓN VISUAL EN TIEMPO REAL
             browser_profile=browser_profile,
             context_config={{
                 'ignore_https_errors': True,
