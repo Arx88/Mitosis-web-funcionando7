@@ -5937,7 +5937,7 @@ def check_ollama_connection():
     """Verifica conexión con Ollama"""
     try:
         data = request.get_json() or {}
-        endpoint = data.get('endpoint', 'https://bef4a4bb93d1.ngrok-free.app')
+        endpoint = data.get('endpoint', get_ollama_endpoint())
         
         # Verificar conexión real con Ollama
         try:
