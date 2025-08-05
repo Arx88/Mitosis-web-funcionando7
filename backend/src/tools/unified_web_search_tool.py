@@ -692,62 +692,34 @@ Be precise and focus on the most relevant search results.'''
             'step': 'Iniciando navegación browser-use'
         }})
         
-        # 🚀 EJECUTAR NAVEGACIÓN CON SCREENSHOTS REALES EN TIEMPO REAL
-        navigation_task = agent.run(max_steps=6)
+        # 🚀 EJECUTAR NAVEGACIÓN SIMPLE SIN SCREENSHOTS CONCURRENTES
+        result = await agent.run(max_steps=4)
         
-        # 📸 CAPTURAR SCREENSHOTS REALES DURANTE NAVEGACIÓN
-        async def capture_real_screenshots():
-            \"\"\"Capturar screenshots reales del browser visible cada 3 segundos\"\"\"
-            for i in range(5):  # 5 capturas durante navegación
-                await asyncio.sleep(3)  # Esperar 3 segundos entre capturas
-                
-                try:
-                    # Capturar screenshot real del browser
-                    browser = agent.browser_session.browser
-                    if browser:
-                        pages = await browser.pages()
-                        if pages and len(pages) > 0:
-                            current_page = pages[0]
-                            
-                            # 📸 CAPTURAR SCREENSHOT REAL PNG
-                            screenshot_bytes = await current_page.screenshot(
-                                type='png', 
-                                full_page=False,
-                                quality=90
-                            )
-                            screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
-                            screenshot_data_url = f'data:image/png;base64,{{screenshot_base64}}'
-                            
-                            # 🌐 OBTENER URL ACTUAL REAL
-                            current_url = current_page.url
-                            
-                            # 📡 ENVIAR EVENTO BROWSER_VISUAL CON SCREENSHOT REAL
-                            await send_websocket_event(websocket_manager, 'browser_visual', {{
-                                'type': 'navigation_progress_real',
-                                'task_id': TASK_ID,
-                                'message': f'🌐 NAVEGACIÓN VISUAL REAL: Captura {{i+1}}/5',
-                                'step': f'Navegación real paso {{i+1}}/5',
-                                'timestamp': datetime.now().isoformat(),
-                                'url': current_url,
-                                'screenshot': screenshot_data_url,  # 📸 SCREENSHOT REAL BASE64
-                                'screenshot_url': screenshot_data_url,
-                                'navigation_active': True,
-                                'progress': int((i+1)/5 * 100),
-                                'real_browser_capture': True
-                            }})
-                            
-                            print(f\"📸 SCREENSHOT REAL {{i+1}}/5 ENVIADO: {{len(screenshot_base64)}} bytes\")
-                            
-                        else:
-                            print(f\"⚠️ No hay páginas disponibles para screenshot {{i+1}}\")
+        # 📸 CAPTURAR SCREENSHOT FINAL DE ALTA CALIDAD
+        try:
+            browser = agent.browser_session.browser
+            if browser:
+                pages = await browser.pages()
+                if pages and len(pages) > 0:
+                    current_page = pages[0]
+                    
+                    # 📸 SCREENSHOT FINAL DE ALTA CALIDAD
+                    screenshot_bytes = await current_page.screenshot(
+                        type='png', 
+                        full_page=True,  # Captura de página completa
+                        quality=95
+                    )
+                    screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
+                    screenshot_data_url = f'data:image/png;base64,{{screenshot_base64}}'
+                    
+                    # Obtener URL actual
+                    final_url = current_page.url
+                    
+                    # 📤 ENVIAR SCREENSHOT REAL AL PARENT PROCESS
+                    print(f\"📸 SCREENSHOT_CAPTURED|{{screenshot_data_url}}|{{final_url}}\")
+                    
                 except Exception as screenshot_error:
-                    print(f\"❌ Error capturando screenshot real {{i+1}}: {{screenshot_error}}\")
-        
-        # Ejecutar captura de screenshots en paralelo con navegación
-        screenshots_task = capture_real_screenshots()
-        
-        # Esperar que ambas tareas terminen
-        navigation_result, screenshots_result = await asyncio.gather(navigation_task, screenshots_task)
+                    print(f\"❌ Error capturando screenshot: {{screenshot_error}}\")
         
         # El resultado de navegación es el primero
         result = navigation_result
