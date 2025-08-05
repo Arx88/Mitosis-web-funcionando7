@@ -116,6 +116,33 @@ class UnifiedWebSearchTool(BaseTool):
             )
         ]
     
+    def _extract_clean_keywords_static(self, query_text: str) -> str:
+        """🔧 Función estática para extraer keywords limpios"""
+        import re
+        
+        # Remover texto de instrucciones comunes
+        clean_text = query_text.lower()
+        clean_text = re.sub(r'buscar información sobre|utilizar la herramienta|web_search para|información actualizada|específica sobre|el estado de|en el año|noticias relacionadas con|relacionadas con', '', clean_text)
+        clean_text = re.sub(r'\d{4}', '2025', clean_text)  # Normalizar año
+        
+        # Extraer keywords significativos
+        words = re.findall(r'\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{3,}\b', clean_text)
+        
+        # Filtrar palabras comunes extendida
+        stop_words = {'sobre', 'para', 'con', 'una', 'del', 'las', 'los', 'que', 'esta', 'este', 'año', 'información', 'buscar', 'utilizar', 'herramienta', 'web', 'search', 'actualizada', 'relacionadas', 'noticias'}
+        keywords = [w for w in words if w not in stop_words and len(w) > 2]
+        
+        # Si encontramos keywords, tomar los primeros 3-4
+        if keywords:
+            return ' '.join(keywords[:4])
+        else:
+            # Si no hay keywords, intentar extraer nombres propios
+            proper_nouns = re.findall(r'\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+\b', query_text)
+            if proper_nouns:
+                return ' '.join(proper_nouns[:3])
+            else:
+                return 'noticias 2025'
+
     def _execute_tool(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> ToolExecutionResult:
         """🚀 EJECUTOR PRINCIPAL CON VISUALIZACIÓN EN TIEMPO REAL"""
         
