@@ -146,7 +146,7 @@ else
     echo "OLLAMA_HOST=e8da53409283.ngrok-free.app" >> /app/backend/.env
     echo "OLLAMA_PORT=443" >> /app/backend/.env
     echo "OLLAMA_BASE_URL=$CORRECT_OLLAMA_URL" >> /app/backend/.env
-    echo "OLLAMA_DEFAULT_MODEL=llama3.1:8b" >> /app/backend/.env
+    echo "OLLAMA_DEFAULT_MODEL=gpt-oss:20b" >> /app/backend/.env
     echo "   ✅ Configuración de Ollama agregada exitosamente"
 fi
 
