@@ -86,6 +86,13 @@ class OllamaService:
                 self.logger.error(f"Modelo {model_name} no encontrado en la lista de modelos disponibles")
                 return False
             
+            # Headers necesarios para ngrok
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            if 'ngrok' in self.base_url:
+                headers['ngrok-skip-browser-warning'] = 'true'
+            
             # Cargar el modelo haciendo una solicitud simple
             response = requests.post(
                 f"{self.base_url}/api/generate",
@@ -95,6 +102,7 @@ class OllamaService:
                     "stream": False,
                     "options": {"num_predict": 1}
                 },
+                headers=headers,
                 timeout=30
             )
             response.raise_for_status()
