@@ -215,6 +215,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                           })),
                           // Fallback options if no models are available
                           ...(ollamaConnection.models.length === 0 ? [
+                            { value: 'gpt-oss:20b', label: 'GPT-OSS 20B' },
                             { value: 'llama3.2', label: 'Llama 3.2' },
                             { value: 'mistral', label: 'Mistral' },
                             { value: 'codellama', label: 'CodeLlama' },
