@@ -316,91 +316,64 @@ class UnifiedWebSearchTool(BaseTool):
     def _execute_search_with_visualization(self, query: str, search_engine: str, 
                                          max_results: int, extract_content: bool) -> List[Dict[str, Any]]:
         """
-        🔍 EJECUTOR PRINCIPAL DE BÚSQUEDA CON VISUALIZACIÓN - BROWSER-USE PRIORIZADO
-        Implementa búsqueda web usando browser-use + Ollama con visualización en tiempo real
+        🔍 EJECUTOR PRINCIPAL DE BÚSQUEDA CON NAVEGACIÓN REAL EN TIEMPO REAL
+        Usa RealTimeBrowserTool para navegación continua con screenshots reales
         """
         
-        # PASO 1: INICIALIZACIÓN CON BROWSER-USE COMO PRIORIDAD
-        self._emit_progress_eventlet(f"🤖 Iniciando búsqueda inteligente con browser-use + Ollama...")
+        # PASO 1: INICIALIZACIÓN CON NAVEGACIÓN REAL EN TIEMPO REAL
+        self._emit_progress_eventlet(f"🚀 INICIANDO NAVEGACIÓN WEB EN TIEMPO REAL...")
         self._emit_progress_eventlet(f"🔍 Consulta: '{query}'")
         self._emit_progress_eventlet(f"🌐 Motor de búsqueda: {search_engine}")
         
         try:
-            # ✨ USAR BROWSER-USE REAL - NAVEGACIÓN VERDADERA VIA SUBPROCESS
-            if BROWSER_USE_AVAILABLE:
-                # 🌐 ACTIVAR NAVEGACIÓN VISUAL EN TIEMPO REAL SI ESTÁ DISPONIBLE
-                if hasattr(self, 'visual_events_manager'):
-                    self.visual_events_manager.emit_navigation_start(query, search_engine)
+            # 🌐 USAR REAL TIME BROWSER TOOL PARA NAVEGACIÓN CONTINUA REAL
+            if REAL_TIME_BROWSER_AVAILABLE and self.task_id:
+                self._emit_progress_eventlet("🎬 Activando navegación en tiempo real con screenshots continuos...")
                 
-                # ENVIAR EVENTOS DE NAVEGACIÓN WEB VISUAL EN TIEMPO REAL
-                if self.task_id:
-                    # Usar el sistema de emisión que ya funciona
-                    self._emit_progress("🚀 NAVEGACIÓN VISUAL: Iniciando browser-use para navegación en tiempo real")
-                    self._emit_progress("🌐 NAVEGACIÓN VISUAL: Conectando con navegador Chromium...")
+                # Crear instancia del RealTimeBrowserTool
+                from .real_time_browser_tool import RealTimeBrowserTool
+                real_time_browser = RealTimeBrowserTool()
+                
+                # Preparar tarea de navegación específica para búsqueda
+                search_url = f'https://www.{search_engine}.com'
+                search_task = f"Buscar información sobre '{query}' en {search_engine} y explorar los primeros resultados"
+                
+                # Ejecutar navegación en tiempo real con captura continua
+                navigation_result = real_time_browser._execute_tool(
+                    parameters={
+                        'task_description': search_task,
+                        'start_url': search_url,
+                        'capture_interval': 2,  # Screenshot cada 2 segundos
+                        'max_duration': 45     # 45 segundos de navegación
+                    },
+                    config={
+                        'task_id': self.task_id
+                    }
+                )
+                
+                if navigation_result.success:
+                    navigation_data = navigation_result.data
+                    self._emit_progress_eventlet(f"✅ Navegación en tiempo real completada: {navigation_data.get('screenshots_captured', 0)} screenshots capturados")
                     
-                    # Activar navegación visual si está disponible
-                    if hasattr(self, 'visual_events_manager'):
-                        self.visual_events_manager.emit_browser_launch("Chromium con navegación visible")
-                
-                # SIMULAR NAVEGACIÓN EN TIEMPO REAL VISIBLE
-                progress_messages = [
-                    "🌐 NAVEGACIÓN VISUAL: Abriendo navegador...",
-                    "🌐 NAVEGACIÓN VISUAL: Navegando a motor de búsqueda...",
-                    "🌐 NAVEGACIÓN VISUAL: Ejecutando búsqueda inteligente...",
-                    "🌐 NAVEGACIÓN VISUAL: Agente analizando resultados...",
-                    "🌐 NAVEGACIÓN VISUAL: Extrayendo datos relevantes..."
-                ]
-                
-                import threading
-                import time
-                
-                def mostrar_progreso_visual():
-                    for i, mensaje in enumerate(progress_messages):
-                        time.sleep(8)  # Esperar 8 segundos entre mensajes
-                        self._emit_progress(f"{mensaje} (Paso {i+2}/6)")
-                        
-                        # Emitir eventos visuales si están disponibles
-                        if hasattr(self, 'visual_events_manager'):
-                            if i == 1:  # Navegando a motor de búsqueda
-                                search_url = f'https://www.{search_engine}.com'
-                                self.visual_events_manager.emit_page_navigation(search_url, f"Motor de búsqueda {search_engine.title()}")
-                            elif i == 2:  # Ejecutando búsqueda
-                                self.visual_events_manager.emit_user_action('search', query)
-                            elif i == 3:  # Analizando resultados
-                                self.visual_events_manager.emit_custom_progress("🤖 Agente analizando resultados", "Análisis inteligente", 70)
-                
-                # Iniciar thread de progreso visual
-                progress_thread = threading.Thread(target=mostrar_progreso_visual)
-                progress_thread.daemon = True
-                progress_thread.start()
-                
-                results = self._run_browser_use_search_original(query, search_engine, max_results, extract_content, self.task_id)
-                
-                # FINALIZAR NAVEGACIÓN VISUAL
-                self._emit_progress("✅ NAVEGACIÓN VISUAL: browser-use navegación completada exitosamente")
-                
-                # Emitir finalización visual si está disponible
-                if hasattr(self, 'visual_events_manager') and results:
-                    self.visual_events_manager.emit_navigation_complete(
-                        total_screenshots=len([r for r in results if r.get('screenshot_url')]),
-                        total_pages=len(results),
-                        total_duration=30.0  # Estimado
-                    )
-                
-                if results and len(results) > 0:
-                    self._emit_progress_eventlet(f"✅ browser-use REAL exitoso: {len(results)} resultados")
+                    # Extraer resultados de la navegación real
+                    results = self._extract_results_from_real_navigation(navigation_data, query, search_engine, max_results)
+                    
+                    self._emit_progress_eventlet(f"📊 Extracción completada: {len(results)} resultados obtenidos")
                     return results
+                else:
+                    self._emit_progress_eventlet(f"⚠️ Error en navegación en tiempo real: {navigation_result.error}")
+                    # Continuar con fallback
             
-            # SOLO SI BROWSER-USE NO ESTÁ DISPONIBLE
-            self._emit_progress_eventlet("⚠️ browser-use no disponible, usando fallback...")
+            # FALLBACK A PLAYWRIGHT SI NO HAY NAVEGACIÓN EN TIEMPO REAL
+            self._emit_progress_eventlet("⚠️ Navegación en tiempo real no disponible, usando fallback...")
             results = self._run_playwright_fallback_search(query, search_engine, max_results)
             
-            # PASO 3: VERIFICAR SI LOS RESULTADOS SON REALES
+            # VERIFICAR SI LOS RESULTADOS SON REALES
             if results and len(results) > 0:
                 # Verificar que no sean URLs simuladas
                 real_results = [r for r in results if not r.get('url', '').startswith('https://example.com')]
                 if real_results:
-                    self._emit_progress_eventlet(f"✅ Búsqueda real completada: {len(real_results)} resultados obtenidos")
+                    self._emit_progress_eventlet(f"✅ Búsqueda fallback completada: {len(real_results)} resultados obtenidos")
                     
                     # Mostrar muestra de resultados en tiempo real
                     for i, result in enumerate(real_results[:3]):  # Primeros 3 resultados
