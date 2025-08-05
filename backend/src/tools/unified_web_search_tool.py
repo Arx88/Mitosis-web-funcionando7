@@ -743,7 +743,10 @@ Be precise and focus on the most relevant search results.'''
         screenshots_task = capture_real_screenshots()
         
         # Esperar que ambas tareas terminen
-        result = await asyncio.gather(navigation_task, screenshots_task)
+        navigation_result, screenshots_result = await asyncio.gather(navigation_task, screenshots_task)
+        
+        # El resultado de navegación es el primero
+        result = navigation_result
         
         # Screenshot final
         try:
