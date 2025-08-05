@@ -244,8 +244,20 @@ class UnifiedWebSearchTool(BaseTool):
                 except Exception as ws_error:
                     self._emit_progress_eventlet(f"⚠️ WebSocket error: {str(ws_error)}")
             
+            # 🔧 CRITICAL FIX: INICIALIZAR BROWSER MANAGER PARA SCREENSHOTS REALES
+            if BROWSER_MANAGER_AVAILABLE and self.task_id:
+                try:
+                    # Inicializar WebBrowserManager con browser-use para screenshots reales
+                    self.browser_manager = WebBrowserManager(self.task_id)
+                    self._emit_progress_eventlet("📸 Browser Manager inicializado - Screenshots habilitados")
+                except Exception as browser_error:
+                    self._emit_progress_eventlet(f"⚠️ Browser Manager error: {str(browser_error)}")
+                    # Continúa sin browser manager - screenshots sintéticos solamente
+            else:
+                self._emit_progress_eventlet("⚠️ Browser Manager no disponible - Solo navegación sintética")
+            
             # SIEMPRE RETORNAR TRUE para continuar con visualización
-            self._emit_progress_eventlet("✅ Componentes inicializados (con o sin WebSocket)")
+            self._emit_progress_eventlet("✅ Componentes inicializados (WebSocket + Browser Manager)")
             return True
             
         except Exception as e:
