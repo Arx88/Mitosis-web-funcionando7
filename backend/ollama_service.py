@@ -31,7 +31,11 @@ class OllamaService:
     def is_available(self) -> bool:
         """Verifica si Ollama está disponible y funcionando"""
         try:
-            response = requests.get(f"{self.base_url}/api/version", timeout=5)
+            headers = {}
+            if 'ngrok' in self.base_url:
+                headers['ngrok-skip-browser-warning'] = 'true'
+                
+            response = requests.get(f"{self.base_url}/api/version", timeout=5, headers=headers)
             return response.status_code == 200
         except requests.exceptions.RequestException as e:
             self.logger.warning(f"Ollama no está disponible: {e}")
