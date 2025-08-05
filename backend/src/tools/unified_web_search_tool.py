@@ -721,8 +721,8 @@ Be precise and focus on the most relevant search results.'''
                 except Exception as screenshot_error:
                     print(f\"❌ Error capturando screenshot: {{screenshot_error}}\")
         
-        # El resultado de navegación es el primero
-        result = navigation_result
+        # El resultado de navegación
+        result = result
         
         # Screenshot final de alta calidad
         try:
