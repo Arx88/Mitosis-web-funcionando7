@@ -8090,3 +8090,75 @@ def delete_task_endpoint(task_id: str):
             'success': False,
             'error_type': 'delete_task_error'
         }), 500
+
+
+# 🔧 ENDPOINTS DE CONFIGURACIÓN CENTRALIZADA DE OLLAMA
+
+@agent_bp.route('/config/ollama', methods=['GET'])
+def get_ollama_config_endpoint():
+    """Obtener configuración actual de Ollama"""
+    try:
+        config = get_ollama_config()
+        return jsonify({
+            'success': True,
+            'config': config.get_full_config(),
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"❌ Error getting Ollama config: {str(e)}")
+        return jsonify({'error': str(e), 'success': False}), 500
+
+@agent_bp.route('/config/ollama', methods=['POST'])
+def update_ollama_config_endpoint():
+    """Actualizar configuración de Ollama desde la UI"""
+    try:
+        data = request.get_json()
+        config = get_ollama_config()
+        
+        # Actualizar configuración
+        updated_fields = []
+        if 'endpoint' in data:
+            config.endpoint = data['endpoint']
+            updated_fields.append('endpoint')
+            
+        if 'model' in data:
+            config.model = data['model']
+            updated_fields.append('model')
+            
+        if 'timeout' in data:
+            config._runtime_config['timeout'] = int(data['timeout'])
+            config._save_runtime_config()
+            updated_fields.append('timeout')
+        
+        logger.info(f"✅ Ollama config updated from UI: {updated_fields}")
+        
+        return jsonify({
+            'success': True,
+            'updated_fields': updated_fields,
+            'new_config': config.get_full_config(),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error updating Ollama config: {str(e)}")
+        return jsonify({'error': str(e), 'success': False}), 500
+
+@agent_bp.route('/config/ollama/reset', methods=['POST'])
+def reset_ollama_config_endpoint():
+    """Resetear configuración de Ollama a valores por defecto"""
+    try:
+        config = get_ollama_config()
+        config.reset_to_defaults()
+        
+        logger.info("✅ Ollama config reset to defaults from UI")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Configuration reset to defaults',
+            'config': config.get_full_config(),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error resetting Ollama config: {str(e)}")
+        return jsonify({'error': str(e), 'success': False}), 500
