@@ -432,7 +432,11 @@ class OllamaService:
     def get_available_models(self) -> List[str]:
         """Obtener lista de modelos disponibles desde Ollama"""
         try:
-            response = requests.get(f"{self.base_url}/api/tags", timeout=5)
+            headers = {}
+            if 'ngrok' in self.base_url:
+                headers['ngrok-skip-browser-warning'] = 'true'
+            
+            response = requests.get(f"{self.base_url}/api/tags", timeout=5, headers=headers)
             if response.status_code == 200:
                 data = response.json()
                 models = [model['name'] for model in data.get('models', [])]
