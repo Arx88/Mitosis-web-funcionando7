@@ -30,7 +30,7 @@ Mitosis es un agente general autónomo de IA diseñado para automatizar tareas c
 ```
 
 ### 2. Acceso a la Aplicación
-- **URL Externa**: `https://9bb6cef7-7be1-4cef-bd58-be3cd38ac17d.preview.emergentagent.com`
+- **URL Externa**: `https://58cc7fbd-8707-4128-b948-25dde4abd771.preview.emergentagent.com`
 - **Backend API**: `http://localhost:8001`
 - **Frontend**: `http://localhost:3000`
 
@@ -229,8 +229,8 @@ tail -f /var/log/supervisor/frontend.err.log
 
 **Frontend (.env)**
 ```bash
-VITE_BACKEND_URL=https://9bb6cef7-7be1-4cef-bd58-be3cd38ac17d.preview.emergentagent.com
-REACT_APP_BACKEND_URL=https://9bb6cef7-7be1-4cef-bd58-be3cd38ac17d.preview.emergentagent.com
+VITE_BACKEND_URL=https://58cc7fbd-8707-4128-b948-25dde4abd771.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://58cc7fbd-8707-4128-b948-25dde4abd771.preview.emergentagent.com
 ```
 
 **Backend (.env)**
