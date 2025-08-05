@@ -95,9 +95,9 @@ class RealTimeBrowserTool(BaseTool):
                 param_type="integer",
                 required=False, 
                 description="Duración máxima de navegación en segundos",
-                default=60,
-                min_value=10,
-                max_value=300
+                default=90,  # Aumentar a 90 segundos para más capturas
+                min_value=30,  # Mínimo 30 segundos
+                max_value=180  # Máximo 3 minutos
             )
         ]
     
