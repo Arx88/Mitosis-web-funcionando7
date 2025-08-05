@@ -350,8 +350,8 @@ class UnifiedWebSearchTool(BaseTool):
                         parameters={
                             'task_description': search_task,
                             'start_url': search_url,
-                            'capture_interval': 2,  # Screenshot cada 2 segundos
-                            'max_duration': 45     # 45 segundos de navegación
+                            'capture_interval': 1,  # Screenshot cada 1 segundo para más capturas
+                            'max_duration': 75     # 75 segundos para más navegación y screenshots
                         },
                         config={
                             'task_id': self.task_id
