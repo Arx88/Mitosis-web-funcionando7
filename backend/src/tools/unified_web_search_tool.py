@@ -2451,8 +2451,8 @@ except Exception as e:
                         screenshot_name = f"{step}_{timestamp}.png"
                         screenshot_path = os.path.join(screenshot_dir, screenshot_name)
                         
-                        # Tomar screenshot
-                        await page.screenshot(path=screenshot_path, quality=20, full_page=False)
+                        # Tomar screenshot (SIN quality parameter para PNG)
+                        await page.screenshot(path=screenshot_path, full_page=False)
                         await browser.close()
                         
                         return f"/api/files/screenshots/{self.task_id}/{screenshot_name}"
