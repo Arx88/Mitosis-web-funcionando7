@@ -190,10 +190,10 @@ else
     echo "   ⚠️ Agregando configuración de Ollama al archivo .env..."
     echo "" >> /app/backend/.env
     echo "# Configuración de Ollama" >> /app/backend/.env
-    echo "OLLAMA_HOST=e8da53409283.ngrok-free.app" >> /app/backend/.env
+    echo "OLLAMA_HOST=$(echo $CORRECT_OLLAMA_URL | sed 's|https://||' | sed 's|http://||' | cut -d'/' -f1)" >> /app/backend/.env
     echo "OLLAMA_PORT=443" >> /app/backend/.env
     echo "OLLAMA_BASE_URL=$CORRECT_OLLAMA_URL" >> /app/backend/.env
-    echo "OLLAMA_DEFAULT_MODEL=gpt-oss:20b" >> /app/backend/.env
+    echo "OLLAMA_DEFAULT_MODEL=$CORRECT_OLLAMA_MODEL" >> /app/backend/.env
     echo "   ✅ Configuración de Ollama agregada exitosamente"
 fi
 
