@@ -5833,7 +5833,7 @@ def agent_status():
         'ollama': {
             'connected': True,
             'endpoint': get_ollama_endpoint(),
-            'model': os.getenv('OLLAMA_DEFAULT_MODEL', 'llama3.1:8b')
+            'model': get_ollama_model()
         },
         'tools': tools_count,
         'memory': {
