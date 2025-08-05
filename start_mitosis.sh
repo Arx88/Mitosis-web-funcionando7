@@ -127,14 +127,61 @@ else
     echo "   ✅ Tavily API Key agregada exitosamente"
 fi
 
-# Configurar OLLAMA endpoints correctos
-echo "   ⚡ Configurando endpoints de Ollama..."
-CORRECT_OLLAMA_URL="https://e8da53409283.ngrok-free.app"
+# Configurar OLLAMA endpoints - RESPETANDO CONFIGURACIÓN RUNTIME
+echo "   ⚡ Configurando endpoints de Ollama (respetando configuración existente)..."
 
-# Actualizar todas las variables de Ollama en el .env
-sed -i "s|OLLAMA_HOST=.*|OLLAMA_HOST=e8da53409283.ngrok-free.app|" /app/backend/.env
+# 🔄 LEER CONFIGURACIÓN RUNTIME EXISTENTE
+RUNTIME_CONFIG_FILE="/app/backend/src/config/ollama_runtime_config.json"
+if [ -f "$RUNTIME_CONFIG_FILE" ]; then
+    echo "   📋 Configuración runtime detectada, leyendo valores..."
+    
+    # Extraer endpoint y modelo desde JSON usando python
+    RUNTIME_ENDPOINT=$(python3 -c "
+import json, sys
+try:
+    with open('$RUNTIME_CONFIG_FILE', 'r') as f:
+        config = json.load(f)
+        print(config.get('endpoint', ''))
+except:
+    print('')
+" 2>/dev/null)
+    
+    RUNTIME_MODEL=$(python3 -c "
+import json, sys
+try:
+    with open('$RUNTIME_CONFIG_FILE', 'r') as f:
+        config = json.load(f)
+        print(config.get('model', ''))
+except:
+    print('')
+" 2>/dev/null)
+    
+    if [ ! -z "$RUNTIME_ENDPOINT" ]; then
+        CORRECT_OLLAMA_URL="$RUNTIME_ENDPOINT"
+        echo "   ✅ Usando endpoint desde configuración runtime: $CORRECT_OLLAMA_URL"
+    else
+        CORRECT_OLLAMA_URL="https://e8da53409283.ngrok-free.app"
+        echo "   ⚠️ Runtime endpoint vacío, usando por defecto: $CORRECT_OLLAMA_URL"
+    fi
+    
+    if [ ! -z "$RUNTIME_MODEL" ]; then
+        CORRECT_OLLAMA_MODEL="$RUNTIME_MODEL"
+        echo "   ✅ Usando modelo desde configuración runtime: $CORRECT_OLLAMA_MODEL"
+    else
+        CORRECT_OLLAMA_MODEL="gpt-oss:20b"
+        echo "   ⚠️ Runtime model vacío, usando por defecto: $CORRECT_OLLAMA_MODEL"
+    fi
+else
+    echo "   📋 No hay configuración runtime, usando valores por defecto"
+    CORRECT_OLLAMA_URL="https://e8da53409283.ngrok-free.app"
+    CORRECT_OLLAMA_MODEL="gpt-oss:20b"
+fi
+
+# Actualizar todas las variables de Ollama en el .env CON VALORES DETECTADOS
+echo "   🔧 Aplicando configuración: endpoint=$CORRECT_OLLAMA_URL, model=$CORRECT_OLLAMA_MODEL"
+sed -i "s|OLLAMA_HOST=.*|OLLAMA_HOST=$(echo $CORRECT_OLLAMA_URL | sed 's|https://||' | sed 's|http://||' | cut -d'/' -f1)|" /app/backend/.env
 sed -i "s|OLLAMA_BASE_URL=.*|OLLAMA_BASE_URL=$CORRECT_OLLAMA_URL|" /app/backend/.env
-sed -i "s|OLLAMA_DEFAULT_MODEL=.*|OLLAMA_DEFAULT_MODEL=gpt-oss:20b|" /app/backend/.env
+sed -i "s|OLLAMA_DEFAULT_MODEL=.*|OLLAMA_DEFAULT_MODEL=$CORRECT_OLLAMA_MODEL|" /app/backend/.env
 
 # Verificar que Ollama se configuró correctamente
 if grep -q "OLLAMA_BASE_URL=$CORRECT_OLLAMA_URL" /app/backend/.env; then
