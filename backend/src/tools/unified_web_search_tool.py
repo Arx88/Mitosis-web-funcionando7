@@ -2408,6 +2408,70 @@ except Exception as e:
             logger = logging.getLogger(__name__)
             logger.error(f"❌ Error sending screenshot via WebSocket: {e}")
     
+    def _generate_synthetic_screenshot_url(self, url: str, step: str) -> str:
+        """📸 GENERAR SCREENSHOT REAL PARA EVENTOS VISUALES - SOLUCIÓN NAVEGACIÓN EN TIEMPO REAL"""
+        try:
+            if not self.task_id:
+                return ""
+            
+            # 🚀 USAR BROWSER_MANAGER SI ESTÁ DISPONIBLE (SCREENSHOTS REALES)
+            if self.browser_manager and hasattr(self.browser_manager, '_take_screenshot_async'):
+                try:
+                    # Usar browser-use para screenshot real
+                    import asyncio
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    screenshot_url = loop.run_until_complete(self.browser_manager._take_screenshot_async())
+                    loop.close()
+                    if screenshot_url:
+                        return screenshot_url
+                except Exception as e:
+                    print(f"⚠️ Browser manager screenshot failed: {e}")
+            
+            # 🔧 FALLBACK: CREAR SCREENSHOT RÁPIDO CON PLAYWRIGHT
+            try:
+                import asyncio
+                from playwright.async_api import async_playwright
+                
+                async def take_quick_screenshot():
+                    async with async_playwright() as playwright:
+                        browser = await playwright.chromium.launch(headless=True)
+                        page = await browser.new_page()
+                        page.set_default_timeout(10000)  # 10 segundos timeout
+                        
+                        await page.goto(url, wait_until='domcontentloaded')
+                        await page.wait_for_timeout(2000)  # Esperar 2 segundos para carga
+                        
+                        # Crear directorio para screenshots
+                        screenshot_dir = f"/tmp/screenshots/{self.task_id}"
+                        os.makedirs(screenshot_dir, exist_ok=True)
+                        
+                        # Generar nombre único
+                        timestamp = int(time.time() * 1000)
+                        screenshot_name = f"{step}_{timestamp}.png"
+                        screenshot_path = os.path.join(screenshot_dir, screenshot_name)
+                        
+                        # Tomar screenshot
+                        await page.screenshot(path=screenshot_path, quality=20, full_page=False)
+                        await browser.close()
+                        
+                        return f"/api/files/screenshots/{self.task_id}/{screenshot_name}"
+                
+                # Ejecutar screenshot async
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                screenshot_url = loop.run_until_complete(take_quick_screenshot())
+                loop.close()
+                return screenshot_url
+                
+            except Exception as e:
+                print(f"⚠️ Playwright screenshot failed: {e}")
+                return ""
+                
+        except Exception as e:
+            print(f"❌ Screenshot generation failed: {e}")
+            return ""
+
     def _cleanup_browser_manager(self):
         """🧹 LIMPIAR RECURSOS DEL NAVEGADOR"""
         try:
