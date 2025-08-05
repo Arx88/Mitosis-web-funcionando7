@@ -688,40 +688,62 @@ Be precise and focus on the most relevant search results.'''
             'step': 'Iniciando navegación browser-use'
         }})
         
-        # 🚀 EJECUTAR NAVEGACIÓN CON EVENTOS VISUALES DIRECTOS (NO PARALELOS)
+        # 🚀 EJECUTAR NAVEGACIÓN CON SCREENSHOTS REALES EN TIEMPO REAL
         navigation_task = agent.run(max_steps=6)
         
-        # 📸 ENVIAR EVENTOS VISUALES DIRECTAMENTE DURANTE NAVEGACIÓN
-        # Enviar eventos progresivos para mostrar navegación visual
+        # 📸 CAPTURAR SCREENSHOTS REALES DURANTE NAVEGACIÓN
+        async def capture_real_screenshots():
+            \"\"\"Capturar screenshots reales del browser visible cada 3 segundos\"\"\"
+            for i in range(5):  # 5 capturas durante navegación
+                await asyncio.sleep(3)  # Esperar 3 segundos entre capturas
+                
+                try:
+                    # Capturar screenshot real del browser
+                    browser = agent.browser_session.browser
+                    if browser:
+                        pages = await browser.pages()
+                        if pages and len(pages) > 0:
+                            current_page = pages[0]
+                            
+                            # 📸 CAPTURAR SCREENSHOT REAL PNG
+                            screenshot_bytes = await current_page.screenshot(
+                                type='png', 
+                                full_page=False,
+                                quality=90
+                            )
+                            screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
+                            screenshot_data_url = f'data:image/png;base64,{{screenshot_base64}}'
+                            
+                            # 🌐 OBTENER URL ACTUAL REAL
+                            current_url = current_page.url
+                            
+                            # 📡 ENVIAR EVENTO BROWSER_VISUAL CON SCREENSHOT REAL
+                            await send_websocket_event(websocket_manager, 'browser_visual', {{
+                                'type': 'navigation_progress_real',
+                                'task_id': TASK_ID,
+                                'message': f'🌐 NAVEGACIÓN VISUAL REAL: Captura {{i+1}}/5',
+                                'step': f'Navegación real paso {{i+1}}/5',
+                                'timestamp': datetime.now().isoformat(),
+                                'url': current_url,
+                                'screenshot': screenshot_data_url,  # 📸 SCREENSHOT REAL BASE64
+                                'screenshot_url': screenshot_data_url,
+                                'navigation_active': True,
+                                'progress': int((i+1)/5 * 100),
+                                'real_browser_capture': True
+                            }})
+                            
+                            print(f\"📸 SCREENSHOT REAL {{i+1}}/5 ENVIADO: {{len(screenshot_base64)}} bytes\")
+                            
+                        else:
+                            print(f\"⚠️ No hay páginas disponibles para screenshot {{i+1}}\")
+                except Exception as screenshot_error:
+                    print(f\"❌ Error capturando screenshot real {{i+1}}: {{screenshot_error}}\")
         
-        # Evento inicial
-        await send_websocket_event(websocket_manager, 'browser_visual', {{
-            'type': 'navigation_start',
-            'task_id': TASK_ID,
-            'message': '🚀 NAVEGACIÓN VISUAL INICIADA: Browser-use comenzando navegación',
-            'step': 'Iniciando navegación visual',
-            'timestamp': datetime.now().isoformat(),
-            'url': f'https://www.bing.com/search?q={{clean_query}}',
-            'navigation_active': True
-        }})
+        # Ejecutar captura de screenshots en paralelo con navegación
+        screenshots_task = capture_real_screenshots()
         
-        # Eventos durante navegación (sin paralelo para evitar conflictos)
-        for i in range(3):
-            await asyncio.sleep(5)  # Esperar entre eventos
-            await send_websocket_event(websocket_manager, 'browser_visual', {{
-                'type': 'navigation_progress',
-                'task_id': TASK_ID,
-                'message': f'🌐 NAVEGACIÓN EN VIVO: Browser-use navegando paso {{i+1}}/3',
-                'step': f'Navegación activa paso {{i+1}}/3',
-                'timestamp': datetime.now().isoformat(),
-                'url': f'https://www.bing.com/search?q={{clean_query}}',
-                'navigation_active': True,
-                'progress': int((i+1)/3 * 100)
-            }})
-            print(f"🌐 EVENTO VISUAL {{i+1}} ENVIADO con task_id {{TASK_ID}}")
-        
-        # Esperar que navegación termine
-        result = await navigation_task
+        # Esperar que ambas tareas terminen
+        result = await asyncio.gather(navigation_task, screenshots_task)
         
         # Screenshot final
         try:
