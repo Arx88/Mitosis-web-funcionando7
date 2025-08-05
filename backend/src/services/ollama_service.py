@@ -34,11 +34,13 @@ from .ollama_queue_manager import (
 
 class OllamaService:
     def __init__(self, base_url: str = None):
-        self.base_url = base_url or os.getenv('OLLAMA_BASE_URL', 'https://e8da53409283.ngrok-free.app')
-        self.default_model = os.getenv("OLLAMA_DEFAULT_MODEL", "llama3.1:8b")  # Configurable por defecto
+        # Usar configuración centralizada
+        self.ollama_config = get_ollama_config()
+        self.base_url = base_url or self.ollama_config.endpoint
+        self.default_model = self.ollama_config.model
         self.current_model = None
         self.conversation_history = []
-        self.request_timeout = 90  # Base timeout, será sobrescrito por configuración por modelo
+        self.request_timeout = self.ollama_config.timeout
         
         # 🆕 PROBLEMA 3: Configuración de parámetros por modelo
         self.model_configs = self._load_model_configs()
