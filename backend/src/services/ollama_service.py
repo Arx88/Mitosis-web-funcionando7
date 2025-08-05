@@ -388,7 +388,11 @@ class OllamaService:
     def is_healthy(self) -> bool:
         """Verificar si Ollama está disponible"""
         try:
-            response = requests.get(f"{self.base_url}/api/tags", timeout=5)
+            headers = {}
+            if 'ngrok' in self.base_url:
+                headers['ngrok-skip-browser-warning'] = 'true'
+            
+            response = requests.get(f"{self.base_url}/api/tags", timeout=5, headers=headers)
             return response.status_code == 200
         except:
             return False
