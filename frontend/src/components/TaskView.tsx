@@ -162,12 +162,38 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         browser_visual: (data) => {
           console.log(`📸 [BROWSER_VISUAL] Event received for task ${task.id}:`, data);
           
+          // ✅ VALIDACIÓN: Filtrar eventos mal formados o vacíos
+          if (!data || typeof data !== 'object') {
+            console.log(`📸 [BROWSER_VISUAL] Invalid data received, skipping:`, data);
+            return;
+          }
+          
+          // ✅ VALIDACIÓN: Verificar que tenga datos mínimos requeridos
+          if (!data.task_id && !data.url && !data.step && !data.message && !data.screenshot_url && !data.screenshot) {
+            console.log(`📸 [BROWSER_VISUAL] Empty or incomplete data received, skipping:`, data);
+            return;
+          }
+          
+          // ✅ VALIDACIÓN: Verificar timestamp válido (evitar fechas como 1970)
+          const eventTimestamp = data.timestamp ? new Date(data.timestamp * 1000) : new Date();
+          if (eventTimestamp.getFullYear() < 2020) {
+            console.log(`📸 [BROWSER_VISUAL] Invalid timestamp detected (${eventTimestamp}), using current time`);
+            // Usar timestamp actual en lugar del inválido
+          }
+          
           if (data.task_id === task.id) {
+            // ✅ VALIDACIÓN: Solo procesar si hay información útil
+            const hasUsefulInfo = data.url || data.step || data.message || data.screenshot_url || data.screenshot;
+            if (!hasUsefulInfo) {
+              console.log(`📸 [BROWSER_VISUAL] No useful information in event, skipping`);
+              return;
+            }
+            
             const visualMessage = `# 🌐 Navegación Web en Tiempo Real
 
 ## ${data.step || 'Navegación activa'}
 
-**Timestamp:** ${new Date().toLocaleTimeString()}
+**Timestamp:** ${eventTimestamp.getFullYear() > 2020 ? eventTimestamp.toLocaleTimeString() : new Date().toLocaleTimeString()}
 **URL:** ${data.url || 'N/A'}
 
 ![Screenshot](${data.screenshot_url || data.screenshot || '/api/placeholder-screenshot.png'})
@@ -184,11 +210,11 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
               id: `browser_visual_${Date.now()}`,
               title: data.step || 'Navegación Visual',
               content: visualMessage,
-              timestamp: new Date(),
+              timestamp: eventTimestamp.getFullYear() > 2020 ? eventTimestamp : new Date(),
               type: 'browser_visual'
             });
             
-            console.log(`📸 [BROWSER_VISUAL] Visual message added to terminal`);
+            console.log(`📸 [BROWSER_VISUAL] Valid visual message added to terminal`);
           } else {
             console.log(`📸 [BROWSER_VISUAL] Event for different task (${data.task_id}), ignoring`);
           }
