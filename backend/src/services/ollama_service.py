@@ -21,6 +21,9 @@ from typing import Dict, List, Optional, Any
 import requests
 from requests.exceptions import RequestException, Timeout
 
+# Importar configuración centralizada
+from ..config.ollama_config import get_ollama_config, get_ollama_endpoint, get_ollama_model
+
 # 🚦 IMPORTACIÓN DEL GESTOR DE COLA
 from .ollama_queue_manager import (
     OllamaQueueManager, 
