@@ -201,7 +201,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   const {
     plan,
     progress,
-    isConnected,
+    isConnected: planConnected,
     currentActiveStep,
     currentActiveStepId,
     setPlan,
