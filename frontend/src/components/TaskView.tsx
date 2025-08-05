@@ -133,17 +133,64 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
           }
         },
         
-        // También escuchar browser_activity como fallback
+        // También escuchar browser_activity como fallback y eventos generales
         browser_activity: (data) => {
           console.log(`🌐 [BROWSER_ACTIVITY] Event received:`, data);
           if (data.task_id === task.id) {
             logToTerminal(`🌐 Browser Activity: ${data.description || 'Navigation event'}`, 'info');
           }
+        },
+        
+        // También escuchar task_update para browser_visual events
+        task_update: (data) => {
+          console.log(`📋 [TASK_UPDATE] Event received:`, data);
+          if (data.type === 'browser_visual' && data.data && data.data.task_id === task.id) {
+            console.log(`📸 [BROWSER_VISUAL via task_update] Processing:`, data.data);
+            
+            // Procesar como browser_visual normal
+            const visualData = data.data;
+            const visualMessage = `# 🌐 Navegación Web en Tiempo Real
+
+## ${visualData.step || 'Navegación activa'}
+
+**Timestamp:** ${new Date().toLocaleTimeString()}
+**URL:** ${visualData.url || 'N/A'}
+
+![Screenshot](${visualData.screenshot_url || visualData.screenshot || '/api/placeholder-screenshot.png'})
+
+*${visualData.message || 'Captura automática de navegación browser-use'}*
+
+---`;
+            
+            logToTerminal(visualMessage, 'info');
+            
+            addMonitorPage({
+              id: `browser_visual_${Date.now()}`,
+              title: visualData.step || 'Navegación Visual',
+              content: visualMessage,
+              timestamp: new Date(),
+              type: 'browser_visual'
+            });
+          }
         }
       });
       
       console.log(`✅ [WEBSOCKET] browser_visual listeners configured for task ${task.id}`);
-    }
+      
+      // RETRY CONNECTION cada 5 segundos si no está conectado
+      const retryInterval = setInterval(() => {
+        if (!isConnected && socket) {
+          console.log(`🔄 [WEBSOCKET] Retry connection for task ${task.id}`);
+          joinTaskRoom(task.id);
+        } else if (isConnected) {
+          clearInterval(retryInterval);
+          console.log(`✅ [WEBSOCKET] Connection stable for task ${task.id}`);
+        }
+      }, 5000);
+      
+      return () => {
+        clearInterval(retryInterval);
+      };
   }, [socket, isConnected, task.id, joinTaskRoom, addEventListeners, logToTerminal, addMonitorPage]);
   
   // ========================================================================
