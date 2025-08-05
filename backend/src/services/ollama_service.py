@@ -400,7 +400,11 @@ class OllamaService:
     def check_connection(self) -> Dict[str, Any]:
         """Verificar conexión con Ollama y retornar información detallada"""
         try:
-            response = requests.get(f"{self.base_url}/api/tags", timeout=5)
+            headers = {}
+            if 'ngrok' in self.base_url:
+                headers['ngrok-skip-browser-warning'] = 'true'
+            
+            response = requests.get(f"{self.base_url}/api/tags", timeout=5, headers=headers)
             if response.status_code == 200:
                 data = response.json()
                 models = [model['name'] for model in data.get('models', [])]
