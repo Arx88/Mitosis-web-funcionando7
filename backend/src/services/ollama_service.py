@@ -998,9 +998,17 @@ Herramientas disponibles:
                 }
             }
             
+            # Headers necesarios para ngrok
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            if 'ngrok' in self.base_url:
+                headers['ngrok-skip-browser-warning'] = 'true'
+            
             response = requests.post(
                 f"{self.base_url}/api/generate",
                 json=payload,
+                headers=headers,
                 timeout=self.request_timeout,
                 stream=True
             )
