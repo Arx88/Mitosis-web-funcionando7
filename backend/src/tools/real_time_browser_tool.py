@@ -630,15 +630,20 @@ class RealTimeBrowserTool(BaseTool):
             
             # Generar nombre de archivo
             timestamp = int(time.time() * 1000)
-            filename = f"real_navigation_{screenshot_index:03d}_{timestamp}.png"
+            filename = f"real_navigation_{screenshot_index:03d}_{timestamp}.jpeg"
             screenshot_path = screenshots_dir / filename
             
-            # Capturar screenshot de página completa
-            await page.screenshot(
-                path=str(screenshot_path),
-                quality=85,  # Buena calidad pero no excesiva
-                full_page=True  # Captura completa de la página
-            )
+            # Capturar screenshot de página completa sin quality para PNG, con quality para JPEG
+            try:
+                await page.screenshot(
+                    path=str(screenshot_path),
+                    quality=30,  # JPEG soporta quality
+                    type='jpeg',  # Usar JPEG en lugar de PNG
+                    full_page=True  # Captura completa de la página
+                )
+            except Exception as e:
+                self._emit_progress(f"⚠️ Error en captura de screenshot: {str(e)}")
+                return None
             
             # Retornar URL accesible para frontend
             return f"/api/files/screenshots/{self.task_id}/{filename}"
