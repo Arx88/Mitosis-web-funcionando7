@@ -595,7 +595,7 @@ async def run_browser_use_subprocess():
             api_key="ollama"
         )
         
-        # Browser profile optimizado para contenedores
+        # Browser profile optimizado para contenedores con X11 virtual
         browser_profile = BrowserProfile(
             user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             chromium_sandbox=False,
@@ -604,6 +604,7 @@ async def run_browser_use_subprocess():
                 '--disable-setuid-sandbox', 
                 '--disable-dev-shm-usage',
                 '--disable-gpu',
+                '--display=:99',  # 🖥️ FORZAR USO DEL DISPLAY X11 VIRTUAL
                 '--disable-software-rasterizer',
                 '--disable-background-timer-throttling',
                 '--disable-renderer-backgrounding',
@@ -616,8 +617,8 @@ async def run_browser_use_subprocess():
                 '--no-default-browser-check',
                 '--disable-backgrounding-occluded-windows',
                 '--disable-ipc-flooding-protection',
-                '--disable-blink-features=AutomationControlled',
-                '--headless'
+                '--disable-blink-features=AutomationControlled'
+                # ❌ REMOVIDO '--headless' para navegación visible
             ]
         )
         
