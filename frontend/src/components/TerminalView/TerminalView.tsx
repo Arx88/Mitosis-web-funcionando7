@@ -844,6 +844,11 @@ export const TerminalView = ({
       
       console.log(`✅ [BROWSER_VISUAL_SUCCESS] Processing browser visual event`);
       
+      // 🔍 DEBUG: Verificar qué campos están disponibles
+      console.log(`🔍 [SCREENSHOT_DEBUG] data.screenshot: "${data.screenshot}"`);
+      console.log(`🔍 [SCREENSHOT_DEBUG] data.screenshot_url: "${data.screenshot_url}"`);
+      console.log(`🔍 [SCREENSHOT_DEBUG] Screenshot final usado: "${data.screenshot_url || data.screenshot}"`);
+      
       try {
         // Agregar screenshot al estado
         const newScreenshot = {
