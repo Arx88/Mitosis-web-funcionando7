@@ -478,14 +478,53 @@ class OllamaService:
             # Determinar si usar cola o llamada directa
             if self.use_queue:
                 # Usar cola con prioridad normal para conversaciones casuales
-                response = asyncio.run(self._execute_with_queue(
-                    prompt=full_prompt,
-                    model=self.get_current_model(),
-                    options=self._get_model_config(self.get_current_model()).get("options", {}),
-                    priority=RequestPriority.LOW,  # Baja prioridad para conversaciones casuales
-                    task_id="casual_conversation",
-                    step_id="casual_response"
-                ))
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        # Si ya hay un loop corriendo, crear una tarea
+                        task = asyncio.create_task(self._execute_with_queue(
+                            prompt=full_prompt,
+                            model=self.get_current_model(),
+                            options=self._get_model_config(self.get_current_model()).get("options", {}),
+                            priority=RequestPriority.LOW,  # Baja prioridad para conversaciones casuales
+                            task_id="casual_conversation",
+                            step_id="casual_response"
+                        ))
+                        # Usar concurrent.futures para obtener el resultado
+                        import concurrent.futures
+                        import threading
+                        
+                        def run_async():
+                            new_loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(new_loop)
+                            try:
+                                return new_loop.run_until_complete(self._execute_with_queue(
+                                    prompt=full_prompt,
+                                    model=self.get_current_model(),
+                                    options=self._get_model_config(self.get_current_model()).get("options", {}),
+                                    priority=RequestPriority.LOW,
+                                    task_id="casual_conversation",
+                                    step_id="casual_response"
+                                ))
+                            finally:
+                                new_loop.close()
+                        
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            future = executor.submit(run_async)
+                            response = future.result(timeout=30)
+                    else:
+                        response = asyncio.run(self._execute_with_queue(
+                            prompt=full_prompt,
+                            model=self.get_current_model(),
+                            options=self._get_model_config(self.get_current_model()).get("options", {}),
+                            priority=RequestPriority.LOW,
+                            task_id="casual_conversation",
+                            step_id="casual_response"
+                        ))
+                except Exception as e:
+                    self.logger.error(f"❌ Error en execute con cola: {e}")
+                    # Fallback a llamada directa
+                    response = self._make_request(full_prompt, stream=False)
             else:
                 # Llamada directa tradicional
                 response = self._call_ollama_api(full_prompt)
