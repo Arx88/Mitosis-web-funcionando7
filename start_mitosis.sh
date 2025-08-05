@@ -134,7 +134,7 @@ CORRECT_OLLAMA_URL="https://e8da53409283.ngrok-free.app"
 # Actualizar todas las variables de Ollama en el .env
 sed -i "s|OLLAMA_HOST=.*|OLLAMA_HOST=e8da53409283.ngrok-free.app|" /app/backend/.env
 sed -i "s|OLLAMA_BASE_URL=.*|OLLAMA_BASE_URL=$CORRECT_OLLAMA_URL|" /app/backend/.env
-sed -i "s|OLLAMA_DEFAULT_MODEL=.*|OLLAMA_DEFAULT_MODEL=llama3.1:8b|" /app/backend/.env
+sed -i "s|OLLAMA_DEFAULT_MODEL=.*|OLLAMA_DEFAULT_MODEL=gpt-oss:20b|" /app/backend/.env
 
 # Verificar que Ollama se configuró correctamente
 if grep -q "OLLAMA_BASE_URL=$CORRECT_OLLAMA_URL" /app/backend/.env; then
