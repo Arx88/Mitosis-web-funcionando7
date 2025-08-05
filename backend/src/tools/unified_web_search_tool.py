@@ -439,12 +439,17 @@ class UnifiedWebSearchTool(BaseTool):
             time.sleep(2)
             
             # Emitir evento inicial después del delay
+            search_url = f'https://www.bing.com/search?q={query.replace(" ", "+")}'
+            # 📸 TOMAR SCREENSHOT SINTÉTICO PARA EVENTOS VISUALES
+            screenshot_url = self._generate_synthetic_screenshot_url(search_url, "navigation_start")
+            
             self._emit_browser_visual({
                 'type': 'navigation_start',
                 'message': '🚀 NAVEGACIÓN VISUAL INICIADA: Browser-use comenzando navegación',
                 'step': 'Iniciando navegación visual',
                 'timestamp': time.time(),
-                'url': f'https://www.bing.com/search?q={query.replace(" ", "+")}',
+                'url': search_url,
+                'screenshot_url': screenshot_url,  # 📸 SCREENSHOT URL AGREGADA
                 'navigation_active': True
             })
             
