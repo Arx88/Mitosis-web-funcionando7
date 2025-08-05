@@ -864,7 +864,7 @@ if __name__ == "__main__":
                 
                 process = subprocess.run([
                     '/root/.venv/bin/python', temp_script_path
-                ], capture_output=True, text=True, timeout=120, cwd='/app/backend')
+                ], capture_output=True, text=True, timeout=60, cwd='/app/backend')
                 
                 if process.returncode == 0:
                     # Parse resultado JSON del subprocess - buscar solo la línea JSON válida
