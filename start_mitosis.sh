@@ -573,8 +573,45 @@ stdout_logfile=/var/log/mongodb.out.log
 EOF
 
 # ========================================================================
-# PASO 6: REINICIAR SERVICIOS CON CONFIGURACIÓN DE PRODUCCIÓN
+# PASO 6: INICIAR SERVIDOR X11 VIRTUAL Y REINICIAR SERVICIOS
 # ========================================================================
+
+echo "🖥️ Iniciando servidor X11 virtual para navegación en tiempo real..."
+
+# Matar cualquier proceso Xvfb existente
+pkill -f "Xvfb.*:99" 2>/dev/null || true
+
+# Iniciar servidor X11 virtual en background
+if command -v Xvfb &> /dev/null; then
+    echo "⚡ Iniciando Xvfb en display :99..."
+    Xvfb :99 -screen 0 1920x1080x24 -ac -nolisten tcp > /dev/null 2>&1 &
+    XVFB_PID=$!
+    
+    # Esperar a que Xvfb se inicie
+    sleep 3
+    
+    # Verificar que Xvfb está corriendo
+    if ps -p $XVFB_PID > /dev/null 2>&1; then
+        echo "   ✅ Servidor X11 virtual iniciado correctamente (PID: $XVFB_PID)"
+        echo "   🖥️ Display virtual: :99 (1920x1080)"
+        
+        # Configurar variable de entorno globalmente
+        echo "DISPLAY=:99" >> /etc/environment
+        export DISPLAY=:99
+        
+        # Crear archivo de estado para verificación
+        echo "XVFB_PID=$XVFB_PID" > /tmp/xvfb_status
+        echo "DISPLAY=:99" >> /tmp/xvfb_status
+        echo "STATUS=RUNNING" >> /tmp/xvfb_status
+        echo "STARTED=$(date)" >> /tmp/xvfb_status
+        
+    else
+        echo "   ⚠️ Error iniciando servidor X11 virtual"
+        echo "   ℹ️ Navegación funcionará en modo headless únicamente"
+    fi
+else
+    echo "   ⚠️ Xvfb no disponible, navegación en modo headless"
+fi
 
 echo "🔄 Reiniciando servicios en modo producción..."
 sudo supervisorctl reread >/dev/null 2>&1
