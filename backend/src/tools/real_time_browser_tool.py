@@ -633,13 +633,19 @@ class RealTimeBrowserTool(BaseTool):
             filename = f"real_navigation_{screenshot_index:03d}_{timestamp}.jpeg"
             screenshot_path = screenshots_dir / filename
             
-            # Capturar screenshot de página completa sin quality para PNG, con quality para JPEG
+            # Capturar screenshot de mayor calidad y resolución
             try:
                 await page.screenshot(
                     path=str(screenshot_path),
-                    quality=30,  # JPEG soporta quality
-                    type='jpeg',  # Usar JPEG en lugar de PNG
-                    full_page=True  # Captura completa de la página
+                    quality=70,  # Mayor calidad (aumentado de 30 a 70)
+                    type='jpeg',  # Usar JPEG para mejor compresión
+                    full_page=False,  # Captura solo viewport para mejor rendimiento y calidad
+                    clip={
+                        'x': 0,
+                        'y': 0, 
+                        'width': 1920,  # Ancho fijo para consistencia
+                        'height': 1080   # Alto fijo para mejor visualización
+                    }
                 )
             except Exception as e:
                 self._emit_progress(f"⚠️ Error en captura de screenshot: {str(e)}")
