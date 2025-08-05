@@ -46,7 +46,7 @@ class RealTimeBrowserTool(BaseTool):
     
     Proporciona navegación web visible con:
     - Servidor X11 virtual para mostrar el browser navegando
-    - Screenshots PNG reales capturados automáticamente  
+    - Screenshots JPEG reales capturados automáticamente  
     - Eventos browser_visual enviados al frontend en tiempo real
     - Navegación paso a paso visible en el Monitor de Ejecución
     """
