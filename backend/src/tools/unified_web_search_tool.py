@@ -463,6 +463,7 @@ class UnifiedWebSearchTool(BaseTool):
                     # 📸 TOMAR SCREENSHOT SINTÉTICO PARA CADA PASO
                     search_url = f'https://www.bing.com/search?q={query.replace(" ", "+")}'
                     screenshot_url = self._generate_synthetic_screenshot_url(search_url, f"navigation_step_{i+1}")
+                    print(f"🔍 DEBUG: Screenshot URL para step {i+1}: '{screenshot_url}'")
                     
                     # Emitir inmediatamente sin threading
                     self._emit_browser_visual({
