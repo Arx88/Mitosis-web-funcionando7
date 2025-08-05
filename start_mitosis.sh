@@ -63,6 +63,36 @@ python -m playwright install chromium --with-deps 2>/dev/null || {
     echo "   ⚠️ Playwright browser install falló, continuando sin navegadores adicionales..."
 }
 
+# ========================================================================
+# CONFIGURAR SERVIDOR X11 VIRTUAL PARA NAVEGACIÓN EN TIEMPO REAL
+# ========================================================================
+
+echo "🖥️ Configurando servidor X11 virtual para navegación visible..."
+
+# Instalar Xvfb (X Virtual Framebuffer) para navegación visible
+if ! command -v Xvfb &> /dev/null; then
+    echo "⚡ Instalando Xvfb para servidor X11 virtual..."
+    apt-get update -qq 2>/dev/null || true
+    apt-get install -y xvfb x11-utils xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic 2>/dev/null || {
+        echo "   ⚠️ Error instalando Xvfb, navegación limitada a headless"
+    }
+fi
+
+# Instalar dependencias adicionales para visualización
+echo "⚡ Instalando dependencias de visualización..."
+apt-get install -y xauth x11vnc fluxbox 2>/dev/null || {
+    echo "   ℹ️ Algunas dependencias de visualización no disponibles"
+}
+
+# Configurar display virtual por defecto
+export DISPLAY=:99
+echo "   ✅ Display virtual configurado: $DISPLAY"
+
+# Crear directorio para screenshots
+mkdir -p /tmp/screenshots
+chmod 755 /tmp/screenshots
+echo "   ✅ Directorio de screenshots creado: /tmp/screenshots"
+
 # Instalar Chrome para Selenium de forma simplificada
 echo "🌐 Verificando Google Chrome para Selenium..."
 if ! command -v google-chrome &> /dev/null && ! command -v chromium-browser &> /dev/null; then
