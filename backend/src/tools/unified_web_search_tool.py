@@ -422,6 +422,10 @@ class UnifiedWebSearchTool(BaseTool):
         
         # SOLUCIÓN PRINCIPAL: Usar subprocess para evitar event loop conflicts
         try:
+            # 🚀 NAVEGACIÓN EN TIEMPO REAL: Configurar display virtual y video
+            import os
+            os.environ['DISPLAY'] = ':99'
+            
             # Ejecutar browser-use en subprocess separado - SOLUCIÓN DEFINITIVA AL EVENT LOOP CONFLICT
             import subprocess
             import tempfile
