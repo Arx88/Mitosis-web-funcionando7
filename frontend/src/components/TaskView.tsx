@@ -748,9 +748,18 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   // ========================================================================
 
   return (
-    <div className="flex h-full overflow-hidden">
-      {/* Panel izquierdo - Chat */}
-      <div className="flex-1 min-w-0 flex flex-col bg-[#272728] border-r border-[rgba(255,255,255,0.08)] overflow-hidden">
+    <div className="flex h-full overflow-hidden relative">
+      {/* Panel izquierdo - Chat - Redimensionable */}
+      <div 
+        className="min-w-0 flex flex-col bg-[#272728] border-r border-[rgba(255,255,255,0.08)] overflow-hidden transition-all duration-200"
+        style={{ 
+          width: responsiveLayout.shouldCollapseChat 
+            ? '100%' 
+            : `${chatWidthPercent}%`,
+          minWidth: `${Math.min(responsiveLayout.minChatWidth, windowWidth * 0.3)}px`,
+          maxWidth: `${responsiveLayout.maxChatWidth}px`
+        }}
+      >
         {/* Header del task - Responsive Header */}
         <div className="p-2 sm:p-4 border-b border-[rgba(255,255,255,0.08)] bg-[#212122]">
           <div className="flex items-center justify-between flex-wrap sm:flex-nowrap gap-2">
@@ -773,6 +782,12 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
             
             {/* Action Buttons - Responsive Stack */}
             <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+              {!responsiveLayout.shouldCollapseChat && (
+                <div className="text-xs text-gray-500 px-2 py-1 bg-gray-800 rounded">
+                  Chat: {Math.round(chatWidthPercent)}%
+                </div>
+              )}
+              
               <button
                 onClick={handleToggleFavorite}
                 className={`p-1 sm:p-2 rounded-lg transition-all duration-200 ${
@@ -818,10 +833,56 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         </div>
       </div>
 
-      {/* Panel derecho - Terminal - Responsive Width */}     
-      <div className="w-full sm:w-1/2 lg:w-2/5 xl:w-1/3 min-w-0 max-w-[50%] bg-[#1e1e1e] border-l border-[rgba(255,255,255,0.08)] flex-shrink-0" ref={monitorRef}>
-        {terminalView}
+      {/* Barra de redimensionamiento - Solo visible en desktop */}
+      {!responsiveLayout.shouldCollapseChat && (
+        <div
+          className="w-1 bg-[rgba(255,255,255,0.05)] hover:bg-blue-500/30 cursor-col-resize transition-colors duration-200 group flex-shrink-0 relative"
+          onMouseDown={handleMouseDown}
+          ref={resizeRef}
+        >
+          <div className="absolute inset-y-0 left-1/2 transform -translate-x-1/2 w-3 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <GripVertical className="w-4 h-4 text-gray-400" />
+          </div>
+          {isResizing && (
+            <div className="absolute inset-0 w-1 bg-blue-500" />
+          )}
+        </div>
+      )}
+
+      {/* Panel derecho - Monitor de Ejecución - Responsive Width */}     
+      <div 
+        className={`
+          min-w-0 bg-[#1e1e1e] border-l border-[rgba(255,255,255,0.08)] flex-shrink-0 transition-all duration-200
+          ${responsiveLayout.shouldCollapseChat ? 'hidden' : 'flex'}
+        `}
+        style={{ 
+          width: responsiveLayout.shouldCollapseChat 
+            ? '0%' 
+            : `${100 - chatWidthPercent}%`,
+          minWidth: responsiveLayout.shouldCollapseSidebar ? '250px' : '300px'
+        }}
+        ref={monitorRef}
+      >
+        {/* Header del Monitor con indicador de tamaño */}
+        <div className="flex flex-col h-full">
+          <div className="px-3 py-2 bg-[#1a1a1a] border-b border-[rgba(255,255,255,0.08)]">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-300">Monitor de Ejecución</h3>
+              <div className="text-xs text-gray-500">
+                {Math.round(100 - chatWidthPercent)}%
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 min-h-0">
+            {terminalView}
+          </div>
+        </div>
       </div>
+
+      {/* Overlay de redimensionamiento */}
+      {isResizing && (
+        <div className="fixed inset-0 bg-transparent cursor-col-resize z-50" />
+      )}
 
       {/* Modals */}
       {filesModal}
