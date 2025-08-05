@@ -911,6 +911,48 @@ if __name__ == "__main__":
                         result_data = json.loads(json_line)
                         
                         if result_data.get('success', False):
+                            # 📸 PROCESAR SCREENSHOTS DEL SUBPROCESS
+                            screenshot_data = None
+                            final_url = None
+                            
+                            # Buscar datos de screenshot en la salida
+                            if process.stdout:
+                                for line in process.stdout.split('\n'):
+                                    if 'SCREENSHOT_CAPTURED|' in line:
+                                        try:
+                                            parts = line.split('SCREENSHOT_CAPTURED|')[1].split('|')
+                                            if len(parts) >= 2:
+                                                screenshot_data = parts[0]
+                                                final_url = parts[1]
+                                                print(f"📸 Screenshot capturado exitosamente de {final_url}")
+                                                break
+                                        except Exception as parse_error:
+                                            print(f"⚠️ Error procesando screenshot: {parse_error}")
+                            
+                            # 📡 ENVIAR SCREENSHOT REAL VIA WEBSOCKET SI SE CAPTURÓ
+                            if screenshot_data and final_url:
+                                # Usar el websocket manager disponible en self
+                                if self.websocket_manager:
+                                    try:
+                                        self.websocket_manager.emit_to_task(self.task_id, 'browser_visual', {
+                                            'type': 'navigation_complete_real',
+                                            'task_id': self.task_id,
+                                            'screenshot': screenshot_data,  # 📸 SCREENSHOT REAL BASE64
+                                            'screenshot_url': screenshot_data,
+                                            'step': '✅ Navegación completada con captura real',
+                                            'timestamp': datetime.now().isoformat(),
+                                            'url': final_url,
+                                            'final_capture': True,
+                                            'real_browser_capture': True
+                                        })
+                                        print(f"📸 SCREENSHOT REAL ENVIADO VIA WEBSOCKET: {len(screenshot_data)} bytes")
+                                    except Exception as ws_error:
+                                        print(f"⚠️ Error enviando screenshot via websocket: {ws_error}")
+                                else:
+                                    print("⚠️ WebSocket manager no disponible para enviar screenshot")
+                            else:
+                                print("⚠️ No se pudo capturar screenshot del subprocess")
+                            
                             self._emit_progress_eventlet("✅ Browser-use subprocess exitoso!")
                             
                             # 🚀 EMITIR EVENTO DE NAVEGACIÓN FINALIZADA CON SCREENSHOT
