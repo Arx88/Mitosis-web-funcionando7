@@ -547,7 +547,7 @@ except Exception as e:
                 "ollama": {
                     "connected": ollama_connected,
                     "endpoint": get_ollama_endpoint(),
-                    "model": app.ollama_service.get_current_model() if hasattr(app, 'ollama_service') and app.ollama_service else os.getenv('OLLAMA_DEFAULT_MODEL', 'llama3.1:8b'),  # 🔧 FIX: Mostrar modelo actual real
+                    "model": app.ollama_service.get_current_model() if hasattr(app, 'ollama_service') and app.ollama_service else get_ollama_model(),  # 🔧 FIX: Mostrar modelo actual real
                     "available_models": ollama_models[:5] if ollama_models else [],  # Primeros 5
                     "models_count": len(ollama_models)
                 },
