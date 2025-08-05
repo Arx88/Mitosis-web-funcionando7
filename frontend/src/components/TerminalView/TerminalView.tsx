@@ -1444,8 +1444,22 @@ export const TerminalView = ({
                               <img 
                                 src={currentPage.metadata.screenshotUrl} 
                                 alt="Captura de pantalla de navegación" 
-                                className="rounded-lg max-w-full h-auto border border-[#404040]"
-                                style={{ maxHeight: '400px' }}
+                                className="rounded-lg max-w-full h-auto border border-[#404040] cursor-pointer transition-transform hover:scale-102"
+                                style={{ 
+                                  maxHeight: '700px',  // Aumentar de 400px a 700px
+                                  minHeight: '450px',  // Altura mínima
+                                  objectFit: 'contain',
+                                  width: '100%'       // Usar todo el ancho disponible
+                                }}
+                                onClick={() => {
+                                  // Abrir imagen en nueva pestaña para ver en full resolution
+                                  window.open(currentPage.metadata.screenshotUrl, '_blank');
+                                }}
+                                onError={(e) => {
+                                  console.error('Error loading screenshot:', e);
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                }}
                               />
                             </div>
                           )}
