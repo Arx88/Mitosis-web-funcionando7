@@ -348,6 +348,10 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   }, [getFiles, task.id]);
   
   const taskMonitorPages = useMemo(() => {
+    const pages = getMonitorPages(task.id);
+    console.log(`📺 [MONITOR-PAGES] Task ${task.id} has ${pages.length} monitor pages in context`);
+    return pages;
+  }, [getMonitorPages, task.id]);
   
   // ========================================================================
   // HANDLERS DE REDIMENSIONAMIENTO RESPONSIVO
@@ -387,11 +391,6 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       setChatWidthPercent(responsiveLayout.defaultChatWidth);
     }
   }, [windowWidth, responsiveLayout]);
-  
-    const pages = getMonitorPages(task.id);
-    console.log(`📺 [MONITOR-PAGES] Task ${task.id} has ${pages.length} monitor pages in context`);
-    return pages;
-  }, [getMonitorPages, task.id]);
   
   const currentPageIndex = useMemo(() => {
     const index = getCurrentPageIndex(task.id);
