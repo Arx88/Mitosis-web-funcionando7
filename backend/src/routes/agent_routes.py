@@ -5965,7 +5965,7 @@ def get_ollama_models():
     """Obtiene modelos disponibles de Ollama"""
     try:
         data = request.get_json() or {}
-        endpoint = data.get('endpoint', os.getenv('OLLAMA_BASE_URL', 'https://bef4a4bb93d1.ngrok-free.app'))
+        endpoint = data.get('endpoint', get_ollama_endpoint())
         
         # Hacer llamada real a Ollama para obtener modelos
         try:
