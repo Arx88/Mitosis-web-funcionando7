@@ -748,23 +748,41 @@ Be precise and focus on the most relevant search results.'''
         # El resultado de navegación es el primero
         result = navigation_result
         
-        # Screenshot final
+        # Screenshot final de alta calidad
         try:
             browser = agent.browser_session.browser
             if browser:
                 pages = await browser.pages()
                 if pages and len(pages) > 0:
-                    screenshot_bytes = await pages[0].screenshot(type='png', full_page=False)
+                    current_page = pages[0]
+                    
+                    # 📸 SCREENSHOT FINAL DE ALTA CALIDAD
+                    screenshot_bytes = await current_page.screenshot(
+                        type='png', 
+                        full_page=True,  # Captura de página completa para screenshot final
+                        quality=95
+                    )
                     screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
+                    screenshot_data_url = f'data:image/png;base64,{{screenshot_base64}}'
+                    
+                    # Obtener URL actual
+                    final_url = current_page.url
                     
                     await send_websocket_event(websocket_manager, 'browser_visual', {{
-                        'type': 'browser_screenshot',
-                        'screenshot': f'data:image/png;base64,{{screenshot_base64}}',
-                        'step': '✅ Navegación completada',
+                        'type': 'navigation_complete_real',
+                        'task_id': TASK_ID,
+                        'screenshot': screenshot_data_url,  # 📸 SCREENSHOT FINAL REAL
+                        'screenshot_url': screenshot_data_url,
+                        'step': '✅ Navegación completada con captura final',
                         'timestamp': datetime.now().isoformat(),
-                        'url': pages[0].url if hasattr(pages[0], 'url') else search_url
+                        'url': final_url,
+                        'final_capture': True,
+                        'real_browser_capture': True
                     }})
-        except:
+                    
+                    print(f"📸 SCREENSHOT FINAL REAL ENVIADO: {{len(screenshot_base64)}} bytes from {{final_url}}")
+        except Exception as final_screenshot_error:
+            print(f"❌ Error capturando screenshot final: {{final_screenshot_error}}")
             pass
         
         # Notificar finalización con navegación visual
