@@ -6071,9 +6071,29 @@ def apply_configuration():
         
         # Aplicar configuración Ollama si está habilitada
         ollama_config = config.get('ollama', {})
-        if ollama_config.get('enabled', False):
+        if ollama_config:  # Cambié de .get('enabled', False) a solo if ollama_config para procesar siempre
             endpoint = ollama_config.get('endpoint')
             model = ollama_config.get('model')
+            
+            # 🚀 USAR CONFIGURACIÓN CENTRALIZADA PARA PERSISTENCIA
+            try:
+                from ..config.ollama_config import get_ollama_config
+                central_config = get_ollama_config()
+                logger.info(f"🔧 Central config loaded for persistence")
+                
+                # Actualizar configuración centralizada si se proporcionan valores
+                if endpoint:
+                    old_endpoint = central_config.endpoint
+                    central_config.endpoint = endpoint
+                    logger.info(f"✅ Central config endpoint updated: {old_endpoint} → {endpoint}")
+                
+                if model:
+                    old_model_central = central_config.model
+                    central_config.model = model
+                    logger.info(f"✅ Central config model updated: {old_model_central} → {model}")
+                    
+            except Exception as e:
+                logger.error(f"❌ Error updating central config: {str(e)}")
             
             if ollama_service:
                 logger.info(f"🔄 Actualizando Ollama: endpoint={endpoint}, modelo={model}")
