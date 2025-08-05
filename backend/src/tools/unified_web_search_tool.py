@@ -1417,7 +1417,27 @@ if __name__ == "__main__":
                     return loop.run_until_complete(async_playwright_fallback_search())
             except RuntimeError:
                 # No hay loop, crear uno nuevo
-                return asyncio.run(async_playwright_fallback_search())
+                try:
+                    return asyncio.run(async_playwright_fallback_search())
+                except RuntimeError as e:
+                    if "cannot be called from a running event loop" in str(e):
+                        # Fallback usando thread si no podemos crear event loop
+                        import threading
+                        import concurrent.futures
+                        
+                        def run_in_new_thread():
+                            new_loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(new_loop)
+                            try:
+                                return new_loop.run_until_complete(async_playwright_fallback_search())
+                            finally:
+                                new_loop.close()
+                        
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            future = executor.submit(run_in_new_thread)
+                            return future.result(timeout=60)
+                    else:
+                        raise
                 
         except Exception as e:
             self._emit_progress_eventlet(f"❌ Error ejecutando Playwright fallback: {str(e)}")
