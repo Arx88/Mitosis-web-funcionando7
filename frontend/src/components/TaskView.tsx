@@ -82,7 +82,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   
   const { socket, isConnected, joinTaskRoom, addEventListeners } = useWebSocket();
   
-  // Configurar event listeners para browser_visual
+  // Configurar event listeners para browser_visual con reconexión automática
   useEffect(() => {
     console.log(`🔌 [WEBSOCKET-DEBUG] useEffect triggered:`, { 
       hasSocket: !!socket, 
@@ -90,33 +90,30 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       taskId: task.id 
     });
     
-    if (socket && isConnected && task.id) {
+    if (socket && task.id) {  // No requiere isConnected para intentar conectar
       console.log(`🔌 [WEBSOCKET] Setting up browser_visual listeners for task ${task.id}`);
       
-      // Join task room
+      // Join task room even if not connected yet
       joinTaskRoom(task.id);
       
-      // Add browser_visual event listener
+      // Add browser_visual event listener  
       addEventListeners({
         browser_visual: (data) => {
           console.log(`📸 [BROWSER_VISUAL] Event received for task ${task.id}:`, data);
           
           if (data.task_id === task.id) {
-            const visualMessage = `
-# Navegación Web en Tiempo Real
+            const visualMessage = `# 🌐 Navegación Web en Tiempo Real
 
 ## ${data.step || 'Navegación activa'}
 
 **Timestamp:** ${new Date().toLocaleTimeString()}
-
 **URL:** ${data.url || 'N/A'}
 
-![Screenshot](${data.screenshot_url || data.screenshot || 'undefined'})
+![Screenshot](${data.screenshot_url || data.screenshot || '/api/placeholder-screenshot.png'})
 
----
+*${data.message || 'Captura automática de navegación browser-use'}*
 
-*Captura automática de navegación browser-use*
-`;
+---`;
             
             // Add visual message to terminal
             logToTerminal(visualMessage, 'info');
