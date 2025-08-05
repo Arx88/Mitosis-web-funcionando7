@@ -30,3 +30,6 @@ xvfbwrapper==0.2.9werkzeug==3.1.3
 gunicorn==21.2.0
 eventlet==0.36.1
 selenium==4.15.0
+gunicorn==21.2.0
+eventlet==0.36.1
+selenium==4.15.0
