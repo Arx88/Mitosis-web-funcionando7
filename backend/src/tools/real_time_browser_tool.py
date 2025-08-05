@@ -695,22 +695,26 @@ class RealTimeBrowserTool(BaseTool):
             if self.screenshot_thread and self.screenshot_thread.is_alive():
                 self.screenshot_thread.join(timeout=3)
             
-            # Cerrar servidor X11 virtual
+            # Cerrar servidor X11 virtual SOLO SI LO CREAMOS NOSOTROS
             if self.xvfb_process:
                 try:
                     self.xvfb_process.terminate()
                     self.xvfb_process.wait(timeout=5)
-                    self._emit_progress("🔒 Servidor X11 virtual cerrado")
+                    self._emit_progress("🔒 Servidor X11 virtual creado por nosotros cerrado")
                 except:
                     # Forzar cierre si no responde
                     self.xvfb_process.kill()
                 finally:
                     self.xvfb_process = None
+            else:
+                # Si no creamos el servidor, solo emitir que seguirá corriendo
+                self._emit_progress("ℹ️ Servidor X11 virtual existente continúa corriendo")
             
             # Emitir evento de limpieza
             self._emit_browser_visual({
                 'type': 'resources_cleaned',
                 'message': '🧹 Recursos de navegación limpiados correctamente',
+                'server_closed': self.xvfb_process is None,
                 'timestamp': time.time()
             })
             
