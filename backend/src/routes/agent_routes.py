@@ -689,11 +689,17 @@ def get_ollama_queue_status():
         
         # Obtener estado actual de la cola
         try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # Si ya hay un loop corriendo, crear un nuevo thread
-                import concurrent.futures
-                
+            import threading
+            current_thread = threading.current_thread()
+            if hasattr(current_thread, 'name') and 'GreenThread' in current_thread.name:
+                # En eventlet, usar estado simplificado
+                status = {
+                    "active_requests": 0,
+                    "pending_requests": 0,
+                    "warning": "Queue status unavailable in GreenThread context"
+                }
+            else:
+                # Usar asyncio normalmente
                 def run_async():
                     new_loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(new_loop)
@@ -705,8 +711,6 @@ def get_ollama_queue_status():
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     future = executor.submit(run_async)
                     status = future.result(timeout=10)
-            else:
-                status = asyncio.run(queue_manager.get_queue_status())
         except Exception as e:
             status = {"error": f"No se pudo obtener estado: {str(e)}", "active_requests": 0, "pending_requests": 0}
         
