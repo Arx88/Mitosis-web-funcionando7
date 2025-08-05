@@ -759,8 +759,8 @@ Be precise and focus on the most relevant search results.'''
                     # 📤 ENVIAR SCREENSHOT REAL AL PARENT PROCESS
                     print(f\"📸 SCREENSHOT_CAPTURED|{{screenshot_data_url}}|{{final_url}}\")
                     
-                except Exception as screenshot_error:
-                    print(f\"❌ Error capturando screenshot: {{screenshot_error}}\")
+        except Exception as screenshot_error:
+            print(f\"❌ Error capturando screenshot: {{screenshot_error}}\")
         
         # El resultado de navegación
         result = result
