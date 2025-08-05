@@ -155,13 +155,35 @@ class BrowserVisualEventManager:
     def _emit_browser_visual(self, data: Dict[str, Any]):
         """📡 EMITIR EVENTO BROWSER_VISUAL AL WEBSOCKET"""
         
-        # Añadir metadatos estándar
+        # ✅ VALIDACIÓN: Verificar que el evento tenga datos útiles
+        if not data or not isinstance(data, dict):
+            print(f"⚠️ [BROWSER_VISUAL] Datos inválidos, omitiendo evento: {data}")
+            return
+        
+        # ✅ VALIDACIÓN: Verificar que tenga información mínima útil
+        has_useful_data = (
+            data.get('url') or 
+            data.get('step') or 
+            data.get('screenshot_url') or 
+            data.get('screenshot') or
+            (data.get('message') and len(str(data.get('message'))) > 10)  # Mensaje descriptivo
+        )
+        
+        if not has_useful_data:
+            print(f"⚠️ [BROWSER_VISUAL] Evento sin información útil, omitiendo: {data}")
+            return
+        
+        # ✅ MEJORAR DATOS: Asegurar valores por defecto apropiados
         enhanced_data = {
             'task_id': self.task_id,
             'event_id': self.event_counter,
             'timestamp': time.time(),
             'datetime': datetime.now().isoformat(),
-            **data
+            'url': data.get('url') or 'about:blank',
+            'step': data.get('step') or 'Navegación activa',
+            'message': data.get('message') or 'Captura automática de navegación',
+            'screenshot_url': data.get('screenshot_url') or data.get('screenshot'),
+            **data  # Agregar datos originales al final
         }
         
         self.event_counter += 1
@@ -172,12 +194,12 @@ class BrowserVisualEventManager:
             
             # También emitir como terminal_activity para visibilidad en terminal
             terminal_data = {
-                'message': data.get('message', 'Navegación en tiempo real'),
+                'message': enhanced_data.get('message', 'Navegación en tiempo real'),
                 'timestamp': enhanced_data['timestamp']
             }
             self.websocket_manager.emit_to_task(self.task_id, 'terminal_activity', terminal_data)
             
-            print(f"📡 [BROWSER_VISUAL] {data.get('message', 'Evento emitido')}")
+            print(f"📡 [BROWSER_VISUAL] ✅ {enhanced_data.get('message', 'Evento válido emitido')}")
             
         except Exception as e:
             print(f"⚠️ Error emitiendo browser_visual: {str(e)}")
