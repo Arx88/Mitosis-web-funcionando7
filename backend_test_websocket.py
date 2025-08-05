@@ -14,7 +14,7 @@ import threading
 import re
 
 # Configuration
-BACKEND_URL = "https://69f71894-dc02-448f-9f63-0e5d6c918cb6.preview.emergentagent.com"
+BACKEND_URL = "https://a03e2a3b-2372-487d-a3d3-fe850a25bc8e.preview.emergentagent.com"
 
 class MitosisWebSocketNavigationTester:
     def __init__(self):
