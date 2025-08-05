@@ -5,7 +5,7 @@ usando Playwright + Servidor X11 virtual para visualización completa
 
 CARACTERÍSTICAS:
 - ✅ Servidor X11 virtual (Xvfb) para navegación visible  
-- ✅ Screenshots PNG reales capturados durante navegación
+- ✅ Screenshots JPEG reales capturados durante navegación
 - ✅ Eventos WebSocket browser_visual en tiempo real
 - ✅ Browser visible navegando paso a paso
 - ✅ Captura automática cada 2 segundos durante navegación
