@@ -2451,9 +2451,21 @@ except Exception as e:
                         screenshot_name = f"{step}_{timestamp}.png"
                         screenshot_path = os.path.join(screenshot_dir, screenshot_name)
                         
-                        # Tomar screenshot (SIN quality parameter para PNG)
-                        await page.screenshot(path=screenshot_path, full_page=False)
-                        await browser.close()
+                        # Tomar screenshot con configuración robusta
+                        try:
+                            await page.screenshot(path=screenshot_path, full_page=False)
+                            await browser.close()
+                            
+                            # Verificar que el archivo se creó
+                            if os.path.exists(screenshot_path):
+                                print(f"✅ Screenshot creado exitosamente: {screenshot_path}")
+                            else:
+                                print(f"❌ Screenshot no se creó: {screenshot_path}")
+                                return ""
+                        except Exception as screenshot_error:
+                            await browser.close()
+                            print(f"❌ Error tomando screenshot: {screenshot_error}")
+                            return ""
                         
                         return f"/api/files/screenshots/{self.task_id}/{screenshot_name}"
                 
