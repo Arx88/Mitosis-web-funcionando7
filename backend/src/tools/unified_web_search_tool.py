@@ -260,6 +260,17 @@ class UnifiedWebSearchTool(BaseTool):
             else:
                 self._emit_progress_eventlet("⚠️ Browser Manager no disponible - Solo navegación sintética")
             
+            # 🌐 ACTIVAR NAVEGACIÓN VISUAL EN TIEMPO REAL
+            if REAL_TIME_BROWSER_AVAILABLE and self.task_id:
+                try:
+                    # Configurar navegación visual en tiempo real
+                    self.visual_events_manager = create_browser_visual_manager(self.websocket_manager, self.task_id)
+                    self._emit_progress_eventlet("🎬 Navegación visual en tiempo real habilitada")
+                except Exception as visual_error:
+                    self._emit_progress_eventlet(f"⚠️ Error navegación visual: {str(visual_error)}")
+            else:
+                self._emit_progress_eventlet("⚠️ Navegación visual no disponible")
+            
             # SIEMPRE RETORNAR TRUE para continuar con visualización
             self._emit_progress_eventlet("✅ Componentes inicializados (WebSocket + Browser Manager)")
             return True
