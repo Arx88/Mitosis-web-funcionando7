@@ -444,6 +444,8 @@ try:
     sys.path.insert(0, '/app/backend/src')
     
     terminal_logger.info("📋 Importando rutas del agente...")
+    # Importar configuración centralizada de Ollama
+    from src.config.ollama_config import get_ollama_config, get_ollama_endpoint, get_ollama_model
     from src.routes.agent_routes import agent_bp
     
     # Verificar que las rutas se importaron correctamente
