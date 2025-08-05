@@ -204,9 +204,18 @@ class OllamaService:
             if is_json_request:
                 self.logger.debug(f"📋 JSON mode detected, using strict parameters")
             
+            # Headers necesarios para ngrok
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            # Agregar header ngrok si el endpoint es ngrok
+            if 'ngrok' in self.base_url:
+                headers['ngrok-skip-browser-warning'] = 'true'
+            
             response = requests.post(
                 f"{self.base_url}/api/generate",
                 json=payload,
+                headers=headers,
                 timeout=min(request_timeout, 180)  # Máximo 3 minutos para evitar cuelgues
             )
             
