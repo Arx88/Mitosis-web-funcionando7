@@ -849,9 +849,30 @@ export const TerminalView = ({
       console.warn(`🔍 [TASK_ID_DEBUG] Data task_id: "${data?.task_id}"`);
       console.warn(`🔍 [TASK_ID_DEBUG] IDs coinciden: ${data?.task_id === taskId}`);
       
-      if (!data) {
-        console.error(`❌ [BROWSER_VISUAL_ERROR] Data is null/undefined`);
+      // ✅ VALIDACIÓN: Verificar que el evento tenga datos válidos
+      if (!data || typeof data !== 'object') {
+        console.error(`❌ [BROWSER_VISUAL_ERROR] Data is null/undefined or invalid`);
         return;
+      }
+      
+      // ✅ VALIDACIÓN: Verificar que tenga información mínima útil
+      const hasUsefulData = (
+        data.url || 
+        data.step || 
+        data.screenshot_url || 
+        data.screenshot ||
+        (data.message && data.message.length > 10)
+      );
+      
+      if (!hasUsefulData) {
+        console.error(`❌ [BROWSER_VISUAL_ERROR] Event has no useful data, skipping:`, data);
+        return;
+      }
+      
+      // ✅ VALIDACIÓN: Verificar timestamp válido (evitar fechas como 1970)
+      const eventTimestamp = data.timestamp ? new Date(data.timestamp * 1000) : new Date();
+      if (eventTimestamp.getFullYear() < 2020) {
+        console.warn(`⚠️ [BROWSER_VISUAL_WARNING] Invalid timestamp detected (${eventTimestamp}), using current time`);
       }
       
       if (data.task_id !== taskId) {
@@ -861,7 +882,7 @@ export const TerminalView = ({
         return;
       }
       
-      console.log(`✅ [BROWSER_VISUAL_SUCCESS] Processing browser visual event`);
+      console.log(`✅ [BROWSER_VISUAL_SUCCESS] Processing valid browser visual event`);
       
       // 🔍 DEBUG: Verificar qué campos están disponibles
       console.log(`🔍 [SCREENSHOT_DEBUG] data.screenshot: "${data.screenshot}"`);
@@ -869,10 +890,17 @@ export const TerminalView = ({
       console.log(`🔍 [SCREENSHOT_DEBUG] Screenshot final usado: "${data.screenshot_url || data.screenshot}"`);
       
       try {
+        // ✅ MEJORAR: Solo proceder si tenemos screenshot o URL válida
+        const screenshotToUse = data.screenshot_url || data.screenshot;
+        if (!screenshotToUse || screenshotToUse === 'undefined' || screenshotToUse === 'null') {
+          console.warn(`⚠️ [BROWSER_VISUAL_WARNING] No valid screenshot available, skipping visual page creation`);
+          return;
+        }
+        
         // Agregar screenshot al estado
         const newScreenshot = {
           id: `screenshot-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          screenshot: data.screenshot_url || data.screenshot,  // 🔧 FIX: Usar screenshot_url primero
+          screenshot: screenshotToUse,
           step: data.step || 'Navegación',
           timestamp: data.timestamp || new Date().toISOString(),
           url: data.url
@@ -884,20 +912,31 @@ export const TerminalView = ({
           return updated.slice(-10);
         });
         
-        // Actualizar screenshot actual (FIX: usar screenshot_url)
-        setCurrentScreenshot(data.screenshot_url || data.screenshot);
+        // Actualizar screenshot actual
+        setCurrentScreenshot(screenshotToUse);
         
-        // Crear página de monitor para navegación visual
+        // Crear página de monitor para navegación visual con datos validados
         const visualPage: MonitorPage = {
           id: `browser-visual-${Date.now()}`,
           title: `🌐 ${data.step || 'Navegación Web'}`,
-          content: `# Navegación Web en Tiempo Real\n\n## ${data.step || 'Navegación'}\n\n**Timestamp:** ${new Date(data.timestamp).toLocaleTimeString()}\n**URL:** ${data.url || 'Desconocida'}\n\n![Screenshot](${data.screenshot_url || data.screenshot || 'undefined'})\n\n---\n\n*Captura automática de navegación browser-use*`,
+          content: `# Navegación Web en Tiempo Real
+
+## ${data.step || 'Navegación activa'}
+
+**Timestamp:** ${eventTimestamp.getFullYear() > 2020 ? eventTimestamp.toLocaleTimeString() : new Date().toLocaleTimeString()}
+**URL:** ${data.url || 'N/A'}
+
+![Screenshot](${screenshotToUse})
+
+*${data.message || 'Captura automática de navegación browser-use'}*
+
+---`,
           type: 'web-browsing',
-          timestamp: new Date(data.timestamp),
+          timestamp: eventTimestamp.getFullYear() > 2020 ? eventTimestamp : new Date(),
           metadata: {
             status: 'success',
             url: data.url,
-            screenshotUrl: data.screenshot_url || data.screenshot  // 🔧 FIX: Usar screenshot_url primero
+            screenshotUrl: screenshotToUse
           }
         };
         
@@ -905,7 +944,7 @@ export const TerminalView = ({
         addTaskMonitorPage(taskId, visualPage);
         
         // Actualizar terminal output
-        setTerminalOutput(prev => [...prev, `📸 ${data.step || 'Screenshot capturado'} - ${new Date(data.timestamp).toLocaleTimeString()}`]);
+        setTerminalOutput(prev => [...prev, `📸 ${data.step || 'Screenshot capturado'} - ${eventTimestamp.getFullYear() > 2020 ? eventTimestamp.toLocaleTimeString() : new Date().toLocaleTimeString()}`]);
         
       } catch (error) {
         console.error(`❌ [BROWSER-VISUAL-${taskId}] Error procesando screenshot:`, error);
