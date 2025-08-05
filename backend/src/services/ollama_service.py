@@ -584,14 +584,16 @@ class OllamaService:
             
             # Determinar si usar cola o llamada directa
             if self.use_queue:
-                # Usar cola con prioridad determinada automáticamente
+                # Detectar si estamos en eventlet y usar llamada directa como fallback
                 try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        # Si ya hay un loop corriendo, crear un nuevo thread
-                        import concurrent.futures
-                        import threading
-                        
+                    import threading
+                    current_thread = threading.current_thread()
+                    if hasattr(current_thread, 'name') and 'GreenThread' in current_thread.name:
+                        # En eventlet, usar llamada directa
+                        self.logger.warning("⚠️ Detectado GreenThread, usando llamada directa")
+                        response = self._call_ollama_api(full_prompt)
+                    else:
+                        # Usar cola con prioridad determinada automáticamente
                         def run_async():
                             new_loop = asyncio.new_event_loop()
                             asyncio.set_event_loop(new_loop)
@@ -610,20 +612,10 @@ class OllamaService:
                         with concurrent.futures.ThreadPoolExecutor() as executor:
                             future = executor.submit(run_async)
                             response = future.result(timeout=60)
-                    else:
-                        response = asyncio.run(self._execute_with_queue(
-                            prompt=full_prompt,
-                            model=self.get_current_model(),
-                            options=self._get_model_config(self.get_current_model()).get("options", {}),
-                            priority=priority,
-                            task_id=task_id or "unknown_task",
-                            step_id=step_id or "unknown_step"
-                        ))
                 except Exception as e:
                     self.logger.error(f"❌ Error en execute con cola: {e}")
                     # Fallback a llamada directa
-                    response = self._call_ollama_api_sync(full_prompt, self.get_current_model(), 
-                                                         self._get_model_config(self.get_current_model()).get("options", {}))
+                    response = self._call_ollama_api(full_prompt)
                 
                 self.logger.info(f"🚦 Request procesado a través de cola (prioridad: {priority.name})")
                 
