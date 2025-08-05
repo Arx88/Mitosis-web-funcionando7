@@ -143,7 +143,7 @@ else
     echo "   ⚠️ Agregando configuración de Ollama al archivo .env..."
     echo "" >> /app/backend/.env
     echo "# Configuración de Ollama" >> /app/backend/.env
-    echo "OLLAMA_HOST=66bd0d09b557.ngrok-free.app" >> /app/backend/.env
+    echo "OLLAMA_HOST=e8da53409283.ngrok-free.app" >> /app/backend/.env
     echo "OLLAMA_PORT=443" >> /app/backend/.env
     echo "OLLAMA_BASE_URL=$CORRECT_OLLAMA_URL" >> /app/backend/.env
     echo "OLLAMA_DEFAULT_MODEL=llama3.1:8b" >> /app/backend/.env
