@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-BACKEND TESTING SUITE FOR WEB NAVIGATION INVESTIGATION
-Testing the specific problem reported by user:
-"El usuario reporta que el agente no está navegando a sitios web específicos durante búsquedas web, solo se queda en la página de Bing."
+BACKEND TESTING SUITE FOR ENHANCED STEP VALIDATION SYSTEM
+Testing the new super strict validation system for Paso 1 implemented:
 
 TESTING FOCUS:
-1. DIRECT WEB SEARCH FUNCTIONALITY: Test web_search tool directly with specific query
-2. REAL NAVIGATION LOGS: Examine if _explore_search_results executes and navigates to specific sites
-3. COMPLETENESS VALIDATION SYSTEM: Test validate_step_completeness function
-4. IDENTIFY SPECIFIC PROBLEM: CSS selectors, _explore_search_results errors, X11 server issues, etc.
+1. ENHANCED STEP VALIDATOR: Test enhanced_step_validator.py directly
+2. AUTOMATIC DETECTION: Verify detection of political research patterns (biografía, trayectoria política, ideología)
+3. SUPER STRICT CRITERIA: Test minimum 3 sources, 2000+ characters, anti-meta-content detection
+4. INTEGRATION TESTING: Test integration in agent_routes.py
+5. FULL WORKFLOW: Test complete flow with political research task
 
-Expected Result: Identify exactly why agent is not navigating to specific websites and propose concrete solution.
+Expected Result: Comprehensive validation that the super strict validation system works correctly.
 """
 
 import requests
