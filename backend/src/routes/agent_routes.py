@@ -7275,7 +7275,18 @@ def execute_step_real(task_id: str, step_id: str, step: dict):
             # ENHANCED TOOL MAPPING LOGIC - As per NEWUPGRADE.md Section 2
             if tool == 'web_search':
                 mapped_tool = 'web_search'
-                search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
+                # 🧠 USAR FUNCIÓN EXISTENTE DE EXTRACCIÓN DE KEYWORDS
+                from ..tools.unified_web_search_tool import UnifiedWebSearchTool
+                web_search_tool = UnifiedWebSearchTool()
+                # Obtener mensaje original de task_data
+                try:
+                    task_data_for_query = get_task_data(task_id)
+                    original_message = task_data_for_query.get('message', '') if task_data_for_query else ''
+                except:
+                    original_message = ''
+                raw_query = f"{title} {description} {original_message}".strip()
+                search_query = web_search_tool._extract_clean_keywords_static(raw_query)
+                logger.info(f"🎯 Query inteligente generado: '{search_query}' (original: '{title}')")
                 tool_params = {
                     'query': search_query,
                     'num_results': 5
