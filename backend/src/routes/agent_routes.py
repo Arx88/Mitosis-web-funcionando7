@@ -1398,6 +1398,101 @@ def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
     logger.info("✅ Resultado aprobado: cumple todos los criterios de calidad")
     return True
 
+def validate_multi_source_data_collection(task_id: str) -> dict:
+    """
+    🔍 VALIDADOR DE RECOLECCIÓN MULTI-FUENTE
+    Verifica que el agente esté recolectando datos de múltiples fuentes reales
+    """
+    try:
+        task_data = get_task_data(task_id)
+        if not task_data or 'plan' not in task_data:
+            return {'valid': False, 'reason': 'Task data not found'}
+        
+        sources_collected = set()
+        tools_used = set()
+        total_content_length = 0
+        real_data_indicators = 0
+        
+        for step in task_data['plan']:
+            if step.get('completed') and 'result' in step:
+                result = step.get('result', {})
+                step_tool = step.get('tool', 'unknown')
+                tools_used.add(step_tool)
+                
+                # Analizar fuentes de web_search
+                if step_tool == 'web_search':
+                    search_results = result.get('results', []) or result.get('data', [])
+                    for res in search_results:
+                        url = res.get('url', '')
+                        if url:
+                            # Extraer dominio como fuente
+                            try:
+                                from urllib.parse import urlparse
+                                domain = urlparse(url).netloc
+                                if domain:
+                                    sources_collected.add(domain)
+                            except:
+                                pass
+                
+                # Contar contenido sustancial
+                content = result.get('content', '') or result.get('summary', '')
+                if content and len(content) > 100:
+                    total_content_length += len(content)
+                    
+                    # Buscar indicadores de datos reales
+                    real_indicators = ['2024', '2025', 'estadística', 'dato', 'cifra', '%', 'resultado']
+                    for indicator in real_indicators:
+                        if indicator in content.lower():
+                            real_data_indicators += 1
+        
+        # Criterios de validación
+        validation = {
+            'valid': True,
+            'sources_count': len(sources_collected),
+            'tools_count': len(tools_used),
+            'content_length': total_content_length,
+            'real_data_indicators': real_data_indicators,
+            'sources': list(sources_collected),
+            'tools': list(tools_used),
+            'quality_score': 0
+        }
+        
+        # Calcular score de calidad
+        quality_score = 0
+        if validation['sources_count'] >= 3:
+            quality_score += 30  # Múltiples fuentes
+        elif validation['sources_count'] >= 2:
+            quality_score += 20
+        elif validation['sources_count'] >= 1:
+            quality_score += 10
+        
+        if validation['tools_count'] >= 2:
+            quality_score += 25  # Diversificación de herramientas
+        
+        if validation['content_length'] >= 1000:
+            quality_score += 25  # Contenido sustancial
+        elif validation['content_length'] >= 500:
+            quality_score += 15
+        
+        if validation['real_data_indicators'] >= 5:
+            quality_score += 20  # Datos reales detectados
+        elif validation['real_data_indicators'] >= 3:
+            quality_score += 10
+        
+        validation['quality_score'] = quality_score
+        
+        # Validar si cumple criterios mínimos
+        if quality_score < 50:
+            validation['valid'] = False
+            validation['reason'] = f"Calidad insuficiente: {quality_score}/100. Necesita más fuentes o datos reales."
+        
+        logger.info(f"🔍 Validación multi-fuente: Score={quality_score}, Fuentes={len(sources_collected)}, Herramientas={len(tools_used)}")
+        return validation
+        
+    except Exception as e:
+        logger.error(f"❌ Error en validación multi-fuente: {e}")
+        return {'valid': False, 'reason': f'Error en validación: {str(e)}'}
+
 def execute_comprehensive_research_step(title: str, description: str, tool_manager, task_id: str, original_message: str) -> dict:
     """🔍 INVESTIGACIÓN COMPREHENSIVA - Combina múltiples fuentes"""
     try:
