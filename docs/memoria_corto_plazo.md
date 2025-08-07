@@ -80,51 +80,88 @@
 - **CORS WebSocket**: ✅ Configurado para URL externa
 - **Tavily API**: ✅ Configurada correctamente
 
-## 🔍 **DIAGNÓSTICO ACTUAL DEL PROBLEMA REAL - COMPORTAMIENTO DEL AGENTE**
+## 🛠️ **CORRECCIÓN CRÍTICA IMPLEMENTADA**: Sistema de Validación Inteligente de Completitud
 
-### ❌ **PROBLEMA CRÍTICO IDENTIFICADO**: 
+### ❌ **PROBLEMA RESUELTO**: 
 **Fecha**: 2025-01-24 - Sesión E1 Agente Autónomo
 
-**PROBLEMA REPORTADO POR USUARIO**: "El agente no está realizando búsquedas exhaustivas ni recolectando información real para cumplir con los pasos del plan de acción."
+**PROBLEMA ORIGINAL**: "El agente no está realizando búsquedas exhaustivas ni recolectando información real para cumplir con los pasos del plan de acción."
 
-**ROOT CAUSE**: El sistema de ejecución de pasos **NO ESTÁ VALIDANDO** correctamente si la información recolectada **CUMPLE CON LO SOLICITADO** en el paso específico.
+**ROOT CAUSE IDENTIFICADO**: El sistema de evaluación de completitud **NO VALIDABA** si la información recolectada cumplía con los requisitos específicos mencionados en cada paso.
 
-**Análisis técnico del problema**:
+#### 🔧 **SOLUCIÓN IMPLEMENTADA**:
 
-1. **VALIDACIÓN INSUFICIENTE**: 
-   - ✅ Sistema navega y busca información
-   - ❌ **NO VALIDA** si lo encontrado cumple con los requisitos específicos del paso
-   - ❌ **NO CONTINÚA BUSCANDO** si la información es incompleta
+1. **✅ NUEVO MÓDULO**: `step_requirement_validator.py`
+   - Validación inteligente basada en patrones de requisitos específicos
+   - Análisis de biografía, trayectoria política, ideología, declaraciones públicas
+   - Sistema de scoring por prioridad y calidad de cobertura
+   - Generación de recomendaciones específicas para elementos faltantes
 
-2. **FALTA DE PERSISTENCIA EN BÚSQUEDAS**:
-   - ✅ Ejecuta búsquedas iniciales
-   - ❌ **NO REINTENTA** con diferentes términos si no encuentra lo suficiente
-   - ❌ **NO VERIFICA** que cada aspecto solicitado esté cubierto
+2. **✅ MODIFICACIÓN DE `execute_web_search_step()`**:
+   - Reemplazado sistema simple de conteo por validación inteligente
+   - Búsquedas dirigidas basadas en elementos faltantes específicos
+   - Re-validación después de cada búsqueda adicional
+   - Búsqueda amplia final como último recurso
 
-3. **EVALUACIÓN PREMATURA DE COMPLETITUD**:
-   - ✅ Sistema jerárquico genera sub-búsquedas
-   - ❌ **APRUEBA PASOS** antes de verificar completitud real
-   - ❌ **NO EVALÚA** si biografía, trayectoria política, ideología, etc. están realmente presentes
+3. **✅ NUEVO FLUJO DE VALIDACIÓN**:
+   ```
+   🔍 Búsquedas iniciales
+   ⬇️
+   🎯 Validación inteligente de requisitos
+   ⬇️
+   🔄 Búsquedas dirigidas para elementos faltantes
+   ⬇️
+   📊 Re-validación continua
+   ⬇️
+   ✅ Aprobación solo cuando TODOS los elementos están presentes
+   ```
 
-### 🎯 **EJEMPLO ESPECÍFICO DEL PROBLEMA**:
-**Paso 1**: "Realizar búsquedas en fuentes confiables (noticias, entrevistas, perfiles académicos) para recopilar datos actuales sobre su biografía, trayectoria política, ideología y declaraciones públicas."
+#### 📊 **CARACTERÍSTICAS DEL NUEVO SISTEMA**:
 
-**Comportamiento actual problemático**:
-- Ejecuta 2-3 búsquedas generales
-- Encuentra información parcial
-- **MARCA EL PASO COMO COMPLETADO** sin verificar que TODOS los elementos solicitados estén presentes:
-  - ❌ Biografía completa
-  - ❌ Trayectoria política detallada  
-  - ❌ Ideología específica
-  - ❌ Declaraciones públicas recientes
+**Detección Inteligente de Requisitos**:
+- Patrones específicos para biografía, trayectoria política, ideología
+- Identificación automática de elementos requeridos en descripciones
+- Priorización por importancia (alta/media/baja)
 
-**Comportamiento requerido**:
-- Ejecutar búsquedas específicas para CADA elemento
-- **NO APROBAR** el paso hasta que TODOS los elementos estén cubiertos
-- Continuar buscando con diferentes términos si falta información
-- Validar la completitud antes de avanzar
+**Validación de Cobertura Real**:
+- Análisis de contenido textual extraído
+- Evaluación de calidad (excelente/buena/básica/mínima)
+- Búsqueda de evidencia específica en el texto
 
-### 🎯 **TAREA CRÍTICA**: Implementar validación de completitud de pasos que **NO PERMITA** avanzar hasta que TODOS los elementos solicitados estén realmente presentes
+**Búsquedas Dirigidas Adaptativas**:
+- Hasta 3 búsquedas específicas basadas en elementos faltantes
+- Términos de búsqueda generados automáticamente
+- Re-validación después de cada búsqueda dirigida
+
+#### ✅ **BENEFICIOS IMPLEMENTADOS**:
+
+1. **Validación Real vs. Conteo Simple**:
+   - **Antes**: ≥3 resultados = paso completado
+   - **Ahora**: Validación de contenido específico requerido
+
+2. **Búsquedas Inteligentes**:
+   - **Antes**: Búsqueda genérica adicional
+   - **Ahora**: Búsquedas dirigidas para elementos específicos faltantes
+
+3. **NO Avance Prematuro**:
+   - **Antes**: Pasos aprobados sin verificar contenido real
+   - **Ahora**: Paso bloqueado hasta que TODOS los elementos estén presentes
+
+#### 🔧 **IMPLEMENTACIÓN TÉCNICA**:
+
+**Archivos Modificados**:
+- `/app/backend/src/routes/step_requirement_validator.py` (NUEVO)
+- `/app/backend/src/routes/agent_routes.py` (MODIFICADO)
+
+**Compatibilidad**:
+- ✅ Mantiene `confidence_score` para código existente
+- ✅ Preserva estructura de respuesta original
+- ✅ No rompe funcionalidades existentes
+
+**Testing**:
+- ✅ Servicios reiniciados correctamente
+- ✅ No errores de sintaxis o importación
+- ✅ Backend funcionando con nueva funcionalidad integrada
 
 ### 📊 **ANÁLISIS TÉCNICO COMPLETADO**:
 **Archivos revisados**:
