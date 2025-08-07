@@ -21,11 +21,13 @@
 - **Funcionalidad**: Screenshots automáticos + WebSocket browser_visual events
 - **Verificación**: Testing comprehensivo confirmó funcionamiento perfecto
 
-### ✅ **2. PROBLEMA CRÍTICO RESUELTO: "Pasos sin recolectar información"**  
-- **Status**: ✅ **COMPLETADO** - Sistema jerárquico robusto implementado
-- **Mejora**: De 1 búsqueda → 3-7 búsquedas específicas
-- **IA Integration**: Ollama evalúa completitud y re-planifica automáticamente
-- **Robustez**: Auto-recuperación si información insuficiente
+### ✅ **3. PROBLEMA CRÍTICO MEJORADO: "Búsquedas sin usar Ollama inteligentemente"**  
+- **Status**: ✅ **COMPLETADO** - Sistema jerárquico mejorado con IA real
+- **Antes**: Lógica simplificada basada en palabras clave predefinidas
+- **Después**: Ollama genera sub-planes específicos para cada consulta única  
+- **Mejora**: De búsquedas predecibles → búsquedas adaptativas al contexto
+- **IA Integration**: Análisis inteligente del contexto para identificar enfoques diversos
+- **Robustez**: Sistema anterior como fallback + nuevo sistema inteligente
 
 ### ✅ **3. EJECUCIÓN EXITOSA: "Busca y ejecuta start_mitosis.sh"**
 - **Status**: ✅ **COMPLETADO** - Script ejecutado sin errores
