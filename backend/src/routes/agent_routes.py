@@ -5342,8 +5342,8 @@ IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Ca
                 logger.info(f"🔄 Ollama response received for attempt {attempt}")
                 
                 if result.get('error'):
-                    logger.error(f"❌ Ollama error: {result['error']}")
-                    return {'error': f'Plan generation failed: {result["error"]}', 'success': False}
+                    logger.error(f"❌ Ollama error in attempt {attempt}: {result['error']}")
+                    raise Exception(f"Ollama error: {result['error']}")  # Throw exception to continue to next attempt
                 
                 # Parsear respuesta JSON
                 response_text = result.get('response', '').strip()
