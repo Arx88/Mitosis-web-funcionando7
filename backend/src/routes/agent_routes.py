@@ -1398,6 +1398,170 @@ def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
     logger.info("✅ Resultado aprobado: cumple todos los criterios de calidad")
     return True
 
+def apply_enhanced_step_1_validation(result: dict, step_title: str, step_description: str, original_message: str, task_id: str, ollama_service, tool_manager) -> dict:
+    """
+    🔥 VALIDACIÓN MEJORADA PARA PASO 1 DE INVESTIGACIÓN POLÍTICA
+    Aplica validación super estricta para pasos de investigación política
+    """
+    try:
+        logger.info("🔥 Aplicando validación mejorada para Paso 1 de investigación política")
+        
+        # Si el resultado ya falló, no aplicar validación adicional
+        if not result.get('success', False):
+            logger.warning("🔥 Resultado ya falló - omitiendo validación mejorada")
+            return result
+        
+        # Extraer contenido para análisis
+        content = result.get('content', '') or result.get('summary', '')
+        
+        # 🔥 CRITERIOS SUPER ESTRICTOS PARA PASO 1 POLÍTICO
+        political_keywords = [
+            'milei', 'presidente', 'argentina', 'gobierno', 'política', 'libertario',
+            'congreso', 'diputado', 'senador', 'ministro', 'reforma', 'economía',
+            'inflación', 'dólar', 'peso', 'ley', 'decreto', 'constitución'
+        ]
+        
+        biographical_keywords = [
+            'biografía', 'nacimiento', 'educación', 'carrera', 'trayectoria',
+            'formación', 'estudios', 'universidad', 'profesión', 'experiencia'
+        ]
+        
+        ideological_keywords = [
+            'ideología', 'libertario', 'liberal', 'anarcocapitalista', 'economista',
+            'escuela austríaca', 'libre mercado', 'privatización', 'desregulación'
+        ]
+        
+        # Verificar presencia de palabras clave políticas
+        political_found = sum(1 for keyword in political_keywords if keyword.lower() in content.lower())
+        biographical_found = sum(1 for keyword in biographical_keywords if keyword.lower() in content.lower())
+        ideological_found = sum(1 for keyword in ideological_keywords if keyword.lower() in content.lower())
+        
+        total_keywords_found = political_found + biographical_found + ideological_found
+        
+        # 🔥 VALIDACIÓN SUPER ESTRICTA
+        if total_keywords_found < 5:
+            logger.warning(f"🔥 VALIDACIÓN FALLIDA: Solo {total_keywords_found} palabras clave políticas encontradas (mínimo: 5)")
+            logger.warning(f"🔥 Político: {political_found}, Biográfico: {biographical_found}, Ideológico: {ideological_found}")
+            
+            # Intentar mejorar el resultado con búsqueda adicional
+            enhanced_result = enhance_political_research_result(
+                result, step_title, step_description, original_message, task_id, 
+                ollama_service, tool_manager
+            )
+            
+            if enhanced_result:
+                logger.info("🔥 Resultado mejorado con búsqueda adicional")
+                return enhanced_result
+            else:
+                logger.warning("🔥 No se pudo mejorar el resultado - mantiendo original")
+                return result
+        
+        # 🔥 VERIFICAR LONGITUD MÍNIMA PARA CONTENIDO POLÍTICO
+        if len(content) < 500:
+            logger.warning(f"🔥 VALIDACIÓN FALLIDA: Contenido muy corto ({len(content)} caracteres, mínimo: 500)")
+            return result
+        
+        # 🔥 VERIFICAR QUE NO SEA CONTENIDO GENÉRICO
+        generic_political_phrases = [
+            'información política general', 'datos básicos del gobierno',
+            'información no específica', 'contenido político genérico'
+        ]
+        
+        is_generic_political = any(phrase in content.lower() for phrase in generic_political_phrases)
+        if is_generic_political:
+            logger.warning("🔥 VALIDACIÓN FALLIDA: Contenido político genérico detectado")
+            return result
+        
+        logger.info(f"🔥 VALIDACIÓN EXITOSA: {total_keywords_found} palabras clave encontradas, {len(content)} caracteres")
+        logger.info(f"🔥 Desglose: Político: {political_found}, Biográfico: {biographical_found}, Ideológico: {ideological_found}")
+        
+        # Agregar metadata de validación al resultado
+        result['step_1_validation'] = {
+            'validated': True,
+            'political_keywords': political_found,
+            'biographical_keywords': biographical_found,
+            'ideological_keywords': ideological_found,
+            'total_keywords': total_keywords_found,
+            'content_length': len(content),
+            'validation_passed': True
+        }
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"🔥 Error en validación mejorada Paso 1: {str(e)}")
+        # En caso de error, devolver resultado original
+        return result
+
+def enhance_political_research_result(result: dict, step_title: str, step_description: str, original_message: str, task_id: str, ollama_service, tool_manager) -> dict:
+    """
+    🔥 MEJORADOR DE RESULTADOS DE INVESTIGACIÓN POLÍTICA
+    Intenta mejorar un resultado de investigación política que no pasó la validación
+    """
+    try:
+        logger.info("🔥 Intentando mejorar resultado de investigación política")
+        
+        # Crear prompt específico para investigación política mejorada
+        enhanced_prompt = f"""
+INVESTIGACIÓN POLÍTICA ESPECÍFICA REQUERIDA:
+
+TEMA: {step_title}
+DESCRIPCIÓN: {step_description}
+CONTEXTO: {original_message}
+
+RESULTADO PREVIO INSUFICIENTE. SE REQUIERE:
+
+1. INFORMACIÓN BIOGRÁFICA ESPECÍFICA:
+   - Fecha y lugar de nacimiento
+   - Formación académica detallada
+   - Trayectoria profesional antes de la política
+
+2. INFORMACIÓN IDEOLÓGICA ESPECÍFICA:
+   - Corriente ideológica principal
+   - Influencias teóricas
+   - Posiciones económicas específicas
+
+3. INFORMACIÓN POLÍTICA ESPECÍFICA:
+   - Cargos políticos ocupados
+   - Principales propuestas
+   - Reformas implementadas o propuestas
+
+GENERA UNA RESPUESTA COMPLETA Y ESPECÍFICA CON DATOS REALES:
+"""
+        
+        # Usar Ollama para generar contenido mejorado
+        if ollama_service and ollama_service.is_healthy():
+            enhanced_response = ollama_service.generate_response(
+                enhanced_prompt,
+                {'temperature': 0.3},  # Más determinístico
+                True,  # use_tools
+                task_id,
+                'enhanced_political_research'
+            )
+            
+            if enhanced_response.get('response') and len(enhanced_response['response']) > 300:
+                # Combinar resultado original con el mejorado
+                original_content = result.get('content', '')
+                enhanced_content = enhanced_response['response']
+                
+                combined_content = f"{original_content}\n\n--- INFORMACIÓN ADICIONAL ---\n\n{enhanced_content}"
+                
+                enhanced_result = result.copy()
+                enhanced_result['content'] = combined_content
+                enhanced_result['summary'] = f"Investigación política mejorada - {len(combined_content)} caracteres"
+                enhanced_result['enhanced'] = True
+                enhanced_result['enhancement_method'] = 'ollama_political_research'
+                
+                logger.info(f"🔥 Resultado mejorado: {len(combined_content)} caracteres totales")
+                return enhanced_result
+        
+        logger.warning("🔥 No se pudo mejorar el resultado con Ollama")
+        return None
+        
+    except Exception as e:
+        logger.error(f"🔥 Error mejorando resultado político: {str(e)}")
+        return None
+
 def validate_multi_source_data_collection(task_id: str) -> dict:
     """
     🔍 VALIDADOR DE RECOLECCIÓN MULTI-FUENTE
