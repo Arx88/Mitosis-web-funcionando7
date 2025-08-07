@@ -1965,7 +1965,10 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
     Genera sub-plan interno, ejecuta múltiples búsquedas específicas, documenta progreso y auto-evalúa completitud
     """
     try:
-        logger.info(f"🚀 INICIANDO BÚSQUEDA JERÁRQUICA: {title}")
+        print(f"🔥🔥🔥 EXECUTE_WEB_SEARCH_STEP CALLED: {title} 🔥🔥🔥")
+        logger.error(f"🚀🚀🚀 INICIANDO BÚSQUEDA JERÁRQUICA: {title} 🚀🚀🚀")
+        print(f"🔥 Task ID: {task_id}")
+        print(f"🔥 Description: {description}")
         
         # 🧠 PASO 1: GENERAR SUB-PLAN INTERNO SIMPLIFICADO
         # En lugar de usar Ollama, crear un sub-plan básico basado en el título y descripción
