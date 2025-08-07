@@ -60,7 +60,7 @@ dist/                       # Build de producción
 - **Base de Datos**: MongoDB operacional
 - **WebSocket**: Eventos en tiempo real funcionando
 - **CORS**: Configuración dinámica
-- **URL Externa**: https://45dfeaa6-7eaf-4101-bc6c-20901a318336.preview.emergentagent.com
+- **URL Externa**: https://9c76c218-ea2e-40c4-8c50-28cf14eff608.preview.emergentagent.com
 
 ### ⚠️ NAVEGACIÓN WEB - PROBLEMÁTICA
 - **X11 Virtual**: ✅ Display :99 (Xvfb PID 2054) - FUNCIONANDO
