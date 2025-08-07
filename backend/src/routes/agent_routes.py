@@ -2262,39 +2262,98 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
         
         logger.info(f"📚 Investigación completada: {searches_performed} búsquedas ejecutadas")
         
-        # 🎯 PASO 3: AUTO-EVALUACIÓN DE COMPLETITUD SIMPLIFICADA
-        total_results = len(accumulated_results)
-        confidence_score = min(100, (total_results * 20))  # 20% por resultado, máximo 100%
-        meets_criteria = total_results >= 3  # Criterio mínimo: al menos 3 resultados
+        # 🎯 PASO 3: VALIDACIÓN INTELIGENTE DE COMPLETITUD DE REQUISITOS ESPECÍFICOS
+        from .step_requirement_validator import validate_step_completeness
         
-        logger.info(f"📊 Evaluación de completitud: {confidence_score}% confianza")
+        # Validar si la información recolectada cumple con los requisitos específicos del paso
+        validation_result = validate_step_completeness(description, title, accumulated_results)
         
-        # 🔄 PASO 4: RE-PLANIFICACIÓN ADAPTIVA SI ES NECESARIO
-        if not meets_criteria and confidence_score < 70:
-            logger.info("🔄 Re-planificación necesaria - ejecutando búsqueda adicional")
+        meets_criteria = validation_result.get('meets_requirements', False)
+        completeness_score = validation_result.get('completeness_score', 0)
+        missing_elements = validation_result.get('missing_elements', [])
+        recommendations = validation_result.get('recommendations', [])
+        
+        logger.info(f"📊 Validación inteligente: {completeness_score}% completitud - Cumple requisitos: {meets_criteria}")
+        if missing_elements:
+            logger.warning(f"❌ Elementos faltantes: {missing_elements}")
+        
+        # 🔄 PASO 4: BÚSQUEDAS ESPECÍFICAS DIRIGIDAS PARA ELEMENTOS FALTANTES
+        additional_searches_performed = 0
+        
+        if not meets_criteria and recommendations:
+            logger.info(f"🔄 Ejecutando {len(recommendations)} búsquedas específicas dirigidas")
             
-            # Búsqueda adicional más amplia
+            # Ejecutar búsquedas específicas basadas en recomendaciones del validador
+            for i, recommendation in enumerate(recommendations[:3]):  # Máximo 3 búsquedas adicionales
+                if 'buscar' not in recommendation.lower():
+                    continue  # Skip recomendaciones que no son de búsqueda
+                    
+                # Extraer términos de búsqueda de la recomendación
+                search_terms = recommendation.split(':')[-1].strip().strip('\'"')
+                
+                if tool_manager and hasattr(tool_manager, 'execute_tool'):
+                    try:
+                        logger.info(f"🎯 Búsqueda dirigida {i+1}: {search_terms}")
+                        
+                        targeted_search = tool_manager.execute_tool('web_search', {
+                            'query': search_terms,
+                            'max_results': 3,
+                            'search_engine': 'bing',
+                            'extract_content': True
+                        }, task_id=task_id)
+                        
+                        if targeted_search and targeted_search.get('success'):
+                            targeted_results = targeted_search.get('search_results', [])
+                            accumulated_results.extend(targeted_results)
+                            additional_searches_performed += 1
+                            logger.info(f"✅ Búsqueda dirigida {i+1} completada: {len(targeted_results)} resultados")
+                            
+                    except Exception as targeted_error:
+                        logger.warning(f"⚠️ Error en búsqueda dirigida {i+1}: {str(targeted_error)}")
+            
+            # RE-VALIDAR después de búsquedas dirigidas
+            if additional_searches_performed > 0:
+                logger.info("🔄 Re-validando después de búsquedas dirigidas...")
+                validation_result = validate_step_completeness(description, title, accumulated_results)
+                meets_criteria = validation_result.get('meets_requirements', False)
+                completeness_score = validation_result.get('completeness_score', 0)
+                missing_elements = validation_result.get('missing_elements', [])
+                
+                logger.info(f"📊 Re-validación: {completeness_score}% completitud - Cumple requisitos: {meets_criteria}")
+        
+        # Actualizar totales
+        searches_performed += additional_searches_performed
+        total_results = len(accumulated_results)
+        
+        # Si aún no cumple después de búsquedas dirigidas, intentar una búsqueda amplia final
+        if not meets_criteria and completeness_score < 50:
+            logger.info("🔄 Búsqueda amplia final como último recurso")
+            
             if tool_manager and hasattr(tool_manager, 'execute_tool'):
                 try:
-                    additional_search = tool_manager.execute_tool('web_search', {
-                        'query': f"{title} información completa",
+                    final_search = tool_manager.execute_tool('web_search', {
+                        'query': f"{title} información detallada completa",
                         'max_results': 5,
                         'search_engine': 'bing',
                         'extract_content': True
                     }, task_id=task_id)
                     
-                    if additional_search and additional_search.get('success'):
-                        additional_results = additional_search.get('search_results', [])
-                        accumulated_results.extend(additional_results)
+                    if final_search and final_search.get('success'):
+                        final_results = final_search.get('search_results', [])
+                        accumulated_results.extend(final_results)
                         searches_performed += 1
                         
-                        # Re-evaluar
-                        total_results = len(accumulated_results)
-                        confidence_score = min(100, (total_results * 20))
-                        logger.info(f"📊 Re-evaluación completitud: {confidence_score}% confianza")
+                        # Validación final
+                        validation_result = validate_step_completeness(description, title, accumulated_results)
+                        meets_criteria = validation_result.get('meets_requirements', False) 
+                        completeness_score = validation_result.get('completeness_score', 0)
+                        logger.info(f"📊 Validación final: {completeness_score}% completitud")
                         
-                except Exception as additional_error:
-                    logger.warning(f"⚠️ Error en búsqueda adicional: {str(additional_error)}")
+                except Exception as final_error:
+                    logger.warning(f"⚠️ Error en búsqueda final: {str(final_error)}")
+        
+        # Asignar confidence_score para compatibilidad con código existente
+        confidence_score = completeness_score
         
         # 📤 PASO 5: COMPILAR RESULTADO FINAL
         final_result = {
