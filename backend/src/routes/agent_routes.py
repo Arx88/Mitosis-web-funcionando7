@@ -8525,9 +8525,40 @@ def execute_step_real_original(task_id: str, step_id: str, step: dict):
                     }
                     
             elif tool == 'web_search':
+                # 🧠 BÚSQUEDA WEB INTELIGENTE Y DIVERSIFICADA
+                
+                # Generar query más inteligente basado en contexto
+                base_query = f"{title} {description}".strip()
+                
+                # 🔍 DIVERSIFICAR ESTRATEGIA DE BÚSQUEDA según contenido
+                search_strategies = []
+                content_lower = base_query.lower()
+                
+                # Estrategias específicas según tipo de contenido
+                if any(word in content_lower for word in ['2025', '2024', 'actual', 'reciente', 'último']):
+                    search_strategies.append(f"{base_query} 2025 actualizado reciente")
+                if any(word in content_lower for word in ['argentina', 'selección', 'futbol']):
+                    search_strategies.append(f"{base_query} argentina estadísticas datos oficiales")
+                if any(word in content_lower for word in ['política', 'gobierno', 'milei']):
+                    search_strategies.append(f"{base_query} argentina política gobierno actualidad")
+                if any(word in content_lower for word in ['datos', 'información', 'análisis']):
+                    search_strategies.append(f"{base_query} datos estadísticas fuentes oficiales")
+                
+                # Si no hay estrategias específicas, usar búsqueda estándar mejorada
+                if not search_strategies:
+                    search_strategies.append(f"{base_query} información detallada datos")
+                
+                # Usar la primera estrategia (más relevante)
+                intelligent_query = search_strategies[0]
+                logger.info(f"🎯 Query inteligente generado: '{intelligent_query}' (original: '{base_query}')")
+                
                 tool_params = {
-                    'query': f"{title} {description}",
-                    'max_results': 5
+                    'query': intelligent_query,
+                    'max_results': 8,  # Más resultados para mayor diversidad
+                    'search_engine': 'bing',  # Especificar motor que funciona
+                    'extract_content': True,   # Extraer contenido de páginas
+                    'deep_search': True,       # Búsqueda profunda
+                    'quality_filter': True     # Filtrar por calidad de resultados
                 }
             elif tool == 'analysis':
                 # 🧠 MAPEO INTELIGENTE: Usar Ollama para análisis real, no búsqueda web
