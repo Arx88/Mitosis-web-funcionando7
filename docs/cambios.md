@@ -220,7 +220,7 @@ El sistema ahora:
    ```bash
    # URL detección automática
    - Método: HOSTNAME_FALLBACK
-   - URL: https://a2c0afe7-4e54-47fd-a0a6-bfa27bf20e4f.preview.emergentagent.com
+   - URL: https://0871bf98-2a06-4ad9-b17c-f2881bf13143.preview.emergentagent.com
    - CORS: Ultra-dinámico configurado
    - WebSocket: Accesible externamente
    ```
@@ -306,8 +306,8 @@ X11-virtual     RUNNING   2085   :99      Navegación visual
 
 **URLs de Acceso**:
 ```
-Frontend: https://a2c0afe7-4e54-47fd-a0a6-bfa27bf20e4f.preview.emergentagent.com
-Backend:  https://a2c0afe7-4e54-47fd-a0a6-bfa27bf20e4f.preview.emergentagent.com/api
+Frontend: https://0871bf98-2a06-4ad9-b17c-f2881bf13143.preview.emergentagent.com
+Backend:  https://0871bf98-2a06-4ad9-b17c-f2881bf13143.preview.emergentagent.com/api
 Local:    http://localhost:3000 (frontend) | http://localhost:8001 (backend)
 ```
 
