@@ -76,18 +76,22 @@ dist/                             # Build de producción OPTIMIZADO ✅
 - **API Integration**: ✅ Endpoints `/api/agent/ollama/check` y `/api/agent/ollama/models`
 - **Conexión**: ✅ Verificada desde backend y frontend
 
-### ✅ SISTEMA JERÁRQUICO ROBUSTO - IMPLEMENTADO Y FUNCIONANDO
-#### **Fase 1: Web Search Jerárquico** ✅
-- **Estado**: IMPLEMENTADO en execute_web_search_step()
-- **Robustez**: De 1 búsqueda → 3-7 búsquedas específicas
-- **IA integrada**: Ollama genera sub-planes automáticamente
-- **Auto-evaluación**: Sistema evalúa completitud y re-planifica
-- **Transparencia**: Progreso interno visible al usuario
+### ✅ SISTEMA JERÁRQUICO ROBUSTO - IMPLEMENTADO CON IA INTELIGENTE
+#### **Fase 1: Web Search Jerárquico** ✅ **MEJORADO CON OLLAMA**
+- **Estado**: IMPLEMENTADO con IA inteligente en execute_web_search_step()
+- **Nueva función**: `_generate_intelligent_search_plan_with_ollama()` ✅
+- **Robustez**: De 1 búsqueda → 2-4 búsquedas específicas generadas por IA
+- **IA integrada**: Ollama genera sub-planes específicos adaptados al contexto
+- **Prompt especializado**: Analiza título/descripción para identificar aspectos clave
+- **Auto-evaluación**: Sistema evalúa completitud y re-planifica si necesario
+- **Fallback robusto**: Sistema anterior disponible si Ollama no funciona
+- **Enhanced logging**: Debug completo del proceso de generación
+- **Transparencia**: Progreso interno visible al usuario con método usado (IA vs fallback)
 
 #### **Fase 2: Enhanced Analysis Jerárquico** ✅  
 - **Estado**: IMPLEMENTADO en execute_enhanced_analysis_step()
 - **Múltiples análisis**: contextual, data, trend, comparative
-- **Auto-evaluación**: ≥2 análisis + ≥300 chars + ≥70% confianza
+- **Auto-evaluación**: Criteria ≥2 análisis + ≥300 chars + ≥70% confianza
 - **Re-análisis adaptivo**: Síntesis adicional si insuficiente
 
 ### ✅ HERRAMIENTAS DEL AGENTE - TODAS FUNCIONANDO
