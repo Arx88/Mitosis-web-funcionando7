@@ -229,9 +229,9 @@ class UnifiedWebSearchTool(BaseTool):
             if keyword not in seen:
                 unique_keywords.append(keyword)
                 seen.add(keyword)
-        if keywords:
+        if unique_keywords:
             # Tomar los 4-5 términos más relevantes
-            final_keywords = keywords[:5]
+            final_keywords = unique_keywords[:5]
             result_query = ' '.join(final_keywords)
             
             # Si es muy corto, agregar contexto temporal
@@ -240,12 +240,17 @@ class UnifiedWebSearchTool(BaseTool):
             
             return result_query
         else:
-            # Fallback: extraer nombres propios del texto original
+            # Fallback mejorado: Si no hay keywords válidos, usar fallback contextual
+            fallback_query = "noticias actualidad 2025"
+            
+            # Intentar extraer al menos un nombre propio como contexto
             proper_nouns = re.findall(r'\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+\b', query_text)
             if proper_nouns:
-                return ' '.join(proper_nouns[:3]).lower()
-            else:
-                return 'noticias actualidad 2025'
+                best_noun = proper_nouns[0].lower()
+                if best_noun not in stop_words:
+                    fallback_query = f"{best_noun} noticias 2025"
+            
+            return fallback_query
 
     def _execute_tool(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> ToolExecutionResult:
         """🚀 EJECUTOR PRINCIPAL CON VISUALIZACIÓN EN TIEMPO REAL"""
