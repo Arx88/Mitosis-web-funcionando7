@@ -1,5 +1,68 @@
 # Tareas Pendientes - Proyecto Mitosis
 
+## 📅 Actualizado: 2025-01-24
+
+### 🚨 **CRÍTICAS - REQUIEREN SOLUCIÓN INMEDIATA**
+
+#### 1. **Reparar Web Search Tool (MÁXIMA PRIORIDAD)**
+- **Archivo**: `/app/backend/src/tools/unified_web_search_tool.py`
+- **Problema**: Conflicto asyncio (Playwright) vs eventlet (Flask)
+- **Error**: "Cannot run the event loop while another loop is running"
+- **Solución**: Implementar subprocess para ejecutar Playwright aislado
+- **Impacto**: Resolvería 80% de problemas de ejecución
+
+#### 2. **Simplificar Evaluación de Calidad de Resultados**
+- **Archivo**: `/app/backend/src/routes/agent_routes.py:7247`
+- **Problema**: Criterios demasiado restrictivos rechazan resultados válidos
+- **Solución**: Reducir meta-content detection, permitir web search results
+- **Impacto**: Aumentaría tasa de éxito de 60% a 85%
+
+#### 3. **Mejorar Thread Management**
+- **Archivo**: `/app/backend/src/routes/agent_routes.py:6569`  
+- **Problema**: Threading manual causa ejecución inconsistente
+- **Solución**: Usar ThreadPoolExecutor con supervision
+- **Impacto**: Ejecución más estable y predecible
+
+### 🔄 **MEDIANA PRIORIDAD**
+
+#### 4. **Simplificar Tool Selection Logic**
+- **Archivo**: `/app/backend/src/routes/agent_routes.py:1178`
+- **Problema**: Lógica de fallback excesivamente compleja
+- **Solución**: Mapeo directo herramienta → función
+- **Impacto**: Reducir overhead y errores de selección
+
+#### 5. **Implementar Monitoring en Tiempo Real**
+- **Archivos**: Crear dashboard de ejecución
+- **Problema**: Falta visibilidad del estado de ejecución
+- **Solución**: Dashboard con métricas por herramienta
+- **Impacto**: Mejor debugging y monitoring
+
+### 🔍 **BAJA PRIORIDAD**
+
+#### 6. **Optimizar Prompts de Ollama**
+- **Problema**: Algunos prompts podrían ser más específicos
+- **Solución**: A/B testing de diferentes prompts
+- **Impacto**: Ligera mejora en calidad de plans
+
+#### 7. **Implementar Caching de Resultados**
+- **Problema**: Búsquedas repetidas no se cachean
+- **Solución**: Redis cache para web search results
+- **Impacto**: Mejor performance para consultas similares
+
+---
+
+## 📈 **MÉTRICAS OBJETIVO POST-FIXES**
+
+### Estado Actual:
+- Plans Generation: ✅ 95%
+- Web Search Success: ❌ 20%  
+- Task Completion: ❌ 15%
+
+### Objetivo Post-Fixes:
+- Plans Generation: ✅ 95% (mantener)
+- Web Search Success: 🎯 90%
+- Task Completion: 🎯 80%
+
 ## 📋 Lista de Tareas Activas
 
 ### ✅ COMPLETADAS - PROBLEMA PRINCIPAL RESUELTO EXITOSAMENTE
