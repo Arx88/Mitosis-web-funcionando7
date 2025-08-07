@@ -397,6 +397,32 @@ class OllamaService:
         except:
             return False
     
+    def is_available(self) -> bool:
+        """Verificar si Ollama está disponible y no está ocupado procesando otra tarea"""
+        if not self.is_healthy():
+            return False
+        
+        # Verificar si hay requests activos en el queue manager
+        queue_manager = self._get_queue_manager()
+        if queue_manager:
+            try:
+                # Si hay tareas en proceso o en cola, no está disponible
+                active_requests = queue_manager.get_active_requests_count()
+                queued_requests = queue_manager.get_queue_size()
+                
+                self.logger.info(f"🚦 Ollama availability check: {active_requests} active, {queued_requests} queued")
+                
+                # Disponible solo si no hay tareas activas y pocas en cola
+                return active_requests == 0 and queued_requests <= 1
+                
+            except Exception as e:
+                self.logger.error(f"❌ Error checking Ollama availability: {e}")
+                # En caso de error, asumir no disponible por seguridad
+                return False
+        else:
+            # Sin gestor de cola, usar check simple
+            return True
+    
     def check_connection(self) -> Dict[str, Any]:
         """Verificar conexión con Ollama y retornar información detallada"""
         try:
