@@ -1619,8 +1619,12 @@ def execute_multi_source_research_step(title: str, description: str, tool_manage
     try:
         logger.info(f"🔍 Ejecutando investigación multi-fuente: {title}")
         
-        # Extraer query de búsqueda
-        search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
+        # 🧠 USAR FUNCIÓN EXISTENTE DE EXTRACCIÓN DE KEYWORDS
+        from ..tools.unified_web_search_tool import UnifiedWebSearchTool
+        web_search_tool = UnifiedWebSearchTool()
+        raw_query = f"{title} {description} {original_message}".strip()
+        search_query = web_search_tool._extract_clean_keywords_static(raw_query)
+        logger.info(f"🎯 Query inteligente generado: '{search_query}' (original: '{title}')")
         
         if tool_manager and hasattr(tool_manager, 'execute_tool'):
             # Intentar múltiples herramientas de búsqueda
