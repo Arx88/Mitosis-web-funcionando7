@@ -1,8 +1,13 @@
 # Tareas Pendientes - Mitosis
 
+## ✅ TAREA COMPLETADA HOY
+- [x] **CRÍTICO: Arreglar búsqueda web** - Navegador ahora realiza búsquedas efectivas *(Completado 2025-01-26)*
+
 ## Tareas de Mantenimiento
 
 ### Alta Prioridad
+- [ ] **Verificar corrección búsqueda web**: Probar con diferentes queries y motores de búsqueda
+- [ ] **Testing de navegación real**: Confirmar que screenshots y navegación funcionan
 - [ ] **Actualizar documentación API**: Algunos endpoints pueden estar obsoletos
 - [ ] **Optimizar performance WebSocket**: Revisar latencia en tasks de larga duración  
 - [ ] **Cleanup logs antiguos**: Sistema de rotación automática de logs
@@ -13,6 +18,7 @@
 - [ ] **UI improvements**: Mejorar responsive design en mobile
 - [ ] **Error handling**: Mejorar mensajes de error user-friendly
 - [ ] **Database optimization**: Índices para consultas frecuentes
+- [ ] **Validar integración Ollama**: Asegurar que IA funciona con búsqueda web
 
 ### Baja Prioridad
 - [ ] **Documentation**: Generar documentación automática de API
