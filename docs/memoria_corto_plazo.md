@@ -11,6 +11,20 @@
 - ✅ **WebSocket**: Sistema SocketIO implementado
 - ✅ **Herramientas**: 12+ tools disponibles y funcionales
 - ✅ **IA Integration**: Ollama service configurado
+- ❌ **PROBLEMA**: Navegador abre pero no realiza búsquedas web efectivas
+
+### Problema Específico Identificado
+**Síntoma**: Cuando usuario genera tarea que requiere búsqueda web:
+- ✅ Navegador abre correctamente
+- ❌ Se queda en home/página inicial  
+- ❌ No navega ni busca información solicitada
+- ❌ No utiliza el navegador para cumplir objetivo de la tarea
+
+### Herramientas de Navegación a Revisar
+Según index_funcional.md:
+- **real_time_browser_tool.py** - Navegación web tiempo real
+- **playwright_tool.py** - Automatización web avanzada  
+- **unified_web_search_tool.py** - Búsqueda web unificada
 
 ### Módulos Principales Identificados
 
