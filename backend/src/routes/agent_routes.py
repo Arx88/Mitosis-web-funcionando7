@@ -2402,7 +2402,8 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
                     logger.warning(f"🚫 Score final: {completeness_score}% (mínimo: 75%)")
         
         # Si no es paso 1, usar el sistema estándar de búsqueda final
-        if not meets_criteria and completeness_score < 50:
+        # Si no es paso 1, usar el sistema estándar de búsqueda final
+        elif not meets_criteria and completeness_score < 50:
             logger.info("🔄 Búsqueda amplia final como último recurso")
             
             if tool_manager and hasattr(tool_manager, 'execute_tool'):
@@ -2419,8 +2420,13 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
                         accumulated_results.extend(final_results)
                         searches_performed += 1
                         
-                        # Validación final
-                        validation_result = validate_step_completeness(description, title, accumulated_results)
+                        # Validación final usando el validador apropiado
+                        if is_step_1_research:
+                            from .enhanced_step_validator import validate_step_1_with_enhanced_validator
+                            validation_result = validate_step_1_with_enhanced_validator(description, title, accumulated_results, task_id)
+                        else:
+                            validation_result = validate_step_completeness(description, title, accumulated_results)
+                            
                         meets_criteria = validation_result.get('meets_requirements', False) 
                         completeness_score = validation_result.get('completeness_score', 0)
                         logger.info(f"📊 Validación final: {completeness_score}% completitud")
@@ -2434,7 +2440,16 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
         # Actualizar conteo final de resultados
         total_results = len(accumulated_results)
         
-        # 📤 PASO 5: COMPILAR RESULTADO FINAL
+        # Logging final específico para paso 1
+        if is_step_1_research:
+            sources_analysis = validation_result.get('sources_analysis', {})
+            logger.info(f"🏛️ RESUMEN PASO 1 - Búsquedas: {searches_performed} | Fuentes únicas: {sources_analysis.get('unique_sources', 0)} | Score: {completeness_score}%")
+            
+            if not meets_criteria:
+                logger.error(f"🚫 PASO 1 NO COMPLETADO - Requiere más información específica de múltiples fuentes")
+                logger.error(f"🚫 Elementos faltantes: {validation_result.get('missing_elements', [])}")
+        
+        # 📤 PASO 5: COMPILAR RESULTADO FINAL CON INFORMACIÓN DE VALIDACIÓN MEJORADA
         final_result = {
             'success': True,
             'type': 'hierarchical_web_search',
