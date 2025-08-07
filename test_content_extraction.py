@@ -26,10 +26,10 @@ async def test_content_extraction_direct():
         web_search_tool = UnifiedWebSearchTool()
         print("✅ Herramienta UnifiedWebSearchTool creada")
         
-        # Parámetros de prueba específicos para Javier Milei
+        # Parámetros de prueba específicos para Javier Milei FORZANDO SITIOS REALES
         test_params = {
-            'query': 'Javier Milei presidente Argentina 2024 biografía',
-            'max_results': 2,
+            'query': 'Javier Milei presidente Argentina biografía site:wikipedia.org OR site:clarin.com OR site:infobae.com',
+            'max_results': 3,
             'search_engine': 'bing',
             'extract_content': True
         }
