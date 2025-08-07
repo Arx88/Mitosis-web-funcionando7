@@ -191,21 +191,35 @@ class UnifiedWebSearchTool(BaseTool):
             return "plan marketing digital estrategia empresarial"
     
     def _optimize_for_data_analysis(self, text: str) -> str:
-        """Optimizar búsqueda para análisis de datos"""
+        """Optimizar búsqueda para análisis de datos - CORREGIDO"""
         import re
         
-        # Identificar qué se quiere analizar
-        analysis_match = re.search(r'analizar.*?(datos|información|beneficios|ventajas|impacto|resultados|tendencias).*?(de|sobre|en).*?([a-záéíóúñ\s]+)', text, re.IGNORECASE)
+        print(f"🔧 _optimize_for_data_analysis INPUT: '{text}'")
+        
+        # ESTRATEGIA CONSERVADORA: Mantener tema principal intacto
+        analysis_match = re.search(r'analiz[ar]*\s+(.*?)(?:\s+análisis|\s+datos|\s*$)', text, re.IGNORECASE)
         
         if analysis_match:
-            subject = analysis_match.group(3).strip()
-            return f"análisis {analysis_match.group(1)} {subject} estudios investigación 2025"
+            subject = analysis_match.group(1).strip()
+            result = f"{subject} análisis datos estadísticas 2024"
+            print(f"🔧 Analysis match found. Result: '{result}'")
+            return result
         else:
-            # Extraer tema principal para análisis
-            words = re.findall(r'\b[a-záéíóúñ]{4,}\b', text, re.IGNORECASE)
-            filtered = [w for w in words if w.lower() not in ['analizar', 'datos', 'información', 'sobre', 'para']]
-            if filtered:
-                return f"análisis estadísticas {' '.join(filtered[:3]).lower()} investigación"
+            # Si no hay pattern de análisis explícito, mantener tema principal
+            # Extraer las palabras más importantes manteniendo orden y contexto
+            words = re.findall(r'\b[a-záéíóúñ]{3,}\b', text, re.IGNORECASE)
+            # Filtrar solo palabras completamente genéricas
+            generic_words = {'analizar', 'datos', 'información', 'sobre', 'para', 'con', 'que', 'las', 'los', 'una', 'del'}
+            filtered = [w for w in words if w.lower() not in generic_words]
+            
+            if len(filtered) >= 2:
+                # Mantener tema principal + añadir contexto de análisis
+                main_topic = ' '.join(filtered[:4]).lower()  # Hasta 4 palabras principales
+                result = f"{main_topic} análisis datos 2024"
+                print(f"🔧 Generic analysis. Main topic: '{main_topic}', Result: '{result}'")
+                return result
+            
+            print(f"🔧 Fallback to generic analysis")
             return "análisis datos estadísticas investigación"
     
     def _optimize_for_research(self, text: str) -> str:
