@@ -8478,6 +8478,9 @@ Tarea ID: {task_id}
             # EXECUTE THE MAPPED TOOL WITH ERROR HANDLING
             logger.info(f"🚀 Executing MAPPED tool: original='{tool}' -> mapped='{mapped_tool}' with params: {tool_params}")
             
+            # 🔍 LOGGING CRÍTICO: Registrar herramienta usada
+            logger.info(f"📊 TOOL USAGE TRACKER: task_id={task_id}, step_id={step_id}, original_tool={tool}, mapped_tool={mapped_tool}")
+            
             # Verify tool availability
             available_tools = tool_manager.get_available_tools() if tool_manager else []
             if mapped_tool not in available_tools:
