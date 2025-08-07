@@ -644,8 +644,15 @@ class RealTimeBrowserTool(BaseTool):
                 return
             
             # Explorar los primeros resultados encontrados
-            for i, link in enumerate(result_links[:2]):  # Solo primeros 2 para no tomar demasiado tiempo
+            for i in range(min(2, len(result_links))):  # Solo primeros 2 para no tomar demasiado tiempo
                 try:
+                    # Re-consultar elementos para evitar contexto destruido
+                    fresh_links = await page.query_selector_all('.b_algo h2 a')
+                    if i >= len(fresh_links):
+                        self._emit_progress(f"⚠️ No hay suficientes enlaces frescos para resultado {i+1}")
+                        continue
+                    
+                    link = fresh_links[i]
                     href = await link.get_attribute('href')
                     link_text = await link.text_content()
                     
@@ -658,35 +665,86 @@ class RealTimeBrowserTool(BaseTool):
                             'timestamp': time.time()
                         })
                         
-                        # Abrir resultado en la misma página
-                        await link.click()
-                        await page.wait_for_load_state('networkidle')
-                        
-                        # Registrar página visitada
-                        results['pages_visited'].append({
-                            'url': page.url,
-                            'title': await page.title(),
-                            'type': 'search_result_page',
-                            'result_index': i,
-                            'search_terms': search_terms,
-                            'timestamp': time.time()
-                        })
-                        
-                        # Explorar el contenido brevemente
-                        await asyncio.sleep(2)
-                        await page.evaluate('window.scrollTo(0, document.body.scrollHeight / 3)')
+                        # Abrir resultado en nueva pestaña para evitar perder el contexto
+                        await link.click(modifiers=['Meta'])  # Cmd+Click para nueva pestaña
                         await asyncio.sleep(2)
                         
-                        results['actions_performed'].append({
-                            'action': 'result_explored',
-                            'result_index': i,
-                            'url': href,
-                            'title': link_text,
-                            'timestamp': time.time()
-                        })
-                        
-                        # Volver a resultados si no es el último
-                        if i < len(result_links) - 1:
+                        # Cambiar a la nueva pestaña
+                        all_pages = page.context.pages
+                        if len(all_pages) > 1:
+                            new_page = all_pages[-1]  # La pestaña más reciente
+                            await new_page.wait_for_load_state('networkidle', timeout=10000)
+                            
+                            # Registrar página visitada
+                            results['pages_visited'].append({
+                                'url': new_page.url,
+                                'title': await new_page.title(),
+                                'type': 'search_result_page',
+                                'result_index': i,
+                                'search_terms': search_terms,
+                                'timestamp': time.time(),
+                                'content_extracted': True
+                            })
+                            
+                            # Explorar el contenido brevemente
+                            await asyncio.sleep(2)
+                            await new_page.evaluate('window.scrollTo(0, document.body.scrollHeight / 3)')
+                            await asyncio.sleep(2)
+                            
+                            # Extraer contenido real de la página
+                            page_content = await new_page.evaluate('''
+                                () => {
+                                    const content = document.body.innerText || document.textContent || '';
+                                    return content.substring(0, 2000);  // Primeros 2000 caracteres
+                                }
+                            ''')
+                            
+                            results['actions_performed'].append({
+                                'action': 'result_explored',
+                                'result_index': i,
+                                'url': href,
+                                'title': link_text,
+                                'content_preview': page_content[:200],
+                                'content_length': len(page_content),
+                                'timestamp': time.time()
+                            })
+                            
+                            # Cerrar la pestaña del resultado y volver a la búsqueda
+                            await new_page.close()
+                        else:
+                            # Fallback: si no se abrió nueva pestaña, navegar normal
+                            await page.wait_for_load_state('networkidle')
+                            
+                            # Registrar página visitada
+                            results['pages_visited'].append({
+                                'url': page.url,
+                                'title': await page.title(),
+                                'type': 'search_result_page',
+                                'result_index': i,
+                                'search_terms': search_terms,
+                                'timestamp': time.time(),
+                                'content_extracted': True
+                            })
+                            
+                            # Extraer contenido real
+                            page_content = await page.evaluate('''
+                                () => {
+                                    const content = document.body.innerText || document.textContent || '';
+                                    return content.substring(0, 2000);
+                                }
+                            ''')
+                            
+                            results['actions_performed'].append({
+                                'action': 'result_explored',
+                                'result_index': i,
+                                'url': href,
+                                'title': link_text,
+                                'content_preview': page_content[:200],
+                                'content_length': len(page_content),
+                                'timestamp': time.time()
+                            })
+                            
+                            # Volver a resultados
                             await page.go_back()
                             await page.wait_for_load_state('networkidle')
                             await asyncio.sleep(1)
