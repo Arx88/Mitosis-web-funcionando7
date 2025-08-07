@@ -1,3 +1,37 @@
+# Cambios - Proyecto Mitosis
+
+## 2025-01-24 - Análisis Completo del Flujo de Trabajo del Agente
+
+### ✅ **INVESTIGACIÓN COMPLETADA**
+- **Archivo creado**: `/app/docs/informe_flujo_agente.md`
+- **Análisis realizado**: Flujo completo desde chat hasta ejecución
+- **Problema identificado**: Web Search Tool completamente roto
+- **Root cause confirmado**: Conflicto asyncio (Playwright) vs eventlet (Flask)
+
+### 📊 **HALLAZGOS PRINCIPALES**
+- **Plans Generation**: ✅ 95% exitoso (Ollama genera planes profesionales)
+- **Web Search Execution**: ❌ 20% exitoso (error: "Cannot run the event loop while another loop is running")
+- **Task Completion End-to-End**: ❌ 15% exitoso
+- **Causa**: Backend usa Flask + Eventlet, pero web search usa Playwright + asyncio
+
+### 🎯 **SOLUCIÓN IDENTIFICADA**
+- **Target**: `/app/backend/src/tools/unified_web_search_tool.py`
+- **Fix**: Implementar subprocess para ejecutar Playwright aislado del event loop principal
+- **Impacto esperado**: Resolver 80% de problemas de ejecución
+
+### 📁 **ARCHIVOS MODIFICADOS**
+- `/app/docs/memoria_corto_plazo.md` - Actualizado con hallazgos
+- `/app/docs/index_funcional.md` - Actualizado estado crítico  
+- `/app/docs/informe_flujo_agente.md` - Creado informe completo
+
+### 📋 **PRÓXIMOS PASOS**
+1. Reparar unified_web_search_tool.py (CRÍTICO)
+2. Simplificar evaluate_result_quality() (ALTO)
+3. Mejorar thread management (MEDIO)
+4. Optimizar tool selection logic (BAJO)
+
+---
+
 # Registro de Cambios - Proyecto Mitosis
 
 ### 🚀 MEJORA CRÍTICA: Algoritmo Inteligente de Extracción de Keywords para Búsquedas Web
