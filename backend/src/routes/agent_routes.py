@@ -1959,6 +1959,115 @@ Formato: Información combinada clara y directa en español.
             'summary': f'❌ Error combinando resultados: {str(e)}'
         }
 
+def _generate_intelligent_search_plan_with_ollama(title: str, description: str, task_id: str) -> dict:
+    """
+    🧠 GENERADOR INTELIGENTE DE SUB-PLAN DE BÚSQUEDA CON OLLAMA
+    
+    Usa Ollama para generar un sub-plan de búsqueda inteligente y específico
+    basado en el título y descripción de la tarea.
+    
+    Args:
+        title: Título del paso de búsqueda
+        description: Descripción del paso de búsqueda
+        task_id: ID de la tarea para tracking
+        
+    Returns:
+        dict: Resultado con sub_tasks generadas o error
+    """
+    try:
+        logger.info(f"🧠 Generando sub-plan inteligente con Ollama para: {title}")
+        
+        # Obtener servicio Ollama
+        ollama_service = get_ollama_service()
+        if not ollama_service or not ollama_service.is_healthy():
+            logger.warning("⚠️ Ollama no disponible para generación de sub-plan")
+            return {'success': False, 'error': 'Ollama no disponible'}
+        
+        # Prompt especializado para generar sub-plan de búsqueda
+        search_plan_prompt = f"""
+TAREA: Generar un sub-plan de búsqueda web inteligente y específico.
+
+INFORMACIÓN DE LA BÚSQUEDA:
+- Título: {title}
+- Descripción: {description}
+
+INSTRUCCIONES:
+1. Analiza el título y descripción para identificar los aspectos clave a investigar
+2. Genera entre 2-4 búsquedas específicas y complementarias
+3. Cada búsqueda debe tener un enfoque diferente (general, específico, actualidad, análisis, etc.)
+4. Las consultas deben ser concisas pero específicas
+5. Responde SOLO con un JSON válido en el siguiente formato:
+
+{{
+    "sub_tasks": [
+        {{
+            "query": "consulta de búsqueda específica",
+            "focus": "tipo de enfoque (general/specific/current/analysis/technical)",
+            "max_results": número_entre_2_y_5
+        }}
+    ]
+}}
+
+GENERA EL SUB-PLAN AHORA:
+"""
+        
+        # Generar respuesta con Ollama
+        result = ollama_service.generate_response(
+            search_plan_prompt,
+            {'temperature': 0.3, 'max_tokens': 500},
+            False,  # No usar tools para esta generación
+            task_id,
+            f"search_plan_{task_id}"
+        )
+        
+        if result.get('error'):
+            logger.error(f"❌ Error en Ollama para sub-plan: {result['error']}")
+            return {'success': False, 'error': result['error']}
+        
+        response_text = result.get('response', '').strip()
+        
+        # Intentar parsear JSON de la respuesta
+        try:
+            # Buscar JSON en la respuesta
+            import re
+            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(0)
+                plan_data = json.loads(json_str)
+                
+                # Validar estructura
+                if 'sub_tasks' in plan_data and isinstance(plan_data['sub_tasks'], list):
+                    sub_tasks = plan_data['sub_tasks']
+                    
+                    # Validar cada sub-tarea
+                    valid_sub_tasks = []
+                    for task in sub_tasks:
+                        if isinstance(task, dict) and 'query' in task and 'focus' in task:
+                            # Asegurar max_results válido
+                            if 'max_results' not in task or not isinstance(task['max_results'], int):
+                                task['max_results'] = 3
+                            valid_sub_tasks.append(task)
+                    
+                    if valid_sub_tasks:
+                        logger.info(f"✅ Sub-plan inteligente generado: {len(valid_sub_tasks)} búsquedas")
+                        return {
+                            'success': True,
+                            'sub_tasks': valid_sub_tasks,
+                            'generated_by': 'ollama',
+                            'original_response': response_text[:200] + '...' if len(response_text) > 200 else response_text
+                        }
+            
+            logger.warning("⚠️ No se pudo parsear JSON válido de la respuesta de Ollama")
+            return {'success': False, 'error': 'Respuesta de Ollama no contiene JSON válido'}
+            
+        except json.JSONDecodeError as e:
+            logger.warning(f"⚠️ Error parseando JSON de Ollama: {str(e)}")
+            return {'success': False, 'error': f'Error parseando JSON: {str(e)}'}
+        
+    except Exception as e:
+        logger.error(f"❌ Error generando sub-plan con Ollama: {str(e)}")
+        return {'success': False, 'error': str(e)}
+
 def execute_web_search_step(title: str, description: str, tool_manager, task_id: str) -> dict:
     """
     🧠 SISTEMA JERÁRQUICO ROBUSTO DE BÚSQUEDA WEB
