@@ -215,14 +215,20 @@ class UnifiedWebSearchTool(BaseTool):
                word.lower() not in keywords:
                 keywords.append(word.lower())
         
-        # Agregar palabras significativas restantes
+        # Agregar palabras significativas restantes (sin duplicar)
         for word in words:
             if (word.lower() not in stop_words and 
                 len(word) > 3 and 
                 word.lower() not in keywords):
                 keywords.append(word.lower())
         
-        # PASO 3: Construir query final inteligente
+        # PASO 3: Limpiar duplicaciones y construir query final
+        unique_keywords = []
+        seen = set()
+        for keyword in keywords:
+            if keyword not in seen:
+                unique_keywords.append(keyword)
+                seen.add(keyword)
         if keywords:
             # Tomar los 4-5 términos más relevantes
             final_keywords = keywords[:5]
