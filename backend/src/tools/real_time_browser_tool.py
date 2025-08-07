@@ -240,6 +240,24 @@ class RealTimeBrowserTool(BaseTool):
         except Exception as e:
             self._emit_progress(f"⚠️ Error inicializando WebSocket: {str(e)}")
     
+    
+    def _run_navigation_in_new_thread(self, task_description: str, start_url: str, 
+                                    capture_interval: int, max_duration: int, results: Dict[str, Any]) -> Dict[str, Any]:
+        """🔧 EJECUTAR NAVEGACIÓN EN THREAD SEPARADO PARA EVITAR CONFLICTOS DE EVENT LOOP"""
+        
+        # Crear nuevo event loop en este thread
+        new_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(new_loop)
+        
+        try:
+            return new_loop.run_until_complete(
+                self._async_navigate_with_real_time_capture(
+                    task_description, start_url, capture_interval, max_duration, results
+                )
+            )
+        finally:
+            new_loop.close()
+    
     def _execute_real_time_navigation(self, task_description: str, start_url: str, 
                                     capture_interval: int, max_duration: int) -> Dict[str, Any]:
         """🌐 EJECUTAR NAVEGACIÓN CON CAPTURA EN TIEMPO REAL"""
