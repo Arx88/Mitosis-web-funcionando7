@@ -4,30 +4,32 @@
 
 ---
 
-## ✅ **COMPLETADAS EN ESTA SESIÓN - MEJORA CRÍTICA IMPLEMENTADA**
+## ✅ **COMPLETADAS EN ESTA SESIÓN - CORRECCIÓN CRÍTICA IMPLEMENTADA**
 
-### ✅ **1. MEJORA PRINCIPAL: Sistema de Búsqueda Inteligente con Ollama**
-- **Status**: ✅ **COMPLETADO** - Generación inteligente de sub-planes implementada
-- **Nueva función**: `_generate_intelligent_search_plan_with_ollama()` agregada
-- **IA Inteligente**: Ollama genera sub-planes específicos adaptados al contexto
-- **Prompt especializado**: Analiza título/descripción para identificar aspectos clave
-- **Sistema robusto**: Fallback automático si Ollama no disponible
-- **Enhanced logging**: Debug completo del proceso para monitoreo
-- **Testing**: Backend reiniciado exitosamente con nueva funcionalidad
+### ✅ **1. PROBLEMA PRINCIPAL RESUELTO: "El agente no realiza búsquedas exhaustivas para cumplir requisitos específicos"**
+- **Status**: ✅ **COMPLETADO** - Sistema de validación inteligente implementado
+- **Nuevo módulo**: `step_requirement_validator.py` creado y funcional
+- **Modificación crítica**: `execute_web_search_step()` actualizada con validación inteligente
+- **Validación por patrones**: Biografía, trayectoria política, ideología, declaraciones públicas
+- **Búsquedas dirigidas**: Sistema ejecuta búsquedas específicas para elementos faltantes
+- **NO avance prematuro**: Pasos bloqueados hasta que TODOS los elementos requeridos estén presentes
+- **Testing**: Backend reiniciado exitosamente con nueva funcionalidad integrada
 
-### ✅ **2. PROBLEMA PRINCIPAL RESUELTO: "Navegación web no se está mostrando"**
-- **Status**: ✅ **COMPLETADO** - Sistema navegación tiempo real funcionando
-- **Evidencia**: X11 virtual server activo (Display :99, PID 2085)
-- **Funcionalidad**: Screenshots automáticos + WebSocket browser_visual events
-- **Verificación**: Testing comprehensivo confirmó funcionamiento perfecto
+### ✅ **2. SISTEMA DE VALIDACIÓN INTELIGENTE DE COMPLETITUD**
+- **Status**: ✅ **COMPLETADO** - Módulo completamente funcional 
+- **Detección automática**: Identifica requisitos específicos en descripciones de pasos
+- **Análisis de contenido**: Verifica presencia real de elementos requeridos en texto
+- **Sistema de scoring**: Calcula completitud basada en prioridad y calidad de cobertura
+- **Recomendaciones específicas**: Genera términos de búsqueda dirigidos automáticamente
+- **Re-validación continua**: Después de cada búsqueda adicional
 
-### ✅ **3. PROBLEMA CRÍTICO MEJORADO: "Búsquedas sin usar Ollama inteligentemente"**  
-- **Status**: ✅ **COMPLETADO** - Sistema jerárquico mejorado con IA real
-- **Antes**: Lógica simplificada basada en palabras clave predefinidas
-- **Después**: Ollama genera sub-planes específicos para cada consulta única  
-- **Mejora**: De búsquedas predecibles → búsquedas adaptativas al contexto
-- **IA Integration**: Análisis inteligente del contexto para identificar enfoques diversos
-- **Robustez**: Sistema anterior como fallback + nuevo sistema inteligente
+### ✅ **3. FLUJO DE BÚSQUEDA DIRIGIDA ADAPTATIVA**
+- **Status**: ✅ **COMPLETADO** - Implementado en execute_web_search_step()
+- **Búsquedas iniciales**: Sub-plan jerárquico con Ollama como antes
+- **Validación inteligente**: Análisis de requisitos específicos usando patrones
+- **Búsquedas dirigidas**: Hasta 3 búsquedas adicionales para elementos faltantes
+- **Búsqueda final**: Último recurso si completitud < 50%
+- **Aprobación estricta**: Solo avanza cuando completitud ≥ 70% y elementos críticos presentes
 
 ### ✅ **3. EJECUCIÓN EXITOSA: "Busca y ejecuta start_mitosis.sh"**
 - **Status**: ✅ **COMPLETADO** - Script ejecutado sin errores
