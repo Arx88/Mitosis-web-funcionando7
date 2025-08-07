@@ -166,12 +166,11 @@ class UnifiedWebSearchTool(BaseTool):
         # PASO 2: Extraer palabras significativas 
         words = re.findall(r'\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{3,}\b', clean_text)
         
-        # Stop words expandido - INCLUIR VERBOS DE INSTRUCCIÓN
+        # Stop words expandido - MEJORADO para preservar términos importantes
         stop_words = {
             'sobre', 'para', 'con', 'una', 'del', 'las', 'los', 'que', 'esta', 'este', 
-            'año', 'información', 'buscar', 'utilizar', 'herramienta', 'web', 'search', 
-            'actualizada', 'relacionadas', 'noticias', 'datos', 'específicos',
-            'necesarios', 'completar', 'realizar', 'obtener', 'encontrar', 'conseguir',
+            'año', 'información', 'buscar', 'web', 'search', 'datos', 'específicos',
+            'necesarios', 'completar', 'obtener', 'encontrar', 'conseguir',
             'también', 'además', 'incluso', 'solo', 'puede', 'debe', 'tiene', 'han',
             'sea', 'son', 'fue', 'será', 'han', 'había', 'habían', 'hubiera', 'hayan',
             # VERBOS DE INSTRUCCIÓN QUE NO APORTAN AL QUERY
