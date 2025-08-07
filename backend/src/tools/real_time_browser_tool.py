@@ -478,29 +478,37 @@ class RealTimeBrowserTool(BaseTool):
                 'timestamp': time.time()
             })
             
-            # Limpiar campo existente
-            await search_input.click()
-            await search_input.select_all()
-            await asyncio.sleep(0.5)
-            
-            # Escribir términos de búsqueda
-            self._emit_browser_visual({
-                'type': 'typing_search',
-                'message': f'⌨️ Escribiendo: "{search_terms}"',
-                'search_terms': search_terms,
-                'timestamp': time.time()
-            })
-            
-            await search_input.type(search_terms, delay=100)  # Escribir con delay más humano
-            await asyncio.sleep(1)  # Pausa para ver el texto escrito
-            
-            # Registrar acción
-            results['actions_performed'].append({
-                'action': 'search_typed',
-                'terms': search_terms,
-                'selector': used_selector,
-                'timestamp': time.time()
-            })
+            try:
+                # Limpiar campo existente
+                self._emit_progress("🔄 Limpiando campo de búsqueda...")
+                await search_input.click()
+                await search_input.select_all()
+                await asyncio.sleep(0.5)
+                
+                # Escribir términos de búsqueda
+                self._emit_progress(f"⌨️ Escribiendo términos: '{search_terms}'")
+                self._emit_browser_visual({
+                    'type': 'typing_search',
+                    'message': f'⌨️ Escribiendo: "{search_terms}"',
+                    'search_terms': search_terms,
+                    'timestamp': time.time()
+                })
+                
+                await search_input.type(search_terms, delay=100)  # Escribir con delay más humano
+                await asyncio.sleep(1)  # Pausa para ver el texto escrito
+                self._emit_progress("✅ Términos de búsqueda escritos correctamente")
+                
+                # Registrar acción
+                results['actions_performed'].append({
+                    'action': 'search_typed',
+                    'terms': search_terms,
+                    'selector': used_selector,
+                    'timestamp': time.time()
+                })
+                
+            except Exception as e:
+                self._emit_progress(f"❌ Error preparando búsqueda: {str(e)}")
+                return
             
             # 4. ENVIAR BÚSQUEDA (múltiples métodos)
             search_submitted = False
