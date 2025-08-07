@@ -2327,7 +2327,14 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
             # RE-VALIDAR después de búsquedas dirigidas
             if additional_searches_performed > 0:
                 logger.info("🔄 Re-validando después de búsquedas dirigidas...")
-                validation_result = validate_step_completeness(description, title, accumulated_results)
+                
+                if is_step_1_research:
+                    # Usar validador mejorado para re-validación de paso 1
+                    from .enhanced_step_validator import validate_step_1_with_enhanced_validator
+                    validation_result = validate_step_1_with_enhanced_validator(description, title, accumulated_results, task_id)
+                else:
+                    validation_result = validate_step_completeness(description, title, accumulated_results)
+                
                 meets_criteria = validation_result.get('meets_requirements', False)
                 completeness_score = validation_result.get('completeness_score', 0)
                 missing_elements = validation_result.get('missing_elements', [])
@@ -2338,7 +2345,63 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
         searches_performed += additional_searches_performed
         total_results = len(accumulated_results)
         
-        # Si aún no cumple después de búsquedas dirigidas, intentar una búsqueda amplia final
+        # PASO 4.5: BÚSQUEDAS ADICIONALES PARA PASO 1 SI AÚN NO CUMPLE
+        if is_step_1_research and not meets_criteria and completeness_score < 75:
+            logger.info("🔥 PASO 1 DETECTADO - Aplicando búsquedas adicionales específicas para información política")
+            
+            # Términos específicos para información política completa
+            political_search_terms = [
+                f"{title} biografía completa datos personales",
+                f"{title} trayectoria política cargos elecciones",
+                f"{title} declaraciones entrevistas rueda prensa",
+                f"{title} ideología política posición principios",
+                f"{title} noticias recientes medios argentinos"
+            ]
+            
+            political_searches_performed = 0
+            
+            for i, search_term in enumerate(political_search_terms[:4]):  # Máximo 4 búsquedas políticas adicionales
+                if tool_manager and hasattr(tool_manager, 'execute_tool'):
+                    try:
+                        logger.info(f"🏛️ Búsqueda política específica {i+1}: {search_term}")
+                        
+                        political_search = tool_manager.execute_tool('web_search', {
+                            'query': search_term,
+                            'max_results': 4,  # Más resultados para información política
+                            'search_engine': 'bing',
+                            'extract_content': True
+                        }, task_id=task_id)
+                        
+                        if political_search and political_search.get('success'):
+                            political_results = political_search.get('search_results', [])
+                            accumulated_results.extend(political_results)
+                            political_searches_performed += 1
+                            logger.info(f"✅ Búsqueda política {i+1} completada: {len(political_results)} resultados")
+                            
+                    except Exception as political_error:
+                        logger.warning(f"⚠️ Error en búsqueda política {i+1}: {str(political_error)}")
+            
+            # RE-VALIDAR FINAL después de búsquedas políticas
+            if political_searches_performed > 0:
+                logger.info("🔄 RE-VALIDACIÓN FINAL después de búsquedas políticas específicas...")
+                from .enhanced_step_validator import validate_step_1_with_enhanced_validator
+                validation_result = validate_step_1_with_enhanced_validator(description, title, accumulated_results, task_id)
+                meets_criteria = validation_result.get('meets_requirements', False)
+                completeness_score = validation_result.get('completeness_score', 0)
+                
+                # Actualizar contadores
+                searches_performed += political_searches_performed
+                
+                logger.info(f"🏛️ Validación política final: {completeness_score}% - Cumple: {meets_criteria}")
+                
+                # Si aún no cumple, registrar información detallada
+                if not meets_criteria:
+                    sources_analysis = validation_result.get('sources_analysis', {})
+                    logger.warning(f"🚫 PASO 1 AÚN INCOMPLETO después de {searches_performed} búsquedas")
+                    logger.warning(f"🚫 Fuentes encontradas: {sources_analysis.get('unique_sources', 0)} de {3} requeridas")
+                    logger.warning(f"🚫 Score final: {completeness_score}% (mínimo: 75%)")
+        
+        # Si no es paso 1, usar el sistema estándar de búsqueda final
         if not meets_criteria and completeness_score < 50:
             logger.info("🔄 Búsqueda amplia final como último recurso")
             
