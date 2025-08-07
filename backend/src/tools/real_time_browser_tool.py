@@ -708,7 +708,7 @@ class RealTimeBrowserTool(BaseTool):
                         await asyncio.sleep(3)
                         
                         # Capturar screenshot de la página visitada
-                        await self._capture_current_screenshot(page, f"result_{i+1}_page")
+                        await self._capture_screenshot_async(page, i+10)
                         
                         # Registrar página visitada
                         current_title = await page.title()
