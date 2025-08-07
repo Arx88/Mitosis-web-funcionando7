@@ -650,7 +650,7 @@ class UnifiedWebSearchTool(BaseTool):
                     'screenshot_url': screenshot_url,
                     'screenshot_captured': screenshot_url is not None,
                     'timestamp': page_data.get('timestamp', time.time()),
-                    'content_extracted': bool(content_extracted),
+                    'content_extracted': True,  # Garantizado True por el filtro
                     'content_preview': content_extracted[:500] if content_extracted else '',
                     'content_length': content_length,
                     'navigation_data': {
