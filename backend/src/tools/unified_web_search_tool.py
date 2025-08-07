@@ -117,57 +117,158 @@ class UnifiedWebSearchTool(BaseTool):
         ]
     
     def _extract_clean_keywords_static(self, query_text: str) -> str:
-        """🧠 Extractor de keywords SIMPLIFICADO y DIRECTO"""
+        """🧠 Extractor de keywords MEJORADO - mantiene contexto y relevancia"""
         import re
         
         if not query_text or len(query_text.strip()) < 3:
             return "noticias actualidad"
         
-        # Preservar texto original
         original = query_text.strip()
         
-        # Solo remover frases de instrucción muy específicas al INICIO
+        # PASO 1: Identificar el TIPO de búsqueda para mantener contexto
+        search_intent = self._identify_search_intent(original)
+        
+        # PASO 2: Limpiar solo prefijos instructivos específicos, manteniendo el núcleo
         patterns_to_remove = [
-            r'^(necesito\s+que\s+)?(busques?|busca|encuentra?)\s+(en\s+internet\s+)?(información\s+)?(sobre\s+)?',
-            r'^buscar\s+(información\s+)?(sobre\s+)?',
-            r'^obtener\s+información\s+(sobre\s+)?',
-            r'^realizar\s+búsqueda\s+(sobre\s+)?'
+            r'^(necesito\s+que\s+)?(busques?|busca|encuentra?)\s+(en\s+internet\s+)?(información\s+)?(sobre\s+|para\s+)?',
+            r'^buscar\s+(información\s+)?(específica\s+)?(sobre\s+|para\s+)?',
+            r'^obtener\s+información\s+(sobre\s+|para\s+)?',
+            r'^investigar\s+(sobre\s+)?'
         ]
         
         clean = original
         for pattern in patterns_to_remove:
             clean = re.sub(pattern, '', clean, flags=re.IGNORECASE).strip()
         
-        # Si se eliminó más del 60% del texto, usar el original
-        if len(clean) < len(original) * 0.4:
+        # PASO 3: Si la limpieza destruyó mucho contenido, usar estrategia conservadora
+        if len(clean) < len(original) * 0.5:
             clean = original
         
-        # Extraer solo términos importantes (3+ caracteres, no artículos)
-        words = re.findall(r'\b[a-zA-ZáéíóúñÁÉÍÓÚÑ]{3,}\b', clean)
-        
-        # Filtrar solo stop words básicos
-        basic_stopwords = {'sobre', 'para', 'con', 'una', 'las', 'los', 'que', 'del', 'información', 'datos', 'noticias'}
-        
-        # Mantener palabras importantes
-        final_words = []
-        for word in words:
-            if word.lower() not in basic_stopwords and len(final_words) < 6:
-                final_words.append(word.lower())
-        
-        # Si tenemos pocas palabras, agregar año actual
-        if len(final_words) < 4:
-            final_words.append('2025')
-        
-        # Construir resultado final
-        if final_words:
-            return ' '.join(final_words[:6])
+        # PASO 4: Procesar según el intent identificado
+        if search_intent == 'plan_creation':
+            return self._optimize_for_plan_creation(clean)
+        elif search_intent == 'data_analysis': 
+            return self._optimize_for_data_analysis(clean)
+        elif search_intent == 'research':
+            return self._optimize_for_research(clean)
+        elif search_intent == 'trends':
+            return self._optimize_for_trends(clean)
         else:
-            # Fallback extremo: usar palabras directamente del original
-            direct_words = re.findall(r'\b[a-zA-ZáéíóúñÁÉÍÓÚÑ]{4,}\b', original)
-            if direct_words:
-                return ' '.join(direct_words[:4]).lower()
-            else:
-                return "noticias actualidad"
+            return self._optimize_generic_search(clean)
+    
+    def _identify_search_intent(self, text: str) -> str:
+        """Identificar el tipo de búsqueda para aplicar optimización específica"""
+        text_lower = text.lower()
+        
+        if any(word in text_lower for word in ['plan de', 'estrategia', 'crear plan', 'planificar']):
+            return 'plan_creation'
+        elif any(word in text_lower for word in ['analizar', 'datos', 'estadísticas', 'métricas']):
+            return 'data_analysis'
+        elif any(word in text_lower for word in ['investigar', 'estudiar', 'información sobre']):
+            return 'research'
+        elif any(word in text_lower for word in ['tendencias', 'últimas', 'novedades', 'actualidad']):
+            return 'trends'
+        else:
+            return 'generic'
+    
+    def _optimize_for_plan_creation(self, text: str) -> str:
+        """Optimizar búsqueda para creación de planes"""
+        # Para planes, mantener el objetivo específico y agregar palabras de contexto útiles
+        import re
+        
+        # Extraer el núcleo del plan
+        main_topic_match = re.search(r'(plan|estrategia).*?(marketing|digital|empresarial|negocio|ventas|social|contenido|seo|publicidad).*?(empresa|negocio|startup|pyme|corporativo)?', text, re.IGNORECASE)
+        
+        if main_topic_match:
+            # Construir búsqueda específica para planes
+            topic = main_topic_match.group(0)
+            return f"guía crear {topic} ejemplos casos éxito 2025"
+        else:
+            # Fallback: extraer palabras clave principales
+            important_words = re.findall(r'\b(?:plan|marketing|digital|estrategia|empresa|negocio|crear|desarrollar|implementar)\b', text, re.IGNORECASE)
+            if important_words:
+                return ' '.join(important_words[:4]).lower() + " guía práctica 2025"
+            return "plan marketing digital estrategia empresarial"
+    
+    def _optimize_for_data_analysis(self, text: str) -> str:
+        """Optimizar búsqueda para análisis de datos"""
+        import re
+        
+        # Identificar qué se quiere analizar
+        analysis_match = re.search(r'analizar.*?(datos|información|beneficios|ventajas|impacto|resultados|tendencias).*?(de|sobre|en).*?([a-záéíóúñ\s]+)', text, re.IGNORECASE)
+        
+        if analysis_match:
+            subject = analysis_match.group(3).strip()
+            return f"análisis {analysis_match.group(1)} {subject} estudios investigación 2025"
+        else:
+            # Extraer tema principal para análisis
+            words = re.findall(r'\b[a-záéíóúñ]{4,}\b', text, re.IGNORECASE)
+            filtered = [w for w in words if w.lower() not in ['analizar', 'datos', 'información', 'sobre', 'para']]
+            if filtered:
+                return f"análisis estadísticas {' '.join(filtered[:3]).lower()} investigación"
+            return "análisis datos estadísticas investigación"
+    
+    def _optimize_for_research(self, text: str) -> str:
+        """Optimizar búsqueda para investigación general"""
+        import re
+        
+        # Extraer el tema principal de investigación
+        research_match = re.search(r'(?:investigar|información).*?(?:sobre|de|en)\s+([a-záéíóúñ\s]+)', text, re.IGNORECASE)
+        
+        if research_match:
+            topic = research_match.group(1).strip()
+            return f"{topic} definición características ejemplos actualidad 2025"
+        else:
+            # Extraer palabras más relevantes
+            words = re.findall(r'\b[a-záéíóúñ]{3,}\b', text, re.IGNORECASE)
+            filtered = [w for w in words if w.lower() not in ['investigar', 'buscar', 'información', 'sobre', 'para']]
+            if len(filtered) >= 2:
+                return f"{' '.join(filtered[:3]).lower()} información completa actualidad"
+            return "información general actualidad noticias"
+    
+    def _optimize_for_trends(self, text: str) -> str:
+        """Optimizar búsqueda para tendencias y actualidad"""
+        import re
+        
+        # Extraer el área de las tendencias
+        trend_match = re.search(r'(?:tendencias|últimas|novedades).*?(?:en|de)\s+([a-záéíóúñ\s]+)', text, re.IGNORECASE)
+        
+        if trend_match:
+            area = trend_match.group(1).strip()
+            return f"tendencias {area} 2025 novedades últimas noticias"
+        else:
+            words = re.findall(r'\b[a-záéíóúñ]{4,}\b', text, re.IGNORECASE)
+            filtered = [w for w in words if w.lower() not in ['tendencias', 'últimas', 'sobre', 'para']]
+            if filtered:
+                return f"tendencias {' '.join(filtered[:2]).lower()} 2025 actualidad"
+            return "tendencias actualidad 2025 novedades"
+    
+    def _optimize_generic_search(self, text: str) -> str:
+        """Optimización para búsquedas genéricas manteniendo coherencia"""
+        import re
+        
+        # Estrategia conservadora: mantener frases coherentes
+        
+        # Eliminar solo palabras muy genéricas al inicio
+        clean = re.sub(r'^(buscar|obtener|realizar)\s+', '', text, flags=re.IGNORECASE)
+        clean = re.sub(r'\b(?:información|datos)\b\s*(?:sobre|de|en)\s+', '', clean, flags=re.IGNORECASE)
+        
+        # Si es muy corto después de limpiar, usar original
+        if len(clean) < len(text) * 0.6:
+            clean = text
+        
+        # Mantener hasta 8 palabras más relevantes en orden
+        words = re.findall(r'\b[a-záéíóúñ]{3,}\b', clean, re.IGNORECASE)
+        
+        # Filtrar solo stop words muy básicos
+        minimal_stopwords = {'sobre', 'para', 'con', 'las', 'los', 'una', 'del'}
+        filtered_words = [w for w in words if w.lower() not in minimal_stopwords]
+        
+        # Si tenemos muy pocas palabras, agregar año para contexto
+        if len(filtered_words) < 3:
+            filtered_words.append('2025')
+        
+        return ' '.join(filtered_words[:6]).lower() if filtered_words else "información actualidad"
 
     def _execute_tool(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> ToolExecutionResult:
         """🚀 EJECUTOR PRINCIPAL CON VISUALIZACIÓN EN TIEMPO REAL"""
