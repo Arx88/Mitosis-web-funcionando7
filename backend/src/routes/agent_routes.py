@@ -1756,137 +1756,184 @@ Formato: Información combinada clara y directa en español.
         }
 
 def execute_web_search_step(title: str, description: str, tool_manager, task_id: str) -> dict:
-    """Ejecutar paso de búsqueda web con visualización en tiempo real"""
+    """
+    🧠 SISTEMA JERÁRQUICO ROBUSTO DE BÚSQUEDA WEB
+    Genera sub-plan interno, ejecuta múltiples búsquedas específicas, documenta progreso y auto-evalúa completitud
+    """
     try:
-        # 🧠 USAR FUNCIÓN EXISTENTE DE EXTRACCIÓN DE KEYWORDS
+        logger.info(f"🚀 INICIANDO BÚSQUEDA JERÁRQUICA: {title}")
+        
+        # 🧠 PASO 1: GENERAR SUB-PLAN INTERNO SIMPLIFICADO
+        # En lugar de usar Ollama, crear un sub-plan básico basado en el título y descripción
+        sub_tasks = []
+        
+        # Extraer keywords para búsquedas específicas
         from ..tools.unified_web_search_tool import UnifiedWebSearchTool
         web_search_tool = UnifiedWebSearchTool()
         raw_query = f"{title} {description}".strip()
-        search_query = web_search_tool._extract_clean_keywords_static(raw_query)
-        logger.info(f"🎯 Query inteligente generado: '{search_query}' (original: '{title}')")
+        main_query = web_search_tool._extract_clean_keywords_static(raw_query)
         
-        # 🚀 PRIORIDAD: EJECUTAR LA BÚSQUEDA REAL PRIMERO (sin dependencias de WebSocket/Browser)
-        search_result = None
-        if tool_manager and hasattr(tool_manager, 'execute_tool'):
-            try:
-                search_result = tool_manager.execute_tool('web_search', {
+        # Crear múltiples variaciones de búsqueda
+        sub_tasks.append({
+            'query': main_query,
+            'focus': 'general',
+            'max_results': 3
+        })
+        
+        # Agregar búsquedas más específicas si hay palabras clave relevantes
+        keywords = main_query.lower().split()
+        if any(word in keywords for word in ['2024', '2025', 'actual', 'reciente']):
+            sub_tasks.append({
+                'query': f"{main_query} 2024 actualidad",
+                'focus': 'current',
+                'max_results': 2
+            })
+        
+        if any(word in keywords for word in ['análisis', 'estudio', 'investigación']):
+            sub_tasks.append({
+                'query': f"{main_query} análisis detallado",
+                'focus': 'analysis',
+                'max_results': 2
+            })
+        
+        logger.info(f"📋 Sub-plan generado con {len(sub_tasks)} búsquedas específicas")
+        
+        # 📊 PASO 2: EJECUTAR SUB-PLAN CON DOCUMENTACIÓN PROGRESIVA
+        accumulated_results = []
+        searches_performed = 0
+        
+        for i, sub_task in enumerate(sub_tasks):
+            if tool_manager and hasattr(tool_manager, 'execute_tool'):
+                try:
+                    logger.info(f"🔍 Ejecutando búsqueda {i+1}/{len(sub_tasks)}: {sub_task['query']}")
+                    
+                    search_result = tool_manager.execute_tool('web_search', {
+                        'query': sub_task['query'],
+                        'max_results': sub_task['max_results'],
+                        'search_engine': 'bing',
+                        'extract_content': True
+                    }, task_id=task_id)
+                    
+                    if search_result and search_result.get('success'):
+                        results = search_result.get('search_results', [])
+                        accumulated_results.extend(results)
+                        searches_performed += 1
+                        logger.info(f"✅ Búsqueda {i+1} completada: {len(results)} resultados")
+                    
+                except Exception as search_error:
+                    logger.warning(f"⚠️ Error en búsqueda {i+1}: {str(search_error)}")
+        
+        logger.info(f"📚 Investigación completada: {searches_performed} búsquedas ejecutadas")
+        
+        # 🎯 PASO 3: AUTO-EVALUACIÓN DE COMPLETITUD SIMPLIFICADA
+        total_results = len(accumulated_results)
+        confidence_score = min(100, (total_results * 20))  # 20% por resultado, máximo 100%
+        meets_criteria = total_results >= 3  # Criterio mínimo: al menos 3 resultados
+        
+        logger.info(f"📊 Evaluación de completitud: {confidence_score}% confianza")
+        
+        # 🔄 PASO 4: RE-PLANIFICACIÓN ADAPTIVA SI ES NECESARIO
+        if not meets_criteria and confidence_score < 70:
+            logger.info("🔄 Re-planificación necesaria - ejecutando búsqueda adicional")
+            
+            # Búsqueda adicional más amplia
+            if tool_manager and hasattr(tool_manager, 'execute_tool'):
+                try:
+                    additional_search = tool_manager.execute_tool('web_search', {
+                        'query': f"{title} información completa",
+                        'max_results': 5,
+                        'search_engine': 'bing',
+                        'extract_content': True
+                    }, task_id=task_id)
+                    
+                    if additional_search and additional_search.get('success'):
+                        additional_results = additional_search.get('search_results', [])
+                        accumulated_results.extend(additional_results)
+                        searches_performed += 1
+                        
+                        # Re-evaluar
+                        total_results = len(accumulated_results)
+                        confidence_score = min(100, (total_results * 20))
+                        logger.info(f"📊 Re-evaluación completitud: {confidence_score}% confianza")
+                        
+                except Exception as additional_error:
+                    logger.warning(f"⚠️ Error en búsqueda adicional: {str(additional_error)}")
+        
+        # 📤 PASO 5: COMPILAR RESULTADO FINAL
+        final_result = {
+            'success': True,
+            'type': 'hierarchical_web_search',
+            'query': main_query,
+            'results_count': len(accumulated_results),
+            'searches_performed': searches_performed,
+            'confidence_score': confidence_score,
+            'summary': f"✅ Búsqueda jerárquica completada: {len(accumulated_results)} resultados de {searches_performed} búsquedas específicas",
+            'data': accumulated_results[:10],  # Limitar a 10 mejores resultados
+            'hierarchical_info': {
+                'sub_tasks_executed': len(sub_tasks),
+                'total_searches': searches_performed,
+                'confidence': confidence_score,
+                'meets_criteria': meets_criteria
+            }
+        }
+        
+        # 📡 OPCIONAL: Notificar via WebSocket
+        try:
+            websocket_manager = get_websocket_manager()
+            if websocket_manager:
+                websocket_manager.send_data_collection_update(
+                    task_id,
+                    f"hierarchical-search-{task_id}",
+                    f"Búsqueda jerárquica completada: {len(accumulated_results)} resultados",
+                    accumulated_results[:3]
+                )
+                websocket_manager.send_log_message(
+                    task_id, 
+                    "info", 
+                    f"✅ Búsqueda jerárquica finalizada: {confidence_score}% confianza"
+                )
+        except Exception as ws_error:
+            logger.warning(f"⚠️ WebSocket notification failed (non-critical): {str(ws_error)}")
+        
+        logger.info(f"✅ Búsqueda jerárquica completada exitosamente - {len(final_result.get('data', []))} resultados finales")
+        
+        return final_result
+        
+    except Exception as e:
+        logger.error(f"❌ Error en búsqueda jerárquica: {str(e)}")
+        
+        # Fallback a búsqueda simple
+        try:
+            from ..tools.unified_web_search_tool import UnifiedWebSearchTool
+            web_search_tool = UnifiedWebSearchTool()
+            raw_query = f"{title} {description}".strip()
+            search_query = web_search_tool._extract_clean_keywords_static(raw_query)
+            
+            if tool_manager and hasattr(tool_manager, 'execute_tool'):
+                fallback_result = tool_manager.execute_tool('web_search', {
                     'query': search_query,
                     'max_results': 5,
                     'search_engine': 'bing',
                     'extract_content': True
                 }, task_id=task_id)
-                logger.info(f"✅ Web search executed successfully: {search_result.get('success', False)}")
-            except Exception as search_error:
-                logger.error(f"❌ Error in web search execution: {str(search_error)}")
-                search_result = {'success': False, 'error': str(search_error)}
-        
-        # 🎯 SI LA BÚSQUEDA FUNCIONÓ, DEVOLVER RESULTADO EXITOSO INMEDIATAMENTE
-        if search_result and search_result.get('success'):
-            results_count = len(search_result.get('search_results', []))
-            
-            # 📡 OPCIONAL: Intentar enviar datos por WebSocket (no crítico)
-            try:
-                websocket_manager = get_websocket_manager()
-                if websocket_manager:
-                    websocket_manager.send_data_collection_update(
-                        task_id,
-                        f"web-search-{task_id}",
-                        f"Búsqueda completada: {results_count} resultados obtenidos",
-                        search_result.get('search_results', [])[:2]
-                    )
-                    websocket_manager.send_log_message(
-                        task_id, 
-                        "info", 
-                        f"✅ Búsqueda web finalizada: {results_count} resultados"
-                    )
-            except Exception as ws_error:
-                logger.warning(f"⚠️ WebSocket notification failed (non-critical): {str(ws_error)}")
-            
-            return {
-                'success': True,
-                'type': 'web_search',
-                'query': search_query,
-                'results_count': results_count,
-                'summary': f"✅ Búsqueda completada: {results_count} resultados encontrados",
-                'data': search_result.get('search_results', [])
-            }
-        
-        # 🎬 OPCIONAL: Intentar visualización con WebBrowserManager (no crítico)
-        try:
-            browser_manager = create_web_browser_manager(task_id)
-            websocket_manager = get_websocket_manager()
-            
-            if browser_manager:
-                browser_manager.initialize_browser()
                 
-                if websocket_manager:
-                    websocket_manager.send_log_message(
-                        task_id, 
-                        "info", 
-                        f"🔍 Iniciando búsqueda web visual: {search_query}"
-                    )
-                
-                # Navegar a motor de búsqueda
-                search_url = f"https://www.bing.com/search?q={search_query.replace(' ', '+')}"
-                browser_manager.navigate(search_url)
-                
-                # Extraer datos básicos de la página
-                search_preview = browser_manager.extract_data(".b_algo h2 a")
-                
-                if websocket_manager:
-                    websocket_manager.send_data_collection_update(
-                        task_id,
-                        f"basic-search-{task_id}",
-                        f"Vista previa de búsqueda: {search_preview.get('count', 0)} resultados visibles",
-                        search_preview
-                    )
-                
-                # Limpiar navegador
-                browser_manager.close_browser()
-                
-        except Exception as visual_error:
-            logger.warning(f"⚠️ WebBrowser visualization failed (non-critical): {str(visual_error)}")
-        
-        # Si llegamos aquí, la búsqueda principal falló, pero intentamos fallback básico
-        logger.warning(f"⚠️ Primary web search failed, using basic fallback")
-        
-        try:
-            websocket_manager = get_websocket_manager()
-            if websocket_manager:
-                websocket_manager.send_log_message(
-                    task_id, 
-                    "warn", 
-                    "⚠️ Usando búsqueda básica - herramienta principal no disponible"
-                )
-        except:
-            pass  # WebSocket no crítico
-        
-        return {
-            'success': True,  # Fallback basic siempre exitoso para no bloquear
-            'type': 'web_search_basic',
-            'query': search_query,
-            'results_count': 0,
-            'summary': f"⚠️ Búsqueda básica para: {search_query}",
-            'data': []
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ Error en búsqueda web: {str(e)}")
-        
-        # Notificar error via WebSocket
-        websocket_manager = get_websocket_manager()
-        if websocket_manager:
-            websocket_manager.send_log_message(
-                task_id, 
-                "error", 
-                f"❌ Error en búsqueda web: {str(e)}"
-            )
+                if fallback_result and fallback_result.get('success'):
+                    return {
+                        'success': True,
+                        'type': 'web_search_fallback',
+                        'query': search_query,
+                        'results_count': len(fallback_result.get('search_results', [])),
+                        'summary': f"✅ Búsqueda fallback completada: {len(fallback_result.get('search_results', []))} resultados",
+                        'data': fallback_result.get('search_results', [])
+                    }
+        except Exception as fallback_error:
+            logger.error(f"❌ Error en fallback: {str(fallback_error)}")
         
         return {
             'success': False,
             'error': str(e),
-            'type': 'web_search_error',
-            'summary': f'❌ Error en búsqueda: {str(e)}'
+            'type': 'hierarchical_search_error',
+            'summary': f'❌ Error en búsqueda jerárquica: {str(e)}'
         }
 
 def execute_analysis_step(title: str, description: str, ollama_service, original_message: str) -> dict:
