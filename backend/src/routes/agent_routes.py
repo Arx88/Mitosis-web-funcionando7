@@ -1391,8 +1391,10 @@ def execute_comprehensive_research_step(title: str, description: str, tool_manag
     try:
         logger.info(f"🔍 Ejecutando investigación comprehensiva: {title}")
         
-        # Extraer query de búsqueda
-        search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
+        # 🧠 USAR EXTRACTOR INTELIGENTE DE QUERIES
+        from ..tools.smart_query_extractor import extract_smart_search_query
+        search_query = extract_smart_search_query(title, description, original_message)
+        logger.info(f"🎯 Query inteligente generado: '{search_query}' (original: '{title}')")
         
         if tool_manager and hasattr(tool_manager, 'execute_tool'):
             result = tool_manager.execute_tool('web_search', {
