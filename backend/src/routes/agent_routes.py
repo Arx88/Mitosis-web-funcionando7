@@ -8673,6 +8673,22 @@ def chat():
             # Handle task request - generate plan
             logger.info(f"💬 Detected task request, generating plan")
             
+            # 🚨 NUEVO: Verificar si Ollama está ocupado antes de proceder
+            ollama_service = get_ollama_service()
+            if ollama_service and not ollama_service.is_available():
+                logger.warning(f"⏳ Ollama busy, queuing task {task_id}")
+                # Retornar respuesta inmediata indicando que está en cola
+                return jsonify({
+                    'response': 'Tu tarea ha sido recibida y está en cola. El sistema está procesando otra tarea actualmente. Por favor espera...',
+                    'task_id': task_id,
+                    'status': 'queued',
+                    'queued': True,
+                    'in_queue': True,
+                    'memory_used': True,
+                    'timestamp': datetime.now().isoformat(),
+                    'estimated_wait_time': '2-3 minutos'
+                })
+            
             # Generate plan for the task
             plan_response = generate_task_plan(message, task_id)
             
