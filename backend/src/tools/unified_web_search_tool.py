@@ -638,11 +638,8 @@ class UnifiedWebSearchTool(BaseTool):
                 content_extracted = page_data.get('content_extracted', '')
                 content_length = page_data.get('content_length', 0)
                 
-                # Crear snippet mejorado con contenido real si está disponible
-                if content_extracted:
-                    snippet = f'Contenido real extraído de {page_data.get("title", "sitio web")}: {content_extracted[:200]}{"..." if len(content_extracted) > 200 else ""}'
-                else:
-                    snippet = f'Información encontrada mediante navegación en tiempo real en {search_engine}. Página visitada durante búsqueda de "{query}".'
+                # Crear snippet con contenido real (garantizado por el filtro)
+                snippet = f'Contenido real extraído de {page_data.get("title", "sitio web")}: {content_extracted[:200]}{"..." if len(content_extracted) > 200 else ""}'
                 
                 result = {
                     'title': page_data.get('title', f'Página navegada {i+1} - {search_engine}'),
