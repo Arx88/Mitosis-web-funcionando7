@@ -266,19 +266,36 @@ class RealTimeBrowserTool(BaseTool):
                 'timestamp': time.time()
             })
             
-            # Ejecutar navegación usando asyncio
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
+            # CORRECCIÓN CRÍTICA: MANEJAR EVENT LOOP EXISTENTE CORRECTAMENTE
             try:
-                navigation_result = loop.run_until_complete(
-                    self._async_navigate_with_real_time_capture(
-                        task_description, start_url, capture_interval, max_duration, results
+                # Intentar obtener el loop actual
+                current_loop = asyncio.get_running_loop()
+                self._emit_progress("🔄 Usando event loop existente")
+                
+                # Usar asyncio.create_task para ejecutar en el loop actual
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    # Ejecutar la navegación en un thread separado para evitar conflictos
+                    future = executor.submit(self._run_navigation_in_new_thread, 
+                                           task_description, start_url, capture_interval, max_duration, results)
+                    navigation_result = future.result()
+                    results.update(navigation_result)
+                    
+            except RuntimeError:
+                # No hay loop corriendo, podemos crear uno nuevo
+                self._emit_progress("🔄 Creando nuevo event loop")
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                
+                try:
+                    navigation_result = loop.run_until_complete(
+                        self._async_navigate_with_real_time_capture(
+                            task_description, start_url, capture_interval, max_duration, results
+                        )
                     )
-                )
-                results.update(navigation_result)
-            finally:
-                loop.close()
+                    results.update(navigation_result)
+                finally:
+                    loop.close()
             
             # Calcular duración total
             results['duration'] = time.time() - start_time
