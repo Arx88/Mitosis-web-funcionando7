@@ -1391,9 +1391,11 @@ def execute_comprehensive_research_step(title: str, description: str, tool_manag
     try:
         logger.info(f"🔍 Ejecutando investigación comprehensiva: {title}")
         
-        # 🧠 USAR EXTRACTOR INTELIGENTE DE QUERIES
-        from ..tools.smart_query_extractor import extract_smart_search_query
-        search_query = extract_smart_search_query(title, description, original_message)
+        # 🧠 USAR FUNCIÓN EXISTENTE DE EXTRACCIÓN DE KEYWORDS
+        from ..tools.unified_web_search_tool import UnifiedWebSearchTool
+        web_search_tool = UnifiedWebSearchTool()
+        raw_query = f"{title} {description} {original_message}".strip()
+        search_query = web_search_tool._extract_clean_keywords_static(raw_query)
         logger.info(f"🎯 Query inteligente generado: '{search_query}' (original: '{title}')")
         
         if tool_manager and hasattr(tool_manager, 'execute_tool'):
