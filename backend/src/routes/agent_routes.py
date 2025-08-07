@@ -2355,6 +2355,9 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
         # Asignar confidence_score para compatibilidad con código existente
         confidence_score = completeness_score
         
+        # Actualizar conteo final de resultados
+        total_results = len(accumulated_results)
+        
         # 📤 PASO 5: COMPILAR RESULTADO FINAL
         final_result = {
             'success': True,
