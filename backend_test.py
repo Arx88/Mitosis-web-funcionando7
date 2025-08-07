@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """
-BACKEND TESTING SUITE FOR MITOSIS TOOL DIVERSIFICATION AND REAL DATA COLLECTION
-Testing the corrected tool diversification improvements to validate:
-1. IMPROVED TOOL MAPPING: analysis → ollama_processing, creation → ollama_processing with real data
-2. ENHANCED META-CONTENT DETECTION: 16 new phrases to detect generic content  
-3. NEW MULTI-SOURCE VALIDATION FUNCTION: validate_multi_source_data_collection()
-4. CRITICAL LOGGING ADDED: 📊 TOOL USAGE TRACKER
+BACKEND TESTING SUITE FOR WEB NAVIGATION INVESTIGATION
+Testing the specific problem reported by user:
+"El usuario reporta que el agente no está navegando a sitios web específicos durante búsquedas web, solo se queda en la página de Bing."
 
-Focus: Verify that agent uses different tools according to context and collects real data from multiple sources
-Context: User reported agent searches vaguely on web, doesn't collect real data, delivers metadata instead of complete tasks
+TESTING FOCUS:
+1. DIRECT WEB SEARCH FUNCTIONALITY: Test web_search tool directly with specific query
+2. REAL NAVIGATION LOGS: Examine if _explore_search_results executes and navigates to specific sites
+3. COMPLETENESS VALIDATION SYSTEM: Test validate_step_completeness function
+4. IDENTIFY SPECIFIC PROBLEM: CSS selectors, _explore_search_results errors, X11 server issues, etc.
+
+Expected Result: Identify exactly why agent is not navigating to specific websites and propose concrete solution.
 """
 
 import requests
