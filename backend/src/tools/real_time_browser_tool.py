@@ -482,7 +482,7 @@ class RealTimeBrowserTool(BaseTool):
                 # Limpiar campo existente
                 self._emit_progress("🔄 Limpiando campo de búsqueda...")
                 await search_input.click()
-                await search_input.select_all()
+                await search_input.select_text()  # Corregido: select_text() en lugar de select_all()
                 await asyncio.sleep(0.5)
                 
                 # Escribir términos de búsqueda
