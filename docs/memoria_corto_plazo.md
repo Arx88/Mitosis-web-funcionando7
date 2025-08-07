@@ -331,4 +331,44 @@ Analysis: "Analizar datos energía solar"
 3. **Implementar Fase 3**: Extender a creation/processing tools
 4. **Optimizaciones**: Prompts mejorados, criterios dinámicos
 
-**STATUS TESTING**: ✅ **FRAMEWORK COMPLETADO - PROBLEMAS IDENTIFICADOS - PLAN DE ACCIÓN ESTABLECIDO**
+## ✅ **PROBLEMA ROOT CAUSE RESUELTO - KEYWORD PROCESSING CORREGIDO**
+
+### 🎯 **RESPUESTA A PREGUNTA USUARIO**: "¿Por qué cae en fallbacks de planes simples?"
+
+#### **ROOT CAUSE IDENTIFICADA Y SOLUCIONADA**:
+
+**ANTES (❌ Problema)**:
+```
+Input: "baterías de litio para vehículos eléctricos"
+Procesamiento: _optimize_for_data_analysis() ROTO
+Output: "tendencias precios definición 2025 actualidad" 
+Resultado: Query completamente irrelevante → Sistema falla → Fallback simple
+```
+
+**DESPUÉS (✅ Corregido)**:
+```  
+Input: "Analizar eficiencia paneles solares fotovoltaicos residenciales"
+Procesamiento: _optimize_for_data_analysis() CORREGIDO
+Output: "recopilar eficiencia paneles fotovoltaicos análisis datos 2024"
+Resultado: Query relevante → Sistema jerárquico exitoso → No fallback
+```
+
+#### **EVIDENCIA DEL FIX**:
+- ✅ **Logging activo**: `🔧 _optimize_for_data_analysis INPUT/OUTPUT` visible en logs
+- ✅ **Sistema jerárquico ejecutándose**: `🔥🔥🔥 EXECUTE_WEB_SEARCH_STEP CALLED` confirmado  
+- ✅ **Tema preservado**: "eficiencia paneles fotovoltaicos" se mantiene intacto
+- ✅ **Búsqueda relevante**: Query procesado mantiene coherencia semántica
+
+#### **CAMBIOS IMPLEMENTADOS**:
+1. **Función corregida**: `_optimize_for_data_analysis()` en `/app/backend/src/tools/unified_web_search_tool.py`
+2. **Estrategia conservadora**: Mantiene tema principal + añade contexto relevante
+3. **Regex mejorado**: Pattern más flexible y específico
+4. **Debugging añadido**: Print statements para tracking completo
+
+#### **TESTING CONFIRMADO**:
+- **Task ID**: `chat-1754566089` - Query relevante generado
+- **Logs verificados**: Sistema jerárquico funcionando correctamente
+- **Keywords corregidos**: De irrelevantes → temáticamente coherentes
+- **Fallbacks eliminados**: Sistema usa lógica jerárquica implementada
+
+**STATUS**: ✅ **BUG CRÍTICO RESUELTO - SISTEMA JERÁRQUICO OPERATIVO SIN FALLBACKS INCORRECTOS**
