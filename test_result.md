@@ -2,23 +2,21 @@
 
 ### ❌ **TESTING REQUEST FULFILLED - SISTEMA DE VALIDACIÓN MEJORADO NO ESTÁ FUNCIONANDO**
 
-**TESTING REQUEST**: Realizar testing comprehensivo del nuevo sistema de validación super estricto para Paso 1 implementado.
+**TESTING REQUEST**: Realizar testing específico del sistema de validación de Paso 1 en Mitosis según el problema reportado por el usuario.
 
-**CONTEXTO DE LA CORRECCIÓN IMPLEMENTADA**:
-- Se creó `/app/backend/src/routes/enhanced_step_validator.py` - Sistema de validación super estricto
-- Se modificó `/app/backend/src/routes/agent_routes.py` - Integración del validador mejorado 
-- El sistema debería detectar automáticamente pasos de investigación política (biografía, trayectoria política, ideología, declaraciones públicas)
-- Debería aplicar criterios super estrictos: mínimo 3 fuentes únicas, 2000+ caracteres, detección anti-meta-contenido
+**CONTEXTO DEL PROBLEMA REPORTADO**:
+- El usuario reporta que "el agente no está generando un plan interno que realmente busque noticias, entrevistas, perfiles académicos, biografía, trayectoria política, ideología, declaraciones públicas"
+- El paso 1 no está recolectando información REAL de múltiples sitios diferentes
+- El paso 1 no está marcando como terminado hasta haber generado un informe con recolección real
 
 **COMPREHENSIVE TESTING COMPLETED**: 
 1. ✅ **Backend Health Check**: Successfully verified backend services (Database: True, Ollama: True, Tools: 12)
-2. ✅ **Create Political Research Task**: Successfully created task with ID test-enhanced-validation-1754591181 using /api/agent/chat
-3. ❌ **Monitor Enhanced Validation**: FAILED - No enhanced validator calls detected, political research not detected
-4. ❌ **Verify Strict Criteria**: FAILED - Strict criteria not met (0 sources, 0 chars, no meta-content detection)
-5. ❌ **Verify Pattern Detection**: FAILED - No critical patterns found (0 categories, 0 patterns)
-6. ❌ **Verify Integration Flow**: FAILED - Integration between agent_routes and enhanced validator not working
+2. ✅ **Create Political Research Task**: Successfully created task with ID test-enhanced-validation-1754592707 using /api/agent/chat
+3. ❌ **Execute Step 1**: FAILED - Step 1 execution timed out, indicating system issues
+4. ❌ **Enhanced Validation Logs**: FAILED - No enhanced validator calls detected in logs
+5. ❌ **Task Completion Status**: FAILED - Enhanced validation not applied (validation_type: unknown, is_research: False)
 
-**TEST RESULTS**: **2/6 TESTS PASSED (33% SUCCESS RATE)**
+**TEST RESULTS**: **2/5 TESTS PASSED (40% SUCCESS RATE)**
 
 ### 📊 **CRITICAL FINDINGS - SISTEMA DE VALIDACIÓN MEJORADO STATUS**:
 
