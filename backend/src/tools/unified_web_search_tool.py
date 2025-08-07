@@ -117,31 +117,126 @@ class UnifiedWebSearchTool(BaseTool):
         ]
     
     def _extract_clean_keywords_static(self, query_text: str) -> str:
-        """🔧 Función estática para extraer keywords limpios"""
+        """🧠 Función inteligente para extraer keywords limpios y específicos"""
         import re
         
-        # Remover texto de instrucciones comunes
-        clean_text = query_text.lower()
-        clean_text = re.sub(r'buscar información sobre|utilizar la herramienta|web_search para|información actualizada|específica sobre|el estado de|en el año|noticias relacionadas con|relacionadas con', '', clean_text)
-        clean_text = re.sub(r'\d{4}', '2025', clean_text)  # Normalizar año
+        if not query_text or len(query_text.strip()) < 3:
+            return "noticias actualidad 2025"
         
-        # Extraer keywords significativos
+        # Remover texto de instrucciones comunes MÁS COMPLETO
+        clean_text = query_text.lower()
+        instruction_patterns = [
+            r'buscar información sobre\s*',
+            r'investigar sobre\s*', 
+            r'analizar\s*',
+            r'obtener información de\s*',
+            r'recopilar datos sobre\s*',
+            r'utilizar.*herramienta.*para\s*',
+            r'web_search para\s*',
+            r'información actualizada sobre\s*',
+            r'información específica sobre\s*',
+            r'datos específicos de\s*',
+            r'encontrar información sobre\s*',
+            r'conseguir datos de\s*',
+            r'realizar.*búsqueda.*sobre\s*',
+            r'buscar datos sobre\s*',
+            r'investigar.*tema.*de\s*'
+        ]
+        
+        for pattern in instruction_patterns:
+            clean_text = re.sub(pattern, ' ', clean_text, flags=re.IGNORECASE)
+        
+        # Normalizar años a 2025 para búsquedas actuales
+        clean_text = re.sub(r'\b20\d{2}\b', '2025', clean_text)
+        
+        # PASO 1: Extraer entidades importantes (nombres propios, países, etc)
+        entities = set()
+        
+        # Detectar nombres propios del texto original (antes de convertir a lowercase)
+        proper_nouns = re.findall(r'\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*\b', query_text)
+        for noun in proper_nouns:
+            if len(noun) > 3 and not any(skip in noun.lower() for skip in ['buscar', 'información', 'sobre', 'datos']):
+                entities.add(noun.lower())
+        
+        # Detectar países y nacionalidades
+        countries = ['argentina', 'brasil', 'españa', 'francia', 'alemania', 'italia', 
+                    'chile', 'uruguay', 'colombia', 'méxico', 'perú', 'ecuador']
+        nationalities = ['argentino', 'brasileño', 'español', 'francés', 'alemán', 'italiano',
+                        'chileno', 'uruguayo', 'colombiano', 'mexicano', 'peruano', 'ecuatoriano']
+        
+        for country in countries + nationalities:
+            if country in clean_text:
+                entities.add(country)
+        
+        # PASO 2: Extraer palabras significativas 
         words = re.findall(r'\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{3,}\b', clean_text)
         
-        # Filtrar palabras comunes extendida
-        stop_words = {'sobre', 'para', 'con', 'una', 'del', 'las', 'los', 'que', 'esta', 'este', 'año', 'información', 'buscar', 'utilizar', 'herramienta', 'web', 'search', 'actualizada', 'relacionadas', 'noticias'}
-        keywords = [w for w in words if w not in stop_words and len(w) > 2]
+        # Stop words expandido
+        stop_words = {
+            'sobre', 'para', 'con', 'una', 'del', 'las', 'los', 'que', 'esta', 'este', 
+            'año', 'información', 'buscar', 'utilizar', 'herramienta', 'web', 'search', 
+            'actualizada', 'relacionadas', 'noticias', 'datos', 'específicos',
+            'necesarios', 'completar', 'realizar', 'obtener', 'encontrar', 'conseguir',
+            'también', 'además', 'incluso', 'solo', 'puede', 'debe', 'tiene', 'han',
+            'sea', 'son', 'fue', 'será', 'han', 'había', 'habían', 'hubiera', 'hayan'
+        }
         
-        # Si encontramos keywords, tomar los primeros 3-4
+        # Palabras temáticas importantes que NO son stop words
+        important_terms = {
+            # Deportes
+            'fútbol', 'futbol', 'selección', 'seleccion', 'equipo', 'jugador', 'jugadores',
+            'mundial', 'copa', 'liga', 'torneo', 'campeonato', 'entrenador', 'técnico',
+            # Política
+            'presidente', 'gobierno', 'ministro', 'congreso', 'política', 'elección',
+            'decreto', 'ley', 'reforma',
+            # Economía  
+            'economía', 'economia', 'inflación', 'inflacion', 'precio', 'precios', 'dólar',
+            'mercado', 'empresa', 'trabajo', 'empleo',
+            # Tecnología
+            'tecnología', 'tecnologia', 'inteligencia', 'artificial', 'software', 'sistema',
+            # Salud
+            'salud', 'médico', 'medico', 'hospital', 'tratamiento', 'medicina'
+        }
+        
+        keywords = []
+        
+        # Priorizar entidades detectadas
+        for entity in entities:
+            if entity not in keywords:
+                keywords.append(entity)
+        
+        # Agregar términos importantes
+        for word in words:
+            if (word.lower() in important_terms or 
+                (len(word) > 4 and word.lower() not in stop_words)) and \
+               word.lower() not in keywords:
+                keywords.append(word.lower())
+        
+        # Agregar palabras significativas restantes
+        for word in words:
+            if (word.lower() not in stop_words and 
+                len(word) > 3 and 
+                word.lower() not in keywords):
+                keywords.append(word.lower())
+        
+        # PASO 3: Construir query final inteligente
         if keywords:
-            return ' '.join(keywords[:4])
+            # Tomar los 4-5 términos más relevantes
+            final_keywords = keywords[:5]
+            result_query = ' '.join(final_keywords)
+            
+            # Si es muy corto, agregar contexto temporal
+            if len(result_query) < 15:
+                result_query = f"{result_query} 2025"
+            
+            return result_query
         else:
-            # Si no hay keywords, intentar extraer nombres propios
+            # Fallback: extraer nombres propios del texto original
             proper_nouns = re.findall(r'\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+\b', query_text)
             if proper_nouns:
-                return ' '.join(proper_nouns[:3])
+                return ' '.join(proper_nouns[:3]).lower()
             else:
-                return 'noticias 2025'
+                return 'noticias actualidad 2025'
 
     def _execute_tool(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> ToolExecutionResult:
         """🚀 EJECUTOR PRINCIPAL CON VISUALIZACIÓN EN TIEMPO REAL"""
