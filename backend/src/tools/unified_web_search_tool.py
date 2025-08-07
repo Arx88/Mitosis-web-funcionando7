@@ -654,7 +654,7 @@ class UnifiedWebSearchTool(BaseTool):
                     'content_preview': content_extracted[:500] if content_extracted else '',
                     'content_length': content_length,
                     'navigation_data': {
-                        'pages_visited': len(pages_visited),
+                        'pages_visited': len(pages_with_content),  # Usar páginas filtradas
                         'screenshots_taken': len(screenshots),
                         'actions_performed': len(actions_performed),
                         'real_time_capture': True,
