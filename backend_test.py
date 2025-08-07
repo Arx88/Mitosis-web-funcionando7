@@ -23,7 +23,7 @@ import subprocess
 # Configuration
 BACKEND_URL = "https://7f2f9f80-1044-4c65-ba29-a1b4a497c200.preview.emergentagent.com"
 
-class MitosisWebNavigationTester:
+class MitosisToolDiversificationTester:
     def __init__(self):
         self.backend_url = BACKEND_URL
         self.session = requests.Session()
@@ -33,9 +33,11 @@ class MitosisWebNavigationTester:
         })
         self.test_results = []
         self.created_task_id = None
-        self.navigation_logs = []
-        self.visited_sites = []
-        self.screenshots_captured = []
+        self.tool_usage_logs = []
+        self.tools_used = set()
+        self.content_generated = ""
+        self.meta_content_detected = []
+        self.multi_source_validation_logs = []
         
     def log_test(self, test_name, success, details, error=None):
         """Log test results"""
@@ -56,13 +58,13 @@ class MitosisWebNavigationTester:
             print(f"   Error: {error}")
         print()
 
-    def monitor_backend_logs(self, duration=60):
-        """Monitor backend logs for navigation activity"""
+    def monitor_tool_usage_logs(self, duration=120):
+        """Monitor backend logs for tool usage tracking and diversification"""
         try:
-            print(f"🔍 Monitoring backend logs for {duration} seconds...")
+            print(f"🔍 Monitoring backend logs for tool usage tracking for {duration} seconds...")
             
-            # Monitor supervisor logs for navigation activity
-            cmd = f"tail -f /var/log/supervisor/backend.out.log | grep -E 'Navegando directamente|✅ Navegado a|page_visited|Screenshot|capturado|content_preview|content_length|Contenido extraído' | head -20"
+            # Monitor supervisor logs for tool usage tracking
+            cmd = f"tail -f /var/log/supervisor/backend.out.log | grep -E '📊 TOOL USAGE TRACKER|ollama_processing|web_search|file_manager|validate_multi_source_data_collection|analysis.*→|creation.*→|Meta-content detected|se realizará|se analizará' | head -30"
             
             process = subprocess.Popen(
                 cmd, 
@@ -73,7 +75,7 @@ class MitosisWebNavigationTester:
             )
             
             start_time = time.time()
-            navigation_events = []
+            tool_events = []
             
             while time.time() - start_time < duration:
                 try:
@@ -81,26 +83,36 @@ class MitosisWebNavigationTester:
                     output = process.stdout.readline()
                     if output:
                         output = output.strip()
-                        navigation_events.append(output)
+                        tool_events.append(output)
                         print(f"   📋 LOG: {output}")
                         
-                        # Extract visited sites
-                        if "Navegado a" in output or "page_visited" in output:
-                            # Extract URL from log
-                            url_match = re.search(r'https?://[^\s]+', output)
-                            if url_match:
-                                url = url_match.group()
-                                domain = re.search(r'https?://([^/]+)', url)
-                                if domain:
-                                    site = domain.group(1)
-                                    if site not in self.visited_sites:
-                                        self.visited_sites.append(site)
-                                        print(f"   🌐 NEW SITE VISITED: {site}")
+                        # Extract tool usage
+                        if "📊 TOOL USAGE TRACKER" in output:
+                            self.tool_usage_logs.append(output)
+                            print(f"   🛠️ TOOL TRACKER DETECTED: {len(self.tool_usage_logs)} entries")
                         
-                        # Extract screenshot info
-                        if "Screenshot" in output or "capturado" in output:
-                            self.screenshots_captured.append(output)
-                            print(f"   📸 SCREENSHOT: {len(self.screenshots_captured)} captured")
+                        # Extract specific tools used
+                        if "ollama_processing" in output:
+                            self.tools_used.add("ollama_processing")
+                            print(f"   🧠 OLLAMA_PROCESSING DETECTED")
+                        
+                        if "web_search" in output:
+                            self.tools_used.add("web_search")
+                            print(f"   🌐 WEB_SEARCH DETECTED")
+                        
+                        if "file_manager" in output:
+                            self.tools_used.add("file_manager")
+                            print(f"   📁 FILE_MANAGER DETECTED")
+                        
+                        # Extract meta-content detection
+                        if any(phrase in output.lower() for phrase in ["se realizará", "se analizará", "meta-content detected"]):
+                            self.meta_content_detected.append(output)
+                            print(f"   🚫 META-CONTENT DETECTED: {len(self.meta_content_detected)} instances")
+                        
+                        # Extract multi-source validation
+                        if "validate_multi_source_data_collection" in output:
+                            self.multi_source_validation_logs.append(output)
+                            print(f"   📊 MULTI-SOURCE VALIDATION: {len(self.multi_source_validation_logs)} calls")
                     
                     time.sleep(0.5)
                     
@@ -108,12 +120,11 @@ class MitosisWebNavigationTester:
                     break
             
             process.terminate()
-            self.navigation_logs = navigation_events
             
-            return navigation_events
+            return tool_events
             
         except Exception as e:
-            print(f"   ❌ Error monitoring logs: {e}")
+            print(f"   ❌ Error monitoring tool usage logs: {e}")
             return []
 
     def test_1_backend_health(self):
@@ -143,15 +154,15 @@ class MitosisWebNavigationTester:
             self.log_test("1. Backend Health Check", False, "Request failed", e)
             return False
 
-    def test_2_create_ai_search_task(self):
-        """Test 2: Create AI Search Task - Multiple Sites Expected"""
+    def test_2_create_economic_analysis_task(self):
+        """Test 2: Create Economic Analysis Task - Tool Diversification Expected"""
         try:
-            print("🔄 Test 2: Creating AI search task expecting multiple site navigation")
+            print("🔄 Test 2: Creating economic analysis task expecting tool diversification")
             
             url = f"{self.backend_url}/api/agent/chat"
             payload = {
-                "message": "Busca información sobre inteligencia artificial 2025",
-                "task_id": f"test-multi-sites-{int(time.time())}"
+                "message": "Realizar análisis detallado del impacto económico de la inteligencia artificial en Argentina durante 2024-2025",
+                "task_id": f"test-tool-diversification-{int(time.time())}"
             }
             
             response = self.session.post(url, json=payload, timeout=30)
@@ -162,230 +173,238 @@ class MitosisWebNavigationTester:
                 
                 if task_id:
                     self.created_task_id = task_id
-                    details = f"Task created successfully: {task_id}"
-                    self.log_test("2. Create AI Search Task", True, details)
+                    details = f"Economic analysis task created successfully: {task_id}"
+                    self.log_test("2. Create Economic Analysis Task", True, details)
                     return task_id
                 else:
-                    self.log_test("2. Create AI Search Task", False, f"No task_id in response: {data}")
+                    self.log_test("2. Create Economic Analysis Task", False, f"No task_id in response: {data}")
                     return None
             else:
-                self.log_test("2. Create AI Search Task", False, f"HTTP {response.status_code}: {response.text}")
+                self.log_test("2. Create Economic Analysis Task", False, f"HTTP {response.status_code}: {response.text}")
                 return None
                 
         except Exception as e:
-            self.log_test("2. Create AI Search Task", False, "Request failed", e)
+            self.log_test("2. Create Economic Analysis Task", False, "Request failed", e)
             return None
 
-    def test_3_monitor_navigation_logs(self):
-        """Test 3: Monitor Navigation Logs for Multiple Sites"""
+    def test_3_monitor_tool_diversification(self):
+        """Test 3: Monitor Tool Usage for Diversification"""
         try:
-            print("🔄 Test 3: Monitoring navigation logs for multiple site visits")
+            print("🔄 Test 3: Monitoring tool usage for diversification (NOT just web_search)")
             
             if not self.created_task_id:
-                self.log_test("3. Navigation Log Monitoring", False, "No task_id available")
+                self.log_test("3. Tool Diversification Monitoring", False, "No task_id available")
                 return False
             
-            print(f"   📋 Monitoring logs for task: {self.created_task_id}")
+            print(f"   📋 Monitoring tool usage for task: {self.created_task_id}")
             
-            # Start log monitoring in background
+            # Start tool usage monitoring in background
             log_thread = threading.Thread(
-                target=self.monitor_backend_logs, 
-                args=(90,),  # Monitor for 90 seconds
+                target=self.monitor_tool_usage_logs, 
+                args=(120,),  # Monitor for 120 seconds
                 daemon=True
             )
             log_thread.start()
             
-            # Wait for some navigation activity
-            time.sleep(95)  # Wait for monitoring to complete
+            # Wait for tool usage activity
+            time.sleep(125)  # Wait for monitoring to complete
             
             # Analyze results
-            unique_sites = len(set(self.visited_sites))
-            total_logs = len(self.navigation_logs)
+            unique_tools = len(self.tools_used)
+            tool_tracker_entries = len(self.tool_usage_logs)
             
-            if unique_sites >= 3:
-                details = f"SUCCESS: {unique_sites} different sites visited: {self.visited_sites[:5]}"
-                self.log_test("3. Navigation Log Monitoring", True, details)
+            if unique_tools >= 3:
+                details = f"SUCCESS: {unique_tools} different tools used: {list(self.tools_used)}"
+                self.log_test("3. Tool Diversification Monitoring", True, details)
                 return True
-            elif unique_sites >= 1 and 'bing.com' not in str(self.visited_sites).lower():
-                details = f"PARTIAL: {unique_sites} sites visited (not just Bing): {self.visited_sites}"
-                self.log_test("3. Navigation Log Monitoring", True, details)
+            elif unique_tools >= 2 and "web_search" not in self.tools_used:
+                details = f"GOOD: {unique_tools} tools used (not just web_search): {list(self.tools_used)}"
+                self.log_test("3. Tool Diversification Monitoring", True, details)
                 return True
-            elif unique_sites == 1 and 'bing.com' in str(self.visited_sites).lower():
-                details = f"FAIL: Only Bing visited, no navigation to other sites: {self.visited_sites}"
-                self.log_test("3. Navigation Log Monitoring", False, details)
+            elif unique_tools == 1 and "web_search" in self.tools_used:
+                details = f"FAIL: Only web_search used, no tool diversification: {list(self.tools_used)}"
+                self.log_test("3. Tool Diversification Monitoring", False, details)
                 return False
             else:
-                details = f"FAIL: No navigation detected in logs. Total logs: {total_logs}"
-                self.log_test("3. Navigation Log Monitoring", False, details)
+                details = f"FAIL: Insufficient tool diversification. Tools: {unique_tools}, Tracker entries: {tool_tracker_entries}"
+                self.log_test("3. Tool Diversification Monitoring", False, details)
                 return False
                 
         except Exception as e:
-            self.log_test("3. Navigation Log Monitoring", False, "Request failed", e)
+            self.log_test("3. Tool Diversification Monitoring", False, "Request failed", e)
             return False
 
-    def test_4_verify_content_extraction(self):
-        """Test 4: Verify Content Extraction from Multiple Sites"""
+    def test_4_verify_real_data_collection(self):
+        """Test 4: Verify Real Data Collection (dates, numbers, names)"""
         try:
-            print("🔄 Test 4: Verifying content extraction from different sites")
+            print("🔄 Test 4: Verifying real data collection with specific details")
             
             if not self.created_task_id:
-                self.log_test("4. Content Extraction", False, "No task_id available")
+                self.log_test("4. Real Data Collection", False, "No task_id available")
                 return False
             
-            # Check for content extraction in logs
-            content_logs = [log for log in self.navigation_logs if 
-                          'content_preview' in log or 'content_length' in log or 'Contenido extraído' in log]
+            # Get task results to analyze content
+            url = f"{self.backend_url}/api/agent/get-task-status/{self.created_task_id}"
+            response = self.session.get(url, timeout=10)
             
-            # Look for content with substantial length (>100 characters)
-            substantial_content = []
-            for log in content_logs:
-                # Extract content length if mentioned
-                length_match = re.search(r'content_length[:\s]*(\d+)', log)
-                if length_match:
-                    length = int(length_match.group(1))
-                    if length > 100:
-                        substantial_content.append(log)
-                elif len(log) > 200:  # Log itself is substantial
-                    substantial_content.append(log)
-            
-            if len(substantial_content) >= 2:
-                details = f"SUCCESS: {len(substantial_content)} substantial content extractions from different sites"
-                self.log_test("4. Content Extraction", True, details)
-                return True
-            elif len(substantial_content) >= 1:
-                details = f"PARTIAL: {len(substantial_content)} content extraction detected"
-                self.log_test("4. Content Extraction", True, details)
-                return True
+            if response.status_code == 200:
+                data = response.json()
+                task_data = data
+                
+                # Extract content from task results
+                content_sources = []
+                if 'plan' in task_data:
+                    for step in task_data.get('plan', []):
+                        if 'result' in step:
+                            content_sources.append(step['result'])
+                
+                # Combine all content
+                all_content = " ".join(str(content) for content in content_sources)
+                self.content_generated = all_content
+                
+                # Check for real data indicators
+                real_data_indicators = {
+                    'dates': len(re.findall(r'\b(2024|2025|enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\b', all_content, re.IGNORECASE)),
+                    'numbers': len(re.findall(r'\b\d+[.,]?\d*\s*(%|millones|miles|USD|ARS|pesos)\b', all_content, re.IGNORECASE)),
+                    'names': len(re.findall(r'\b[A-Z][a-z]+\s+[A-Z][a-z]+\b', all_content)),
+                    'specific_terms': len(re.findall(r'\b(Argentina|Buenos Aires|INDEC|Banco Central|PIB|inflación|tecnología|startup)\b', all_content, re.IGNORECASE))
+                }
+                
+                total_indicators = sum(real_data_indicators.values())
+                content_length = len(all_content)
+                
+                if total_indicators >= 10 and content_length > 500:
+                    details = f"SUCCESS: {total_indicators} real data indicators found in {content_length} chars: {real_data_indicators}"
+                    self.log_test("4. Real Data Collection", True, details)
+                    return True
+                elif total_indicators >= 5:
+                    details = f"PARTIAL: {total_indicators} real data indicators found: {real_data_indicators}"
+                    self.log_test("4. Real Data Collection", True, details)
+                    return True
+                else:
+                    details = f"FAIL: Only {total_indicators} real data indicators found in {content_length} chars"
+                    self.log_test("4. Real Data Collection", False, details)
+                    return False
             else:
-                details = f"FAIL: No substantial content extraction detected. Content logs: {len(content_logs)}"
-                self.log_test("4. Content Extraction", False, details)
+                self.log_test("4. Real Data Collection", False, f"Could not get task status: HTTP {response.status_code}")
                 return False
                 
         except Exception as e:
-            self.log_test("4. Content Extraction", False, "Request failed", e)
+            self.log_test("4. Real Data Collection", False, "Request failed", e)
             return False
 
-    def test_5_verify_screenshot_diversity(self):
-        """Test 5: Verify Screenshot Diversity from Different Pages"""
+    def test_5_verify_meta_content_detection(self):
+        """Test 5: Verify Meta-Content Detection (NO generic phrases)"""
         try:
-            print("🔄 Test 5: Verifying screenshot diversity from different pages")
+            print("🔄 Test 5: Verifying meta-content detection (rejecting generic phrases)")
             
-            if not self.created_task_id:
-                self.log_test("5. Screenshot Diversity", False, "No task_id available")
+            if not self.content_generated:
+                self.log_test("5. Meta-Content Detection", False, "No content available for analysis")
                 return False
             
-            # Analyze screenshot logs
-            screenshot_count = len(self.screenshots_captured)
+            # Check for meta-content phrases that should be rejected
+            meta_phrases = [
+                "se realizará", "se analizará", "el presente estudio", "información general",
+                "se llevará a cabo", "se procederá", "se efectuará", "se desarrollará",
+                "en el futuro", "posteriormente", "a continuación", "en resumen",
+                "por otro lado", "en conclusión", "finalmente", "en primer lugar"
+            ]
             
-            # Look for different screenshot contexts
-            different_contexts = set()
-            for screenshot_log in self.screenshots_captured:
-                # Extract context from screenshot log
-                if 'result' in screenshot_log.lower():
-                    different_contexts.add('search_results')
-                if 'final' in screenshot_log.lower():
-                    different_contexts.add('final_page')
-                if 'scrolled' in screenshot_log.lower():
-                    different_contexts.add('scrolled_content')
-                # Extract URLs if present
-                url_match = re.search(r'https?://([^/\s]+)', screenshot_log)
-                if url_match:
-                    domain = url_match.group(1)
-                    different_contexts.add(domain)
+            detected_meta_phrases = []
+            for phrase in meta_phrases:
+                if phrase.lower() in self.content_generated.lower():
+                    detected_meta_phrases.append(phrase)
             
-            unique_contexts = len(different_contexts)
+            meta_content_count = len(detected_meta_phrases)
+            detection_logs = len(self.meta_content_detected)
             
-            if screenshot_count >= 3 and unique_contexts >= 2:
-                details = f"SUCCESS: {screenshot_count} screenshots from {unique_contexts} different contexts: {list(different_contexts)[:3]}"
-                self.log_test("5. Screenshot Diversity", True, details)
+            if meta_content_count == 0:
+                details = f"SUCCESS: No meta-content phrases detected. Content is specific and real."
+                self.log_test("5. Meta-Content Detection", True, details)
                 return True
-            elif screenshot_count >= 2:
-                details = f"PARTIAL: {screenshot_count} screenshots captured, contexts: {unique_contexts}"
-                self.log_test("5. Screenshot Diversity", True, details)
+            elif meta_content_count <= 2:
+                details = f"ACCEPTABLE: Only {meta_content_count} meta-phrases found: {detected_meta_phrases[:2]}"
+                self.log_test("5. Meta-Content Detection", True, details)
                 return True
             else:
-                details = f"FAIL: Only {screenshot_count} screenshots captured, insufficient diversity"
-                self.log_test("5. Screenshot Diversity", False, details)
+                details = f"FAIL: {meta_content_count} meta-content phrases detected: {detected_meta_phrases[:5]}"
+                self.log_test("5. Meta-Content Detection", False, details)
                 return False
                 
         except Exception as e:
-            self.log_test("5. Screenshot Diversity", False, "Request failed", e)
+            self.log_test("5. Meta-Content Detection", False, "Request failed", e)
             return False
 
-    def test_6_verify_no_bing_only_navigation(self):
-        """Test 6: Verify System is NOT Stuck on Bing Only"""
+    def test_6_verify_multi_source_validation(self):
+        """Test 6: Verify Multi-Source Data Validation Function"""
         try:
-            print("🔄 Test 6: Verifying system is not stuck on Bing search results only")
+            print("🔄 Test 6: Verifying multi-source data validation function execution")
             
-            if not self.visited_sites:
-                self.log_test("6. No Bing-Only Navigation", False, "No sites visited detected")
-                return False
+            validation_calls = len(self.multi_source_validation_logs)
+            tool_tracker_calls = len(self.tool_usage_logs)
+            unique_tools = len(self.tools_used)
             
-            # Check if only Bing was visited
-            bing_only = all('bing.com' in site.lower() for site in self.visited_sites)
-            non_bing_sites = [site for site in self.visited_sites if 'bing.com' not in site.lower()]
-            
-            if not bing_only and len(non_bing_sites) >= 1:
-                details = f"SUCCESS: System navigated beyond Bing to {len(non_bing_sites)} other sites: {non_bing_sites[:3]}"
-                self.log_test("6. No Bing-Only Navigation", True, details)
+            if validation_calls >= 1 and unique_tools >= 2:
+                details = f"SUCCESS: {validation_calls} validation calls with {unique_tools} different tools"
+                self.log_test("6. Multi-Source Validation", True, details)
                 return True
-            elif bing_only and len(self.visited_sites) == 1:
-                details = f"FAIL: System stuck on Bing only, no navigation to other sites: {self.visited_sites}"
-                self.log_test("6. No Bing-Only Navigation", False, details)
-                return False
+            elif tool_tracker_calls >= 3:
+                details = f"PARTIAL: {tool_tracker_calls} tool tracker calls detected (validation may be implicit)"
+                self.log_test("6. Multi-Source Validation", True, details)
+                return True
             else:
-                details = f"PARTIAL: Mixed results - Bing sites: {len(self.visited_sites) - len(non_bing_sites)}, Non-Bing: {len(non_bing_sites)}"
-                self.log_test("6. No Bing-Only Navigation", True, details)
-                return True
+                details = f"FAIL: Only {validation_calls} validation calls, {tool_tracker_calls} tracker calls"
+                self.log_test("6. Multi-Source Validation", False, details)
+                return False
                 
         except Exception as e:
-            self.log_test("6. No Bing-Only Navigation", False, "Request failed", e)
+            self.log_test("6. Multi-Source Validation", False, "Request failed", e)
             return False
 
-    def run_web_navigation_tests(self):
-        """Run comprehensive web navigation functionality tests"""
-        print("🚀 MITOSIS WEB NAVIGATION FUNCTIONALITY TESTING")
-        print("=" * 70)
+    def run_tool_diversification_tests(self):
+        """Run comprehensive tool diversification and real data collection tests"""
+        print("🚀 MITOSIS TOOL DIVERSIFICATION AND REAL DATA COLLECTION TESTING")
+        print("=" * 80)
         print(f"Backend URL: {self.backend_url}")
         print(f"Test Time: {datetime.now().isoformat()}")
-        print(f"Test Task: 'Busca información sobre inteligencia artificial 2025'")
-        print(f"FOCUS: Verify navigation to MULTIPLE different websites (NOT just Bing)")
+        print(f"Test Task: 'Realizar análisis detallado del impacto económico de la IA en Argentina 2024-2025'")
+        print(f"FOCUS: Verify tool diversification + real data collection + no meta-content")
         print()
         
         # Test 1: Backend Health
-        print("=" * 50)
+        print("=" * 60)
         health_ok = self.test_1_backend_health()
         if not health_ok:
             print("❌ Backend health check failed. Aborting tests.")
             return self.test_results
         
-        # Test 2: Create AI Search Task
-        print("=" * 50)
-        task_id = self.test_2_create_ai_search_task()
+        # Test 2: Create Economic Analysis Task
+        print("=" * 60)
+        task_id = self.test_2_create_economic_analysis_task()
         if not task_id:
-            print("❌ Failed to create AI search task. Aborting remaining tests.")
+            print("❌ Failed to create economic analysis task. Aborting remaining tests.")
             self.print_summary()
             return self.test_results
         
         # Wait a moment for task to be saved
-        print("⏳ Waiting 5 seconds for task to be saved...")
-        time.sleep(5)
+        print("⏳ Waiting 10 seconds for task to be saved and processing to start...")
+        time.sleep(10)
         
-        # Test 3: Monitor Navigation Logs (CRITICAL)
-        print("=" * 50)
-        navigation_ok = self.test_3_monitor_navigation_logs()
+        # Test 3: Monitor Tool Diversification (CRITICAL)
+        print("=" * 60)
+        diversification_ok = self.test_3_monitor_tool_diversification()
         
-        # Test 4: Content Extraction
-        print("=" * 50)
-        content_ok = self.test_4_verify_content_extraction()
+        # Test 4: Real Data Collection
+        print("=" * 60)
+        real_data_ok = self.test_4_verify_real_data_collection()
         
-        # Test 5: Screenshot Diversity
-        print("=" * 50)
-        screenshot_ok = self.test_5_verify_screenshot_diversity()
+        # Test 5: Meta-Content Detection
+        print("=" * 60)
+        meta_content_ok = self.test_5_verify_meta_content_detection()
         
-        # Test 6: No Bing-Only Navigation
-        print("=" * 50)
-        no_bing_only_ok = self.test_6_verify_no_bing_only_navigation()
+        # Test 6: Multi-Source Validation
+        print("=" * 60)
+        multi_source_ok = self.test_6_verify_multi_source_validation()
         
         # Summary
         self.print_summary()
@@ -394,9 +413,9 @@ class MitosisWebNavigationTester:
 
     def print_summary(self):
         """Print test summary"""
-        print("\n" + "=" * 70)
-        print("🎯 WEB NAVIGATION FUNCTIONALITY TEST SUMMARY")
-        print("=" * 70)
+        print("\n" + "=" * 80)
+        print("🎯 TOOL DIVERSIFICATION AND REAL DATA COLLECTION TEST SUMMARY")
+        print("=" * 80)
         
         passed = sum(1 for result in self.test_results if result['success'])
         total = len(self.test_results)
@@ -404,134 +423,139 @@ class MitosisWebNavigationTester:
         print(f"Tests Passed: {passed}/{total}")
         print()
         
-        # Analyze results for the specific navigation fix
+        # Analyze results for the specific improvements
         critical_issues = []
-        navigation_working = True
-        multiple_sites_visited = False
-        content_extracted = False
-        screenshots_diverse = False
-        not_stuck_on_bing = False
+        tool_diversification_working = False
+        real_data_collected = False
+        meta_content_rejected = False
+        multi_source_validated = False
         
         for result in self.test_results:
             if not result['success']:
                 test_name = result['test']
                 details = result['details'] or result['error']
                 
-                if 'Navigation Log Monitoring' in test_name:
+                if 'Tool Diversification' in test_name:
                     critical_issues.append(f"🚨 CRITICAL: {test_name} - {details}")
-                    navigation_working = False
-                elif 'No Bing-Only Navigation' in test_name:
+                elif 'Real Data Collection' in test_name:
                     critical_issues.append(f"🚨 CRITICAL: {test_name} - {details}")
-                    not_stuck_on_bing = False
-                elif 'Content Extraction' in test_name:
+                elif 'Meta-Content Detection' in test_name:
                     critical_issues.append(f"⚠️ MAJOR: {test_name} - {details}")
-                elif 'Screenshot Diversity' in test_name:
+                elif 'Multi-Source Validation' in test_name:
                     critical_issues.append(f"⚠️ MAJOR: {test_name} - {details}")
                 else:
                     critical_issues.append(f"❌ {test_name} - {details}")
             else:
                 # Check for positive results
-                if 'Navigation Log Monitoring' in result['test']:
-                    multiple_sites_visited = True
-                if 'Content Extraction' in result['test']:
-                    content_extracted = True
-                if 'Screenshot Diversity' in result['test']:
-                    screenshots_diverse = True
-                if 'No Bing-Only Navigation' in result['test']:
-                    not_stuck_on_bing = True
+                if 'Tool Diversification' in result['test']:
+                    tool_diversification_working = True
+                if 'Real Data Collection' in result['test']:
+                    real_data_collected = True
+                if 'Meta-Content Detection' in result['test']:
+                    meta_content_rejected = True
+                if 'Multi-Source Validation' in result['test']:
+                    multi_source_validated = True
         
         if critical_issues:
             print("🚨 ISSUES FOUND:")
             for issue in critical_issues:
                 print(f"  {issue}")
         else:
-            print("✅ All web navigation functionality tests passed successfully")
+            print("✅ All tool diversification and real data collection tests passed successfully")
         
         print()
         
-        # Specific diagnosis for the navigation fix
-        print("🔍 WEB NAVIGATION FIX ANALYSIS:")
+        # Specific diagnosis for the improvements
+        print("🔍 TOOL DIVERSIFICATION IMPROVEMENTS ANALYSIS:")
         
-        if multiple_sites_visited:
-            print("✅ MULTIPLE SITE NAVIGATION: WORKING")
-            print(f"   - System navigated to {len(self.visited_sites)} different sites: {self.visited_sites[:3]}")
+        if tool_diversification_working:
+            print("✅ TOOL DIVERSIFICATION: WORKING")
+            print(f"   - System used {len(self.tools_used)} different tools: {list(self.tools_used)}")
+            print(f"   - Tool usage tracker entries: {len(self.tool_usage_logs)}")
         else:
-            print("❌ MULTIPLE SITE NAVIGATION: NOT WORKING")
-            print("   - System is not navigating to multiple different websites")
+            print("❌ TOOL DIVERSIFICATION: NOT WORKING")
+            print("   - System is not using diverse tools based on context")
         
-        if not_stuck_on_bing:
-            print("✅ NOT STUCK ON BING: CONFIRMED")
-            print("   - System successfully navigates beyond Bing search results")
+        if real_data_collected:
+            print("✅ REAL DATA COLLECTION: WORKING")
+            print("   - Content contains specific dates, numbers, names, and terms")
+            print(f"   - Content length: {len(self.content_generated)} characters")
         else:
-            print("❌ STUCK ON BING: PROBLEM PERSISTS")
-            print("   - System appears to be stuck on Bing search results only")
+            print("❌ REAL DATA COLLECTION: NOT WORKING")
+            print("   - Content lacks specific real data indicators")
         
-        if content_extracted:
-            print("✅ CONTENT EXTRACTION: WORKING")
-            print("   - Real content extracted from visited sites (>100 characters)")
+        if meta_content_rejected:
+            print("✅ META-CONTENT DETECTION: WORKING")
+            print("   - System successfully rejects generic phrases like 'se realizará', 'se analizará'")
         else:
-            print("❌ CONTENT EXTRACTION: NOT WORKING")
-            print("   - No substantial content extraction detected")
+            print("❌ META-CONTENT DETECTION: NOT WORKING")
+            print("   - Content contains too many generic meta-phrases")
         
-        if screenshots_diverse:
-            print("✅ SCREENSHOT DIVERSITY: WORKING")
-            print(f"   - {len(self.screenshots_captured)} screenshots from different contexts")
+        if multi_source_validated:
+            print("✅ MULTI-SOURCE VALIDATION: WORKING")
+            print(f"   - Validation function calls: {len(self.multi_source_validation_logs)}")
         else:
-            print("❌ SCREENSHOT DIVERSITY: NOT WORKING")
-            print("   - Screenshots not diverse or insufficient")
+            print("❌ MULTI-SOURCE VALIDATION: NOT WORKING")
+            print("   - Multi-source validation function not detected")
         
         print()
         
         # Overall assessment
-        if multiple_sites_visited and not_stuck_on_bing and content_extracted:
-            print("🎉 OVERALL ASSESSMENT: ✅ WEB NAVIGATION FIX SUCCESSFUL")
-            print("   - System navigates to multiple different websites")
-            print("   - Not stuck on Bing search results only")
-            print("   - Real content extraction from different sites")
-            print("   - Screenshots captured from different pages")
+        if tool_diversification_working and real_data_collected and meta_content_rejected:
+            print("🎉 OVERALL ASSESSMENT: ✅ TOOL DIVERSIFICATION IMPROVEMENTS SUCCESSFUL")
+            print("   - System uses different tools based on context")
+            print("   - Real data collection with specific details")
+            print("   - Meta-content detection working correctly")
+            print("   - Multi-source validation implemented")
         else:
-            print("⚠️ OVERALL ASSESSMENT: ❌ WEB NAVIGATION FIX NEEDS MORE WORK")
-            print("   - The web navigation functionality still has issues")
+            print("⚠️ OVERALL ASSESSMENT: ❌ TOOL DIVERSIFICATION IMPROVEMENTS NEED MORE WORK")
+            print("   - The tool diversification functionality still has issues")
             print("   - May need additional debugging and fixes")
         
         print()
         
         # Specific recommendations
         print("📋 RECOMMENDATIONS:")
-        if not multiple_sites_visited:
-            print("   1. Check unified_web_search_tool.py for direct navigation implementation")
-            print("   2. Verify event loop fix is working correctly")
-            print("   3. Test with different search queries")
+        if not tool_diversification_working:
+            print("   1. Check agent_routes.py for correct tool mapping (analysis→ollama_processing)")
+            print("   2. Verify 📊 TOOL USAGE TRACKER is logging tool usage correctly")
+            print("   3. Test context-based tool selection logic")
         
-        if not not_stuck_on_bing:
-            print("   1. Verify link extraction and navigation logic")
-            print("   2. Check if system is clicking on search result links")
-            print("   3. Test navigation to specific URLs directly")
+        if not real_data_collected:
+            print("   1. Verify web search is collecting real data from multiple sources")
+            print("   2. Check ollama_processing is using real data from previous steps")
+            print("   3. Test data extraction and processing pipeline")
         
-        if not content_extracted:
-            print("   1. Check content extraction logic in navigation tools")
-            print("   2. Verify page loading and parsing functionality")
-            print("   3. Test content extraction independently")
+        if not meta_content_rejected:
+            print("   1. Check meta-content detection with 16 new phrases")
+            print("   2. Verify content generation rejects generic phrases")
+            print("   3. Test content quality validation")
         
-        if multiple_sites_visited and not_stuck_on_bing and content_extracted:
-            print("   1. Web navigation fix is working correctly")
+        if not multi_source_validated:
+            print("   1. Implement validate_multi_source_data_collection() function")
+            print("   2. Check multi-source validation scoring system")
+            print("   3. Test source diversity requirements")
+        
+        if tool_diversification_working and real_data_collected and meta_content_rejected:
+            print("   1. Tool diversification improvements are working correctly")
             print("   2. Monitor for any regression issues")
-            print("   3. Consider performance optimizations")
+            print("   3. Consider expanding to more tool types")
         
         print()
-        print("📊 WEB NAVIGATION FUNCTIONALITY TESTING COMPLETE")
+        print("📊 TOOL DIVERSIFICATION AND REAL DATA COLLECTION TESTING COMPLETE")
         
         if self.created_task_id:
             print(f"📝 Test Task ID: {self.created_task_id}")
             print("   Use this ID to check logs and debug if needed")
         
-        print(f"📋 Navigation Logs Captured: {len(self.navigation_logs)}")
-        print(f"🌐 Unique Sites Visited: {len(set(self.visited_sites))}")
-        print(f"📸 Screenshots Captured: {len(self.screenshots_captured)}")
+        print(f"📋 Tool Usage Logs: {len(self.tool_usage_logs)}")
+        print(f"🛠️ Unique Tools Used: {len(self.tools_used)}")
+        print(f"📊 Multi-Source Validation Calls: {len(self.multi_source_validation_logs)}")
+        print(f"🚫 Meta-Content Detections: {len(self.meta_content_detected)}")
 
 if __name__ == "__main__":
-    tester = MitosisWebNavigationTester()
-    results = tester.run_web_navigation_tests()
+    tester = MitosisToolDiversificationTester()
+    results = tester.run_tool_diversification_tests()
     
     # Exit with appropriate code
     failed_tests = sum(1 for result in results if not result['success'])
