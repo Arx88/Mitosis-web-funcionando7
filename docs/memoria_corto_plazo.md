@@ -21,22 +21,29 @@
 - CORS configurado dinámicamente
 - Modo producción activado
 
-### 🚨 NUEVO PROBLEMA REPORTADO: PLANES FALLBACK EN LUGAR DE PROFESIONALES
+### 🚨 PROBLEMA CRÍTICO IDENTIFICADO: EXTRACCIÓN DEFICIENTE DE KEYWORDS PARA BÚSQUEDAS
 
-#### 🔍 **ANÁLISIS DEL PROBLEMA ACTUAL**:
-**Síntoma**: Los planes generados son fallback simples, no usa los planes profesionales de la app
-**Archivo Clave**: `/app/backend/src/routes/agent_routes.py` - función `generate_unified_ai_plan()`
-**Línea Crítica**: 5254, 5259, 5510, 5522 - múltiples fallbacks a `generate_intelligent_fallback_plan()`
+#### 🔍 **PROBLEMA REAL CONFIRMADO**:
+**Síntoma**: "Las búsquedas con las palabras clave son extrañas, poco eficientes, no tienen nada que ver con lo que el plan propone y no llega a encontrar nada relevante"
+**Estado Planes**: ✅ Los planes se generan correctamente (confirmado - no es el problema)
+**Estado Navegador**: ✅ El navegador carga bien (confirmado - no es el problema)
+**PROBLEMA REAL**: ❌ La conversión de "pasos del plan" → "query de búsqueda" genera keywords irrelevantes
 
-#### 📊 **DIAGNÓSTICO TÉCNICO EN PROGRESO**:
-1. **Sistema de Planificación Implementado**: ✅ `EnhancedDynamicTaskPlanner` existe pero no se usa
-2. **TaskOrchestrator**: ✅ Configurado con `DynamicTaskPlanner` (línea 80 en task_orchestrator.py)
-3. **Función Principal**: `generate_unified_ai_plan()` depende de Ollama service
-4. **Problema Identificado**: Si Ollama service falla → fallback automático a planes simples
+#### 📊 **DIAGNÓSTICO TÉCNICO ENFOCADO**:
+**Archivo Clave**: `/app/backend/src/tools/unified_web_search_tool.py` 
+**Función Problemática**: Probablemente `_extract_clean_keywords_static()` o similar
+**Flujo Problemático**: Plan paso → extracción keywords → query búsqueda → resultados irrelevantes
 
 #### 🔧 **HIPÓTESIS DE CAUSA RAÍZ**:
-- Ollama service no disponible o no healthy → línea 5254/5259 ejecuta fallback
-- Sistema profesional `EnhancedDynamicTaskPlanner` no se invoca desde la ruta principal
-- Flujo: `/api/agent/chat` → `generate_unified_ai_plan()` → si falla Ollama → fallback simple
+- Función de extracción de keywords no interpreta correctamente el contexto del paso
+- Algoritmo de limpieza/filtrado de keywords es demasiado agresivo o genérico
+- No considera la descripción completa del paso, solo títulos
+- Convierte conceptos específicos en términos genéricos sin valor
 
-#### ⚠️ **ESTADO ACTUAL**: INVESTIGACIÓN EN CURSO - REQUIERE VERIFICACIÓN DE OLLAMA SERVICE
+#### ⚡ **PLAN DE ACCIÓN INMEDIATO**:
+1. Localizar función de extracción de keywords en unified_web_search_tool.py
+2. Analizar cómo convierte pasos del plan en queries
+3. Corregir algoritmo para mantener especificidad y relevancia
+4. Testing con casos reales para validar mejora
+
+#### ⚠️ **ESTADO ACTUAL**: INVESTIGACIÓN KEYWORD EXTRACTION EN PROGRESO
