@@ -29,19 +29,26 @@
 - **Validación**: ✅ Confirmado Fase 1 no usa sistema jerárquico
 - **Estado**: ✅ **TESTING END-TO-END EJECUTADO - RESULTADOS DOCUMENTADOS**
 
-### 🚀 **EN DESARROLLO - PRÓXIMAS FASES**
+### 🚨 **CRÍTICAS - REQUIEREN ATENCIÓN INMEDIATA**
 
-#### 🔄 2. **FASE 2: Extender Sistema Jerárquico a Analysis Tools**
-- **Objetivo**: Aplicar mismo patrón jerárquico a `execute_enhanced_analysis_step()`
-- **Plan**: Sub-planes de análisis con múltiples enfoques específicos  
-- **Impacto esperado**: Analysis success 85% → 95%
-- **Prioridad**: ALTA
+#### 1. **RESOLVER FASE 1 - Sistema Jerárquico Web Search No Ejecuta**
+- **Problema**: execute_web_search_step implementado pero no se ejecuta
+- **Evidencia**: Sin logs "BÚSQUEDA JERÁRQUICA", usa fallback playwright_subprocess_real
+- **Root cause**: Posible error silencioso o keyword processing roto
+- **Acción**: Debug urgente líneas 1758-1900 agent_routes.py
+- **Prioridad**: **CRÍTICA**
 
-#### 🔄 3. **FASE 3: Sistema Jerárquico para Creation Tools** 
-- **Objetivo**: Implementar en `execute_creation_step()` y `execute_processing_step()`
-- **Plan**: Sub-planes de creación con secciones específicas
+#### 2. **VALIDAR FASE 2 - Testing Análisis Jerárquico**  
+- **Objetivo**: Confirmar que execute_enhanced_analysis_step funciona correctamente
+- **Método**: Ejecutar paso 2 de tarea test y verificar hierarchical_info
+- **Validar**: Múltiples análisis, auto-evaluación, compilación estructurada
+- **Prioridad**: **ALTA**
+
+#### 3. **IMPLEMENTAR FASE 3 - Creation Tools Jerárquico**
+- **Target**: `execute_creation_step()`, `execute_processing_step()`
+- **Patrón**: Sub-secciones de contenido + evaluación + compilación
 - **Impacto esperado**: Content quality 70% → 90%
-- **Prioridad**: MEDIA
+- **Prioridad**: **MEDIA**
 
 ### 🧪 **TESTING Y VALIDACIÓN**
 
