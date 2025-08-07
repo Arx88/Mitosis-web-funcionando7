@@ -1279,7 +1279,7 @@ def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
     # Para otras herramientas, evaluar contenido de texto
     content = result.get('content', '') or result.get('summary', '')
     
-    # 🚨 DETECCIÓN CRÍTICA DE META-CONTENIDO
+    # 🚨 DETECCIÓN CRÍTICA DE META-CONTENIDO (MEJORADA)
     meta_phrases = [
         # Frases de planificación/metodología
         'se realizará', 'se procederá', 'se analizará', 'se evaluará', 'se estudiará',
@@ -1290,9 +1290,21 @@ def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
         'analizaremos', 'evaluaremos', 'examinaremos', 'desarrollaremos',
         'presentaremos', 'consideraremos', 'estudiaremos',
         
-        # Frases de estructura
+        # Frases de estructura/organización (NUEVO)
         'el documento está estructurado', 'se divide en secciones',
-        'consta de las siguientes partes', 'incluye los siguientes capítulos'
+        'consta de las siguientes partes', 'incluye los siguientes capítulos',
+        
+        # Frases de proceso (NUEVO)
+        'el proceso de análisis', 'la metodología utilizada', 'el enfoque adoptado',
+        'el marco teórico', 'la revisión bibliográfica', 'el estado del arte',
+        
+        # Frases genéricas de introducción (NUEVO)
+        'en este trabajo se', 'el presente estudio', 'la presente investigación',
+        'este documento tiene como objetivo', 'el propósito de este análisis',
+        
+        # Frases de contenido vacío (NUEVO)
+        'información general', 'datos genéricos', 'contenido básico',
+        'resumen ejecutivo', 'introducción al tema', 'marco conceptual'
     ]
     
     # Detectar meta-contenido
