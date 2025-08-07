@@ -408,83 +408,354 @@ class RealTimeBrowserTool(BaseTool):
             })
     
     async def _perform_search_task(self, page, task_description: str, results: Dict[str, Any]):
-        """🔍 REALIZAR TAREA DE BÚSQUEDA"""
+        """🔍 REALIZAR TAREA DE BÚSQUEDA - VERSIÓN MEJORADA CON MÚLTIPLES ESTRATEGIAS"""
         
-        # Buscar campo de búsqueda
-        search_selectors = [
-            'input[name="q"]',  # Google
-            'input[type="search"]',
-            'input[placeholder*="search" i]', 
-            'input[placeholder*="buscar" i]',
-            '.search-input',
-            '#search'
-        ]
-        
-        search_input = None
-        for selector in search_selectors:
-            try:
-                search_input = await page.wait_for_selector(selector, timeout=3000)
-                if search_input:
-                    break
-            except:
-                continue
-        
-        if search_input:
-            # Extraer términos de búsqueda del task_description
+        try:
+            # 1. EXTRAER TÉRMINOS DE BÚSQUEDA INTELIGENTES
             search_terms = self._extract_search_terms(task_description)
-            
             self._emit_browser_visual({
-                'type': 'search_action',
-                'message': f'🔍 Realizando búsqueda: {search_terms}',
+                'type': 'search_terms_extracted',
+                'message': f'📝 Términos extraídos: "{search_terms}"',
+                'original_task': task_description,
+                'extracted_terms': search_terms,
+                'timestamp': time.time()
+            })
+            
+            # 2. INTENTAR MÚLTIPLES SELECTORS DE CAMPO DE BÚSQUEDA
+            search_selectors = [
+                # Google y motores principales
+                'input[name="q"]',
+                'textarea[name="q"]',
+                
+                # Selectores genéricos de búsqueda
+                'input[type="search"]',
+                'input[placeholder*="search" i]', 
+                'input[placeholder*="buscar" i]',
+                'input[placeholder*="Buscar" i]',
+                'input[placeholder*="Search" i]',
+                
+                # Clases comunes
+                '.search-input',
+                '.search-box',
+                '.searchbox',
+                '#search',
+                '#search-input',
+                '#searchbox',
+                
+                # Bing y otros motores
+                'input[name="search"]',
+                'input[id="sb_form_q"]',  # Bing específico
+                
+                # Fallbacks más generales
+                'input[type="text"]',  # Último recurso
+            ]
+            
+            search_input = None
+            used_selector = None
+            
+            # Intentar cada selector con timeout progresivo
+            for i, selector in enumerate(search_selectors):
+                try:
+                    self._emit_progress(f"🔍 Probando selector {i+1}: {selector}")
+                    search_input = await page.wait_for_selector(selector, timeout=2000)
+                    if search_input:
+                        used_selector = selector
+                        self._emit_progress(f"✅ Campo de búsqueda encontrado con: {selector}")
+                        break
+                except:
+                    continue
+            
+            if not search_input:
+                # Si no encontramos campo de búsqueda, buscar enlaces con texto relevante
+                await self._perform_link_based_search(page, search_terms, results)
+                return
+                
+            # 3. PREPARAR CAMPO DE BÚSQUEDA Y REALIZAR BÚSQUEDA
+            self._emit_browser_visual({
+                'type': 'search_field_found',
+                'message': f'🎯 Campo de búsqueda encontrado: {used_selector}',
+                'selector': used_selector,
+                'timestamp': time.time()
+            })
+            
+            # Limpiar campo existente
+            await search_input.click()
+            await search_input.select_all()
+            await asyncio.sleep(0.5)
+            
+            # Escribir términos de búsqueda
+            self._emit_browser_visual({
+                'type': 'typing_search',
+                'message': f'⌨️ Escribiendo: "{search_terms}"',
                 'search_terms': search_terms,
                 'timestamp': time.time()
             })
             
-            # Realizar búsqueda
-            await search_input.fill(search_terms)
-            await asyncio.sleep(1)  # Pausa para captura
-            await search_input.press('Enter')
+            await search_input.type(search_terms, delay=100)  # Escribir con delay más humano
+            await asyncio.sleep(1)  # Pausa para ver el texto escrito
             
             # Registrar acción
             results['actions_performed'].append({
-                'action': 'search',
+                'action': 'search_typed',
                 'terms': search_terms,
+                'selector': used_selector,
                 'timestamp': time.time()
             })
             
-            # Esperar resultados y explorar
+            # 4. ENVIAR BÚSQUEDA (múltiples métodos)
+            search_submitted = False
+            
+            # Método 1: Presionar Enter
+            try:
+                self._emit_progress("🔍 Enviando búsqueda con Enter...")
+                await search_input.press('Enter')
+                search_submitted = True
+            except:
+                pass
+            
+            # Método 2: Buscar botón de búsqueda si Enter no funcionó
+            if not search_submitted:
+                search_button_selectors = [
+                    'button[type="submit"]',
+                    'input[type="submit"]',
+                    'button[aria-label*="search" i]',
+                    'button[aria-label*="buscar" i]',
+                    '.search-button',
+                    '#search-button',
+                    'button:has-text("Search")',
+                    'button:has-text("Buscar")',
+                    '[data-ved]',  # Google específico
+                ]
+                
+                for selector in search_button_selectors:
+                    try:
+                        search_button = await page.wait_for_selector(selector, timeout=1000)
+                        if search_button:
+                            self._emit_progress(f"🔍 Enviando búsqueda con botón: {selector}")
+                            await search_button.click()
+                            search_submitted = True
+                            break
+                    except:
+                        continue
+            
+            if not search_submitted:
+                self._emit_progress("⚠️ No se pudo enviar búsqueda - usando fallback")
+                # Fallback: navegar directamente a URL de búsqueda
+                current_url = page.url
+                if 'google.com' in current_url:
+                    search_url = f"https://www.google.com/search?q={search_terms.replace(' ', '+')}"
+                elif 'bing.com' in current_url:
+                    search_url = f"https://www.bing.com/search?q={search_terms.replace(' ', '+')}"
+                else:
+                    search_url = f"{current_url}?q={search_terms.replace(' ', '+')}"
+                
+                await page.goto(search_url)
+            
+            # 5. ESPERAR RESULTADOS Y EXPLORAR
+            self._emit_browser_visual({
+                'type': 'waiting_results',
+                'message': '⏳ Esperando resultados de búsqueda...',
+                'timestamp': time.time()
+            })
+            
             await page.wait_for_load_state('networkidle')
             await asyncio.sleep(2)
             
-            # Hacer clic en primer resultado si existe
-            try:
-                first_result = await page.wait_for_selector('h3', timeout=5000)
-                if first_result:
-                    self._emit_browser_visual({
-                        'type': 'click_action', 
-                        'message': '🖱️ Haciendo clic en primer resultado',
-                        'timestamp': time.time()
-                    })
+            # Registrar página de resultados
+            results['pages_visited'].append({
+                'url': page.url,
+                'title': await page.title(),
+                'type': 'search_results',
+                'search_terms': search_terms,
+                'timestamp': time.time()
+            })
+            
+            results['actions_performed'].append({
+                'action': 'search_completed',
+                'terms': search_terms,
+                'results_url': page.url,
+                'timestamp': time.time()
+            })
+            
+            # 6. EXPLORAR PRIMEROS RESULTADOS
+            await self._explore_search_results(page, search_terms, results)
+                
+        except Exception as e:
+            self._emit_browser_visual({
+                'type': 'search_error',
+                'message': f'❌ Error en búsqueda: {str(e)}',
+                'timestamp': time.time()
+            })
+            
+            # Fallback: navegación genérica
+            await self._perform_generic_exploration(page, results)
+    
+    async def _explore_search_results(self, page, search_terms: str, results: Dict[str, Any]):
+        """🔍 EXPLORAR RESULTADOS DE BÚSQUEDA DE MANERA INTELIGENTE"""
+        
+        try:
+            # Buscar enlaces de resultados con múltiples estrategias
+            result_selectors = [
+                'h3 a',  # Google, Bing estándar
+                '.g h3 a',  # Google específico
+                '.b_algo h2 a',  # Bing específico
+                '[data-hveid] h3 a',  # Google alternativo
+                '.result h3 a',  # Genérico
+                'a[href*="http"]:has(h3)',  # Fallback general
+                'a[href*="http"]:has(h2)',  # Fallback alternativo
+            ]
+            
+            result_links = []
+            
+            for selector in result_selectors:
+                try:
+                    links = await page.query_selector_all(selector)
+                    if links:
+                        self._emit_progress(f"✅ Encontrados {len(links)} resultados con: {selector}")
+                        result_links = links[:3]  # Tomar primeros 3 resultados
+                        break
+                except:
+                    continue
+            
+            if not result_links:
+                self._emit_progress("⚠️ No se encontraron enlaces de resultados, haciendo scroll")
+                # Hacer scroll para cargar más contenido
+                await page.evaluate('window.scrollTo(0, document.body.scrollHeight / 2)')
+                await asyncio.sleep(2)
+                return
+            
+            # Explorar los primeros resultados encontrados
+            for i, link in enumerate(result_links[:2]):  # Solo primeros 2 para no tomar demasiado tiempo
+                try:
+                    href = await link.get_attribute('href')
+                    link_text = await link.text_content()
                     
-                    await first_result.click()
-                    await page.wait_for_load_state('networkidle')
+                    if href and href.startswith('http'):
+                        self._emit_browser_visual({
+                            'type': 'exploring_result',
+                            'message': f'🔗 Explorando resultado {i+1}: {link_text[:50]}...',
+                            'link_text': link_text,
+                            'url': href,
+                            'timestamp': time.time()
+                        })
+                        
+                        # Abrir resultado en la misma página
+                        await link.click()
+                        await page.wait_for_load_state('networkidle')
+                        
+                        # Registrar página visitada
+                        results['pages_visited'].append({
+                            'url': page.url,
+                            'title': await page.title(),
+                            'type': 'search_result_page',
+                            'result_index': i,
+                            'search_terms': search_terms,
+                            'timestamp': time.time()
+                        })
+                        
+                        # Explorar el contenido brevemente
+                        await asyncio.sleep(2)
+                        await page.evaluate('window.scrollTo(0, document.body.scrollHeight / 3)')
+                        await asyncio.sleep(2)
+                        
+                        results['actions_performed'].append({
+                            'action': 'result_explored',
+                            'result_index': i,
+                            'url': href,
+                            'title': link_text,
+                            'timestamp': time.time()
+                        })
+                        
+                        # Volver a resultados si no es el último
+                        if i < len(result_links) - 1:
+                            await page.go_back()
+                            await page.wait_for_load_state('networkidle')
+                            await asyncio.sleep(1)
+                        
+                except Exception as e:
+                    self._emit_progress(f"⚠️ Error explorando resultado {i+1}: {str(e)}")
+                    continue
                     
-                    # Registrar nueva página
-                    results['pages_visited'].append({
-                        'url': page.url,
-                        'title': await page.title(),
-                        'timestamp': time.time()
-                    })
+        except Exception as e:
+            self._emit_progress(f"❌ Error explorando resultados: {str(e)}")
+    
+    async def _perform_link_based_search(self, page, search_terms: str, results: Dict[str, Any]):
+        """🔗 BÚSQUEDA BASADA EN ENLACES CUANDO NO HAY CAMPO DE BÚSQUEDA"""
+        
+        try:
+            self._emit_browser_visual({
+                'type': 'link_based_search',
+                'message': f'🔗 Sin campo de búsqueda, buscando enlaces relevantes para: {search_terms}',
+                'search_terms': search_terms,
+                'timestamp': time.time()
+            })
+            
+            # Buscar enlaces que contengan palabras clave
+            search_words = search_terms.lower().split()[:3]  # Primeras 3 palabras
+            
+            all_links = await page.query_selector_all('a[href]')
+            relevant_links = []
+            
+            for link in all_links:
+                try:
+                    text = await link.text_content()
+                    href = await link.get_attribute('href')
                     
-                    results['actions_performed'].append({
-                        'action': 'click_result',
-                        'url': page.url,
-                        'timestamp': time.time()
-                    })
-                    
-            except:
-                # No se pudo hacer clic en resultado
-                pass
+                    if text and href:
+                        text_lower = text.lower()
+                        # Verificar si el texto del enlace contiene alguna palabra clave
+                        relevance_score = sum(1 for word in search_words if word in text_lower)
+                        
+                        if relevance_score > 0 and len(text.strip()) > 5:
+                            relevant_links.append({
+                                'element': link,
+                                'text': text.strip(),
+                                'href': href,
+                                'score': relevance_score
+                            })
+                except:
+                    continue
+            
+            # Ordenar por relevancia y tomar los mejores
+            relevant_links.sort(key=lambda x: x['score'], reverse=True)
+            
+            if relevant_links:
+                best_link = relevant_links[0]
+                self._emit_browser_visual({
+                    'type': 'relevant_link_found',
+                    'message': f'🎯 Enlace relevante encontrado: {best_link["text"][:50]}...',
+                    'link_text': best_link['text'],
+                    'url': best_link['href'],
+                    'timestamp': time.time()
+                })
+                
+                # Hacer clic en el enlace más relevante
+                await best_link['element'].click()
+                await page.wait_for_load_state('networkidle')
+                
+                results['actions_performed'].append({
+                    'action': 'relevant_link_clicked',
+                    'link_text': best_link['text'],
+                    'url': best_link['href'],
+                    'relevance_score': best_link['score'],
+                    'timestamp': time.time()
+                })
+                
+                # Registrar nueva página
+                results['pages_visited'].append({
+                    'url': page.url,
+                    'title': await page.title(),
+                    'type': 'link_exploration',
+                    'search_terms': search_terms,
+                    'timestamp': time.time()
+                })
+            else:
+                self._emit_progress("⚠️ No se encontraron enlaces relevantes")
+                await self._perform_generic_exploration(page, results)
+                
+        except Exception as e:
+            self._emit_progress(f"❌ Error en búsqueda basada en enlaces: {str(e)}")
+            await self._perform_generic_exploration(page, results)
     
     async def _perform_pokemon_search(self, page, results: Dict[str, Any]):
         """🎮 BÚSQUEDA ESPECÍFICA DE POKÉMON"""
