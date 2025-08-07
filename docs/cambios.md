@@ -18,7 +18,7 @@
    - Servicios iniciados: backend, frontend, mongodb, code-server
    - X11 Virtual: Servidor Xvfb iniciado (Display :99, PID 2036)
    - Navegadores: Playwright y dependencias instaladas
-   - URL Externa: https://cf3b468c-2f1b-49f1-91df-1c9e804df1c7.preview.emergentagent.com
+   - URL Externa: https://45dfeaa6-7eaf-4101-bc6c-20901a318336.preview.emergentagent.com
 
 3. **Creación de Estructura de Documentación**
    - Directorio creado: `/app/docs/`
