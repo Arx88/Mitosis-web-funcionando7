@@ -421,27 +421,33 @@ class OllamaQueueManager:
                 'requests': queue_requests
             },
             'processing': {
-                'count': len(processing_requests),
+                'active_count': len(processing_requests),
                 'max_concurrent': self.max_concurrent_requests,
                 'requests': processing_requests
             },
-            'stats': {
-                'requests_queued': self.stats.requests_queued,
-                'requests_completed': self.stats.requests_completed,
-                'requests_failed': self.stats.requests_failed,
-                'average_wait_time': round(self.stats.average_wait_time, 2),
-                'average_processing_time': round(self.stats.average_processing_time, 2),
-                'throughput_per_minute': round(self.stats.throughput_per_minute, 2),
-                'uptime_seconds': round(self.stats.uptime_seconds, 2),
-                'ollama_errors': self.stats.ollama_errors,
-                'timeout_errors': self.stats.timeout_errors
+            'semaphore': {
+                'available_permits': self._semaphore._value if hasattr(self._semaphore, '_value') else 0
             },
-            'health': {
-                'is_running': not self._shutdown,
-                'queue_full': len(queue_requests) >= self.max_queue_size,
-                'processing_capacity': self.max_concurrent_requests - len(processing_requests)
+            'stats': {
+                'total_requests': self.stats.requests_queued,
+                'successful_requests': self.stats.requests_completed,
+                'failed_requests': self.stats.requests_failed,
+                'average_wait_time': self.stats.average_wait_time,
+                'average_processing_time': self.stats.average_processing_time
+            },
+            'manager': {
+                'running': not self._shutdown,
+                'created_at': datetime.now().isoformat()
             }
         }
+    
+    def get_active_requests_count(self) -> int:
+        """Obtener número de requests activos (procesándose)"""
+        return len(self._processing_requests)
+    
+    def get_queue_size(self) -> int:
+        """Obtener número de requests en cola esperando"""
+        return len(self._queue)
     
     async def _cleanup_loop(self) -> None:
         """
