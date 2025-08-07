@@ -536,8 +536,10 @@ class RealTimeBrowserTool(BaseTool):
                             self._emit_progress(f"🔍 Enviando búsqueda con botón: {selector}")
                             await search_button.click()
                             search_submitted = True
+                            self._emit_progress(f"✅ Búsqueda enviada con botón: {selector}")
                             break
-                    except:
+                    except Exception as e:
+                        self._emit_progress(f"⚠️ Error con botón {selector}: {str(e)}")
                         continue
             
             if not search_submitted:
