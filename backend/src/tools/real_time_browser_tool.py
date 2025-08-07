@@ -737,7 +737,7 @@ class RealTimeBrowserTool(BaseTool):
                         # Explorar el contenido de la página
                         await page.evaluate('window.scrollTo(0, document.body.scrollHeight / 3)')
                         await asyncio.sleep(2)
-                        await self._capture_screenshot_async(page, f"result_{i+1}_scrolled")
+                        await self._capture_screenshot_async(page, i+100)
                         
                         # Extraer contenido real de la página
                         page_content = await page.evaluate('''
