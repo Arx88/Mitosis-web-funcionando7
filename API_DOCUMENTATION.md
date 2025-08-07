@@ -9,7 +9,7 @@
 
 Todas las APIs del backend están prefijadas con `/api` para cumplir con las reglas de ingress de Kubernetes.
 
-**Base URL**: `https://df209258-3b83-483b-a34c-970a958b35e3.preview.emergentagent.com/api`
+**Base URL**: `https://7f2f9f80-1044-4c65-ba29-a1b4a497c200.preview.emergentagent.com/api`
 
 ---
 
