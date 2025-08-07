@@ -207,4 +207,37 @@ Plan Usuario → Sub-Planificador IA → Múltiples Búsquedas Específicas →
 Auto-Evaluador IA → Re-Planificador (si necesario) → Resultado Robusto
 ```
 
-**STATUS**: ✅ **SISTEMA COMPLETAMENTE OPERATIVO Y LISTO PARA PRÓXIMA FASE**
+### 🧪 **TESTING SISTEMA JERÁRQUICO COMPLETADO - PROBLEMAS CRÍTICOS IDENTIFICADOS**
+
+#### ❌ **RESULTADO DEL TESTING**:
+**STATUS**: **SISTEMA JERÁRQUICO NO SE ESTÁ EJECUTANDO**
+
+#### 🔍 **PROBLEMAS IDENTIFICADOS**:
+
+1. **Query Processing Crítico**: 
+   - Input: "energía solar" 
+   - Procesado como: "análisis estadísticas análisis estadísticas realizar investigación"
+   - URL navegada: `q=análisis+estadísticas+análisis+estadísticas+realizar+investigación`
+
+2. **Sistema NO Jerárquico**:
+   - ❌ NO usa `execute_web_search_step()` implementado
+   - ❌ Logs sin evidencia de "BÚSQUEDA JERÁRQUICA"
+   - ❌ Usa método fallback `playwright_subprocess_real`
+   - ❌ Sin sub_tasks, sin hierarchical_info
+
+3. **Resultados Incorrectos**:
+   - Búsqueda "energía solar" → Definiciones de "análisis" 
+   - 8 resultados sobre diccionarios en español
+   - 0 resultados sobre energía solar
+
+#### ⚡ **CAUSA RAÍZ CONFIRMADA**:
+- **Flujo de ejecución**: Sistema NO está usando la función jerárquica implementada
+- **Keyword processing**: `_extract_clean_keywords_static()` está roto
+- **Tool routing**: web_search tool no está apuntando a execute_web_search_step
+
+#### 🎯 **ACCIÓN REQUERIDA - FASE 2 URGENTE**:
+1. **Investigar routing**: Por qué no se llama execute_web_search_step
+2. **Arreglar keyword extraction**: unified_web_search_tool.py 
+3. **Testing de validación**: Confirmar sistema jerárquico funcional
+
+**CONCLUSIÓN**: ❌ **SISTEMA JERÁRQUICO IMPLEMENTADO PERO NO EJECUTÁNDOSE - NECESITA CORRECCIÓN INMEDIATA**
