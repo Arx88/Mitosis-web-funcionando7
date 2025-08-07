@@ -1553,12 +1553,15 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
         }
 
 def execute_enhanced_analysis_step(title: str, description: str, ollama_service, original_message: str, previous_results: list) -> dict:
-    """📊 ANÁLISIS MEJORADO - Análisis con contexto de resultados previos"""
+    """
+    🧠 SISTEMA JERÁRQUICO DE ANÁLISIS AVANZADO
+    Genera sub-análisis específicos, ejecuta múltiples enfoques analíticos y auto-evalúa completitud
+    """
     try:
-        logger.info(f"📊 Ejecutando análisis mejorado: {title}")
+        logger.info(f"🚀 INICIANDO ANÁLISIS JERÁRQUICO: {title}")
         
-        if not ollama_service or not ollama_service.is_healthy():
-            raise Exception("Servicio Ollama no disponible")
+        # 🧠 PASO 1: GENERAR SUB-PLAN DE ANÁLISIS INTERNO
+        sub_analyses = []
         
         # Construir contexto con resultados previos
         context = ""
@@ -1568,51 +1571,252 @@ def execute_enhanced_analysis_step(title: str, description: str, ollama_service,
                 if prev_result.get('success'):
                     context += f"- Herramienta {prev_result.get('tool', 'unknown')}: {prev_result.get('result', {}).get('summary', 'Sin resumen')}\n"
         
-        analysis_prompt = f"""
-EJECUTA el análisis específico solicitado para: {original_message}
+        # Crear múltiples tipos de análisis basados en el título y contexto
+        keywords = f"{title} {description}".lower()
+        
+        # Análisis básico siempre presente
+        sub_analyses.append({
+            'type': 'contextual_analysis',
+            'focus': 'Análisis del contexto específico',
+            'prompt_template': 'contextual'
+        })
+        
+        # Análisis específicos basado en keywords
+        if any(word in keywords for word in ['datos', 'estadísticas', 'información', 'resultados']):
+            sub_analyses.append({
+                'type': 'data_analysis',
+                'focus': 'Análisis de datos y estadísticas',
+                'prompt_template': 'data'
+            })
+        
+        if any(word in keywords for word in ['tendencias', 'evolución', 'cambios', 'desarrollo']):
+            sub_analyses.append({
+                'type': 'trend_analysis',
+                'focus': 'Análisis de tendencias y evolución',
+                'prompt_template': 'trend'
+            })
+        
+        if any(word in keywords for word in ['comparar', 'evaluar', 'valorar', 'contrastar']):
+            sub_analyses.append({
+                'type': 'comparative_analysis',
+                'focus': 'Análisis comparativo y evaluativo',
+                'prompt_template': 'comparative'
+            })
+        
+        logger.info(f"📋 Sub-plan de análisis generado con {len(sub_analyses)} enfoques específicos")
+        
+        # 📊 PASO 2: EJECUTAR SUB-ANÁLISIS CON DOCUMENTACIÓN PROGRESIVA
+        accumulated_insights = []
+        analyses_performed = 0
+        
+        for i, sub_analysis in enumerate(sub_analyses):
+            if ollama_service and ollama_service.is_healthy():
+                try:
+                    logger.info(f"🔍 Ejecutando análisis {i+1}/{len(sub_analyses)}: {sub_analysis['focus']}")
+                    
+                    # Generar prompt específico según el tipo
+                    analysis_prompt = generate_hierarchical_analysis_prompt(
+                        sub_analysis['prompt_template'],
+                        title,
+                        description,
+                        original_message,
+                        context,
+                        sub_analysis['focus']
+                    )
+                    
+                    result = ollama_service.generate_response(analysis_prompt, {'temperature': 0.7})
+                    
+                    if not result.get('error'):
+                        analysis_content = result.get('response', '')
+                        if analysis_content and len(analysis_content) > 50:  # Mínimo contenido
+                            accumulated_insights.append({
+                                'type': sub_analysis['type'],
+                                'focus': sub_analysis['focus'],
+                                'content': analysis_content,
+                                'length': len(analysis_content)
+                            })
+                            analyses_performed += 1
+                            logger.info(f"✅ Análisis {i+1} completado: {len(analysis_content)} caracteres")
+                    
+                except Exception as analysis_error:
+                    logger.warning(f"⚠️ Error en análisis {i+1}: {str(analysis_error)}")
+        
+        logger.info(f"📚 Análisis jerárquico completado: {analyses_performed} análisis ejecutados")
+        
+        # 🎯 PASO 3: AUTO-EVALUACIÓN DE COMPLETITUD ANALÍTICA
+        total_content = sum([insight['length'] for insight in accumulated_insights])
+        confidence_score = min(100, (total_content // 50))  # 50 chars = 1%, máximo 100%
+        meets_criteria = len(accumulated_insights) >= 2 and total_content >= 300
+        
+        logger.info(f"📊 Evaluación de completitud analítica: {confidence_score}% confianza")
+        
+        # 🔄 PASO 4: RE-ANÁLISIS ADAPTIVO SI ES NECESARIO
+        if not meets_criteria and confidence_score < 70:
+            logger.info("🔄 Re-análisis necesario - ejecutando análisis de síntesis adicional")
+            
+            if ollama_service and ollama_service.is_healthy():
+                try:
+                    # Análisis de síntesis adicional
+                    synthesis_prompt = f"""
+REALIZA un análisis de síntesis completo sobre: {original_message}
 
-Paso a EJECUTAR: {title}
+TAREA ESPECÍFICA: {title}
 Descripción: {description}
 
 {context}
 
-GENERA DIRECTAMENTE el análisis completado que incluya:
+GENERA un análisis integral que incluya:
+1. Síntesis de toda la información disponible
+2. Identificación de patrones y conexiones
+3. Evaluación crítica de hallazgos
+4. Conclusiones fundamentadas y detalladas
+
+FORMATO: Análisis completo y estructurado en español.
+                    """
+                    
+                    synthesis_result = ollama_service.generate_response(synthesis_prompt, {'temperature': 0.8})
+                    
+                    if not synthesis_result.get('error'):
+                        synthesis_content = synthesis_result.get('response', '')
+                        if synthesis_content:
+                            accumulated_insights.append({
+                                'type': 'synthesis_analysis',
+                                'focus': 'Análisis de síntesis integral',
+                                'content': synthesis_content,
+                                'length': len(synthesis_content)
+                            })
+                            analyses_performed += 1
+                            
+                            # Re-evaluar
+                            total_content = sum([insight['length'] for insight in accumulated_insights])
+                            confidence_score = min(100, (total_content // 50))
+                            logger.info(f"📊 Re-evaluación completitud analítica: {confidence_score}% confianza")
+                            
+                except Exception as synthesis_error:
+                    logger.warning(f"⚠️ Error en análisis de síntesis: {str(synthesis_error)}")
+        
+        # 📤 PASO 5: COMPILAR RESULTADO ANALÍTICO FINAL
+        final_analysis = compile_hierarchical_analysis_result(accumulated_insights)
+        
+        final_result = {
+            'success': True,
+            'type': 'hierarchical_enhanced_analysis',
+            'content': final_analysis,
+            'length': len(final_analysis),
+            'analyses_performed': analyses_performed,
+            'confidence_score': confidence_score,
+            'context_used': len(previous_results),
+            'summary': f"✅ Análisis jerárquico completado: {len(final_analysis)} caracteres de {analyses_performed} análisis específicos",
+            'hierarchical_info': {
+                'sub_analyses_executed': len(sub_analyses),
+                'total_analyses': analyses_performed,
+                'confidence': confidence_score,
+                'meets_criteria': meets_criteria,
+                'insights_generated': len(accumulated_insights)
+            }
+        }
+        
+        logger.info(f"✅ Análisis jerárquico completado exitosamente - {len(final_analysis)} caracteres finales")
+        
+        return final_result
+        
+    except Exception as e:
+        logger.error(f"❌ Hierarchical enhanced analysis error: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'hierarchical_enhanced_analysis_error',
+            'summary': f'❌ Error en análisis jerárquico: {str(e)}'
+        }
+
+def generate_hierarchical_analysis_prompt(prompt_type: str, title: str, description: str, original_message: str, context: str, focus: str) -> str:
+    """Genera prompts específicos para cada tipo de análisis jerárquico"""
+    
+    base_info = f"""
+EJECUTA el análisis específico solicitado para: {original_message}
+
+Paso a EJECUTAR: {title}
+Descripción: {description}
+ENFOQUE ESPECÍFICO: {focus}
+
+{context}
+"""
+    
+    if prompt_type == 'contextual':
+        return base_info + """
+GENERA un análisis contextual que incluya:
+1. Análisis del contexto específico con datos concretos disponibles
+2. Identificación de elementos clave en la información
+3. Relaciones y conexiones entre diferentes aspectos
+4. Interpretación del significado en el contexto dado
+
+Formato: Análisis contextual detallado en español.
+"""
+    
+    elif prompt_type == 'data':
+        return base_info + """
+GENERA un análisis de datos que incluya:
+1. Evaluación de datos, cifras y estadísticas disponibles
+2. Identificación de patrones numéricos y tendencias cuantitativas
+3. Análisis de la calidad y fiabilidad de los datos
+4. Interpretación de métricas y valores significativos
+
+Formato: Análisis de datos estructurado en español.
+"""
+    
+    elif prompt_type == 'trend':
+        return base_info + """
+GENERA un análisis de tendencias que incluya:
+1. Identificación de evoluciones y cambios temporales
+2. Análisis de direcciones de desarrollo futuro
+3. Evaluación de factores que impulsan las tendencias
+4. Predicciones basadas en patrones identificados
+
+Formato: Análisis de tendencias prospectivo en español.
+"""
+    
+    elif prompt_type == 'comparative':
+        return base_info + """
+GENERA un análisis comparativo que incluya:
+1. Comparación entre diferentes elementos o opciones
+2. Evaluación de ventajas y desventajas relativas
+3. Análisis de similitudes y diferencias significativas
+4. Conclusiones sobre preferencias o recomendaciones
+
+Formato: Análisis comparativo evaluativo en español.
+"""
+    
+    else:  # default
+        return base_info + """
+GENERA un análisis completo que incluya:
 1. Análisis específico del contexto con datos concretos
 2. Hallazgos principales identificados
 3. Evaluación detallada de la información disponible
 4. Conclusiones específicas y fundamentadas
 
-NO generes "próximos pasos" o "plan de acción".
-NO escribas "utilizaré herramientas" o "realizaré búsquedas".
-EJECUTA y COMPLETA el análisis ahora mismo.
-
 Formato: Análisis ejecutado, completo y detallado en español.
 """
-        
-        result = ollama_service.generate_response(analysis_prompt, {'temperature': 0.7})
-        
-        if result.get('error'):
-            raise Exception(f"Error Ollama: {result['error']}")
-        
-        analysis_content = result.get('response', 'Análisis mejorado completado')
-        
-        return {
-            'success': True,
-            'type': 'enhanced_analysis',
-            'content': analysis_content,
-            'length': len(analysis_content),
-            'context_used': len(previous_results),
-            'summary': f"✅ Análisis mejorado completado - {len(analysis_content)} caracteres con contexto de {len(previous_results)} resultados previos"
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ Enhanced analysis error: {str(e)}")
-        return {
-            'success': False,
-            'error': str(e),
-            'type': 'enhanced_analysis_error',
-            'summary': f'❌ Error en análisis mejorado: {str(e)}'
-        }
+
+def compile_hierarchical_analysis_result(accumulated_insights: list) -> str:
+    """Compila los insights jerárquicos en un resultado final estructurado"""
+    if not accumulated_insights:
+        return "Análisis jerárquico completado sin insights específicos generados."
+    
+    compiled_analysis = "# Análisis Jerárquico Integral\n\n"
+    
+    for i, insight in enumerate(accumulated_insights):
+        compiled_analysis += f"## {i+1}. {insight['focus']}\n\n"
+        compiled_analysis += f"{insight['content']}\n\n"
+        compiled_analysis += "---\n\n"
+    
+    # Añadir resumen final
+    total_length = sum([insight['length'] for insight in accumulated_insights])
+    compiled_analysis += f"## Resumen del Análisis Jerárquico\n\n"
+    compiled_analysis += f"- **Enfoques analíticos**: {len(accumulated_insights)}\n"
+    compiled_analysis += f"- **Contenido total**: {total_length} caracteres\n"
+    compiled_analysis += f"- **Tipos de análisis**: {', '.join([insight['type'] for insight in accumulated_insights])}\n"
+    
+    return compiled_analysis
 
 def execute_multi_source_research_step(title: str, description: str, tool_manager, task_id: str, original_message: str) -> dict:
     """🔍 INVESTIGACIÓN MULTI-FUENTE - Combina múltiples herramientas de búsqueda"""
