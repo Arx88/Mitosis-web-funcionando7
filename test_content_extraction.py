@@ -23,9 +23,16 @@ async def test_content_extraction():
     tool_manager = ToolManager()
     
     # Obtener herramienta web_search
-    web_search_tool = tool_manager.get_tool('web_search')
+    available_tools = tool_manager.get_available_tools()
+    web_search_tool = None
+    for tool in available_tools:
+        if tool.name == 'web_search':
+            web_search_tool = tool
+            break
+    
     if not web_search_tool:
         print("❌ Error: Herramienta web_search no encontrada")
+        print(f"🔧 Herramientas disponibles: {[t.name for t in available_tools]}")
         return
     
     print("✅ Herramienta web_search encontrada")
