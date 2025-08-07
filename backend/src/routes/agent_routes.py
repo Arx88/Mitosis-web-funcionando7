@@ -4847,11 +4847,11 @@ Tu respuesta debe ser ÚNICAMENTE el título:
 
 def extract_search_query_from_message(message: str, step_title: str) -> str:
     """Extraer query de búsqueda optimizada del mensaje y título del paso"""
-    # Combinar mensaje original con título del paso para contexto
-    combined_text = f"{message} {step_title}"
-    
-    # Limpiar texto común
-    query = combined_text.replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
+    # 🧠 USAR FUNCIÓN EXISTENTE DE EXTRACCIÓN DE KEYWORDS
+    from ..tools.unified_web_search_tool import UnifiedWebSearchTool
+    web_search_tool = UnifiedWebSearchTool()
+    raw_query = f"{message} {step_title}".strip()
+    query = web_search_tool._extract_clean_keywords_static(raw_query)
     
     # Limitar longitud para búsquedas efectivas
     if len(query) > 100:
