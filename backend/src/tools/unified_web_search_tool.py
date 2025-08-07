@@ -123,24 +123,19 @@ class UnifiedWebSearchTool(BaseTool):
         if not query_text or len(query_text.strip()) < 3:
             return "noticias actualidad 2025"
         
-        # Remover texto de instrucciones comunes MÁS COMPLETO
+        # Remover texto de instrucciones comunes - MEJORADO Y MÁS PRECISO
         clean_text = query_text.lower()
         instruction_patterns = [
-            r'buscar información sobre\s*',
-            r'investigar sobre\s*', 
-            r'analizar\s*',
-            r'obtener información de\s*',
-            r'recopilar datos sobre\s*',
-            r'utilizar.*herramienta.*para\s*',
-            r'web_search para\s*',
-            r'información actualizada sobre\s*',
-            r'información específica sobre\s*',
-            r'datos específicos de\s*',
-            r'encontrar información sobre\s*',
-            r'conseguir datos de\s*',
+            r'necesito que busques?\s*(en\s*internet)?\s*(información)?\s*(sobre|noticias)?\s*',
+            r'buscar?\s*(información|noticias|datos)?\s*(sobre|de)?\s*',
+            r'investigar?\s*(sobre|acerca\s*de)?\s*',
+            r'obtener?\s*(información|datos|noticias)?\s*(de|sobre)?\s*',
+            r'encontrar?\s*(información|noticias|datos)?\s*(sobre|de)?\s*',
             r'realizar.*búsqueda.*sobre\s*',
-            r'buscar datos sobre\s*',
-            r'investigar.*tema.*de\s*'
+            r'web_search\s*para\s*',
+            r'utilizar.*herramienta.*para\s*',
+            r'filtrando\s*por\s*(relevancia|actualidad)\s*',
+            r'publicadas?\s*en\s*\d{4}\s*'
         ]
         
         for pattern in instruction_patterns:
