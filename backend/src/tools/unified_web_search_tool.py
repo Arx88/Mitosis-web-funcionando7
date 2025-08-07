@@ -634,16 +634,9 @@ class UnifiedWebSearchTool(BaseTool):
                 if not screenshot_url and screenshots:
                     screenshot_url = screenshots[-1].get('path', '')
                 
-                # Buscar contenido extraído en actions_performed
-                content_extracted = ""
-                content_length = 0
-                for action in actions_performed:
-                    if (action.get('url') == page_url and 
-                        action.get('action') == 'result_explored' and
-                        action.get('content_preview')):
-                        content_extracted = action.get('content_preview', '')
-                        content_length = action.get('content_length', 0)
-                        break
+                # Buscar contenido extraído (ya está en page_data después del filtro)
+                content_extracted = page_data.get('content_extracted', '')
+                content_length = page_data.get('content_length', 0)
                 
                 # Crear snippet mejorado con contenido real si está disponible
                 if content_extracted:
