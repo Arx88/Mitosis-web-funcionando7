@@ -776,7 +776,7 @@ class RealTimeBrowserTool(BaseTool):
                         # Scroll adicional para explorar más contenido
                         await page.evaluate('window.scrollTo(0, document.body.scrollHeight / 2)')
                         await asyncio.sleep(2)
-                        await self._capture_screenshot_async(page, f"result_{i+1}_final")
+                        await self._capture_screenshot_async(page, i+200)
                         
                         # Volver a resultados de Bing para el siguiente enlace
                         self._emit_progress(f"🔄 Volviendo a resultados para siguiente enlace...")
