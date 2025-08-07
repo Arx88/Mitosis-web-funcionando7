@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-BACKEND TESTING SUITE FOR MITOSIS OLLAMA PROCESSING TOOL FIX
-Testing the corrected OllamaProcessingTool to verify task_id error is resolved
-Focus: Verify that 'OllamaProcessingTool' object has no attribute 'task_id' error is fixed
-Context: Error was in line 76, changed self.task_id to config.get('task_id', 'unknown')
+BACKEND TESTING SUITE FOR MITOSIS WEB NAVIGATION FUNCTIONALITY
+Testing the corrected web navigation system to verify multiple site navigation
+Focus: Verify that web navigation visits multiple different websites (NOT just Bing)
+Context: User reported TaskView terminal showing same Bing image, system not navigating to specific links
 """
 
 import requests
@@ -13,6 +13,7 @@ import sys
 from datetime import datetime
 import threading
 import re
+import subprocess
 
 # Configuration
 BACKEND_URL = "https://df209258-3b83-483b-a34c-970a958b35e3.preview.emergentagent.com"
