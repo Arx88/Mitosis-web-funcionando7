@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-BACKEND TESTING SUITE FOR MITOSIS WEB SEARCH FUNCTIONALITY FIX
-Testing the corrected web_search tool to verify real results are obtained instead of simulated ones
-Focus: Verify that "Parsing failed - no real search results found" error is resolved
+BACKEND TESTING SUITE FOR MITOSIS OLLAMA PROCESSING TOOL FIX
+Testing the corrected OllamaProcessingTool to verify task_id error is resolved
+Focus: Verify that 'OllamaProcessingTool' object has no attribute 'task_id' error is fixed
+Context: Error was in line 76, changed self.task_id to config.get('task_id', 'unknown')
 """
 
 import requests
