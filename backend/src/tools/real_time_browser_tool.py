@@ -665,89 +665,96 @@ class RealTimeBrowserTool(BaseTool):
                             'timestamp': time.time()
                         })
                         
-                        # Abrir resultado en nueva pestaña para evitar perder el contexto
-                        await link.click(modifiers=['Meta'])  # Cmd+Click para nueva pestaña
-                        await asyncio.sleep(2)
+                        # NAVEGACIÓN DIRECTA SIN PESTAÑAS - MÉTODO SIMPLIFICADO Y ROBUSTO
+                        self._emit_progress(f"🌐 Navegando directamente a: {href[:50]}...")
                         
-                        # Cambiar a la nueva pestaña
-                        all_pages = page.context.pages
-                        if len(all_pages) > 1:
-                            new_page = all_pages[-1]  # La pestaña más reciente
-                            await new_page.wait_for_load_state('networkidle', timeout=10000)
-                            
-                            # Registrar página visitada
-                            results['pages_visited'].append({
-                                'url': new_page.url,
-                                'title': await new_page.title(),
-                                'type': 'search_result_page',
-                                'result_index': i,
-                                'search_terms': search_terms,
-                                'timestamp': time.time(),
-                                'content_extracted': True
-                            })
-                            
-                            # Explorar el contenido brevemente
-                            await asyncio.sleep(2)
-                            await new_page.evaluate('window.scrollTo(0, document.body.scrollHeight / 3)')
-                            await asyncio.sleep(2)
-                            
-                            # Extraer contenido real de la página
-                            page_content = await new_page.evaluate('''
-                                () => {
-                                    const content = document.body.innerText || document.textContent || '';
-                                    return content.substring(0, 2000);  // Primeros 2000 caracteres
+                        # Navegar directamente al enlace
+                        await page.goto(href, wait_until='networkidle')
+                        await asyncio.sleep(3)
+                        
+                        # Capturar screenshot de la página visitada
+                        await self._capture_current_screenshot(page, f"result_{i+1}_page")
+                        
+                        # Registrar página visitada
+                        current_title = await page.title()
+                        current_url = page.url
+                        
+                        results['pages_visited'].append({
+                            'url': current_url,
+                            'title': current_title,
+                            'type': 'search_result_page',
+                            'result_index': i,
+                            'search_terms': search_terms,
+                            'timestamp': time.time(),
+                            'content_extracted': True,
+                            'navigation_method': 'direct_goto'
+                        })
+                        
+                        self._emit_browser_visual({
+                            'type': 'page_visited',
+                            'message': f'✅ Navegado a: {current_title[:50]}...',
+                            'url': current_url,
+                            'title': current_title,
+                            'result_index': i,
+                            'timestamp': time.time()
+                        })
+                        
+                        # Explorar el contenido de la página
+                        await page.evaluate('window.scrollTo(0, document.body.scrollHeight / 3)')
+                        await asyncio.sleep(2)
+                        await self._capture_current_screenshot(page, f"result_{i+1}_scrolled")
+                        
+                        # Extraer contenido real de la página
+                        page_content = await page.evaluate('''
+                            () => {
+                                // Intentar extraer contenido de elementos comunes
+                                let content = '';
+                                
+                                // Intentar obtener contenido de artículo
+                                const article = document.querySelector('article, main, .content, .post, .article');
+                                if (article) {
+                                    content = article.innerText || article.textContent || '';
+                                } else {
+                                    // Fallback al body
+                                    content = document.body.innerText || document.body.textContent || '';
                                 }
-                            ''')
-                            
-                            results['actions_performed'].append({
-                                'action': 'result_explored',
-                                'result_index': i,
-                                'url': href,
-                                'title': link_text,
-                                'content_preview': page_content[:200],
-                                'content_length': len(page_content),
-                                'timestamp': time.time()
-                            })
-                            
-                            # Cerrar la pestaña del resultado y volver a la búsqueda
-                            await new_page.close()
-                        else:
-                            # Fallback: si no se abrió nueva pestaña, navegar normal
-                            await page.wait_for_load_state('networkidle')
-                            
-                            # Registrar página visitada
-                            results['pages_visited'].append({
-                                'url': page.url,
-                                'title': await page.title(),
-                                'type': 'search_result_page',
-                                'result_index': i,
-                                'search_terms': search_terms,
-                                'timestamp': time.time(),
-                                'content_extracted': True
-                            })
-                            
-                            # Extraer contenido real
-                            page_content = await page.evaluate('''
-                                () => {
-                                    const content = document.body.innerText || document.textContent || '';
-                                    return content.substring(0, 2000);
-                                }
-                            ''')
-                            
-                            results['actions_performed'].append({
-                                'action': 'result_explored',
-                                'result_index': i,
-                                'url': href,
-                                'title': link_text,
-                                'content_preview': page_content[:200],
-                                'content_length': len(page_content),
-                                'timestamp': time.time()
-                            })
-                            
-                            # Volver a resultados
-                            await page.go_back()
-                            await page.wait_for_load_state('networkidle')
-                            await asyncio.sleep(1)
+                                
+                                // Limpiar y limitar contenido
+                                return content.replace(/\\s+/g, ' ').trim().substring(0, 2000);
+                            }
+                        ''')
+                        
+                        self._emit_progress(f"📄 Contenido extraído: {len(page_content)} caracteres de {current_title[:30]}...")
+                        
+                        results['actions_performed'].append({
+                            'action': 'result_explored',
+                            'result_index': i,
+                            'url': current_url,
+                            'title': current_title,
+                            'content_preview': page_content[:300],
+                            'content_length': len(page_content),
+                            'timestamp': time.time(),
+                            'navigation_method': 'direct_goto',
+                            'content_extracted': len(page_content) > 100
+                        })
+                        
+                        # Scroll adicional para explorar más contenido
+                        await page.evaluate('window.scrollTo(0, document.body.scrollHeight / 2)')
+                        await asyncio.sleep(2)
+                        await self._capture_current_screenshot(page, f"result_{i+1}_final")
+                        
+                        # Volver a resultados de Bing para el siguiente enlace
+                        self._emit_progress(f"🔄 Volviendo a resultados para siguiente enlace...")
+                        await page.go_back()
+                        await asyncio.sleep(3)
+                        await page.wait_for_load_state('networkidle')
+                        await self._capture_current_screenshot(page, f"back_to_results_after_{i+1}")
+                        
+                        self._emit_browser_visual({
+                            'type': 'back_to_results',
+                            'message': f'↩️ De vuelta en resultados después de explorar sitio {i+1}',
+                            'timestamp': time.time()
+                        })
                         
                 except Exception as e:
                     self._emit_progress(f"⚠️ Error explorando resultado {i+1}: {str(e)}")
