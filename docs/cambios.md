@@ -51,7 +51,8 @@ mongodb                          RUNNING   pid 2080, uptime 0:00:40
 - Probar funcionalidad end-to-end de búsqueda
 
 ### 🔧 Archivos Modificados:
-- Ninguno hasta el momento (solo creación de documentación)
+- `/app/backend/src/tools/ollama_processing_tool.py` - Línea 76: Corregido `self.task_id` → `config.get('task_id', 'unknown')`
+- Backend reiniciado para aplicar cambios
 
 ### ✅ Problema Real Identificado y Solucionado:
 **PROBLEMA**: Error en OllamaProcessingTool: `'OllamaProcessingTool' object has no attribute 'task_id'`
