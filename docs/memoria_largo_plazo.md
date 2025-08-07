@@ -14,7 +14,7 @@
 ### Puertos y URLs
 - **Backend interno**: 0.0.0.0:8001 (mapeado externamente)
 - **Frontend**: Puerto 3000/5173 (desarrollo)
-- **URL externa**: https://ee70983e-b67d-421f-b372-8125796948bc.preview.emergentagent.com
+- **URL externa**: https://fbccc99e-1d40-4797-ac97-f134f2410c0b.preview.emergentagent.com
 - **API base**: `/api/` (todos los endpoints backend usan este prefijo)
 
 ### Base de Datos MongoDB
