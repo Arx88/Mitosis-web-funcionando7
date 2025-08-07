@@ -8845,6 +8845,9 @@ CREAR EL CONTENIDO COMPLETO AHORA:"""
             # EJECUTAR HERRAMIENTA REAL
             logger.info(f"🚀 Executing MAPPED tool: original='{step.get('tool', 'unknown')}' -> mapped='{tool}' with params: {tool_params}")
             
+            # 🔍 LOGGING CRÍTICO: Registrar herramienta usada
+            logger.info(f"📊 TOOL USAGE TRACKER: task_id={task_id}, step_id={step_id}, original_tool={step.get('tool', 'unknown')}, mapped_tool={tool}")
+            
             # Verificar que la herramienta existe antes de ejecutar
             available_tools = tool_manager.get_available_tools() if tool_manager else []
             if tool not in available_tools:
