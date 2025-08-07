@@ -6,6 +6,7 @@ Genera contenido final procesado basado en todo el contexto de la tarea
 import logging
 import sys
 import os
+import time
 from typing import Dict, Any, List
 
 from .base_tool import BaseTool, ParameterDefinition, ToolExecutionResult, register_tool
