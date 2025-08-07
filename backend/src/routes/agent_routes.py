@@ -1936,6 +1936,504 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
             'summary': f'❌ Error en búsqueda jerárquica: {str(e)}'
         }
 
+def generate_internal_research_plan(title: str, description: str, task_id: str) -> dict:
+    """
+    🧠 GENERADOR DE SUB-PLAN INTERNO PARA INVESTIGACIÓN JERÁRQUICA
+    Crea un plan detallado con múltiples búsquedas específicas usando Ollama
+    """
+    try:
+        # Obtener servicio Ollama
+        ollama_service = get_ollama_service()
+        if not ollama_service or not ollama_service.is_healthy():
+            logger.warning("⚠️ Ollama no disponible - usando sub-plan básico")
+            return generate_basic_research_plan(title, description)
+        
+        # Prompt para generar sub-plan de investigación
+        subplan_prompt = f"""
+TAREA: Crear un plan de investigación web detallado para este tema específico.
+
+TEMA: {title}
+DESCRIPCIÓN: {description}
+
+GENERA un plan de 3-5 búsquedas específicas que cubran diferentes aspectos:
+1. Información básica y conceptos fundamentales
+2. Datos actuales y estadísticas (si aplica)
+3. Análisis y perspectivas expertas
+4. Casos de estudio o ejemplos prácticos (si aplica)
+5. Ventajas, desventajas o consideraciones (si aplica)
+
+FORMATO JSON requerido:
+{{
+  "research_focus": "Descripción del enfoque de investigación",
+  "sub_tasks": [
+    {{
+      "id": "search_1",
+      "query_focus": "conceptos básicos {title}",
+      "goal": "Obtener fundamentos y definiciones",
+      "priority": "high"
+    }},
+    {{
+      "id": "search_2", 
+      "query_focus": "{title} datos estadísticas 2024",
+      "goal": "Recopilar datos actualizados",
+      "priority": "high"
+    }},
+    {{
+      "id": "search_3",
+      "query_focus": "{title} análisis expertos opiniones",
+      "goal": "Obtener perspectivas analíticas",
+      "priority": "medium"
+    }}
+  ]
+}}
+
+Responde SOLO con JSON válido:
+"""
+        
+        # Ejecutar con Ollama
+        result = ollama_service.generate_response(
+            subplan_prompt,
+            {'temperature': 0.4, 'max_tokens': 800},
+            False,  # no usar tools
+            task_id,
+            "internal_research_planning"
+        )
+        
+        if result.get('error'):
+            logger.error(f"❌ Error en Ollama para sub-plan: {result['error']}")
+            return generate_basic_research_plan(title, description)
+        
+        # Parsear respuesta JSON
+        response_text = result.get('response', '').strip()
+        try:
+            # Limpiar respuesta y extraer JSON
+            import re
+            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            if json_match:
+                plan_data = json.loads(json_match.group(0))
+                logger.info(f"✅ Sub-plan generado con Ollama: {len(plan_data.get('sub_tasks', []))} tareas")
+                return plan_data
+            else:
+                raise ValueError("No JSON found in response")
+                
+        except (json.JSONDecodeError, ValueError) as parse_error:
+            logger.error(f"❌ Error parseando sub-plan JSON: {parse_error}")
+            return generate_basic_research_plan(title, description)
+            
+    except Exception as e:
+        logger.error(f"❌ Error generando sub-plan interno: {str(e)}")
+        return generate_basic_research_plan(title, description)
+
+def generate_basic_research_plan(title: str, description: str) -> dict:
+    """
+    📋 GENERADOR DE SUB-PLAN BÁSICO DE RESPALDO
+    Crea un plan simple cuando Ollama no está disponible
+    """
+    return {
+        "research_focus": f"Investigación básica sobre {title}",
+        "sub_tasks": [
+            {
+                "id": "search_1",
+                "query_focus": f"{title} información básica",
+                "goal": "Obtener información fundamental",
+                "priority": "high"
+            },
+            {
+                "id": "search_2",
+                "query_focus": f"{title} datos actuales 2024",
+                "goal": "Recopilar información actualizada",
+                "priority": "high"
+            },
+            {
+                "id": "search_3",
+                "query_focus": f"{title} análisis detallado",
+                "goal": "Obtener análisis especializado",
+                "priority": "medium"
+            }
+        ]
+    }
+
+def execute_internal_research_plan(internal_plan: dict, tool_manager, task_id: str) -> dict:
+    """
+    📊 EJECUTOR DE SUB-PLAN INTERNO CON DOCUMENTACIÓN PROGRESIVA
+    Ejecuta múltiples búsquedas específicas y documenta los hallazgos
+    """
+    accumulated_findings = {
+        'searches_performed': [],
+        'successful_searches': 0,
+        'total_results': 0,
+        'all_results': [],
+        'research_focus': internal_plan.get('research_focus', 'Investigación general')
+    }
+    
+    # Extraer keywords para búsquedas
+    from ..tools.unified_web_search_tool import UnifiedWebSearchTool
+    web_search_tool = UnifiedWebSearchTool()
+    
+    for i, sub_task in enumerate(internal_plan.get('sub_tasks', [])):
+        try:
+            query = sub_task.get('query_focus', '')
+            clean_query = web_search_tool._extract_clean_keywords_static(query)
+            
+            logger.info(f"🔍 Ejecutando búsqueda {i+1}: {clean_query} (objetivo: {sub_task.get('goal', 'No especificado')})")
+            
+            # Emitir progreso interno
+            emit_internal_progress(task_id, {
+                'internal_step': i + 1,
+                'total_steps': len(internal_plan.get('sub_tasks', [])),
+                'current_goal': sub_task.get('goal', ''),
+                'query': clean_query
+            })
+            
+            if tool_manager and hasattr(tool_manager, 'execute_tool'):
+                search_result = tool_manager.execute_tool('web_search', {
+                    'query': clean_query,
+                    'max_results': 3,
+                    'search_engine': 'bing',
+                    'extract_content': True
+                }, task_id=task_id)
+                
+                # Documentar resultado de esta búsqueda
+                search_entry = {
+                    'sub_task_id': sub_task.get('id', f'search_{i+1}'),
+                    'query': clean_query,
+                    'goal': sub_task.get('goal', ''),
+                    'priority': sub_task.get('priority', 'medium'),
+                    'success': search_result and search_result.get('success', False),
+                    'results_count': len(search_result.get('search_results', [])) if search_result else 0,
+                    'timestamp': datetime.now().isoformat()
+                }
+                
+                if search_entry['success']:
+                    results = search_result.get('search_results', [])
+                    accumulated_findings['all_results'].extend(results)
+                    accumulated_findings['successful_searches'] += 1
+                    accumulated_findings['total_results'] += len(results)
+                    search_entry['sample_results'] = results[:2]  # Guardar muestra para logging
+                    
+                    logger.info(f"✅ Búsqueda {i+1} exitosa: {len(results)} resultados para '{sub_task.get('goal', '')}'")
+                else:
+                    logger.warning(f"⚠️ Búsqueda {i+1} falló: '{clean_query}'")
+                
+                accumulated_findings['searches_performed'].append(search_entry)
+                
+        except Exception as search_error:
+            logger.error(f"❌ Error en búsqueda interna {i+1}: {str(search_error)}")
+            accumulated_findings['searches_performed'].append({
+                'sub_task_id': sub_task.get('id', f'search_{i+1}'),
+                'query': query,
+                'goal': sub_task.get('goal', ''),
+                'success': False,
+                'error': str(search_error),
+                'timestamp': datetime.now().isoformat()
+            })
+    
+    logger.info(f"📊 Investigación interna completada: {accumulated_findings['successful_searches']}/{len(internal_plan.get('sub_tasks', []))} búsquedas exitosas")
+    return accumulated_findings
+
+def evaluate_research_completeness(accumulated_findings: dict, internal_plan: dict, title: str, description: str, task_id: str) -> dict:
+    """
+    🎯 AUTO-EVALUADOR DE COMPLETITUD DE INVESTIGACIÓN CON OLLAMA
+    Evalúa si la información recolectada es suficiente usando IA
+    """
+    try:
+        # Datos para evaluación
+        total_results = accumulated_findings.get('total_results', 0)
+        successful_searches = accumulated_findings.get('successful_searches', 0) 
+        total_searches = len(accumulated_findings.get('searches_performed', []))
+        
+        # Evaluación básica basada en métricas
+        basic_confidence = min(100, (total_results * 15))  # 15% por resultado
+        success_rate = (successful_searches / max(total_searches, 1)) * 100
+        meets_basic_criteria = total_results >= 3 and successful_searches >= 2
+        
+        # Intentar evaluación avanzada con Ollama
+        ollama_service = get_ollama_service()
+        if ollama_service and ollama_service.is_healthy():
+            try:
+                # Compilar información para Ollama
+                search_summary = ""
+                for search in accumulated_findings.get('searches_performed', []):
+                    status = "✅ Exitosa" if search.get('success') else "❌ Falló"
+                    search_summary += f"- {search.get('goal', 'Sin objetivo')}: {status} ({search.get('results_count', 0)} resultados)\n"
+                
+                evaluation_prompt = f"""
+EVALUACIÓN DE COMPLETITUD DE INVESTIGACIÓN:
+
+TEMA INVESTIGADO: {title}
+DESCRIPCIÓN: {description}
+
+RESULTADOS DE BÚSQUEDAS:
+{search_summary}
+
+MÉTRICAS:
+- Total de resultados obtenidos: {total_results}
+- Búsquedas exitosas: {successful_searches}/{total_searches}
+- Tasa de éxito: {success_rate:.1f}%
+
+EVALÚA la completitud de esta investigación:
+1. ¿Los resultados cubren adecuadamente el tema solicitado?
+2. ¿Qué aspectos importantes podrían faltar?
+3. ¿Qué nivel de confianza (0-100) asignarías a esta investigación?
+4. ¿Se necesitan búsquedas adicionales específicas?
+
+Responde en JSON:
+{{
+  "meets_criteria": true/false,
+  "confidence_score": 0-100,
+  "coverage_assessment": "descripción de cobertura",
+  "missing_aspects": ["aspecto1", "aspecto2"],
+  "recommended_searches": ["búsqueda adicional 1"],
+  "overall_quality": "excelente/buena/regular/pobre"
+}}
+"""
+                
+                eval_result = ollama_service.generate_response(
+                    evaluation_prompt,
+                    {'temperature': 0.2, 'max_tokens': 600},
+                    False,
+                    task_id,
+                    "research_completeness_evaluation"
+                )
+                
+                if eval_result and not eval_result.get('error'):
+                    response_text = eval_result.get('response', '').strip()
+                    import re
+                    json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+                    
+                    if json_match:
+                        ai_evaluation = json.loads(json_match.group(0))
+                        
+                        # Combinar evaluación IA con métricas básicas
+                        final_confidence = max(basic_confidence, ai_evaluation.get('confidence_score', basic_confidence))
+                        
+                        return {
+                            'meets_criteria': ai_evaluation.get('meets_criteria', meets_basic_criteria),
+                            'confidence_score': final_confidence,
+                            'evaluation_method': 'ai_assisted',
+                            'ai_assessment': ai_evaluation.get('coverage_assessment', ''),
+                            'missing_aspects': ai_evaluation.get('missing_aspects', []),
+                            'recommended_searches': ai_evaluation.get('recommended_searches', []),
+                            'overall_quality': ai_evaluation.get('overall_quality', 'regular'),
+                            'metrics': {
+                                'total_results': total_results,
+                                'successful_searches': successful_searches,
+                                'success_rate': success_rate
+                            }
+                        }
+                        
+            except Exception as ai_eval_error:
+                logger.warning(f"⚠️ Evaluación IA falló, usando evaluación básica: {str(ai_eval_error)}")
+        
+        # Fallback a evaluación básica
+        return {
+            'meets_criteria': meets_basic_criteria,
+            'confidence_score': basic_confidence,
+            'evaluation_method': 'basic_metrics',
+            'assessment': f"Investigación básica completada con {total_results} resultados",
+            'missing_aspects': ['Análisis más profundo'] if total_results < 5 else [],
+            'recommended_searches': [f"{title} información adicional"] if not meets_basic_criteria else [],
+            'overall_quality': 'buena' if meets_basic_criteria else 'regular',
+            'metrics': {
+                'total_results': total_results,
+                'successful_searches': successful_searches,
+                'success_rate': success_rate
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error en evaluación de completitud: {str(e)}")
+        return {
+            'meets_criteria': False,
+            'confidence_score': 20,
+            'evaluation_method': 'error_fallback',
+            'error': str(e)
+        }
+
+def execute_additional_research(completeness_evaluation: dict, accumulated_findings: dict, tool_manager, task_id: str) -> dict:
+    """
+    🔄 EJECUTOR DE INVESTIGACIÓN ADICIONAL ADAPTIVA
+    Ejecuta búsquedas adicionales específicas basadas en gaps identificados
+    """
+    additional_findings = {
+        'additional_searches': [],
+        'new_results': [],
+        'reason': 'Completitud insuficiente detectada'
+    }
+    
+    try:
+        # Obtener búsquedas recomendadas
+        recommended_searches = completeness_evaluation.get('recommended_searches', [])
+        missing_aspects = completeness_evaluation.get('missing_aspects', [])
+        
+        # Si no hay recomendaciones específicas, crear búsquedas genéricas
+        if not recommended_searches:
+            confidence = completeness_evaluation.get('confidence_score', 0)
+            if confidence < 50:
+                recommended_searches = ["información detallada adicional", "datos específicos actualizados"]
+            elif confidence < 70:
+                recommended_searches = ["análisis complementario"]
+        
+        # Extraer keywords
+        from ..tools.unified_web_search_tool import UnifiedWebSearchTool
+        web_search_tool = UnifiedWebSearchTool()
+        
+        # Ejecutar búsquedas adicionales
+        for i, search_rec in enumerate(recommended_searches[:2]):  # Máximo 2 búsquedas adicionales
+            try:
+                clean_query = web_search_tool._extract_clean_keywords_static(search_rec)
+                logger.info(f"🔄 Búsqueda adicional {i+1}: {clean_query}")
+                
+                if tool_manager and hasattr(tool_manager, 'execute_tool'):
+                    additional_result = tool_manager.execute_tool('web_search', {
+                        'query': clean_query,
+                        'max_results': 3,
+                        'search_engine': 'bing',
+                        'extract_content': True
+                    }, task_id=task_id)
+                    
+                    search_entry = {
+                        'query': clean_query,
+                        'purpose': f"Complementar: {search_rec}",
+                        'success': additional_result and additional_result.get('success', False),
+                        'results_count': len(additional_result.get('search_results', [])) if additional_result else 0,
+                        'timestamp': datetime.now().isoformat()
+                    }
+                    
+                    if search_entry['success']:
+                        new_results = additional_result.get('search_results', [])
+                        additional_findings['new_results'].extend(new_results)
+                        logger.info(f"✅ Búsqueda adicional {i+1} exitosa: {len(new_results)} resultados")
+                    
+                    additional_findings['additional_searches'].append(search_entry)
+                    
+            except Exception as additional_error:
+                logger.error(f"❌ Error en búsqueda adicional {i+1}: {str(additional_error)}")
+        
+        logger.info(f"🔄 Investigación adicional completada: {len(additional_findings['new_results'])} nuevos resultados")
+        return additional_findings
+        
+    except Exception as e:
+        logger.error(f"❌ Error en investigación adicional: {str(e)}")
+        return additional_findings
+
+def merge_research_findings(original_findings: dict, additional_findings: dict) -> dict:
+    """
+    🔀 COMBINADOR DE HALLAZGOS DE INVESTIGACIÓN
+    Combina los hallazgos originales con los adicionales
+    """
+    try:
+        merged_findings = original_findings.copy()
+        
+        # Agregar nuevos resultados
+        merged_findings['all_results'].extend(additional_findings.get('new_results', []))
+        merged_findings['total_results'] = len(merged_findings['all_results'])
+        
+        # Agregar información de búsquedas adicionales
+        merged_findings['additional_research'] = {
+            'performed': True,
+            'additional_searches_count': len(additional_findings.get('additional_searches', [])),
+            'new_results_count': len(additional_findings.get('new_results', [])),
+            'reason': additional_findings.get('reason', 'Mejora de completitud')
+        }
+        
+        # Actualizar métricas
+        merged_findings['successful_searches'] += sum(1 for search in additional_findings.get('additional_searches', []) if search.get('success'))
+        
+        logger.info(f"🔀 Hallazgos combinados: {merged_findings['total_results']} resultados totales")
+        return merged_findings
+        
+    except Exception as e:
+        logger.error(f"❌ Error combinando hallazgos: {str(e)}")
+        return original_findings
+
+def compile_hierarchical_research_result(accumulated_findings: dict, completeness_evaluation: dict, title: str) -> dict:
+    """
+    📤 COMPILADOR DE RESULTADO FINAL JERÁRQUICO  
+    Genera el resultado final estructurado para el sistema de pasos
+    """
+    try:
+        total_results = accumulated_findings.get('total_results', 0)
+        successful_searches = accumulated_findings.get('successful_searches', 0)
+        confidence_score = completeness_evaluation.get('confidence_score', 0)
+        
+        # Limitar resultados para evitar sobrecarga
+        final_results = accumulated_findings.get('all_results', [])[:10]
+        
+        # Generar resumen ejecutivo
+        research_focus = accumulated_findings.get('research_focus', f'Investigación sobre {title}')
+        quality_assessment = completeness_evaluation.get('overall_quality', 'regular')
+        
+        summary_parts = [
+            f"✅ Investigación jerárquica completada",
+            f"{len(final_results)} resultados de calidad {quality_assessment}",
+            f"{successful_searches} búsquedas exitosas",
+            f"{confidence_score}% confianza"
+        ]
+        
+        # Agregar información de investigación adicional si aplica
+        if accumulated_findings.get('additional_research', {}).get('performed'):
+            additional_count = accumulated_findings['additional_research']['new_results_count']
+            summary_parts.append(f"+ {additional_count} resultados adicionales")
+        
+        return {
+            'success': True,
+            'type': 'hierarchical_web_research',
+            'title': title,
+            'results_count': len(final_results),
+            'confidence_score': confidence_score,
+            'quality_assessment': quality_assessment,
+            'summary': ' - '.join(summary_parts),
+            'data': final_results,
+            'research_metadata': {
+                'research_focus': research_focus,
+                'total_searches_performed': len(accumulated_findings.get('searches_performed', [])),
+                'successful_searches': successful_searches,
+                'evaluation_method': completeness_evaluation.get('evaluation_method', 'basic'),
+                'meets_criteria': completeness_evaluation.get('meets_criteria', False),
+                'additional_research_performed': accumulated_findings.get('additional_research', {}).get('performed', False)
+            },
+            'completeness_info': {
+                'confidence_score': confidence_score,
+                'coverage_assessment': completeness_evaluation.get('ai_assessment', completeness_evaluation.get('assessment', '')),
+                'missing_aspects': completeness_evaluation.get('missing_aspects', []),
+                'overall_quality': quality_assessment
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error compilando resultado jerárquico: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'hierarchical_compile_error',
+            'summary': f'❌ Error compilando investigación jerárquica: {str(e)}'
+        }
+
+def emit_internal_progress(task_id: str, progress_data: dict):
+    """
+    📡 EMISOR DE PROGRESO INTERNO
+    Envía eventos de progreso para sub-tareas internas al frontend
+    """
+    try:
+        websocket_manager = get_websocket_manager()
+        if websocket_manager:
+            enhanced_progress = {
+                **progress_data,
+                'event_type': 'internal_research_progress',
+                'task_id': task_id,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            websocket_manager.send_log_message(
+                task_id,
+                "info", 
+                f"🔍 Progreso interno: {progress_data.get('current_goal', 'Ejecutando investigación')} ({progress_data.get('internal_step', 1)}/{progress_data.get('total_steps', 1)})"
+            )
+            
+    except Exception as ws_error:
+        logger.warning(f"⚠️ Error enviando progreso interno (no crítico): {str(ws_error)}")
+
 def execute_analysis_step(title: str, description: str, ollama_service, original_message: str) -> dict:
     """Ejecutar paso de análisis - GENERA CONTENIDO REAL DIRECTO"""
     try:
