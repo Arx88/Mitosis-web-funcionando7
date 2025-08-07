@@ -643,8 +643,8 @@ class RealTimeBrowserTool(BaseTool):
                 await asyncio.sleep(2)
                 return
             
-            # Explorar los primeros resultados encontrados
-            for i in range(min(2, len(result_links))):  # Solo primeros 2 para no tomar demasiado tiempo
+            # Explorar más resultados para obtener información diversa
+            for i in range(min(4, len(result_links))):  # Aumentado a 4 enlaces para más diversidad
                 try:
                     # Re-consultar elementos para evitar contexto destruido
                     fresh_links = await page.query_selector_all('.b_algo h2 a')
