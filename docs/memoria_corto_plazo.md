@@ -80,26 +80,51 @@
 - **CORS WebSocket**: ✅ Configurado para URL externa
 - **Tavily API**: ✅ Configurada correctamente
 
-## 🔍 **DIAGNÓSTICO ACTUAL DEL PROBLEMA REAL - EXTRACCIÓN DE CONTENIDO**
+## 🔍 **DIAGNÓSTICO ACTUAL DEL PROBLEMA REAL - COMPORTAMIENTO DEL AGENTE**
 
 ### ❌ **PROBLEMA CRÍTICO IDENTIFICADO**: 
 **Fecha**: 2025-01-24 - Sesión E1 Agente Autónomo
 
-**Root Cause**: El sistema `RealTimeBrowserTool` y `unified_web_search_tool.py` **NO están extrayendo contenido textual real** de las páginas web visitadas.
+**PROBLEMA REPORTADO POR USUARIO**: "El agente no está realizando búsquedas exhaustivas ni recolectando información real para cumplir con los pasos del plan de acción."
 
-**Evidencia del problema**:
-- ✅ Navega correctamente a sitios web (bing.com, iprofesional.com, etc.)
-- ✅ Captura screenshots en tiempo real (34 screenshots capturados)  
-- ❌ **NO extrae el texto contenido de las páginas visitadas**
-- ❌ Solo devuelve metadatos: "Información encontrada mediante navegación en tiempo real"
-- ❌ Los campos `content_extracted: false`, `content_length: 0`
+**ROOT CAUSE**: El sistema de ejecución de pasos **NO ESTÁ VALIDANDO** correctamente si la información recolectada **CUMPLE CON LO SOLICITADO** en el paso específico.
 
-**Sitios identificados pero SIN contenido extraído**:
-1. **iprofesional.com** - Artículo sobre clase media e inflación Javier Milei elecciones 2025
-2. **Múltiples páginas de Bing** - Páginas de búsqueda sin extraer contenido real
-3. **Otros sitios potenciales** - Navegados pero sin extracción de texto
+**Análisis técnico del problema**:
 
-### 🎯 **TAREA CRÍTICA**: Corregir extracción de contenido real de páginas web
+1. **VALIDACIÓN INSUFICIENTE**: 
+   - ✅ Sistema navega y busca información
+   - ❌ **NO VALIDA** si lo encontrado cumple con los requisitos específicos del paso
+   - ❌ **NO CONTINÚA BUSCANDO** si la información es incompleta
+
+2. **FALTA DE PERSISTENCIA EN BÚSQUEDAS**:
+   - ✅ Ejecuta búsquedas iniciales
+   - ❌ **NO REINTENTA** con diferentes términos si no encuentra lo suficiente
+   - ❌ **NO VERIFICA** que cada aspecto solicitado esté cubierto
+
+3. **EVALUACIÓN PREMATURA DE COMPLETITUD**:
+   - ✅ Sistema jerárquico genera sub-búsquedas
+   - ❌ **APRUEBA PASOS** antes de verificar completitud real
+   - ❌ **NO EVALÚA** si biografía, trayectoria política, ideología, etc. están realmente presentes
+
+### 🎯 **EJEMPLO ESPECÍFICO DEL PROBLEMA**:
+**Paso 1**: "Realizar búsquedas en fuentes confiables (noticias, entrevistas, perfiles académicos) para recopilar datos actuales sobre su biografía, trayectoria política, ideología y declaraciones públicas."
+
+**Comportamiento actual problemático**:
+- Ejecuta 2-3 búsquedas generales
+- Encuentra información parcial
+- **MARCA EL PASO COMO COMPLETADO** sin verificar que TODOS los elementos solicitados estén presentes:
+  - ❌ Biografía completa
+  - ❌ Trayectoria política detallada  
+  - ❌ Ideología específica
+  - ❌ Declaraciones públicas recientes
+
+**Comportamiento requerido**:
+- Ejecutar búsquedas específicas para CADA elemento
+- **NO APROBAR** el paso hasta que TODOS los elementos estén cubiertos
+- Continuar buscando con diferentes términos si falta información
+- Validar la completitud antes de avanzar
+
+### 🎯 **TAREA CRÍTICA**: Implementar validación de completitud de pasos que **NO PERMITA** avanzar hasta que TODOS los elementos solicitados estén realmente presentes
 
 ### 📊 **ANÁLISIS TÉCNICO COMPLETADO**:
 **Archivos revisados**:
