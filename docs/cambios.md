@@ -151,7 +151,7 @@ execute_web_search_step() →
 6. **Browser-use**: Dependencies corregidas y compatibles
 
 #### 🌐 **ACCESO EXTERNO CONFIGURADO**:
-- **URL Externa**: https://8a37e468-ab71-40ac-978a-134e5be53211.preview.emergentagent.com
+- **URL Externa**: https://08726b21-4767-47fc-a24f-a40542c18203.preview.emergentagent.com
 - **API Backend**: Mapeado correctamente a puerto 8001
 - **WebSocket**: Configurado con eventlet para tiempo real
 
@@ -321,7 +321,7 @@ Enhanced Analysis →
    - Resultado: ✅ ÉXITO TOTAL
    - Servicios iniciados: backend (PID 3333), frontend (PID 3320), mongodb (PID 2098), code-server (PID 2095)
    - X11 Virtual: Servidor Xvfb iniciado (Display :99, PID 2054)
-   - URL Externa: https://8a37e468-ab71-40ac-978a-134e5be53211.preview.emergentagent.com
+   - URL Externa: https://08726b21-4767-47fc-a24f-a40542c18203.preview.emergentagent.com
 
 3. **Creación y Actualización de Documentación**
    - Archivos actualizados:

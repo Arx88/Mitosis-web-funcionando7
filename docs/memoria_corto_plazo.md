@@ -20,7 +20,7 @@
 - ✅ Ollama configurado: https://66bd0d09b557.ngrok-free.app
 - ✅ CORS ultra-dinámico configurado
 - ✅ Modo producción completamente activado
-- ✅ URL Externa: https://8a37e468-ab71-40ac-978a-134e5be53211.preview.emergentagent.com
+- ✅ URL Externa: https://08726b21-4767-47fc-a24f-a40542c18203.preview.emergentagent.com
 - ✅ Browser-use dependencies corregidas y funcionando
 - ✅ API Testing comprehensivo completado - TODAS LAS APIS FUNCIONANDO
 
