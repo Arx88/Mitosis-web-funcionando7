@@ -543,17 +543,24 @@ class RealTimeBrowserTool(BaseTool):
                         continue
             
             if not search_submitted:
-                self._emit_progress("⚠️ No se pudo enviar búsqueda - usando fallback")
+                self._emit_progress("⚠️ No se pudo enviar búsqueda - usando fallback URL")
                 # Fallback: navegar directamente a URL de búsqueda
-                current_url = page.url
-                if 'google.com' in current_url:
-                    search_url = f"https://www.google.com/search?q={search_terms.replace(' ', '+')}"
-                elif 'bing.com' in current_url:
-                    search_url = f"https://www.bing.com/search?q={search_terms.replace(' ', '+')}"
-                else:
-                    search_url = f"{current_url}?q={search_terms.replace(' ', '+')}"
-                
-                await page.goto(search_url)
+                try:
+                    current_url = page.url
+                    if 'google.com' in current_url:
+                        search_url = f"https://www.google.com/search?q={search_terms.replace(' ', '+')}"
+                    elif 'bing.com' in current_url:
+                        search_url = f"https://www.bing.com/search?q={search_terms.replace(' ', '+')}"
+                    else:
+                        search_url = f"{current_url}?q={search_terms.replace(' ', '+')}"
+                    
+                    self._emit_progress(f"🔗 Navegando a URL de búsqueda: {search_url}")
+                    await page.goto(search_url)
+                    search_submitted = True
+                    self._emit_progress("✅ Búsqueda enviada via URL fallback")
+                except Exception as e:
+                    self._emit_progress(f"❌ Error en navegación fallback: {str(e)}")
+                    return
             
             # 5. ESPERAR RESULTADOS Y EXPLORAR
             self._emit_browser_visual({
