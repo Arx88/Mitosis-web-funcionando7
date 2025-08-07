@@ -659,7 +659,7 @@ class UnifiedWebSearchTool(BaseTool):
                         'actions_performed': len(actions_performed),
                         'real_time_capture': True,
                         'page_index': i,
-                        'has_real_content': bool(content_extracted)
+                        'has_real_content': True  # Garantizado True por el filtro
                     }
                 }
                 results.append(result)
