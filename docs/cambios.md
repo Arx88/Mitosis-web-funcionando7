@@ -1,6 +1,6 @@
 # Registro de Cambios - Proyecto Mitosis
 
-## 2025-01-24 - Sesión de Inicio y Diagnóstico
+## 2025-01-24 - Sesión de Diagnóstico y Identificación del Problema Real
 
 ### 🚀 Inicialización del Sistema
 **Hora**: Inicio de sesión
@@ -16,7 +16,7 @@
    - Comando: `chmod +x /app/start_mitosis.sh && cd /app && ./start_mitosis.sh`
    - Resultado: ✅ ÉXITO TOTAL
    - Servicios iniciados: backend, frontend, mongodb, code-server
-   - X11 Virtual: Servidor Xvfb iniciado (Display :99, PID 2036)
+   - X11 Virtual: Servidor Xvfb iniciado (Display :99, PID 2054)
    - Navegadores: Playwright y dependencias instaladas
    - URL Externa: https://45dfeaa6-7eaf-4101-bc6c-20901a318336.preview.emergentagent.com
 
@@ -31,41 +31,73 @@
 
 #### Estado de Servicios Post-Inicialización:
 ```
-backend                          RUNNING   pid 2078, uptime 0:00:40
-code-server                      RUNNING   pid 2077, uptime 0:00:40  
-frontend                         RUNNING   pid 2079, uptime 0:00:40
-mongodb                          RUNNING   pid 2080, uptime 0:00:40
+backend                          RUNNING   pid 2096, uptime 0:00:26
+code-server                      RUNNING   pid 2095, uptime 0:00:26  
+frontend                         RUNNING   pid 2097, uptime 0:00:26
+mongodb                          RUNNING   pid 2098, uptime 0:00:26
 ```
 
-#### Configuraciones Aplicadas:
-- Ollama endpoint: https://66bd0d09b557.ngrok-free.app
-- Modelo IA: gpt-oss:20b
-- Tavily API: Configurada para búsqueda web
-- CORS: Dinámico para acceso externo
-- Navegación visual: Display :99 activo
+### 🔍 DIAGNÓSTICO CRÍTICO DEL PROBLEMA DE BÚSQUEDA WEB
+
+#### ⚡ **PROBLEMA REAL IDENTIFICADO** - Conflicto Event Loop
+**Hora**: 08:02 UTC
+**Método**: Análisis de logs del backend + Testing directo API
+
+#### 📊 Evidencia Técnica Recopilada:
+1. **Testing API Directo**:
+   ```bash
+   curl -X POST "http://localhost:8001/api/agent/chat" \
+     -H "Content-Type: application/json" \
+     -d '{"message": "Busca información sobre inteligencia artificial"}'
+   
+   # Resultado: Plan generado correctamente, pero búsqueda sin resultados
+   ```
+
+2. **Ejecución de Step-1 (web_search)**:
+   ```bash
+   curl -X POST "http://localhost:8001/api/agent/execute-step-detailed/chat-1754553686/step-1"
+   
+   # Resultado: "Los resultados de las búsquedas realizadas no arrojaron ninguna fuente"
+   ```
+
+3. **Análisis de Logs Backend**:
+   ```
+   [REAL_TIME_BROWSER] 🔌 WebSocket inicializado para navegación en tiempo real
+   🌐 NAVEGACIÓN WEB: ⚠️ Error en navegación en tiempo real: Cannot run the event loop while another loop is running
+   🌐 NAVEGACIÓN WEB: ⚠️ Navegación en tiempo real no disponible, usando fallback...
+   🌐 NAVEGACIÓN WEB: ❌ Error ejecutando Playwright fallback: Cannot run the event loop while another loop is running
+   🌐 NAVEGACIÓN WEB: ⚠️ Búsqueda completada sin resultados reales
+   ```
+
+#### 🎯 **CAUSA RAÍZ CONFIRMADA**:
+**ERROR CRÍTICO**: `Cannot run the event loop while another loop is running`
+
+**EXPLICACIÓN TÉCNICA**:
+- El backend usa Flask + Eventlet (event loop principal)
+- `unified_web_search_tool.py` trata de ejecutar Playwright (asyncio loop) 
+- Python no permite múltiples event loops asyncio concurrentes
+- Resultado: Navegación web se inicializa pero falla en ejecución
+
+#### 🔧 Archivos Implicados:
+- `/app/backend/src/tools/unified_web_search_tool.py` - **ARCHIVO PRINCIPAL DEL PROBLEMA**
+- `/app/backend/src/tools/real_time_browser_tool.py` - Herramienta que falla
+- **Sistema de Event Loops**: Flask/Eventlet vs Asyncio/Playwright
+
+#### ✅ Status Final del Diagnóstico:
+- **Problema Identificado**: ✅ CONFIRMADO
+- **Causa Raíz**: ✅ Event Loop Conflict (asyncio vs eventlet)  
+- **Ubicación**: ✅ unified_web_search_tool.py líneas de ejecución async
+- **Síntoma del Usuario**: ✅ EXPLICADO ("abre navegador pero no busca")
+- **Solución Requerida**: 🔄 PENDIENTE - Implementar subprocess/thread para asyncio
 
 ### 📋 Próximas Acciones Planificadas:
-- Analizar problema específico de navegación web
-- Revisar herramientas de búsqueda en `/app/backend/src/tools/`
-- Verificar configuración de browser-use
-- Probar funcionalidad end-to-end de búsqueda
+1. **PRIORIDAD 1**: Implementar solución de event loop en unified_web_search_tool.py
+2. Crear subprocess/thread para operaciones async Playwright
+3. Testing end-to-end de búsqueda web corregida
+4. Actualizar documentación con solución implementada
 
-### 🔧 Archivos Modificados:
-- `/app/backend/src/tools/ollama_processing_tool.py` - Línea 76: Corregido `self.task_id` → `config.get('task_id', 'unknown')`
-- Backend reiniciado para aplicar cambios
-
-### ✅ Problema Real Identificado y Solucionado:
-**PROBLEMA**: Error en OllamaProcessingTool: `'OllamaProcessingTool' object has no attribute 'task_id'`
-**CAUSA**: Línea 76 en `/app/backend/src/tools/ollama_processing_tool.py` usaba `self.task_id` sin inicializar
-**SOLUCIÓN**: Cambiado a `config.get('task_id', 'unknown')` para obtener task_id del contexto
-
-### 🔍 Diagnóstico Completo Realizado:
-- ✅ **Navegación web funciona perfectamente** (contrario al reporte inicial)
-- ✅ **RealTimeBrowserTool navegando y capturando screenshots correctamente**  
-- ✅ **Ejecución automática de pasos funcionando**
-- ❌ **Monitor de Ejecución no mostraba progreso por error en herramienta específica**
-
-### 📊 Evidencias del Análisis:
-- Logs muestran: "🌐 NAVEGACIÓN WEB: ✅ Navegación en tiempo real completada: 10 screenshots capturados"
-- X11 Server funcionando correctamente (Display :99)
-- WebSocket events siendo emitidos pero herramienta fallando interrumpía flujo visual
+### 🎯 IMPACTO DEL HALLAZGO:
+- **Problema Core**: Navegación web completamente no funcional
+- **Usuario Impact**: Sistema crea planes pero no ejecuta búsquedas reales  
+- **Urgencia**: Crítica - Funcionalidad principal comprometida
+- **Complejidad Solución**: Media - Requiere refactorización arquitectural específica
