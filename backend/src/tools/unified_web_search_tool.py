@@ -581,8 +581,42 @@ class UnifiedWebSearchTool(BaseTool):
             
             self._emit_progress_eventlet(f"📊 Procesando navegación CORRECTA: {len(pages_visited)} páginas visitadas, {len(screenshots)} screenshots")
             
-            # Crear resultados basados en páginas visitadas
-            for i, page_data in enumerate(pages_visited[:max_results]):
+            # 🔥 FILTRO CRÍTICO: Solo incluir páginas con contenido real extraído
+            pages_with_content = []
+            for page_data in pages_visited:
+                page_url = page_data.get('url', '')
+                
+                # Buscar si esta página tiene contenido extraído real
+                has_real_content = False
+                content_extracted = ""
+                content_length = 0
+                
+                for action in actions_performed:
+                    if (action.get('url') == page_url and 
+                        action.get('action') == 'result_explored' and
+                        action.get('content_preview') and
+                        len(action.get('content_preview', '')) > 100):  # Al menos 100 caracteres de contenido real
+                        content_extracted = action.get('content_preview', '')
+                        content_length = action.get('content_length', 0)
+                        has_real_content = True
+                        break
+                
+                # Solo agregar páginas que NO sean de búsqueda Y que tengan contenido real
+                is_search_page = (
+                    'bing.com' in page_url and 'search' in page_url.lower() or
+                    page_data.get('title', '').lower().startswith('search') or
+                    'Search - Microsoft Bing' in page_data.get('title', '')
+                )
+                
+                if has_real_content and not is_search_page:
+                    page_data['content_extracted'] = content_extracted
+                    page_data['content_length'] = content_length
+                    pages_with_content.append(page_data)
+            
+            self._emit_progress_eventlet(f"🔍 FILTRADO: {len(pages_with_content)} páginas con contenido real de {len(pages_visited)} visitadas")
+            
+            # Crear resultados basados SOLO en páginas con contenido real
+            for i, page_data in enumerate(pages_with_content[:max_results]):
                 # Buscar screenshot correspondiente a esta página
                 screenshot_url = None
                 page_url = page_data.get('url', '')
