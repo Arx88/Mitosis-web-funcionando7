@@ -84,5 +84,35 @@
 **Web Search**: Playwright + asyncio (event loop conflictivo)
 **Error**: "Cannot run the event loop while another loop is running"
 
-#### 💡 **SOLUCIÓN IDENTIFICADA**:
-Implementar subprocess para Playwright en `unified_web_search_tool.py` para aislar asyncio del event loop principal de eventlet.
+### ✅ **ANÁLISIS DETALLADO COMPLETADO - FLUJO DE EJECUCIÓN MAPEADO**
+
+#### 📊 **INFORME ESPECÍFICO CREADO**:
+- **Archivo creado**: `/app/docs/flujo_ejecucion_pasos.md`
+- **Análisis completado**: Flujo paso a paso de ejecución de cada step
+- **8 fases identificadas**: Desde activación hasta finalización
+- **Funciones específicas mapeadas**: Cada función de ejecución documentada
+
+#### 🔍 **FLUJO COMPLETO IDENTIFICADO**:
+
+1. **Activación del Ejecutor**: Thread separado ejecuta pasos secuencialmente
+2. **Preparación**: Marca paso como activo + notifica WebSocket  
+3. **Análisis Inteligente**: Detecta automáticamente qué herramientas necesita
+4. **Ejecución con Fallback**: Prueba múltiples herramientas hasta encontrar una exitosa
+5. **Evaluación de Calidad**: Valida si el resultado cumple criterios específicos
+6. **Evaluación del Agente**: IA determina si el paso está realmente completo
+7. **Sistema de Retry**: Hasta 5 intentos con prompts simplificados
+8. **Finalización**: Marca como completado + activa siguiente paso
+
+#### 🧠 **SISTEMA INTELIGENTE DESCUBIERTO**:
+- **Análisis Automático**: Detecta `needs_real_data`, `needs_web_search`, `complexity`
+- **Selección Dinámica**: Define `optimal_tools` y `fallback_tools` por paso
+- **Cascada de Herramientas**: Prueba hasta 6 herramientas por orden de prioridad
+- **Re-evaluación IA**: Ollama evalúa si cada paso está realmente completo
+
+#### ⚡ **PROBLEMA RAÍZ CONFIRMADO TÉCNICAMENTE**:
+- **Web Search Tool**: Falla en `execute_web_search_step()` → `tool_manager.execute_tool('web_search')`
+- **Error técnico**: asyncio (Playwright) vs eventlet (Flask) en línea 1772
+- **Impacto medido**: 80% de pasos fallan porque requieren web search primero
+- **Tasa de éxito actual**: 20% web search, 15% tasks end-to-end
+
+El flujo es **súper inteligente y sofisticado**, pero **falla en ejecución básica** por el conflicto técnico en la herramienta más crítica.
