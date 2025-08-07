@@ -2452,20 +2452,33 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
         # 📤 PASO 5: COMPILAR RESULTADO FINAL CON INFORMACIÓN DE VALIDACIÓN MEJORADA
         final_result = {
             'success': True,
-            'type': 'hierarchical_web_search',
-            'query': main_query,
+            'type': 'enhanced_hierarchical_web_search' if is_step_1_research else 'hierarchical_web_search',
+            'query': title,
             'results_count': len(accumulated_results),
             'searches_performed': searches_performed,
             'confidence_score': confidence_score,
-            'summary': f"✅ Búsqueda jerárquica completada: {len(accumulated_results)} resultados de {searches_performed} búsquedas específicas",
-            'data': accumulated_results[:10],  # Limitar a 10 mejores resultados
+            'summary': f"✅ Búsqueda {'política específica' if is_step_1_research else 'jerárquica'} completada: {len(accumulated_results)} resultados de {searches_performed} búsquedas específicas",
+            'data': accumulated_results[:15] if is_step_1_research else accumulated_results[:10],  # Más resultados para paso 1
             'hierarchical_info': {
                 'sub_tasks_executed': len(sub_tasks),
                 'total_searches': searches_performed,
                 'confidence': confidence_score,
-                'meets_criteria': meets_criteria
+                'meets_criteria': meets_criteria,
+                'is_step_1_research': is_step_1_research,
+                'validation_type': 'enhanced_political' if is_step_1_research else 'standard'
             }
         }
+        
+        # Agregar información específica de validación mejorada si es paso 1
+        if is_step_1_research and 'sources_analysis' in validation_result:
+            final_result['enhanced_validation'] = {
+                'sources_analysis': validation_result.get('sources_analysis'),
+                'content_analysis': validation_result.get('content_analysis'),
+                'pattern_validation': validation_result.get('pattern_validation'),
+                'validation_summary': validation_result.get('validation_summary'),
+                'strict_requirements_met': validation_result.get('strict_requirements_status'),
+                'specific_recommendations': validation_result.get('specific_recommendations', [])
+            }
         
         # 📡 OPCIONAL: Notificar via WebSocket
         try:
