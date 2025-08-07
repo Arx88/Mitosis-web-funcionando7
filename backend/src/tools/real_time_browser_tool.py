@@ -551,20 +551,78 @@ class RealTimeBrowserTool(BaseTool):
         })
     
     def _extract_search_terms(self, task_description: str) -> str:
-        """📝 EXTRAER TÉRMINOS DE BÚSQUEDA DEL TASK_DESCRIPTION"""
+        """📝 EXTRAER TÉRMINOS DE BÚSQUEDA INTELIGENTES DEL TASK_DESCRIPTION"""
         
-        # Limpiar y extraer palabras clave relevantes
         import re
         
-        # Remover palabras comunes
-        stop_words = {'buscar', 'información', 'sobre', 'acerca', 'de', 'la', 'el', 'en', 'con', 'para', 'web_search'}
+        # Limpiar el texto
+        text = task_description.lower().strip()
         
-        # Extraer palabras
-        words = re.findall(r'\b\w+\b', task_description.lower())
-        keywords = [w for w in words if w not in stop_words and len(w) > 2]
+        # 1. DETECTAR ENTIDADES NOMBRADAS (nombres propios, títulos, etc.)
+        # Buscar patrones comunes de títulos y nombres
+        named_entities = []
         
-        # Tomar las primeras 3-4 palabras más relevantes
-        search_terms = ' '.join(keywords[:4]) if keywords else 'información general'
+        # Detectar títulos entre comillas
+        quoted_matches = re.findall(r'"([^"]+)"', task_description)
+        named_entities.extend(quoted_matches)
+        
+        # Detectar nombres propios (palabras que empiezan con mayúscula)
+        proper_nouns = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b', task_description)
+        named_entities.extend(proper_nouns)
+        
+        # 2. DETECTAR FRASES IMPORTANTES
+        # Buscar frases con "sobre", "acerca de", "información de"
+        content_patterns = [
+            r'(?:sobre|acerca\s+de|información\s+(?:sobre|de))\s+([^,\.]+)',
+            r'(?:investigar|buscar|analizar)\s+([^,\.]+)',
+            r'(?:informe|análisis|estudio)\s+(?:sobre|de)\s+([^,\.]+)'
+        ]
+        
+        key_phrases = []
+        for pattern in content_patterns:
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            key_phrases.extend(matches)
+        
+        # 3. CONSTRUIR QUERY DE BÚSQUEDA INTELIGENTE
+        search_terms = ""
+        
+        # Priorizar entidades nombradas y frases clave
+        if named_entities:
+            # Tomar la primera entidad nombrada más relevante
+            best_entity = max(named_entities, key=len) if named_entities else ""
+            search_terms = best_entity.strip()
+        elif key_phrases:
+            # Tomar la frase clave más relevante
+            best_phrase = max(key_phrases, key=len) if key_phrases else ""
+            search_terms = best_phrase.strip()
+        
+        # Si no se encontraron patrones específicos, usar método de fallback mejorado
+        if not search_terms:
+            # Stop words más extensas
+            stop_words = {
+                'buscar', 'información', 'sobre', 'acerca', 'de', 'la', 'el', 'en', 
+                'con', 'para', 'web_search', 'investigar', 'datos', 'específicos',
+                'necesarios', 'completar', 'realizar', 'obtener', 'encontrar',
+                'y', 'o', 'que', 'se', 'un', 'una', 'los', 'las', 'del', 'al'
+            }
+            
+            # Extraer palabras significativas
+            words = re.findall(r'\b\w+\b', text)
+            keywords = [w for w in words if w not in stop_words and len(w) > 3]
+            
+            # Tomar las primeras 2-3 palabras más relevantes
+            search_terms = ' '.join(keywords[:3]) if keywords else 'información general'
+        
+        # 4. LIMPIAR Y OPTIMIZAR LA QUERY FINAL
+        search_terms = re.sub(r'\s+', ' ', search_terms).strip()
+        
+        # Limitar longitud para evitar queries demasiado largas
+        if len(search_terms) > 80:
+            search_terms = search_terms[:77] + "..."
+        
+        # Fallback en caso de query vacía
+        if not search_terms or len(search_terms) < 3:
+            search_terms = "información relevante"
         
         return search_terms
     
