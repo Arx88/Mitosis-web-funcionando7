@@ -21,51 +21,42 @@
 - CORS configurado dinámicamente
 - Modo producción activado
 
-### ✅ PROBLEMA COMPLETAMENTE RESUELTO: EXTRACCIÓN INTELIGENTE DE KEYWORDS FUNCIONANDO
+### 🚨 PROBLEMA CRÍTICO DETECTADO: REGRESIÓN EN SISTEMA DE PLANIFICACIÓN PROFESIONAL
 
-#### 🎉 **EVIDENCIA DE ÉXITO COMPLETO**:
-**Problema Original**: "Las búsquedas con las palabras clave son extrañas, poco eficientes, no tienen nada que ver con lo que el plan propone y no llega a encontrar nada relevante"
+#### ⚡ **ANÁLISIS DEL NUEVO ISSUE** - Usuario reporta correctamente
 
-**Estado**: ✅ **COMPLETAMENTE SOLUCIONADO Y VERIFICADO**
+**Síntoma Confirmado**: La última tarea (chat-1754561064) generó un **plan genérico fallback** en lugar del **plan profesional avanzado**
 
-#### 🔍 **EVIDENCIA TÉCNICA DE LA MEJORA** (Log línea 710):
+#### 🔍 **EVIDENCIA TÉCNICA DE LA REGRESIÓN**:
 
-**ANTES** (Problemático):
+**Plan Generado - GENÉRICO Y DEFICIENTE**:
 ```
-'query': 'investigar específica crear plan marketing digital'
+1. "Definir alcance y palabras clave" - tool: planning
+2. "Realizar búsqueda web especializada" - tool: web_search  
+3. "Analizar y sintetizar la información" - tool: analysis
+4. "Compilar informe de tendencias" - tool: creation
 ```
-↳ ❌ Keywords fragmentadas sin coherencia semántica
+↳ ❌ **Plan simplista, títulos genéricos, herramientas básicas**
 
-**DESPUÉS** (Mejorado - FUNCIONANDO):
+**Comparación con Plan Profesional Anterior** (chat-1754560822):
 ```
-'query': 'guía crear plan de marketing ejemplos casos éxito 2025'
+1. "Recopilar datos de mercado y competencia" - Específico
+2. "Definir objetivos SMART y KPIs" - Profesional  
+3. "Diseñar la estrategia de contenidos y canales" - Detallado
+4. "Elaborar el plan de marketing digital completo" - Completo
 ```
-↳ ✅ **Búsqueda inteligente, coherente y con alta probabilidad de resultados relevantes**
+↳ ✅ **Plan profesional, contexto específico, pasos detallados**
 
-#### 🧠 **VALIDACIÓN DEL ALGORITMO MEJORADO**:
+#### 🔧 **PROBLEMAS IDENTIFICADOS**:
 
-**Caso Real Exitoso**:
-- **Plan solicitado**: "Crear un plan de marketing digital completo para una startup tecnológica"
-- **Paso del plan**: "Realizar una búsqueda web para obtener información actualizada sobre tendencias de marketing digital en el sector tecnológico"
-- **Query generado por IA mejorada**: `"guía crear plan de marketing ejemplos casos éxito 2025"`
+1. **Plan Fallback Activado**: Sistema no usa `generate_unified_ai_plan()` con Ollama
+2. **Contenido IA Vacío**: Análisis generan 0 caracteres (Ollama responde vacío)  
+3. **Query Fragmentado**: Aún genera `"análisis estadísticas análisis estadísticas realizar investigación"`
+4. **Herramientas Básicas**: Usa planning/analysis en lugar de ollama_processing/ollama_analysis
 
-**Análisis de la mejora**:
-1. ✅ **Mantiene contexto**: "plan de marketing" preservado intacto
-2. ✅ **Agrega términos útiles**: "guía", "ejemplos", "casos éxito" mejoran relevancia  
-3. ✅ **Incluye temporalidad**: "2025" para información actualizada
-4. ✅ **Elimina redundancias**: Sin palabras como "buscar", "información", "sobre"
-5. ✅ **Coherencia semántica**: Frase con sentido completo y específico
+#### 🚨 **CAUSA RAÍZ INVESTIGADA**:
+- **Ruta**: `generate_task_plan()` → `generate_unified_ai_plan()` → ¿fallback activado?
+- **Ollama Status**: ✅ Conectado (`"connected": true`)
+- **Flujo sospechoso**: `generate_unified_ai_plan()` detecta un problema y activa fallback
 
-#### 🚀 **RESULTADOS OBTENIDOS**:
-- ✅ **Navegación exitosa**: X11 server usado correctamente
-- ✅ **Screenshots capturados**: `/api/files/screenshots/chat-1754560822/real_navigation_000_*.jpeg`
-- ✅ **Búsqueda específica ejecutada**: En lugar de keywords genéricas 
-- ✅ **Tiempo de ejecución optimizado**: 34.2 segundos (dentro del rango esperado)
-- ✅ **Sistema de planificación integrado**: Plan profesional de 4 pasos generado correctamente
-
-#### 📊 **IMPACTO DE LA SOLUCIÓN**:
-**Calidad de búsquedas**: Drásticamente mejorada - de fragmentos incoherentes a queries específicos y útiles
-**Relevancia de resultados**: Alta probabilidad de encontrar información específica y práctica  
-**Experiencia del usuario**: Búsquedas que realmente corresponden con lo que el plan propone
-
-#### ⚠️ **ESTADO FINAL**: ✅ PROBLEMA RESUELTO COMPLETAMENTE - ALGORITMO MEJORADO OPERATIVO Y VALIDADO
+#### ⚠️ **ESTADO ACTUAL**: REGRESIÓN CONFIRMADA - REQUIERE INVESTIGACIÓN INMEDIATA DEL SISTEMA DE PLANIFICACIÓN
