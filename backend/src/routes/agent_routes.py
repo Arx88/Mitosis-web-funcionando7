@@ -1750,8 +1750,12 @@ Formato: Información combinada clara y directa en español.
 def execute_web_search_step(title: str, description: str, tool_manager, task_id: str) -> dict:
     """Ejecutar paso de búsqueda web con visualización en tiempo real"""
     try:
-        # Extraer query de búsqueda
-        search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
+        # 🧠 USAR FUNCIÓN EXISTENTE DE EXTRACCIÓN DE KEYWORDS
+        from ..tools.unified_web_search_tool import UnifiedWebSearchTool
+        web_search_tool = UnifiedWebSearchTool()
+        raw_query = f"{title} {description}".strip()
+        search_query = web_search_tool._extract_clean_keywords_static(raw_query)
+        logger.info(f"🎯 Query inteligente generado: '{search_query}' (original: '{title}')")
         
         # 🚀 PRIORIDAD: EJECUTAR LA BÚSQUEDA REAL PRIMERO (sin dependencias de WebSocket/Browser)
         search_result = None
