@@ -5252,61 +5252,24 @@ def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool =
                 
                 # Prompts progresivamente más específicos
                 if attempt == 1:
-                    # Prompt CORREGIDO para generar pasos que realmente cumplan la solicitud del usuario
-                    plan_prompt = f"""INSTRUCCIÓN: Responde ÚNICAMENTE con JSON válido, sin texto adicional.
+                    # Prompt SIMPLIFICADO para mejor rendimiento
+                    plan_prompt = f"""Crea un plan detallado paso a paso para: "{message}"
 
-CORRECCIÓN CRÍTICA: Los pasos deben ejecutar EXACTAMENTE lo que el usuario pidió, no tareas genéricas.
+Responde SOLO con JSON válido (sin explicaciones):
 
-Solicitud del usuario: {message}
-Categoría detectada: {task_category}
-
-EJEMPLO CORRECTO:
-Si el usuario pide "Escribe un informe sobre los beneficios de la energía solar", el paso final debe ser:
-"title": "Escribir el informe sobre los beneficios de la energía solar",
-"description": "Crear el informe completo sobre los beneficios de la energía solar con datos específicos, ventajas económicas, ambientales y técnicas"
-
-JSON de respuesta (SOLO JSON, sin explicaciones):
 {{
   "steps": [
-    {{
-      "id": "step-1",
-      "title": "Investigar información específica para {message}",
-      "description": "Buscar datos actualizados y específicos necesarios para completar: {message}",
-      "tool": "web_search",
-      "estimated_time": "8-10 minutos",
-      "complexity": "media"
-    }},
-    {{
-      "id": "step-2",
-      "title": "Analizar datos recopilados",
-      "description": "Procesar y estructurar la información encontrada para su uso en: {message}",
-      "tool": "analysis", 
-      "estimated_time": "10-12 minutos",
-      "complexity": "alta"
-    }},
-    {{
-      "id": "step-3",
-      "title": "Desarrollar contenido base",
-      "description": "Crear la estructura y contenido preliminar requerido para: {message}",
-      "tool": "creation",
-      "estimated_time": "12-15 minutos", 
-      "complexity": "alta"
-    }},
-    {{
-      "id": "step-4",
-      "title": "{message}",
-      "description": "Completar y entregar exactamente lo solicitado: {message}",
-      "tool": "processing",
-      "estimated_time": "5-8 minutos",
-      "complexity": "media"
-    }}
+    {{"id": "step-1", "title": "Investigar información específica sobre {message[:40]}", "description": "Buscar datos actualizados y específicos para completar la tarea", "tool": "web_search", "estimated_time": "8-12 min", "complexity": "media"}},
+    {{"id": "step-2", "title": "Analizar y procesar información", "description": "Analizar los datos encontrados para estructurarlos correctamente", "tool": "analysis", "estimated_time": "10-15 min", "complexity": "alta"}},
+    {{"id": "step-3", "title": "Desarrollar contenido base", "description": "Crear la estructura principal del contenido solicitado", "tool": "creation", "estimated_time": "15-20 min", "complexity": "alta"}},
+    {{"id": "step-4", "title": "{message[:50]}", "description": "Finalizar y entregar exactamente lo solicitado por el usuario", "tool": "processing", "estimated_time": "8-15 min", "complexity": "alta"}}
   ],
   "task_type": "{task_category}",
   "complexity": "alta",
-  "estimated_total_time": "35-45 minutos"
+  "estimated_total_time": "41-62 minutos"
 }}
 
-IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Cada paso debe tener valor único."""
+IMPORTANTE: El paso final debe completar EXACTAMENTE "{message}"."""
 
                 elif attempt == 2:
                     # Prompt simplificado pero específico para JSON
