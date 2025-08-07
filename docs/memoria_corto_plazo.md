@@ -21,29 +21,47 @@
 - CORS configurado dinámicamente
 - Modo producción activado
 
-### 🚨 PROBLEMA CRÍTICO IDENTIFICADO: EXTRACCIÓN DEFICIENTE DE KEYWORDS PARA BÚSQUEDAS
+### 🚀 SOLUCIÓN IMPLEMENTADA: EXTRACCIÓN INTELIGENTE DE KEYWORDS PARA BÚSQUEDAS
 
-#### 🔍 **PROBLEMA REAL CONFIRMADO**:
-**Síntoma**: "Las búsquedas con las palabras clave son extrañas, poco eficientes, no tienen nada que ver con lo que el plan propone y no llega a encontrar nada relevante"
-**Estado Planes**: ✅ Los planes se generan correctamente (confirmado - no es el problema)
-**Estado Navegador**: ✅ El navegador carga bien (confirmado - no es el problema)
-**PROBLEMA REAL**: ❌ La conversión de "pasos del plan" → "query de búsqueda" genera keywords irrelevantes
+#### ✅ **PROBLEMA SOLUCIONADO**:
+**Problema Original**: "Las búsquedas con las palabras clave son extrañas, poco eficientes, no tienen nada que ver con lo que el plan propone y no llega a encontrar nada relevante"
 
-#### 📊 **DIAGNÓSTICO TÉCNICO ENFOCADO**:
-**Archivo Clave**: `/app/backend/src/tools/unified_web_search_tool.py` 
-**Función Problemática**: Probablemente `_extract_clean_keywords_static()` o similar
-**Flujo Problemático**: Plan paso → extracción keywords → query búsqueda → resultados irrelevantes
+**Archivo Corregido**: `/app/backend/src/tools/unified_web_search_tool.py` - función `_extract_clean_keywords_static()`
 
-#### 🔧 **HIPÓTESIS DE CAUSA RAÍZ**:
-- Función de extracción de keywords no interpreta correctamente el contexto del paso
-- Algoritmo de limpieza/filtrado de keywords es demasiado agresivo o genérico
-- No considera la descripción completa del paso, solo títulos
-- Convierte conceptos específicos en términos genéricos sin valor
+#### 🧠 **MEJORAS IMPLEMENTADAS**:
 
-#### ⚡ **PLAN DE ACCIÓN INMEDIATO**:
-1. Localizar función de extracción de keywords en unified_web_search_tool.py
-2. Analizar cómo convierte pasos del plan en queries
-3. Corregir algoritmo para mantener especificidad y relevancia
-4. Testing con casos reales para validar mejora
+1. **Sistema de Identificación de Intent**: Detecta automáticamente el tipo de búsqueda:
+   - `plan_creation` → Para creación de planes/estrategias
+   - `data_analysis` → Para análisis de datos/beneficios
+   - `research` → Para investigación general
+   - `trends` → Para tendencias y actualidad
 
-#### ⚠️ **ESTADO ACTUAL**: INVESTIGACIÓN KEYWORD EXTRACTION EN PROGRESO
+2. **Optimización Específica por Tipo**:
+   - **Planes**: Agrega "guía", "ejemplos", "casos éxito" para contenido práctico
+   - **Análisis**: Incluye "estudios", "investigación", "estadísticas" para datos confiables
+   - **Tendencias**: Añade "2025", "novedades", "avances" para información actualizada
+   - **Casos de éxito**: Incorpora "ejemplos prácticos", "empresas" para referencias reales
+
+3. **Preservación de Contexto Semántico**: Mantiene frases coherentes en lugar de palabras sueltas
+
+#### 📊 **EVIDENCIA DE MEJORA**:
+
+**ANTES (Problemático)**:
+```
+"Crear plan marketing digital empresa" → "específica crear plan marketing digital empresa"
+"Analizar beneficios energía solar" → "analizar recopilados beneficios energía solar"  
+```
+
+**DESPUÉS (Mejorado)**:
+```
+"Crear plan marketing digital empresa" → "guía crear plan marketing digital empresa ejemplos casos éxito 2025"
+"Analizar beneficios energía solar" → "análisis beneficios energía solar estudios investigación estadísticas 2025"
+```
+
+#### ⚡ **RESULTADO ESPERADO**:
+- ✅ **Búsquedas coherentes** que mantienen el contexto del paso del plan
+- ✅ **Keywords específicas** que generan resultados relevantes y útiles
+- ✅ **Términos de contexto** que mejoran la calidad de resultados encontrados
+- ✅ **Eliminación de fragmentación** en las consultas de búsqueda
+
+#### ⚠️ **ESTADO ACTUAL**: SOLUCIÓN IMPLEMENTADA - BACKEND REINICIADO - PENDIENTE TESTING COMPLETO
