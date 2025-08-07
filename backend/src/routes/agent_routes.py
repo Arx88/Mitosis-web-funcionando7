@@ -8606,15 +8606,83 @@ GENERA EL ANÁLISIS COMPLETO AHORA:"""
                 }
                 tool = mapped_tool
             elif tool == 'creation':
-                # 🔧 CRITICAL FIX: Mapear creation a file_manager tool real
-                tool = 'file_manager'  # Usar herramienta real en lugar de creation
-                # Crear un documento con el contenido solicitado
-                filename = f"report_{task_id}_{step_id}.md"
+                # 🧠 CREACIÓN INTELIGENTE CON DATOS REALES
+                mapped_tool = 'ollama_processing'  # Usar IA para crear contenido real
+                filename = f"generated_content_{task_id}_{step_id}.md"
+                
+                # 🚀 RECOPILAR TODOS LOS DATOS REALES de pasos anteriores
+                comprehensive_data = ""
+                research_summary = ""
+                analysis_insights = ""
+                
+                try:
+                    task_data = get_task_data(task_id)
+                    if task_data and 'plan' in task_data:
+                        for prev_step in task_data['plan']:
+                            if prev_step.get('completed') and 'result' in prev_step:
+                                result = prev_step.get('result', {})
+                                step_tool = prev_step.get('tool', 'unknown')
+                                
+                                # Categorizar datos por tipo de herramienta
+                                if step_tool == 'web_search':
+                                    # Extraer datos de búsqueda web
+                                    if isinstance(result, dict):
+                                        search_results = result.get('results', []) or result.get('data', [])
+                                        for res in search_results[:3]:  # Top 3 resultados
+                                            if res.get('title') and res.get('snippet'):
+                                                research_summary += f"📌 {res.get('title')}: {res.get('snippet', '')}\n"
+                                                if res.get('url'):
+                                                    research_summary += f"   Fuente: {res.get('url')}\n\n"
+                                
+                                elif step_tool in ['analysis', 'ollama_processing']:
+                                    # Extraer insights de análisis
+                                    content = result.get('content', '') or result.get('response', '') or result.get('summary', '')
+                                    if content and len(content) > 100:
+                                        analysis_insights += f"--- Análisis previo ---\n{content}\n\n"
+                                
+                                # Recopilar todo el contenido disponible
+                                all_content = result.get('content', '') or result.get('response', '') or result.get('summary', '')
+                                if all_content and len(all_content) > 50:
+                                    comprehensive_data += f"\n=== Datos de {step_tool} ===\n{all_content[:800]}\n"
+                                    
+                except Exception as e:
+                    logger.warning(f"Error extracting comprehensive data: {e}")
+                
+                # 🎯 PROMPT PARA CREACIÓN REAL CON DATOS ESPECÍFICOS
+                creation_prompt = f"""TAREA DE CREACIÓN CON DATOS REALES: {title}
+
+DESCRIPCIÓN DEL CONTENIDO A CREAR:
+{description}
+
+DATOS REALES DISPONIBLES PARA USAR:
+{comprehensive_data}
+
+RESUMEN DE INVESTIGACIÓN:
+{research_summary}
+
+INSIGHTS DE ANÁLISIS PREVIO:
+{analysis_insights}
+
+INSTRUCCIONES CRÍTICAS PARA CREACIÓN:
+- USAR TODOS LOS DATOS REALES proporcionados arriba
+- NO crear contenido genérico o meta-información
+- NO usar frases como "se creará" o "se desarrollará" - CREAR DIRECTAMENTE
+- Incluir datos específicos, fechas, nombres, números cuando estén disponibles
+- Generar contenido SUSTANCIAL de al menos 500 palabras
+- Citar fuentes cuando sea posible
+- Proporcionar información práctica y valiosa
+- RESULTADO FINAL debe ser el contenido solicitado, no un plan o metodología
+
+CREAR EL CONTENIDO COMPLETO AHORA:"""
+
                 tool_params = {
-                    'action': 'create',
-                    'path': f"/tmp/{filename}",
-                    'content': f"# {title}\n\n## Descripción\n{description}\n\n## Contenido\n\n*Documento generado automáticamente por el agente*\n\nFecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\nTarea ID: {task_id}\nPaso ID: {step_id}\n"
+                    'prompt': creation_prompt,
+                    'temperature': 0.4,  # Creatividad moderada
+                    'max_tokens': 2000,  # Suficientes tokens para contenido extenso
+                    'save_to_file': True,
+                    'filename': filename
                 }
+                tool = mapped_tool
             elif tool == 'delivery':
                 # Mapear delivery a file_manager para crear archivos de entrega
                 tool = 'file_manager'
