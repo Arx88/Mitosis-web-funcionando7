@@ -8530,13 +8530,50 @@ def execute_step_real_original(task_id: str, step_id: str, step: dict):
                     'max_results': 5
                 }
             elif tool == 'analysis':
-                # Mapear analysis a comprehensive_research tool
-                tool = 'comprehensive_research'  # 🔧 FIXED: usar herramienta real
+                # 🧠 MAPEO INTELIGENTE: Usar Ollama para análisis real, no búsqueda web
+                mapped_tool = 'ollama_processing'  # Usar herramienta de procesamiento IA
+                
+                # 🚀 OBTENER DATOS REALES de pasos anteriores para análisis profundo
+                previous_data = ""
+                try:
+                    task_data = get_task_data(task_id)
+                    if task_data and 'plan' in task_data:
+                        for prev_step in task_data['plan']:
+                            if prev_step.get('completed') and 'result' in prev_step:
+                                result = prev_step.get('result', {})
+                                if isinstance(result, dict):
+                                    # Extraer contenido real de resultados anteriores
+                                    content = result.get('content', '') or result.get('summary', '')
+                                    if content and len(content) > 50:  # Solo contenido sustancial
+                                        previous_data += f"\n--- Datos de {prev_step.get('tool', 'paso anterior')} ---\n{content[:500]}\n"
+                except Exception as e:
+                    logger.warning(f"Error extracting previous data for analysis: {e}")
+                
+                # Prompt específico para análisis real con datos
+                analysis_prompt = f"""TAREA DE ANÁLISIS PROFUNDO: {title}
+
+DESCRIPCIÓN DEL ANÁLISIS REQUERIDO:
+{description}
+
+DATOS DISPONIBLES PARA ANALIZAR:
+{previous_data}
+
+INSTRUCCIONES CRÍTICAS:
+- Realizar un análisis PROFUNDO y DETALLADO de los datos proporcionados
+- NO uses frases como "se analizará" o "se evaluará" - HAZLO DIRECTAMENTE
+- Identifica patrones, tendencias, insights específicos
+- Proporciona conclusiones concretas y recomendaciones accionables
+- Incluye datos específicos, números, fechas, nombres cuando estén disponibles
+- Genera un análisis de AL MENOS 300 palabras con contenido sustancial
+
+GENERA EL ANÁLISIS COMPLETO AHORA:"""
+
                 tool_params = {
-                    'query': f"{title}: {description}",
-                    'max_results': 5,
-                    'include_analysis': True
+                    'prompt': analysis_prompt,
+                    'temperature': 0.3,  # Menor temperatura para análisis más preciso
+                    'max_tokens': 1500   # Más tokens para análisis detallado
                 }
+                tool = mapped_tool
             elif tool == 'creation':
                 # 🔧 CRITICAL FIX: Mapear creation a file_manager tool real
                 tool = 'file_manager'  # Usar herramienta real en lugar de creation
