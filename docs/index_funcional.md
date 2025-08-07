@@ -76,17 +76,20 @@ dist/                             # Build de producción OPTIMIZADO ✅
 - **API Integration**: ✅ Endpoints `/api/agent/ollama/check` y `/api/agent/ollama/models`
 - **Conexión**: ✅ Verificada desde backend y frontend
 
-### ✅ SISTEMA JERÁRQUICO ROBUSTO - IMPLEMENTADO CON IA INTELIGENTE
-#### **Fase 1: Web Search Jerárquico** ✅ **MEJORADO CON OLLAMA**
-- **Estado**: IMPLEMENTADO con IA inteligente en execute_web_search_step()
-- **Nueva función**: `_generate_intelligent_search_plan_with_ollama()` ✅
-- **Robustez**: De 1 búsqueda → 2-4 búsquedas específicas generadas por IA
+### ✅ SISTEMA JERÁRQUICO ROBUSTO - IMPLEMENTADO CON VALIDACIÓN INTELIGENTE DE COMPLETITUD
+
+#### **Fase 1: Web Search Jerárquico** ✅ **MEJORADO CON VALIDACIÓN INTELIGENTE**
+- **Estado**: IMPLEMENTADO con validación de completitud en execute_web_search_step()
+- **Nueva función**: `step_requirement_validator.py` ✅ **MÓDULO COMPLETO**
+- **Robustez**: De 1 búsqueda → 2-4 búsquedas específicas + búsquedas dirigidas para elementos faltantes
 - **IA integrada**: Ollama genera sub-planes específicos adaptados al contexto
-- **Prompt especializado**: Analiza título/descripción para identificar aspectos clave
-- **Auto-evaluación**: Sistema evalúa completitud y re-planifica si necesario
+- **🎯 VALIDACIÓN INTELIGENTE**: Sistema analiza si biografía, trayectoria política, ideología, declaraciones están presentes
+- **🔄 BÚSQUEDAS DIRIGIDAS**: Hasta 3 búsquedas específicas para elementos faltantes identificados
+- **❌ NO AVANCE PREMATURO**: Pasos bloqueados hasta que TODOS los elementos requeridos estén presentes
+- **Auto-evaluación**: Sistema evalúa completitud real y re-planifica con búsquedas dirigidas
 - **Fallback robusto**: Sistema anterior disponible si Ollama no funciona
-- **Enhanced logging**: Debug completo del proceso de generación
-- **Transparencia**: Progreso interno visible al usuario con método usado (IA vs fallback)
+- **Enhanced logging**: Debug completo del proceso de generación + validación de requisitos
+- **Transparencia**: Progreso interno visible con elementos faltantes específicos
 
 #### **Fase 2: Enhanced Analysis Jerárquico** ✅  
 - **Estado**: IMPLEMENTADO en execute_enhanced_analysis_step()
