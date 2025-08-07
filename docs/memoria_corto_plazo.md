@@ -1,8 +1,8 @@
 # Memoria de Corto Plazo - Mitosis
 
 ## Trabajo Actual
-**Fecha**: 2025-01-26
-**Tarea**: Documentación completa del sistema Mitosis existente
+**Fecha**: 2025-01-26 - Actualización
+**Tarea**: Solucionar problema de búsqueda web - navegador no realiza búsquedas
 
 ### Estado Actual del Sistema
 - ✅ **Backend funcionando**: Flask server en puerto 8001
