@@ -5327,66 +5327,19 @@ IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Ca
                     # Prompt mínimo para tercer intento - ESPECÍFICO para la solicitud del usuario
                     plan_prompt = f"Plan JSON para '{message}': {{'steps': [{{'id':'step-1','title':'Investigar para {message[:20]}','description':'Buscar información específica','tool':'web_search'}},{{'id':'step-2','title':'Procesar información','description':'Analizar datos recopilados','tool':'analysis'}},{{'id':'step-3','title':'{message[:30]}','description':'Completar exactamente lo solicitado','tool':'creation'}}],'task_type':'general','complexity':'media','estimated_total_time':'25 minutos'}}"
                 
-                # TEMPORALLY: Use a simpler approach to generate plan
-                logger.info(f"🔄 Using simplified plan generation for: {message}")
+                # 🚀 FIX CRÍTICO: USAR OLLAMA PARA GENERAR PLANES INTELIGENTES
+                logger.info(f"🧠 Attempting to generate AI-powered plan using Ollama for: {message}")
                 
-                # Create a basic but intelligent plan based on the message
-                import re
+                # Llamar a Ollama para generar plan inteligente
+                result = ollama_service.generate_response(
+                    plan_prompt,
+                    {'temperature': 0.7, 'max_tokens': 1000},
+                    False,  # use_tools = False para generar JSON puro
+                    task_id,
+                    f"plan_generation_attempt_{attempt}"
+                )
                 
-                # Extract key action words
-                action_words = ['crear', 'generar', 'escribir', 'desarrollar', 'diseñar', 'analizar', 'investigar']
-                main_action = 'crear'
-                for word in action_words:
-                    if word in message.lower():
-                        main_action = word
-                        break
-                
-                # Create intelligent steps based on the task
-                intelligent_steps = [
-                    {
-                        "id": "step-1",
-                        "title": f"Investigar información específica para {message[:50]}",
-                        "description": f"Buscar datos actualizados y específicos necesarios para: {message}",
-                        "tool": "web_search",
-                        "completed": False,
-                        "active": True,
-                        "status": "active",
-                        "estimated_time": "8-12 minutos",
-                        "complexity": "media"
-                    },
-                    {
-                        "id": "step-2", 
-                        "title": f"Analizar y estructurar información para {main_action}",
-                        "description": f"Procesar y organizar los datos encontrados para {main_action}: {message}",
-                        "tool": "analysis",
-                        "completed": False,
-                        "active": False,
-                        "status": "pending",
-                        "estimated_time": "10-15 minutos",
-                        "complexity": "alta"
-                    },
-                    {
-                        "id": "step-3",
-                        "title": f"{main_action.capitalize()} {message}",
-                        "description": f"Completar exactamente lo solicitado: {message}",
-                        "tool": "creation",
-                        "completed": False,
-                        "active": False,
-                        "status": "pending",
-                        "estimated_time": "15-20 minutos", 
-                        "complexity": "alta"
-                    }
-                ]
-                
-                # Return the intelligent plan without Ollama for now
-                plan_data = {
-                    'steps': intelligent_steps,
-                    'task_type': task_category,
-                    'complexity': 'alta' if len(message) > 50 else 'media',
-                    'estimated_total_time': '33-47 minutos'
-                }
-                
-                logger.info(f"✅ Generated intelligent plan with {len(plan_data['steps'])} specific steps")
+                logger.info(f"🔄 Ollama response received for attempt {attempt}")
                 
                 if result.get('error'):
                     logger.error(f"❌ Ollama error: {result['error']}")
