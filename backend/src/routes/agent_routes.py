@@ -2079,40 +2079,54 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
         print(f"🔥 Task ID: {task_id}")
         print(f"🔥 Description: {description}")
         
-        # 🧠 PASO 1: GENERAR SUB-PLAN INTERNO SIMPLIFICADO
-        # En lugar de usar Ollama, crear un sub-plan básico basado en el título y descripción
+        # 🧠 PASO 1: GENERAR SUB-PLAN INTELIGENTE CON OLLAMA
+        # Usar Ollama para generar un sub-plan de búsqueda inteligente y específico
         sub_tasks = []
         
-        # Extraer keywords para búsquedas específicas
-        from ..tools.unified_web_search_tool import UnifiedWebSearchTool
-        web_search_tool = UnifiedWebSearchTool()
-        raw_query = f"{title} {description}".strip()
-        main_query = web_search_tool._extract_clean_keywords_static(raw_query)
+        # Intentar usar Ollama para generar el sub-plan
+        ollama_generated_plan = _generate_intelligent_search_plan_with_ollama(title, description, task_id)
         
-        # Crear múltiples variaciones de búsqueda
-        sub_tasks.append({
-            'query': main_query,
-            'focus': 'general',
-            'max_results': 3
-        })
-        
-        # Agregar búsquedas más específicas si hay palabras clave relevantes
-        keywords = main_query.lower().split()
-        if any(word in keywords for word in ['2024', '2025', 'actual', 'reciente']):
+        if ollama_generated_plan and ollama_generated_plan.get('success'):
+            sub_tasks = ollama_generated_plan.get('sub_tasks', [])
+            logger.info(f"🧠 Sub-plan inteligente generado por Ollama: {len(sub_tasks)} búsquedas específicas")
+            
+            # Log del sub-plan para debug
+            for i, task in enumerate(sub_tasks, 1):
+                logger.info(f"   🔍 Búsqueda {i}: '{task.get('query', 'N/A')}' (Foco: {task.get('focus', 'N/A')})")
+        else:
+            # Fallback al sistema anterior si Ollama no funciona
+            logger.warning("⚠️ Ollama no disponible, usando generación de sub-plan simplificada")
+            
+            # Extraer keywords para búsquedas específicas
+            from ..tools.unified_web_search_tool import UnifiedWebSearchTool
+            web_search_tool = UnifiedWebSearchTool()
+            raw_query = f"{title} {description}".strip()
+            main_query = web_search_tool._extract_clean_keywords_static(raw_query)
+            
+            # Crear múltiples variaciones de búsqueda
             sub_tasks.append({
-                'query': f"{main_query} 2024 actualidad",
-                'focus': 'current',
-                'max_results': 2
+                'query': main_query,
+                'focus': 'general',
+                'max_results': 3
             })
-        
-        if any(word in keywords for word in ['análisis', 'estudio', 'investigación']):
-            sub_tasks.append({
-                'query': f"{main_query} análisis detallado",
-                'focus': 'analysis',
-                'max_results': 2
-            })
-        
-        logger.info(f"📋 Sub-plan generado con {len(sub_tasks)} búsquedas específicas")
+            
+            # Agregar búsquedas más específicas si hay palabras clave relevantes
+            keywords = main_query.lower().split()
+            if any(word in keywords for word in ['2024', '2025', 'actual', 'reciente']):
+                sub_tasks.append({
+                    'query': f"{main_query} 2024 actualidad",
+                    'focus': 'current',
+                    'max_results': 2
+                })
+            
+            if any(word in keywords for word in ['análisis', 'estudio', 'investigación']):
+                sub_tasks.append({
+                    'query': f"{main_query} análisis detallado",
+                    'focus': 'analysis',
+                    'max_results': 2
+                })
+            
+            logger.info(f"📋 Sub-plan de fallback generado: {len(sub_tasks)} búsquedas específicas")
         
         # 📊 PASO 2: EJECUTAR SUB-PLAN CON DOCUMENTACIÓN PROGRESIVA
         accumulated_results = []
