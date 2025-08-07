@@ -1099,8 +1099,9 @@ GENERA LA RESPUESTA AHORA:
 
 def execute_single_step_logic(step: dict, original_message: str, task_id: str) -> dict:
     """
-    🧠 SISTEMA INTELIGENTE DE EJECUCIÓN DE PASOS
+    🧠 SISTEMA INTELIGENTE DE EJECUCIÓN DE PASOS CON VALIDACIÓN MEJORADA
     Lógica avanzada que puede cambiar de herramientas automáticamente y combinar múltiples herramientas
+    CON DETECCIÓN AUTOMÁTICA DE PASO 1 Y VALIDACIÓN SUPER ESTRICTA
     """
     try:
         step_tool = step.get('tool', 'processing')
@@ -1109,6 +1110,16 @@ def execute_single_step_logic(step: dict, original_message: str, task_id: str) -
         
         logger.info(f"🧠 Ejecutando PASO INTELIGENTE: {step_title}")
         logger.info(f"🛠️ Herramienta inicial: {step_tool}")
+        
+        # 🔥 DETECCIÓN CRÍTICA DE PASO 1 EN FLUJO PRINCIPAL
+        is_step_1_research = any(keyword in step_description.lower() for keyword in [
+            'biografía', 'trayectoria política', 'ideología', 'declaraciones públicas',
+            'buscar información', 'recopilar datos', 'fuentes confiables', 'noticias',
+            'entrevistas', 'perfiles académicos', 'paso 1'
+        ])
+        
+        if is_step_1_research:
+            logger.info("🔥 DETECTADO PASO 1 DE INVESTIGACIÓN POLÍTICA - Sistema de validación mejorada activo")
         
         # Obtener servicios necesarios
         ollama_service = get_ollama_service()
@@ -1119,9 +1130,18 @@ def execute_single_step_logic(step: dict, original_message: str, task_id: str) -
         logger.info(f"🔍 Análisis de tarea: {task_analysis}")
         
         # 🚀 EJECUTOR INTELIGENTE CON FALLBACK AUTOMÁTICO
-        return execute_step_with_intelligent_tool_selection(
+        result = execute_step_with_intelligent_tool_selection(
             step, task_analysis, ollama_service, tool_manager, task_id, original_message
         )
+        
+        # 🔥 APLICAR VALIDACIÓN MEJORADA DESPUÉS DE LA EJECUCIÓN SI ES PASO 1
+        if is_step_1_research:
+            result = apply_enhanced_step_1_validation(
+                result, step_title, step_description, original_message, task_id, 
+                ollama_service, tool_manager
+            )
+        
+        return result
             
     except Exception as e:
         logger.error(f"❌ Error en ejecución de paso: {str(e)}")
