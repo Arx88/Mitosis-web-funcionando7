@@ -1,89 +1,72 @@
-# Tareas Pendientes - Mitosis
+# Tareas Pendientes - Proyecto Mitosis
 
-## ✅ TAREA COMPLETADA HOY
-- [x] **CRÍTICO: Arreglar búsqueda web** - Navegador ahora realiza búsquedas efectivas *(Completado 2025-01-26)*
+## 📋 Lista de Tareas Activas
 
-## Tareas de Mantenimiento
+### 🔴 ALTA PRIORIDAD - Problema Crítico Reportado
 
-### Alta Prioridad
-- [ ] **Verificar corrección búsqueda web**: Probar con diferentes queries y motores de búsqueda
-- [ ] **Testing de navegación real**: Confirmar que screenshots y navegación funcionan
-- [ ] **Actualizar documentación API**: Algunos endpoints pueden estar obsoletos
-- [ ] **Optimizar performance WebSocket**: Revisar latencia en tasks de larga duración  
-- [ ] **Cleanup logs antiguos**: Sistema de rotación automática de logs
-- [ ] **Testing coverage**: Aumentar cobertura de tests en componentes críticos
+#### 1. **Investigar Problema de Búsqueda Web** 
+- **Descripción**: "Genere una tarea pero a la hora de buscar en la web no genera busqueda sobre el tema.... abre el navegador pero no se queda en el home y no lo usa para buscar."
+- **Estado**: 🔄 PENDIENTE
+- **Archivos a revisar**:
+  - `/app/backend/src/tools/unified_web_search_tool.py`
+  - `/app/backend/src/tools/tool_manager.py`
+  - Configuración de browser-use
+- **Acciones**:
+  - [ ] Analizar configuración actual de búsqueda web
+  - [ ] Verificar integración con RealTimeBrowserTool
+  - [ ] Probar búsqueda web manualmente
+  - [ ] Revisar logs de navegación
+  - [ ] Identificar punto de falla en el pipeline
 
-### Media Prioridad
-- [ ] **Refactor tool registry**: Simplificar sistema de auto-discovery
-- [ ] **UI improvements**: Mejorar responsive design en mobile
-- [ ] **Error handling**: Mejorar mensajes de error user-friendly
-- [ ] **Database optimization**: Índices para consultas frecuentes
-- [ ] **Validar integración Ollama**: Asegurar que IA funciona con búsqueda web
+#### 2. **Verificar Pipeline de Navegación en Tiempo Real**
+- **Descripción**: Confirmar que el sistema de navegación visual funcione correctamente
+- **Estado**: 🔄 PENDIENTE  
+- **Dependencias**: Tarea #1
+- **Acciones**:
+  - [ ] Probar eventos browser_visual en WebSocket
+  - [ ] Verificar screenshots en `/tmp/screenshots/`
+  - [ ] Confirmar display X11 virtual (:99)
+  - [ ] Validar configuración de Playwright
 
-### Baja Prioridad
-- [ ] **Documentation**: Generar documentación automática de API
-- [ ] **Monitoring**: Implementar métricas de performance
-- [ ] **Security audit**: Revisar prácticas de seguridad
-- [ ] **Bundle optimization**: Reducir tamaño de bundle frontend
+### 🟡 MEDIA PRIORIDAD - Mejoras del Sistema
 
-## Mejoras de Funcionalidad
+#### 3. **Actualizar Índice Funcional**
+- **Descripción**: Mapear todas las funcionalidades del sistema actual
+- **Estado**: ⏳ NO INICIADA
+- **Acciones**:
+  - [ ] Explorar estructura completa del backend
+  - [ ] Documentar herramientas disponibles
+  - [ ] Mapear rutas API
+  - [ ] Documentar componentes React
 
-### Ideas Pendientes
-- [ ] **Plantillas de tareas**: Crear plantillas predefinidas para tareas comunes
-- [ ] **Historial avanzado**: Timeline visual de ejecución de tareas
-- [ ] **Colaboración**: Sistema multi-usuario para tareas compartidas
-- [ ] **Integración externa**: APIs de terceros (Slack, Discord, etc.)
-- [ ] **Modo offline**: Funcionalidad básica sin conexión a internet
-- [ ] **Export/Import**: Backup y restauración de configuración
+#### 4. **Optimizar Documentación**
+- **Descripción**: Mejorar la documentación basada en hallazgos
+- **Estado**: ⏳ NO INICIADA
+- **Acciones**:
+  - [ ] Actualizar memoria de largo plazo con nuevos hallazgos
+  - [ ] Documentar soluciones implementadas
+  - [ ] Crear guía de troubleshooting
 
-### Herramientas Nuevas
-- [ ] **Database tool**: Interacción directa con bases de datos
-- [ ] **API testing tool**: Herramienta para testing de APIs
-- [ ] **Image processing tool**: Procesamiento de imágenes
-- [ ] **PDF generator tool**: Generación de documentos PDF
-- [ ] **Email tool**: Envío de emails automatizados
-- [ ] **Calendar tool**: Integración con calendarios
+### 🟢 BAJA PRIORIDAD - Mantenimiento
 
-## Bugs Conocidos
+#### 5. **Limpieza de Código**
+- **Descripción**: Revisar y limpiar duplicaciones si las hay
+- **Estado**: ⏳ NO INICIADA
+- **Dependencias**: Completar análisis funcional
+- **Acciones**:
+  - [ ] Identificar código duplicado
+  - [ ] Refactorizar funciones complejas
+  - [ ] Mejorar nombres y documentación
 
-### Críticos
-- (Ninguno identificado actualmente)
+## 📊 Estado General de Tareas
+- **Total**: 5 tareas
+- **Alta Prioridad**: 2 tareas  
+- **Media Prioridad**: 2 tareas
+- **Baja Prioridad**: 1 tarea
+- **En Proceso**: 2 tareas
+- **Pendientes**: 3 tareas
 
-### Menores
-- [ ] **WebSocket reconnection**: A veces no reconecta automáticamente
-- [ ] **Long task handling**: Tasks muy largas pueden timeout
-- [ ] **Browser tool memory**: Posible memory leak en navegación extensa
-
-## Optimizaciones Técnicas
-
-### Performance
-- [ ] **Lazy loading**: Implementar en más componentes
-- [ ] **Caching**: Sistema de cache para respuestas frecuentes
-- [ ] **Database queries**: Optimizar consultas N+1
-- [ ] **Asset compression**: Comprimir assets estáticos
-
-### Código
-- [ ] **Type safety**: Mejorar tipado TypeScript
-- [ ] **Error boundaries**: Más granularidad en error handling
-- [ ] **Code splitting**: Dividir bundles por funcionalidad
-- [ ] **Dead code elimination**: Remover código no utilizado
-
-## Notas para el Agente
-
-### Al Agregar Nuevas Características
-1. Verificar en `index_funcional.md` si ya existe funcionalidad similar
-2. Actualizar este archivo con nuevas tareas derivadas
-3. Considerar impacto en performance y experiencia usuario
-4. Seguir patrones arquitectónicos establecidos
-
-### Al Realizar Mantenimiento
-1. Priorizar tareas críticas antes que mejoras cosméticas
-2. Validar que cambios no rompan funcionalidad existente
-3. Actualizar documentación relevante
-4. Comunicar cambios importantes vía changelog
-
-### Al Encontrar Problemas
-1. Agregar a sección "Bugs Conocidos" con detalles
-2. Incluir pasos para reproducir el problema
-3. Estimar impacto y prioridad
-4. Vincular con posibles soluciones o workarounds
+## 🎯 Próxima Tarea a Ejecutar
+**PRIORIDAD 1**: Investigar Problema de Búsqueda Web
+**Tiempo Estimado**: 30-60 minutos
+**Archivo Principal**: unified_web_search_tool.py
