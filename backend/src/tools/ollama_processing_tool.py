@@ -73,7 +73,7 @@ class OllamaProcessingTool(BaseTool):
                 prompt=prompt,
                 context=context,
                 use_tools=False,  # No necesitamos tools para procesamiento final
-                task_id=self.task_id,
+                task_id=config.get('task_id', 'unknown'),
                 step_id=f"processing_{int(time.time())}"
             )
             
