@@ -21,61 +21,22 @@
 - CORS configurado dinámicamente
 - Modo producción activado
 
-### 🎯 PROBLEMA RESUELTO EXITOSAMENTE
+### 🚨 NUEVO PROBLEMA REPORTADO: PLANES FALLBACK EN LUGAR DE PROFESIONALES
 
-#### ✅ **SOLUCIÓN IMPLEMENTADA** - Subprocess para Event Loop Conflict
-**Hora**: 08:10 UTC
-**Archivo Modificado**: `/app/backend/src/tools/unified_web_search_tool.py`
-**Función Corregida**: `_run_playwright_fallback_search()`
+#### 🔍 **ANÁLISIS DEL PROBLEMA ACTUAL**:
+**Síntoma**: Los planes generados son fallback simples, no usa los planes profesionales de la app
+**Archivo Clave**: `/app/backend/src/routes/agent_routes.py` - función `generate_unified_ai_plan()`
+**Línea Crítica**: 5254, 5259, 5510, 5522 - múltiples fallbacks a `generate_intelligent_fallback_plan()`
 
-#### 🔧 **CAMBIOS TÉCNICOS IMPLEMENTADOS**:
-1. **Eliminación de asyncio directo**: Removido uso directo de asyncio en el hilo principal
-2. **Implementación subprocess**: Playwright ejecutado en proceso Python separado
-3. **Script independiente**: Código asyncio completamente aislado del eventlet
-4. **Configuración robusta**: Soporte para navegación visible (X11) y headless
-5. **Error handling mejorado**: Manejo completo de errores con cleanup automático
-6. **Progress tracking**: Reportes detallados de progreso en tiempo real
+#### 📊 **DIAGNÓSTICO TÉCNICO EN PROGRESO**:
+1. **Sistema de Planificación Implementado**: ✅ `EnhancedDynamicTaskPlanner` existe pero no se usa
+2. **TaskOrchestrator**: ✅ Configurado con `DynamicTaskPlanner` (línea 80 en task_orchestrator.py)
+3. **Función Principal**: `generate_unified_ai_plan()` depende de Ollama service
+4. **Problema Identificado**: Si Ollama service falla → fallback automático a planes simples
 
-#### 📊 **EVIDENCIA DE RESOLUCIÓN**:
-```bash
-# Testing ejecutado:
-curl -X POST "http://localhost:8001/api/agent/execute-step-detailed/chat-1754554316/step-1"
+#### 🔧 **HIPÓTESIS DE CAUSA RAÍZ**:
+- Ollama service no disponible o no healthy → línea 5254/5259 ejecuta fallback
+- Sistema profesional `EnhancedDynamicTaskPlanner` no se invoca desde la ruta principal
+- Flujo: `/api/agent/chat` → `generate_unified_ai_plan()` → si falla Ollama → fallback simple
 
-# RESULTADO EXITOSO:
-{
-  "step_result": {
-    "data": [
-      {
-        "method": "playwright_subprocess_real",  # ← MÉTODO REAL FUNCIONANDO
-        "source": "bing",
-        "title": "Resultado real de búsqueda",
-        "url": "https://www.juntadeandalucia.es/...",  # ← URL REAL
-        "snippet": "Contenido real extraído..."  # ← CONTENIDO REAL
-      }
-    ],
-    "success": true,
-    "summary": "✅ Búsqueda completada: 5 resultados encontrados"
-  }
-}
-```
-
-### 🚀 **VERIFICACIÓN COMPLETA DEL FIX**
-- ✅ **Event Loop Conflict**: RESUELTO - subprocess aísla asyncio
-- ✅ **Navegación Real**: FUNCIONANDO - URLs reales siendo extraídas
-- ✅ **X11 Integration**: OPERATIVO - Display :99 utilizado para navegación visible
-- ✅ **Error Handling**: ROBUSTO - Cleanup automático y recovery
-- ✅ **Progress Updates**: FUNCIONANDO - Reportes en tiempo real al usuario
-
-### 📋 Estado del Problema Original:
-**ANTES**: "abre el navegador pero no se queda en el home y no lo usa para buscar"
-- Error: `Cannot run the event loop while another loop is running`
-- Resultado: "Búsqueda completada sin resultados reales"
-
-**DESPUÉS**: 
-- ✅ **Navegación subprocess funcionando**
-- ✅ **Resultados reales extraídos** con método `playwright_subprocess_real`
-- ✅ **URLs válidas y contenido genuino** retornado
-- ✅ **Sin conflictos de event loop** - Error eliminado completamente
-
-### 🎯 Conclusión Final
-El problema ha sido **COMPLETAMENTE RESUELTO**. La búsqueda web ahora funciona correctamente, navegando páginas reales y extrayendo contenido genuino sin conflictos de event loop. El usuario ahora puede generar tareas que ejecuten búsquedas web exitosamente.
+#### ⚠️ **ESTADO ACTUAL**: INVESTIGACIÓN EN CURSO - REQUIERE VERIFICACIÓN DE OLLAMA SERVICE
