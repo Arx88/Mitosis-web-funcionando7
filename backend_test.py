@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """
-BACKEND TESTING SUITE FOR MITOSIS WEB NAVIGATION FUNCTIONALITY
-Testing the corrected web navigation system to verify multiple site navigation
-Focus: Verify that web navigation visits multiple different websites (NOT just Bing)
-Context: User reported TaskView terminal showing same Bing image, system not navigating to specific links
+BACKEND TESTING SUITE FOR MITOSIS TOOL DIVERSIFICATION AND REAL DATA COLLECTION
+Testing the corrected tool diversification improvements to validate:
+1. IMPROVED TOOL MAPPING: analysis → ollama_processing, creation → ollama_processing with real data
+2. ENHANCED META-CONTENT DETECTION: 16 new phrases to detect generic content  
+3. NEW MULTI-SOURCE VALIDATION FUNCTION: validate_multi_source_data_collection()
+4. CRITICAL LOGGING ADDED: 📊 TOOL USAGE TRACKER
+
+Focus: Verify that agent uses different tools according to context and collects real data from multiple sources
+Context: User reported agent searches vaguely on web, doesn't collect real data, delivers metadata instead of complete tasks
 """
 
 import requests
