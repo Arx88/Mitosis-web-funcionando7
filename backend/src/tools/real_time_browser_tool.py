@@ -783,7 +783,7 @@ class RealTimeBrowserTool(BaseTool):
                         await page.go_back()
                         await asyncio.sleep(3)
                         await page.wait_for_load_state('networkidle')
-                        await self._capture_current_screenshot(page, f"back_to_results_after_{i+1}")
+                        await self._capture_screenshot_async(page, f"back_to_results_after_{i+1}")
                         
                         self._emit_browser_visual({
                             'type': 'back_to_results',
