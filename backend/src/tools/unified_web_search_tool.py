@@ -600,21 +600,42 @@ class UnifiedWebSearchTool(BaseTool):
                 if not screenshot_url and screenshots:
                     screenshot_url = screenshots[-1].get('path', '')
                 
+                # Buscar contenido extraído en actions_performed
+                content_extracted = ""
+                content_length = 0
+                for action in actions_performed:
+                    if (action.get('url') == page_url and 
+                        action.get('action') == 'result_explored' and
+                        action.get('content_preview')):
+                        content_extracted = action.get('content_preview', '')
+                        content_length = action.get('content_length', 0)
+                        break
+                
+                # Crear snippet mejorado con contenido real si está disponible
+                if content_extracted:
+                    snippet = f'Contenido real extraído de {page_data.get("title", "sitio web")}: {content_extracted[:200]}{"..." if len(content_extracted) > 200 else ""}'
+                else:
+                    snippet = f'Información encontrada mediante navegación en tiempo real en {search_engine}. Página visitada durante búsqueda de "{query}".'
+                
                 result = {
                     'title': page_data.get('title', f'Página navegada {i+1} - {search_engine}'),
                     'url': page_url,
-                    'snippet': f'Información encontrada mediante navegación en tiempo real en {search_engine}. Página visitada durante búsqueda de "{query}".',
+                    'snippet': snippet,
                     'source': search_engine,
                     'method': 'real_time_navigation',  # MARCA COMO NAVEGACIÓN REAL
                     'screenshot_url': screenshot_url,
                     'screenshot_captured': screenshot_url is not None,
                     'timestamp': page_data.get('timestamp', time.time()),
+                    'content_extracted': bool(content_extracted),
+                    'content_preview': content_extracted[:500] if content_extracted else '',
+                    'content_length': content_length,
                     'navigation_data': {
                         'pages_visited': len(pages_visited),
                         'screenshots_taken': len(screenshots),
                         'actions_performed': len(actions_performed),
                         'real_time_capture': True,
-                        'page_index': i
+                        'page_index': i,
+                        'has_real_content': bool(content_extracted)
                     }
                 }
                 results.append(result)
