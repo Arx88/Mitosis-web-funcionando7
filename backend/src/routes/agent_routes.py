@@ -2262,11 +2262,24 @@ def execute_web_search_step(title: str, description: str, tool_manager, task_id:
         
         logger.info(f"📚 Investigación completada: {searches_performed} búsquedas ejecutadas")
         
-        # 🎯 PASO 3: VALIDACIÓN INTELIGENTE DE COMPLETITUD DE REQUISITOS ESPECÍFICOS
-        from .step_requirement_validator import validate_step_completeness
+        # 🎯 PASO 3: VALIDACIÓN SUPER ESTRICTA PARA PASO 1 DE PLAN DE ACCIÓN
+        # Detectar si este es el paso 1 que requiere recolección de información política/biográfica
+        is_step_1_research = any(keyword in description.lower() for keyword in [
+            'biografía', 'trayectoria política', 'ideología', 'declaraciones públicas',
+            'buscar información', 'recopilar datos', 'fuentes confiables', 'noticias',
+            'entrevistas', 'perfiles académicos', 'paso 1'
+        ])
         
-        # Validar si la información recolectada cumple con los requisitos específicos del paso
-        validation_result = validate_step_completeness(description, title, accumulated_results)
+        if is_step_1_research:
+            logger.info("🔥 DETECTADO PASO 1 DE INVESTIGACIÓN - Aplicando validación SUPER ESTRICTA")
+            from .enhanced_step_validator import validate_step_1_with_enhanced_validator
+            
+            # Usar validador mejorado específico para paso 1
+            validation_result = validate_step_1_with_enhanced_validator(description, title, accumulated_results, task_id)
+        else:
+            # Usar validador estándar para otros pasos
+            from .step_requirement_validator import validate_step_completeness
+            validation_result = validate_step_completeness(description, title, accumulated_results)
         
         meets_criteria = validation_result.get('meets_requirements', False)
         completeness_score = validation_result.get('completeness_score', 0)
