@@ -59,8 +59,8 @@ class OllamaProcessingTool(BaseTool):
             # Crear instancia de OllamaService
             ollama_service = OllamaService()
             
-            # Configurar parámetros de generación para procesamiento final
-            generation_params = {
+            # Configurar contexto con parámetros de generación para procesamiento final
+            context = {
                 'max_tokens': max_tokens,
                 'temperature': 0.8,
                 'system_prompt': "Eres un asistente experto en generar contenido final completo y detallado. Tu tarea es crear el resultado final exacto que se solicita basándote en toda la información recopilada previamente. Sé específico, detallado y útil."
@@ -71,7 +71,10 @@ class OllamaProcessingTool(BaseTool):
             
             response = ollama_service.generate_response(
                 prompt=prompt,
-                **generation_params
+                context=context,
+                use_tools=False,  # No necesitamos tools para procesamiento final
+                task_id=self.task_id,
+                step_id=f"processing_{int(time.time())}"
             )
             
             if response and 'response' in response:
