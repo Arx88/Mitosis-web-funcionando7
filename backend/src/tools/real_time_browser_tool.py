@@ -510,7 +510,9 @@ class RealTimeBrowserTool(BaseTool):
                 self._emit_progress("🔍 Enviando búsqueda con Enter...")
                 await search_input.press('Enter')
                 search_submitted = True
-            except:
+                self._emit_progress("✅ Búsqueda enviada con Enter exitosamente")
+            except Exception as e:
+                self._emit_progress(f"⚠️ Error enviando búsqueda con Enter: {str(e)}")
                 pass
             
             # Método 2: Buscar botón de búsqueda si Enter no funcionó
