@@ -22,44 +22,45 @@
 
 #### ❌ **1. ENHANCED STEP VALIDATOR: NO ESTÁ FUNCIONANDO (0% SUCCESS)**:
 **Implementation Status**: ❌ **CRITICAL FAILURE - ENHANCED VALIDATOR NOT BEING CALLED**
+- **Root Cause Identified**: Enhanced validation logic is only in `execute_web_search_step()` function
+- **Actual Execution Path**: System uses `execute_step_internal()` which bypasses enhanced validation
 - **Enhanced Validator Calls**: ❌ 0 calls detected during entire task execution
-- **EnhancedStepValidator Class**: ❌ Not being instantiated or used
-- **validate_step_1_with_enhanced_validator**: ❌ Function not being called
-- **Integration Status**: ❌ No integration between agent_routes.py and enhanced_step_validator.py
-- **Testing Result**: ❌ **CRITICAL FAILURE** - Enhanced step validator completely non-functional
+- **Integration Issue**: Enhanced validation code exists but is not in the main execution flow
+- **Testing Result**: ❌ **CRITICAL FAILURE** - Enhanced step validator completely bypassed by system architecture
 
-#### ❌ **2. DETECCIÓN AUTOMÁTICA DE INVESTIGACIÓN POLÍTICA: NO ESTÁ FUNCIONANDO (0% SUCCESS)**:
-**Implementation Status**: ❌ **CRITICAL FAILURE - POLITICAL RESEARCH PATTERNS NOT DETECTED**
-- **Pattern Detection**: ❌ Political research patterns not detected automatically
-- **Keywords Tested**: ❌ "biografía, trayectoria política, ideología, declaraciones públicas" not triggering detection
-- **is_step_1_research Logic**: ❌ Detection logic in agent_routes.py not working
-- **Task Message**: ✅ Task contained correct keywords: "Realizar búsquedas en fuentes confiables sobre biografía, trayectoria política, ideología y declaraciones públicas de Javier Milei"
-- **Testing Result**: ❌ **CRITICAL FAILURE** - Automatic detection system completely broken
+#### ❌ **2. DETECCIÓN AUTOMÁTICA DE INVESTIGACIÓN POLÍTICA: CÓDIGO EXISTE PERO NO SE EJECUTA (0% SUCCESS)**:
+**Implementation Status**: ❌ **CRITICAL FAILURE - DETECTION CODE NOT IN EXECUTION PATH**
+- **Detection Logic Found**: ✅ Code exists in `execute_web_search_step()` with correct keywords
+- **Keywords Present**: ✅ Task description contains "biografía, trayectoria política, ideología, declaraciones públicas"
+- **Execution Path Issue**: ❌ System uses different execution path that bypasses detection logic
+- **is_step_1_research Logic**: ❌ Never executed because function not called
+- **Testing Result**: ❌ **CRITICAL FAILURE** - Detection logic exists but is architecturally isolated
 
-#### ❌ **3. CRITERIOS SUPER ESTRICTOS: NO ESTÁN APLICÁNDOSE (0% SUCCESS)**:
-**Implementation Status**: ❌ **CRITICAL FAILURE - STRICT CRITERIA NOT APPLIED**
-- **Minimum 3 Sources**: ❌ Not being enforced (0 sources detected)
-- **2000+ Characters**: ❌ Not being enforced (0 characters analyzed)
-- **Anti-Meta-Content Detection**: ❌ Not being applied (no meta-content analysis)
-- **Strict Validation Applied**: ❌ False - No strict validation occurred
-- **Testing Result**: ❌ **CRITICAL FAILURE** - Super strict criteria system not implemented
+#### ❌ **3. CRITERIOS SUPER ESTRICTOS: CÓDIGO IMPLEMENTADO PERO NO EJECUTADO (0% SUCCESS)**:
+**Implementation Status**: ❌ **CRITICAL FAILURE - STRICT CRITERIA CODE NOT REACHED**
+- **Implementation Exists**: ✅ Enhanced validator has all strict criteria logic
+- **Minimum 3 Sources**: ✅ Code implemented but not executed
+- **2000+ Characters**: ✅ Code implemented but not executed  
+- **Anti-Meta-Content Detection**: ✅ Code implemented but not executed
+- **Execution Issue**: ❌ Criteria never applied due to architectural bypass
+- **Testing Result**: ❌ **CRITICAL FAILURE** - All strict criteria code exists but unreachable
 
-#### ❌ **4. DETECCIÓN DE PATRONES CRÍTICOS: NO ESTÁ FUNCIONANDO (0% SUCCESS)**:
-**Implementation Status**: ❌ **CRITICAL FAILURE - CRITICAL PATTERNS NOT DETECTED**
-- **Biografía Personal**: ❌ 0 patterns found
-- **Trayectoria Política**: ❌ 0 patterns found  
-- **Ideología Específica**: ❌ 0 patterns found
-- **Declaraciones Recientes**: ❌ 0 patterns found
-- **Pattern Categories**: ❌ 0 categories with patterns detected
-- **Testing Result**: ❌ **CRITICAL FAILURE** - Pattern detection system not working
+#### ❌ **4. DETECCIÓN DE PATRONES CRÍTICOS: IMPLEMENTADO PERO NO EJECUTADO (0% SUCCESS)**:
+**Implementation Status**: ❌ **CRITICAL FAILURE - PATTERN DETECTION CODE NOT REACHED**
+- **Pattern Logic Exists**: ✅ Enhanced validator has comprehensive pattern detection
+- **Biografía Personal**: ✅ Patterns implemented but not executed
+- **Trayectoria Política**: ✅ Patterns implemented but not executed
+- **Ideología Específica**: ✅ Patterns implemented but not executed
+- **Declaraciones Recientes**: ✅ Patterns implemented but not executed
+- **Testing Result**: ❌ **CRITICAL FAILURE** - Pattern detection fully implemented but architecturally isolated
 
-#### ❌ **5. FLUJO DE INTEGRACIÓN: COMPLETAMENTE ROTO (0% SUCCESS)**:
-**Implementation Status**: ❌ **CRITICAL FAILURE - INTEGRATION FLOW BROKEN**
-- **agent_routes.py → enhanced_step_validator.py**: ❌ No integration detected
-- **Import Statement**: ❌ enhanced_step_validator import may be failing
-- **Function Call**: ❌ validate_step_1_with_enhanced_validator not being called
-- **Detection → Validation Flow**: ❌ Complete breakdown in integration
-- **Testing Result**: ❌ **CRITICAL FAILURE** - Integration completely non-functional
+#### ❌ **5. FLUJO DE INTEGRACIÓN: ARQUITECTURA INCORRECTA (0% SUCCESS)**:
+**Implementation Status**: ❌ **CRITICAL FAILURE - ARCHITECTURAL INTEGRATION ISSUE**
+- **Code Location**: ❌ Enhanced validation only in `execute_web_search_step()` 
+- **Actual Execution**: ❌ System uses `execute_step_internal()` → different execution path
+- **Import Statement**: ✅ Enhanced validator imports successfully
+- **Function Integration**: ❌ Enhanced validation function never called by main execution flow
+- **Testing Result**: ❌ **CRITICAL FAILURE** - Integration exists in wrong architectural location
 
 ### 🎯 **FINAL ASSESSMENT - SISTEMA DE VALIDACIÓN MEJORADO**:
 
