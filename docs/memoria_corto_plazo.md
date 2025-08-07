@@ -71,3 +71,30 @@ Según index_funcional.md:
 - 12+ herramientas documentadas
 - 20+ componentes React catalogados
 - Sistema de rutas mapeado completo
+
+### 🔍 ANÁLISIS DEL PROBLEMA DE BÚSQUEDA WEB
+
+**PROBLEMA IDENTIFICADO**: 
+El navegador abre correctamente pero no realiza búsquedas efectivas. Análisis de código revela:
+
+#### Herramientas Involucradas:
+1. **unified_web_search_tool.py** - Herramienta principal de búsqueda
+2. **real_time_browser_tool.py** - Navegación en tiempo real con screenshots
+3. **playwright_tool.py** - Automatización web con Playwright
+
+#### Flujo del Problema:
+1. ✅ Usuario genera tarea que requiere búsqueda web
+2. ✅ `unified_web_search_tool` se ejecuta
+3. ✅ Llama a `real_time_browser_tool` para navegación visual
+4. ❌ **PROBLEMA**: No hay implementación completa de búsqueda real
+
+#### Causes Técnicas Detectadas:
+- `_perform_search_task()` tiene lógica básica pero incompleta
+- Falta extracción real de términos de búsqueda de la query del usuario
+- No hay integración efectiva entre query de usuario y acciones del navegador
+- `_extract_search_terms()` no está implementada correctamente
+
+#### Solución Requerida:
+- Mejorar `_extract_search_terms()` para extraer términos reales de la query
+- Completar `_perform_search_task()` para navegación efectiva
+- Asegurar que el navegador realmente busque la información solicitada por el usuario
