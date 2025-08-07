@@ -163,10 +163,15 @@
    - `delete_file()` - Eliminar archivo
    - `list_directory()` - Listar directorio
 
-4. **real_time_browser_tool.py** - Navegación web en tiempo real
+4. **real_time_browser_tool.py** - Navegación web en tiempo real *(MEJORADO 2025-01-26)*
    - `navigate_to_url()` - Navegar a URL
    - `take_screenshot()` - Capturar pantalla
    - `extract_data()` - Extraer datos de página
+   - `_extract_search_terms()` - *(MEJORADO)* Extracción inteligente de términos de búsqueda
+   - `_perform_search_task()` - *(REFACTORIZADO)* Búsqueda robusta con múltiples estrategias  
+   - `_explore_search_results()` - *(NUEVO)* Exploración inteligente de resultados
+   - `_perform_link_based_search()` - *(NUEVO)* Búsqueda basada en enlaces relevantes
+   - `_clean_search_terms()` - *(NUEVO)* Limpieza de términos extraídos
 
 5. **playwright_tool.py** - Automatización web avanzada
    - `launch_browser()` - Lanzar navegador
