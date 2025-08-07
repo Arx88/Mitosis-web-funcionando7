@@ -1432,8 +1432,12 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
     try:
         logger.info(f"🔍 Ejecutando búsqueda web mejorada: {title}")
         
-        # Extraer query de búsqueda
-        search_query = f"{title} {description}".replace('Buscar información sobre:', '').replace('Investigar:', '').strip()
+        # 🧠 USAR FUNCIÓN EXISTENTE DE EXTRACCIÓN DE KEYWORDS
+        from ..tools.unified_web_search_tool import UnifiedWebSearchTool
+        web_search_tool = UnifiedWebSearchTool()
+        raw_query = f"{title} {description} {original_message}".strip()
+        search_query = web_search_tool._extract_clean_keywords_static(raw_query)
+        logger.info(f"🎯 Query inteligente generado: '{search_query}' (original: '{title}')")
         
         # ✅ INTEGRACIÓN WebBrowserManager PARA VISUALIZACIÓN EN TIEMPO REAL
         browser_manager = create_web_browser_manager(task_id)
