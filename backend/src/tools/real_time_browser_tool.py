@@ -886,35 +886,44 @@ class RealTimeBrowserTool(BaseTool):
                         if content_length > 200:  # Mínimo 200 caracteres de contenido real
                             successful_explorations += 1
                         
-                        self._emit_progress(f"📄 Contenido extraído: {len(page_content)} caracteres de {current_title[:30]}...")
+                        self._emit_progress(f"📄 Contenido extraído: {content_length} caracteres de {current_title[:30]}...")
                         
                         results['actions_performed'].append({
-                            'action': 'result_explored',
-                            'result_index': i,
+                            'action': 'diverse_source_explored',
+                            'result_index': successful_explorations,
                             'url': current_url,
                             'title': current_title,
-                            'content_preview': page_content[:300],
-                            'content_length': len(page_content),
+                            'domain': domain,
+                            'content_preview': content_text[:300] if content_text else '',
+                            'content_length': content_length,
+                            'extraction_method': extraction_method,
+                            'quality_score': quality_score,
                             'timestamp': time.time(),
                             'navigation_method': 'direct_goto',
-                            'content_extracted': len(page_content) > 100
+                            'content_extracted': content_length > 200
                         })
                         
                         # Scroll adicional para explorar más contenido
                         await page.evaluate('window.scrollTo(0, document.body.scrollHeight / 2)')
                         await asyncio.sleep(2)
-                        await self._capture_screenshot_async(page, i+200)
+                        await self._capture_screenshot_async(page, successful_explorations+200)
+                        
+                        # 🎯 VERIFICAR SI YA TENEMOS SUFICIENTES FUENTES DIVERSAS
+                        if successful_explorations >= max_successful:
+                            self._emit_progress(f"🎉 ¡Objetivo cumplido! Se exploraron {successful_explorations} fuentes diversas exitosamente")
+                            break
                         
                         # Volver a resultados de Bing para el siguiente enlace
-                        self._emit_progress(f"🔄 Volviendo a resultados para siguiente enlace...")
+                        self._emit_progress(f"🔄 Volviendo a resultados para siguiente enlace ({successful_explorations}/{max_successful} completados)...")
                         await page.go_back()
                         await asyncio.sleep(3)
                         await page.wait_for_load_state('networkidle')
-                        await self._capture_screenshot_async(page, i+300)
+                        await self._capture_screenshot_async(page, successful_explorations+300)
                         
                         self._emit_browser_visual({
-                            'type': 'back_to_results',
-                            'message': f'↩️ De vuelta en resultados después de explorar sitio {i+1}',
+                            'type': 'back_to_results_progress',
+                            'message': f'↩️ De vuelta en resultados - Progreso: {successful_explorations}/{max_successful} fuentes exitosas',
+                            'progress': f"{successful_explorations}/{max_successful}",
                             'timestamp': time.time()
                         })
                         
