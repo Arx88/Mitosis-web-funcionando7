@@ -412,10 +412,32 @@ RESULTADO 2: Página de búsqueda Bing
   * Extracción de información no real
 - **Expectativa**: Lograr que el agente general resuelva cualquier tarea visitando múltiples sitios y extrayendo información REAL
 
-### 🔍 **DIAGNÓSTICO INICIAL**:
-- **Sistema navega**: ✅ Navegación en tiempo real funciona (X11 virtual activo)
-- **Problema real**: ❌ Extracción de contenido limitada y pocos sitios visitados
-- **Calidad información**: ❌ Solo metadatos, no contenido real verificable
+### 🔍 **DIAGNÓSTICO TÉCNICO COMPLETADO**:
+
+#### **PROBLEMA 1: KEYWORDS DESTRUCTIVOS** ❌
+**Ubicación**: `/app/backend/src/tools/unified_web_search_tool.py` líneas 128-206
+- **Función problemática**: `_extract_clean_keywords_static()`
+- **Issue**: Regex destructivo elimina palabras esenciales del contexto
+- **Ejemplo**: "análisis datos Javier Milei" → se convierte en palabras sin sentido
+- **Keywords generados**: "REALIZA INFORME", "UTILIZAR HERRAMIENTA" (inutilizables)
+
+#### **PROBLEMA 2: POCOS SITIOS VISITADOS** ❌  
+**Ubicación**: `/app/backend/src/tools/real_time_browser_tool.py` líneas 682-695
+- **Limitación actual**: Solo explora 2-3 enlaces máximo
+- **Código**: `for i in range(min(4, len(result_links)))` - muy limitado
+- **Filtros excesivos**: Rechaza muchos sitios por criterios muy estrictos
+
+#### **PROBLEMA 3: EXTRACCIÓN CONTENIDO DEFICIENTE** ❌
+**Ubicación**: `/app/backend/src/tools/unified_web_search_tool.py` líneas 669-720
+- **Issue**: `content_extracted = False` en la mayoría de casos
+- **Parsing limitado**: Solo extrae 200-300 caracteres por sitio
+- **Resultados**: Informes con metadatos en lugar de contenido real
+
+#### **PROBLEMA 4: VALIDACIÓN INSUFICIENTE** ❌
+**Ubicación**: `/app/backend/src/routes/enhanced_step_validator.py` 
+- **Criterios demasiado laxos**: Acepta información insuficiente
+- **Mínimo contenido**: Solo 300 caracteres por fuente (muy poco)
+- **Fuentes mínimas**: Solo 3 sitios (insuficiente para tareas complejas)
 
 ### 🔍 **ANÁLISIS TÉCNICO COMPLETADO**:
 
