@@ -1182,10 +1182,36 @@ async def run_browser_use_subprocess():
             \"\"\"Extraer 2-4 keywords principales para búsqueda efectiva\"\"\"
             import re
             
-            # Remover texto de instrucciones comunes
+            # CORRECCIÓN CRÍTICA: Mejorar la limpieza de texto para evitar queries malformados
             clean_text = query_text.lower()
-            clean_text = re.sub(r'buscar información sobre|utilizar la herramienta|web_search para|información actualizada|específica sobre|el estado de|en el año|noticias relacionadas con|en el año', '', clean_text)
-            clean_text = re.sub(r'\\d{{4}}', '2025', clean_text)  # Normalizar año
+            
+            # NUEVO: Extraer entidades importantes ANTES de limpiar
+            import re
+            important_entities = re.findall(r'\\b(?:iphone|android|tesla|milei|arctic|monkeys|biden|trump)\\b', clean_text)
+            product_numbers = re.findall(r'\\b\\w*\\d+\\w*\\b', query_text)  # iPhone 16 Pro, etc.
+            proper_nouns = re.findall(r'\\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+\\b', query_text)
+            
+            # Remover frases de instrucción completas en lugar de palabras individuales
+            instruction_patterns = [
+                r'buscar información sobre\\s*',
+                r'utilizar la herramienta\\s*web_search\\s*para\\s*',
+                r'información actualizada\\s*sobre\\s*',
+                r'obtener\\s*datos\\s*específicos\\s*sobre\\s*',
+                r'realizar\\s*análisis\\s*de\\s*'
+            ]
+            
+            for pattern in instruction_patterns:
+                clean_text = re.sub(pattern, '', clean_text)
+            
+            # Preservar entidades importantes encontradas
+            preserved_terms = []
+            preserved_terms.extend(important_entities)
+            preserved_terms.extend([term for term in product_numbers if len(term) > 1])
+            preserved_terms.extend([term.lower() for term in proper_nouns if len(term) > 3])
+            
+            # Si tenemos términos preservados, usarlos como base
+            if preserved_terms:
+                return ' '.join(list(set(preserved_terms))[:4])  # Eliminar duplicados y tomar 4
             
             # Extraer keywords significativos - corregir regex
             words = re.findall(r'\\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{{3,}}\\b', clean_text)
