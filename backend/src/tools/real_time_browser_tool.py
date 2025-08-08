@@ -678,8 +678,15 @@ class RealTimeBrowserTool(BaseTool):
                 await asyncio.sleep(2)
                 return
             
-            # Explorar más resultados para obtener información diversa
-            for i in range(min(4, len(result_links))):  # Aumentado a 4 enlaces para más diversidad
+            # 🚀 EXPLORAR MÁS RESULTADOS PARA MAYOR DIVERSIDAD DE FUENTES
+            max_links_to_explore = min(8, len(result_links))  # 🔥 AUMENTADO DE 4 A 8 ENLACES
+            self._emit_progress(f"🎯 Explorando hasta {max_links_to_explore} sitios web diferentes para mayor diversidad")
+            
+            explored_domains = set()  # Trackear dominios visitados para evitar duplicados
+            successful_explorations = 0
+            max_successful = 6  # Mínimo 6 sitios exitosos
+            
+            for i in range(max_links_to_explore):
                 try:
                     # Re-consultar elementos para evitar contexto destruido
                     fresh_links = await page.query_selector_all('.b_algo h2 a')
@@ -691,26 +698,46 @@ class RealTimeBrowserTool(BaseTool):
                     href = await link.get_attribute('href')
                     link_text = await link.text_content()
                     
-                    # FILTRO DE RELEVANCIA MEJORADO
+                    # FILTRO DE RELEVANCIA MEJORADO Y DIVERSIDAD DE DOMINIOS
                     if href and href.startswith('http'):
-                        # Filtrar enlaces irrelevantes
-                        irrelevant_domains = ['amazon.com', 'ebay.com', 'aliexpress.com', 'mercadolibre.com', 'shopping.', 'ads.']
-                        is_irrelevant = any(domain in href.lower() for domain in irrelevant_domains)
+                        # Extraer dominio para verificar diversidad
+                        import urllib.parse
+                        domain = urllib.parse.urlparse(href).netloc.lower()
                         
-                        # Filtrar por keywords irrelevantes en el título
-                        irrelevant_keywords = ['backpack', 'comprar', 'precio', 'tienda', 'shop', 'buy', 'sale']
-                        has_irrelevant_keywords = any(keyword in link_text.lower() for keyword in irrelevant_keywords)
-                        
-                        if is_irrelevant or has_irrelevant_keywords:
-                            self._emit_progress(f"⚠️ Saltando enlace irrelevante: {href} - {link_text[:30]}...")
+                        # Saltar si ya visitamos este dominio (forzar diversidad)
+                        if domain in explored_domains:
+                            self._emit_progress(f"🔄 Saltando dominio ya explorado: {domain}")
                             continue
                         
-                        print(f"🔍 SOURCES DEBUG: About to navigate to RELEVANT link: {href}")
+                        # Filtrar enlaces comerciales y irrelevantes (más estricto)
+                        irrelevant_domains = [
+                            'amazon.com', 'ebay.com', 'aliexpress.com', 'mercadolibre.com', 
+                            'shopping.', 'ads.', 'publicidad', 'tienda', 'shop', 
+                            'marketplace', 'store', 'buy', 'comprar', 'precio'
+                        ]
+                        is_irrelevant = any(domain_filter in href.lower() for domain_filter in irrelevant_domains)
+                        
+                        # Filtrar por keywords comerciales en el título
+                        commercial_keywords = [
+                            'comprar', 'precio', 'tienda', 'shop', 'buy', 'sale', 'oferta', 
+                            'descuento', 'venta', 'store', 'marketplace', 'shopping'
+                        ]
+                        has_commercial_keywords = any(keyword in link_text.lower() for keyword in commercial_keywords)
+                        
+                        if is_irrelevant or has_commercial_keywords:
+                            self._emit_progress(f"⚠️ Saltando enlace comercial: {domain} - {link_text[:30]}...")
+                            continue
+                        
+                        # Agregar dominio a lista de explorados
+                        explored_domains.add(domain)
+                        
+                        print(f"🔍 SOURCES DEBUG: About to navigate to DIVERSE source #{successful_explorations + 1}: {domain}")
                         self._emit_browser_visual({
-                            'type': 'exploring_result',
-                            'message': f'🔗 Explorando resultado RELEVANTE {i+1}: {link_text[:50]}...',
+                            'type': 'exploring_diverse_source',
+                            'message': f'🌐 Explorando fuente diversa {successful_explorations + 1}/6: {domain}',
                             'link_text': link_text,
                             'url': href,
+                            'domain': domain,
                             'timestamp': time.time()
                         })
                         
