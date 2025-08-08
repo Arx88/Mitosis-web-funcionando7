@@ -474,3 +474,20 @@ El sistema DE VALIDACIÓN EXISTE pero puede necesitar ajustes para ser más estr
 - Navegación web en tiempo real funcionando
 - Documentación actualizada según protocolo del usuario
 - Listo para continuar con desarrollo o testing según necesidades del usuario
+
+## ⚡ **LOGS AGREGADOS PARA DEBUGGING**
+
+### 🔍 **KEYWORDS DEBUG**: 
+- Monitorea si el sistema genera keywords problemáticas como "REALIZA INFORME"
+- Verifica que los términos de búsqueda sean inteligentes y específicos
+- Se ejecuta en función `_optimize_for_data_analysis()`
+
+### 🔍 **SOURCES DEBUG**:
+- Cuenta dominios únicos visitados (diversidad de fuentes)
+- Detecta si solo usa Bing vs múltiples sitios web
+- Alerta sobre problemas de diversidad de fuentes
+
+### ⚡ **PRÓXIMO PASO**: 
+**Crea una nueva tarea en el frontend** - los nuevos logs mostrarán exactamente dónde están los problemas reales.
+
+---
