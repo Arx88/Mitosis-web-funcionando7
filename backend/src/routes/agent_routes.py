@@ -9170,6 +9170,39 @@ CREAR EL CONTENIDO COMPLETO AHORA:"""
                     'max_results': 8,
                     'include_analysis': True
                 }
+            elif tool == 'review':
+                # CORRECCIÓN: review debe usar ollama_processing, NO web_search
+                tool = 'ollama_processing'
+                # Obtener contexto de la tarea para revisión
+                full_context = ""
+                try:
+                    task_data = get_task_data(task_id)
+                    if task_data:
+                        original_message = task_data.get('original_message', '')
+                        full_context += f"Tarea original: {original_message}\n\n"
+                        
+                        if 'plan' in task_data:
+                            full_context += "Información recopilada en pasos anteriores:\n"
+                            for prev_step in task_data['plan']:
+                                if prev_step.get('completed') and 'result' in prev_step:
+                                    step_title = prev_step.get('title', 'Paso')
+                                    full_context += f"\n=== {step_title} ===\n"
+                                    
+                                    result = prev_step.get('result', {})
+                                    if 'data' in result and isinstance(result['data'], dict):
+                                        data_content = result['data']
+                                        if 'content' in data_content and isinstance(data_content['content'], dict):
+                                            content_obj = data_content['content']
+                                            if 'results' in content_obj:
+                                                for res in content_obj['results']:
+                                                    full_context += f"• {res.get('title', 'Información')}: {res.get('snippet', '')}\n"
+                except Exception as e:
+                    logger.warning(f"Error extracting context for review: {e}")
+                
+                tool_params = {
+                    'prompt': f"Completa la siguiente tarea con todo el contexto recopilado:\n\nTarea: {title}\nDescripción: {description}\n\nContexto completo:\n{full_context}\n\nGenera el resultado final completo y detallado que responda exactamente a lo solicitado en la tarea original.",
+                    'max_tokens': 1500
+                }
             else:
                 # Para herramientas no mapeadas, usar web_search como fallback seguro
                 tool = 'web_search'  # Fallback a herramienta real
