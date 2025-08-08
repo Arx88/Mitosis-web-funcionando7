@@ -126,44 +126,84 @@ class UnifiedWebSearchTool(BaseTool):
         ]
     
     def _extract_clean_keywords_static(self, query_text: str) -> str:
-        """🧠 Extractor de keywords MEJORADO - mantiene contexto y relevancia"""
-        import re
+        """🎯 EXTRACTOR INTELIGENTE DE KEYWORDS - VERSIÓN COMPLETAMENTE CORREGIDA"""
         
         if not query_text or len(query_text.strip()) < 3:
-            return "noticias actualidad"
+            return "información actualizada"
+        
+        print(f"🔍 EXTRACTING KEYWORDS FROM: '{query_text}'")
+        
+        # 🚀 USAR GENERADOR INTELIGENTE SI ESTÁ DISPONIBLE
+        if INTELLIGENT_KEYWORDS_AVAILABLE:
+            try:
+                result = get_intelligent_keywords(query_text)
+                print(f"✅ INTELLIGENT EXTRACTION: '{query_text}' → '{result}'")
+                return result
+            except Exception as e:
+                print(f"⚠️ Error with intelligent generator: {e}")
+        
+        # 🛠️ FALLBACK MEJORADO CON LÓGICA CORREGIDA
+        print("🔄 Using improved fallback logic")
+        import re
         
         original = query_text.strip()
         
-        # PASO 1: Identificar el TIPO de búsqueda para mantener contexto
-        search_intent = self._identify_search_intent(original)
+        # 1. Extraer nombres propios (personas, lugares, marcas)
+        proper_nouns = re.findall(r'\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*\b', original)
         
-        # PASO 2: Limpiar solo prefijos instructivos específicos, manteniendo el núcleo
-        patterns_to_remove = [
-            r'^(necesito\s+que\s+)?(busques?|busca|encuentra?)\s+(en\s+internet\s+)?(información\s+)?(sobre\s+|para\s+)?',
-            r'^buscar\s+(información\s+)?(específica\s+)?(sobre\s+|para\s+)?',
-            r'^obtener\s+información\s+(sobre\s+|para\s+)?',
-            r'^investigar\s+(sobre\s+)?'
-        ]
+        # 2. Extraer palabras significativas (3+ caracteres)
+        significant_words = re.findall(r'\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{3,}\b', original)
         
-        clean = original
-        for pattern in patterns_to_remove:
-            clean = re.sub(pattern, '', clean, flags=re.IGNORECASE).strip()
+        # 3. Palabras que siempre deben preservarse (entidades importantes)
+        preserve_always = {'milei', 'javier', 'argentina', 'arctic', 'monkeys', 'banda', 
+                          'presidente', 'economía', 'político', 'inflación', 'tecnología',
+                          'inteligencia', 'artificial', 'música', 'rock', 'discografía'}
         
-        # PASO 3: Si la limpieza destruyó mucho contenido, usar estrategia conservadora
-        if len(clean) < len(original) * 0.5:
-            clean = original
+        # 4. Palabras meta que deben eliminarse
+        meta_words = {'buscar', 'información', 'sobre', 'utilizar', 'herramienta', 'web', 
+                     'search', 'datos', 'análisis', 'genera', 'informe', 'específica', 
+                     'actualizada', 'realizar', 'para', 'con', 'del', 'las', 'los'}
         
-        # PASO 4: Procesar según el intent identificado
-        if search_intent == 'plan_creation':
-            return self._optimize_for_plan_creation(clean)
-        elif search_intent == 'data_analysis': 
-            return self._optimize_for_data_analysis(clean)
-        elif search_intent == 'research':
-            return self._optimize_for_research(clean)
-        elif search_intent == 'trends':
-            return self._optimize_for_trends(clean)
-        else:
-            return self._optimize_generic_search(clean)
+        # 5. Construir lista de palabras útiles
+        useful_words = []
+        
+        # Agregar nombres propios primero (alta prioridad)
+        for noun in proper_nouns:
+            useful_words.append(noun.lower())
+        
+        # Agregar palabras significativas filtradas
+        for word in significant_words:
+            word_lower = word.lower()
+            # Incluir si: está en preserve_always O no está en meta_words
+            if (word_lower in preserve_always or 
+                (word_lower not in meta_words and word_lower not in useful_words)):
+                useful_words.append(word_lower)
+        
+        # 6. Construir resultado final
+        if useful_words:
+            # Tomar máximo 4 palabras más relevantes
+            result = ' '.join(useful_words[:4])
+            print(f"✅ FALLBACK SUCCESS: '{original}' → '{result}'")
+            
+            # Validar calidad mínima
+            if len(result.split()) >= 2:
+                return result
+            else:
+                # Agregar contexto si solo hay 1 palabra
+                return f"{result} información 2025"
+        
+        # 7. Último recurso: extraer cualquier palabra útil de 4+ caracteres
+        any_useful = [w.lower() for w in re.findall(r'\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{4,}\b', original) 
+                     if w.lower() not in meta_words]
+        
+        if any_useful:
+            result = ' '.join(any_useful[:3])
+            print(f"⚠️ LAST RESORT: '{original}' → '{result}'")
+            return result
+        
+        # Fallback final
+        print(f"❌ NO USEFUL WORDS FOUND: '{original}' → using generic fallback")
+        return "información actualizada noticias"
     
     def _identify_search_intent(self, text: str) -> str:
         """Identificar el tipo de búsqueda para aplicar optimización específica"""
