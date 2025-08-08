@@ -8589,12 +8589,16 @@ def execute_step_internal(task_id: str, step_id: str, step: dict):
         return {'success': False, 'agent_approved': False, 'error': str(e), 'reason': 'Execution error'}
 
 def execute_step_real(task_id: str, step_id: str, step: dict):
-    """Execute step with REAL tools instead of simulation - ENHANCED VERSION"""
+    """Execute step with REAL tools instead of simulation - ENHANCED VERSION WITH SUPER STRICT VALIDATION"""
     tool = step.get('tool', 'general')
     title = step.get('title', 'Ejecutando paso')
     description = step.get('description', '')
     
     logger.info(f"🔧 Ejecutando REAL TOOL: {tool} para paso: {title}")
+    
+    # 🔥 CRITICAL FIX: Import and initialize Enhanced Step Validator
+    from .enhanced_step_validator import EnhancedStepValidator
+    enhanced_validator = EnhancedStepValidator()
     
     # Emitir progreso inicial
     emit_step_event(task_id, 'task_progress', {
