@@ -202,9 +202,18 @@ class IntelligentKeywordGenerator:
         # Remover comillas y espacios extra
         clean_theme = re.sub(r'["\']', '', theme).strip()
         
-        # Si el tema es muy corto, agregarlo contexto
+        # Si el tema es muy corto, agregarlo contexto relevante
         if len(clean_theme.split()) < 2:
-            return f"{clean_theme} información completa"
+            if any(keyword in clean_theme.lower() for keyword in ['marketing', 'social', 'redes']):
+                return f"{clean_theme} estrategias marketing digital 2025"
+            elif 'inteligencia' in clean_theme.lower():
+                return f"{clean_theme} tendencias aplicaciones 2025"
+            else:
+                return f"{clean_theme} información completa actualizada 2025"
+        
+        # Si ya es un buen tema, agregar contexto temporal
+        if '2024' not in clean_theme and '2025' not in clean_theme:
+            return f"{clean_theme} 2025"
         
         return clean_theme
     
