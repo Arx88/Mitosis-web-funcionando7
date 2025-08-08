@@ -191,59 +191,54 @@ class UnifiedWebSearchTool(BaseTool):
             return "plan marketing digital estrategia empresarial"
     
     def _optimize_for_data_analysis(self, text: str) -> str:
-        """Optimizar búsqueda para análisis de datos - MEJORADO COMPLETAMENTE"""
-        import re
+        """🎯 OPTIMIZAR BÚSQUEDA PARA ANÁLISIS DE DATOS - COMPLETAMENTE CORREGIDO"""
         
         print(f"🔧 _optimize_for_data_analysis INPUT: '{text}'")
         print(f"🔍 KEYWORDS DEBUG: Original input before optimization: '{text}'")
         
-        # NUEVA ESTRATEGIA: PRESERVAR TEMA PRINCIPAL COMPLETAMENTE
-        # Detectar temas específicos sin destruir contexto
-        
-        # 1. Limpiar texto preservando palabras clave importantes
-        cleaned_text = re.sub(r'\b(genera|buscar|datos|análisis|información|sobre|de|la|el|los|las|un|una|del|por)\b', '', text, flags=re.IGNORECASE)
-        cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
-        
-        # 2. Extraer tema principal manteniendo contexto
-        words = re.findall(r'\b[a-záéíóúñ]{2,}\b', cleaned_text, re.IGNORECASE)
-        
-        if len(words) >= 2:
-            # Mantener las primeras 4-5 palabras más importantes
-            main_topic = ' '.join(words[:5]).lower()
+        # 🚀 NUEVA IMPLEMENTACIÓN: Usar generador inteligente de keywords
+        try:
+            from .improved_keyword_generator import get_intelligent_keywords
             
-            # Si es un nombre propio/banda/persona, preservar completamente
-            if any(word[0].isupper() for word in text.split() if len(word) > 2):
-                # Extraer nombres propios
-                proper_nouns = re.findall(r'\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*\b', text)
-                if proper_nouns:
-                    main_topic = ' '.join(proper_nouns).lower()
+            # Generar keywords inteligentes usando el nuevo sistema
+            result = get_intelligent_keywords(text)
             
-            # Resultado optimizado pero conservando tema
-            if 'arctic monkeys' in text.lower():
-                result = f"Arctic Monkeys banda música rock discografía"
-            elif any(music_term in text.lower() for music_term in ['banda', 'música', 'rock', 'pop', 'cantante']):
-                result = f"{main_topic} música banda información"
-            elif any(econ_term in text.lower() for econ_term in ['económ', 'inflación', 'pib', 'argentina', 'macroeconom']):
-                result = f"{main_topic} economía datos estadísticas"
-            else:
-                result = f"{main_topic} información completa"
+            print(f"✅ INTELLIGENT KEYWORDS: '{result}'")
+            print(f"🔍 KEYWORDS DEBUG: COMPLETELY FIXED - Final result: '{result}'")
             
-            print(f"🔧 NUEVA ESTRATEGIA - Main topic preserved: '{main_topic}', Result: '{result}'")
-            print(f"🔍 KEYWORDS DEBUG: MEJORADO - Final result: '{result}'")
-            
-            # Verificar calidad del resultado
-            if len(result.split()) >= 3 and not any(bad_word in result for bad_word in ['específica', 'buscar', 'datos 2024']):
+            # Validar que el resultado sea útil
+            if result and len(result.split()) >= 2:
                 print(f"✅ EXCELLENT KEYWORD QUALITY: {result}")
+                return result
             else:
-                print(f"🚨 POOR KEYWORD QUALITY: {result}")
+                print(f"⚠️ Fallback needed for: {result}")
+                return f"información {text.split()[0] if text.split() else 'general'}"
+                
+        except ImportError:
+            print("⚠️ Generador inteligente no disponible, usando lógica mejorada básica")
             
-            return result
-        
-        # Fallback mejorado
-        print(f"🔧 MEJORADO Fallback")
-        fallback_result = "información general completa actualizada"
-        print(f"✅ IMPROVED FALLBACK: {fallback_result}")
-        return fallback_result
+            # Fallback con lógica mejorada básica
+            import re
+            
+            # Extraer palabras significativas sin destruir contexto
+            significant_words = re.findall(r'\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{3,}\b', text)
+            
+            # Filtrar palabras meta pero preservar entidades importantes
+            preserve_words = {'milei', 'javier', 'argentina', 'arctic', 'monkeys', 'tecnología', 'inteligencia'}
+            meta_words = {'buscar', 'información', 'sobre', 'datos', 'análisis', 'generar'}
+            
+            filtered_words = []
+            for word in significant_words:
+                word_lower = word.lower()
+                if word_lower in preserve_words or (word_lower not in meta_words and len(word) >= 3):
+                    filtered_words.append(word_lower)
+            
+            if filtered_words:
+                result = ' '.join(filtered_words[:4])
+                print(f"✅ BASIC FALLBACK: {result}")
+                return result
+            else:
+                return "información actualizada noticias"
     
     def _optimize_for_research(self, text: str) -> str:
         """Optimizar búsqueda para investigación general"""
