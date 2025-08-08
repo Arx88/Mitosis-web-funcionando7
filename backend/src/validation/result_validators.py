@@ -1,14 +1,105 @@
 """
 Result Validators - Sistema de Validación de Resultados por Herramienta
 PROBLEMA 2: Implementación de validación rigurosa de resultados antes de marcar como exitoso
++ CORRECCIÓN CRÍTICA: Validación de relevancia temática
 """
 
 import os
 import logging
-from typing import Dict, Tuple, Any
+import re
+from typing import Dict, Tuple, Any, List
 import json
 
 logger = logging.getLogger(__name__)
+
+def extract_key_terms_from_query(query: str) -> List[str]:
+    """
+    🎯 NUEVA FUNCIÓN: Extraer términos clave de la consulta original para validación de relevancia
+    
+    Args:
+        query: Query original de la tarea
+        
+    Returns:
+        Lista de términos clave que deberían aparecer en el contenido
+    """
+    if not query:
+        return []
+    
+    # Extraer términos importantes
+    key_terms = []
+    
+    # 1. Nombres propios y entidades importantes
+    proper_nouns = re.findall(r'\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*\b', query)
+    key_terms.extend([noun.lower() for noun in proper_nouns])
+    
+    # 2. Productos, marcas y tecnologías específicas
+    tech_terms = re.findall(r'\b(?:iphone|android|tesla|apple|google|microsoft|bitcoin|blockchain)\b', query, re.IGNORECASE)
+    key_terms.extend([term.lower() for term in tech_terms])
+    
+    # 3. Palabras significativas de 4+ caracteres que no sean meta
+    meta_words = {'buscar', 'información', 'sobre', 'utilizar', 'herramienta', 'análisis', 'crear', 'generar', 'obtener', 'datos'}
+    significant_words = re.findall(r'\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{4,}\b', query)
+    for word in significant_words:
+        word_lower = word.lower()
+        if word_lower not in meta_words and len(word_lower) >= 4:
+            key_terms.append(word_lower)
+    
+    # 4. Números de modelo y versiones
+    model_numbers = re.findall(r'\b\w*\d+\w*\b', query)
+    key_terms.extend([model for model in model_numbers if len(model) > 1])
+    
+    # Eliminar duplicados manteniendo orden
+    unique_terms = []
+    seen = set()
+    for term in key_terms:
+        if term not in seen and len(term) > 2:
+            seen.add(term)
+            unique_terms.append(term)
+    
+    return unique_terms[:8]  # Máximo 8 términos más relevantes
+
+def check_content_relevance(content: str, original_query: str, step_title: str = "") -> Tuple[bool, float, str]:
+    """
+    🎯 NUEVA FUNCIÓN: Verificar si el contenido es relevante a la consulta original
+    
+    Args:
+        content: Contenido recopilado por la herramienta
+        original_query: Query original de la tarea 
+        step_title: Título del paso (opcional)
+        
+    Returns:
+        Tuple[bool, float, str]: (es_relevante, puntuación_relevancia, mensaje_detalle)
+    """
+    if not content or not original_query:
+        return False, 0.0, "Contenido o query vacío"
+    
+    # Extraer términos clave del query original
+    key_terms = extract_key_terms_from_query(original_query)
+    
+    if not key_terms:
+        return True, 0.5, "No se pudieron extraer términos clave, asumiendo relevancia"
+    
+    content_lower = content.lower()
+    found_terms = []
+    
+    # Verificar cuántos términos clave aparecen en el contenido
+    for term in key_terms:
+        if term in content_lower:
+            found_terms.append(term)
+    
+    # Calcular puntuación de relevancia
+    relevance_score = len(found_terms) / len(key_terms) if key_terms else 0.0
+    
+    # Determinar si es relevante
+    is_relevant = relevance_score >= 0.3  # Al menos 30% de términos clave deben aparecer
+    
+    # Mensaje detallado
+    if is_relevant:
+        detail_msg = f"Contenido relevante: {len(found_terms)}/{len(key_terms)} términos clave encontrados ({relevance_score:.1%}). Términos: {', '.join(found_terms[:5])}"
+    else:
+        detail_msg = f"Contenido NO relevante: solo {len(found_terms)}/{len(key_terms)} términos clave encontrados ({relevance_score:.1%}). Esperados: {', '.join(key_terms[:5])}"
+    
+    return is_relevant, relevance_score, detail_msg
 
 def validate_web_search_result(result: dict) -> Tuple[str, str]:
     """
