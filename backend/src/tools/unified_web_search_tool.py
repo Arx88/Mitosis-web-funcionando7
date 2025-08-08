@@ -195,6 +195,7 @@ class UnifiedWebSearchTool(BaseTool):
         import re
         
         print(f"🔧 _optimize_for_data_analysis INPUT: '{text}'")
+        print(f"🔍 KEYWORDS DEBUG: Original input before optimization: '{text}'")
         
         # ESTRATEGIA CONSERVADORA: Mantener tema principal intacto
         analysis_match = re.search(r'analiz[ar]*\s+(.*?)(?:\s+análisis|\s+datos|\s*$)', text, re.IGNORECASE)
@@ -203,6 +204,14 @@ class UnifiedWebSearchTool(BaseTool):
             subject = analysis_match.group(1).strip()
             result = f"{subject} análisis datos estadísticas 2024"
             print(f"🔧 Analysis match found. Result: '{result}'")
+            print(f"🔍 KEYWORDS DEBUG: Final optimized result: '{result}'")
+            
+            # Check for problematic keywords
+            if "REALIZA INFORME" in result.upper():
+                print(f"🚨 PROBLEMATIC KEYWORD DETECTED IN RESULT: {result}")
+            else:
+                print(f"✅ GOOD KEYWORD RESULT: {result}")
+            
             return result
         else:
             # Si no hay pattern de análisis explícito, mantener tema principal
@@ -217,10 +226,27 @@ class UnifiedWebSearchTool(BaseTool):
                 main_topic = ' '.join(filtered[:4]).lower()  # Hasta 4 palabras principales
                 result = f"{main_topic} análisis datos 2024"
                 print(f"🔧 Generic analysis. Main topic: '{main_topic}', Result: '{result}'")
+                print(f"🔍 KEYWORDS DEBUG: Generic analysis result: '{result}'")
+                
+                # Check for problematic keywords
+                if "REALIZA INFORME" in result.upper():
+                    print(f"🚨 PROBLEMATIC KEYWORD DETECTED IN GENERIC: {result}")
+                else:
+                    print(f"✅ GOOD GENERIC KEYWORD: {result}")
+                
                 return result
             
             print(f"🔧 Fallback to generic analysis")
-            return "análisis datos estadísticas investigación"
+            print(f"🔍 KEYWORDS DEBUG: Using fallback analysis")
+            fallback_result = "análisis datos estadísticas investigación"
+            
+            # Check for problematic keywords in fallback too
+            if "REALIZA INFORME" in fallback_result.upper():
+                print(f"🚨 PROBLEMATIC KEYWORD IN FALLBACK: {fallback_result}")
+            else:
+                print(f"✅ GOOD FALLBACK KEYWORD: {fallback_result}")
+            
+            return fallback_result
     
     def _optimize_for_research(self, text: str) -> str:
         """Optimizar búsqueda para investigación general"""
