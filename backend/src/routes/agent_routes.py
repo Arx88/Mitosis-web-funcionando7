@@ -6882,7 +6882,7 @@ IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Ca
         return result
     except Exception as e:
         logger.error(f"❌ Plan generation error: {e}")
-        return generate_intelligent_fallback_plan(message, task_id, task_category)
+        return generate_robust_plan_direct(message, task_id, task_category)
 
 
 def generate_robust_plan_direct(message: str, task_id: str, task_category: str = "general") -> dict:
