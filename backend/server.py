@@ -267,7 +267,7 @@ CORS(app, resources={
 try:
     mongo_url = os.getenv('MONGO_URL', 'mongodb://localhost:27017/')
     client = pymongo.MongoClient(mongo_url)
-    db = client.mitosis
+    db = client.get_default_database()
     logger.info("✅ MongoDB conectado exitosamente")
 except Exception as e:
     logger.error(f"❌ Error conectando MongoDB: {e}")
