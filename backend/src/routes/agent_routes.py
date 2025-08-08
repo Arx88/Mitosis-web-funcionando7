@@ -8896,8 +8896,10 @@ Tarea ID: {task_id}
             
             logger.info(f"✅ Tool {mapped_tool} executed successfully, result: {str(tool_result)[:200]}...")
             
-            # 🔥 CRITICAL INTEGRATION: Apply Enhanced Step Validation for investigation steps
+            # 🔥 CRITICAL INTEGRATION: Apply Enhanced Step Validation for different step types
             enhanced_validation_result = None
+            
+            # Enhanced validation for first step (research)
             if mapped_tool == 'web_search' and step_id.endswith('-1'):  # Apply to first step only
                 logger.info(f"🔍 APPLYING ENHANCED SUPER STRICT VALIDATION TO STEP 1")
                 
@@ -8927,6 +8929,56 @@ Tarea ID: {task_id}
                         'enhanced_validation': enhanced_validation_result,
                         'validation_failed': True,
                         'requires_more_research': True
+                    })
+                    return step_result
+            
+            # Enhanced validation for final steps (creation, processing)
+            elif mapped_tool in ['ollama_processing', 'file_manager'] and tool in ['creation', 'processing']:
+                logger.info(f"🔍 APPLYING ENHANCED FINAL CONTENT VALIDATION TO FINAL STEP")
+                
+                # Extract generated content for validation
+                content_to_validate = ""
+                task_context = ""
+                
+                try:
+                    # Get task context for better validation
+                    task_data = get_task_data(task_id)
+                    task_context = task_data.get('message', '') if task_data else ''
+                    
+                    # Extract content from different result formats
+                    if isinstance(tool_result, dict):
+                        if 'response' in tool_result:
+                            content_to_validate = str(tool_result['response'])
+                        elif 'content' in tool_result:
+                            content_to_validate = str(tool_result['content'])
+                        elif 'result' in tool_result:
+                            content_to_validate = str(tool_result['result'])
+                    else:
+                        content_to_validate = str(tool_result)
+                
+                except Exception as e:
+                    logger.warning(f"Error extracting content for validation: {e}")
+                    content_to_validate = str(tool_result)
+                
+                # Apply final content validation
+                enhanced_validation_result = enhanced_validator.validate_final_content_quality(
+                    title, content_to_validate, task_context
+                )
+                
+                logger.info(f"🔍 FINAL CONTENT VALIDATION: meets_requirements={enhanced_validation_result.get('meets_requirements', False)}")
+                logger.info(f"🔍 CONTENT SCORE: {enhanced_validation_result.get('completeness_score', 0)}%")
+                
+                # If validation fails, mark step as requiring better content
+                if not enhanced_validation_result.get('meets_requirements', False):
+                    logger.warning(f"❌ FINAL STEP FAILED CONTENT VALIDATION - Contains generic metadata or insufficient content")
+                    step_result.update({
+                        'success': False,
+                        'summary': f"Contenido genérico detectado: {title}",
+                        'content': tool_result,
+                        'tool_result': tool_result,
+                        'enhanced_validation': enhanced_validation_result,
+                        'validation_failed': True,
+                        'requires_better_content': True
                     })
                     return step_result
             
