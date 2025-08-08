@@ -101,12 +101,14 @@ def check_content_relevance(content: str, original_query: str, step_title: str =
     
     return is_relevant, relevance_score, detail_msg
 
-def validate_web_search_result(result: dict) -> Tuple[str, str]:
+def validate_web_search_result(result: dict, original_query: str = "", step_title: str = "") -> Tuple[str, str]:
     """
-    Valida el resultado de una búsqueda web.
+    Valida el resultado de una búsqueda web CON VALIDACIÓN DE RELEVANCIA.
     
     Args:
         result: Resultado de la búsqueda web
+        original_query: Query original de la tarea (NUEVO)
+        step_title: Título del paso (NUEVO)
     
     Returns:
         Tuple[str, str]: (estado, mensaje)
@@ -126,17 +128,41 @@ def validate_web_search_result(result: dict) -> Tuple[str, str]:
         content = result.get('content', '')
         data = result.get('data', {})
         
+        # Obtener contenido para validar (múltiples fuentes posibles)
+        content_to_validate = content
+        if not content_to_validate and data:
+            if isinstance(data, dict):
+                # Buscar contenido en diferentes estructuras
+                content_to_validate = data.get('content', '')
+                if not content_to_validate and 'results' in data:
+                    results = data.get('results', [])
+                    if results and isinstance(results, list):
+                        # Combinar snippets de resultados
+                        snippets = [r.get('snippet', '') for r in results if isinstance(r, dict)]
+                        content_to_validate = ' '.join(snippets)
+        
         # Si results_count es 0 y no hay content real, es un fallo
-        if results_count == 0 and not content.strip():
+        if results_count == 0 and not content_to_validate.strip():
             return 'failure', 'La búsqueda no arrojó resultados reales. El sistema reportó éxito pero no recopiló información.'
         
         # Si data está vacío y content está vacío, es un fallo
-        if not data and not content.strip():
+        if not data and not content_to_validate.strip():
             return 'failure', 'La búsqueda no recopiló información real. Datos y contenido están vacíos.'
         
         # Verificar el contenido si existe
-        if content and len(content.strip()) < 50:
+        if content_to_validate and len(content_to_validate.strip()) < 50:
             return 'warning', 'La búsqueda recopiló muy poca información (menos de 50 caracteres).'
+        
+        # 🚀 NUEVA VALIDACIÓN CRÍTICA: Verificar relevancia del contenido
+        if original_query and content_to_validate:
+            is_relevant, relevance_score, relevance_detail = check_content_relevance(
+                content_to_validate, original_query, step_title
+            )
+            
+            if not is_relevant:
+                return 'failure', f'CONTENIDO NO RELEVANTE: {relevance_detail}. La búsqueda no encontró información relacionada con la tarea solicitada.'
+            elif relevance_score < 0.5:
+                return 'warning', f'CONTENIDO PARCIALMENTE RELEVANTE: {relevance_detail}. Puede necesitar búsquedas adicionales.'
         
         # Verificar search_results si existen (estructura legacy)
         if search_results:
@@ -148,11 +174,18 @@ def validate_web_search_result(result: dict) -> Tuple[str, str]:
             if valid_results == 0:
                 return 'failure', 'Los resultados de búsqueda no tienen formato válido.'
             
-            return 'success', f'Búsqueda exitosa, {valid_results} resultados válidos encontrados.'
+            success_msg = f'Búsqueda exitosa, {valid_results} resultados válidos encontrados.'
+            if original_query:
+                success_msg += f' Contenido relevante verificado para: "{original_query[:50]}..."'
+            
+            return 'success', success_msg
         
         # Si llegamos aquí, verificamos si tenemos contenido real
-        if content and len(content.strip()) >= 50:
-            return 'success', f'Búsqueda completada con contenido válido ({len(content)} caracteres).'
+        if content_to_validate and len(content_to_validate.strip()) >= 50:
+            success_msg = f'Búsqueda completada con contenido válido ({len(content_to_validate)} caracteres).'
+            if original_query:
+                success_msg += f' Relevancia verificada para: "{original_query[:50]}..."'
+            return 'success', success_msg
         
         # Si no hay resultados válidos en ningún formato
         return 'failure', 'La búsqueda no produjo resultados válidos en ningún formato esperado.'
