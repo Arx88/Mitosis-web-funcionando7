@@ -4,6 +4,34 @@
 
 ---
 
+## 🚨 **TAREAS CRÍTICAS IDENTIFICADAS - PROBLEMAS USUARIO (2025-01-24)**
+
+### ❌ **1. CORRECCIÓN KEYWORDS DESTRUCTIVOS** - PRIORIDAD CRÍTICA
+- **Archivo**: `/app/backend/src/tools/unified_web_search_tool.py` líneas 128-206
+- **Problema**: `_extract_clean_keywords_static()` destruye contexto de búsqueda
+- **Síntoma**: Genera keywords inútiles como "REALIZA INFORME"
+- **Impacto**: 90% de búsquedas fallan por keywords sin sentido
+- **Solución requerida**: Reescribir función completamente con lógica inteligente
+
+### ❌ **2. AUMENTAR DIVERSIDAD DE FUENTES** - PRIORIDAD CRÍTICA  
+- **Archivo**: `/app/backend/src/tools/real_time_browser_tool.py` líneas 682-695
+- **Problema**: Solo explora 2-4 enlaces por búsqueda
+- **Síntoma**: "Solo recorre 1-2 fuentes" reportado por usuario
+- **Solución requerida**: Aumentar a 8-10 sitios por búsqueda con mejores filtros
+
+### ❌ **3. MEJORAR EXTRACCIÓN CONTENIDO REAL** - PRIORIDAD CRÍTICA
+- **Archivo**: `/app/backend/src/tools/unified_web_search_tool.py` líneas 669-720
+- **Problema**: `content_extracted = False` + solo 200-300 chars por sitio
+- **Síntoma**: "Informes solo muestran METADATOS" reportado por usuario  
+- **Solución requerida**: Extraer 1000+ caracteres de contenido real por sitio
+
+### ❌ **4. REFORZAR VALIDACIÓN DE COMPLETITUD** - PRIORIDAD ALTA
+- **Archivo**: `/app/backend/src/routes/enhanced_step_validator.py`
+- **Problema**: Criterios muy laxos (300 chars/fuente, solo 3 sitios)
+- **Solución requerida**: Criterios más estrictos (1000+ chars/fuente, 6+ sitios)
+
+---
+
 ## ✅ **COMPLETADAS EN ESTA SESIÓN - CORRECCIÓN CRÍTICA IMPLEMENTADA**
 
 ### ✅ **1. PROBLEMA PRINCIPAL RESUELTO: "El agente no realiza búsquedas exhaustivas para cumplir requisitos específicos"**
