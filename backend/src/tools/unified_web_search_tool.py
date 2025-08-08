@@ -129,7 +129,7 @@ class UnifiedWebSearchTool(BaseTool):
         ]
     
     def _extract_clean_keywords_static(self, query_text: str) -> str:
-        """🎯 EXTRACTOR INTELIGENTE DE KEYWORDS - SOLUCIÓN COMPLETA INTEGRADA"""
+        """🎯 EXTRACTOR INTELIGENTE DE KEYWORDS - SOLUCIÓN CORREGIDA COMPLETA"""
         
         if not query_text or len(query_text.strip()) < 3:
             return "información actualizada"
@@ -141,13 +141,21 @@ class UnifiedWebSearchTool(BaseTool):
             result = get_intelligent_keywords(query_text)
             print(f"✅ INTELLIGENT EXTRACTION SUCCESS: '{query_text}' → '{result}'")
             
-            # Validar que el resultado no sea genérico o problemático  
-            if (result and len(result.strip()) > 5 and 
+            # ✅ VALIDACIÓN MEJORADA: Verificar que el resultado sea útil y relevante
+            if (result and len(result.strip()) > 3 and 
+                result.strip() != query_text.strip() and  # No devolver lo mismo
                 'realiza informe' not in result.lower() and
-                'utilizar herramienta' not in result.lower()):
-                return result
+                'utilizar herramienta' not in result.lower() and
+                'específica sobre' not in result.lower() and  # ✅ NUEVO: Evitar este problema
+                len(result.split()) >= 1):  # Al menos una palabra útil
+                
+                # ✅ VALIDACIÓN ADICIONAL: Verificar que no sea solo años o palabras genéricas
+                if not result.strip().isdigit() and result.strip() not in ['2025', '2024', 'sobre', 'información']:
+                    return result
+                else:
+                    print(f"⚠️ Resultado solo numérico o muy genérico: '{result}', usando fallback")
             else:
-                print(f"⚠️ Resultado genérico detectado: '{result}', usando fallback")
+                print(f"⚠️ Resultado inválido detectado: '{result}', usando fallback")
         except Exception as e:
             print(f"⚠️ Error en generador inteligente: {e}, usando fallback")
         
