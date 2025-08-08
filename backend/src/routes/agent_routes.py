@@ -6832,8 +6832,8 @@ IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Ca
                 last_error = attempt_error
                 continue
         
-        # Si llegamos aquí, todos los intentos fallaron
-        logger.error(f"❌ All plan generation attempts failed. Using robust direct plan")
+        # 🔥 NUEVO: Si llegamos aquí, usar plan robusto en lugar de fallback básico
+        logger.info(f"🔧 Todos los intentos AI fallaron - Generando plan robusto directo")
         return generate_robust_plan_direct(message, task_id, task_category)
     
     # Llamar a la función interna
