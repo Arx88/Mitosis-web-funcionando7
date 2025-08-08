@@ -8764,16 +8764,84 @@ def execute_step_internal(task_id: str, step_id: str, step: dict):
         return {'success': False, 'agent_approved': False, 'error': str(e), 'reason': 'Execution error'}
 
 def execute_step_real(task_id: str, step_id: str, step: dict):
-    """Execute step with REAL tools instead of simulation - ENHANCED VERSION WITH SUPER STRICT VALIDATION"""
+    """Execute step with REAL tools - ENHANCED VERSION WITH ROBUST VALIDATION SYSTEM"""
     tool = step.get('tool', 'general')
     title = step.get('title', 'Ejecutando paso')
     description = step.get('description', '')
     
-    logger.info(f"🔧 Ejecutando REAL TOOL: {tool} para paso: {title}")
+    logger.info(f"🔧 Ejecutando PASO ROBUSTO: {tool} para paso: {title}")
     
-    # 🔥 CRITICAL FIX: Import and initialize Enhanced Step Validator
-    from .enhanced_step_validator import EnhancedStepValidator
-    enhanced_validator = EnhancedStepValidator()
+    # 🔥 NUEVO: Usar sistema de ejecución robusto
+    try:
+        from .improved_plan_execution import ImprovedPlanExecutor
+        from .robust_validation_system import RobustValidationSystem
+        
+        # Inicializar ejecutor robusto
+        robust_executor = ImprovedPlanExecutor()
+        robust_validator = RobustValidationSystem()
+        
+        logger.info("🚀 Sistema de ejecución robusto inicializado correctamente")
+        
+        # Obtener mensaje original de la tarea
+        try:
+            task_data = get_task_data(task_id)
+            original_message = task_data.get('message', '') if task_data else ''
+        except:
+            original_message = ''
+        
+        # Emitir progreso inicial
+        emit_step_event(task_id, 'task_progress', {
+            'step_id': step_id,
+            'activity': f"Iniciando ejecución robusta: {tool}...",
+            'progress_percentage': 10,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        # 🔥 EJECUTAR CON SISTEMA ROBUSTO
+        logger.info(f"🚀 Ejecutando paso con sistema robusto: {title}")
+        result = robust_executor.execute_step_with_robust_retry(step, task_id, original_message)
+        
+        logger.info(f"✅ Paso ejecutado con sistema robusto - Éxito: {result.get('success', False)}")
+        
+        # Emitir progreso de finalización
+        emit_step_event(task_id, 'task_progress', {
+            'step_id': step_id,
+            'activity': "Paso completado con sistema robusto",
+            'progress_percentage': 100,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        return result
+        
+    except ImportError as import_error:
+        logger.error(f"❌ Error importando sistema robusto: {import_error}")
+        logger.info("🔧 Fallback a sistema de validación mejorado...")
+        
+        # Fallback usando sistema de validación mejorado
+        try:
+            from .enhanced_step_validator import EnhancedStepValidator
+            enhanced_validator = EnhancedStepValidator()
+            use_enhanced_validation = True
+        except ImportError:
+            logger.warning("⚠️ Enhanced validator no disponible, usando validación básica")
+            enhanced_validator = None
+            use_enhanced_validation = False
+    
+    except Exception as robust_error:
+        logger.error(f"❌ Error en sistema robusto: {robust_error}")
+        logger.info("🔧 Fallback a ejecución mejorada...")
+        
+        # Usar enhanced validator como fallback
+        try:
+            from .enhanced_step_validator import EnhancedStepValidator
+            enhanced_validator = EnhancedStepValidator()
+            use_enhanced_validation = True
+        except ImportError:
+            enhanced_validator = None
+            use_enhanced_validation = False
+    
+    # 🔧 EJECUCIÓN MEJORADA COMO FALLBACK
+    logger.info(f"🔧 Ejecutando con sistema mejorado (fallback): {title}")
     
     # Emitir progreso inicial
     emit_step_event(task_id, 'task_progress', {
@@ -8789,7 +8857,8 @@ def execute_step_real(task_id: str, step_id: str, step: dict):
         'type': tool,
         'summary': 'Paso en progreso',
         'content': '',
-        'tool_used': tool
+        'tool_used': tool,
+        'execution_mode': 'improved_fallback'
     }
     
     try:
