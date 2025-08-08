@@ -770,9 +770,22 @@ class RealTimeBrowserTool(BaseTool):
                         # NAVEGACIÓN DIRECTA SIN PESTAÑAS - MÉTODO SIMPLIFICADO Y ROBUSTO
                         self._emit_progress(f"🌐 Navegando directamente a: {href[:50]}...")
                         
-                        # Navegar directamente al enlace
+                        # Navegar directamente al enlace y seguir redirects
                         await page.goto(href, wait_until='networkidle')
                         await asyncio.sleep(3)
+                        
+                        # CRÍTICO: Verificar dominio final después de redirects
+                        final_url = page.url
+                        final_domain = urllib.parse.urlparse(final_url).netloc.lower()
+                        
+                        # Si seguimos en Bing después del redirect, saltar este enlace
+                        if 'bing.com' in final_domain:
+                            self._emit_progress(f"⚠️ Enlace redirect quedó en Bing: {final_domain} - saltando")
+                            continue
+                        
+                        # Actualizar dominio explorado con el dominio FINAL
+                        explored_domains.add(final_domain)
+                        self._emit_progress(f"✅ Navegación exitosa a dominio real: {final_domain}")
                         
                         # Capturar screenshot de la página visitada
                         await self._capture_screenshot_async(page, i+10)
