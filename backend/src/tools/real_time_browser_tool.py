@@ -704,13 +704,25 @@ class RealTimeBrowserTool(BaseTool):
                 try:
                     # Re-consultar elementos para evitar contexto destruido
                     fresh_links = await page.query_selector_all('.b_algo h2 a')
+                    
+                    # Si no hay links con .b_algo, usar selector más amplio
+                    if not fresh_links:
+                        fresh_links = await page.query_selector_all('h3 a')
+                        self._emit_progress(f"🔍 DEBUG: Usando selector h3 a, encontrados: {len(fresh_links)}")
+                    
+                    if not fresh_links:
+                        fresh_links = await page.query_selector_all('a[href^="http"]')
+                        self._emit_progress(f"🔍 DEBUG: Usando selector amplio, encontrados: {len(fresh_links)}")
+                        
                     if i >= len(fresh_links):
-                        self._emit_progress(f"⚠️ No hay suficientes enlaces frescos para resultado {i+1}")
+                        self._emit_progress(f"⚠️ No hay suficientes enlaces frescos para resultado {i+1} (disponibles: {len(fresh_links)})")
                         continue
                     
                     link = fresh_links[i]
                     href = await link.get_attribute('href')
                     link_text = await link.text_content()
+                    
+                    self._emit_progress(f"🎯 DEBUG: Procesando enlace {i+1}: {link_text[:40]}... -> {href[:60]}...")
                     
                     # FILTRO DE RELEVANCIA MEJORADO Y DIVERSIDAD DE DOMINIOS
                     if href and href.startswith('http'):
