@@ -8870,12 +8870,47 @@ Tarea ID: {task_id}
             
             logger.info(f"✅ Tool {mapped_tool} executed successfully, result: {str(tool_result)[:200]}...")
             
+            # 🔥 CRITICAL INTEGRATION: Apply Enhanced Step Validation for investigation steps
+            enhanced_validation_result = None
+            if mapped_tool == 'web_search' and step_id.endswith('-1'):  # Apply to first step only
+                logger.info(f"🔍 APPLYING ENHANCED SUPER STRICT VALIDATION TO STEP 1")
+                
+                # Extract results from tool_result for validation
+                results_for_validation = []
+                if isinstance(tool_result, dict) and 'results' in tool_result:
+                    results_for_validation = tool_result['results']
+                elif isinstance(tool_result, dict) and 'search_results' in tool_result:
+                    results_for_validation = tool_result['search_results']
+                
+                # Apply super strict validation
+                enhanced_validation_result = enhanced_validator.validate_step_1_completion(
+                    title, results_for_validation
+                )
+                
+                logger.info(f"🔍 ENHANCED VALIDATION RESULT: meets_requirements={enhanced_validation_result.get('meets_requirements', False)}")
+                logger.info(f"🔍 VALIDATION SCORE: {enhanced_validation_result.get('completeness_score', 0)}%")
+                
+                # If validation fails, mark step as requiring more work
+                if not enhanced_validation_result.get('meets_requirements', False):
+                    logger.warning(f"❌ STEP 1 FAILED ENHANCED VALIDATION - Requires more comprehensive research")
+                    step_result.update({
+                        'success': False,
+                        'summary': f"Información insuficiente: {title}",
+                        'content': tool_result,
+                        'tool_result': tool_result,
+                        'enhanced_validation': enhanced_validation_result,
+                        'validation_failed': True,
+                        'requires_more_research': True
+                    })
+                    return step_result
+            
             # Actualizar resultado exitoso
             step_result.update({
                 'success': True,
                 'summary': f"Ejecutado exitosamente: {title}",
                 'content': tool_result,
-                'tool_result': tool_result
+                'tool_result': tool_result,
+                'enhanced_validation': enhanced_validation_result
             })
             
             # 🔧 CORRECCIÓN CRÍTICA: Extraer contenido correcto según el tipo de herramienta
