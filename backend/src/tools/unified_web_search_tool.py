@@ -325,29 +325,64 @@ class UnifiedWebSearchTool(BaseTool):
             return "tendencias actualidad 2025 novedades"
     
     def _optimize_generic_search(self, text: str) -> str:
-        """Optimización para búsquedas genéricas manteniendo coherencia"""
+        """🎯 OPTIMIZACIÓN GENÉRICA CORREGIDA - Preserva contexto útil"""
+        
+        # 🚀 USAR GENERADOR INTELIGENTE SI ESTÁ DISPONIBLE
+        if INTELLIGENT_KEYWORDS_AVAILABLE:
+            try:
+                result = get_intelligent_keywords(text)
+                print(f"✅ GENERIC SEARCH - INTELLIGENT: '{text}' → '{result}'")
+                return result
+            except Exception as e:
+                print(f"⚠️ Generic search fallback due to: {e}")
+        
+        # 🛠️ FALLBACK MEJORADO
         import re
         
-        # Estrategia conservadora: mantener frases coherentes
+        print(f"🔄 GENERIC SEARCH - FALLBACK: '{text}'")
         
-        # Eliminar solo palabras muy genéricas al inicio
-        clean = re.sub(r'^(buscar|obtener|realizar)\s+', '', text, flags=re.IGNORECASE)
-        clean = re.sub(r'\b(?:información|datos)\b\s*(?:sobre|de|en)\s+', '', clean, flags=re.IGNORECASE)
+        # 1. Remover solo prefijos muy específicos, manteniendo el tema
+        clean = re.sub(r'^(buscar|obtener|realizar|genera)\s+', '', text, flags=re.IGNORECASE)
+        clean = re.sub(r'\binformación\s+(sobre\s+)?', '', clean, flags=re.IGNORECASE)
         
-        # Si es muy corto después de limpiar, usar original
-        if len(clean) < len(text) * 0.6:
+        # 2. Si el texto se redujo demasiado, usar el original
+        if len(clean.strip()) < len(text) * 0.5:
             clean = text
         
-        # Mantener hasta 8 palabras más relevantes en orden
-        words = re.findall(r'\b[a-záéíóúñ]{3,}\b', clean, re.IGNORECASE)
+        # 3. Extraer palabras significativas (3+ caracteres)
+        words = re.findall(r'\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{3,}\b', clean)
         
-        # Filtrar solo stop words muy básicos
-        minimal_stopwords = {'sobre', 'para', 'con', 'las', 'los', 'una', 'del'}
-        filtered_words = [w for w in words if w.lower() not in minimal_stopwords]
+        # 4. Filtrar solo stop words absolutamente esenciales
+        essential_stopwords = {'sobre', 'para', 'con', 'las', 'los', 'una', 'del', 'que', 'por'}
+        filtered_words = []
         
-        # Si tenemos muy pocas palabras, agregar año para contexto
-        if len(filtered_words) < 3:
-            filtered_words.append('2025')
+        for word in words:
+            word_lower = word.lower()
+            if word_lower not in essential_stopwords and len(word) >= 3:
+                filtered_words.append(word_lower)
+        
+        # 5. Si tenemos palabras útiles, construir resultado
+        if filtered_words:
+            # Máximo 5 palabras para mantener enfoque
+            result = ' '.join(filtered_words[:5])
+            
+            # Agregar año si el resultado es muy corto
+            if len(result.split()) < 3:
+                result += ' 2025'
+                
+            print(f"✅ GENERIC FALLBACK: '{text}' → '{result}'")
+            return result
+        
+        # 6. Si no hay palabras útiles, extraer cualquier palabra de 4+ caracteres
+        any_words = re.findall(r'\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{4,}\b', text)
+        if any_words:
+            result = ' '.join([w.lower() for w in any_words[:3]])
+            print(f"⚠️ ANY WORDS GENERIC: '{text}' → '{result}'")
+            return result
+        
+        # 7. Fallback final
+        print(f"❌ GENERIC FINAL FALLBACK: '{text}'")
+        return "información actualizada noticias 2025"
         
         return ' '.join(filtered_words[:6]).lower() if filtered_words else "información actualidad"
 
