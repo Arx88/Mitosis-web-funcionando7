@@ -726,44 +726,31 @@ class RealTimeBrowserTool(BaseTool):
                     
                     # FILTRO DE RELEVANCIA MEJORADO Y DIVERSIDAD DE DOMINIOS
                     if href and href.startswith('http'):
-                        # Extraer dominio para verificar diversidad
+                        # Extraer dominio para verificación inicial (pero permitir redirects de Bing)
                         import urllib.parse
-                        domain = urllib.parse.urlparse(href).netloc.lower()
+                        initial_domain = urllib.parse.urlparse(href).netloc.lower()
                         
-                        # Saltar si ya visitamos este dominio (forzar diversidad)
-                        if domain in explored_domains:
-                            self._emit_progress(f"🔄 Saltando dominio ya explorado: {domain}")
-                            continue
+                        # NO saltar enlaces de Bing que pueden ser redirects válidos
+                        # Solo verificar diversidad después de la navegación final
                         
-                        # Filtrar enlaces comerciales y irrelevantes (más estricto)
-                        irrelevant_domains = [
-                            'amazon.com', 'ebay.com', 'aliexpress.com', 'mercadolibre.com', 
-                            'shopping.', 'ads.', 'publicidad', 'tienda', 'shop', 
-                            'marketplace', 'store', 'buy', 'comprar', 'precio'
-                        ]
-                        is_irrelevant = any(domain_filter in href.lower() for domain_filter in irrelevant_domains)
-                        
-                        # Filtrar por keywords comerciales en el título
+                        # Filtrar enlaces comerciales obvios por título (más estricto)
                         commercial_keywords = [
                             'comprar', 'precio', 'tienda', 'shop', 'buy', 'sale', 'oferta', 
                             'descuento', 'venta', 'store', 'marketplace', 'shopping'
                         ]
                         has_commercial_keywords = any(keyword in link_text.lower() for keyword in commercial_keywords)
                         
-                        if is_irrelevant or has_commercial_keywords:
-                            self._emit_progress(f"⚠️ Saltando enlace comercial: {domain} - {link_text[:30]}...")
+                        if has_commercial_keywords:
+                            self._emit_progress(f"⚠️ Saltando enlace comercial por título: {link_text[:30]}...")
                             continue
                         
-                        # Agregar dominio a lista de explorados
-                        explored_domains.add(domain)
-                        
-                        print(f"🔍 SOURCES DEBUG: About to navigate to DIVERSE source #{successful_explorations + 1}: {domain}")
+                        print(f"🔍 SOURCES DEBUG: About to navigate to DIVERSE source #{successful_explorations + 1}: {initial_domain}")
                         self._emit_browser_visual({
                             'type': 'exploring_diverse_source',
-                            'message': f'🌐 Explorando fuente diversa {successful_explorations + 1}/6: {domain}',
+                            'message': f'🌐 Explorando fuente diversa {successful_explorations + 1}/6: {initial_domain}',
                             'link_text': link_text,
                             'url': href,
-                            'domain': domain,
+                            'domain': initial_domain,
                             'timestamp': time.time()
                         })
                         
@@ -781,6 +768,11 @@ class RealTimeBrowserTool(BaseTool):
                         # Si seguimos en Bing después del redirect, saltar este enlace
                         if 'bing.com' in final_domain:
                             self._emit_progress(f"⚠️ Enlace redirect quedó en Bing: {final_domain} - saltando")
+                            continue
+                        
+                        # Verificar diversidad de dominios DESPUÉS de la navegación final
+                        if final_domain in explored_domains:
+                            self._emit_progress(f"🔄 Saltando dominio ya explorado después de redirect: {final_domain}")
                             continue
                         
                         # Actualizar dominio explorado con el dominio FINAL
@@ -815,7 +807,7 @@ class RealTimeBrowserTool(BaseTool):
                         })
                         
                         # 🚀 EXPLORAR MÁS A FONDO EL CONTENIDO DE LA PÁGINA
-                        self._emit_progress(f"📄 Extrayendo contenido detallado de {domain}...")
+                        self._emit_progress(f"📄 Extrayendo contenido detallado de {final_domain}...")
                         
                         # Scroll más extensivo para cargar contenido dinámico
                         await page.evaluate('window.scrollTo(0, document.body.scrollHeight / 4)')
@@ -916,7 +908,7 @@ class RealTimeBrowserTool(BaseTool):
                         quality_score = page_content.get('quality_score', 'unknown') if isinstance(page_content, dict) else 'unknown'
                         
                         # 📊 LOGGING DETALLADO DE EXTRACCIÓN
-                        self._emit_progress(f"📊 Contenido extraído de {domain}:")
+                        self._emit_progress(f"📊 Contenido extraído de {final_domain}:")
                         self._emit_progress(f"   📝 Caracteres: {content_length}")
                         self._emit_progress(f"   🎯 Método: {extraction_method}")  
                         self._emit_progress(f"   ⭐ Calidad: {quality_score}")
@@ -932,7 +924,7 @@ class RealTimeBrowserTool(BaseTool):
                             'result_index': successful_explorations,
                             'url': current_url,
                             'title': current_title,
-                            'domain': domain,
+                            'domain': final_domain,
                             'content_preview': content_text[:300] if content_text else '',
                             'content_length': content_length,
                             'extraction_method': extraction_method,
