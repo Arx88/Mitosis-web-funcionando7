@@ -61,7 +61,11 @@ class IntelligentKeywordGenerator:
             r'\butilizar\s+herramienta\b', 
             r'\bweb_search\s+para\b',
             r'\binformación\s+específica\s+sobre\b',
-            r'\bgenera\s+(un|una)\s+(análisis|informe|reporte)\b'
+            r'\bgenera\s+(un|una)\s+(análisis|informe|reporte)\b',
+            r'\brecopilar\s+datos\s+de\s+mercado\b',
+            r'\brealizar\s+una\s+búsqueda\s+web\b',
+            r'\bdesarrollar\s+una\s+estrategia\b',
+            r'\bobtener\s+datos\s+actuales\b'
         ]
     
     def get_intelligent_keywords(self, query_text: str) -> str:
