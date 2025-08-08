@@ -62,7 +62,7 @@
    - Sistema jerárquico operativo
 
 4. **Acceso Externo Configurado**:
-   - URL Externa: https://a2cbef2a-9149-4a27-b17c-f1c2a42712d4.preview.emergentagent.com
+   - URL Externa: https://7427363b-7f37-4f25-ae05-d47ff009f2bb.preview.emergentagent.com
    - CORS ultra-dinámico configurado
    - Kubernetes ingress funcionando
    - WebSocket accesible externamente

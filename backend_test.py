@@ -24,7 +24,7 @@ import re
 import subprocess
 
 # Configuration
-BACKEND_URL = "https://a2cbef2a-9149-4a27-b17c-f1c2a42712d4.preview.emergentagent.com"
+BACKEND_URL = "https://7427363b-7f37-4f25-ae05-d47ff009f2bb.preview.emergentagent.com"
 
 class EnhancedStepValidationTester:
     def __init__(self):
