@@ -47,7 +47,8 @@ class IntelligentKeywordGenerator:
         self.meta_words = {
             'instrucciones': ['buscar', 'información', 'sobre', 'acerca', 'utilizar', 'herramienta', 
                              'web_search', 'realizar', 'generar', 'crear', 'obtener', 'necesario',
-                             'completar', 'específico', 'datos', 'análisis', 'informe'],
+                             'completar', 'específico', 'datos', 'análisis', 'informe', 'recopilar',
+                             'desarrollar', 'estrategia', 'búsqueda', 'actual', 'actuales', 'web'],
             'conectores': ['para', 'con', 'por', 'desde', 'hasta', 'durante', 'mediante', 'según',
                           'ante', 'bajo', 'contra', 'entre', 'hacia', 'según', 'sin', 'tras'],
             'articulos': ['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas'],
