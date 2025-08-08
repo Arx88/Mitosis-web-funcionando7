@@ -52,6 +52,15 @@ except ImportError:
     WEBSOCKET_AVAILABLE = False
     REAL_TIME_BROWSER_AVAILABLE = False
 
+# 🚀 IMPORTAR GENERADOR INTELIGENTE DE KEYWORDS - CORRECCIÓN CRÍTICA
+try:
+    from .improved_keyword_generator import get_intelligent_keywords, get_multiple_search_variants
+    INTELLIGENT_KEYWORDS_AVAILABLE = True
+    print("✅ Generador inteligente de keywords cargado correctamente")
+except ImportError as e:
+    INTELLIGENT_KEYWORDS_AVAILABLE = False
+    print(f"⚠️ Generador inteligente no disponible: {e}")
+
 @register_tool
 class UnifiedWebSearchTool(BaseTool):
     """
