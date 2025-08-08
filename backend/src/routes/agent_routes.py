@@ -5538,8 +5538,13 @@ Proporciona un resultado específico y útil para este paso.
                     
                     # Solo marcar como completado si tenemos un step_result válido
                     if step_result and 'status' not in step or step.get('status') != 'failed':
-                        # VALIDAR RESULTADO USANDO SISTEMA ROBUSTO
-                        validation_status, validation_message = validate_step_result(step['tool'], step_result)
+                        # VALIDAR RESULTADO USANDO SISTEMA ROBUSTO CON VALIDACIÓN DE RELEVANCIA
+                        validation_status, validation_message = validate_step_result(
+                            step['tool'], 
+                            step_result, 
+                            message,  # original_query
+                            step.get('title', '')  # step_title
+                        )
                         
                         logger.info(f"🔍 Validación para {step['tool']}: {validation_status} - {validation_message}")
                         
