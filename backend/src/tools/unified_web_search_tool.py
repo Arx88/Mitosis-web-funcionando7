@@ -749,6 +749,29 @@ class UnifiedWebSearchTool(BaseTool):
             except:
                 pass
             
+            # Final results summary and domain analysis
+            unique_domains = set()
+            for result in results:
+                from urllib.parse import urlparse
+                try:
+                    domain = urlparse(result['url']).netloc
+                    unique_domains.add(domain)
+                except:
+                    pass
+            
+            print(f"🔍 SOURCES DEBUG: Final results summary:")
+            print(f"🔍 SOURCES DEBUG: Total results: {len(results)}")
+            print(f"🔍 SOURCES DEBUG: Unique domains: {len(unique_domains)}")
+            print(f"🔍 SOURCES DEBUG: Domains visited: {list(unique_domains)}")
+            
+            # Check if we're only getting Bing results
+            if len(unique_domains) <= 1 and any('bing.com' in str(domain) for domain in unique_domains):
+                print(f"🚨 SOURCE DIVERSITY PROBLEM: Only Bing sources detected!")
+            elif len(unique_domains) >= 3:
+                print(f"✅ GOOD SOURCE DIVERSITY: {len(unique_domains)} different domains")
+            else:
+                print(f"⚠️ LIMITED SOURCE DIVERSITY: Only {len(unique_domains)} domains")
+            
             return results
             
         except Exception as e:
