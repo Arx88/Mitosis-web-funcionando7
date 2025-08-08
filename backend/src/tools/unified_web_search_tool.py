@@ -704,32 +704,36 @@ class UnifiedWebSearchTool(BaseTool):
                 page_url = page_data.get('url', '')
                 print(f"🔍 SOURCES DEBUG: Processing page: {page_url}")
                 
-                # Buscar si esta página tiene contenido extraído real
-                has_real_content = False
-                content_extracted = ""
-                content_length = 0
-                
-                for action in actions_performed:
-                    if (action.get('url') == page_url and 
-                        action.get('action') == 'result_explored' and
-                        action.get('content_preview') and
-                        len(action.get('content_preview', '')) > 100):  # Al menos 100 caracteres de contenido real
-                        content_extracted = action.get('content_preview', '')
-                        content_length = action.get('content_length', 0)
-                        has_real_content = True
-                        break
-                
-                # Solo agregar páginas que NO sean de búsqueda Y que tengan contenido real
+                # Solo filtrar páginas de búsqueda, incluir todo lo demás
                 is_search_page = (
-                    'bing.com' in page_url and 'search' in page_url.lower() or
+                    'bing.com' in page_url and ('search' in page_url.lower() or not '/' in page_url.split('.com')[-1]) or
                     page_data.get('title', '').lower().startswith('search') or
-                    'Search - Microsoft Bing' in page_data.get('title', '')
+                    'Search - Microsoft Bing' in page_data.get('title', '') or
+                    page_url == 'https://www.bing.com/' or
+                    page_url.endswith('/search')
                 )
                 
-                if has_real_content and not is_search_page:
+                # Incluir todas las páginas que NO sean de búsqueda
+                if not is_search_page:
+                    # Buscar contenido extraído de esta página
+                    content_extracted = ""
+                    content_length = 0
+                    
+                    for action in actions_performed:
+                        if action.get('url') == page_url and action.get('content_preview'):
+                            content_extracted = action.get('content_preview', '')
+                            content_length = action.get('content_length', len(content_extracted))
+                            break
+                    
+                    # Si no hay contenido específico, usar el contenido de la página si existe
+                    if not content_extracted and 'content' in page_data:
+                        content_extracted = page_data.get('content', '')
+                        content_length = len(content_extracted)
+                    
                     page_data['content_extracted'] = content_extracted
                     page_data['content_length'] = content_length
                     pages_with_content.append(page_data)
+                    print(f"✅ INCLUIDA: {page_url} - Content length: {content_length}")
             
             self._emit_progress_eventlet(f"🔍 FILTRADO: {len(pages_with_content)} páginas con contenido real de {len(pages_visited)} visitadas")
             
