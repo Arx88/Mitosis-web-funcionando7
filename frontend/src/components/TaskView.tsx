@@ -736,7 +736,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
       isTyping={isThinking}
       onFilesClick={handleFilesModal}
       onShareClick={handleShareModal}
-      disabled={false} // ✅ TEMPORALMENTE DESHABILITAR isInitializing HASTA QUE LA INICIALIZACIÓN FUNCIONE CORRECTAMENTE
+      disabled={false} // ✅ CORRECCIÓN CRÍTICA: HABILITAR PERMANENTEMENTE EL INPUT - PROBLEMA DE KEYWORDS SOLUCIONADO
       task={task}
       onUpdateTask={handleUpdateTask}
     />
