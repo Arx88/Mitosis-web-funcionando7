@@ -607,10 +607,10 @@ class UnifiedWebSearchTool(BaseTool):
             
             self._emit_progress_eventlet(f"📊 Procesando navegación CORRECTA: {len(pages_visited)} páginas visitadas, {len(screenshots)} screenshots")
             
-            # 🔥 FILTRO CRÍTICO: Solo incluir páginas con contenido real extraído
             pages_with_content = []
             for page_data in pages_visited:
                 page_url = page_data.get('url', '')
+                print(f"🔍 SOURCES DEBUG: Processing page: {page_url}")
                 
                 # Buscar si esta página tiene contenido extraído real
                 has_real_content = False
