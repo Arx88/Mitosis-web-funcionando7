@@ -43,6 +43,12 @@ except ImportError:
 # Import Ollama configuration functions
 from ..config.ollama_config import get_ollama_config, get_ollama_endpoint, get_ollama_model
 
+# 🔥 NUEVO: Importar sistema robusto de validación
+try:
+    from .robust_validation_system import RobustValidationSystem
+except ImportError:
+    RobustValidationSystem = None
+
 logger = logging.getLogger(__name__)
 
 # 🔄 CONSTANTE PARA SISTEMA DE REINTENTOS
