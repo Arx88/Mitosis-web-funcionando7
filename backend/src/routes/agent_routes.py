@@ -8138,6 +8138,17 @@ def execute_task_steps_sequentially(task_id: str, steps: list):
     print(f"📋 Total steps to execute: {len(steps)}")
     print(f"🔍 Steps details: {json.dumps(steps, indent=2, default=str)}")
     
+    # 🆕 OBTENER MENSAJE ORIGINAL DE LA TAREA PARA VALIDACIÓN DE RELEVANCIA
+    original_message = ""
+    try:
+        task_data = get_task_data(task_id)
+        if task_data:
+            original_message = task_data.get('message', task_data.get('title', ''))
+            logger.info(f"📋 Original message for validation: '{original_message[:100]}...'")
+    except Exception as e:
+        logger.warning(f"⚠️ Could not get original message for task {task_id}: {e}")
+        original_message = ""
+    
     # Enhanced WebSocket debugging
     logger.info(f"🔌 WebSocket Manager Status Check:")
     if hasattr(current_app, 'websocket_manager'):
