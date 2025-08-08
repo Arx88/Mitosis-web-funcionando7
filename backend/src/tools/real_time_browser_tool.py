@@ -775,30 +775,116 @@ class RealTimeBrowserTool(BaseTool):
                             'timestamp': time.time()
                         })
                         
-                        # Explorar el contenido de la página
+                        # 🚀 EXPLORAR MÁS A FONDO EL CONTENIDO DE LA PÁGINA
+                        self._emit_progress(f"📄 Extrayendo contenido detallado de {domain}...")
+                        
+                        # Scroll más extensivo para cargar contenido dinámico
+                        await page.evaluate('window.scrollTo(0, document.body.scrollHeight / 4)')
+                        await asyncio.sleep(1)
+                        await page.evaluate('window.scrollTo(0, document.body.scrollHeight / 2)')
+                        await asyncio.sleep(1)
                         await page.evaluate('window.scrollTo(0, document.body.scrollHeight / 3)')
                         await asyncio.sleep(2)
-                        await self._capture_screenshot_async(page, i+100)
+                        await self._capture_screenshot_async(page, successful_explorations+100)
                         
-                        # Extraer contenido real de la página
+                        # 📝 EXTRAER CONTENIDO REAL EXTENSO Y DE CALIDAD
                         page_content = await page.evaluate('''
                             () => {
-                                // Intentar extraer contenido de elementos comunes
+                                // ESTRATEGIA MULTI-SELECTOR PARA EXTRAER MÁXIMO CONTENIDO ÚTIL
                                 let content = '';
+                                let extractedSections = [];
                                 
-                                // Intentar obtener contenido de artículo
-                                const article = document.querySelector('article, main, .content, .post, .article');
-                                if (article) {
-                                    content = article.innerText || article.textContent || '';
-                                } else {
-                                    // Fallback al body
-                                    content = document.body.innerText || document.body.textContent || '';
+                                // 1. PRIORITIZAR CONTENIDO EDITORIAL Y ARTÍCULOS
+                                const articleSelectors = [
+                                    'article', 'main', '[role="main"]', '.article', '.post', 
+                                    '.content', '.entry-content', '.post-content', '.article-content',
+                                    '#content', '#main', '.main-content', '.page-content'
+                                ];
+                                
+                                for (let selector of articleSelectors) {
+                                    const element = document.querySelector(selector);
+                                    if (element && element.innerText && element.innerText.length > 200) {
+                                        content = element.innerText || element.textContent || '';
+                                        extractedSections.push('article-content');
+                                        break;
+                                    }
                                 }
                                 
-                                // Limpiar y limitar contenido
-                                return content.replace(/\\s+/g, ' ').trim().substring(0, 2000);
+                                // 2. SI NO HAY ARTÍCULO, BUSCAR CONTENIDO EN SECCIONES ESPECÍFICAS
+                                if (!content || content.length < 300) {
+                                    const sectionSelectors = [
+                                        '.bio', '.biography', '.about', '.description', '.summary',
+                                        '.news-content', '.text-content', '.body-text', 'section',
+                                        'p', '.paragraph', '.content-text'
+                                    ];
+                                    
+                                    let sectionContent = '';
+                                    for (let selector of sectionSelectors) {
+                                        const elements = document.querySelectorAll(selector);
+                                        for (let elem of elements) {
+                                            if (elem.innerText && elem.innerText.length > 50) {
+                                                sectionContent += elem.innerText + ' ';
+                                                if (sectionContent.length > 1500) break; // Suficiente contenido
+                                            }
+                                        }
+                                        if (sectionContent.length > 500) break;
+                                    }
+                                    
+                                    if (sectionContent.length > content.length) {
+                                        content = sectionContent;
+                                        extractedSections.push('section-content');
+                                    }
+                                }
+                                
+                                // 3. ÚLTIMO RECURSO: BODY COMPLETO PERO FILTRADO
+                                if (!content || content.length < 500) {
+                                    content = document.body.innerText || document.body.textContent || '';
+                                    extractedSections.push('body-fallback');
+                                }
+                                
+                                // 4. LIMPIAR Y PROCESAR CONTENIDO
+                                // Remover líneas duplicadas y espacios excesivos
+                                content = content.replace(/\\s+/g, ' ').trim();
+                                
+                                // Remover texto de navegación común
+                                const navigationText = [
+                                    'Skip to content', 'Menu', 'Navigation', 'Home', 'About', 'Contact',
+                                    'Privacy Policy', 'Terms', 'Cookie', 'Subscribe', 'Newsletter'
+                                ];
+                                
+                                for (let navText of navigationText) {
+                                    content = content.replace(new RegExp(navText, 'gi'), '');
+                                }
+                                
+                                // 5. EXPANDIR LÍMITE DE CARACTERES PARA MÁS INFORMACIÓN
+                                const maxChars = 3000; // 🔥 AUMENTADO DE 2000 A 3000 CARACTERES
+                                content = content.substring(0, maxChars);
+                                
+                                // Retornar información de calidad sobre la extracción
+                                return {
+                                    content: content,
+                                    length: content.length,
+                                    extraction_method: extractedSections.join(', '),
+                                    quality_score: content.length > 1000 ? 'high' : content.length > 500 ? 'medium' : 'low'
+                                };
                             }
                         ''')
+                        
+                        # Procesar resultado de extracción
+                        content_text = page_content.get('content', '') if isinstance(page_content, dict) else page_content
+                        content_length = page_content.get('length', len(content_text)) if isinstance(page_content, dict) else len(content_text)
+                        extraction_method = page_content.get('extraction_method', 'unknown') if isinstance(page_content, dict) else 'basic'
+                        quality_score = page_content.get('quality_score', 'unknown') if isinstance(page_content, dict) else 'unknown'
+                        
+                        # 📊 LOGGING DETALLADO DE EXTRACCIÓN
+                        self._emit_progress(f"📊 Contenido extraído de {domain}:")
+                        self._emit_progress(f"   📝 Caracteres: {content_length}")
+                        self._emit_progress(f"   🎯 Método: {extraction_method}")  
+                        self._emit_progress(f"   ⭐ Calidad: {quality_score}")
+                        
+                        # Solo contar como exitoso si extrajo contenido suficiente
+                        if content_length > 200:  # Mínimo 200 caracteres de contenido real
+                            successful_explorations += 1
                         
                         self._emit_progress(f"📄 Contenido extraído: {len(page_content)} caracteres de {current_title[:30]}...")
                         
