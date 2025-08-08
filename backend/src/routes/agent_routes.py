@@ -6929,9 +6929,27 @@ IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Ca
         logger.info(f"🔧 Todos los intentos AI fallaron - Generando plan robusto directo")
         return generate_robust_plan_direct(message, task_id, task_category)
     
+    # 🔥 NUEVO: Importar sistema de monitoreo de fallbacks
+    try:
+        from .fallback_monitoring import record_plan_generation_result
+        monitoring_available = True
+    except ImportError:
+        monitoring_available = False
+        logger.warning("⚠️ Monitoreo de fallbacks no disponible")
+    
     # Llamar a la función interna
     try:
         result = generate_robust_plan_with_retries()
+        
+        # Registrar resultado exitoso
+        if monitoring_available:
+            record_plan_generation_result(
+                task_id, 
+                result.get('plan_source', 'unknown'), 
+                True,
+                attempts=1
+            )
+        
         # Asegurar que el primer paso esté activo
         if result.get('steps') and len(result['steps']) > 0:
             result['steps'][0]['active'] = True
@@ -6939,6 +6957,17 @@ IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Ca
         return result
     except Exception as e:
         logger.error(f"❌ Plan generation error: {e}")
+        
+        # Registrar error en monitoreo
+        if monitoring_available:
+            record_plan_generation_result(
+                task_id, 
+                'robust_direct_fallback', 
+                False,
+                attempts=1,
+                error_reason=str(e)[:200]
+            )
+        
         return generate_robust_plan_direct(message, task_id, task_category)
 
 
