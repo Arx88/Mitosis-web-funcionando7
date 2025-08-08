@@ -490,4 +490,78 @@ El sistema DE VALIDACIÓN EXISTE pero puede necesitar ajustes para ser más estr
 ### ⚡ **PRÓXIMO PASO**: 
 **Crea una nueva tarea en el frontend** - los nuevos logs mostrarán exactamente dónde están los problemas reales.
 
+## 🚨 **PROBLEMA CRÍTICO IDENTIFICADO - SESIÓN ACTUAL 2025-01-24**
+
+### 📝 **REPORTE USUARIO CONFIRMADO**:
+- **Issue principal**: "Búsquedas web PESIMAS, pone keywords sin sentido como REALIZA INFORME en el buscador"
+- **Síntomas reportados**: Solo recorre 1-2 fuentes, no logra sacar información real
+- **Keywords problemáticas**: Sistema genera términos inútiles como "REALIZA INFORME"
+
+### 🔍 **DIAGNÓSTICO COMPLETADO**:
+
+#### ✅ **1. PROBLEMA UI IDENTIFICADO**:
+- **Botón envío deshabilitado**: Screenshot capturado confirma botón gris deshabilitado
+- **Usuario no puede enviar tareas**: Estado bloqueado impide testing de keywords
+
+#### 🎯 **2. ROOT CAUSE ENCONTRADO - LÍNEA ESPECÍFICA**:
+**Archivo**: `/app/backend/src/tools/unified_web_search_tool.py`
+**Línea problemática**: 1082 y función `_optimize_for_data_analysis()` líneas 193-246
+
+**Código problemático identificado**:
+```python
+clean_text = re.sub(r'buscar información sobre|utilizar la herramienta|web_search para|información actualizada|específica sobre|el estado de|en el año|noticias relacionadas con|en el año', '', clean_text)
+```
+
+#### 🚨 **3. PROBLEMAS ESPECÍFICOS DETECTADOS**:
+
+**A. KEYWORDS DESTRUCTIVOS** (líneas 204-205):
+```python
+cleaned_text = re.sub(r'\b(genera|buscar|datos|análisis|información|sobre|de|la|el|los|las|un|una|del|por)\b', '', text, flags=re.IGNORECASE)
+```
+- **Problema**: Remueve palabras esenciales como "datos", "análisis" 
+- **Resultado**: Query "análisis datos Javier Milei" → se convierte en "Javier Milei"
+
+**B. LÓGICA FALLBACK DEFECTUOSA** (líneas 244-245):
+```python
+fallback_result = "información general completa actualizada"
+```  
+- **Problema**: Keywords genéricos inútiles para búsqueda
+- **Resultado**: Sistema busca "información general completa actualizada" en lugar del tema específico
+
+**C. FUNCIÓN DESTRUCTIVA EXTRACT_CLEAN_KEYWORDS** (líneas 1076-1100):
+- **Problema**: Regex mal diseñado destruye contexto del query
+- **Keywords problemáticos**: "REALIZA INFORME", "UTILIZAR HERRAMIENTA"
+- **Resultado**: Términos sin sentido que no devuelven resultados útiles
+
+#### 📊 **4. IMPACTO DEL PROBLEMA**:
+- **✅ Navegación web**: Sistema SÍ navega (X11 virtual activo)
+- **❌ Keywords generation**: Términos de búsqueda inútiles
+- **❌ Content quality**: 1-2 fuentes porque búsquedas fallan
+- **❌ Information extraction**: Datos irrelevantes por búsquedas mal dirigidas
+
+### 🎯 **PLAN DE CORRECCIÓN IDENTIFICADO**:
+
+#### **PASO 1**: Arreglar generación de keywords
+- Corregir función `_optimize_for_data_analysis()`
+- Eliminar regex destructivos  
+- Implementar extracción inteligente de términos principales
+
+#### **PASO 2**: Arreglar función `extract_clean_keywords()`
+- Corregir línea 1082 regex problemático
+- Preservar contexto esencial de búsqueda
+- Evitar términos meta como "REALIZA INFORME"
+
+#### **PASO 3**: Mejorar diversidad de fuentes
+- Implementar búsquedas múltiples con keywords diferentes
+- Evitar dependencia de una sola búsqueda genérica
+- Verificar que se acceda a múltiples dominios únicos
+
+#### **PASO 4**: Testing y validación
+- Crear tarea de prueba con términos específicos
+- Verificar que keywords generados sean útiles
+- Confirmar que múltiples fuentes sean accedidas
+
+### ⚡ **SIGUIENTE ACCIÓN INMEDIATA**: 
+**IMPLEMENTAR CORRECCIONES EN unified_web_search_tool.py y reiniciar servicios**
+
 ---
