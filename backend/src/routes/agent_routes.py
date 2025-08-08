@@ -4198,9 +4198,35 @@ La tarea se completó exitosamente pero hubo limitaciones en la generación del 
 def evaluate_step_completion_with_agent(step: dict, step_result: dict, original_message: str, task_id: str) -> dict:
     """
     🧠 NUEVA FUNCIONALIDAD: El agente evalúa si un paso está realmente completado
-    VERSIÓN SIMPLIFICADA CON LÓGICA DETERMINÍSTICA
+    VERSIÓN CON ENHANCED STEP VALIDATION INTEGRATION
     """
     try:
+        # 🔥 CRITICAL: Check for enhanced validation results first
+        if 'enhanced_validation' in step_result and step_result['enhanced_validation']:
+            enhanced_validation = step_result['enhanced_validation']
+            if not enhanced_validation.get('meets_requirements', True):
+                logger.warning(f"❌ ENHANCED VALIDATION FAILED - Step does not meet super strict criteria")
+                return {
+                    'step_completed': False,
+                    'should_continue': True,
+                    'reason': f'Enhanced validation failed: {enhanced_validation.get("validation_summary", "Requirements not met")}',
+                    'feedback': enhanced_validation.get('validation_summary', 'Step requires more comprehensive research'),
+                    'enhanced_validation_failed': True,
+                    'specific_recommendations': enhanced_validation.get('specific_recommendations', [])
+                }
+            else:
+                logger.info(f"✅ ENHANCED VALIDATION PASSED - Score: {enhanced_validation.get('completeness_score', 0)}%")
+        
+        # Check for validation failure flag
+        if step_result.get('validation_failed', False):
+            return {
+                'step_completed': False,
+                'should_continue': True,
+                'reason': 'Step failed enhanced validation requirements',
+                'feedback': step_result.get('enhanced_validation', {}).get('validation_summary', 'Step requires more research'),
+                'enhanced_validation_failed': True
+            }
+        
         # 🔧 NUEVA IMPLEMENTACIÓN: Evaluación determinística inteligente
         tool_name = step.get('tool', '')
         success = step_result.get('success', False)
