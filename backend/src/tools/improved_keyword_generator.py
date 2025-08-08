@@ -265,6 +265,40 @@ class IntelligentKeywordGenerator:
         
         return result
 
+# Funciones públicas para usar desde unified_web_search_tool.py
+def get_intelligent_keywords(query_text: str) -> str:
+    """🎯 Función principal para generar keywords inteligentes"""
+    generator = IntelligentKeywordGenerator()
+    return generator.get_intelligent_keywords(query_text)
+
+def get_multiple_search_variants(query_text: str, count: int = 3) -> List[str]:
+    """🔄 Generar múltiples variantes de búsqueda"""
+    generator = IntelligentKeywordGenerator()
+    return generator.get_multiple_search_variants(query_text, count)
+
+# Testing directo si se ejecuta como script
+if __name__ == "__main__":
+    # Tests de casos problemáticos reportados por el usuario
+    test_cases = [
+        "Buscar información sobre 'Javier Milei' en bing y explorar los primeros resultados",
+        "realizar análisis de datos específicos sobre inteligencia artificial",  
+        "genera informe sobre Arctic Monkeys discografía",
+        "utilizar herramienta web_search para obtener datos económicos Argentina",
+        "información específica sobre inflación Argentina 2024"
+    ]
+    
+    print("🧪 TESTING INTELLIGENT KEYWORD GENERATOR")
+    print("=" * 60)
+    
+    for i, test in enumerate(test_cases, 1):
+        print(f"\n🔍 TEST {i}: {test}")
+        result = get_intelligent_keywords(test)
+        print(f"✅ RESULT: {result}")
+        
+        variants = get_multiple_search_variants(test, 2)
+        print(f"🔄 VARIANTS: {variants}")
+        print("-" * 40)
+
 # Instancia global para usar en unified_web_search_tool.py
 intelligent_keyword_generator = IntelligentKeywordGenerator()
 
