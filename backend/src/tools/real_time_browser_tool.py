@@ -669,9 +669,20 @@ class RealTimeBrowserTool(BaseTool):
                     links = await page.query_selector_all(selector)
                     if links:
                         self._emit_progress(f"✅ Encontrados {len(links)} resultados con: {selector}")
+                        
+                        # DEBUG: Mostrar los primeros enlaces encontrados
+                        for i, link in enumerate(links[:3]):
+                            try:
+                                href = await link.get_attribute('href')
+                                text = await link.text_content()
+                                self._emit_progress(f"🔗 DEBUG Link {i+1}: {text[:40]}... -> {href[:60]}...")
+                            except:
+                                self._emit_progress(f"🔗 DEBUG Link {i+1}: [Error getting link info]")
+                        
                         result_links = links[:3]  # Tomar primeros 3 resultados
                         break
-                except:
+                except Exception as e:
+                    self._emit_progress(f"⚠️ Error con selector {selector}: {str(e)}")
                     continue
             
             if not result_links:
