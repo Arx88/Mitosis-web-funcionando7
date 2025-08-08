@@ -9152,13 +9152,7 @@ CREAR EL CONTENIDO COMPLETO AHORA:"""
                     'path': f"/tmp/{filename}",
                     'content': f"Entrega del paso: {title}\n\nDescripción: {description}\n\nResultado: Paso completado exitosamente\n\nFecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
                 }
-            elif tool == 'processing':
-                # Mapear processing a comprehensive_research
-                tool = 'comprehensive_research'
-                tool_params = {
-                    'query': f"Process and analyze: {title} {description}",
-                    'max_results': 5
-                }
+            # PROCESSING DUPLICADO ELIMINADO - Ya está manejado en la línea 8763 con ollama_processing
             elif tool == 'planning':
                 # Mapear planning a file_manager para crear archivos de planificación
                 tool = 'file_manager'
