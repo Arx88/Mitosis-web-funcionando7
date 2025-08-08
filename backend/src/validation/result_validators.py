@@ -444,18 +444,28 @@ RESULT_VALIDATORS = {
     'generic': validate_generic_processing_result
 }
 
-def validate_step_result(tool_name: str, result: dict) -> Tuple[str, str]:
+def validate_step_result(tool_name: str, result: dict, original_query: str = "", step_title: str = "") -> Tuple[str, str]:
     """
-    Valida el resultado de un paso usando el validador apropiado.
+    Valida el resultado de un paso usando el validador apropiado CON VALIDACIÓN DE RELEVANCIA MEJORADA.
     
     Args:
         tool_name: Nombre de la herramienta/paso
         result: Resultado a validar
+        original_query: Query original de la tarea (NUEVO - opcional para compatibilidad)
+        step_title: Título del paso (NUEVO - opcional para compatibilidad)
     
     Returns:
         Tuple[str, str]: (estado, mensaje) donde estado es 'success', 'warning', o 'failure'
     """
     try:
+        # 🚀 VALIDACIÓN ESPECIAL PARA WEB_SEARCH CON RELEVANCIA
+        if tool_name == 'web_search' and original_query:
+            return validate_web_search_result(result, original_query, step_title)
+        elif tool_name == 'web_search':
+            # Fallback sin query original
+            return validate_web_search_result(result)
+        
+        # Para otras herramientas, usar validador específico
         validator = RESULT_VALIDATORS.get(tool_name)
         if validator:
             return validator(result)
