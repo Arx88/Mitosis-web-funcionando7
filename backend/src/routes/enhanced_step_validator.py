@@ -438,6 +438,200 @@ class EnhancedStepValidator:
                    f"Patrones: {pattern_validation['patterns_found_count']} de {len(self.critical_patterns)} elementos | "
                    f"NECESITA MÁS INFORMACIÓN ESPECÍFICA")
 
+    def validate_final_content_quality(self, step_title: str, content: str, task_context: str = "") -> Dict[str, Any]:
+        """
+        🔥 VALIDACIÓN SUPER ESTRICTA PARA PASOS FINALES (creation, processing)
+        
+        Asegura que el contenido final sea REAL y específico, no metadata genérica
+        """
+        try:
+            logger.info(f"🔍 INICIANDO VALIDACIÓN DE CONTENIDO FINAL: {step_title}")
+            
+            # 1. Detectar metadata genérica y frases prohibidas
+            meta_content_detected = self._detect_forbidden_meta_content_in_text(content)
+            
+            # 2. Análizar calidad del contenido
+            content_quality = self._analyze_final_content_quality(content, task_context)
+            
+            # 3. Verificar especificidad vs genericidad
+            specificity_check = self._check_content_specificity(content, step_title)
+            
+            # 4. Calcular score final
+            final_score = self._calculate_final_content_score(
+                meta_content_detected, content_quality, specificity_check
+            )
+            
+            # 5. Decisión de completitud
+            is_acceptable = (
+                not meta_content_detected['has_meta_content'] and
+                content_quality['is_substantial'] and
+                specificity_check['is_specific'] and
+                final_score >= 70
+            )
+            
+            result = {
+                'meets_requirements': is_acceptable,
+                'completeness_score': final_score,
+                'meta_content_detected': meta_content_detected,
+                'content_quality': content_quality,
+                'specificity_check': specificity_check,
+                'validation_summary': self._generate_final_content_summary(
+                    is_acceptable, final_score, meta_content_detected, content_quality
+                ),
+                'recommendations': self._generate_content_improvement_recommendations(
+                    meta_content_detected, content_quality, specificity_check
+                ),
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            if is_acceptable:
+                logger.info(f"✅ CONTENIDO FINAL APROBADO - Score: {final_score}%")
+            else:
+                logger.warning(f"❌ CONTENIDO FINAL RECHAZADO - Score: {final_score}% - Contiene metadata genérica")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"❌ Error en validación de contenido final: {str(e)}")
+            return {
+                'meets_requirements': False,
+                'completeness_score': 0,
+                'error': str(e),
+                'validation_summary': f'Error en validación: {str(e)}'
+            }
+
+    def _detect_forbidden_meta_content_in_text(self, content: str) -> Dict[str, Any]:
+        """Detecta contenido meta genérico en texto final"""
+        forbidden_phrases = [
+            r'\bse realizará\b', r'\bse analizará\b', r'\bse estudiará\b',
+            r'\bel presente\s+(estudio|análisis|trabajo|documento)\b',
+            r'\bse llevará\s+a\s+cabo\b', r'\bse procederá\s+a\b',
+            r'\ba continuación\s+se\b', r'\bse expondrá\b', r'\bse detallará\b',
+            r'\bse mostrará\b', r'\bse presentará\b', r'\bse desarrollará\b',
+            r'\bpróximamente\b', r'\ben\s+el\s+siguiente\s+(capítulo|apartado)\b',
+            r'\bse incluirán?\b', r'\bse abordarán?\b', r'\bse tratarán?\b',
+            r'\*Este\s+es\s+un\b', r'\*Esto\s+es\s+un\b',
+            r'\bFecha:\s+\d{4}-\d{2}-\d{2}\b', r'\bGenerado\s+automáticamente\b'
+        ]
+        
+        meta_phrases_found = []
+        content_lower = content.lower()
+        
+        for pattern in forbidden_phrases:
+            matches = re.findall(pattern, content_lower, re.IGNORECASE)
+            if matches:
+                meta_phrases_found.extend(matches)
+        
+        return {
+            'has_meta_content': len(meta_phrases_found) > 0,
+            'meta_phrases_found': meta_phrases_found,
+            'meta_phrase_count': len(meta_phrases_found)
+        }
+
+    def _analyze_final_content_quality(self, content: str, task_context: str = "") -> Dict[str, Any]:
+        """Analiza la calidad del contenido final"""
+        content_length = len(content.strip())
+        
+        # Contar elementos sustanciales
+        sentences = len(re.findall(r'[.!?]+', content))
+        paragraphs = len([p for p in content.split('\n\n') if p.strip()])
+        specific_data = len(re.findall(r'\d+|[A-Z][a-z]+\s+[A-Z][a-z]+', content))  # Números o nombres propios
+        
+        return {
+            'is_substantial': content_length >= 500 and sentences >= 5,
+            'content_length': content_length,
+            'sentence_count': sentences,
+            'paragraph_count': paragraphs,
+            'specific_data_count': specific_data,
+            'has_real_information': specific_data >= 3
+        }
+
+    def _check_content_specificity(self, content: str, step_title: str) -> Dict[str, Any]:
+        """Verifica que el contenido sea específico al tema solicitado"""
+        # Extraer palabras clave del título
+        title_keywords = re.findall(r'\b[a-záéíóú]{3,}\b', step_title.lower())
+        
+        # Contar cuántas palabras clave aparecen en el contenido
+        content_lower = content.lower()
+        keywords_found = [kw for kw in title_keywords if kw in content_lower]
+        
+        specificity_score = (len(keywords_found) / max(len(title_keywords), 1)) * 100
+        
+        return {
+            'is_specific': specificity_score >= 50,
+            'specificity_score': specificity_score,
+            'title_keywords': title_keywords,
+            'keywords_found': keywords_found,
+            'keyword_coverage': len(keywords_found)
+        }
+
+    def _calculate_final_content_score(self, meta_content: Dict, content_quality: Dict, 
+                                     specificity: Dict) -> int:
+        """Calcula score final para contenido"""
+        score = 100
+        
+        # Penalizaciones por metadata
+        if meta_content['has_meta_content']:
+            score -= 50  # Penalización severa por metadata
+        
+        # Penalizaciones por baja calidad
+        if not content_quality['is_substantial']:
+            score -= 30
+        
+        if not content_quality['has_real_information']:
+            score -= 20
+        
+        # Penalizaciones por falta de especificidad
+        if not specificity['is_specific']:
+            score -= 25
+        
+        return max(0, score)
+
+    def _generate_final_content_summary(self, is_acceptable: bool, score: int, 
+                                      meta_content: Dict, content_quality: Dict) -> str:
+        """Genera resumen de validación de contenido final"""
+        if is_acceptable:
+            return f"✅ CONTENIDO FINAL APROBADO - Score: {score}% - Sin metadata genérica, información específica presente"
+        else:
+            issues = []
+            if meta_content['has_meta_content']:
+                issues.append(f"metadata genérica detectada ({meta_content['meta_phrase_count']} frases)")
+            if not content_quality['is_substantial']:
+                issues.append(f"contenido insuficiente ({content_quality['content_length']} chars)")
+            if not content_quality['has_real_information']:
+                issues.append("falta información específica")
+            
+            return f"❌ CONTENIDO FINAL RECHAZADO - Score: {score}% - Problemas: {', '.join(issues)}"
+
+    def _generate_content_improvement_recommendations(self, meta_content: Dict, 
+                                                    content_quality: Dict, 
+                                                    specificity: Dict) -> List[str]:
+        """Genera recomendaciones específicas para mejorar el contenido"""
+        recommendations = []
+        
+        if meta_content['has_meta_content']:
+            recommendations.append(
+                "Eliminar frases genéricas como 'se realizará', 'se analizará' y reemplazar con contenido específico"
+            )
+        
+        if not content_quality['is_substantial']:
+            recommendations.append(
+                f"Expandir contenido a mínimo 500 caracteres (actual: {content_quality['content_length']})"
+            )
+        
+        if not content_quality['has_real_information']:
+            recommendations.append(
+                "Incluir datos específicos: nombres, fechas, números, hechos concretos"
+            )
+        
+        if not specificity['is_specific']:
+            recommendations.append(
+                f"Incluir más información específica sobre: {', '.join(specificity['title_keywords'][:3])}"
+            )
+        
+        return recommendations[:3]  # Máximo 3 recomendaciones
+
+
 # Función de wrapper para integración
 def validate_step_1_with_enhanced_validator(step_description: str, step_title: str, 
                                           collected_results: List[Dict[str, Any]], 
