@@ -6884,6 +6884,191 @@ IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Ca
         logger.error(f"❌ Plan generation error: {e}")
         return generate_intelligent_fallback_plan(message, task_id, task_category)
 
+
+def generate_robust_plan_direct(message: str, task_id: str, task_category: str = "general") -> dict:
+    """
+    🔥 NUEVO: Genera plan robusto directo usando análisis inteligente
+    Esta función reemplaza los fallbacks básicos con planes más inteligentes
+    """
+    logger.info(f"🔧 Generando plan robusto directo para: {message[:100]}...")
+    
+    # Analizar tipo de tarea de manera inteligente
+    message_lower = message.lower()
+    
+    # Determinar tipo de plan basado en palabras clave
+    if any(word in message_lower for word in ['buscar', 'investigar', 'encontrar', 'información', 'datos']):
+        plan_type = 'research'
+    elif any(word in message_lower for word in ['analizar', 'comparar', 'evaluar', 'estudiar']):
+        plan_type = 'analysis'
+    elif any(word in message_lower for word in ['crear', 'generar', 'hacer', 'escribir', 'desarrollar']):
+        plan_type = 'creation'
+    elif any(word in message_lower for word in ['planificar', 'organizar', 'estructurar']):
+        plan_type = 'planning'
+    else:
+        plan_type = 'general'
+    
+    # Generar pasos específicos según el tipo
+    if plan_type == 'research':
+        steps = [
+            {
+                "id": "step-1",
+                "title": f"Investigación exhaustiva: {message[:40]}",
+                "description": f"Realizar búsqueda comprehensiva de información sobre: {message}",
+                "tool": "web_search",
+                "completed": False,
+                "active": True,
+                "status": "active"
+            },
+            {
+                "id": "step-2",
+                "title": "Análisis de fuentes encontradas",
+                "description": "Procesar, analizar y sintetizar toda la información recopilada",
+                "tool": "analysis",
+                "completed": False,
+                "active": False,
+                "status": "pending"
+            },
+            {
+                "id": "step-3",
+                "title": "Compilación de resultados",
+                "description": "Crear documento comprehensivo con todos los hallazgos organizados",
+                "tool": "creation",
+                "completed": False,
+                "active": False,
+                "status": "pending"
+            }
+        ]
+        complexity = "media"
+        time_estimate = "25-35 minutos"
+        
+    elif plan_type == 'analysis':
+        steps = [
+            {
+                "id": "step-1",
+                "title": f"Recopilación de datos para análisis: {message[:30]}",
+                "description": f"Buscar información y datos relevantes para análisis de: {message}",
+                "tool": "web_search",
+                "completed": False,
+                "active": True,
+                "status": "active"
+            },
+            {
+                "id": "step-2",
+                "title": "Análisis profundo de datos",
+                "description": "Realizar análisis detallado, identificar patrones y extraer conclusiones",
+                "tool": "analysis",
+                "completed": False,
+                "active": False,
+                "status": "pending"
+            },
+            {
+                "id": "step-3",
+                "title": "Informe de análisis",
+                "description": "Crear informe completo con análisis, conclusiones y recomendaciones",
+                "tool": "creation",
+                "completed": False,
+                "active": False,
+                "status": "pending"
+            }
+        ]
+        complexity = "alta"
+        time_estimate = "30-40 minutos"
+        
+    elif plan_type == 'creation':
+        steps = [
+            {
+                "id": "step-1",
+                "title": f"Investigación para creación: {message[:30]}",
+                "description": f"Buscar referencias, ejemplos y recursos necesarios para: {message}",
+                "tool": "web_search",
+                "completed": False,
+                "active": True,
+                "status": "active"
+            },
+            {
+                "id": "step-2",
+                "title": "Planificación y estructuración",
+                "description": "Analizar requisitos y planificar estructura del contenido a crear",
+                "tool": "analysis",
+                "completed": False,
+                "active": False,
+                "status": "pending"
+            },
+            {
+                "id": "step-3",
+                "title": "Creación del contenido final",
+                "description": "Desarrollar y crear el producto final solicitado",
+                "tool": "creation",
+                "completed": False,
+                "active": False,
+                "status": "pending"
+            }
+        ]
+        complexity = "media"
+        time_estimate = "25-35 minutos"
+        
+    else:  # general o planning
+        steps = [
+            {
+                "id": "step-1",
+                "title": f"Exploración del tema: {message[:40]}",
+                "description": f"Investigar y recopilar información relevante sobre: {message}",
+                "tool": "web_search",
+                "completed": False,
+                "active": True,
+                "status": "active"
+            },
+            {
+                "id": "step-2",
+                "title": "Procesamiento de información",
+                "description": "Analizar, organizar y procesar la información recopilada",
+                "tool": "analysis",
+                "completed": False,
+                "active": False,
+                "status": "pending"
+            },
+            {
+                "id": "step-3",
+                "title": "Resultado final",
+                "description": "Crear el producto final o respuesta solicitada",
+                "tool": "creation",
+                "completed": False,
+                "active": False,
+                "status": "pending"
+            }
+        ]
+        complexity = "media"
+        time_estimate = "20-30 minutos"
+    
+    # Guardar datos de la tarea
+    task_data = {
+        'id': task_id,
+        'message': message,
+        'plan': steps,
+        'task_type': plan_type,
+        'complexity': complexity,
+        'estimated_total_time': time_estimate,
+        'created_at': datetime.now().isoformat(),
+        'status': 'plan_generated',
+        'plan_source': 'robust_direct'
+    }
+    
+    save_task_data(task_id, task_data)
+    
+    logger.info(f"✅ Plan robusto directo creado con {len(steps)} pasos (tipo: {plan_type})")
+    
+    result = {
+        'steps': steps,
+        'task_type': plan_type,
+        'complexity': complexity,
+        'estimated_total_time': time_estimate,
+        'plan_source': 'robust_direct_generation',
+        'validation_system': 'robust'
+    }
+    
+    return result
+
+
 @agent_bp.route('/update-task-progress', methods=['POST'])
 def update_task_progress():
     """Actualiza el progreso de una tarea"""
