@@ -150,6 +150,10 @@ class IntelligentKeywordGenerator:
             r'sobre\s+([a-záéíóúñ\s]+?)(?:\s+en\s|\s+con\s|$)',  # sobre tema
             r'información.*?([a-záéíóúñ]{4,}(?:\s+[a-záéíóúñ]{4,})*)',  # información tema
             r'análisis.*?([a-záéíóúñ]{4,}(?:\s+[a-záéíóúñ]{4,})*)',  # análisis tema
+            r'mercado\s+objetivo.*?(redes\s+sociales|social\s+media|marketing)',  # mercado + marketing
+            r'tendencias\s+de\s+(redes\s+sociales|social\s+media|marketing)',  # tendencias marketing
+            r'estrategia\s+de\s+(marketing|redes\s+sociales|social\s+media)',  # estrategia marketing
+            r'comportamiento\s+de\s+la\s+audiencia',  # comportamiento audiencia
         ]
         
         for pattern in theme_patterns:
@@ -158,6 +162,20 @@ class IntelligentKeywordGenerator:
                 theme = match.group(1).strip()
                 print(f"🔧 TEMA EXTRAÍDO DE QUERY PROBLEMÁTICO: '{theme}'")
                 return self._clean_and_enhance_theme(theme)
+        
+        # Buscar conceptos específicos del contexto de marketing
+        marketing_concepts = ['marketing', 'redes sociales', 'social media', 'audiencia', 
+                             'mercado', 'tendencias', 'comportamiento', 'digital', 'contenido']
+        
+        found_concepts = []
+        for concept in marketing_concepts:
+            if concept in query_lower:
+                found_concepts.append(concept)
+        
+        if found_concepts:
+            result = ' '.join(found_concepts[:3]) + ' 2025'
+            print(f"🔧 CONCEPTOS MARKETING EXTRAÍDOS: '{result}'")
+            return result
         
         # Si no se encuentra patrón, usar extracción de entidades de emergencia
         words = re.findall(r'\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{4,}\b', query_text)
@@ -176,7 +194,7 @@ class IntelligentKeywordGenerator:
             return result
         
         # Último recurso
-        return "información actualizada noticias"
+        return "marketing digital redes sociales 2025"
     
     def _clean_and_enhance_theme(self, theme: str) -> str:
         """✨ Limpiar y mejorar tema extraído"""
