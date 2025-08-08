@@ -6631,9 +6631,20 @@ def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool =
         """🔄 Generar plan con múltiples estrategias de reintentos"""
         max_attempts = 3 if attempt_retries else 1
         
+        # 🔥 NUEVO: Importar sistema robusto de validación
+        robust_validator = None
+        if RobustValidationSystem:
+            robust_validator = RobustValidationSystem()
+            logger.info("🔧 Sistema de validación robusto inicializado")
+        
         for attempt in range(1, max_attempts + 1):
             try:
                 logger.info(f"🔄 Robust plan generation attempt {attempt}/{max_attempts} for task {task_id}")
+                
+                # 🔥 NUEVO: Si Ollama no está disponible después de 2 intentos, usar plan robusto directo
+                if attempt >= 2 and not ollama_service.is_healthy():
+                    logger.info(f"🔧 Ollama no disponible después de {attempt} intentos - Generando plan robusto directo")
+                    return generate_robust_plan_direct(message, task_id, task_category)
                 
                 # Prompts progresivamente más específicos
                 if attempt == 1:
