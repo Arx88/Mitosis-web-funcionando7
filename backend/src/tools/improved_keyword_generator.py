@@ -1,52 +1,269 @@
 """
-CORRECCIÓN CRÍTICA: Generador de Keywords Inteligente
-Reemplazo completo para las funciones problemáticas de generación de términos de búsqueda
+🧠 GENERADOR INTELIGENTE DE KEYWORDS - SOLUCIÓN COMPLETA V2.0
+Reemplaza la lógica destructiva de _extract_clean_keywords_static()
+con un sistema inteligente que preserva el contexto esencial
 
-PROBLEMA IDENTIFICADO:
-- unified_web_search_tool.py líneas 1080, 204-205 generan keywords sin sentido
-- Regex destructivos que eliminan contexto esencial 
-- Términos como "REALIZA INFORME" que no devuelven resultados útiles
+RESUELVE: 
+- Keywords inútiles como "REALIZA INFORME"
+- Pérdida de contexto importante
+- Búsquedas genéricas sin resultados
 
-SOLUCIÓN IMPLEMENTADA:
-- Extracción inteligente de entidades y conceptos principales
-- Preservación del contexto y tema central
-- Múltiples estrategias de fallback inteligentes
+IMPLEMENTA:
+- Preservación de entidades nombradas (personas, lugares)
+- Extracción inteligente de conceptos principales
+- Múltiples variantes de búsqueda específicas
+- Contexto temporal y geográfico automático
 """
 
 import re
 import logging
-from typing import List, Tuple, Optional
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 class IntelligentKeywordGenerator:
-    """
-    🧠 GENERADOR INTELIGENTE DE KEYWORDS PARA BÚSQUEDAS WEB
-    
-    Reemplaza las funciones problemáticas con lógica avanzada que:
-    1. Preserva el contexto esencial de la consulta
-    2. Extrae entidades principales (personas, lugares, conceptos)
-    3. Genera múltiples variantes de búsqueda específicas
-    4. Evita términos meta que no producen resultados útiles
-    """
+    """🎯 Generador inteligente de keywords y términos de búsqueda"""
     
     def __init__(self):
-        # Palabras que deben ser preservadas siempre (entidades políticas, económicas, etc)
-        self.preserve_words = {
-            'milei', 'argentina', 'javier', 'presidente', 'político', 'economía', 'inflación',
-            'ideología', 'declaraciones', 'biografía', 'trayectoria', 'libertario',
-            'arctic', 'monkeys', 'banda', 'música', 'rock', 'discografía',
-            'inteligencia', 'artificial', 'ai', 'tecnología', 'datos', 'machine', 'learning'
+        # Entidades importantes que SIEMPRE deben preservarse
+        self.preserve_entities = {
+            'personas': ['milei', 'javier', 'biden', 'musk', 'elon', 'trump', 'cristina', 'massa', 
+                        'alberto', 'fernández', 'macri', 'mauricio', 'cristiano', 'messi', 'lionel'],
+            'lugares': ['argentina', 'buenos', 'aires', 'córdoba', 'mendoza', 'españa', 'madrid', 
+                       'barcelona', 'valencia', 'méxico', 'colombia', 'chile', 'usa', 'eeuu'],
+            'organizaciones': ['fifa', 'onu', 'oea', 'mercosur', 'gobierno', 'congress', 'senate'],
+            'tecnologia': ['inteligencia', 'artificial', 'blockchain', 'bitcoin', 'crypto', 'tesla', 
+                          'apple', 'google', 'microsoft', 'meta', 'openai', 'chatgpt'],
+            'conceptos': ['economía', 'política', 'inflación', 'dólar', 'peso', 'elecciones', 
+                         'democracia', 'libertad', 'socialismo', 'capitalismo', 'crisis'],
+            'temporal': ['2024', '2025', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                        'actual', 'reciente', 'nuevo', 'última', 'último'],
+            'musica': ['arctic', 'monkeys', 'banda', 'música', 'rock', 'discografía', 'álbum', 
+                      'canción', 'concierto', 'gira', 'festival']
         }
         
-        # Palabras meta que deben ser eliminadas completamente
+        # Palabras meta que deben eliminarse COMPLETAMENTE
         self.meta_words = {
-            'buscar', 'información', 'sobre', 'utilizar', 'herramienta', 'web_search',
-            'realizar', 'análisis', 'genera', 'informe', 'específica', 'actualizada',
-            'relacionadas', 'noticias', 'datos', 'para', 'con', 'una', 'del', 'las', 'los',
-            'que', 'esta', 'este', 'año', 'search', 'estado', 'completa', 'general'
+            'instrucciones': ['buscar', 'información', 'sobre', 'acerca', 'utilizar', 'herramienta', 
+                             'web_search', 'realizar', 'generar', 'crear', 'obtener', 'necesario',
+                             'completar', 'específico', 'datos', 'análisis', 'informe'],
+            'conectores': ['para', 'con', 'por', 'desde', 'hasta', 'durante', 'mediante', 'según',
+                          'ante', 'bajo', 'contra', 'entre', 'hacia', 'según', 'sin', 'tras'],
+            'articulos': ['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas'],
+            'pronombres': ['que', 'cual', 'quien', 'donde', 'cuando', 'como', 'este', 'esta', 'ese', 'esa']
         }
+        
+        # Patrones problemáticos que indican queries mal formados
+        self.problematic_patterns = [
+            r'\brealiza\s+informe\b',
+            r'\butilizar\s+herramienta\b', 
+            r'\bweb_search\s+para\b',
+            r'\binformación\s+específica\s+sobre\b',
+            r'\bgenera\s+(un|una)\s+(análisis|informe|reporte)\b'
+        ]
+    
+    def get_intelligent_keywords(self, query_text: str) -> str:
+        """🎯 FUNCIÓN PRINCIPAL: Generar keywords inteligentes"""
+        
+        if not query_text or len(query_text.strip()) < 3:
+            return "información actualizada"
+        
+        print(f"🧠 INTELLIGENT GENERATOR INPUT: '{query_text}'")
+        
+        # 1. Detectar si es query problemático
+        if self._is_problematic_query(query_text):
+            print("⚠️ PROBLEMATIC QUERY detectado - aplicando corrección especial")
+            return self._fix_problematic_query(query_text)
+        
+        # 2. Extraer entidades importantes (nombres propios, conceptos clave)
+        entities = self._extract_important_entities(query_text)
+        
+        # 3. Extraer conceptos principales 
+        concepts = self._extract_main_concepts(query_text)
+        
+        # 4. Combinar y optimizar
+        result = self._combine_and_optimize(entities, concepts, query_text)
+        
+        print(f"✅ INTELLIGENT RESULT: '{query_text}' → '{result}'")
+        return result
+    
+    def get_multiple_search_variants(self, query_text: str, count: int = 3) -> List[str]:
+        """🔄 Generar múltiples variantes de búsqueda para diversidad"""
+        
+        base_keywords = self.get_intelligent_keywords(query_text)
+        variants = [base_keywords]
+        
+        # Variante 1: Con contexto temporal
+        if '2025' not in base_keywords and '2024' not in base_keywords:
+            variants.append(f"{base_keywords} 2025 actualidad")
+        
+        # Variante 2: Con especificidad geográfica si aplicable
+        if any(lugar in query_text.lower() for lugar in self.preserve_entities['lugares']):
+            variants.append(f"{base_keywords} noticias recientes")
+        else:
+            variants.append(f"{base_keywords} información completa")
+        
+        # Variante 3: Con enfoque específico
+        if any(persona in query_text.lower() for persona in self.preserve_entities['personas']):
+            variants.append(f"{base_keywords} biografía trayectoria")
+        elif any(tech in query_text.lower() for tech in self.preserve_entities['tecnologia']):
+            variants.append(f"{base_keywords} definición características")
+        else:
+            variants.append(f"{base_keywords} guía completa")
+        
+        return variants[:count]
+    
+    def _is_problematic_query(self, query_text: str) -> bool:
+        """🚨 Detectar queries problemáticos que generan keywords inútiles"""
+        
+        query_lower = query_text.lower()
+        
+        # Verificar patrones problemáticos conocidos
+        for pattern in self.problematic_patterns:
+            if re.search(pattern, query_lower):
+                return True
+        
+        # Verificar si tiene muchas palabras meta vs. pocas entidades
+        meta_count = sum(1 for category in self.meta_words.values() 
+                        for word in category if word in query_lower)
+        
+        entity_count = sum(1 for category in self.preserve_entities.values()
+                          for entity in category if entity in query_lower)
+        
+        # Si hay más de 3 palabras meta y menos de 1 entidad, es problemático
+        return meta_count > 3 and entity_count < 1
+    
+    def _fix_problematic_query(self, query_text: str) -> str:
+        """🔧 Reparar queries problemáticos extrayendo el tema real"""
+        
+        query_lower = query_text.lower()
+        
+        # Buscar patrones específicos de tema
+        theme_patterns = [
+            r'sobre\s+"([^"]+)"',  # sobre "tema"
+            r'sobre\s+([a-záéíóúñ\s]+?)(?:\s+en\s|\s+con\s|$)',  # sobre tema
+            r'información.*?([a-záéíóúñ]{4,}(?:\s+[a-záéíóúñ]{4,})*)',  # información tema
+            r'análisis.*?([a-záéíóúñ]{4,}(?:\s+[a-záéíóúñ]{4,})*)',  # análisis tema
+        ]
+        
+        for pattern in theme_patterns:
+            match = re.search(pattern, query_text, re.IGNORECASE)
+            if match:
+                theme = match.group(1).strip()
+                print(f"🔧 TEMA EXTRAÍDO DE QUERY PROBLEMÁTICO: '{theme}'")
+                return self._clean_and_enhance_theme(theme)
+        
+        # Si no se encuentra patrón, usar extracción de entidades de emergencia
+        words = re.findall(r'\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{4,}\b', query_text)
+        significant_words = []
+        
+        for word in words:
+            word_lower = word.lower()
+            # Incluir si es entidad importante o no es palabra meta
+            if (any(word_lower in entities for entities in self.preserve_entities.values()) or
+                not any(word_lower in metas for metas in self.meta_words.values())):
+                significant_words.append(word_lower)
+        
+        if significant_words:
+            result = ' '.join(significant_words[:4])
+            print(f"🔧 EMERGENCIA - Palabras significativas extraídas: '{result}'")
+            return result
+        
+        # Último recurso
+        return "información actualizada noticias"
+    
+    def _clean_and_enhance_theme(self, theme: str) -> str:
+        """✨ Limpiar y mejorar tema extraído"""
+        
+        # Remover comillas y espacios extra
+        clean_theme = re.sub(r'["\']', '', theme).strip()
+        
+        # Si el tema es muy corto, agregarlo contexto
+        if len(clean_theme.split()) < 2:
+            return f"{clean_theme} información completa"
+        
+        return clean_theme
+    
+    def _extract_important_entities(self, query_text: str) -> List[str]:
+        """🏷️ Extraer entidades importantes (nombres propios, conceptos clave)"""
+        
+        entities = []
+        query_lower = query_text.lower()
+        
+        # Buscar todas las entidades de alta prioridad
+        for category, entity_list in self.preserve_entities.items():
+            for entity in entity_list:
+                if entity in query_lower:
+                    entities.append(entity)
+        
+        # Buscar nombres propios adicionales (Capitalizados)
+        proper_nouns = re.findall(r'\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*\b', query_text)
+        for noun in proper_nouns:
+            if len(noun) > 3:
+                entities.append(noun.lower())
+        
+        # Remover duplicados manteniendo orden
+        seen = set()
+        unique_entities = []
+        for entity in entities:
+            if entity not in seen:
+                seen.add(entity)
+                unique_entities.append(entity)
+        
+        return unique_entities[:6]  # Máximo 6 entidades más importantes
+    
+    def _extract_main_concepts(self, query_text: str) -> List[str]:
+        """💡 Extraer conceptos principales del texto"""
+        
+        concepts = []
+        
+        # Extraer palabras significativas (4+ caracteres)
+        words = re.findall(r'\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{4,}\b', query_text)
+        
+        for word in words:
+            word_lower = word.lower()
+            
+            # Incluir si NO es palabra meta
+            is_meta = any(word_lower in meta_category for meta_category in self.meta_words.values())
+            
+            if not is_meta and len(word_lower) >= 4:
+                concepts.append(word_lower)
+        
+        return concepts[:8]  # Máximo 8 conceptos
+    
+    def _combine_and_optimize(self, entities: List[str], concepts: List[str], original_query: str) -> str:
+        """⚡ Combinar y optimizar entidades y conceptos"""
+        
+        # 1. Priorizar entidades (son más importantes)
+        important_terms = entities[:3]  # Top 3 entidades
+        
+        # 2. Agregar conceptos que no sean repetitivos
+        for concept in concepts:
+            if (concept not in important_terms and 
+                len(important_terms) < 6 and
+                not any(concept in term for term in important_terms)):  # Evitar redundancia
+                important_terms.append(concept)
+        
+        # 3. Si muy pocos términos, agregar contexto inteligente
+        if len(important_terms) < 2:
+            # Agregar contexto basado en tipo de consulta
+            if any(persona in original_query.lower() for persona in self.preserve_entities['personas']):
+                important_terms.append('biografía')
+            elif any(tech in original_query.lower() for tech in self.preserve_entities['tecnologia']):
+                important_terms.append('información')
+            else:
+                important_terms.append('actualidad')
+        
+        # 4. Construir resultado final
+        result = ' '.join(important_terms[:5])  # Máximo 5 términos
+        
+        # 5. Agregar año si no está presente y el resultado es corto
+        if ('2024' not in result and '2025' not in result and 
+            len(result.split()) < 4):
+            result += ' 2025'
+        
+        return result
     
     def generate_smart_keywords(self, original_query: str, max_keywords: int = 4) -> str:
         """
