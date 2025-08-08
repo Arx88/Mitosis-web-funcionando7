@@ -9308,8 +9308,8 @@ def generate_task_plan(title: str, task_id: str) -> Dict:
     try:
         logger.info(f"🚀 Starting generate_task_plan (unified) for task {task_id}: {title}")
         
-        # ✅ CRITICAL FIX: Use unified AI plan generation instead of duplicated code
-        plan_result = generate_unified_ai_plan(title, task_id, attempt_retries=False)  # No retries para backward compatibility
+        # ✅ CRITICAL FIX: Use unified AI plan generation WITH RETRIES for robust plan generation
+        plan_result = generate_unified_ai_plan(title, task_id, attempt_retries=True)  # Enable retries for consistent advanced plans
         
         if plan_result.get('plan_source') == 'fallback':
             logger.warning(f"⚠️ Unified plan generation returned fallback for task {task_id}")
