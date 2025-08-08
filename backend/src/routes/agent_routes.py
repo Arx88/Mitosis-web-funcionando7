@@ -6613,13 +6613,13 @@ def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool =
     # Obtener servicio de Ollama
     ollama_service = get_ollama_service()
     if not ollama_service:
-        logger.warning("⚠️ Ollama service not available, using intelligent fallback")
-        return generate_intelligent_fallback_plan(message, task_id, task_category)
+        logger.warning("⚠️ Ollama service not available, using robust direct plan")
+        return generate_robust_plan_direct(message, task_id, task_category)
     
     # Verificar que Ollama esté saludable
     if not ollama_service.is_healthy():
-        logger.warning("⚠️ Ollama service not healthy, using intelligent fallback")
-        return generate_intelligent_fallback_plan(message, task_id, task_category)
+        logger.warning("⚠️ Ollama service not healthy, using robust direct plan")
+        return generate_robust_plan_direct(message, task_id, task_category)
     
     def generate_robust_plan_with_retries() -> dict:
         """🔄 Generar plan con múltiples estrategias de reintentos"""
