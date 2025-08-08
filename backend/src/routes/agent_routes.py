@@ -8858,8 +8858,20 @@ Tarea ID: {task_id}
                 'tool_result': tool_result
             })
             
-            # 🚀 NUEVO: Copiar claves importantes del tool_result para evaluación
+            # 🔧 CORRECCIÓN CRÍTICA: Extraer contenido correcto según el tipo de herramienta
             if isinstance(tool_result, dict):
+                # Para herramientas de Ollama (processing, analysis) que devuelven contenido directo
+                if mapped_tool in ['ollama_processing', 'ollama_analysis'] and 'content' in tool_result:
+                    actual_content = tool_result['content']
+                    # Asegurar que el contenido no esté vacío
+                    if actual_content and isinstance(actual_content, str) and len(actual_content.strip()) > 0:
+                        step_result['content'] = tool_result  # Mantener estructura completa
+                        logger.info(f"✅ Contenido de Ollama extraído correctamente: {len(actual_content)} caracteres")
+                    else:
+                        logger.error(f"❌ CONTENIDO VACÍO DE OLLAMA: {mapped_tool} devolvió contenido vacío")
+                        logger.error(f"❌ Tool result keys: {list(tool_result.keys())}")
+                        logger.error(f"❌ Content value: '{tool_result.get('content', 'NO CONTENT KEY')}'")
+                
                 # Copiar claves relevantes que usa la función de evaluación
                 for key in ['results', 'count', 'search_results', 'success']:
                     if key in tool_result:
