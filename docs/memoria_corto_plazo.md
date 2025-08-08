@@ -592,7 +592,61 @@ fallback_result = "información general completa actualizada"
 - Verificar que keywords generados sean útiles
 - Confirmar que múltiples fuentes sean accedidas
 
-### ⚡ **SIGUIENTE ACCIÓN INMEDIATA**: 
-**IMPLEMENTAR CORRECCIONES EN unified_web_search_tool.py y reiniciar servicios**
+---
+
+## ✅ **CORRECCIONES COMPLETADAS EN ESTA SESIÓN - 2025-01-24**
+
+### 🛠️ **CORRECCIONES IMPLEMENTADAS**:
+
+#### ✅ **1. PROBLEMA KEYWORDS DESTRUCTIVOS - SOLUCIONADO** 
+**Archivos modificados**: 
+- `/app/backend/src/tools/improved_keyword_generator.py` - Completamente reescrito
+- `/app/backend/src/tools/unified_web_search_tool.py` - Integrado generador inteligente
+
+**Soluciones aplicadas**:
+- 🧠 **Nuevo IntelligentKeywordGenerator**: Clase completamente nueva que preserva entidades importantes
+- 🏷️ **Categorización de entidades**: personas, lugares, organizaciones, tecnología, conceptos, temporal, música
+- 🚫 **Eliminación inteligente de meta-words**: Remueve palabras instructivas que no aportan a búsquedas
+- 🔧 **Detección de queries problemáticos**: Identifica automáticamente queries que generan keywords inútiles
+- 🔄 **Múltiples variantes de búsqueda**: Genera 2-3 variantes por consulta para mayor diversidad
+- 🎯 **Funciones públicas**: `get_intelligent_keywords()` y `get_multiple_search_variants()`
+- ✅ **Integración completa**: unified_web_search_tool.py ahora usa el generador inteligente automáticamente
+
+#### ✅ **2. PROBLEMA POCAS FUENTES VISITADAS - SOLUCIONADO**
+**Archivos modificados**: 
+- `/app/backend/src/tools/real_time_browser_tool.py` líneas 682-720
+
+**Soluciones aplicadas**:
+- 🚀 **Aumentado límite de exploración**: De 4 a 8 enlaces máximos por búsqueda
+- 🌐 **Diversidad de dominios**: Sistema que evita visitar el mismo dominio dos veces
+- 📊 **Control de éxito**: Solo cuenta sitios que extraen >200 caracteres como exitosos
+- 🎯 **Meta de 6 fuentes**: Mínimo 6 sitios web diferentes con contenido real
+- 🔍 **Filtros mejorados**: Elimina sitios comerciales y de compras más efectivamente
+- 📈 **Progreso en tiempo real**: Muestra progreso "X/6 fuentes exitosas" al usuario
+- ⚡ **Parada inteligente**: Se detiene automáticamente al alcanzar 6 fuentes exitosas
+
+#### ✅ **3. PROBLEMA EXTRACCIÓN CONTENIDO DEFICIENTE - SOLUCIONADO**
+**Archivos modificados**: 
+- `/app/backend/src/tools/real_time_browser_tool.py` líneas 778-890
+
+**Soluciones aplicadas**:
+- 📝 **Extracción multi-selector**: Estrategia de 3 niveles (article → sections → body)
+- 🔍 **Selectores extendidos**: 15+ selectores CSS para encontrar contenido editorial
+- 🧹 **Limpieza inteligente**: Remueve texto de navegación y elementos no útiles  
+- 📏 **Límite aumentado**: De 2000 a 3000 caracteres máximos por sitio
+- 📊 **Métricas de calidad**: Reporta método de extracción y calidad (high/medium/low)
+- 🎯 **Contenido mínimo**: Solo sitios con >200 caracteres cuentan como exitosos
+- 🔄 **Scroll extensivo**: Scroll en 3 pasos para cargar contenido dinámico
+
+#### ✅ **4. MEJORADO MONITOREO Y PROGRESO**
+**Mejoras generales**:
+- 📱 **Mensajes más descriptivos**: Progreso detallado durante exploración
+- 📊 **Analytics de extracción**: Reporta caracteres, método y calidad por sitio
+- 🎯 **Seguimiento de dominios**: Lista de dominios únicos visitados  
+- ⏱️ **Timestamps mejorados**: Mejor tracking de tiempo por operación
+- 🔍 **Debug logging**: Información detallada para troubleshooting
+
+### ⚡ **SIGUIENTE ACCIÓN REQUERIDA**: 
+**PROBAR LAS CORRECCIONES CON TEST END-TO-END COMPLETO**
 
 ---
