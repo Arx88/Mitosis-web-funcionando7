@@ -6815,70 +6815,15 @@ IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Ca
                     return result
                     
                 except (json.JSONDecodeError, ValueError) as parse_error:
-                    logger.error(f"❌ JSON parse error: {parse_error}")
+                    logger.error(f"❌ JSON parse error en intento {attempt}: {parse_error}")
                     logger.error(f"❌ Response was: {response_text[:200]}...")
                     
-                    # Plan de fallback simple
-                    fallback_steps = [
-                        {
-                            "id": "step-1",
-                            "title": f"Investigar sobre: {message[:30]}",
-                            "description": "Buscar información relevante",
-                            "tool": "web_search",
-                            "completed": False,
-                            "active": False,
-                            "status": "pending"
-                        },
-                        {
-                            "id": "step-2", 
-                            "title": "Analizar información",
-                            "description": "Procesar y analizar los datos encontrados",
-                            "tool": "analysis",
-                            "completed": False,
-                            "active": False,
-                            "status": "pending" 
-                        },
-                        {
-                            "id": "step-3",
-                            "title": "Crear resultado final",
-                            "description": "Generar el producto final solicitado", 
-                            "tool": "creation",
-                            "completed": False,
-                            "active": False,
-                            "status": "pending"
-                        }
-                    ]
+                    # 🔥 NUEVO: En lugar de fallback básico, usar plan robusto directo después de 2 intentos
+                    if attempt >= 2:
+                        logger.info(f"🔧 Creando plan robusto directo después de {attempt} intentos de JSON")
+                        return generate_robust_plan_direct(message, task_id, task_category)
                     
-                    # Guardar plan de fallback
-                    task_data = {
-                        'id': task_id,
-                        'message': message,
-                        'plan': fallback_steps,
-                        'task_type': 'general',
-                        'complexity': 'media',
-                        'estimated_total_time': '30 minutos',
-                        'created_at': datetime.now().isoformat(),
-                        'status': 'plan_generated'
-                    }
-                    
-                    save_task_data(task_id, task_data)
-                    
-                    # 🎯 MARCAR EL PRIMER PASO COMO ACTIVO
-                    if fallback_steps:
-                        fallback_steps[0]['active'] = True
-                        fallback_steps[0]['status'] = 'active'
-                        logger.info(f"✅ First fallback step marked as active: {fallback_steps[0]['title']}")
-                    
-                    result = {
-                        'steps': fallback_steps,
-                        'task_type': 'general',
-                        'complexity': 'media',
-                        'estimated_total_time': '30 minutos',
-                        'plan_source': 'json_parse_fallback'
-                    }
-                    
-                    logger.info(f"✅ Returning JSON parse fallback plan with {len(fallback_steps)} steps")
-                    return result
+                    continue  # Intentar siguiente prompt
                     
             except Exception as attempt_error:
                 logger.error(f"❌ Attempt {attempt} failed: {attempt_error}")
