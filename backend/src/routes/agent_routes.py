@@ -7126,7 +7126,145 @@ def generate_robust_plan_direct(message: str, task_id: str, task_category: str =
     return result
 
 
-@agent_bp.route('/update-task-progress', methods=['POST'])
+@agent_bp.route('/fallback-health', methods=['GET'])
+def get_fallback_health():
+    """
+    🔍 NUEVO ENDPOINT: Obtener estadísticas de salud de fallbacks
+    """
+    try:
+        from .fallback_monitoring import fallback_monitor
+        
+        hours = request.args.get('hours', 24, type=int)
+        include_report = request.args.get('report', 'false').lower() == 'true'
+        
+        # Obtener estadísticas básicas
+        plan_stats = fallback_monitor.get_fallback_statistics(hours)
+        validation_stats = fallback_monitor.get_validation_statistics(hours)
+        
+        response_data = {
+            'plan_statistics': plan_stats,
+            'validation_statistics': validation_stats,
+            'timestamp': datetime.now().isoformat(),
+            'period_hours': hours
+        }
+        
+        # Incluir reporte de mejoras si se solicita
+        if include_report:
+            improvement_report = fallback_monitor.generate_improvement_report()
+            response_data['improvement_report'] = improvement_report
+        
+        # Determinar estado general
+        alert_level = plan_stats.get('alert_level', 'none')
+        fallback_rate = plan_stats.get('fallback_rate', 0)
+        
+        if alert_level == 'high' or fallback_rate > 0.5:
+            health_status = 'critical'
+        elif alert_level == 'medium' or fallback_rate > 0.3:
+            health_status = 'warning'
+        elif alert_level == 'low' or fallback_rate > 0.1:
+            health_status = 'fair'
+        else:
+            health_status = 'healthy'
+        
+        response_data['health_status'] = health_status
+        
+        logger.info(f"📊 Fallback health check: {health_status} - Rate: {fallback_rate:.1%}")
+        
+        return jsonify(response_data), 200
+        
+    except Exception as e:
+        logger.error(f"❌ Error in fallback health check: {str(e)}")
+        return jsonify({
+            'error': 'Failed to get fallback health statistics',
+            'details': str(e)
+        }), 500
+
+
+@agent_bp.route('/system-diagnostics', methods=['GET'])
+def get_system_diagnostics():
+    """
+    🔧 NUEVO ENDPOINT: Diagnósticos completos del sistema de agentes
+    """
+    try:
+        from .fallback_monitoring import fallback_monitor
+        
+        # Obtener estadísticas de fallbacks
+        fallback_health = fallback_monitor.generate_improvement_report()
+        
+        # Verificar salud de servicios
+        ollama_service = get_ollama_service()
+        ollama_healthy = ollama_service.is_healthy() if ollama_service else False
+        
+        tool_manager = get_tool_manager()
+        available_tools = tool_manager.get_available_tools() if tool_manager else []
+        
+        # Obtener métricas de tareas recientes
+        try:
+            task_files = os.listdir('/app/backend/data')
+            recent_tasks = len([f for f in task_files if f.endswith('.json')])
+        except:
+            recent_tasks = 0
+        
+        # Compilar diagnósticos
+        diagnostics = {
+            'timestamp': datetime.now().isoformat(),
+            'system_health': {
+                'ollama_service': {
+                    'available': ollama_service is not None,
+                    'healthy': ollama_healthy,
+                    'status': 'healthy' if ollama_healthy else 'unhealthy'
+                },
+                'tool_manager': {
+                    'available': tool_manager is not None,
+                    'tool_count': len(available_tools),
+                    'available_tools': available_tools
+                },
+                'task_storage': {
+                    'recent_task_count': recent_tasks,
+                    'storage_accessible': True
+                }
+            },
+            'fallback_analysis': fallback_health,
+            'performance_metrics': {
+                'plan_generation_health': fallback_health.get('summary', {}).get('fallback_health', 'unknown'),
+                'system_stability': 'stable' if ollama_healthy and tool_manager else 'unstable',
+                'overall_status': 'good' if (
+                    ollama_healthy and 
+                    tool_manager and 
+                    fallback_health.get('priority_level', 'high') in ['none', 'low']
+                ) else 'needs_attention'
+            },
+            'recommendations': fallback_health.get('recommendations', []),
+            'priority_actions': []
+        }
+        
+        # Generar acciones prioritarias basadas en diagnósticos
+        if not ollama_healthy:
+            diagnostics['priority_actions'].append("Revisar y reiniciar servicio Ollama")
+        
+        if not tool_manager:
+            diagnostics['priority_actions'].append("Verificar tool_manager - herramientas no disponibles")
+        
+        if fallback_health.get('priority_level') == 'high':
+            diagnostics['priority_actions'].append("Revisar alta tasa de fallbacks - sistema necesita atención")
+        
+        if len(available_tools) < 3:
+            diagnostics['priority_actions'].append(f"Solo {len(available_tools)} herramientas disponibles - verificar configuración")
+        
+        if not diagnostics['priority_actions']:
+            diagnostics['priority_actions'] = ["Sistema funcionando correctamente"]
+        
+        logger.info(f"🔧 System diagnostics completed - Status: {diagnostics['performance_metrics']['overall_status']}")
+        
+        return jsonify(diagnostics), 200
+        
+    except Exception as e:
+        logger.error(f"❌ Error in system diagnostics: {str(e)}")
+        return jsonify({
+            'error': 'Failed to generate system diagnostics',
+            'details': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
 def update_task_progress():
     """Actualiza el progreso de una tarea"""
     try:
