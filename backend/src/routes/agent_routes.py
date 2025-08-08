@@ -6607,8 +6607,8 @@ def generate_intelligent_fallback_plan(message: str, task_id: str, category: str
 
 def generate_unified_ai_plan(message: str, task_id: str, attempt_retries: bool = True) -> dict:
     """
-    🚀 SISTEMA ROBUSTO DE GENERACIÓN DE PLANES CON MÚLTIPLES FALLBACKS
-    Función UNIFICADA con robustecimiento completo y fallbacks inteligentes
+    🔥 FUNCIÓN MEJORADA DE GENERACIÓN DE PLANES CON IA
+    Versión que evita fallbacks prematuros y usa sistema robusto
     """
     logger.info(f"🧠 Generating robust unified AI-powered plan for task {task_id} - Message: {message[:50]}...")
     
