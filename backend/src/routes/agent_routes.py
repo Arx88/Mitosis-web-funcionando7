@@ -6869,8 +6869,8 @@ IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Ca
                 continue
         
         # Si llegamos aquí, todos los intentos fallaron
-        logger.error(f"❌ All plan generation attempts failed. Using intelligent fallback")
-        return generate_intelligent_fallback_plan(message, task_id, task_category)
+        logger.error(f"❌ All plan generation attempts failed. Using robust direct plan")
+        return generate_robust_plan_direct(message, task_id, task_category)
     
     # Llamar a la función interna
     try:
