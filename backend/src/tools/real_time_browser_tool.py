@@ -648,15 +648,18 @@ class RealTimeBrowserTool(BaseTool):
         """🔍 EXPLORAR RESULTADOS DE BÚSQUEDA DE MANERA INTELIGENTE"""
         
         try:
-            # Buscar enlaces de resultados con múltiples estrategias
+            # Buscar enlaces de resultados con múltiples estrategias MEJORADO
             result_selectors = [
                 'h3 a',  # Google, Bing estándar
                 '.g h3 a',  # Google específico
-                '.b_algo h2 a',  # Bing específico
+                '.b_algo h2 a',  # Bing específico (clásico)
+                '.b_algo a',  # Bing simplificado
                 '[data-hveid] h3 a',  # Google alternativo
                 '.result h3 a',  # Genérico
                 'a[href*="http"]:has(h3)',  # Fallback general
                 'a[href*="http"]:has(h2)',  # Fallback alternativo
+                'li a[href^="http"]',  # Lista de enlaces HTTP
+                '[class*="result"] a[href^="http"]',  # Cualquier clase con "result"
             ]
             
             result_links = []
