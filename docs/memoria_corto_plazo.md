@@ -401,12 +401,21 @@ RESULTADO 2: Página de búsqueda Bing
 - **Plan de Acción**: ✅ Pasos se completan con información real verificable
 - **Testing confirmado**: ✅ Múltiples pruebas exitosas con contenido real
 
-### ✅ **NUEVA SESIÓN INICIADA (2025-01-24)**
+### 🆕 **NUEVA SESIÓN INICIADA (2025-01-24) - PROBLEMA CRÍTICO ACTUALIZADO**
 
-### 🛠️ **PROBLEMA REPORTADO POR USUARIO**:
-- **Issue crítico**: "El agente debe generar un plan interno tomando el paso 1 del PLAN DE ACCION, que realemente busque noticias, entrevistas, perfiles academicos, biografia, trayectoria politica, ideologia, declaraciones publicas"
-- **Síntoma**: El paso 1 no está recolectando información REAL de múltiples sitios diferentes
-- **Expectativa**: El agente debe continuar en el paso 1 hasta haber generado un informe con recolección real de VARIOS sitios, no solo meta-datos
+### 🚨 **NUEVO PROBLEMA REPORTADO POR USUARIO**:
+- **Issue principal**: "Solo recorre 1-2 fuentes, no logra sacar información real ni cumplir con la tarea"
+- **Síntomas específicos**:
+  * Las búsquedas son buenas, pero se visitan pocos sitios
+  * El informe final solo muestra METADATOS
+  * No logra resolver completamente las tareas asignadas
+  * Extracción de información no real
+- **Expectativa**: Lograr que el agente general resuelva cualquier tarea visitando múltiples sitios y extrayendo información REAL
+
+### 🔍 **DIAGNÓSTICO INICIAL**:
+- **Sistema navega**: ✅ Navegación en tiempo real funciona (X11 virtual activo)
+- **Problema real**: ❌ Extracción de contenido limitada y pocos sitios visitados
+- **Calidad información**: ❌ Solo metadatos, no contenido real verificable
 
 ### 🔍 **ANÁLISIS TÉCNICO COMPLETADO**:
 
