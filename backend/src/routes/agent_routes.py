@@ -6790,28 +6790,30 @@ IMPORTANTE: Los pasos deben ser específicos para "{message}", no genéricos. Ca
                         'complexity': plan_data.get('complexity', 'media'),
                         'estimated_total_time': plan_data.get('estimated_total_time', '30 minutos'),
                         'created_at': datetime.now().isoformat(),
-                        'status': 'plan_generated'
+                        'status': 'plan_generated',
+                        'plan_source': f'ai_generated_robust_attempt_{attempt}'
                     }
                     
                     save_task_data(task_id, task_data)
                     
-                    logger.info(f"✅ Plan generated with {len(plan_data['steps'])} steps")
+                    logger.info(f"✅ Plan robusto generado con {len(plan_data['steps'])} pasos")
                     
                     # 🎯 MARCAR EL PRIMER PASO COMO ACTIVO
                     if plan_data['steps']:
                         plan_data['steps'][0]['active'] = True
                         plan_data['steps'][0]['status'] = 'active'
-                        logger.info(f"✅ First step marked as active: {plan_data['steps'][0]['title']}")
+                        logger.info(f"✅ Primer paso marcado como activo: {plan_data['steps'][0]['title']}")
                     
                     result = {
                         'steps': plan_data['steps'],
                         'task_type': plan_data.get('task_type', 'general'),
                         'complexity': plan_data.get('complexity', 'media'),
                         'estimated_total_time': plan_data.get('estimated_total_time', '30 minutos'),
-                        'plan_source': 'ai_generated'
+                        'plan_source': f'ai_generated_robust_attempt_{attempt}',
+                        'validation_system': 'robust'
                     }
                     
-                    logger.info(f"✅ Returning AI-generated plan with {len(plan_data['steps'])} steps")
+                    logger.info(f"✅ Retornando plan AI robusto con {len(plan_data['steps'])} pasos")
                     return result
                     
                 except (json.JSONDecodeError, ValueError) as parse_error:
