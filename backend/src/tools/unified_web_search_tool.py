@@ -129,24 +129,30 @@ class UnifiedWebSearchTool(BaseTool):
         ]
     
     def _extract_clean_keywords_static(self, query_text: str) -> str:
-        """🎯 EXTRACTOR INTELIGENTE DE KEYWORDS - VERSIÓN COMPLETAMENTE CORREGIDA"""
+        """🎯 EXTRACTOR INTELIGENTE DE KEYWORDS - SOLUCIÓN COMPLETA INTEGRADA"""
         
         if not query_text or len(query_text.strip()) < 3:
             return "información actualizada"
         
-        print(f"🔍 EXTRACTING KEYWORDS FROM: '{query_text}'")
+        print(f"🧠 EXTRACTOR INTELIGENTE INPUT: '{query_text}'")
         
-        # 🚀 USAR GENERADOR INTELIGENTE SI ESTÁ DISPONIBLE
-        if INTELLIGENT_KEYWORDS_AVAILABLE:
-            try:
-                result = get_intelligent_keywords(query_text)
-                print(f"✅ INTELLIGENT EXTRACTION: '{query_text}' → '{result}'")
+        # 🚀 USAR SIEMPRE EL GENERADOR INTELIGENTE COMO PRIMERA OPCIÓN
+        try:
+            result = get_intelligent_keywords(query_text)
+            print(f"✅ INTELLIGENT EXTRACTION SUCCESS: '{query_text}' → '{result}'")
+            
+            # Validar que el resultado no sea genérico o problemático  
+            if (result and len(result.strip()) > 5 and 
+                'realiza informe' not in result.lower() and
+                'utilizar herramienta' not in result.lower()):
                 return result
-            except Exception as e:
-                print(f"⚠️ Error with intelligent generator: {e}")
+            else:
+                print(f"⚠️ Resultado genérico detectado: '{result}', usando fallback")
+        except Exception as e:
+            print(f"⚠️ Error en generador inteligente: {e}, usando fallback")
         
-        # 🛠️ FALLBACK MEJORADO CON LÓGICA CORREGIDA
-        print("🔄 Using improved fallback logic")
+        # 🛠️ FALLBACK MEJORADO COMO RESPALDO
+        print("🔄 Usando lógica de fallback mejorada")
         import re
         
         original = query_text.strip()
@@ -158,28 +164,35 @@ class UnifiedWebSearchTool(BaseTool):
         significant_words = re.findall(r'\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{3,}\b', original)
         
         # 3. Palabras que siempre deben preservarse (entidades importantes)
-        preserve_always = {'milei', 'javier', 'argentina', 'arctic', 'monkeys', 'banda', 
-                          'presidente', 'economía', 'político', 'inflación', 'tecnología',
-                          'inteligencia', 'artificial', 'música', 'rock', 'discografía'}
+        preserve_always = {
+            'milei', 'javier', 'argentina', 'arctic', 'monkeys', 'banda', 
+            'presidente', 'economía', 'político', 'inflación', 'tecnología',
+            'inteligencia', 'artificial', 'música', 'rock', 'discografía',
+            'biden', 'trump', 'musk', 'elon', 'cristina', 'massa', 'macri'
+        }
         
-        # 4. Palabras meta que deben eliminarse
-        meta_words = {'buscar', 'información', 'sobre', 'utilizar', 'herramienta', 'web', 
-                     'search', 'datos', 'análisis', 'genera', 'informe', 'específica', 
-                     'actualizada', 'realizar', 'para', 'con', 'del', 'las', 'los'}
+        # 4. Palabras meta que deben eliminarse COMPLETAMENTE
+        meta_words = {
+            'buscar', 'información', 'sobre', 'utilizar', 'herramienta', 'web', 
+            'search', 'datos', 'análisis', 'genera', 'informe', 'específica', 
+            'actualizada', 'realizar', 'para', 'con', 'del', 'las', 'los',
+            'que', 'este', 'esta', 'acerca', 'mediante', 'relacionadas'
+        }
         
         # 5. Construir lista de palabras útiles
         useful_words = []
         
         # Agregar nombres propios primero (alta prioridad)
         for noun in proper_nouns:
-            useful_words.append(noun.lower())
+            if noun.lower() not in meta_words:
+                useful_words.append(noun.lower())
         
         # Agregar palabras significativas filtradas
         for word in significant_words:
             word_lower = word.lower()
-            # Incluir si: está en preserve_always O no está en meta_words
+            # Incluir si: está en preserve_always O (no está en meta_words Y no es duplicado)
             if (word_lower in preserve_always or 
-                (word_lower not in meta_words and word_lower not in useful_words)):
+                (word_lower not in meta_words and word_lower not in useful_words and len(word_lower) >= 4)):
                 useful_words.append(word_lower)
         
         # 6. Construir resultado final
@@ -205,7 +218,7 @@ class UnifiedWebSearchTool(BaseTool):
             return result
         
         # Fallback final
-        print(f"❌ NO USEFUL WORDS FOUND: '{original}' → using generic fallback")
+        print(f"❌ NO USEFUL WORDS FOUND: '{original}' → usando fallback genérico")
         return "información actualizada noticias"
     
     def _identify_search_intent(self, text: str) -> str:
