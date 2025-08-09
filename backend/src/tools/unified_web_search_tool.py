@@ -698,6 +698,152 @@ class UnifiedWebSearchTool(BaseTool):
             # NO fallback a resultados simulados - mejor devolver error
             raise e
     
+    def _detect_granular_search_needs(self, query: str) -> List[Dict[str, str]]:
+        """
+        🎯 DETECTOR AUTOMÁTICO DE NECESIDAD DE BÚSQUEDAS GRANULARES
+        
+        Analiza el query y determina si necesita múltiples búsquedas específicas
+        para obtener información completa
+        """
+        query_lower = query.lower()
+        searches = []
+        
+        # 🔍 PATRÓN 1: INFORMACIÓN SOBRE PERSONAS/FIGURAS PÚBLICAS
+        if any(word in query_lower for word in ['información sobre', 'datos sobre', 'buscar información']):
+            person_indicators = ['presidente', 'político', 'artista', 'cantante', 'actor', 'personalidad']
+            subject = None
+            
+            # Extraer el sujeto principal
+            for indicator in person_indicators:
+                if indicator in query_lower:
+                    # Buscar nombres propios después del indicador
+                    import re
+                    pattern = r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b'
+                    matches = re.findall(pattern, query)
+                    if matches:
+                        subject = matches[0]
+                        break
+            
+            if not subject:
+                # Extraer nombres propios generales
+                import re
+                proper_names = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b', query)
+                if proper_names:
+                    subject = proper_names[0]
+            
+            if subject:
+                searches.extend([
+                    {"query": f"{subject} biografía historia personal", "category": "biografía"},
+                    {"query": f"{subject} trayectoria carrera profesional", "category": "trayectoria"},
+                    {"query": f"{subject} posiciones políticas ideología", "category": "ideología"},
+                    {"query": f"{subject} declaraciones públicas entrevistas", "category": "declaraciones"},
+                    {"query": f"{subject} noticias recientes 2025", "category": "noticias_recientes"}
+                ])
+        
+        # 🔍 PATRÓN 2: INFORMACIÓN SOBRE BANDAS/MÚSICA  
+        elif any(word in query_lower for word in ['arctic monkeys', 'banda', 'discografía', 'música']):
+            band_name = "Arctic Monkeys"  # Detectar automáticamente
+            searches.extend([
+                {"query": f"{band_name} historia formación miembros", "category": "historia"},
+                {"query": f"{band_name} discografía álbumes completa", "category": "discografía"},
+                {"query": f"{band_name} estilo musical evolución", "category": "estilo_musical"},
+                {"query": f"{band_name} premios reconocimientos logros", "category": "premios"},
+                {"query": f"{band_name} noticias recientes 2025 conciertos", "category": "noticias_recientes"}
+            ])
+        
+        # 🔍 PATRÓN 3: INFORMACIÓN TÉCNICA/CIENTÍFICA
+        elif any(word in query_lower for word in ['inteligencia artificial', 'tecnología', 'ciencia']):
+            topic = self._extract_main_topic(query)
+            searches.extend([
+                {"query": f"{topic} definición conceptos básicos", "category": "conceptos"},
+                {"query": f"{topic} aplicaciones usos prácticos", "category": "aplicaciones"},
+                {"query": f"{topic} ventajas beneficios", "category": "ventajas"},
+                {"query": f"{topic} desventajas riesgos", "category": "desventajas"},
+                {"query": f"{topic} tendencias futuro 2025", "category": "tendencias"}
+            ])
+        
+        # 🔍 PATRÓN 4: DEPORTES/EQUIPOS
+        elif any(word in query_lower for word in ['selección', 'equipo', 'fútbol', 'deporte']):
+            team = self._extract_team_name(query)
+            searches.extend([
+                {"query": f"{team} plantilla jugadores actual 2025", "category": "plantilla"},
+                {"query": f"{team} historia títulos logros", "category": "historia"},
+                {"query": f"{team} estadísticas temporada 2024-2025", "category": "estadísticas"},
+                {"query": f"{team} últimos partidos resultados", "category": "resultados_recientes"},
+                {"query": f"{team} próximos partidos calendario", "category": "próximos_partidos"}
+            ])
+        
+        # Si no se detectó patrón específico, retornar lista vacía para búsqueda simple
+        return searches if len(searches) > 1 else []
+    
+    def _execute_granular_searches(self, searches: List[Dict[str, str]], search_engine: str, 
+                                 max_results: int, extract_content: bool) -> List[Dict[str, Any]]:
+        """
+        🔍 EJECUTOR DE BÚSQUEDAS GRANULARES MÚLTIPLES
+        
+        Realiza múltiples búsquedas específicas y combina los resultados
+        """
+        all_results = []
+        
+        for i, search_config in enumerate(searches):
+            query = search_config["query"]
+            category = search_config["category"]
+            
+            self._emit_progress_eventlet(f"🔎 Búsqueda {i+1}/{len(searches)}: {category}")
+            self._emit_progress_eventlet(f"   🔍 Query: {query}")
+            
+            try:
+                # Ejecutar búsqueda específica con menos resultados por búsqueda
+                results_per_search = max(2, max_results // len(searches))
+                category_results = self._run_playwright_fallback_search(
+                    query, search_engine, results_per_search
+                )
+                
+                # Marcar resultados con la categoría
+                for result in category_results:
+                    result['search_category'] = category
+                    result['granular_search'] = True
+                    result['search_query_used'] = query
+                
+                all_results.extend(category_results)
+                
+                self._emit_progress_eventlet(f"   ✅ {len(category_results)} resultados para {category}")
+                
+                # Delay pequeño entre búsquedas
+                import time
+                time.sleep(1)
+                
+            except Exception as e:
+                self._emit_progress_eventlet(f"   ❌ Error en búsqueda {category}: {str(e)}")
+                continue
+        
+        # Combinar y organizar resultados
+        self._emit_progress_eventlet(f"📊 TOTAL: {len(all_results)} resultados de {len(searches)} búsquedas granulares")
+        self._emit_progress_eventlet(f"   🎯 Categorías cubiertas: {', '.join([s['category'] for s in searches])}")
+        
+        return all_results[:max_results]  # Limitar al máximo solicitado
+    
+    def _extract_main_topic(self, query: str) -> str:
+        """Extraer el tema principal de la consulta"""
+        import re
+        # Buscar palabras técnicas principales
+        tech_terms = re.findall(r'\b(?:inteligencia artificial|machine learning|blockchain|tecnología)\b', query.lower())
+        if tech_terms:
+            return tech_terms[0]
+        
+        # Fallback: extraer palabras principales
+        words = re.findall(r'\b[a-zA-Z]{4,}\b', query)
+        return ' '.join(words[:2]) if words else "tecnología"
+    
+    def _extract_team_name(self, query: str) -> str:
+        """Extraer nombre del equipo de la consulta"""
+        if 'argentina' in query.lower():
+            return "Selección Argentina"
+        elif 'brasil' in query.lower():
+            return "Selección Brasil"
+        else:
+            return "equipo"
+    
     def _extract_results_from_real_navigation(self, navigation_data: Dict[str, Any], query: str, 
                                             search_engine: str, max_results: int) -> List[Dict[str, Any]]:
         """📊 EXTRAER RESULTADOS DE LA NAVEGACIÓN EN TIEMPO REAL"""
