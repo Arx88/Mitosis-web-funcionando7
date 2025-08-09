@@ -173,7 +173,7 @@ except:
     fi
 else
     echo "   📋 No hay configuración runtime, usando valores por defecto"
-    CORRECT_OLLAMA_URL="https://e8da53409283.ngrok-free.app"
+    CORRECT_OLLAMA_URL="https://277e85fec6fd.ngrok-free.app"
     CORRECT_OLLAMA_MODEL="gpt-oss:20b"
 fi
 
