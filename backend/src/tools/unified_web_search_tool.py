@@ -583,14 +583,22 @@ class UnifiedWebSearchTool(BaseTool):
     def _execute_search_with_visualization(self, query: str, search_engine: str, 
                                          max_results: int, extract_content: bool) -> List[Dict[str, Any]]:
         """
-        🔍 EJECUTOR PRINCIPAL DE BÚSQUEDA CON NAVEGACIÓN REAL EN TIEMPO REAL
-        Usa RealTimeBrowserTool para navegación continua con screenshots reales
+        🔍 EJECUTOR PRINCIPAL DE BÚSQUEDA GRANULAR CON NAVEGACIÓN REAL EN TIEMPO REAL
+        Implementa búsquedas específicas múltiples para información completa
         """
         
-        # PASO 1: INICIALIZACIÓN CON NAVEGACIÓN REAL EN TIEMPO REAL
-        self._emit_progress_eventlet(f"🚀 INICIANDO NAVEGACIÓN WEB EN TIEMPO REAL...")
-        self._emit_progress_eventlet(f"🔍 Consulta: '{query}'")
-        self._emit_progress_eventlet(f"🌐 Motor de búsqueda: {search_engine}")
+        # PASO 1: DETECTAR SI NECESITA BÚSQUEDAS GRANULARES
+        granular_searches = self._detect_granular_search_needs(query)
+        
+        if granular_searches and len(granular_searches) > 1:
+            # BÚSQUEDA GRANULAR MÚLTIPLE
+            self._emit_progress_eventlet(f"🎯 BÚSQUEDA GRANULAR DETECTADA - {len(granular_searches)} búsquedas específicas")
+            return self._execute_granular_searches(granular_searches, search_engine, max_results, extract_content)
+        else:
+            # BÚSQUEDA SIMPLE TRADICIONAL
+            self._emit_progress_eventlet(f"🚀 INICIANDO NAVEGACIÓN WEB EN TIEMPO REAL...")
+            self._emit_progress_eventlet(f"🔍 Consulta: '{query}'")
+            self._emit_progress_eventlet(f"🌐 Motor de búsqueda: {search_engine}")
         
         try:
             # 🌐 USAR REAL TIME BROWSER TOOL PARA NAVEGACIÓN CONTINUA REAL
