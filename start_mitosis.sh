@@ -687,7 +687,7 @@ check_mongodb() {
 
 check_ollama() {
     # Verificar el endpoint correcto de Ollama
-    curl -s -f "https://66bd0d09b557.ngrok-free.app/api/tags" >/dev/null 2>&1
+    curl -s -f "https://277e85fec6fd.ngrok-free.app/api/tags" >/dev/null 2>&1
 }
 
 check_external_access() {
