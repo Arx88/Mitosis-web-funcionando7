@@ -2365,368 +2365,110 @@ GENERA EL SUB-PLAN AHORA:
         logger.error(f"❌ Error generando sub-plan con Ollama: {str(e)}")
         return {'success': False, 'error': str(e)}
 
-def execute_web_search_step(title: str, description: str, tool_manager, task_id: str) -> dict:
+def execute_web_search_step(step_title: str, step_description: str, tool_manager, task_id: str) -> dict:
     """
-    🧠 SISTEMA JERÁRQUICO ROBUSTO DE BÚSQUEDA WEB
-    Genera sub-plan interno, ejecuta múltiples búsquedas específicas, documenta progreso y auto-evalúa completitud
+    🎯 BÚSQUEDA WEB CON DETECCIÓN AUTOMÁTICA DE GRANULARIDAD
+    
+    Detecta automáticamente si necesita búsquedas granulares específicas
+    y las ejecuta de forma sistemática para obtener información completa.
+    
+    Ejemplo:
+    - Query: "Buscar información sobre Arctic Monkeys"
+    - Ejecutará automáticamente:
+      1. "Arctic Monkeys historia formación miembros" 
+      2. "Arctic Monkeys discografía álbumes completa"
+      3. "Arctic Monkeys estilo musical evolución"
+      4. "Arctic Monkeys premios reconocimientos logros"
+      5. "Arctic Monkeys noticias recientes 2025"
     """
     try:
-        print(f"🔥🔥🔥 EXECUTE_WEB_SEARCH_STEP CALLED: {title} 🔥🔥🔥")
-        logger.error(f"🚀🚀🚀 INICIANDO BÚSQUEDA JERÁRQUICA: {title} 🚀🚀🚀")
-        print(f"🔥 Task ID: {task_id}")
-        print(f"🔥 Description: {description}")
+        from ..tools.unified_web_search_tool import UnifiedWebSearchTool
+        web_search_tool = UnifiedWebSearchTool()
         
-        # 🧠 PASO 1: GENERAR SUB-PLAN INTELIGENTE CON OLLAMA
-        # Usar Ollama para generar un sub-plan de búsqueda inteligente y específico
-        sub_tasks = []
+        # Crear consulta combinada con contexto específico
+        combined_query = f"{step_title} {step_description}".strip()
         
-        # Intentar usar Ollama para generar el sub-plan
-        ollama_generated_plan = _generate_intelligent_search_plan_with_ollama(title, description, task_id)
+        # Limpiar query si es muy largo (automático en la herramienta)
+        search_query = web_search_tool._extract_clean_keywords_static(combined_query)
         
-        if ollama_generated_plan and ollama_generated_plan.get('success'):
-            sub_tasks = ollama_generated_plan.get('sub_tasks', [])
-            logger.info(f"🧠 Sub-plan inteligente generado por Ollama: {len(sub_tasks)} búsquedas específicas")
+        logger.info(f"🎯 EJECUTANDO BÚSQUEDA GRANULAR")
+        logger.info(f"   📝 Título: {step_title}")
+        logger.info(f"   📄 Descripción: {step_description}")
+        logger.info(f"   🔍 Query final: {search_query}")
+        
+        # La herramienta detectará automáticamente si necesita granularidad
+        result = tool_manager.execute_tool('web_search', {
+            'query': search_query,
+            'max_results': 12,  # Más resultados para búsquedas granulares
+            'extract_content': True,
+            'search_engine': 'bing'
+        }, config={'task_id': task_id})
+        
+        if result and result.get('success', False):
+            search_data = result.get('data', {})
+            results = search_data.get('search_results', [])
             
-            # Log del sub-plan para debug
-            for i, task in enumerate(sub_tasks, 1):
-                logger.info(f"   🔍 Búsqueda {i}: '{task.get('query', 'N/A')}' (Foco: {task.get('focus', 'N/A')})")
-        else:
-            # Fallback al sistema anterior si Ollama no funciona
-            logger.warning("⚠️ Ollama no disponible, usando generación de sub-plan simplificada")
+            # Verificar si se usaron búsquedas granulares
+            granular_used = any(r.get('granular_search', False) for r in results)
             
-            # Extraer keywords para búsquedas específicas
-            from ..tools.unified_web_search_tool import UnifiedWebSearchTool
-            web_search_tool = UnifiedWebSearchTool()
-            raw_query = f"{title} {description}".strip()
-            main_query = web_search_tool._extract_clean_keywords_static(raw_query)
-            
-            # Crear múltiples variaciones de búsqueda
-            sub_tasks.append({
-                'query': main_query,
-                'focus': 'general',
-                'max_results': 3
-            })
-            
-            # Agregar búsquedas más específicas si hay palabras clave relevantes
-            keywords = main_query.lower().split()
-            if any(word in keywords for word in ['2024', '2025', 'actual', 'reciente']):
-                sub_tasks.append({
-                    'query': f"{main_query} 2024 actualidad",
-                    'focus': 'current',
-                    'max_results': 2
-                })
-            
-            if any(word in keywords for word in ['análisis', 'estudio', 'investigación']):
-                sub_tasks.append({
-                    'query': f"{main_query} análisis detallado",
-                    'focus': 'analysis',
-                    'max_results': 2
-                })
-            
-            logger.info(f"📋 Sub-plan de fallback generado: {len(sub_tasks)} búsquedas específicas")
-        
-        # 📊 PASO 2: EJECUTAR SUB-PLAN CON DOCUMENTACIÓN PROGRESIVA
-        accumulated_results = []
-        searches_performed = 0
-        
-        for i, sub_task in enumerate(sub_tasks):
-            if tool_manager and hasattr(tool_manager, 'execute_tool'):
-                try:
-                    logger.info(f"🔍 Ejecutando búsqueda {i+1}/{len(sub_tasks)}: {sub_task['query']}")
-                    
-                    search_result = tool_manager.execute_tool('web_search', {
-                        'query': sub_task['query'],
-                        'max_results': sub_task['max_results'],
-                        'search_engine': 'bing',
-                        'extract_content': True
-                    }, task_id=task_id)
-                    
-                    if search_result and search_result.get('success'):
-                        results = search_result.get('search_results', [])
-                        accumulated_results.extend(results)
-                        searches_performed += 1
-                        logger.info(f"✅ Búsqueda {i+1} completada: {len(results)} resultados")
-                    
-                except Exception as search_error:
-                    logger.warning(f"⚠️ Error en búsqueda {i+1}: {str(search_error)}")
-        
-        logger.info(f"📚 Investigación completada: {searches_performed} búsquedas ejecutadas")
-        
-        # 🎯 PASO 3: VALIDACIÓN SUPER ESTRICTA PARA PASO 1 DE PLAN DE ACCIÓN
-        # Detectar si este es el paso 1 que requiere recolección de información política/biográfica
-        is_step_1_research = any(keyword in description.lower() for keyword in [
-            'biografía', 'trayectoria política', 'ideología', 'declaraciones públicas',
-            'buscar información', 'recopilar datos', 'fuentes confiables', 'noticias',
-            'entrevistas', 'perfiles académicos', 'paso 1'
-        ])
-        
-        if is_step_1_research:
-            logger.info("🔥 DETECTADO PASO 1 DE INVESTIGACIÓN - Aplicando validación SUPER ESTRICTA")
-            from .enhanced_step_validator import validate_step_1_with_enhanced_validator
-            
-            # Usar validador mejorado específico para paso 1
-            validation_result = validate_step_1_with_enhanced_validator(description, title, accumulated_results, task_id)
-        else:
-            # Usar validador estándar para otros pasos
-            from .step_requirement_validator import validate_step_completeness
-            validation_result = validate_step_completeness(description, title, accumulated_results)
-        
-        meets_criteria = validation_result.get('meets_requirements', False)
-        completeness_score = validation_result.get('completeness_score', 0)
-        missing_elements = validation_result.get('missing_elements', [])
-        recommendations = validation_result.get('recommendations', [])
-        
-        logger.info(f"📊 Validación inteligente: {completeness_score}% completitud - Cumple requisitos: {meets_criteria}")
-        if missing_elements:
-            logger.warning(f"❌ Elementos faltantes: {missing_elements}")
-        
-        # 🔄 PASO 4: BÚSQUEDAS ESPECÍFICAS DIRIGIDAS PARA ELEMENTOS FALTANTES
-        additional_searches_performed = 0
-        
-        if not meets_criteria and recommendations:
-            logger.info(f"🔄 Ejecutando {len(recommendations)} búsquedas específicas dirigidas")
-            
-            # Ejecutar búsquedas específicas basadas en recomendaciones del validador
-            for i, recommendation in enumerate(recommendations[:3]):  # Máximo 3 búsquedas adicionales
-                if 'buscar' not in recommendation.lower():
-                    continue  # Skip recomendaciones que no son de búsqueda
-                    
-                # Extraer términos de búsqueda de la recomendación
-                search_terms = recommendation.split(':')[-1].strip().strip('\'"')
+            if granular_used:
+                # Organizar resultados por categorías
+                categories = {}
+                for res in results:
+                    category = res.get('search_category', 'general')
+                    if category not in categories:
+                        categories[category] = []
+                    categories[category].append(res)
                 
-                if tool_manager and hasattr(tool_manager, 'execute_tool'):
-                    try:
-                        logger.info(f"🎯 Búsqueda dirigida {i+1}: {search_terms}")
-                        
-                        targeted_search = tool_manager.execute_tool('web_search', {
-                            'query': search_terms,
-                            'max_results': 3,
-                            'search_engine': 'bing',
-                            'extract_content': True
-                        }, task_id=task_id)
-                        
-                        if targeted_search and targeted_search.get('success'):
-                            targeted_results = targeted_search.get('search_results', [])
-                            accumulated_results.extend(targeted_results)
-                            additional_searches_performed += 1
-                            logger.info(f"✅ Búsqueda dirigida {i+1} completada: {len(targeted_results)} resultados")
-                            
-                    except Exception as targeted_error:
-                        logger.warning(f"⚠️ Error en búsqueda dirigida {i+1}: {str(targeted_error)}")
-            
-            # RE-VALIDAR después de búsquedas dirigidas
-            if additional_searches_performed > 0:
-                logger.info("🔄 Re-validando después de búsquedas dirigidas...")
+                logger.info(f"✅ BÚSQUEDA GRANULAR COMPLETADA")
+                logger.info(f"   📊 {len(results)} resultados en {len(categories)} categorías")
+                logger.info(f"   🎯 Categorías: {', '.join(categories.keys())}")
                 
-                if is_step_1_research:
-                    # Usar validador mejorado para re-validación de paso 1
-                    from .enhanced_step_validator import validate_step_1_with_enhanced_validator
-                    validation_result = validate_step_1_with_enhanced_validator(description, title, accumulated_results, task_id)
-                else:
-                    validation_result = validate_step_completeness(description, title, accumulated_results)
+                # Crear resumen por categoría
+                summary_parts = []
+                for category, cat_results in categories.items():
+                    summary_parts.append(f"**{category.title()}** ({len(cat_results)} fuentes)")
                 
-                meets_criteria = validation_result.get('meets_requirements', False)
-                completeness_score = validation_result.get('completeness_score', 0)
-                missing_elements = validation_result.get('missing_elements', [])
-                
-                logger.info(f"📊 Re-validación: {completeness_score}% completitud - Cumple requisitos: {meets_criteria}")
-        
-        # Actualizar totales
-        searches_performed += additional_searches_performed
-        total_results = len(accumulated_results)
-        
-        # PASO 4.5: BÚSQUEDAS ADICIONALES PARA PASO 1 SI AÚN NO CUMPLE
-        if is_step_1_research and not meets_criteria and completeness_score < 75:
-            logger.info("🔥 PASO 1 DETECTADO - Aplicando búsquedas adicionales específicas para información política")
-            
-            # Términos específicos para información política completa
-            political_search_terms = [
-                f"{title} biografía completa datos personales",
-                f"{title} trayectoria política cargos elecciones",
-                f"{title} declaraciones entrevistas rueda prensa",
-                f"{title} ideología política posición principios",
-                f"{title} noticias recientes medios argentinos"
-            ]
-            
-            political_searches_performed = 0
-            
-            for i, search_term in enumerate(political_search_terms[:4]):  # Máximo 4 búsquedas políticas adicionales
-                if tool_manager and hasattr(tool_manager, 'execute_tool'):
-                    try:
-                        logger.info(f"🏛️ Búsqueda política específica {i+1}: {search_term}")
-                        
-                        political_search = tool_manager.execute_tool('web_search', {
-                            'query': search_term,
-                            'max_results': 4,  # Más resultados para información política
-                            'search_engine': 'bing',
-                            'extract_content': True
-                        }, task_id=task_id)
-                        
-                        if political_search and political_search.get('success'):
-                            political_results = political_search.get('search_results', [])
-                            accumulated_results.extend(political_results)
-                            political_searches_performed += 1
-                            logger.info(f"✅ Búsqueda política {i+1} completada: {len(political_results)} resultados")
-                            
-                    except Exception as political_error:
-                        logger.warning(f"⚠️ Error en búsqueda política {i+1}: {str(political_error)}")
-            
-            # RE-VALIDAR FINAL después de búsquedas políticas
-            if political_searches_performed > 0:
-                logger.info("🔄 RE-VALIDACIÓN FINAL después de búsquedas políticas específicas...")
-                from .enhanced_step_validator import validate_step_1_with_enhanced_validator
-                validation_result = validate_step_1_with_enhanced_validator(description, title, accumulated_results, task_id)
-                meets_criteria = validation_result.get('meets_requirements', False)
-                completeness_score = validation_result.get('completeness_score', 0)
-                
-                # Actualizar contadores
-                searches_performed += political_searches_performed
-                
-                logger.info(f"🏛️ Validación política final: {completeness_score}% - Cumple: {meets_criteria}")
-                
-                # Si aún no cumple, registrar información detallada
-                if not meets_criteria:
-                    sources_analysis = validation_result.get('sources_analysis', {})
-                    logger.warning(f"🚫 PASO 1 AÚN INCOMPLETO después de {searches_performed} búsquedas")
-                    logger.warning(f"🚫 Fuentes encontradas: {sources_analysis.get('unique_sources', 0)} de {3} requeridas")
-                    logger.warning(f"🚫 Score final: {completeness_score}% (mínimo: 75%)")
-        
-        # Si no es paso 1, usar el sistema estándar de búsqueda final
-        # Si no es paso 1, usar el sistema estándar de búsqueda final
-        elif not meets_criteria and completeness_score < 50:
-            logger.info("🔄 Búsqueda amplia final como último recurso")
-            
-            if tool_manager and hasattr(tool_manager, 'execute_tool'):
-                try:
-                    final_search = tool_manager.execute_tool('web_search', {
-                        'query': f"{title} información detallada completa",
-                        'max_results': 5,
-                        'search_engine': 'bing',
-                        'extract_content': True
-                    }, task_id=task_id)
-                    
-                    if final_search and final_search.get('success'):
-                        final_results = final_search.get('search_results', [])
-                        accumulated_results.extend(final_results)
-                        searches_performed += 1
-                        
-                        # Validación final usando el validador apropiado
-                        if is_step_1_research:
-                            from .enhanced_step_validator import validate_step_1_with_enhanced_validator
-                            validation_result = validate_step_1_with_enhanced_validator(description, title, accumulated_results, task_id)
-                        else:
-                            validation_result = validate_step_completeness(description, title, accumulated_results)
-                            
-                        meets_criteria = validation_result.get('meets_requirements', False) 
-                        completeness_score = validation_result.get('completeness_score', 0)
-                        logger.info(f"📊 Validación final: {completeness_score}% completitud")
-                        
-                except Exception as final_error:
-                    logger.warning(f"⚠️ Error en búsqueda final: {str(final_error)}")
-        
-        # Asignar confidence_score para compatibilidad con código existente
-        confidence_score = completeness_score
-        
-        # Actualizar conteo final de resultados
-        total_results = len(accumulated_results)
-        
-        # Logging final específico para paso 1
-        if is_step_1_research:
-            sources_analysis = validation_result.get('sources_analysis', {})
-            logger.info(f"🏛️ RESUMEN PASO 1 - Búsquedas: {searches_performed} | Fuentes únicas: {sources_analysis.get('unique_sources', 0)} | Score: {completeness_score}%")
-            
-            if not meets_criteria:
-                logger.error(f"🚫 PASO 1 NO COMPLETADO - Requiere más información específica de múltiples fuentes")
-                logger.error(f"🚫 Elementos faltantes: {validation_result.get('missing_elements', [])}")
-        
-        # 📤 PASO 5: COMPILAR RESULTADO FINAL CON INFORMACIÓN DE VALIDACIÓN MEJORADA
-        final_result = {
-            'success': True,
-            'type': 'enhanced_hierarchical_web_search' if is_step_1_research else 'hierarchical_web_search',
-            'query': title,
-            'results_count': len(accumulated_results),
-            'searches_performed': searches_performed,
-            'confidence_score': confidence_score,
-            'summary': f"✅ Búsqueda {'política específica' if is_step_1_research else 'jerárquica'} completada: {len(accumulated_results)} resultados de {searches_performed} búsquedas específicas",
-            'data': accumulated_results[:15] if is_step_1_research else accumulated_results[:10],  # Más resultados para paso 1
-            'hierarchical_info': {
-                'sub_tasks_executed': len(sub_tasks),
-                'total_searches': searches_performed,
-                'confidence': confidence_score,
-                'meets_criteria': meets_criteria,
-                'is_step_1_research': is_step_1_research,
-                'validation_type': 'enhanced_political' if is_step_1_research else 'standard'
-            }
-        }
-        
-        # Agregar información específica de validación mejorada si es paso 1
-        if is_step_1_research and 'sources_analysis' in validation_result:
-            final_result['enhanced_validation'] = {
-                'sources_analysis': validation_result.get('sources_analysis'),
-                'content_analysis': validation_result.get('content_analysis'),
-                'pattern_validation': validation_result.get('pattern_validation'),
-                'validation_summary': validation_result.get('validation_summary'),
-                'strict_requirements_met': validation_result.get('strict_requirements_status'),
-                'specific_recommendations': validation_result.get('specific_recommendations', [])
-            }
-        
-        # 📡 OPCIONAL: Notificar via WebSocket
-        try:
-            websocket_manager = get_websocket_manager()
-            if websocket_manager:
-                websocket_manager.send_data_collection_update(
-                    task_id,
-                    f"hierarchical-search-{task_id}",
-                    f"Búsqueda jerárquica completada: {len(accumulated_results)} resultados",
-                    accumulated_results[:3]
-                )
-                websocket_manager.send_log_message(
-                    task_id, 
-                    "info", 
-                    f"✅ Búsqueda jerárquica finalizada: {confidence_score}% confianza"
-                )
-        except Exception as ws_error:
-            logger.warning(f"⚠️ WebSocket notification failed (non-critical): {str(ws_error)}")
-        
-        logger.info(f"✅ Búsqueda jerárquica completada exitosamente - {len(final_result.get('data', []))} resultados finales")
-        
-        return final_result
-        
-    except Exception as e:
-        logger.error(f"❌ Error en búsqueda jerárquica: {str(e)}")
-        
-        # Fallback a búsqueda simple
-        try:
-            from ..tools.unified_web_search_tool import UnifiedWebSearchTool
-            web_search_tool = UnifiedWebSearchTool()
-            raw_query = f"{title} {description}".strip()
-            search_query = web_search_tool._extract_clean_keywords_static(raw_query)
-            
-            if tool_manager and hasattr(tool_manager, 'execute_tool'):
-                fallback_result = tool_manager.execute_tool('web_search', {
+                return {
+                    'success': True,
+                    'type': 'granular_web_search',
+                    'content': f"Búsqueda granular completada con {len(results)} resultados organizados en: {', '.join(summary_parts)}",
+                    'summary': f"✅ Búsqueda granular: {len(categories)} categorías cubiertas con {len(results)} fuentes",
+                    'data': results,
+                    'search_results': results,
+                    'categories': categories,
+                    'granular_search': True,
                     'query': search_query,
-                    'max_results': 5,
-                    'search_engine': 'bing',
-                    'extract_content': True
-                }, task_id=task_id)
+                    'results_count': len(results),
+                    'categories_count': len(categories)
+                }
+            else:
+                logger.info(f"✅ BÚSQUEDA SIMPLE COMPLETADA: {len(results)} resultados")
                 
-                if fallback_result and fallback_result.get('success'):
-                    return {
-                        'success': True,
-                        'type': 'web_search_fallback',
-                        'query': search_query,
-                        'results_count': len(fallback_result.get('search_results', [])),
-                        'summary': f"✅ Búsqueda fallback completada: {len(fallback_result.get('search_results', []))} resultados",
-                        'data': fallback_result.get('search_results', [])
-                    }
-        except Exception as fallback_error:
-            logger.error(f"❌ Error en fallback: {str(fallback_error)}")
-        
+                return {
+                    'success': True,
+                    'type': 'web_search_basic',
+                    'content': f"Búsqueda web completada: {len(results)} resultados encontrados para '{search_query}'",
+                    'summary': f"✅ Búsqueda web: {len(results)} resultados obtenidos",
+                    'data': results,
+                    'search_results': results,
+                    'query': search_query,
+                    'results_count': len(results)
+                }
+        else:
+            error_msg = result.get('error', 'Error desconocido en búsqueda web')
+            return {
+                'success': False,
+                'error': error_msg,
+                'type': 'web_search_error'
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ Error en búsqueda web granular: {str(e)}")
         return {
             'success': False,
             'error': str(e),
-            'type': 'hierarchical_search_error',
-            'summary': f'❌ Error en búsqueda jerárquica: {str(e)}'
+            'type': 'web_search_execution_error'
         }
 
 def generate_internal_research_plan(title: str, description: str, task_id: str) -> dict:
