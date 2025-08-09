@@ -34,9 +34,9 @@ class OllamaConfig:
         
         # 1. Configuración BASE desde .env (valores por defecto)
         self._base_config = {
-            "endpoint": os.getenv('OLLAMA_BASE_URL', 'https://e8da53409283.ngrok-free.app'),
+            "endpoint": os.getenv('OLLAMA_BASE_URL', 'https://277e85fec6fd.ngrok-free.app'),
             "default_model": os.getenv('OLLAMA_DEFAULT_MODEL', 'gpt-oss:20b'),
-            "host": os.getenv('OLLAMA_HOST', 'e8da53409283.ngrok-free.app'),
+            "host": os.getenv('OLLAMA_HOST', '277e85fec6fd.ngrok-free.app'),
             "port": int(os.getenv('OLLAMA_PORT', '443')),
             "timeout": int(os.getenv('OLLAMA_TIMEOUT', '180'))
         }
