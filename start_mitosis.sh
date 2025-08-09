@@ -160,7 +160,7 @@ except:
         CORRECT_OLLAMA_URL="$RUNTIME_ENDPOINT"
         echo "   ✅ Usando endpoint desde configuración runtime: $CORRECT_OLLAMA_URL"
     else
-        CORRECT_OLLAMA_URL="https://e8da53409283.ngrok-free.app"
+        CORRECT_OLLAMA_URL="https://277e85fec6fd.ngrok-free.app"
         echo "   ⚠️ Runtime endpoint vacío, usando por defecto: $CORRECT_OLLAMA_URL"
     fi
     
