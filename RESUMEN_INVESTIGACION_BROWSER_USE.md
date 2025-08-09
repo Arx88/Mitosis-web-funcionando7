@@ -22,7 +22,7 @@
 
 ```bash
 # Aplicación ejecutándose en:
-URL: https://79891659-b696-4632-8c04-86f75511857b.preview.emergentagent.com
+URL: https://a95314bb-53dd-41ab-89d7-e54d9c5f009a.preview.emergentagent.com
 
 # Servicios activos:
 ✅ start_mitosis.sh ejecutado exitosamente

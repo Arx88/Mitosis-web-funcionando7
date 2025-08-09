@@ -17,7 +17,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://79891659-b696-4632-8c04-86f75511857b.preview.emergentagent.com"
+BACKEND_URL = "https://a95314bb-53dd-41ab-89d7-e54d9c5f009a.preview.emergentagent.com"
 
 class ToolMappingFixTester:
     def __init__(self):
