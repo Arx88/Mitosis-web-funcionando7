@@ -9276,6 +9276,31 @@ Tarea ID: {task_id}
                     'prompt': processing_prompt,
                     'max_tokens': 1500
                 }
+            # 🌐 MAPEO DE NAVEGADOR - DETECCIÓN AUTOMÁTICA DE ACCIONES
+            elif tool == 'browser':
+                # Mapear browser según la acción específica
+                action = step.get('action', 'open')
+                if action == 'open':
+                    mapped_tool = 'browser.open'
+                    url = step.get('parameters', {}).get('url', 'https://example.com')
+                    tool_params = {'url': url}
+                elif action == 'wait':
+                    mapped_tool = 'browser.wait'
+                    timeout = step.get('parameters', {}).get('timeout', 10)
+                    tool_params = {'timeout': timeout}
+                elif action == 'screenshot':
+                    mapped_tool = 'browser.capture_screenshot'
+                    full_page = step.get('parameters', {}).get('full_page', True)
+                    tool_params = {'full_page': full_page}
+                else:
+                    # Fallback para acciones no especificadas - usar browser.open
+                    mapped_tool = 'browser.open'
+                    # Extraer URL de descripción si está disponible
+                    import re
+                    url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+[^\s<>"{}|\\^`\[\].,)]'
+                    urls = re.findall(url_pattern, description)
+                    url = urls[0] if urls else 'https://example.com'
+                    tool_params = {'url': url}
             # Add more mappings for other tool types as needed
             else:
                 # For unmapped tools, use web_search as a fallback
