@@ -1238,6 +1238,17 @@ def execute_step_with_intelligent_tool_selection(step: dict, task_analysis: dict
                 result = execute_analysis_step(step_title, step_description, ollama_service, original_message)
             elif tool_name == 'processing':
                 result = execute_processing_step(step_title, step_description, ollama_service, original_message, step, task_id)
+            # 🌐 HERRAMIENTAS DE NAVEGADOR CON VISUALIZACIÓN EN TIEMPO REAL
+            elif tool_name == 'browser.open':
+                result = execute_browser_step(step_title, step_description, tool_manager, task_id, 'browser.open', step)
+            elif tool_name == 'browser.wait':
+                result = execute_browser_step(step_title, step_description, tool_manager, task_id, 'browser.wait', step)
+            elif tool_name == 'browser.capture_screenshot':
+                result = execute_browser_step(step_title, step_description, tool_manager, task_id, 'browser.capture_screenshot', step)
+            elif tool_name == 'browser.close':
+                result = execute_browser_step(step_title, step_description, tool_manager, task_id, 'browser.close', step)
+            elif tool_name == 'send_file':
+                result = execute_browser_step(step_title, step_description, tool_manager, task_id, 'send_file', step)
             else:
                 result = execute_generic_step(step_title, step_description, ollama_service, original_message)
             
