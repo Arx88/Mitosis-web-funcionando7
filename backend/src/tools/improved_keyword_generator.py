@@ -342,6 +342,138 @@ class IntelligentKeywordGenerator:
         
         return result
 
+    def detect_granular_search_needs(self, query_text: str) -> List[Dict[str, str]]:
+        """
+        🎯 DETECTOR DE NECESIDAD DE BÚSQUEDAS GRANULARES MÚLTIPLES
+        
+        Detecta si una consulta necesita múltiples búsquedas específicas
+        para obtener información completa sobre un tema
+        """
+        query_lower = query_text.lower()
+        searches = []
+        
+        # 🎬 PATRÓN: ANIME/MANGA (Attack on Titan, etc.)
+        anime_patterns = [
+            (r'attack\s+on\s+titan|shingeki\s+no\s+kyojin', 'Attack on Titan'),
+            (r'naruto', 'Naruto'),
+            (r'one\s+piece', 'One Piece'),
+            (r'dragon\s+ball', 'Dragon Ball'),
+            (r'demon\s+slayer|kimetsu\s+no\s+yaiba', 'Demon Slayer')
+        ]
+        
+        for pattern, anime_name in anime_patterns:
+            if re.search(pattern, query_lower):
+                searches.extend([
+                    {"query": f"{anime_name} trama historia argumento", "category": "trama"},
+                    {"query": f"{anime_name} personajes principales protagonistas", "category": "personajes"},
+                    {"query": f"{anime_name} contexto histórico mundo ficción", "category": "contexto"},
+                    {"query": f"{anime_name} recepción crítica reseñas puntuación", "category": "recepción_crítica"},
+                    {"query": f"{anime_name} mangaka autor Hajime Isayama creador", "category": "autor_creador"}
+                ])
+                break
+        
+        # 🎵 PATRÓN: BANDAS/MÚSICA
+        music_patterns = [
+            (r'arctic\s+monkeys', 'Arctic Monkeys'),
+            (r'coldplay', 'Coldplay'),
+            (r'radiohead', 'Radiohead'),
+            (r'the\s+beatles', 'The Beatles')
+        ]
+        
+        for pattern, band_name in music_patterns:
+            if re.search(pattern, query_lower):
+                searches.extend([
+                    {"query": f"{band_name} historia formación miembros banda", "category": "historia"},
+                    {"query": f"{band_name} discografía álbumes completa", "category": "discografía"},
+                    {"query": f"{band_name} estilo musical evolución géneros", "category": "estilo_musical"},
+                    {"query": f"{band_name} premios reconocimientos Grammy awards", "category": "premios"},
+                    {"query": f"{band_name} conciertos giras 2024 2025 fechas", "category": "tours_recientes"}
+                ])
+                break
+        
+        # 👤 PATRÓN: POLÍTICOS/FIGURAS PÚBLICAS
+        politician_patterns = [
+            (r'javier\s+milei|milei', 'Javier Milei'),
+            (r'donald\s+trump|trump', 'Donald Trump'),
+            (r'joe\s+biden|biden', 'Joe Biden'),
+            (r'elon\s+musk|musk', 'Elon Musk')
+        ]
+        
+        for pattern, person_name in politician_patterns:
+            if re.search(pattern, query_lower):
+                searches.extend([
+                    {"query": f"{person_name} biografía vida personal historia", "category": "biografía"},
+                    {"query": f"{person_name} trayectoria carrera profesional política", "category": "trayectoria"},
+                    {"query": f"{person_name} posiciones políticas ideología propuestas", "category": "ideología"},
+                    {"query": f"{person_name} declaraciones públicas entrevistas recientes", "category": "declaraciones"},
+                    {"query": f"{person_name} noticias actualidad 2024 2025", "category": "noticias_recientes"}
+                ])
+                break
+        
+        # 🔬 PATRÓN: TECNOLOGÍA/CIENCIA
+        tech_patterns = [
+            (r'inteligencia\s+artificial|artificial\s+intelligence|AI', 'Inteligencia Artificial'),
+            (r'machine\s+learning|aprendizaje\s+automático', 'Machine Learning'),
+            (r'blockchain|cadena\s+de\s+bloques', 'Blockchain'),
+            (r'chatgpt|gpt', 'ChatGPT')
+        ]
+        
+        for pattern, tech_name in tech_patterns:
+            if re.search(pattern, query_lower):
+                searches.extend([
+                    {"query": f"{tech_name} definición conceptos básicos explicación", "category": "conceptos"},
+                    {"query": f"{tech_name} aplicaciones usos prácticos ejemplos", "category": "aplicaciones"},
+                    {"query": f"{tech_name} ventajas beneficios impacto positivo", "category": "ventajas"},
+                    {"query": f"{tech_name} desventajas riesgos limitaciones", "category": "desventajas"},
+                    {"query": f"{tech_name} tendencias futuro 2025 innovaciones", "category": "tendencias"}
+                ])
+                break
+        
+        # 🏆 PATRÓN: DEPORTES/EQUIPOS
+        sports_patterns = [
+            (r'selección\s+argentina|argentina\s+fútbol', 'Selección Argentina'),
+            (r'real\s+madrid', 'Real Madrid'),
+            (r'barcelona\s+fc|fc\s+barcelona', 'FC Barcelona'),
+            (r'manchester\s+united', 'Manchester United')
+        ]
+        
+        for pattern, team_name in sports_patterns:
+            if re.search(pattern, query_lower):
+                searches.extend([
+                    {"query": f"{team_name} plantilla jugadores actual 2025", "category": "plantilla"},
+                    {"query": f"{team_name} historia títulos logros trofeos", "category": "historia"},
+                    {"query": f"{team_name} estadísticas temporada 2024-2025 resultados", "category": "estadísticas"},
+                    {"query": f"{team_name} últimos partidos resultados calendario", "category": "resultados_recientes"},
+                    {"query": f"{team_name} fichajes transferencias mercado", "category": "transferencias"}
+                ])
+                break
+        
+        # 📺 PATRÓN: ENTRETENIMIENTO/SERIES/PELÍCULAS
+        entertainment_patterns = [
+            (r'netflix\s+series|serie\s+netflix', 'Netflix Series'),
+            (r'marvel\s+movies|películas\s+marvel', 'Marvel Movies'),
+            (r'game\s+of\s+thrones|juego\s+de\s+tronos', 'Game of Thrones'),
+            (r'stranger\s+things', 'Stranger Things')
+        ]
+        
+        for pattern, content_name in entertainment_patterns:
+            if re.search(pattern, query_lower):
+                searches.extend([
+                    {"query": f"{content_name} trama resumen historia", "category": "trama"},
+                    {"query": f"{content_name} reparto actores personajes", "category": "reparto"},
+                    {"query": f"{content_name} críticas reseñas puntuación IMDB", "category": "críticas"},
+                    {"query": f"{content_name} temporadas episodios disponibles", "category": "temporadas"},
+                    {"query": f"{content_name} premios nominaciones Emmy Oscar", "category": "premios"}
+                ])
+                break
+        
+        print(f"🎯 GRANULAR SEARCH DETECTION: {len(searches)} búsquedas específicas detectadas")
+        if searches:
+            categories = [s['category'] for s in searches]
+            print(f"   📊 Categorías: {', '.join(categories)}")
+        
+        return searches
+
 # Funciones públicas para usar desde unified_web_search_tool.py
 def get_intelligent_keywords(query_text: str) -> str:
     """🎯 Función principal para generar keywords inteligentes"""
