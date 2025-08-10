@@ -1,0 +1,209 @@
+🌐 NAVEGACIÓN WEB:    📸 Screenshot único 3: https://www.bing.com/search?q=Realizar+informaci%C...
+🌐 NAVEGACIÓN WEB:    📸 Screenshot único 4: https://requestletters.com/es/home/sample-letter-r...
+🌐 NAVEGACIÓN WEB: ✅ Extracción CORREGIDA completada: 4 resultados con navegación en tiempo real
+🔍 SOURCES DEBUG: Final results summary:
+🔍 SOURCES DEBUG: Total results: 4
+🔍 SOURCES DEBUG: Unique domains: 2
+🔍 SOURCES DEBUG: Domains visited: ['www.bing.com', 'requestletters.com']
+⚠️ LIMITED SOURCE DIVERSITY: Only 2 domains
+🌐 NAVEGACIÓN WEB: 📊 Extracción completada: 4 resultados obtenidos
+🔧 execute_step_internal returned: {'success': True, 'agent_approved': True, 'evaluation': {'step_completed': True, 'should_continue': False, 'reason': 'Búsqueda completada: 4 fuentes (score: 100%)', 'feedback': 'Validación robusta exitosa', 'validation_mode': 'moderate', 'completeness_score': 100, 'validation_system': 'robust'}, 'data': {'success': True, 'tool_used': 'web_search', 'original_tool': 'web_search', 'strategy': 'lenient', 'timestamp': '2025-08-10T12:20:29.051492', 'execution_time': 88.81395673751831, 'tool_name': 'web_search', 'parameters': {'query': 'Realizar búsqueda web fuentes oficiales académicas sobre Age Empires Utilizar', 'num_results': 8, 'max_results': 8, 'search_engine': 'bing', 'extract_content': True}, 'query': 'Realizar información actualizada', 'search_engine': 'bing', 'results_count': 4, 'results': [{'title': 'Captura navegación bing #1', 'url': 'https://www.bing.com/', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Realizar información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_000_1754828343739.jpeg', 'screenshot_captured': True, 'timestamp': 1754828344.2420983, 'navigation_data': {'screenshot_index': 0, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #2', 'url': 'https://www.bing.com/search?q=Realizar+informaci%C3%B3n+actualizada&search=Submit&form=QBLH', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Realizar información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_017_1754828386270.jpeg', 'screenshot_captured': True, 'timestamp': 1754828388.6272736, 'navigation_data': {'screenshot_index': 17, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/search?q=Realizar+informaci%C3%B3n+actualizada&search=Submit&form=QBLH'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #3', 'url': 'https://www.bing.com/search?q=Realizar+informaci%C3%B3n+actualizada&search=Submit&form=QBLH&rdr=1&rdrig=DC080567E2984BFD831BBA91BF6A59FB', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Realizar información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_019_1754828390927.jpeg', 'screenshot_captured': True, 'timestamp': 1754828391.2486715, 'navigation_data': {'screenshot_index': 19, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/search?q=Realizar+informaci%C3%B3n+actualizada&search=Submit&form=QBLH&rdr=1&rdrig=DC080567E2984BFD831BBA91BF6A59FB'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #4', 'url': 'https://requestletters.com/es/home/sample-letter-requesting-updated-information', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Realizar información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_023_1754828395557.jpeg', 'screenshot_captured': True, 'timestamp': 1754828396.5282228, 'navigation_data': {'screenshot_index': 23, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://requestletters.com/es/home/sample-letter-requesting-updated-information'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}], 'search_results': [{'title': 'Captura navegación bing #1', 'url': 'https://www.bing.com/', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Realizar información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_000_1754828343739.jpeg', 'screenshot_captured': True, 'timestamp': 1754828344.2420983, 'navigation_data': {'screenshot_index': 0, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #2', 'url': 'https://www.bing.com/search?q=Realizar+informaci%C3%B3n+actualizada&search=Submit&form=QBLH', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Realizar información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_017_1754828386270.jpeg', 'screenshot_captured': True, 'timestamp': 1754828388.6272736, 'navigation_data': {'screenshot_index': 17, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/search?q=Realizar+informaci%C3%B3n+actualizada&search=Submit&form=QBLH'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #3', 'url': 'https://www.bing.com/search?q=Realizar+informaci%C3%B3n+actualizada&search=Submit&form=QBLH&rdr=1&rdrig=DC080567E2984BFD831BBA91BF6A59FB', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Realizar información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_019_1754828390927.jpeg', 'screenshot_captured': True, 'timestamp': 1754828391.2486715, 'navigation_data': {'screenshot_index': 19, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/search?q=Realizar+informaci%C3%B3n+actualizada&search=Submit&form=QBLH&rdr=1&rdrig=DC080567E2984BFD831BBA91BF6A59FB'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #4', 'url': 'https://requestletters.com/es/home/sample-letter-requesting-updated-information', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Realizar información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_023_1754828395557.jpeg', 'screenshot_captured': True, 'timestamp': 1754828396.5282228, 'navigation_data': {'screenshot_index': 23, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://requestletters.com/es/home/sample-letter-requesting-updated-information'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}], 'extract_content': True, 'visualization_enabled': False, 'screenshots_generated': True, 'strategy_used': 'lenient', 'attempt_number': 1, 'evaluation': {'step_completed': True, 'should_continue': False, 'reason': 'Búsqueda exitosa: 4 resultados encontrados', 'strategy': 'lenient'}}}
+✅ execute_step_internal completed for step 1 - AGENT APPROVED
+💾 Database updated: 1/5 steps completed, current_step: 1
+⚡ EXECUTING STEP 2/5: Recopilar información sobre mecánicas de juego y expansiones
+   Tool: web_search
+   Description: Extraer datos detallados sobre las mecánicas de juego (economía, unidades, tecnologías) y las expans...
+🔧 About to call execute_step_internal with step_id: step-2
+🧠 EXTRACTOR INTELIGENTE INPUT: 'Recopilar información sobre mecánicas juego expansiones Extraer datos detallados sobre'
+🧠 INTELLIGENT GENERATOR INPUT: 'Recopilar información sobre mecánicas juego expansiones Extraer datos detallados sobre'
+🔄 INTENTO 1/5: Generando query...
+✅ PROPER NOUNS DETECTED: ['Recopilar', 'Extraer'] - NOT problematic
+📝 QUERY CANDIDATA: 'one mecánicas expansiones extraer juego'
+✅ QUERY APROBADA en intento 1: 'one mecánicas expansiones extraer juego'
+✅ RAZONES DE APROBACIÓN: Longitud apropiada, Sin duplicaciones, Preserva tema principal, Sin palabras meta, Términos específicos: 5, Query específica
+✅ INTELLIGENT EXTRACTION SUCCESS: 'Recopilar información sobre mecánicas juego expansiones Extraer datos detallados sobre' → 'one mecánicas expansiones extraer juego'
+🔧 Query limpiado: 'one mecánicas expansiones extraer juego' (original era muy largo)
+🌐 NAVEGACIÓN WEB: 🚀 WebSocket GLOBAL inicializado encontrado
+🔍 EXECUTE_SEARCH_WITH_VISUALIZATION INPUT: 'one mecánicas expansiones extraer juego'
+🔍 _detect_granular_search_needs CALLED WITH: 'one mecánicas expansiones extraer juego'
+🔍 ANALYZING QUERY FOR GRANULAR NEEDS: 'one mecánicas expansiones extraer juego'
+🔍 EXTRACTING SUBJECT FROM: 'one mecánicas expansiones extraer juego'
+❌ NO SUBJECT EXTRACTED
+❌ No se pudo extraer tema principal
+🔍 detect_granular_search_needs RETURNED: 0 searches
+❌ NO GRANULAR SEARCHES FROM INTELLIGENT DETECTOR
+🔄 FALLBACK GRANULAR: 0 búsquedas generadas para query: 'one mecánicas expansiones extraer juego'
+🔍 GRANULAR DETECTION RESULT: 0 searches
+🌐 NAVEGACIÓN WEB: 🚀 INICIANDO NAVEGACIÓN WEB EN TIEMPO REAL...
+🌐 NAVEGACIÓN WEB: 🔍 Consulta: 'one mecánicas expansiones extraer juego'
+🌐 NAVEGACIÓN WEB: 🌐 Motor de búsqueda: bing
+🌐 NAVEGACIÓN WEB: 🎬 Activando navegación en tiempo real con screenshots continuos...
+🌐 NAVEGACIÓN WEB: ✅ RealTimeBrowserTool importado exitosamente
+🌐 NAVEGACIÓN WEB: ✅ Instancia RealTimeBrowserTool creada
+🌐 NAVEGACIÓN WEB: 🌐 Preparando navegación: Buscar información sobre 'one mecánicas expansiones extraer juego' en bing y exp...
+[REAL_TIME_BROWSER] 🖥️ Iniciando nuevo servidor X11 virtual en display :99
+[REAL_TIME_BROWSER] ❌ Error configurando X11: Fallo al iniciar servidor Xvfb
+[REAL_TIME_BROWSER] ⚠️ Continuando con servidor X11 existente...
+[REAL_TIME_BROWSER] 🔌 WebSocket inicializado para navegación en tiempo real
+[REAL_TIME_BROWSER] 🔄 Creando nuevo event loop
+[REAL_TIME_BROWSER] 📸 Hilo de captura automática iniciado (intervalo: 1s)
+[REAL_TIME_BROWSER] 🔍 EXTRAYENDO términos de: 'Buscar información sobre 'one mecánicas expansiones extraer juego' en bing y explorar los primeros resultados con screenshots continuos'
+[REAL_TIME_BROWSER] ✅ PATRÓN ESPECÍFICO detectado: 'one mecánicas expansiones extraer juego'
+[REAL_TIME_BROWSER] 🔍 Probando selector 1: input[name="q"]
+[REAL_TIME_BROWSER] ✅ Campo de búsqueda encontrado con: input[name="q"]
+[REAL_TIME_BROWSER] 🔄 Limpiando campo de búsqueda...
+[REAL_TIME_BROWSER] ⌨️ Escribiendo términos: 'one mecánicas expansiones extraer juego'
+[REAL_TIME_BROWSER] ✅ Términos de búsqueda escritos correctamente
+[REAL_TIME_BROWSER] 🔍 Enviando búsqueda con Enter...
+[REAL_TIME_BROWSER] ✅ Búsqueda enviada con Enter exitosamente
+[REAL_TIME_BROWSER] ✅ Encontrados 10 resultados con: .b_algo h2 a
+[REAL_TIME_BROWSER] 🔗 DEBUG Link 1: 10 Juegos con Mecánicas de Extracción qu... -> https://www.bing.com/ck/a?!&&p=5c28ef8145981cff4eebfa0a4171f...
+[REAL_TIME_BROWSER] 🔗 DEBUG Link 2: La utilidad de las reglas opcionales – A... -> https://www.bing.com/ck/a?!&&p=e05373c21309e0d6510f4b19f170a...
+[REAL_TIME_BROWSER] 🔗 DEBUG Link 3: Sistema de juego de One Page Rules - Per... -> https://www.bing.com/ck/a?!&&p=4dbaf96f242b9c648c263a2bfa909...
+[REAL_TIME_BROWSER] 🎯 Explorando hasta 3 sitios web diferentes para mayor diversidad
+[REAL_TIME_BROWSER] 🎯 DEBUG: Procesando enlace 1: 10 Juegos con Mecánicas de Extracción qu... -> https://www.bing.com/ck/a?!&&p=5c28ef8145981cff4eebfa0a4171f...
+🔍 SOURCES DEBUG: About to navigate to DIVERSE source #1: www.bing.com
+[REAL_TIME_BROWSER] 🌐 Navegando directamente a: https://www.bing.com/ck/a?!&&p=5c28ef8145981cff4ee...
+[REAL_TIME_BROWSER] ✅ Navegación exitosa a dominio real: www.mmoingame.com
+[REAL_TIME_BROWSER] 📄 Extrayendo contenido detallado de www.mmoingame.com...
+[REAL_TIME_BROWSER] 📊 Contenido extraído de www.mmoingame.com:
+[REAL_TIME_BROWSER]    📝 Caracteres: 565
+[REAL_TIME_BROWSER]    🎯 Método: section-content
+[REAL_TIME_BROWSER]    ⭐ Calidad: medium
+[REAL_TIME_BROWSER] 📄 Contenido extraído: 565 caracteres de www.mmoingame.com | 526: Inval...
+[REAL_TIME_BROWSER] 🔄 Volviendo a resultados para siguiente enlace (1/6 completados)...
+[REAL_TIME_BROWSER] 🎯 DEBUG: Procesando enlace 2: La utilidad de las reglas opcionales – A... -> https://www.bing.com/ck/a?!&&p=e05373c21309e0d6510f4b19f170a...
+🔍 SOURCES DEBUG: About to navigate to DIVERSE source #2: www.bing.com
+[REAL_TIME_BROWSER] 🌐 Navegando directamente a: https://www.bing.com/ck/a?!&&p=e05373c21309e0d6510...
+[REAL_TIME_BROWSER] ✅ Navegación exitosa a dominio real: asociacionkimera.wordpress.com
+[REAL_TIME_BROWSER] 📄 Extrayendo contenido detallado de asociacionkimera.wordpress.com...
+[REAL_TIME_BROWSER] 📊 Contenido extraído de asociacionkimera.wordpress.com:
+[REAL_TIME_BROWSER]    📝 Caracteres: 3000
+[REAL_TIME_BROWSER]    🎯 Método: article-content
+[REAL_TIME_BROWSER]    ⭐ Calidad: high
+[REAL_TIME_BROWSER] 📄 Contenido extraído: 3000 caracteres de La utilidad de las reglas opci...
+[REAL_TIME_BROWSER] 🔄 Volviendo a resultados para siguiente enlace (2/6 completados)...
+[REAL_TIME_BROWSER] ⚠️ Error explorando resultado 2: Timeout 30000ms exceeded.
+[REAL_TIME_BROWSER] 🎯 DEBUG: Procesando enlace 3: Sistema de juego de One Page Rules - Per... -> https://www.bing.com/ck/a?!&&p=4dbaf96f242b9c648c263a2bfa909...
+🔍 SOURCES DEBUG: About to navigate to DIVERSE source #3: www.bing.com
+[REAL_TIME_BROWSER] 🌐 Navegando directamente a: https://www.bing.com/ck/a?!&&p=4dbaf96f242b9c648c2...
+[REAL_TIME_BROWSER] ✅ Navegación exitosa a dominio real: perdiendocordura.com
+[REAL_TIME_BROWSER] 📄 Extrayendo contenido detallado de perdiendocordura.com...
+[REAL_TIME_BROWSER] 📊 Contenido extraído de perdiendocordura.com:
+[REAL_TIME_BROWSER]    📝 Caracteres: 3000
+[REAL_TIME_BROWSER]    🎯 Método: article-content
+[REAL_TIME_BROWSER]    ⭐ Calidad: high
+[REAL_TIME_BROWSER] 📄 Contenido extraído: 3000 caracteres de Sistema de juego de One Page R...
+[REAL_TIME_BROWSER] 🔄 Volviendo a resultados para siguiente enlace (3/6 completados)...
+[REAL_TIME_BROWSER] 🔒 Servidor X11 virtual creado por nosotros cerrado
+🌐 NAVEGACIÓN WEB: ✅ Navegación en tiempo real ejecutada
+🌐 NAVEGACIÓN WEB: ✅ Navegación en tiempo real completada: 85 screenshots capturados
+🌐 NAVEGACIÓN WEB: 📊 Procesando navegación CORRECTA: 5 páginas visitadas, 85 screenshots
+🔍 SOURCES DEBUG: Processing page: https://www.bing.com
+🔍 SOURCES DEBUG: Processing page: https://www.bing.com/search?q=one+mec%C3%A1nicas+expansiones+extraer+juego&search=Submit&form=QBLH&rdr=1&rdrig=640C463F2AB04C06A134E578A8819C55
+🔍 SOURCES DEBUG: Processing page: https://www.mmoingame.com/opinion/10-juegos-con-mecanicas-de-extraccion-que-deberias-probar/
+✅ INCLUIDA: https://www.mmoingame.com/opinion/10-juegos-con-mecanicas-de-extraccion-que-deberias-probar/ - Content length: 565
+🔍 SOURCES DEBUG: Processing page: https://asociacionkimera.wordpress.com/2021/05/01/la-utilidad-de-las-reglas-opcionales/
+✅ INCLUIDA: https://asociacionkimera.wordpress.com/2021/05/01/la-utilidad-de-las-reglas-opcionales/ - Content length: 3000
+🔍 SOURCES DEBUG: Processing page: https://perdiendocordura.com/sistema-de-juego-de-one-page-rules/
+✅ INCLUIDA: https://perdiendocordura.com/sistema-de-juego-de-one-page-rules/ - Content length: 3000
+🌐 NAVEGACIÓN WEB: 🔍 FILTRADO: 3 páginas con contenido real de 5 visitadas
+🌐 NAVEGACIÓN WEB:    📄 Resultado real 1: www.mmoingame.com | 526: Invalid SSL certificate... [Screenshot: ✅]
+🌐 NAVEGACIÓN WEB:    📄 Resultado real 2: La utilidad de las reglas opcionales – Asociación ... [Screenshot: ✅]
+🌐 NAVEGACIÓN WEB:    📄 Resultado real 3: Sistema de juego de One Page Rules - Perdiendo Cor... [Screenshot: ✅]
+🌐 NAVEGACIÓN WEB:    📸 Screenshot único 4: https://www.bing.com/...
+🌐 NAVEGACIÓN WEB:    📸 Screenshot único 5: https://www.bing.com/search?q=one+mec%C3%A1nicas+e...
+🌐 NAVEGACIÓN WEB:    📸 Screenshot único 6: https://www.bing.com/search?q=one+mec%C3%A1nicas+e...
+🌐 NAVEGACIÓN WEB: ✅ Extracción CORREGIDA completada: 6 resultados con navegación en tiempo real
+🔍 SOURCES DEBUG: Final results summary:
+🔍 SOURCES DEBUG: Total results: 6
+🔍 SOURCES DEBUG: Unique domains: 4
+🔍 SOURCES DEBUG: Domains visited: ['www.bing.com', 'perdiendocordura.com', 'asociacionkimera.wordpress.com', 'www.mmoingame.com']
+✅ GOOD SOURCE DIVERSITY: 4 different domains
+🌐 NAVEGACIÓN WEB: 📊 Extracción completada: 6 resultados obtenidos
+🔧 execute_step_internal returned: {'success': True, 'agent_approved': True, 'evaluation': {'step_completed': True, 'should_continue': False, 'reason': 'Búsqueda completada: 6 fuentes (score: 100%)', 'feedback': 'Validación robusta exitosa', 'validation_mode': 'moderate', 'completeness_score': 100, 'validation_system': 'robust'}, 'data': {'success': True, 'tool_used': 'web_search', 'original_tool': 'web_search', 'strategy': 'lenient', 'timestamp': '2025-08-10T12:22:19.058082', 'execution_time': 109.99852967262268, 'tool_name': 'web_search', 'parameters': {'query': 'Recopilar información sobre mecánicas juego expansiones Extraer datos detallados sobre', 'num_results': 8, 'max_results': 8, 'search_engine': 'bing', 'extract_content': True}, 'query': 'one mecánicas expansiones extraer juego', 'search_engine': 'bing', 'results_count': 6, 'results': [{'title': 'www.mmoingame.com | 526: Invalid SSL certificate', 'url': 'https://www.mmoingame.com/opinion/10-juegos-con-mecanicas-de-extraccion-que-deberias-probar/', 'snippet': 'Contenido real extraído de www.mmoingame.com | 526: Invalid SSL certificate: The origin web server does not have a valid SSL certificate. The SSL certificate presented by the server did not pass validation. This could indicate an expired SSL certificate or a certificate that d...', 'source': 'bing', 'method': 'real_time_navigation', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_015_1754828455325.jpeg', 'screenshot_captured': True, 'timestamp': 1754828459.7504156, 'content_extracted': True, 'content_preview': 'The origin web server does not have a valid SSL certificate. The SSL certificate presented by the server did not pass validation. This could indicate an expired SSL certificate or a certificate that does not include the requested domain name. Please  your hosting provider to ensure that an up-to-dat', 'content_length': 565, 'navigation_data': {'pages_visited': 3, 'screenshots_taken': 85, 'actions_performed': 5, 'real_time_capture': True, 'page_index': 0, 'has_real_content': True}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'La utilidad de las reglas opcionales – Asociación Kimera', 'url': 'https://asociacionkimera.wordpress.com/2021/05/01/la-utilidad-de-las-reglas-opcionales/', 'snippet': 'Contenido real extraído de La utilidad de las reglas opcionales – Asociación Kimera: La utilidad de las reglas opcionales Escrito por: Oht 1 mayo, 2021 Leave a comment on La utilidad de las reglas opcionales Bienvenidos un día mas al blog de la Asociación Kimera. Recientemente he desc...', 'source': 'bing', 'method': 'real_time_navigation', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_027_1754828470239.jpeg', 'screenshot_captured': True, 'timestamp': 1754828476.7848353, 'content_extracted': True, 'content_preview': 'La utilidad de las reglas opcionales Escrito por: Oht 1 mayo, 2021 Leave a comment on La utilidad de las reglas opcionales Bienvenidos un día mas al blog de la Asociación Kimera. Recientemente he descubierto a One Page Rules, un grupo independiente que ha hecho unas reglas de wargames que entran en ', 'content_length': 3000, 'navigation_data': {'pages_visited': 3, 'screenshots_taken': 85, 'actions_performed': 5, 'real_time_capture': True, 'page_index': 1, 'has_real_content': True}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Sistema de juego de One Page Rules - Perdiendo Cordura', 'url': 'https://perdiendocordura.com/sistema-de-juego-de-one-page-rules/', 'snippet': 'Contenido real extraído de Sistema de juego de One Page Rules - Perdiendo Cordura: One Page Rules: Una Nueva Era para los Juegos de Miniaturas En un mundo dominado por juegos de miniaturas extensos y complejos, One Page Rules (OPR) ha emergido como una opción revolucionaria. Fundado...', 'source': 'bing', 'method': 'real_time_navigation', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_068_1754828517301.jpeg', 'screenshot_captured': True, 'timestamp': 1754828525.9053445, 'content_extracted': True, 'content_preview': 'One Page Rules: Una Nueva Era para los Juegos de Miniaturas En un mundo dominado por juegos de miniaturas extensos y complejos, One Page Rules (OPR) ha emergido como una opción revolucionaria. Fundado con la premisa de simplificar el género y hacerlo accesible para una audiencia más amplia, OPR ha c', 'content_length': 3000, 'navigation_data': {'pages_visited': 3, 'screenshots_taken': 85, 'actions_performed': 5, 'real_time_capture': True, 'page_index': 2, 'has_real_content': True}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #4', 'url': 'https://www.bing.com/', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "one mecánicas expansiones extraer juego" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_000_1754828432646.jpeg', 'screenshot_captured': True, 'timestamp': 1754828433.24394, 'navigation_data': {'screenshot_index': 0, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #5', 'url': 'https://www.bing.com/search?q=one+mec%C3%A1nicas+expansiones+extraer+juego&search=Submit&form=QBLH', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "one mecánicas expansiones extraer juego" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_009_1754828447426.jpeg', 'screenshot_captured': True, 'timestamp': 1754828448.1254086, 'navigation_data': {'screenshot_index': 9, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/search?q=one+mec%C3%A1nicas+expansiones+extraer+juego&search=Submit&form=QBLH'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #6', 'url': 'https://www.bing.com/search?q=one+mec%C3%A1nicas+expansiones+extraer+juego&search=Submit&form=QBLH&rdr=1&rdrig=640C463F2AB04C06A134E578A8819C55', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "one mecánicas expansiones extraer juego" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_011_1754828450355.jpeg', 'screenshot_captured': True, 'timestamp': 1754828450.8601696, 'navigation_data': {'screenshot_index': 11, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/search?q=one+mec%C3%A1nicas+expansiones+extraer+juego&search=Submit&form=QBLH&rdr=1&rdrig=640C463F2AB04C06A134E578A8819C55'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}], 'search_results': [{'title': 'www.mmoingame.com | 526: Invalid SSL certificate', 'url': 'https://www.mmoingame.com/opinion/10-juegos-con-mecanicas-de-extraccion-que-deberias-probar/', 'snippet': 'Contenido real extraído de www.mmoingame.com | 526: Invalid SSL certificate: The origin web server does not have a valid SSL certificate. The SSL certificate presented by the server did not pass validation. This could indicate an expired SSL certificate or a certificate that d...', 'source': 'bing', 'method': 'real_time_navigation', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_015_1754828455325.jpeg', 'screenshot_captured': True, 'timestamp': 1754828459.7504156, 'content_extracted': True, 'content_preview': 'The origin web server does not have a valid SSL certificate. The SSL certificate presented by the server did not pass validation. This could indicate an expired SSL certificate or a certificate that does not include the requested domain name. Please  your hosting provider to ensure that an up-to-dat', 'content_length': 565, 'navigation_data': {'pages_visited': 3, 'screenshots_taken': 85, 'actions_performed': 5, 'real_time_capture': True, 'page_index': 0, 'has_real_content': True}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'La utilidad de las reglas opcionales – Asociación Kimera', 'url': 'https://asociacionkimera.wordpress.com/2021/05/01/la-utilidad-de-las-reglas-opcionales/', 'snippet': 'Contenido real extraído de La utilidad de las reglas opcionales – Asociación Kimera: La utilidad de las reglas opcionales Escrito por: Oht 1 mayo, 2021 Leave a comment on La utilidad de las reglas opcionales Bienvenidos un día mas al blog de la Asociación Kimera. Recientemente he desc...', 'source': 'bing', 'method': 'real_time_navigation', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_027_1754828470239.jpeg', 'screenshot_captured': True, 'timestamp': 1754828476.7848353, 'content_extracted': True, 'content_preview': 'La utilidad de las reglas opcionales Escrito por: Oht 1 mayo, 2021 Leave a comment on La utilidad de las reglas opcionales Bienvenidos un día mas al blog de la Asociación Kimera. Recientemente he descubierto a One Page Rules, un grupo independiente que ha hecho unas reglas de wargames que entran en ', 'content_length': 3000, 'navigation_data': {'pages_visited': 3, 'screenshots_taken': 85, 'actions_performed': 5, 'real_time_capture': True, 'page_index': 1, 'has_real_content': True}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Sistema de juego de One Page Rules - Perdiendo Cordura', 'url': 'https://perdiendocordura.com/sistema-de-juego-de-one-page-rules/', 'snippet': 'Contenido real extraído de Sistema de juego de One Page Rules - Perdiendo Cordura: One Page Rules: Una Nueva Era para los Juegos de Miniaturas En un mundo dominado por juegos de miniaturas extensos y complejos, One Page Rules (OPR) ha emergido como una opción revolucionaria. Fundado...', 'source': 'bing', 'method': 'real_time_navigation', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_068_1754828517301.jpeg', 'screenshot_captured': True, 'timestamp': 1754828525.9053445, 'content_extracted': True, 'content_preview': 'One Page Rules: Una Nueva Era para los Juegos de Miniaturas En un mundo dominado por juegos de miniaturas extensos y complejos, One Page Rules (OPR) ha emergido como una opción revolucionaria. Fundado con la premisa de simplificar el género y hacerlo accesible para una audiencia más amplia, OPR ha c', 'content_length': 3000, 'navigation_data': {'pages_visited': 3, 'screenshots_taken': 85, 'actions_performed': 5, 'real_time_capture': True, 'page_index': 2, 'has_real_content': True}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #4', 'url': 'https://www.bing.com/', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "one mecánicas expansiones extraer juego" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_000_1754828432646.jpeg', 'screenshot_captured': True, 'timestamp': 1754828433.24394, 'navigation_data': {'screenshot_index': 0, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #5', 'url': 'https://www.bing.com/search?q=one+mec%C3%A1nicas+expansiones+extraer+juego&search=Submit&form=QBLH', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "one mecánicas expansiones extraer juego" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_009_1754828447426.jpeg', 'screenshot_captured': True, 'timestamp': 1754828448.1254086, 'navigation_data': {'screenshot_index': 9, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/search?q=one+mec%C3%A1nicas+expansiones+extraer+juego&search=Submit&form=QBLH'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #6', 'url': 'https://www.bing.com/search?q=one+mec%C3%A1nicas+expansiones+extraer+juego&search=Submit&form=QBLH&rdr=1&rdrig=640C463F2AB04C06A134E578A8819C55', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "one mecánicas expansiones extraer juego" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_011_1754828450355.jpeg', 'screenshot_captured': True, 'timestamp': 1754828450.8601696, 'navigation_data': {'screenshot_index': 11, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/search?q=one+mec%C3%A1nicas+expansiones+extraer+juego&search=Submit&form=QBLH&rdr=1&rdrig=640C463F2AB04C06A134E578A8819C55'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}], 'extract_content': True, 'visualization_enabled': False, 'screenshots_generated': True, 'strategy_used': 'lenient', 'attempt_number': 1, 'evaluation': {'step_completed': True, 'should_continue': False, 'reason': 'Búsqueda exitosa: 6 resultados encontrados', 'strategy': 'lenient'}}}
+✅ execute_step_internal completed for step 2 - AGENT APPROVED
+💾 Database updated: 2/5 steps completed, current_step: 2
+⚡ EXECUTING STEP 3/5: Obtener estadísticas de jugadores y datos de la comunidad
+   Tool: web_search
+   Description: Buscar estadísticas de jugadores, rankings, y datos de la comunidad en plataformas como Steam, Battl...
+🔧 About to call execute_step_internal with step_id: step-3
+🧠 EXTRACTOR INTELIGENTE INPUT: 'Obtener estadísticas jugadores datos comunidad Buscar estadísticas jugadores, rankings, datos'
+🧠 INTELLIGENT GENERATOR INPUT: 'Obtener estadísticas jugadores datos comunidad Buscar estadísticas jugadores, rankings, datos'
+🔄 INTENTO 1/5: Generando query...
+✅ PROPER NOUNS DETECTED: ['Obtener', 'Buscar'] - NOT problematic
+📝 QUERY CANDIDATA: 'jugadores ranking estadísticas comunidad rankings'
+❌ QUERY RECHAZADA en intento 1: 'jugadores ranking estadísticas comunidad rankings'
+❌ RAZONES DE RECHAZO: No preserva tema principal identificado
+🔄 Generando nueva query (intento 2)...
+🔄 INTENTO 2/5: Generando query...
+📝 QUERY CANDIDATA: 'jugadores ranking'
+❌ QUERY RECHAZADA en intento 2: 'jugadores ranking'
+❌ RAZONES DE RECHAZO: No preserva tema principal identificado
+🔄 Generando nueva query (intento 3)...
+🔄 INTENTO 3/5: Generando query...
+📝 QUERY CANDIDATA: 'Obtener'
+❌ QUERY RECHAZADA en intento 3: 'Obtener'
+❌ RAZONES DE RECHAZO: Longitud incorrecta: 1 palabras, Pocos términos específicos reconocibles
+🔄 Generando nueva query (intento 4)...
+🔄 INTENTO 4/5: Generando query...
+📝 QUERY CANDIDATA: 'jugadores comunidad rankings'
+❌ QUERY RECHAZADA en intento 4: 'jugadores comunidad rankings'
+❌ RAZONES DE RECHAZO: No preserva tema principal identificado
+🔄 Generando nueva query (intento 5)...
+🔄 INTENTO 5/5: Generando query...
+📝 QUERY CANDIDATA: 'Obtener información actualizada'
+✅ QUERY APROBADA en intento 5: 'Obtener información actualizada'
+✅ RAZONES DE APROBACIÓN: Longitud apropiada, Sin duplicaciones, Preserva tema principal, Términos específicos: 3
+✅ INTELLIGENT EXTRACTION SUCCESS: 'Obtener estadísticas jugadores datos comunidad Buscar estadísticas jugadores, rankings, datos' → 'Obtener información actualizada'
+🔧 Query limpiado: 'Obtener información actualizada' (original era muy largo)
+🌐 NAVEGACIÓN WEB: 🚀 WebSocket GLOBAL inicializado encontrado
+🔍 EXECUTE_SEARCH_WITH_VISUALIZATION INPUT: 'Obtener información actualizada'
+🔍 _detect_granular_search_needs CALLED WITH: 'Obtener información actualizada'
+🔍 ANALYZING QUERY FOR GRANULAR NEEDS: 'Obtener información actualizada'
+🔍 EXTRACTING SUBJECT FROM: 'Obtener información actualizada'
+✅ SUBJECT FOUND (Method 5 - Single Proper Noun): 'Obtener'
+✅ TEMA PRINCIPAL DETECTADO: 'Obtener'
+📊 TIPO DE TEMA CLASIFICADO: general_topic
+🔍 EVALUATING GRANULAR NEED FOR: 'Obtener' (type: general_topic)
+❌ NO REQUIERE GRANULARIDAD - Búsqueda simple suficiente
+🔍 NECESITA GRANULARIDAD: False
+❌ Tema no requiere búsquedas granulares - búsqueda simple
+🔍 detect_granular_search_needs RETURNED: 0 searches
+❌ NO GRANULAR SEARCHES FROM INTELLIGENT DETECTOR
+🔄 FALLBACK GRANULAR: 0 búsquedas generadas para query: 'Obtener información actualizada'
+🔍 GRANULAR DETECTION RESULT: 0 searches
+🌐 NAVEGACIÓN WEB: 🚀 INICIANDO NAVEGACIÓN WEB EN TIEMPO REAL...
+🌐 NAVEGACIÓN WEB: 🔍 Consulta: 'Obtener información actualizada'
+🌐 NAVEGACIÓN WEB: 🌐 Motor de búsqueda: bing
+🌐 NAVEGACIÓN WEB: 🎬 Activando navegación en tiempo real con screenshots continuos...
+🌐 NAVEGACIÓN WEB: ✅ RealTimeBrowserTool importado exitosamente
+🌐 NAVEGACIÓN WEB: ✅ Instancia RealTimeBrowserTool creada
+🌐 NAVEGACIÓN WEB: 🌐 Preparando navegación: Buscar información sobre 'Obtener información actualizada' en bing y explorar lo...
+[REAL_TIME_BROWSER] 🖥️ Iniciando nuevo servidor X11 virtual en display :99
+[REAL_TIME_BROWSER] ❌ Error configurando X11: Fallo al iniciar servidor Xvfb
+[REAL_TIME_BROWSER] ⚠️ Continuando con servidor X11 existente...
+[REAL_TIME_BROWSER] 🔌 WebSocket inicializado para navegación en tiempo real
+[REAL_TIME_BROWSER] 🔄 Creando nuevo event loop
+[REAL_TIME_BROWSER] 📸 Hilo de captura automática iniciado (intervalo: 1s)
+[REAL_TIME_BROWSER] 🔒 Servidor X11 virtual creado por nosotros cerrado
+🌐 NAVEGACIÓN WEB: ✅ Navegación en tiempo real ejecutada
+🌐 NAVEGACIÓN WEB: ✅ Navegación en tiempo real completada: 15 screenshots capturados
+🌐 NAVEGACIÓN WEB: 📊 Procesando navegación CORRECTA: 0 páginas visitadas, 15 screenshots
+🌐 NAVEGACIÓN WEB: 🔍 FILTRADO: 0 páginas con contenido real de 0 visitadas
+🌐 NAVEGACIÓN WEB:    📸 Screenshot único 1: https://www.bing.com/...
+🌐 NAVEGACIÓN WEB: ✅ Extracción CORREGIDA completada: 1 resultados con navegación en tiempo real
+🔍 SOURCES DEBUG: Final results summary:
+🔍 SOURCES DEBUG: Total results: 1
+🔍 SOURCES DEBUG: Unique domains: 1
+🔍 SOURCES DEBUG: Domains visited: ['www.bing.com']
+🚨 SOURCE DIVERSITY PROBLEM: Only Bing sources detected!
+🌐 NAVEGACIÓN WEB: 📊 Extracción completada: 1 resultados obtenidos
+🔧 execute_step_internal returned: {'success': True, 'agent_approved': True, 'evaluation': {'step_completed': True, 'should_continue': False, 'reason': 'Búsqueda aceptable: 1 fuentes (score: 90.0%)', 'feedback': 'Validación robusta exitosa', 'validation_mode': 'moderate', 'completeness_score': 90.0, 'validation_system': 'robust'}, 'data': {'success': True, 'tool_used': 'web_search', 'original_tool': 'web_search', 'strategy': 'lenient', 'timestamp': '2025-08-10T12:22:58.486500', 'execution_time': 39.41944646835327, 'tool_name': 'web_search', 'parameters': {'query': 'Obtener estadísticas jugadores datos comunidad Buscar estadísticas jugadores, rankings, datos', 'num_results': 8, 'max_results': 8, 'search_engine': 'bing', 'extract_content': True}, 'query': 'Obtener información actualizada', 'search_engine': 'bing', 'results_count': 1, 'results': [{'title': 'Captura navegación bing #1', 'url': 'https://www.bing.com/', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Obtener información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_000_1754828542455.jpeg', 'screenshot_captured': True, 'timestamp': 1754828543.0305207, 'navigation_data': {'screenshot_index': 0, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}], 'search_results': [{'title': 'Captura navegación bing #1', 'url': 'https://www.bing.com/', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Obtener información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828220728-1-1761/real_navigation_000_1754828542455.jpeg', 'screenshot_captured': True, 'timestamp': 1754828543.0305207, 'navigation_data': {'screenshot_index': 0, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}], 'extract_content': True, 'visualization_enabled': False, 'screenshots_generated': True, 'strategy_used': 'lenient', 'attempt_number': 1, 'evaluation': {'step_completed': True, 'should_continue': False, 'reason': 'Búsqueda exitosa: 1 resultados encontrados', 'strategy': 'lenient'}}}
+✅ execute_step_internal completed for step 3 - AGENT APPROVED
+💾 Database updated: 3/5 steps completed, current_step: 3
+⚡ EXECUTING STEP 4/5: Investigar el impacto cultural y la influencia en la industria
+   Tool: web_search
+   Description: Revisar artículos de prensa, estudios de caso y análisis de la influencia de Age of Empires 2 en la ...
+🔧 About to call execute_step_internal with step_id: step-4
+🧠 EXTRACTOR INTELIGENTE INPUT: 'Investigar impacto cultural influencia industria Revisar artículos prensa, estudios caso'
