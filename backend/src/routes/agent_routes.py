@@ -47,6 +47,9 @@ from ..config.ollama_config import get_ollama_config, get_ollama_endpoint, get_o
 from ..services.intelligent_planner import get_intelligent_planner, IntelligentPlanner
 from ..services.real_time_feedback import get_feedback_manager, RealTimeFeedbackManager
 
+# 📄 NUEVO: Importar sistema de documento en vivo para recolección en tiempo real
+from ..services.documento_en_vivo import obtener_documento_en_vivo
+
 # 🔥 NUEVO: Importar sistema robusto de validación
 try:
     from .robust_validation_system import RobustValidationSystem
