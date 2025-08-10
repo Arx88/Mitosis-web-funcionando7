@@ -1149,6 +1149,27 @@ def serve_screenshot(task_id, filename):
         logger.error(f"Error serving screenshot {filename} for task {task_id}: {e}")
         return jsonify({"error": "Screenshot not found"}), 404
 
+# 🔄 ENDPOINT PARA OBTENER FEEDBACK EN TIEMPO REAL
+@app.route('/api/tasks/<task_id>/feedback', methods=['GET'])
+def get_task_feedback(task_id):
+    """Obtener el feedback y documentación en tiempo real de una tarea"""
+    try:
+        # Buscar si existe un reporte de feedback para esta tarea
+        feedback_file = f"/tmp/feedback_{task_id}.json"
+        if os.path.exists(feedback_file):
+            with open(feedback_file, 'r') as f:
+                feedback_data = json.load(f)
+            return jsonify(feedback_data)
+        else:
+            return jsonify({
+                "task_id": task_id,
+                "message": "No hay feedback disponible aún para esta tarea",
+                "status": "waiting"
+            })
+    except Exception as e:
+        logger.error(f"Error obteniendo feedback para tarea {task_id}: {e}")
+        return jsonify({"error": "Error obteniendo feedback"}), 500
+
 # ✅ ENDPOINT FALTANTE PARA GET-TASK-STATUS - CORRIGIENDO ERROR 404
 @app.route('/api/agent/get-task-status/<task_id>', methods=['GET', 'OPTIONS'])
 def get_task_status(task_id):
