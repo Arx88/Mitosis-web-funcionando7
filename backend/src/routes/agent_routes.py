@@ -749,7 +749,51 @@ def get_ollama_queue_status():
             'timestamp': datetime.now().isoformat()
         }), 500
 
-@agent_bp.route('/get-all-tasks', methods=['GET'])
+@agent_bp.route('/get-task-feedback/<task_id>', methods=['GET'])
+def get_task_feedback(task_id: str):
+    """
+    📊 ENDPOINT PARA OBTENER FEEDBACK EN TIEMPO REAL DE UNA TAREA
+    
+    Proporciona toda la información recolectada en tiempo real durante la ejecución de una tarea,
+    incluyendo datos, insights y progreso de recolección.
+    """
+    try:
+        feedback_manager = get_feedback_manager()
+        
+        # Obtener datos recolectados
+        collected_data = feedback_manager.get_task_collected_data(task_id)
+        
+        # Obtener resumen de progreso
+        progress_summary = feedback_manager.get_task_progress_summary(task_id)
+        
+        # Generar documento de recolección
+        collection_document = feedback_manager.generate_collection_document(task_id)
+        
+        return jsonify({
+            'success': True,
+            'task_id': task_id,
+            'collected_data': collected_data,
+            'progress_summary': progress_summary,
+            'collection_document': collection_document,
+            'data_count': len(collected_data),
+            'has_data': len(collected_data) > 0,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting task feedback for {task_id}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'task_id': task_id,
+            'collected_data': [],
+            'progress_summary': {},
+            'collection_document': '# Error\n\nNo se pudo generar el documento de recolección.',
+            'data_count': 0,
+            'has_data': False,
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 def get_all_tasks():
     """
     🔄 ENDPOINT PARA OBTENER TODAS LAS TAREAS
