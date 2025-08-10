@@ -481,9 +481,14 @@ def get_intelligent_keywords(query_text: str) -> str:
     return generator.get_intelligent_keywords(query_text)
 
 def get_multiple_search_variants(query_text: str, count: int = 3) -> List[str]:
-    """🔄 Generar múltiples variantes de búsqueda"""
+    """🔄 Generar múltiples variantes de búsqueda para diversidad"""
     generator = IntelligentKeywordGenerator()
     return generator.get_multiple_search_variants(query_text, count)
+
+def detect_granular_search_needs(query_text: str) -> List[Dict[str, str]]:
+    """🎯 Detectar si una consulta necesita búsquedas granulares múltiples"""
+    generator = IntelligentKeywordGenerator()
+    return generator.detect_granular_search_needs(query_text)
 
 # Testing directo si se ejecuta como script
 if __name__ == "__main__":
