@@ -320,11 +320,19 @@ class IntelligentKeywordGenerator:
             if search_term in text_lower:
                 return subject
         
-        # Buscar nombres propios
+        # Buscar nombres propios y videojuegos con números
         import re
-        proper_nouns = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\b', text)
-        if proper_nouns:
-            return proper_nouns[0]
+        
+        # Patrones específicos para videojuegos 
+        videogame_patterns = [
+            r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:VI|IV|V|2|3|4|5|6)\b',  # Civilization VI, Age of Empires 2
+            r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b',  # Nombres propios normales
+        ]
+        
+        for pattern in videogame_patterns:
+            matches = re.findall(pattern, text)
+            if matches:
+                return matches[0]
         
         # Extraer palabras significativas (fallback)
         words = re.findall(r'\b[a-zA-Z]{4,}\b', text)
