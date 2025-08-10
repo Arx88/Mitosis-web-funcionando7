@@ -1008,19 +1008,30 @@ class IntelligentKeywordGenerator:
     def _generate_intelligent_searches_with_llm(self, subject: str, subject_type: str, mentioned_aspects: List[str]) -> List[Dict[str, str]]:
         """🧠 USAR LLM PARA GENERAR BÚSQUEDAS GRANULARES INTELIGENTES"""
         
-        # Construir prompt inteligente y conciso para el LLM
+        # Construir prompt inteligente y conciso para el LLM - CORREGIDO PARA EVITAR ALUCINACIONES
         aspects_text = f" Aspectos mencionados: {', '.join(mentioned_aspects)}." if mentioned_aspects else ""
         
-        prompt = f"""Para el tema "{subject}", necesito 5 búsquedas web específicas y granulares.{aspects_text}
+        prompt = f"""Para el tema "{subject}", genera 5 búsquedas web efectivas pero GENERALES.{aspects_text}
+
+IMPORTANTE: No inventes eventos específicos, fechas exactas, o entrevistas particulares. Usa términos generales que permitan encontrar información actual.
 
 Responde SOLO con JSON:
 {{"searches": [
-  {{"category": "aspecto1", "query": "búsqueda específica 1"}},
-  {{"category": "aspecto2", "query": "búsqueda específica 2"}},
-  {{"category": "aspecto3", "query": "búsqueda específica 3"}},
-  {{"category": "aspecto4", "query": "búsqueda específica 4"}},
-  {{"category": "aspecto5", "query": "búsqueda específica 5"}}
-]}}"""
+  {{"category": "aspecto1", "query": "búsqueda general efectiva 1"}},
+  {{"category": "aspecto2", "query": "búsqueda general efectiva 2"}},  
+  {{"category": "aspecto3", "query": "búsqueda general efectiva 3"}},
+  {{"category": "aspecto4", "query": "búsqueda general efectiva 4"}},
+  {{"category": "aspecto5", "query": "búsqueda general efectiva 5"}}
+]}}
+
+Ejemplos de búsquedas GENERALES efectivas:
+- "{subject} biografía historia personal"
+- "{subject} últimas noticias 2025" 
+- "{subject} posiciones políticas ideología"
+- "{subject} controversias polémicas"
+- "{subject} declaraciones recientes actualidad"
+
+NO uses eventos específicos inventados."""
 
         try:
             # Importar OllamaService para generar respuestas inteligentes
