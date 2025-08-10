@@ -467,9 +467,7 @@ class UnifiedWebSearchTool(BaseTool):
         
         try:
             # 🔄 INICIALIZAR VISUALIZACIÓN EN TIEMPO REAL
-            if not self._initialize_real_time_components():
-                # Si falla la inicialización, continuar sin visualización
-                pass
+            visualization_initialized = self._initialize_real_time_components()
             
             # 🔍 EJECUTAR BÚSQUEDA CON VISUALIZACIÓN PASO A PASO
             results = self._execute_search_with_visualization(
@@ -486,7 +484,7 @@ class UnifiedWebSearchTool(BaseTool):
                     'results': results,
                     'search_results': results,  # Para compatibilidad
                     'extract_content': extract_content,
-                    'visualization_enabled': self.browser_manager is not None,
+                    'visualization_enabled': visualization_initialized and (self.browser_manager is not None or self.websocket_manager is not None),
                     'screenshots_generated': any(r.get('screenshot_url') for r in results),
                     'timestamp': datetime.now().isoformat()
                 }
