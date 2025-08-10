@@ -74,29 +74,269 @@ class IntelligentKeywordGenerator:
         ]
     
     def get_intelligent_keywords(self, query_text: str) -> str:
-        """🎯 FUNCIÓN PRINCIPAL: Generar keywords inteligentes"""
+        """🎯 FUNCIÓN PRINCIPAL: Generar keywords inteligentes CON VALIDACIÓN Y APROBACIÓN"""
         
         if not query_text or len(query_text.strip()) < 3:
             return "información actualizada"
         
         print(f"🧠 INTELLIGENT GENERATOR INPUT: '{query_text}'")
         
-        # 1. Detectar si es query problemático
-        if self._is_problematic_query(query_text):
-            print("⚠️ PROBLEMATIC QUERY detectado - aplicando corrección especial")
-            return self._fix_problematic_query(query_text)
+        # 🔄 SISTEMA DE VALIDACIÓN Y APROBACIÓN - MÁXIMO 5 INTENTOS
+        max_attempts = 5
+        for attempt in range(1, max_attempts + 1):
+            print(f"🔄 INTENTO {attempt}/{max_attempts}: Generando query...")
+            
+            # 1. Generar query candidata
+            candidate_query = self._generate_candidate_query(query_text, attempt)
+            print(f"📝 QUERY CANDIDATA: '{candidate_query}'")
+            
+            # 2. VALIDAR Y APROBAR la query candidata
+            validation_result = self._validate_and_approve_query(candidate_query, query_text)
+            
+            if validation_result['approved']:
+                print(f"✅ QUERY APROBADA en intento {attempt}: '{candidate_query}'")
+                print(f"✅ RAZONES DE APROBACIÓN: {', '.join(validation_result['approval_reasons'])}")
+                return candidate_query
+            else:
+                print(f"❌ QUERY RECHAZADA en intento {attempt}: '{candidate_query}'")
+                print(f"❌ RAZONES DE RECHAZO: {', '.join(validation_result['rejection_reasons'])}")
+                if attempt < max_attempts:
+                    print(f"🔄 Generando nueva query (intento {attempt + 1})...")
+                continue
         
-        # 2. Extraer entidades importantes (nombres propios, conceptos clave)
-        entities = self._extract_important_entities(query_text)
+        # Si todos los intentos fallaron, usar query de emergencia específica
+        emergency_query = self._generate_emergency_query(query_text)
+        print(f"🚨 EMERGENCY QUERY USADA: '{emergency_query}'")
+        return emergency_query
+    
+    def _generate_candidate_query(self, query_text: str, attempt_number: int) -> str:
+        """🎯 Generar query candidata usando diferentes estrategias según el intento"""
         
-        # 3. Extraer conceptos principales 
-        concepts = self._extract_main_concepts(query_text)
+        # Estrategia 1 (Intento 1): Lógica original mejorada
+        if attempt_number == 1:
+            if self._is_problematic_query(query_text):
+                return self._fix_problematic_query(query_text)
+            else:
+                entities = self._extract_important_entities(query_text)
+                concepts = self._extract_main_concepts(query_text)
+                return self._combine_and_optimize(entities, concepts, query_text)
         
-        # 4. Combinar y optimizar
-        result = self._combine_and_optimize(entities, concepts, query_text)
+        # Estrategia 2 (Intento 2): Enfoque conservador - solo entidades principales
+        elif attempt_number == 2:
+            entities = self._extract_important_entities(query_text)
+            return ' '.join(entities[:3]) if entities else self._extract_main_subject_from_text(query_text)
         
-        print(f"✅ INTELLIGENT RESULT: '{query_text}' → '{result}'")
-        return result
+        # Estrategia 3 (Intento 3): Enfoque específico - extraer tema exacto
+        elif attempt_number == 3:
+            main_subject = self._extract_main_subject_from_text(query_text)
+            if main_subject:
+                return main_subject
+            else:
+                return self._extract_key_terms_only(query_text)
+        
+        # Estrategia 4 (Intento 4): Enfoque minimalista - términos clave únicos
+        elif attempt_number == 4:
+            return self._extract_key_terms_only(query_text)
+        
+        # Estrategia 5 (Intento 5): Último recurso - tema + contexto básico
+        else:
+            base_topic = self._extract_main_subject_from_text(query_text) or "información"
+            return f"{base_topic} información actualizada"
+    
+    def _validate_and_approve_query(self, candidate_query: str, original_text: str) -> dict:
+        """🛡️ SISTEMA DE VALIDACIÓN Y APROBACIÓN DE QUERIES"""
+        
+        approval_reasons = []
+        rejection_reasons = []
+        
+        # VALIDACIÓN 1: Longitud apropiada (2-6 palabras)
+        words = candidate_query.strip().split()
+        if 2 <= len(words) <= 6:
+            approval_reasons.append("Longitud apropiada")
+        else:
+            rejection_reasons.append(f"Longitud incorrecta: {len(words)} palabras")
+        
+        # VALIDACIÓN 2: Sin duplicaciones de palabras
+        unique_words = list(dict.fromkeys(words))  # Mantener orden, remover duplicados
+        if len(unique_words) == len(words):
+            approval_reasons.append("Sin duplicaciones")
+        else:
+            rejection_reasons.append("Contiene palabras duplicadas")
+        
+        # VALIDACIÓN 3: Preserva tema principal del contexto original
+        main_subjects = self._extract_known_subjects(original_text)
+        if main_subjects:
+            query_lower = candidate_query.lower()
+            subject_preserved = any(subject.lower() in query_lower for subject in main_subjects)
+            if subject_preserved:
+                approval_reasons.append("Preserva tema principal")
+            else:
+                rejection_reasons.append("No preserva tema principal identificado")
+        
+        # VALIDACIÓN 4: No contiene palabras meta prohibidas
+        meta_words = ['investigar', 'información', 'buscar', 'datos', 'análisis', 'realizar', 'web', 'search']
+        query_lower = candidate_query.lower()
+        meta_found = [word for word in meta_words if word in query_lower]
+        if not meta_found:
+            approval_reasons.append("Sin palabras meta")
+        else:
+            rejection_reasons.append(f"Contiene palabras meta: {', '.join(meta_found)}")
+        
+        # VALIDACIÓN 5: Contiene términos específicos reconocibles
+        recognizable_terms = self._count_recognizable_terms(candidate_query)
+        if recognizable_terms >= 2:
+            approval_reasons.append(f"Términos específicos: {recognizable_terms}")
+        else:
+            rejection_reasons.append("Pocos términos específicos reconocibles")
+        
+        # VALIDACIÓN 6: No es genérica
+        generic_patterns = ['noticias actualidad', 'información completa', 'datos actuales', 'información actualizada']
+        is_generic = any(pattern in query_lower for pattern in generic_patterns)
+        if not is_generic:
+            approval_reasons.append("Query específica")
+        else:
+            rejection_reasons.append("Query demasiado genérica")
+        
+        # DECISIÓN DE APROBACIÓN: Debe pasar al menos 4 de las 6 validaciones
+        approved = len(approval_reasons) >= 4 and len(rejection_reasons) <= 2
+        
+        return {
+            'approved': approved,
+            'approval_reasons': approval_reasons,
+            'rejection_reasons': rejection_reasons,
+            'score': len(approval_reasons) - len(rejection_reasons)
+        }
+    
+    def _extract_known_subjects(self, text: str) -> list:
+        """🎯 Extraer sujetos/temas conocidos del texto"""
+        known_subjects = []
+        text_lower = text.lower()
+        
+        # Temas específicos conocidos
+        specific_subjects = [
+            ('arctic monkeys', 'Arctic Monkeys'),
+            ('attack on titan', 'Attack on Titan'), 
+            ('attack titan', 'Attack on Titan'),
+            ('shingeki no kyojin', 'Shingeki no Kyojin'),
+            ('javier milei', 'Javier Milei'),
+            ('inteligencia artificial', 'Inteligencia Artificial'),
+            ('machine learning', 'Machine Learning'),
+            ('cambio climático', 'Cambio Climático')
+        ]
+        
+        for search_term, subject_name in specific_subjects:
+            if search_term in text_lower:
+                known_subjects.append(subject_name)
+        
+        # Buscar nombres propios
+        import re
+        proper_nouns = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b', text)
+        for noun in proper_nouns:
+            if len(noun.split()) <= 3:  # Máximo 3 palabras
+                known_subjects.append(noun)
+        
+        return list(set(known_subjects))  # Remover duplicados
+    
+    def _count_recognizable_terms(self, query: str) -> int:
+        """📊 Contar términos específicos reconocibles en la query"""
+        words = query.lower().split()
+        recognizable = 0
+        
+        # Términos de todas las categorías de entidades conocidas
+        all_entities = []
+        for category in self.preserve_entities.values():
+            all_entities.extend(category)
+        
+        for word in words:
+            if (word in all_entities or 
+                len(word) >= 5 or  # Palabras largas suelen ser específicas
+                word.istitle()):   # Nombres propios
+                recognizable += 1
+        
+        return recognizable
+    
+    def _extract_main_subject_from_text(self, text: str) -> str:
+        """📝 Extraer el tema principal del texto de manera simple y directa"""
+        # Primero buscar temas conocidos
+        text_lower = text.lower()
+        
+        known_mappings = {
+            'arctic monkeys': 'Arctic Monkeys',
+            'attack on titan': 'Attack on Titan',
+            'attack titan': 'Attack on Titan', 
+            'shingeki no kyojin': 'Shingeki no Kyojin',
+            'javier milei': 'Javier Milei',
+            'inteligencia artificial': 'inteligencia artificial',
+        }
+        
+        for search_term, subject in known_mappings.items():
+            if search_term in text_lower:
+                return subject
+        
+        # Buscar nombres propios
+        import re
+        proper_nouns = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\b', text)
+        if proper_nouns:
+            return proper_nouns[0]
+        
+        # Extraer palabras significativas (fallback)
+        words = re.findall(r'\b[a-zA-Z]{4,}\b', text)
+        significant_words = []
+        
+        meta_filter = {'investigar', 'información', 'buscar', 'datos', 'análisis', 'sobre', 'acerca'}
+        for word in words:
+            if word.lower() not in meta_filter:
+                significant_words.append(word.lower())
+        
+        return ' '.join(significant_words[:2]) if significant_words else "información"
+    
+    def _extract_key_terms_only(self, text: str) -> str:
+        """🔑 Extraer solo términos clave únicos y específicos"""
+        import re
+        
+        # Buscar términos específicos únicos
+        words = re.findall(r'\b[a-zA-Z]{3,}\b', text)
+        
+        # Filtrar palabras meta y comunes
+        meta_filter = {
+            'investigar', 'información', 'buscar', 'datos', 'análisis', 'sobre', 'acerca',
+            'realizar', 'generar', 'crear', 'obtener', 'utilizar', 'específica', 'completa',
+            'actualizada', 'relevante', 'importante', 'necesaria', 'web', 'search', 'para',
+            'con', 'del', 'las', 'los', 'una', 'mediante'
+        }
+        
+        key_terms = []
+        seen = set()
+        
+        for word in words:
+            word_lower = word.lower()
+            if (word_lower not in meta_filter and 
+                word_lower not in seen and 
+                len(word) >= 3):
+                key_terms.append(word_lower)
+                seen.add(word_lower)
+        
+        return ' '.join(key_terms[:4]) if key_terms else "información específica"
+    
+    def _generate_emergency_query(self, original_text: str) -> str:
+        """🚨 Generar query de emergencia cuando todos los intentos fallan"""
+        # Extraer tema principal o usar términos básicos
+        main_subject = self._extract_main_subject_from_text(original_text)
+        if main_subject and main_subject != "información":
+            return main_subject
+        
+        # Fallback final basado en contexto detectado
+        text_lower = original_text.lower()
+        if 'arctic' in text_lower:
+            return "Arctic Monkeys"
+        elif 'attack' in text_lower and 'titan' in text_lower:
+            return "Attack on Titan"
+        elif 'milei' in text_lower:
+            return "Javier Milei"
+        elif 'inteligencia' in text_lower:
+            return "inteligencia artificial"
+        else:
+            return "información noticias actualidad"
     
     def get_multiple_search_variants(self, query_text: str, count: int = 3) -> List[str]:
         """🔄 Generar múltiples variantes de búsqueda para diversidad"""
