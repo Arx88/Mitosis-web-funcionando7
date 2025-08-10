@@ -1929,16 +1929,25 @@ def execute_comprehensive_research_step(title: str, description: str, tool_manag
         }
 
 def execute_enhanced_web_search_step(title: str, description: str, tool_manager, task_id: str, original_message: str) -> dict:
-    """🔍 BÚSQUEDA WEB MEJORADA - Búsqueda web con análisis mejorado y visualización en tiempo real"""
+    """
+    🔍 BÚSQUEDA WEB MEJORADA CON MÚLTIPLES BÚSQUEDAS ESPECÍFICAS INTELIGENTES
+    
+    NUEVO: Descompone el paso de investigación en múltiples búsquedas específicas
+    para cubrir todos los aspectos del requerimiento, NO una búsqueda genérica
+    """
     try:
-        logger.info(f"🔍 Ejecutando búsqueda web mejorada: {title}")
+        logger.info(f"🔍 INICIANDO BÚSQUEDA WEB CON MÚLTIPLES BÚSQUEDAS ESPECÍFICAS: {title}")
         
-        # 🧠 USAR FUNCIÓN EXISTENTE DE EXTRACCIÓN DE KEYWORDS
-        from ..tools.unified_web_search_tool import UnifiedWebSearchTool
-        web_search_tool = UnifiedWebSearchTool()
-        raw_query = f"{title} {description} {original_message}".strip()
-        search_query = web_search_tool._extract_clean_keywords_static(raw_query)
-        logger.info(f"🎯 Query inteligente generado: '{search_query}' (original: '{title}')")
+        # 🧠 GENERAR MÚLTIPLES BÚSQUEDAS ESPECÍFICAS INTELIGENTEMENTE
+        specific_searches = generate_intelligent_specific_searches(title, description, original_message)
+        logger.info(f"🎯 Se ejecutarán {len(specific_searches)} búsquedas específicas:")
+        for i, search in enumerate(specific_searches, 1):
+            logger.info(f"   {i}. {search}")
+        
+        # 🔍 EJECUTAR CADA BÚSQUEDA ESPECÍFICA
+        all_search_results = []
+        all_content = []
+        total_results_count = 0
         
         # ✅ INTEGRACIÓN WebBrowserManager PARA VISUALIZACIÓN EN TIEMPO REAL
         browser_manager = create_web_browser_manager(task_id)
@@ -1947,7 +1956,6 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
         try:
             # Inicializar navegador para visualización en tiempo real
             if browser_manager:
-                # Compatibilidad para ambos gestores
                 if hasattr(browser_manager, 'initialize_browser'):
                     browser_manager.initialize_browser()
                 elif hasattr(browser_manager, 'initialize'):
@@ -1956,91 +1964,112 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
                         asyncio.run(browser_manager.initialize())
                     except RuntimeError:
                         pass
-                
-                # Enviar evento de inicio de búsqueda con navegación
-                if websocket_manager:
-                    websocket_manager.send_log_message(
-                        task_id, 
-                        "info", 
-                        f"🔍 Iniciando búsqueda web con visualización en tiempo real: {search_query}"
-                    )
-                
-                # Navegar a Google/Bing para mostrar proceso de búsqueda
-                search_url = f"https://www.bing.com/search?q={search_query.replace(' ', '+')}"
-                browser_manager.navigate(search_url)
-                
-                # Simular interacción y extracción de datos
-                time.sleep(2)  # Permitir carga completa
-                # Compatibilidad de extracción de datos
-                try:
-                    search_data = browser_manager.extract_data("h3 a, .b_title")
-                except TypeError:
-                    # Si el gestor async requiere descripción, usar fallback
-                    search_data = {"count": 0, "data": []}
-                
-                # Enviar actualización de datos recolectados
-                if websocket_manager:
-                    websocket_manager.send_data_collection_update(
-                        task_id,
-                        f"search-{search_query[:30]}",
-                        f"Datos extraídos de búsqueda: {search_data.get('count', 0)} elementos encontrados",
-                        search_data
-                    )
             
-            # Ejecutar búsqueda tradicional con herramientas
-            if tool_manager and hasattr(tool_manager, 'execute_tool'):
-                result = tool_manager.execute_tool('web_search', {
-                    'query': search_query,
-                    'max_results': 7,
-                    'search_engine': 'bing',
-                    'extract_content': True
-                }, task_id=task_id)
+            for i, search_query in enumerate(specific_searches, 1):
+                logger.info(f"🔍 Ejecutando búsqueda {i}/{len(specific_searches)}: {search_query}")
                 
-                # Enviar progreso incremental de datos recolectados
+                # Notificar progreso en tiempo real
                 if websocket_manager:
-                    results_count = len(result.get('search_results', []))
-                    websocket_manager.send_data_collection_update(
-                        task_id,
-                        f"enhanced-search-{task_id}",
-                        f"Búsqueda completada: {results_count} resultados procesados",
-                        result.get('search_results', [])[:3]  # Enviar muestra de 3 resultados
-                    )
-                    
                     websocket_manager.send_log_message(
                         task_id, 
                         "info", 
-                        f"✅ Búsqueda web completada: {results_count} resultados analizados"
+                        f"🔍 Búsqueda específica {i}/{len(specific_searches)}: {search_query}"
                     )
                 
-                return {
-                    'success': True,
-                    'type': 'enhanced_web_search',
-                    'query': search_query,
-                    'results_count': len(result.get('search_results', [])),
-                    'count': len(result.get('search_results', [])),  # 🔥 FIX: Agregar count para compatibilidad
-                    'results': result.get('search_results', []),    # 🔥 FIX: Agregar results para compatibilidad
-                    'summary': f"✅ Búsqueda web mejorada completada: {len(result.get('search_results', []))} resultados analizados",
-                    'content': f"Búsqueda web mejorada sobre: {search_query}\n\nAnálisis de {len(result.get('search_results', []))} fuentes",
-                    'data': result.get('search_results', [])
-                }
-            else:
-                # Fallback sin tool_manager
-                if websocket_manager:
-                    websocket_manager.send_log_message(
-                        task_id, 
-                        "warn", 
-                        "⚠️ Tool manager no disponible, usando búsqueda básica"
-                    )
+                # Navegación visual en tiempo real
+                if browser_manager:
+                    search_url = f"https://www.bing.com/search?q={search_query.replace(' ', '+')}"
+                    browser_manager.navigate(search_url)
+                    time.sleep(2)  # Permitir carga y visualización
+                    
+                    try:
+                        visual_data = browser_manager.extract_data("h3 a, .b_title")
+                    except TypeError:
+                        visual_data = {"count": 0, "data": []}
                 
-                return {
-                    'success': True,
-                    'type': 'enhanced_web_search_fallback',
-                    'query': search_query,
-                    'results_count': 0,
-                    'summary': f"⚠️ Búsqueda básica realizada para: {search_query}",
-                    'content': f"Búsqueda realizada: {search_query}\n\nTool manager no disponible.",
-                    'data': []
+                # Ejecutar búsqueda real con herramientas
+                if tool_manager and hasattr(tool_manager, 'execute_tool'):
+                    search_result = tool_manager.execute_tool('web_search', {
+                        'query': search_query,
+                        'max_results': 5,  # 5 resultados por búsqueda específica
+                        'search_engine': 'bing',
+                        'extract_content': True
+                    }, task_id=task_id)
+                    
+                    if search_result.get('search_results'):
+                        search_results = search_result.get('search_results', [])
+                        all_search_results.extend(search_results)
+                        total_results_count += len(search_results)
+                        
+                        # Extraer contenido de cada resultado
+                        for result in search_results:
+                            content_part = result.get('snippet', '') or result.get('content', '')
+                            if content_part and len(content_part) > 50:
+                                all_content.append({
+                                    'search_query': search_query,
+                                    'content': content_part,
+                                    'url': result.get('url', ''),
+                                    'title': result.get('title', ''),
+                                    'source': result.get('url', '').replace('https://', '').replace('http://', '').split('/')[0]
+                                })
+                        
+                        logger.info(f"   ✅ Búsqueda {i} completada: {len(search_results)} resultados")
+                        
+                        # Actualización en tiempo real
+                        if websocket_manager:
+                            websocket_manager.send_data_collection_update(
+                                task_id,
+                                f"search-{i}",
+                                f"Búsqueda {i} completada: {len(search_results)} resultados de '{search_query[:40]}...'",
+                                search_results[:2]  # Muestra de 2 resultados
+                            )
+                    else:
+                        logger.warning(f"   ⚠️ Búsqueda {i} no devolvió resultados")
+                
+                # Pequeña pausa entre búsquedas para no sobrecargar
+                if i < len(specific_searches):
+                    time.sleep(1)
+            
+            # 📊 CONSOLIDAR RESULTADOS DE MÚLTIPLES BÚSQUEDAS
+            consolidated_content = consolidate_multi_search_content(all_content, title, description)
+            unique_sources = len(set(content['source'] for content in all_content if content.get('source')))
+            
+            logger.info(f"✅ BÚSQUEDA MÚLTIPLE COMPLETADA:")
+            logger.info(f"   • {len(specific_searches)} búsquedas específicas ejecutadas")
+            logger.info(f"   • {total_results_count} resultados totales recolectados")
+            logger.info(f"   • {unique_sources} fuentes únicas encontradas")
+            logger.info(f"   • {len(consolidated_content)} caracteres de contenido consolidado")
+            
+            # Notificación final
+            if websocket_manager:
+                websocket_manager.send_log_message(
+                    task_id, 
+                    "success", 
+                    f"✅ Investigación múltiple completada: {len(specific_searches)} búsquedas, {total_results_count} resultados, {unique_sources} fuentes"
+                )
+            
+            return {
+                'success': True,
+                'type': 'enhanced_multi_search',
+                'specific_searches': specific_searches,
+                'searches_executed': len(specific_searches),
+                'results_count': total_results_count,
+                'unique_sources': unique_sources,
+                'count': total_results_count,
+                'results': all_search_results,
+                'search_results': all_search_results,  # Para compatibilidad
+                'sources': all_content,
+                'content': consolidated_content,
+                'summary': f"✅ Investigación múltiple específica completada: {len(specific_searches)} búsquedas, {total_results_count} resultados de {unique_sources} fuentes únicas",
+                'data': all_search_results,
+                'multi_search_analysis': {
+                    'total_searches': len(specific_searches),
+                    'successful_searches': len([s for s in specific_searches if s]),  # Count non-empty
+                    'unique_sources_found': unique_sources,
+                    'content_pieces': len(all_content),
+                    'consolidated_content_length': len(consolidated_content)
                 }
+            }
                 
         finally:
             # Cerrar navegador
@@ -2056,7 +2085,7 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
                         pass
         
     except Exception as e:
-        logger.error(f"❌ Error en búsqueda web mejorada: {str(e)}")
+        logger.error(f"❌ Error en búsqueda web múltiple: {str(e)}")
         
         # Enviar error via WebSocket
         websocket_manager = get_websocket_manager()
@@ -2064,15 +2093,264 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
             websocket_manager.send_log_message(
                 task_id, 
                 "error", 
-                f"❌ Error en búsqueda web: {str(e)}"
+                f"❌ Error en búsqueda múltiple: {str(e)}"
             )
         
         return {
             'success': False,
             'error': str(e),
-            'type': 'enhanced_web_search_error',
-            'summary': f'❌ Error en búsqueda: {str(e)}'
+            'type': 'enhanced_multi_search_error',
+            'summary': f'❌ Error en búsqueda múltiple: {str(e)}'
         }
+
+def generate_intelligent_specific_searches(title: str, description: str, original_message: str) -> list:
+    """
+    🧠 GENERADOR INTELIGENTE DE BÚSQUEDAS ESPECÍFICAS
+    
+    Analiza el requerimiento y descompone en múltiples búsquedas específicas
+    que cubran todos los aspectos necesarios del paso de investigación
+    """
+    try:
+        logger.info("🧠 Generando búsquedas específicas inteligentemente")
+        
+        # Texto completo para análisis
+        full_context = f"{title} {description} {original_message}".lower()
+        
+        # 🎯 PATRONES DE DETECCIÓN PARA DIFERENTES TIPOS DE INVESTIGACIÓN
+        search_patterns = {
+            # MARCAS Y BRANDING
+            'branding': {
+                'keywords': ['marca', 'branding', 'nombres', 'memorables', 'únicos', 'brand', 'naming'],
+                'searches': [
+                    "estrategias naming marcas exitosas ejemplos 2025",
+                    "psicología nombres marcas memorables casos éxito",
+                    "tendencias branding nombres únicos startups",
+                    "ejemplos marcas icónicas nombres creativos",
+                    "metodología creación nombres marca efectivos",
+                    "análisis nombres marcas globales exitosas"
+                ]
+            },
+            # INVESTIGACIÓN POLÍTICA
+            'political': {
+                'keywords': ['político', 'política', 'gobierno', 'presidente', 'ideología', 'trayectoria'],
+                'searches': [
+                    "biografía completa fecha nacimiento formación académica",
+                    "trayectoria política cargos ocupados historial electoral",
+                    "posición ideológica principios políticos específicos",
+                    "declaraciones públicas recientes entrevistas medios",
+                    "propuestas políticas reformas implementadas",
+                    "cobertura mediática análisis prensa especializada"
+                ]
+            },
+            # TECNOLOGÍA E INNOVACIÓN
+            'technology': {
+                'keywords': ['tecnología', 'innovación', 'startup', 'digital', 'software', 'app'],
+                'searches': [
+                    "tendencias tecnológicas 2025 innovaciones emergentes",
+                    "startups exitosas casos estudio modelos negocio",
+                    "tecnologías disruptivas impacto industrial actual",
+                    "inversión tecnológica venture capital tendencias",
+                    "innovación digital transformación empresarial",
+                    "ecosistema tecnológico mercado competitivo análisis"
+                ]
+            },
+            # MERCADO Y NEGOCIOS
+            'business': {
+                'keywords': ['mercado', 'negocio', 'empresa', 'industria', 'económico', 'comercial'],
+                'searches': [
+                    "análisis mercado datos estadísticas actuales industria",
+                    "competencia principales empresas participantes mercado",
+                    "tendencias comerciales oportunidades crecimiento sector",
+                    "modelos negocio exitosos casos estudio empresariales",
+                    "análisis económico sectorial perspectivas futuras",
+                    "estrategias comerciales innovadoras mercado actual"
+                ]
+            },
+            # INVESTIGACIÓN ACADÉMICA/CIENTÍFICA
+            'academic': {
+                'keywords': ['investigación', 'estudio', 'análisis', 'científico', 'académico', 'research'],
+                'searches': [
+                    "estudios académicos investigación científica reciente",
+                    "publicaciones científicas papers relevantes tema",
+                    "metodología investigación enfoques científicos",
+                    "datos estadísticos fuentes académicas confiables",
+                    "revisión literatura científica estado arte",
+                    "expertos académicos autoridades tema investigación"
+                ]
+            },
+            # GENÉRICO (FALLBACK)
+            'generic': {
+                'keywords': ['información', 'datos', 'sobre', 'acerca'],
+                'searches': [
+                    f"{title} información detallada datos específicos",
+                    f"{title} análisis completo características principales",
+                    f"{title} ejemplos casos reales estudios",
+                    f"{title} tendencias actuales desarrollo reciente",
+                    f"{title} expertos opiniones análisis profesional",
+                    f"{title} fuentes oficiales documentación confiable"
+                ]
+            }
+        }
+        
+        # 🎯 DETECTAR TIPO DE INVESTIGACIÓN
+        detected_type = 'generic'
+        max_matches = 0
+        
+        for pattern_type, pattern_config in search_patterns.items():
+            if pattern_type == 'generic':
+                continue
+                
+            matches = sum(1 for keyword in pattern_config['keywords'] if keyword in full_context)
+            if matches > max_matches:
+                max_matches = matches
+                detected_type = pattern_type
+        
+        logger.info(f"🎯 Tipo de investigación detectado: {detected_type} ({max_matches} matches)")
+        
+        # 🔍 OBTENER BÚSQUEDAS ESPECÍFICAS
+        if detected_type in search_patterns:
+            specific_searches = search_patterns[detected_type]['searches'].copy()
+        else:
+            specific_searches = search_patterns['generic']['searches'].copy()
+        
+        # 📝 PERSONALIZAR BÚSQUEDAS CON CONTEXTO ESPECÍFICO
+        if detected_type == 'generic':
+            # Para búsquedas genéricas, reemplazar placeholder con título real
+            personalized_searches = []
+            title_keywords = extract_key_terms(title)
+            
+            for search in specific_searches:
+                personalized_search = search.replace(f"{title}", title_keywords)
+                personalized_searches.append(personalized_search)
+            
+            specific_searches = personalized_searches
+        
+        # 🎯 AGREGAR BÚSQUEDAS CONTEXTUALES ADICIONALES si el mensaje original tiene información específica
+        if len(original_message) > 50:
+            context_terms = extract_key_terms(original_message)
+            if context_terms and context_terms != title:
+                specific_searches.append(f"{context_terms} información actualizada datos recientes")
+        
+        # 📊 VALIDAR Y OPTIMIZAR LISTA FINAL
+        final_searches = []
+        for search in specific_searches:
+            if len(search) > 10 and search not in final_searches:  # Evitar duplicados
+                final_searches.append(search)
+        
+        # Asegurar mínimo 3 búsquedas, máximo 6 para eficiencia
+        final_searches = final_searches[:6]
+        if len(final_searches) < 3:
+            # Agregar búsquedas genéricas adicionales si es necesario
+            generic_additions = [
+                f"{title} definición características principales",
+                f"{title} ejemplos prácticos casos reales",
+                f"{title} análisis expertos profesionales"
+            ]
+            for addition in generic_additions:
+                if len(final_searches) >= 3:
+                    break
+                if addition not in final_searches:
+                    final_searches.append(addition)
+        
+        logger.info(f"✅ {len(final_searches)} búsquedas específicas generadas para tipo '{detected_type}'")
+        return final_searches
+        
+    except Exception as e:
+        logger.error(f"❌ Error generando búsquedas específicas: {str(e)}")
+        # Fallback a búsquedas básicas
+        return [
+            f"{title} información detallada",
+            f"{title} análisis completo datos",
+            f"{title} ejemplos casos estudio"
+        ]
+
+def extract_key_terms(text: str) -> str:
+    """
+    🔍 EXTRACTOR DE TÉRMINOS CLAVE
+    Extrae los términos más importantes de un texto
+    """
+    import re
+    
+    # Remover palabras muy comunes (stop words básicas)
+    stop_words = {
+        'el', 'la', 'de', 'que', 'y', 'a', 'en', 'un', 'es', 'se', 'no', 'te', 'lo', 'le', 'da', 'su',
+        'por', 'son', 'con', 'para', 'al', 'del', 'los', 'las', 'una', 'sobre', 'como', 'esta', 'esto',
+        'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'an', 'a', 'is',
+        'are', 'was', 'were', 'been', 'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would'
+    }
+    
+    # Extraer palabras de 3+ caracteres
+    words = re.findall(r'\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{3,}\b', text.lower())
+    
+    # Filtrar stop words y tomar las primeras 4-5 palabras más relevantes
+    key_terms = [word for word in words if word not in stop_words][:5]
+    
+    return ' '.join(key_terms) if key_terms else text[:50]
+
+def consolidate_multi_search_content(all_content: list, title: str, description: str) -> str:
+    """
+    📊 CONSOLIDADOR DE CONTENIDO MULTI-BÚSQUEDA
+    Consolida el contenido de múltiples búsquedas en un informe coherente
+    """
+    try:
+        if not all_content:
+            return f"Investigación sobre: {title}\n\nNo se pudo recolectar contenido de las búsquedas."
+        
+        # 📊 ORGANIZAR CONTENIDO POR FUENTE
+        sources_content = {}
+        for content_item in all_content:
+            source = content_item.get('source', 'unknown')
+            if source not in sources_content:
+                sources_content[source] = []
+            sources_content[source].append(content_item)
+        
+        # 📝 CONSTRUIR INFORME CONSOLIDADO
+        consolidated_report = f"# Investigación Múltiple: {title}\n\n"
+        consolidated_report += f"**Descripción**: {description}\n\n"
+        consolidated_report += f"**Fuentes consultadas**: {len(sources_content)} sitios únicos\n"
+        consolidated_report += f"**Total de contenido**: {len(all_content)} fragmentos de información\n\n"
+        
+        consolidated_report += "## Información Recolectada por Fuente\n\n"
+        
+        # 📋 AGREGAR CONTENIDO POR FUENTE
+        for source, content_items in sources_content.items():
+            consolidated_report += f"### 🔗 {source}\n\n"
+            
+            for i, item in enumerate(content_items[:3], 1):  # Máximo 3 items por fuente
+                content_text = item.get('content', '').strip()
+                if content_text and len(content_text) > 30:
+                    # Limpiar y truncar contenido si es muy largo
+                    clean_content = content_text[:400] + "..." if len(content_text) > 400 else content_text
+                    consolidated_report += f"**Fragmento {i}**: {clean_content}\n\n"
+            
+            # Agregar URL si está disponible
+            if content_items and content_items[0].get('url'):
+                consolidated_report += f"*Fuente: {content_items[0]['url']}*\n\n"
+        
+        # 📊 RESUMEN FINAL
+        consolidated_report += "## Resumen de la Investigación\n\n"
+        consolidated_report += f"Se realizó una investigación múltiple sobre **{title}** consultando "
+        consolidated_report += f"{len(sources_content)} fuentes diferentes y recolectando {len(all_content)} "
+        consolidated_report += f"fragmentos de información relevante. La investigación abarcó múltiples "
+        consolidated_report += f"aspectos del tema utilizando búsquedas específicas dirigidas.\n\n"
+        
+        # Agregar estadísticas
+        total_chars = sum(len(item.get('content', '')) for item in all_content)
+        consolidated_report += f"**Estadísticas**:\n"
+        consolidated_report += f"- Caracteres de contenido: {total_chars}\n"
+        consolidated_report += f"- Promedio por fuente: {total_chars // len(sources_content) if sources_content else 0} caracteres\n"
+        
+        return consolidated_report
+        
+    except Exception as e:
+        logger.error(f"❌ Error consolidando contenido multi-búsqueda: {str(e)}")
+        # Fallback simple
+        simple_content = f"Investigación sobre: {title}\n\n"
+        for item in all_content[:5]:  # Primeros 5 items
+            content_text = item.get('content', '').strip()
+            if content_text:
+                simple_content += f"• {content_text[:200]}...\n\n"
+        return simple_content
 
 def execute_enhanced_analysis_step(title: str, description: str, ollama_service, original_message: str, previous_results: list) -> dict:
     """
