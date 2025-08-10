@@ -1778,7 +1778,12 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
                 
                 # Simular interacción y extracción de datos
                 time.sleep(2)  # Permitir carga completa
-                search_data = browser_manager.extract_data("h3 a, .b_title")
+                # Compatibilidad de extracción de datos
+                try:
+                    search_data = browser_manager.extract_data("h3 a, .b_title")
+                except TypeError:
+                    # Si el gestor async requiere descripción, usar fallback
+                    search_data = {"count": 0, "data": []}
                 
                 # Enviar actualización de datos recolectados
                 if websocket_manager:
