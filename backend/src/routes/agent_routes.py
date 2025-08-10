@@ -1957,6 +1957,11 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
         browser_manager = create_web_browser_manager(task_id)
         websocket_manager = get_websocket_manager()
         
+        # 🔄 INTEGRAR FEEDBACK EN TIEMPO REAL
+        feedback_manager = get_feedback_manager(websocket_manager)
+        step_id = f"search-{int(time.time())}"
+        feedback_manager.start_data_collection_for_task(task_id, step_id, title)
+        
         try:
             # Inicializar navegador para visualización en tiempo real
             if browser_manager:
