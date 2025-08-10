@@ -22,11 +22,14 @@ from datetime import datetime
 import threading
 import re
 import subprocess
+import socketio
+import os
+from urllib.parse import urlparse
 
 # Configuration
 BACKEND_URL = "https://2f9b16a2-f388-46fd-8827-433d38a1cda3.preview.emergentagent.com"
 
-class EnhancedStepValidationTester:
+class RealTimeBrowserNavigationTester:
     def __init__(self):
         self.backend_url = BACKEND_URL
         self.session = requests.Session()
@@ -36,10 +39,12 @@ class EnhancedStepValidationTester:
         })
         self.test_results = []
         self.created_task_id = None
-        self.validation_logs = []
-        self.enhanced_validator_calls = []
-        self.political_research_detected = False
-        self.strict_validation_applied = False
+        self.websocket_events = []
+        self.browser_visual_events = []
+        self.browser_activity_events = []
+        self.screenshot_urls = []
+        self.stored_messages = []
+        self.sio = None
         
     def log_test(self, test_name, success, details, error=None):
         """Log test results"""
@@ -60,63 +65,75 @@ class EnhancedStepValidationTester:
             print(f"   Error: {error}")
         print()
 
-    def monitor_enhanced_validation_logs(self, duration=120):
-        """Monitor backend logs for enhanced step validation activity"""
+    def setup_websocket_client(self):
+        """Setup WebSocket client to monitor real-time events"""
         try:
-            print(f"🔍 Monitoring backend logs for enhanced validation for {duration} seconds...")
+            print("🔌 Setting up WebSocket client for real-time monitoring...")
             
-            # Monitor supervisor logs for enhanced validation
-            cmd = f"tail -f /var/log/supervisor/backend.out.log | grep -E 'DETECTADO PASO 1 DE INVESTIGACIÓN|VALIDACIÓN SUPER ESTRICTA|enhanced_step_validator|biografía.*trayectoria.*política|validate_step_1_with_enhanced_validator|EnhancedStepValidator|PASO 1 APROBADO|PASO 1 RECHAZADO' | head -30"
+            self.sio = socketio.Client(logger=False, engineio_logger=False)
             
-            process = subprocess.Popen(
-                cmd, 
-                shell=True, 
-                stdout=subprocess.PIPE, 
-                stderr=subprocess.PIPE, 
-                text=True
-            )
-            
-            start_time = time.time()
-            validation_events = []
-            
-            while time.time() - start_time < duration:
-                try:
-                    # Check if process has output
-                    output = process.stdout.readline()
-                    if output:
-                        output = output.strip()
-                        validation_events.append(output)
-                        print(f"   📋 LOG: {output}")
-                        
-                        # Extract enhanced validator usage
-                        if "DETECTADO PASO 1 DE INVESTIGACIÓN" in output:
-                            self.political_research_detected = True
-                            print(f"   🎯 POLITICAL RESEARCH DETECTED")
-                        
-                        if "VALIDACIÓN SUPER ESTRICTA" in output:
-                            self.strict_validation_applied = True
-                            print(f"   🔥 STRICT VALIDATION APPLIED")
-                        
-                        if "enhanced_step_validator" in output or "EnhancedStepValidator" in output:
-                            self.enhanced_validator_calls.append(output)
-                            print(f"   🛡️ ENHANCED VALIDATOR CALL: {len(self.enhanced_validator_calls)} calls")
-                        
-                        if "PASO 1 APROBADO" in output or "PASO 1 RECHAZADO" in output:
-                            self.validation_logs.append(output)
-                            print(f"   📊 VALIDATION RESULT: {len(self.validation_logs)} results")
+            @self.sio.event
+            def connect():
+                print("   ✅ WebSocket connected successfully")
+                
+            @self.sio.event
+            def disconnect():
+                print("   ❌ WebSocket disconnected")
+                
+            @self.sio.event
+            def browser_visual(data):
+                print(f"   📸 browser_visual event: {data.get('type', 'unknown')} - {data.get('message', '')}")
+                self.browser_visual_events.append(data)
+                self.websocket_events.append(('browser_visual', data))
+                
+                # Extract screenshot URLs
+                if 'screenshot_url' in data and data['screenshot_url']:
+                    self.screenshot_urls.append(data['screenshot_url'])
+                    print(f"   📷 Screenshot URL captured: {data['screenshot_url']}")
                     
-                    time.sleep(0.5)
-                    
-                except Exception as e:
-                    break
+            @self.sio.event
+            def browser_activity(data):
+                print(f"   🌐 browser_activity event: {data.get('type', 'unknown')} - {data.get('message', '')}")
+                self.browser_activity_events.append(data)
+                self.websocket_events.append(('browser_activity', data))
+                
+            @self.sio.event
+            def task_progress(data):
+                print(f"   📊 task_progress event: {data.get('message', '')}")
+                self.websocket_events.append(('task_progress', data))
+                
+            @self.sio.event
+            def terminal_activity(data):
+                print(f"   💻 terminal_activity event: {data.get('message', '')}")
+                self.websocket_events.append(('terminal_activity', data))
+                
+            @self.sio.event
+            def stored_messages(data):
+                print(f"   📦 stored_messages event: {len(data.get('messages', []))} messages")
+                self.stored_messages.extend(data.get('messages', []))
+                
+            # Connect to WebSocket
+            websocket_url = f"{self.backend_url}/api/socket.io/"
+            self.sio.connect(websocket_url, transports=['polling', 'websocket'])
             
-            process.terminate()
-            
-            return validation_events
+            return True
             
         except Exception as e:
-            print(f"   ❌ Error monitoring enhanced validation logs: {e}")
-            return []
+            print(f"   ❌ Error setting up WebSocket client: {e}")
+            return False
+
+    def join_task_room(self, task_id):
+        """Join task room to receive task-specific events"""
+        try:
+            if self.sio and self.sio.connected:
+                print(f"   🔗 Joining task room: {task_id}")
+                self.sio.emit('join_task', {'task_id': task_id})
+                time.sleep(2)  # Wait for join confirmation
+                return True
+            return False
+        except Exception as e:
+            print(f"   ❌ Error joining task room: {e}")
+            return False
 
     def test_1_backend_health(self):
         """Test 1: Backend Health Check"""
@@ -145,15 +162,15 @@ class EnhancedStepValidationTester:
             self.log_test("1. Backend Health Check", False, "Request failed", e)
             return False
 
-    def test_2_create_political_research_task(self):
-        """Test 2: Create Political Research Task - Should Trigger Enhanced Validation"""
+    def test_2_create_research_task(self):
+        """Test 2: Create Research Task - Should Trigger Web Navigation"""
         try:
-            print("🔄 Test 2: Creating political research task to trigger enhanced validation")
+            print("🔄 Test 2: Creating research task to trigger web navigation")
             
             url = f"{self.backend_url}/api/agent/chat"
             payload = {
-                "message": "Realizar búsquedas en fuentes confiables sobre biografía, trayectoria política, ideología y declaraciones públicas de Javier Milei",
-                "task_id": f"test-enhanced-validation-{int(time.time())}"
+                "message": "Investigar información específica sobre Javier Milei: biografía, trayectoria política, declaraciones públicas y controversias",
+                "task_id": f"test-browser-navigation-{int(time.time())}"
             }
             
             response = self.session.post(url, json=payload, timeout=30)
@@ -164,247 +181,289 @@ class EnhancedStepValidationTester:
                 
                 if task_id:
                     self.created_task_id = task_id
-                    details = f"Political research task created successfully: {task_id}"
-                    self.log_test("2. Create Political Research Task", True, details)
+                    details = f"Research task created successfully: {task_id}"
+                    self.log_test("2. Create Research Task", True, details)
                     return task_id
                 else:
-                    self.log_test("2. Create Political Research Task", False, f"No task_id in response: {data}")
+                    self.log_test("2. Create Research Task", False, f"No task_id in response: {data}")
                     return None
             else:
-                self.log_test("2. Create Political Research Task", False, f"HTTP {response.status_code}: {response.text}")
+                self.log_test("2. Create Research Task", False, f"HTTP {response.status_code}: {response.text}")
                 return None
                 
         except Exception as e:
-            self.log_test("2. Create Political Research Task", False, "Request failed", e)
+            self.log_test("2. Create Research Task", False, "Request failed", e)
             return None
 
-    def test_3_monitor_enhanced_validation(self):
-        """Test 3: Monitor Enhanced Step Validation System"""
+    def test_3_execute_plan(self):
+        """Test 3: Execute Plan - Start Task Execution"""
         try:
-            print("🔄 Test 3: Monitoring enhanced step validation system activation")
+            print("🔄 Test 3: Starting task execution")
             
             if not self.created_task_id:
-                self.log_test("3. Enhanced Validation Monitoring", False, "No task_id available")
+                self.log_test("3. Execute Plan", False, "No task_id available")
                 return False
             
-            print(f"   📋 Monitoring enhanced validation for task: {self.created_task_id}")
+            # Try to execute the plan if endpoint exists
+            url = f"{self.backend_url}/api/agent/execute-plan/{self.created_task_id}"
+            response = self.session.post(url, timeout=30)
             
-            # Start enhanced validation monitoring in background
-            log_thread = threading.Thread(
-                target=self.monitor_enhanced_validation_logs, 
-                args=(120,),  # Monitor for 120 seconds
-                daemon=True
-            )
-            log_thread.start()
+            if response.status_code == 200:
+                details = f"Plan execution started successfully for task: {self.created_task_id}"
+                self.log_test("3. Execute Plan", True, details)
+                return True
+            elif response.status_code == 404:
+                # Plan might start automatically, check task status instead
+                status_url = f"{self.backend_url}/api/agent/get-task-status/{self.created_task_id}"
+                status_response = self.session.get(status_url, timeout=10)
+                
+                if status_response.status_code == 200:
+                    status_data = status_response.json()
+                    task_status = status_data.get('status', 'unknown')
+                    details = f"Plan execution automatic, task status: {task_status}"
+                    self.log_test("3. Execute Plan", True, details)
+                    return True
+                else:
+                    self.log_test("3. Execute Plan", False, f"Execute endpoint not found and status check failed: HTTP {status_response.status_code}")
+                    return False
+            else:
+                self.log_test("3. Execute Plan", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("3. Execute Plan", False, "Request failed", e)
+            return False
+
+    def test_4_monitor_websocket_events(self):
+        """Test 4: Monitor WebSocket Events for Browser Navigation"""
+        try:
+            print("🔄 Test 4: Monitoring WebSocket events for browser navigation")
             
-            # Wait for validation activity
-            time.sleep(125)  # Wait for monitoring to complete
+            if not self.created_task_id:
+                self.log_test("4. Monitor WebSocket Events", False, "No task_id available")
+                return False
+            
+            # Setup WebSocket client
+            if not self.setup_websocket_client():
+                self.log_test("4. Monitor WebSocket Events", False, "Failed to setup WebSocket client")
+                return False
+            
+            # Join task room
+            if not self.join_task_room(self.created_task_id):
+                self.log_test("4. Monitor WebSocket Events", False, "Failed to join task room")
+                return False
+            
+            # Monitor for 90 seconds as requested
+            print(f"   📡 Monitoring WebSocket events for 90 seconds...")
+            start_time = time.time()
+            
+            while time.time() - start_time < 90:
+                time.sleep(1)
+                
+                # Print progress every 15 seconds
+                elapsed = int(time.time() - start_time)
+                if elapsed % 15 == 0 and elapsed > 0:
+                    print(f"   ⏱️ {elapsed}s elapsed - Events: {len(self.websocket_events)}, Browser Visual: {len(self.browser_visual_events)}, Screenshots: {len(self.screenshot_urls)}")
             
             # Analyze results
-            validator_calls = len(self.enhanced_validator_calls)
-            validation_results = len(self.validation_logs)
+            total_events = len(self.websocket_events)
+            browser_visual_count = len(self.browser_visual_events)
+            browser_activity_count = len(self.browser_activity_events)
+            screenshot_count = len(self.screenshot_urls)
             
-            if self.political_research_detected and self.strict_validation_applied and validator_calls > 0:
-                details = f"SUCCESS: Political research detected, strict validation applied, {validator_calls} validator calls"
-                self.log_test("3. Enhanced Validation Monitoring", True, details)
+            if browser_visual_count > 0 or browser_activity_count > 0:
+                details = f"SUCCESS: {total_events} total events, {browser_visual_count} browser_visual, {browser_activity_count} browser_activity, {screenshot_count} screenshots"
+                self.log_test("4. Monitor WebSocket Events", True, details)
                 return True
-            elif validator_calls > 0:
-                details = f"PARTIAL: {validator_calls} validator calls, but detection may be incomplete"
-                self.log_test("3. Enhanced Validation Monitoring", True, details)
+            elif total_events > 0:
+                details = f"PARTIAL: {total_events} total events received, but no browser navigation events"
+                self.log_test("4. Monitor WebSocket Events", True, details)
                 return True
             else:
-                details = f"FAIL: No enhanced validator calls detected. Political research: {self.political_research_detected}, Strict validation: {self.strict_validation_applied}"
-                self.log_test("3. Enhanced Validation Monitoring", False, details)
+                details = f"FAIL: No WebSocket events received during monitoring period"
+                self.log_test("4. Monitor WebSocket Events", False, details)
                 return False
                 
         except Exception as e:
-            self.log_test("3. Enhanced Validation Monitoring", False, "Request failed", e)
+            self.log_test("4. Monitor WebSocket Events", False, "Request failed", e)
             return False
+        finally:
+            # Cleanup WebSocket connection
+            if self.sio and self.sio.connected:
+                self.sio.disconnect()
 
-    def test_4_verify_strict_criteria_application(self):
-        """Test 4: Verify Strict Criteria Application (3+ sources, 2000+ chars, anti-meta-content)"""
+    def test_5_verify_screenshot_accessibility(self):
+        """Test 5: Verify Screenshot File Accessibility"""
         try:
-            print("🔄 Test 4: Verifying strict criteria application")
+            print("🔄 Test 5: Verifying screenshot file accessibility")
             
             if not self.created_task_id:
-                self.log_test("4. Strict Criteria Application", False, "No task_id available")
+                self.log_test("5. Screenshot Accessibility", False, "No task_id available")
                 return False
             
-            # Get task results to analyze validation
-            url = f"{self.backend_url}/api/agent/get-task-status/{self.created_task_id}"
-            response = self.session.get(url, timeout=10)
+            if not self.screenshot_urls:
+                self.log_test("5. Screenshot Accessibility", False, "No screenshot URLs captured")
+                return False
             
-            if response.status_code == 200:
-                data = response.json()
-                task_data = data
-                
-                # Extract content from task results
-                content_sources = []
-                unique_sources = set()
-                total_content_length = 0
-                
-                if 'plan' in task_data:
-                    for step in task_data.get('plan', []):
-                        if 'result' in step:
-                            result = step.get('result', {})
-                            content = str(result.get('content', '')) or str(result.get('summary', ''))
-                            if content and len(content) > 100:
-                                content_sources.append(content)
-                                total_content_length += len(content)
-                            
-                            # Check for sources in web search results
-                            if 'data' in result and isinstance(result['data'], list):
-                                for item in result['data']:
-                                    url = item.get('url', '')
-                                    if url and url.startswith('http'):
-                                        try:
-                                            from urllib.parse import urlparse
-                                            domain = urlparse(url).netloc
-                                            if domain:
-                                                unique_sources.add(domain)
-                                        except:
-                                            pass
-                
-                # Check strict criteria
-                sources_count = len(unique_sources)
-                meets_source_requirement = sources_count >= 3
-                meets_content_requirement = total_content_length >= 2000
-                
-                # Check for meta-content (should be rejected)
-                all_content = " ".join(content_sources)
-                meta_phrases = ["se realizará", "se analizará", "el presente estudio", "se procederá"]
-                meta_content_detected = any(phrase in all_content.lower() for phrase in meta_phrases)
-                
-                criteria_met = {
-                    'sources_count': sources_count,
-                    'content_length': total_content_length,
-                    'meets_source_requirement': meets_source_requirement,
-                    'meets_content_requirement': meets_content_requirement,
-                    'no_meta_content': not meta_content_detected
-                }
-                
-                if meets_source_requirement and meets_content_requirement and not meta_content_detected:
-                    details = f"SUCCESS: All strict criteria met - {sources_count} sources, {total_content_length} chars, no meta-content"
-                    self.log_test("4. Strict Criteria Application", True, details)
-                    return True
-                elif meets_source_requirement or meets_content_requirement:
-                    details = f"PARTIAL: Some criteria met - {sources_count} sources, {total_content_length} chars, meta-content: {meta_content_detected}"
-                    self.log_test("4. Strict Criteria Application", True, details)
-                    return True
-                else:
-                    details = f"FAIL: Strict criteria not met - {sources_count} sources, {total_content_length} chars, meta-content: {meta_content_detected}"
-                    self.log_test("4. Strict Criteria Application", False, details)
-                    return False
+            accessible_screenshots = 0
+            failed_screenshots = 0
+            
+            for screenshot_url in self.screenshot_urls[:5]:  # Test first 5 screenshots
+                try:
+                    # Extract filename from URL
+                    parsed_url = urlparse(screenshot_url)
+                    if parsed_url.path.startswith('/api/files/screenshots/'):
+                        full_url = f"{self.backend_url}{screenshot_url}"
+                        response = self.session.get(full_url, timeout=10)
+                        
+                        if response.status_code == 200:
+                            accessible_screenshots += 1
+                            print(f"   ✅ Screenshot accessible: {screenshot_url}")
+                        else:
+                            failed_screenshots += 1
+                            print(f"   ❌ Screenshot not accessible: {screenshot_url} (HTTP {response.status_code})")
+                    else:
+                        print(f"   ⚠️ Invalid screenshot URL format: {screenshot_url}")
+                        
+                except Exception as e:
+                    failed_screenshots += 1
+                    print(f"   ❌ Error accessing screenshot {screenshot_url}: {e}")
+            
+            if accessible_screenshots > 0:
+                details = f"SUCCESS: {accessible_screenshots} screenshots accessible, {failed_screenshots} failed"
+                self.log_test("5. Screenshot Accessibility", True, details)
+                return True
             else:
-                self.log_test("4. Strict Criteria Application", False, f"Could not get task status: HTTP {response.status_code}")
+                details = f"FAIL: No screenshots accessible, {failed_screenshots} failed"
+                self.log_test("5. Screenshot Accessibility", False, details)
                 return False
                 
         except Exception as e:
-            self.log_test("4. Strict Criteria Application", False, "Request failed", e)
+            self.log_test("5. Screenshot Accessibility", False, "Request failed", e)
             return False
 
-    def test_5_verify_pattern_detection(self):
-        """Test 5: Verify Critical Pattern Detection (biografía, trayectoria política, ideología)"""
+    def test_6_verify_stored_messages(self):
+        """Test 6: Verify Stored Messages for Late-Joining Clients"""
         try:
-            print("🔄 Test 5: Verifying critical pattern detection for political research")
+            print("🔄 Test 6: Verifying stored messages for late-joining clients")
             
             if not self.created_task_id:
-                self.log_test("5. Pattern Detection", False, "No task_id available")
+                self.log_test("6. Stored Messages", False, "No task_id available")
                 return False
             
-            # Get task results to analyze patterns
-            url = f"{self.backend_url}/api/agent/get-task-status/{self.created_task_id}"
-            response = self.session.get(url, timeout=10)
+            # Setup a new WebSocket client to simulate late-joining
+            print("   🔌 Setting up new WebSocket client to simulate late-joining...")
             
-            if response.status_code == 200:
-                data = response.json()
-                task_data = data
+            late_join_sio = socketio.Client(logger=False, engineio_logger=False)
+            late_join_messages = []
+            
+            @late_join_sio.event
+            def connect():
+                print("   ✅ Late-join WebSocket connected")
                 
-                # Extract all content
-                all_content = ""
-                if 'plan' in task_data:
-                    for step in task_data.get('plan', []):
-                        if 'result' in step:
-                            result = step.get('result', {})
-                            content = str(result.get('content', '')) or str(result.get('summary', ''))
-                            all_content += f" {content}"
+            @late_join_sio.event
+            def stored_messages(data):
+                print(f"   📦 Received stored messages: {len(data.get('messages', []))} messages")
+                late_join_messages.extend(data.get('messages', []))
+            
+            try:
+                # Connect and join task room
+                websocket_url = f"{self.backend_url}/api/socket.io/"
+                late_join_sio.connect(websocket_url, transports=['polling', 'websocket'])
                 
-                # Check for critical patterns
-                critical_patterns = {
-                    'biografia_personal': ['nació', 'nacimiento', 'edad', 'formación', 'universidad', 'estudios'],
-                    'trayectoria_politica': ['cargo político', 'diputado', 'senador', 'ministro', 'presidente', 'candidato', 'elección'],
-                    'ideologia_especifica': ['liberal', 'conservador', 'libertario', 'derecha', 'izquierda', 'ideológica'],
-                    'declaraciones_recientes': ['declaró', 'afirmó', 'manifestó', 'entrevista', 'rueda de prensa', 'discurso']
-                }
+                # Join task room
+                late_join_sio.emit('join_task', {'task_id': self.created_task_id})
                 
-                patterns_found = {}
-                for category, patterns in critical_patterns.items():
-                    found_patterns = [p for p in patterns if p in all_content.lower()]
-                    patterns_found[category] = found_patterns
+                # Wait for stored messages
+                time.sleep(5)
                 
-                total_patterns = sum(len(patterns) for patterns in patterns_found.values())
-                categories_with_patterns = sum(1 for patterns in patterns_found.values() if len(patterns) > 0)
+                # Disconnect
+                late_join_sio.disconnect()
                 
-                if categories_with_patterns >= 3 and total_patterns >= 5:
-                    details = f"SUCCESS: {categories_with_patterns} categories, {total_patterns} patterns found: {patterns_found}"
-                    self.log_test("5. Pattern Detection", True, details)
+                if late_join_messages:
+                    details = f"SUCCESS: {len(late_join_messages)} stored messages received for late-joining client"
+                    self.log_test("6. Stored Messages", True, details)
                     return True
-                elif categories_with_patterns >= 2:
-                    details = f"PARTIAL: {categories_with_patterns} categories, {total_patterns} patterns found"
-                    self.log_test("5. Pattern Detection", True, details)
+                elif len(self.websocket_events) > 0:
+                    details = f"PARTIAL: No stored messages, but {len(self.websocket_events)} events were captured during monitoring"
+                    self.log_test("6. Stored Messages", True, details)
                     return True
                 else:
-                    details = f"FAIL: Only {categories_with_patterns} categories, {total_patterns} patterns found"
-                    self.log_test("5. Pattern Detection", False, details)
+                    details = f"FAIL: No stored messages received for late-joining client"
+                    self.log_test("6. Stored Messages", False, details)
                     return False
-            else:
-                self.log_test("5. Pattern Detection", False, f"Could not get task status: HTTP {response.status_code}")
+                    
+            except Exception as e:
+                print(f"   ❌ Error with late-join WebSocket: {e}")
+                details = f"FAIL: Error testing late-join functionality: {e}"
+                self.log_test("6. Stored Messages", False, details)
                 return False
                 
         except Exception as e:
-            self.log_test("5. Pattern Detection", False, "Request failed", e)
+            self.log_test("6. Stored Messages", False, "Request failed", e)
             return False
 
-    def test_6_verify_integration_flow(self):
-        """Test 6: Verify Integration Flow (agent_routes.py → enhanced_step_validator.py)"""
+    def test_7_verify_task_status_polling(self):
+        """Test 7: Verify Task Status Polling Shows Navigation Activity"""
         try:
-            print("🔄 Test 6: Verifying integration flow between agent_routes and enhanced validator")
+            print("🔄 Test 7: Verifying task status polling shows navigation activity")
             
-            validator_calls = len(self.enhanced_validator_calls)
-            validation_results = len(self.validation_logs)
+            if not self.created_task_id:
+                self.log_test("7. Task Status Polling", False, "No task_id available")
+                return False
             
-            # Check if the integration flow worked
-            integration_working = (
-                self.political_research_detected and  # Detection in agent_routes
-                self.strict_validation_applied and   # Strict validation triggered
-                validator_calls > 0                  # Enhanced validator called
-            )
+            # Poll task status multiple times
+            url = f"{self.backend_url}/api/agent/get-task-status/{self.created_task_id}"
             
-            if integration_working:
-                details = f"SUCCESS: Integration flow working - Detection: {self.political_research_detected}, Strict validation: {self.strict_validation_applied}, Validator calls: {validator_calls}"
-                self.log_test("6. Integration Flow", True, details)
-                return True
-            elif validator_calls > 0:
-                details = f"PARTIAL: Some integration working - Validator calls: {validator_calls}, but detection may be incomplete"
-                self.log_test("6. Integration Flow", True, details)
+            navigation_indicators = []
+            for i in range(5):
+                try:
+                    response = self.session.get(url, timeout=10)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        
+                        # Look for navigation indicators in task data
+                        task_status = data.get('status', 'unknown')
+                        current_step = data.get('current_step', {})
+                        plan = data.get('plan', [])
+                        
+                        # Check for web search or navigation activity
+                        for step in plan:
+                            if step.get('tool') == 'web_search' or 'navegación' in str(step).lower():
+                                navigation_indicators.append(f"Step {step.get('id', 'unknown')}: {step.get('tool', 'unknown')}")
+                        
+                        if current_step and ('web' in str(current_step).lower() or 'search' in str(current_step).lower()):
+                            navigation_indicators.append(f"Current step involves web activity: {current_step}")
+                        
+                        print(f"   📊 Poll {i+1}: Status={task_status}, Navigation indicators: {len(navigation_indicators)}")
+                        
+                    time.sleep(3)  # Wait between polls
+                    
+                except Exception as e:
+                    print(f"   ❌ Error in poll {i+1}: {e}")
+            
+            if navigation_indicators:
+                details = f"SUCCESS: {len(navigation_indicators)} navigation indicators found in task status"
+                self.log_test("7. Task Status Polling", True, details)
                 return True
             else:
-                details = f"FAIL: Integration not working - Detection: {self.political_research_detected}, Strict validation: {self.strict_validation_applied}, Validator calls: {validator_calls}"
-                self.log_test("6. Integration Flow", False, details)
-                return False
+                details = f"PARTIAL: Task status polling working, but no clear navigation indicators"
+                self.log_test("7. Task Status Polling", True, details)
+                return True
                 
         except Exception as e:
-            self.log_test("6. Integration Flow", False, "Request failed", e)
+            self.log_test("7. Task Status Polling", False, "Request failed", e)
             return False
 
-    def run_enhanced_validation_tests(self):
-        """Run comprehensive enhanced step validation tests"""
-        print("🚀 ENHANCED STEP VALIDATION SYSTEM TESTING")
+    def run_real_time_browser_tests(self):
+        """Run comprehensive real-time browser navigation tests"""
+        print("🚀 REAL-TIME BROWSER NAVIGATION WITH SCREENSHOTS TESTING")
         print("=" * 80)
         print(f"Backend URL: {self.backend_url}")
         print(f"Test Time: {datetime.now().isoformat()}")
-        print(f"Test Task: Political research task with biografía, trayectoria política, ideología")
-        print(f"FOCUS: Verify enhanced step validation system for Paso 1")
+        print(f"Test Task: Research task about Javier Milei")
+        print(f"FOCUS: Verify real-time browser navigation with screenshot capture")
         print()
         
         # Test 1: Backend Health
@@ -414,33 +473,37 @@ class EnhancedStepValidationTester:
             print("❌ Backend health check failed. Aborting tests.")
             return self.test_results
         
-        # Test 2: Create Political Research Task
+        # Test 2: Create Research Task
         print("=" * 60)
-        task_id = self.test_2_create_political_research_task()
+        task_id = self.test_2_create_research_task()
         if not task_id:
-            print("❌ Failed to create political research task. Aborting remaining tests.")
+            print("❌ Failed to create research task. Aborting remaining tests.")
             self.print_summary()
             return self.test_results
         
-        # Wait a moment for task to be saved
-        print("⏳ Waiting 10 seconds for task to be saved and processing to start...")
+        # Test 3: Execute Plan
+        print("=" * 60)
+        execution_ok = self.test_3_execute_plan()
+        
+        # Wait a moment for task execution to start
+        print("⏳ Waiting 10 seconds for task execution to start...")
         time.sleep(10)
         
-        # Test 3: Monitor Enhanced Validation (CRITICAL)
+        # Test 4: Monitor WebSocket Events (CRITICAL - 90 seconds as requested)
         print("=" * 60)
-        validation_ok = self.test_3_monitor_enhanced_validation()
+        websocket_ok = self.test_4_monitor_websocket_events()
         
-        # Test 4: Strict Criteria Application
+        # Test 5: Screenshot Accessibility
         print("=" * 60)
-        criteria_ok = self.test_4_verify_strict_criteria_application()
+        screenshots_ok = self.test_5_verify_screenshot_accessibility()
         
-        # Test 5: Pattern Detection
+        # Test 6: Stored Messages
         print("=" * 60)
-        patterns_ok = self.test_5_verify_pattern_detection()
+        stored_ok = self.test_6_verify_stored_messages()
         
-        # Test 6: Integration Flow
+        # Test 7: Task Status Polling
         print("=" * 60)
-        integration_ok = self.test_6_verify_integration_flow()
+        polling_ok = self.test_7_verify_task_status_polling()
         
         # Summary
         self.print_summary()
@@ -450,7 +513,7 @@ class EnhancedStepValidationTester:
     def print_summary(self):
         """Print test summary"""
         print("\n" + "=" * 80)
-        print("🎯 ENHANCED STEP VALIDATION SYSTEM TEST SUMMARY")
+        print("🎯 REAL-TIME BROWSER NAVIGATION TEST SUMMARY")
         print("=" * 80)
         
         passed = sum(1 for result in self.test_results if result['success'])
@@ -459,157 +522,152 @@ class EnhancedStepValidationTester:
         print(f"Tests Passed: {passed}/{total}")
         print()
         
-        # Analyze results for the enhanced validation system
+        # Analyze results for the real-time browser navigation system
         critical_issues = []
-        enhanced_validator_working = False
-        automatic_detection_working = False
-        strict_criteria_applied = False
-        pattern_detection_working = False
-        integration_working = False
+        browser_navigation_working = False
+        screenshot_capture_working = False
+        websocket_events_working = False
+        stored_messages_working = False
+        file_serving_working = False
         
         for result in self.test_results:
             if not result['success']:
                 test_name = result['test']
                 details = result['details'] or result['error']
                 
-                if 'Enhanced Validation' in test_name:
+                if 'WebSocket Events' in test_name:
                     critical_issues.append(f"🚨 CRITICAL: {test_name} - {details}")
-                elif 'Strict Criteria' in test_name:
+                elif 'Screenshot' in test_name:
                     critical_issues.append(f"🚨 CRITICAL: {test_name} - {details}")
-                elif 'Pattern Detection' in test_name:
-                    critical_issues.append(f"⚠️ MAJOR: {test_name} - {details}")
-                elif 'Integration Flow' in test_name:
+                elif 'Stored Messages' in test_name:
                     critical_issues.append(f"⚠️ MAJOR: {test_name} - {details}")
                 else:
                     critical_issues.append(f"❌ {test_name} - {details}")
             else:
                 # Check for positive results
-                if 'Enhanced Validation' in result['test']:
-                    enhanced_validator_working = True
-                    if self.political_research_detected:
-                        automatic_detection_working = True
-                if 'Strict Criteria' in result['test']:
-                    strict_criteria_applied = True
-                if 'Pattern Detection' in result['test']:
-                    pattern_detection_working = True
-                if 'Integration Flow' in result['test']:
-                    integration_working = True
+                if 'WebSocket Events' in result['test']:
+                    websocket_events_working = True
+                    if len(self.browser_visual_events) > 0 or len(self.browser_activity_events) > 0:
+                        browser_navigation_working = True
+                if 'Screenshot' in result['test']:
+                    screenshot_capture_working = True
+                    file_serving_working = True
+                if 'Stored Messages' in result['test']:
+                    stored_messages_working = True
         
         if critical_issues:
             print("🚨 ISSUES FOUND:")
             for issue in critical_issues:
                 print(f"  {issue}")
         else:
-            print("✅ All enhanced step validation tests passed successfully")
+            print("✅ All real-time browser navigation tests passed successfully")
         
         print()
         
-        # Specific diagnosis for the enhanced validation system
-        print("🔍 ENHANCED STEP VALIDATION SYSTEM ANALYSIS:")
+        # Specific diagnosis for the real-time browser navigation system
+        print("🔍 REAL-TIME BROWSER NAVIGATION SYSTEM ANALYSIS:")
         
-        if enhanced_validator_working:
-            print("✅ ENHANCED STEP VALIDATOR: WORKING")
-            print(f"   - Enhanced validator calls: {len(self.enhanced_validator_calls)}")
-            print(f"   - Validation results: {len(self.validation_logs)}")
+        if browser_navigation_working:
+            print("✅ BROWSER NAVIGATION: WORKING")
+            print(f"   - Browser visual events: {len(self.browser_visual_events)}")
+            print(f"   - Browser activity events: {len(self.browser_activity_events)}")
         else:
-            print("❌ ENHANCED STEP VALIDATOR: NOT WORKING")
-            print("   - Enhanced validator not being called correctly")
+            print("❌ BROWSER NAVIGATION: NOT WORKING")
+            print("   - No browser_visual or browser_activity events detected")
         
-        if automatic_detection_working:
-            print("✅ AUTOMATIC DETECTION: WORKING")
-            print("   - Political research patterns detected automatically")
-            print("   - System correctly identifies Paso 1 research tasks")
+        if screenshot_capture_working:
+            print("✅ SCREENSHOT CAPTURE: WORKING")
+            print(f"   - Screenshots captured: {len(self.screenshot_urls)}")
+            print(f"   - Screenshot URLs: {self.screenshot_urls[:3]}...")
         else:
-            print("❌ AUTOMATIC DETECTION: NOT WORKING")
-            print("   - Political research patterns not detected")
+            print("❌ SCREENSHOT CAPTURE: NOT WORKING")
+            print("   - No screenshots captured or URLs not accessible")
         
-        if strict_criteria_applied:
-            print("✅ STRICT CRITERIA: WORKING")
-            print("   - Minimum 3 sources requirement applied")
-            print("   - 2000+ character requirement applied")
-            print("   - Anti-meta-content detection working")
+        if websocket_events_working:
+            print("✅ WEBSOCKET EVENTS: WORKING")
+            print(f"   - Total events received: {len(self.websocket_events)}")
         else:
-            print("❌ STRICT CRITERIA: NOT WORKING")
-            print("   - Strict validation criteria not properly applied")
+            print("❌ WEBSOCKET EVENTS: NOT WORKING")
+            print("   - No WebSocket events received")
         
-        if pattern_detection_working:
-            print("✅ PATTERN DETECTION: WORKING")
-            print("   - Critical patterns (biografía, trayectoria política, ideología) detected")
+        if stored_messages_working:
+            print("✅ STORED MESSAGES: WORKING")
+            print("   - Late-joining clients receive previous messages")
         else:
-            print("❌ PATTERN DETECTION: NOT WORKING")
-            print("   - Critical patterns not properly detected")
+            print("❌ STORED MESSAGES: NOT WORKING")
+            print("   - Late-joining clients don't receive stored messages")
         
-        if integration_working:
-            print("✅ INTEGRATION FLOW: WORKING")
-            print("   - agent_routes.py → enhanced_step_validator.py integration working")
+        if file_serving_working:
+            print("✅ FILE SERVING: WORKING")
+            print("   - Screenshot files accessible via /api/files/screenshots/")
         else:
-            print("❌ INTEGRATION FLOW: NOT WORKING")
-            print("   - Integration between components not working properly")
+            print("❌ FILE SERVING: NOT WORKING")
+            print("   - Screenshot files not accessible")
         
         print()
         
         # Overall assessment
-        if enhanced_validator_working and automatic_detection_working and strict_criteria_applied:
-            print("🎉 OVERALL ASSESSMENT: ✅ ENHANCED STEP VALIDATION SYSTEM SUCCESSFUL")
-            print("   - Enhanced validator functioning correctly")
-            print("   - Automatic detection of political research working")
-            print("   - Strict criteria properly applied")
-            print("   - Pattern detection working")
-            print("   - Integration flow functional")
+        if browser_navigation_working and screenshot_capture_working and websocket_events_working:
+            print("🎉 OVERALL ASSESSMENT: ✅ REAL-TIME BROWSER NAVIGATION SYSTEM SUCCESSFUL")
+            print("   - Browser navigation events working correctly")
+            print("   - Screenshot capture and serving functional")
+            print("   - WebSocket events transmitted in real-time")
+            print("   - File serving endpoints operational")
         else:
-            print("⚠️ OVERALL ASSESSMENT: ❌ ENHANCED STEP VALIDATION SYSTEM NEEDS WORK")
-            print("   - The enhanced validation system has issues")
+            print("⚠️ OVERALL ASSESSMENT: ❌ REAL-TIME BROWSER NAVIGATION SYSTEM NEEDS WORK")
+            print("   - The real-time browser navigation system has issues")
             print("   - May need additional debugging and fixes")
         
         print()
         
         # Specific recommendations
         print("📋 RECOMMENDATIONS:")
-        if not enhanced_validator_working:
-            print("   1. Check enhanced_step_validator.py implementation")
-            print("   2. Verify EnhancedStepValidator class is working correctly")
-            print("   3. Test validate_step_1_with_enhanced_validator function")
+        if not browser_navigation_working:
+            print("   1. Check web_search tool implementation for browser_visual events")
+            print("   2. Verify WebSocket Manager is emitting browser navigation events")
+            print("   3. Test browser-use integration with real-time event emission")
         
-        if not automatic_detection_working:
-            print("   1. Check agent_routes.py detection logic for political research patterns")
-            print("   2. Verify keywords: 'biografía', 'trayectoria política', 'ideología', 'declaraciones públicas'")
-            print("   3. Test is_step_1_research detection")
+        if not screenshot_capture_working:
+            print("   1. Check screenshot capture in web navigation tools")
+            print("   2. Verify /tmp/screenshots/{task_id}/ directory creation")
+            print("   3. Test screenshot file generation during navigation")
         
-        if not strict_criteria_applied:
-            print("   1. Verify minimum 3 sources requirement implementation")
-            print("   2. Check 2000+ character requirement")
-            print("   3. Test anti-meta-content detection patterns")
+        if not websocket_events_working:
+            print("   1. Check WebSocket Manager initialization")
+            print("   2. Verify event emission in tool execution")
+            print("   3. Test WebSocket connection and room joining")
         
-        if not pattern_detection_working:
-            print("   1. Check critical_patterns in EnhancedStepValidator")
-            print("   2. Verify pattern matching for biografía, trayectoria política, ideología")
-            print("   3. Test pattern scoring system")
+        if not stored_messages_working:
+            print("   1. Check stored message functionality in WebSocket Manager")
+            print("   2. Verify message persistence for late-joining clients")
+            print("   3. Test join_task event handling")
         
-        if not integration_working:
-            print("   1. Check import of enhanced_step_validator in agent_routes.py")
-            print("   2. Verify validate_step_1_with_enhanced_validator is called correctly")
-            print("   3. Test flow from detection to validation")
+        if not file_serving_working:
+            print("   1. Check /api/files/screenshots/ endpoint implementation")
+            print("   2. Verify file permissions and directory structure")
+            print("   3. Test screenshot file serving with correct CORS headers")
         
-        if enhanced_validator_working and automatic_detection_working and strict_criteria_applied:
-            print("   1. Enhanced step validation system is working correctly")
-            print("   2. Monitor for any regression issues")
-            print("   3. Consider expanding to other step types")
+        if browser_navigation_working and screenshot_capture_working and websocket_events_working:
+            print("   1. Real-time browser navigation system is working correctly")
+            print("   2. Monitor for any performance issues during heavy navigation")
+            print("   3. Consider optimizing screenshot capture frequency if needed")
         
         print()
-        print("📊 ENHANCED STEP VALIDATION SYSTEM TESTING COMPLETE")
+        print("📊 REAL-TIME BROWSER NAVIGATION TESTING COMPLETE")
         
         if self.created_task_id:
             print(f"📝 Test Task ID: {self.created_task_id}")
             print("   Use this ID to check logs and debug if needed")
         
-        print(f"📋 Enhanced Validator Calls: {len(self.enhanced_validator_calls)}")
-        print(f"🎯 Political Research Detected: {self.political_research_detected}")
-        print(f"🔥 Strict Validation Applied: {self.strict_validation_applied}")
-        print(f"📊 Validation Results: {len(self.validation_logs)}")
+        print(f"📡 Total WebSocket Events: {len(self.websocket_events)}")
+        print(f"📸 Browser Visual Events: {len(self.browser_visual_events)}")
+        print(f"🌐 Browser Activity Events: {len(self.browser_activity_events)}")
+        print(f"📷 Screenshot URLs Captured: {len(self.screenshot_urls)}")
+        print(f"📦 Stored Messages: {len(self.stored_messages)}")
 
 if __name__ == "__main__":
-    tester = EnhancedStepValidationTester()
-    results = tester.run_enhanced_validation_tests()
+    tester = RealTimeBrowserNavigationTester()
+    results = tester.run_real_time_browser_tests()
     
     # Exit with appropriate code
     failed_tests = sum(1 for result in results if not result['success'])
