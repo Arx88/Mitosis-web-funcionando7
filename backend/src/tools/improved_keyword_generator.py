@@ -484,6 +484,7 @@ class IntelligentKeywordGenerator:
         # 🎯 MÉTODO ESPECIAL: Detectar nombres compuestos específicos conocidos PRIMERO
         known_subjects = [
             r'\battack\s+on\s+titan\b',
+            r'\battack\s+titan\b',  # ✅ AÑADIDO: Detectar "Attack Titan" también
             r'\bshingeki\s+no\s+kyojin\b', 
             r'\barctic\s+monkeys\b',
             r'\bcoldplay\b',
