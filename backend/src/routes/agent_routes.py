@@ -1437,97 +1437,195 @@ def evaluate_result_quality(result: dict, task_analysis: dict) -> bool:
 
 def apply_enhanced_step_1_validation(result: dict, step_title: str, step_description: str, original_message: str, task_id: str, ollama_service, tool_manager) -> dict:
     """
-    🔥 VALIDACIÓN MEJORADA PARA PASO 1 DE INVESTIGACIÓN POLÍTICA
-    Aplica validación super estricta para pasos de investigación política
+    🔥 VALIDACIÓN SUPER ESTRICTA UNIVERSAL PARA PASO 1 DE INVESTIGACIÓN
+    Aplica validación robusta para CUALQUIER tipo de investigación, no solo política
+    Integra el Enhanced Step Validator que ya existe
     """
     try:
-        logger.info("🔥 Aplicando validación mejorada para Paso 1 de investigación política")
+        logger.info("🔥 APLICANDO VALIDACIÓN SUPER ESTRICTA UNIVERSAL PARA PASO 1")
         
         # Si el resultado ya falló, no aplicar validación adicional
         if not result.get('success', False):
-            logger.warning("🔥 Resultado ya falló - omitiendo validación mejorada")
+            logger.warning("🔥 Resultado ya falló - omitiendo validación enhanced")
             return result
         
-        # Extraer contenido para análisis
-        content = result.get('content', '') or result.get('summary', '')
+        # Importar el Enhanced Step Validator
+        try:
+            from src.routes.enhanced_step_validator import EnhancedStepValidator
+            validator = EnhancedStepValidator()
+            logger.info("✅ Enhanced Step Validator importado correctamente")
+        except Exception as e:
+            logger.error(f"❌ Error importando Enhanced Step Validator: {str(e)}")
+            # Fallback a validación básica si falla la importación
+            return apply_basic_step_validation_fallback(result, step_title, step_description, original_message)
         
-        # 🔥 CRITERIOS SUPER ESTRICTOS PARA PASO 1 POLÍTICO
-        political_keywords = [
-            'milei', 'presidente', 'argentina', 'gobierno', 'política', 'libertario',
-            'congreso', 'diputado', 'senador', 'ministro', 'reforma', 'economía',
-            'inflación', 'dólar', 'peso', 'ley', 'decreto', 'constitución'
-        ]
+        # Preparar datos para el validador Enhanced
+        collected_results = []
         
-        biographical_keywords = [
-            'biografía', 'nacimiento', 'educación', 'carrera', 'trayectoria',
-            'formación', 'estudios', 'universidad', 'profesión', 'experiencia'
-        ]
-        
-        ideological_keywords = [
-            'ideología', 'libertario', 'liberal', 'anarcocapitalista', 'economista',
-            'escuela austríaca', 'libre mercado', 'privatización', 'desregulación'
-        ]
-        
-        # Verificar presencia de palabras clave políticas
-        political_found = sum(1 for keyword in political_keywords if keyword.lower() in content.lower())
-        biographical_found = sum(1 for keyword in biographical_keywords if keyword.lower() in content.lower())
-        ideological_found = sum(1 for keyword in ideological_keywords if keyword.lower() in content.lower())
-        
-        total_keywords_found = political_found + biographical_found + ideological_found
-        
-        # 🔥 VALIDACIÓN SUPER ESTRICTA
-        if total_keywords_found < 5:
-            logger.warning(f"🔥 VALIDACIÓN FALLIDA: Solo {total_keywords_found} palabras clave políticas encontradas (mínimo: 5)")
-            logger.warning(f"🔥 Político: {political_found}, Biográfico: {biographical_found}, Ideológico: {ideological_found}")
+        # Extraer información de diferentes fuentes del resultado
+        if 'search_results' in result:
+            collected_results.extend(result['search_results'])
+        elif 'sources' in result:
+            collected_results.extend(result['sources'])
+        elif 'results' in result:
+            collected_results.extend(result['results'])
+        else:
+            # Crear resultado sintético para validación si no hay fuentes explícitas
+            content = result.get('content', '') or result.get('summary', '')
+            urls = extract_urls_from_content_fallback(content) or ['synthetic_source']
             
-            # Intentar mejorar el resultado con búsqueda adicional
-            enhanced_result = enhance_political_research_result(
+            collected_results = [{
+                'title': step_title,
+                'snippet': content[:500],
+                'content': content,
+                'url': url,
+                'description': f'Contenido extraído: {len(content)} caracteres'
+            } for url in urls[:1]]  # Al menos 1 fuente sintética
+        
+        logger.info(f"🔍 Preparando validación Enhanced con {len(collected_results)} fuentes")
+        
+        # ✅ APLICAR VALIDACIÓN ENHANCED STEP VALIDATOR
+        enhanced_validation_result = validator.validate_step_1_completion(
+            step_description, step_title, collected_results, task_id
+        )
+        
+        logger.info(f"📊 Resultado validación Enhanced: {enhanced_validation_result.get('completeness_score', 0)}%")
+        
+        # Verificar si pasa la validación estricta
+        meets_requirements = enhanced_validation_result.get('meets_requirements', False)
+        
+        if meets_requirements:
+            logger.info("✅ PASO 1 APROBADO POR ENHANCED VALIDATOR")
+            
+            # Agregar metadata de validación enhanced al resultado
+            result['enhanced_validation'] = enhanced_validation_result
+            result['validation_status'] = 'APPROVED_ENHANCED'
+            result['validation_score'] = enhanced_validation_result.get('completeness_score', 0)
+            
+            return result
+        
+        else:
+            logger.warning("❌ PASO 1 RECHAZADO POR ENHANCED VALIDATOR")
+            logger.warning(f"❌ Score: {enhanced_validation_result.get('completeness_score', 0)}%")
+            logger.warning(f"❌ Razón: {enhanced_validation_result.get('validation_summary', 'Criterios no cumplidos')}")
+            
+            # 🔧 INTENTAR MEJORAR EL RESULTADO CON BÚSQUEDAS MÚLTIPLES ESPECÍFICAS
+            improved_result = improve_research_with_targeted_searches_fallback(
                 result, step_title, step_description, original_message, task_id, 
-                ollama_service, tool_manager
+                tool_manager, enhanced_validation_result
             )
             
-            if enhanced_result:
-                logger.info("🔥 Resultado mejorado con búsqueda adicional")
-                return enhanced_result
+            if improved_result and improved_result != result:
+                logger.info("🔄 RESULTADO MEJORADO - Aplicando validación nuevamente")
+                # Validar el resultado mejorado
+                return apply_enhanced_step_1_validation(
+                    improved_result, step_title, step_description, original_message, 
+                    task_id, ollama_service, tool_manager
+                )
             else:
-                logger.warning("🔥 No se pudo mejorar el resultado - mantiendo original")
+                # Si no se pudo mejorar, marcar como necesita más trabajo
+                result['enhanced_validation'] = enhanced_validation_result
+                result['validation_status'] = 'REJECTED_ENHANCED'
+                result['needs_more_research'] = True
+                result['validation_recommendations'] = enhanced_validation_result.get('specific_recommendations', [])
+                
+                logger.warning("⚠️ PASO 1 MARCADO COMO NECESITA MÁS INVESTIGACIÓN ESPECÍFICA")
                 return result
         
-        # 🔥 VERIFICAR LONGITUD MÍNIMA PARA CONTENIDO POLÍTICO
-        if len(content) < 500:
-            logger.warning(f"🔥 VALIDACIÓN FALLIDA: Contenido muy corto ({len(content)} caracteres, mínimo: 500)")
-            return result
+    except Exception as e:
+        logger.error(f"❌ Error en validación Enhanced Paso 1: {str(e)}")
+        # En caso de error, aplicar validación básica como fallback
+        return apply_basic_step_validation_fallback(result, step_title, step_description, original_message)
+
+def apply_basic_step_validation_fallback(result: dict, step_title: str, step_description: str, original_message: str) -> dict:
+    """
+    🔧 VALIDACIÓN BÁSICA DE FALLBACK
+    Se usa cuando el Enhanced Step Validator no está disponible
+    """
+    try:
+        logger.info("🔧 Aplicando validación básica de fallback")
         
-        # 🔥 VERIFICAR QUE NO SEA CONTENIDO GENÉRICO
-        generic_political_phrases = [
-            'información política general', 'datos básicos del gobierno',
-            'información no específica', 'contenido político genérico'
-        ]
+        content = result.get('content', '') or result.get('summary', '')
         
-        is_generic_political = any(phrase in content.lower() for phrase in generic_political_phrases)
-        if is_generic_political:
-            logger.warning("🔥 VALIDACIÓN FALLIDA: Contenido político genérico detectado")
-            return result
+        # Validación básica de longitud
+        if len(content) < 200:
+            logger.warning(f"⚠️ Contenido muy corto: {len(content)} caracteres")
+            result['validation_status'] = 'BASIC_WARNING_SHORT'
+        else:
+            logger.info(f"✅ Contenido aceptable: {len(content)} caracteres")
+            result['validation_status'] = 'BASIC_APPROVED'
         
-        logger.info(f"🔥 VALIDACIÓN EXITOSA: {total_keywords_found} palabras clave encontradas, {len(content)} caracteres")
-        logger.info(f"🔥 Desglose: Político: {political_found}, Biográfico: {biographical_found}, Ideológico: {ideological_found}")
-        
-        # Agregar metadata de validación al resultado
-        result['step_1_validation'] = {
-            'validated': True,
-            'political_keywords': political_found,
-            'biographical_keywords': biographical_found,
-            'ideological_keywords': ideological_found,
-            'total_keywords': total_keywords_found,
+        result['basic_validation'] = {
             'content_length': len(content),
-            'validation_passed': True
+            'validation_type': 'basic_fallback'
         }
         
         return result
         
     except Exception as e:
-        logger.error(f"🔥 Error en validación mejorada Paso 1: {str(e)}")
-        # En caso de error, devolver resultado original
+        logger.error(f"❌ Error en validación básica: {str(e)}")
+        return result
+
+def extract_urls_from_content_fallback(content: str) -> list:
+    """
+    🔗 EXTRACTOR DE URLs DE FALLBACK
+    Extrae URLs del contenido usando regex simple
+    """
+    try:
+        import re
+        url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
+        urls = re.findall(url_pattern, content)
+        return urls[:5]  # Máximo 5 URLs
+    except Exception as e:
+        logger.error(f"❌ Error extrayendo URLs: {str(e)}")
+        return []
+
+def improve_research_with_targeted_searches_fallback(result: dict, step_title: str, step_description: str, original_message: str, task_id: str, tool_manager, validation_result: dict) -> dict:
+    """
+    🔧 MEJORADOR DE INVESTIGACIÓN DE FALLBACK
+    Intenta mejorar el resultado con búsquedas adicionales básicas
+    """
+    try:
+        logger.info("🔧 Intentando mejorar investigación con búsquedas de fallback")
+        
+        # Si no hay tool_manager, no se puede mejorar
+        if not tool_manager:
+            logger.warning("⚠️ No hay tool_manager disponible para mejoras")
+            return result
+        
+        # Intentar una búsqueda web adicional simple
+        try:
+            search_query = f"{step_title} {step_description}"[:100]  # Limitar longitud
+            
+            # Usar búsqueda web básica si está disponible
+            if hasattr(tool_manager, 'execute_web_search'):
+                search_result = tool_manager.execute_web_search(search_query, task_id)
+                
+                if search_result and search_result.get('success'):
+                    # Combinar resultados
+                    original_content = result.get('content', '')
+                    additional_content = search_result.get('content', '')
+                    
+                    if additional_content and len(additional_content) > 100:
+                        combined_content = f"{original_content}\n\n--- INFORMACIÓN ADICIONAL ---\n\n{additional_content}"
+                        
+                        improved_result = result.copy()
+                        improved_result['content'] = combined_content
+                        improved_result['summary'] = f"Investigación mejorada - {len(combined_content)} caracteres"
+                        improved_result['improved'] = True
+                        improved_result['improvement_method'] = 'fallback_web_search'
+                        
+                        logger.info(f"✅ Resultado mejorado con búsqueda adicional: {len(combined_content)} caracteres")
+                        return improved_result
+            
+        except Exception as search_error:
+            logger.error(f"❌ Error en búsqueda de mejora: {str(search_error)}")
+        
+        logger.warning("⚠️ No se pudo mejorar el resultado con fallback")
+        return result
+        
+    except Exception as e:
+        logger.error(f"❌ Error en mejora de fallback: {str(e)}")
         return result
 
 def enhance_political_research_result(result: dict, step_title: str, step_description: str, original_message: str, task_id: str, ollama_service, tool_manager) -> dict:
