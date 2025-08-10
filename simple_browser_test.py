@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://7e7b2f0c-18f0-4054-9260-67c4cc41ee4a.preview.emergentagent.com"
+BACKEND_URL = "https://e727d8c0-6cdb-4a78-b216-fb15e8e27a4e.preview.emergentagent.com"
 
 def test_browser_navigation_system():
     """Test the browser navigation system as requested"""
