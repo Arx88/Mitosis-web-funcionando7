@@ -263,22 +263,35 @@ class IntelligentKeywordGenerator:
         return clean_theme
     
     def _extract_important_entities(self, query_text: str) -> List[str]:
-        """🏷️ Extraer entidades importantes (nombres propios, conceptos clave)"""
+        """🏷️ Extraer entidades importantes (nombres propios, conceptos clave) - CORREGIDO FILTRADO META"""
         
         entities = []
         query_lower = query_text.lower()
         
-        # Buscar todas las entidades de alta prioridad
+        # 🔥 FILTRO CRÍTICO: Lista completa de palabras meta que nunca deben ser entidades
+        meta_filter_entities = {
+            'investigar', 'información', 'específica', 'buscar', 'datos', 'sobre', 'acerca',
+            'realizar', 'generar', 'crear', 'análisis', 'informe', 'completo', 'completa',
+            'recopilar', 'obtener', 'utilizar', 'herramienta', 'web', 'search', 'incluyendo',
+            'mediante', 'para', 'con', 'del', 'las', 'los', 'una', 'actualizada', 'actuales',
+            'relevante', 'relevantes', 'importante', 'importantes', 'necesario', 'necesaria',
+            'completar', 'desarrollo', 'específicos', 'general', 'generales'
+        }
+        
+        # Buscar todas las entidades de alta prioridad (filtradas)
         for category, entity_list in self.preserve_entities.items():
             for entity in entity_list:
-                if entity in query_lower:
+                if entity in query_lower and entity not in meta_filter_entities:
                     entities.append(entity)
         
-        # Buscar nombres propios adicionales (Capitalizados)
+        # Buscar nombres propios adicionales (Capitalizados) y filtrar meta words
         proper_nouns = re.findall(r'\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*\b', query_text)
         for noun in proper_nouns:
-            if len(noun) > 3:
-                entities.append(noun.lower())
+            noun_lower = noun.lower()
+            if (len(noun) > 3 and 
+                noun_lower not in meta_filter_entities and
+                not any(meta in noun_lower for meta in ['investig', 'informac', 'buscar', 'datos'])):
+                entities.append(noun_lower)
         
         # Remover duplicados manteniendo orden
         seen = set()
