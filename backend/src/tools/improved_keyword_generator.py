@@ -40,7 +40,12 @@ class IntelligentKeywordGenerator:
             'temporal': ['2024', '2025', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
                         'actual', 'reciente', 'nuevo', 'última', 'último'],
             'musica': ['arctic', 'monkeys', 'banda', 'música', 'rock', 'discografía', 'álbum', 
-                      'canción', 'concierto', 'gira', 'festival']
+                      'canción', 'concierto', 'gira', 'festival'],
+            'anime_manga': ['attack', 'titan', 'shingeki', 'kyojin', 'eren', 'mikasa', 'armin', 'levi', 
+                           'anime', 'manga', 'naruto', 'one', 'piece', 'dragon', 'ball', 'studio', 
+                           'ghibli', 'miyazaki', 'otaku', 'cosplay'],
+            'entretenimiento': ['netflix', 'disney', 'marvel', 'dc', 'comics', 'superhero', 'movie', 
+                               'film', 'serie', 'temporada', 'episodio', 'actor', 'actress', 'director']
         }
         
         # Palabras meta que deben eliminarse COMPLETAMENTE
