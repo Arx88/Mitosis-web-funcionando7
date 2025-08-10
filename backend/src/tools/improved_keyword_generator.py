@@ -344,133 +344,240 @@ class IntelligentKeywordGenerator:
 
     def detect_granular_search_needs(self, query_text: str) -> List[Dict[str, str]]:
         """
-        🎯 DETECTOR DE NECESIDAD DE BÚSQUEDAS GRANULARES MÚLTIPLES
+        🎯 DETECTOR GENÉRICO INTELIGENTE DE BÚSQUEDAS GRANULARES
         
-        Detecta si una consulta necesita múltiples búsquedas específicas
-        para obtener información completa sobre un tema
+        Analiza CUALQUIER consulta y determina automáticamente si necesita
+        múltiples búsquedas específicas, SIN hardcodear temas específicos
         """
         query_lower = query_text.lower()
         searches = []
         
-        # 🎬 PATRÓN: ANIME/MANGA (Attack on Titan, etc.)
-        anime_patterns = [
-            (r'attack\s+on\s+titan|shingeki\s+no\s+kyojin', 'Attack on Titan'),
-            (r'naruto', 'Naruto'),
-            (r'one\s+piece', 'One Piece'),
-            (r'dragon\s+ball', 'Dragon Ball'),
-            (r'demon\s+slayer|kimetsu\s+no\s+yaiba', 'Demon Slayer')
+        print(f"🔍 ANALYZING QUERY FOR GRANULAR NEEDS: '{query_text}'")
+        
+        # 🎯 STEP 1: DETECTAR SI LA CONSULTA SOLICITA INFORMACIÓN AMPLIA/COMPLETA
+        comprehensive_indicators = [
+            'información completa', 'datos completos', 'información sobre',
+            'investigar sobre', 'buscar información', 'análisis completo',
+            'estudiar', 'recopilar información', 'información relevante',
+            'aspectos importantes', 'características principales'
         ]
         
-        for pattern, anime_name in anime_patterns:
-            if re.search(pattern, query_lower):
-                searches.extend([
-                    {"query": f"{anime_name} trama historia argumento", "category": "trama"},
-                    {"query": f"{anime_name} personajes principales protagonistas", "category": "personajes"},
-                    {"query": f"{anime_name} contexto histórico mundo ficción", "category": "contexto"},
-                    {"query": f"{anime_name} recepción crítica reseñas puntuación", "category": "recepción_crítica"},
-                    {"query": f"{anime_name} mangaka autor Hajime Isayama creador", "category": "autor_creador"}
-                ])
-                break
+        is_comprehensive_request = any(indicator in query_lower for indicator in comprehensive_indicators)
         
-        # 🎵 PATRÓN: BANDAS/MÚSICA
-        music_patterns = [
-            (r'arctic\s+monkeys', 'Arctic Monkeys'),
-            (r'coldplay', 'Coldplay'),
-            (r'radiohead', 'Radiohead'),
-            (r'the\s+beatles', 'The Beatles')
+        if not is_comprehensive_request:
+            print("❌ No es solicitud comprehensiva - búsqueda simple")
+            return []
+        
+        # 🎯 STEP 2: EXTRAER EL TEMA/SUJETO PRINCIPAL
+        main_subject = self._extract_main_subject_generic(query_text)
+        
+        if not main_subject:
+            print("❌ No se pudo extraer tema principal")
+            return []
+            
+        print(f"✅ TEMA PRINCIPAL DETECTADO: '{main_subject}'")
+        
+        # 🎯 STEP 3: DETECTAR ASPECTOS ESPECÍFICOS MENCIONADOS
+        mentioned_aspects = self._extract_mentioned_aspects(query_text)
+        print(f"🎯 ASPECTOS MENCIONADOS: {mentioned_aspects}")
+        
+        # 🎯 STEP 4: GENERAR BÚSQUEDAS GRANULARES BASADAS EN TIPO DE TEMA
+        subject_type = self._classify_subject_type_generic(main_subject, query_text)
+        print(f"📊 TIPO DE TEMA CLASIFICADO: {subject_type}")
+        
+        searches = self._generate_searches_by_type_generic(main_subject, subject_type, mentioned_aspects)
+        
+        print(f"✅ BÚSQUEDAS GRANULARES GENERADAS: {len(searches)}")
+        for search in searches:
+            print(f"   🎯 {search['category']}: {search['query']}")
+        
+        return searches if len(searches) > 1 else []
+    
+    def _extract_main_subject_generic(self, query_text: str) -> str:
+        """🎯 Extraer el tema/sujeto principal de CUALQUIER consulta"""
+        import re
+        
+        # MÉTODO 1: Buscar después de palabras clave
+        subject_patterns = [
+            r'sobre\s+"([^"]+)"',  # sobre "tema"
+            r'sobre\s+([A-Z][a-zA-Z\s]+?)(?:\s*-|\.|$)',  # sobre Tema
+            r'información\s+sobre\s+([A-Z][a-zA-Z\s]+?)(?:\s*-|\.|$)',
+            r'datos\s+sobre\s+([A-Z][a-zA-Z\s]+?)(?:\s*-|\.|$)',
+            r'investigar\s+sobre\s+([A-Z][a-zA-Z\s]+?)(?:\s*-|\.|$)',
+            r'análisis\s+de\s+([A-Z][a-zA-Z\s]+?)(?:\s*-|\.|$)'
         ]
         
-        for pattern, band_name in music_patterns:
-            if re.search(pattern, query_lower):
-                searches.extend([
-                    {"query": f"{band_name} historia formación miembros banda", "category": "historia"},
-                    {"query": f"{band_name} discografía álbumes completa", "category": "discografía"},
-                    {"query": f"{band_name} estilo musical evolución géneros", "category": "estilo_musical"},
-                    {"query": f"{band_name} premios reconocimientos Grammy awards", "category": "premios"},
-                    {"query": f"{band_name} conciertos giras 2024 2025 fechas", "category": "tours_recientes"}
-                ])
-                break
+        for pattern in subject_patterns:
+            match = re.search(pattern, query_text, re.IGNORECASE)
+            if match:
+                subject = match.group(1).strip()
+                if len(subject) > 2:
+                    return subject
         
-        # 👤 PATRÓN: POLÍTICOS/FIGURAS PÚBLICAS
-        politician_patterns = [
-            (r'javier\s+milei|milei', 'Javier Milei'),
-            (r'donald\s+trump|trump', 'Donald Trump'),
-            (r'joe\s+biden|biden', 'Joe Biden'),
-            (r'elon\s+musk|musk', 'Elon Musk')
-        ]
+        # MÉTODO 2: Buscar nombres propios (2+ palabras capitalizadas)
+        proper_nouns = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b', query_text)
+        for noun in proper_nouns:
+            if len(noun.split()) >= 2:  # Al menos 2 palabras
+                return noun
         
-        for pattern, person_name in politician_patterns:
-            if re.search(pattern, query_lower):
-                searches.extend([
-                    {"query": f"{person_name} biografía vida personal historia", "category": "biografía"},
-                    {"query": f"{person_name} trayectoria carrera profesional política", "category": "trayectoria"},
-                    {"query": f"{person_name} posiciones políticas ideología propuestas", "category": "ideología"},
-                    {"query": f"{person_name} declaraciones públicas entrevistas recientes", "category": "declaraciones"},
-                    {"query": f"{person_name} noticias actualidad 2024 2025", "category": "noticias_recientes"}
-                ])
-                break
+        # MÉTODO 3: Buscar nombres propios simples importantes
+        single_nouns = re.findall(r'\b[A-Z][a-z]{3,}\b', query_text)
+        important_single = []
         
-        # 🔬 PATRÓN: TECNOLOGÍA/CIENCIA
-        tech_patterns = [
-            (r'inteligencia\s+artificial|artificial\s+intelligence|AI', 'Inteligencia Artificial'),
-            (r'machine\s+learning|aprendizaje\s+automático', 'Machine Learning'),
-            (r'blockchain|cadena\s+de\s+bloques', 'Blockchain'),
-            (r'chatgpt|gpt', 'ChatGPT')
-        ]
+        # Filtrar nombres comunes que no son temas
+        skip_words = {'Investigar', 'Buscar', 'Datos', 'Información', 'Análisis', 'Sobre', 'Para', 'Con'}
         
-        for pattern, tech_name in tech_patterns:
-            if re.search(pattern, query_lower):
-                searches.extend([
-                    {"query": f"{tech_name} definición conceptos básicos explicación", "category": "conceptos"},
-                    {"query": f"{tech_name} aplicaciones usos prácticos ejemplos", "category": "aplicaciones"},
-                    {"query": f"{tech_name} ventajas beneficios impacto positivo", "category": "ventajas"},
-                    {"query": f"{tech_name} desventajas riesgos limitaciones", "category": "desventajas"},
-                    {"query": f"{tech_name} tendencias futuro 2025 innovaciones", "category": "tendencias"}
-                ])
-                break
+        for noun in single_nouns:
+            if noun not in skip_words and len(noun) > 3:
+                important_single.append(noun)
         
-        # 🏆 PATRÓN: DEPORTES/EQUIPOS
-        sports_patterns = [
-            (r'selección\s+argentina|argentina\s+fútbol', 'Selección Argentina'),
-            (r'real\s+madrid', 'Real Madrid'),
-            (r'barcelona\s+fc|fc\s+barcelona', 'FC Barcelona'),
-            (r'manchester\s+united', 'Manchester United')
-        ]
+        if important_single:
+            return important_single[0]  # Tomar el primero
         
-        for pattern, team_name in sports_patterns:
-            if re.search(pattern, query_lower):
-                searches.extend([
-                    {"query": f"{team_name} plantilla jugadores actual 2025", "category": "plantilla"},
-                    {"query": f"{team_name} historia títulos logros trofeos", "category": "historia"},
-                    {"query": f"{team_name} estadísticas temporada 2024-2025 resultados", "category": "estadísticas"},
-                    {"query": f"{team_name} últimos partidos resultados calendario", "category": "resultados_recientes"},
-                    {"query": f"{team_name} fichajes transferencias mercado", "category": "transferencias"}
-                ])
-                break
+        return None
+    
+    def _extract_mentioned_aspects(self, query_text: str) -> List[str]:
+        """🔍 Extraer aspectos específicos mencionados en la consulta"""
+        query_lower = query_text.lower()
+        aspects = []
         
-        # 📺 PATRÓN: ENTRETENIMIENTO/SERIES/PELÍCULAS
-        entertainment_patterns = [
-            (r'netflix\s+series|serie\s+netflix', 'Netflix Series'),
-            (r'marvel\s+movies|películas\s+marvel', 'Marvel Movies'),
-            (r'game\s+of\s+thrones|juego\s+de\s+tronos', 'Game of Thrones'),
-            (r'stranger\s+things', 'Stranger Things')
-        ]
+        # Mapeo de palabras clave a aspectos
+        aspect_keywords = {
+            'trama': ['trama', 'historia', 'argumento', 'narrativa', 'plot'],
+            'personajes': ['personajes', 'protagonistas', 'caracteres', 'characters'],
+            'biografía': ['biografía', 'vida', 'personal', 'nacimiento', 'historia personal'],
+            'historia': ['historia', 'orígenes', 'desarrollo', 'evolución', 'pasado'],
+            'contexto': ['contexto', 'ambiente', 'época', 'período', 'marco'],
+            'crítica': ['crítica', 'recepción', 'opiniones', 'reseñas', 'evaluación'],
+            'impacto': ['impacto', 'influencia', 'legado', 'consecuencias', 'efectos'],
+            'características': ['características', 'propiedades', 'atributos', 'rasgos'],
+            'causas': ['causas', 'orígenes', 'razones', 'motivos'],
+            'efectos': ['efectos', 'consecuencias', 'resultados', 'impactos'],
+            'soluciones': ['soluciones', 'remedios', 'propuestas', 'alternativas'],
+            'obras': ['obras', 'trabajos', 'creaciones', 'producción'],
+            'carrera': ['carrera', 'trayectoria', 'profesional', 'trabajo'],
+            'política': ['política', 'posiciones', 'ideología', 'propuestas']
+        }
         
-        for pattern, content_name in entertainment_patterns:
-            if re.search(pattern, query_lower):
-                searches.extend([
-                    {"query": f"{content_name} trama resumen historia", "category": "trama"},
-                    {"query": f"{content_name} reparto actores personajes", "category": "reparto"},
-                    {"query": f"{content_name} críticas reseñas puntuación IMDB", "category": "críticas"},
-                    {"query": f"{content_name} temporadas episodios disponibles", "category": "temporadas"},
-                    {"query": f"{content_name} premios nominaciones Emmy Oscar", "category": "premios"}
-                ])
-                break
+        for aspect, keywords in aspect_keywords.items():
+            if any(keyword in query_lower for keyword in keywords):
+                aspects.append(aspect)
         
-        print(f"🎯 GRANULAR SEARCH DETECTION: {len(searches)} búsquedas específicas detectadas")
-        if searches:
-            categories = [s['category'] for s in searches]
-            print(f"   📊 Categorías: {', '.join(categories)}")
+        return aspects
+    
+    def _classify_subject_type_generic(self, subject: str, query_text: str) -> str:
+        """📊 Clasificar genéricamente el tipo de tema basado en indicadores"""
+        subject_lower = subject.lower()
+        query_lower = query_text.lower()
+        
+        # Indicadores de tipo de tema
+        if any(indicator in query_lower for indicator in ['anime', 'manga', 'serie', 'película', 'film']):
+            return 'entertainment'
+        elif any(indicator in query_lower for indicator in ['banda', 'música', 'cantante', 'artista musical']):
+            return 'music'  
+        elif any(indicator in query_lower for indicator in ['presidente', 'político', 'líder', 'personalidad']):
+            return 'person'
+        elif any(indicator in query_lower for indicator in ['tecnología', 'ciencia', 'científico', 'técnico']):
+            return 'technology'
+        elif any(indicator in query_lower for indicator in ['economía', 'económico', 'mercado', 'financiero']):
+            return 'economics'
+        elif any(indicator in query_lower for indicator in ['equipo', 'deporte', 'fútbol', 'selección']):
+            return 'sports'
+        elif any(indicator in query_lower for indicator in ['libro', 'novela', 'autor', 'literatura']):
+            return 'literature'
+        elif any(indicator in query_lower for indicator in ['pintor', 'artista', 'arte', 'pintura']):
+            return 'art'
+        elif any(indicator in query_lower for indicator in ['histórico', 'historia', 'época', 'período']):
+            return 'history'
+        elif any(indicator in query_lower for indicator in ['empresa', 'compañía', 'corporación', 'negocio']):
+            return 'business'
+        else:
+            # Clasificación por nombres propios conocidos o contexto
+            if len(subject.split()) >= 2:  # Nombres compuestos = probablemente persona o obra
+                return 'person_or_work'
+            else:
+                return 'general_topic'
+    
+    def _generate_searches_by_type_generic(self, subject: str, subject_type: str, mentioned_aspects: List[str]) -> List[Dict[str, str]]:
+        """🎯 Generar búsquedas específicas basadas en el tipo de tema"""
+        searches = []
+        
+        # Plantillas por tipo de tema
+        search_templates = {
+            'entertainment': [
+                ('trama', f'{subject} trama historia argumento resumen'),
+                ('personajes', f'{subject} personajes principales protagonistas reparto'),
+                ('crítica', f'{subject} críticas reseñas puntuación recepción'),
+                ('contexto', f'{subject} contexto producción trasfondo'),
+                ('impacto', f'{subject} impacto cultural legado influencia')
+            ],
+            'music': [
+                ('historia', f'{subject} historia formación miembros banda'),
+                ('discografía', f'{subject} discografía álbumes canciones hits'),
+                ('estilo', f'{subject} estilo musical género evolución'),
+                ('logros', f'{subject} premios reconocimientos logros'),
+                ('actualidad', f'{subject} noticias recientes conciertos giras')
+            ],
+            'person': [
+                ('biografía', f'{subject} biografía vida personal historia'),
+                ('carrera', f'{subject} carrera trayectoria profesional'),
+                ('logros', f'{subject} logros reconocimientos premios'),
+                ('posiciones', f'{subject} posiciones ideología propuestas'),
+                ('actualidad', f'{subject} noticias recientes declaraciones 2025')
+            ],
+            'technology': [
+                ('definición', f'{subject} definición conceptos básicos explicación'),
+                ('aplicaciones', f'{subject} aplicaciones usos prácticos ejemplos'),
+                ('ventajas', f'{subject} ventajas beneficios impacto positivo'),
+                ('desafíos', f'{subject} desventajas riesgos limitaciones'),
+                ('futuro', f'{subject} tendencias futuro 2025 innovaciones')
+            ],
+            'economics': [
+                ('situación', f'{subject} situación actual estado 2025'),
+                ('causas', f'{subject} causas factores antecedentes'),
+                ('efectos', f'{subject} efectos consecuencias impacto'),
+                ('políticas', f'{subject} políticas medidas propuestas'),
+                ('perspectivas', f'{subject} perspectivas futuro pronósticos')
+            ],
+            'literature': [
+                ('trama', f'{subject} trama resumen argumento historia'),
+                ('personajes', f'{subject} personajes principales protagonistas'),
+                ('análisis', f'{subject} análisis literario temas símbolos'),
+                ('contexto', f'{subject} contexto histórico época ambientación'),
+                ('crítica', f'{subject} crítica literaria recepción reseñas')
+            ],
+            'art': [
+                ('biografía', f'{subject} biografía vida personal historia'),
+                ('obras', f'{subject} obras principales trabajos destacados'),
+                ('estilo', f'{subject} estilo artístico técnica características'),
+                ('contexto', f'{subject} contexto histórico época artística'),
+                ('legado', f'{subject} legado influencia impacto arte')
+            ],
+            'person_or_work': [
+                ('información', f'{subject} información general datos básicos'),
+                ('historia', f'{subject} historia orígenes desarrollo'),
+                ('características', f'{subject} características principales aspectos'),
+                ('impacto', f'{subject} importancia relevancia significado'),
+                ('actualidad', f'{subject} situación actual noticias recientes')
+            ],
+            'general_topic': [
+                ('definición', f'{subject} definición qué es conceptos'),
+                ('aspectos', f'{subject} aspectos principales características'),
+                ('importancia', f'{subject} importancia relevancia significado'),
+                ('contexto', f'{subject} contexto situación actual'),
+                ('perspectivas', f'{subject} análisis opiniones perspectivas')
+            ]
+        }
+        
+        # Usar plantilla por defecto si no se encuentra el tipo
+        templates = search_templates.get(subject_type, search_templates['general_topic'])
+        
+        # Generar búsquedas
+        for category, query in templates:
+            searches.append({
+                'query': query,
+                'category': category
+            })
         
         return searches
 
