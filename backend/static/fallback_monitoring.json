@@ -304,5 +304,14 @@
     "attempts": 1,
     "is_fallback": false,
     "error_reason": null
+  },
+  {
+    "timestamp": "2025-08-10T14:05:16.942296",
+    "task_id": "test-navegacion-fix",
+    "plan_source": "ai_generated_robust_attempt_1",
+    "success": true,
+    "attempts": 1,
+    "is_fallback": false,
+    "error_reason": null
   }
 ]
