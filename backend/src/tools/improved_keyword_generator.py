@@ -359,7 +359,9 @@ class IntelligentKeywordGenerator:
             'información completa', 'datos completos', 'información sobre',
             'investigar sobre', 'buscar información', 'análisis completo',
             'estudiar', 'recopilar información', 'información relevante',
-            'aspectos importantes', 'características principales'
+            'aspectos importantes', 'características principales',
+            'investigar datos sobre', 'buscar datos sobre', 'análisis de',
+            'investigación sobre', 'estudio sobre', 'datos sobre'
         ]
         
         is_comprehensive_request = any(indicator in query_lower for indicator in comprehensive_indicators)
