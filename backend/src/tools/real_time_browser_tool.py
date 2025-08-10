@@ -106,7 +106,9 @@ class RealTimeBrowserTool(BaseTool):
         ]
     
     def _execute_tool(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> ToolExecutionResult:
-        """🚀 EJECUTOR PRINCIPAL CON NAVEGACIÓN VISUAL EN TIEMPO REAL"""
+        """🚀 EJECUTOR PRINCIPAL CON NAVEGACIÓN VISUAL EN TIEMPO REAL - VERSIÓN ROBUSTA"""
+        
+        global _active_navigation_count
         
         if not self.playwright_available:
             return ToolExecutionResult(
@@ -114,16 +116,29 @@ class RealTimeBrowserTool(BaseTool):
                 error='Playwright no está disponible. Instalar con: pip install playwright && playwright install'
             )
         
-        # Extraer parámetros
-        task_description = parameters.get('task_description', '').strip()
-        start_url = parameters.get('start_url', 'https://www.google.com')
-        capture_interval = int(parameters.get('capture_interval', 2))
-        max_duration = int(parameters.get('max_duration', 60))
-        
-        # Obtener task_id del config
-        self.task_id = config.get('task_id') if config else f"browser-{int(time.time())}"
-        
+        # 🔒 IMPLEMENTAR CONTROL DE CONCURRENCIA
+        navigation_acquired = False
         try:
+            with _navigation_lock:
+                if _active_navigation_count >= 1:
+                    self._emit_progress("⚠️ Navegación en progreso, esperando...")
+                    return ToolExecutionResult(
+                        success=False,
+                        error='Solo se permite una navegación en tiempo real simultánea. Inténtalo en unos momentos.'
+                    )
+                _active_navigation_count += 1
+                navigation_acquired = True
+                self._emit_progress("🔒 Navegación adquirida - iniciando proceso exclusivo")
+            
+            # Extraer parámetros
+            task_description = parameters.get('task_description', '').strip()
+            start_url = parameters.get('start_url', 'https://www.google.com')
+            capture_interval = int(parameters.get('capture_interval', 2))
+            max_duration = int(parameters.get('max_duration', 60))
+            
+            # Obtener task_id del config
+            self.task_id = config.get('task_id') if config else f"browser-{int(time.time())}"
+            
             # 🖥️ CONFIGURAR SERVIDOR X11 VIRTUAL
             self._setup_x11_server()
             
@@ -164,8 +179,13 @@ class RealTimeBrowserTool(BaseTool):
                 error=f'Error en navegación en tiempo real: {str(e)}'
             )
         finally:
-            # 🧹 LIMPIAR RECURSOS
+            # 🧹 LIMPIAR RECURSOS Y LIBERAR LOCK
             self._cleanup_resources()
+            
+            if navigation_acquired:
+                with _navigation_lock:
+                    _active_navigation_count -= 1
+                    self._emit_progress("🔓 Navegación liberada - disponible para próxima ejecución")
     
     def _setup_x11_server(self):
         """🖥️ CONFIGURAR SERVIDOR X11 VIRTUAL PARA NAVEGACIÓN VISIBLE - VERSIÓN ROBUSTA"""
