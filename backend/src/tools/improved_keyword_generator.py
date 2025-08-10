@@ -972,7 +972,7 @@ class IntelligentKeywordGenerator:
 
 # Funciones públicas para usar desde unified_web_search_tool.py
 def get_intelligent_keywords(query_text: str) -> str:
-    """🎯 Función principal para generar keywords inteligentes"""
+    """🎯 Función principal para generar keywords inteligentes CON VALIDACIÓN"""
     generator = IntelligentKeywordGenerator()
     return generator.get_intelligent_keywords(query_text)
 
@@ -990,54 +990,18 @@ def detect_granular_search_needs(query_text: str) -> List[Dict[str, str]]:
 if __name__ == "__main__":
     # Tests de casos problemáticos reportados por el usuario
     test_cases = [
+        "Investigar información específica sobre Arctic Monkeys",
         "Buscar información sobre 'Javier Milei' en bing y explorar los primeros resultados",
         "realizar análisis de datos específicos sobre inteligencia artificial",  
-        "genera informe sobre Arctic Monkeys discografía",
-        "utilizar herramienta web_search para obtener datos económicos Argentina",
-        "información específica sobre inflación Argentina 2024"
+        "genera informe sobre Attack on Titan trama personajes",
+        "utilizar herramienta web_search para obtener datos económicos Argentina"
     ]
     
-    print("🧪 TESTING INTELLIGENT KEYWORD GENERATOR")
-    print("=" * 60)
+    print("🧪 TESTING INTELLIGENT KEYWORD GENERATOR CON VALIDACIÓN")
+    print("=" * 70)
     
     for i, test in enumerate(test_cases, 1):
         print(f"\n🔍 TEST {i}: {test}")
         result = get_intelligent_keywords(test)
-        print(f"✅ RESULT: {result}")
-        
-        variants = get_multiple_search_variants(test, 2)
-        print(f"🔄 VARIANTS: {variants}")
-        print("-" * 40)
-
-# Instancia global para usar en unified_web_search_tool.py
-intelligent_keyword_generator = IntelligentKeywordGenerator()
-
-def get_intelligent_keywords(query: str, num_variants: int = 1) -> str:
-    """
-    🎯 FUNCIÓN PRINCIPAL PARA REEMPLAZAR LAS FUNCIONES PROBLEMÁTICAS
-    
-    Args:
-        query: Query original del usuario
-        num_variants: Número de variantes (por defecto 1)
-        
-    Returns:
-        str: Keywords inteligentes optimizados
-    """
-    if num_variants == 1:
-        return intelligent_keyword_generator.get_intelligent_keywords(query)
-    else:
-        variants = intelligent_keyword_generator.get_multiple_search_variants(query, num_variants)
-        return variants[0] if variants else "información actualizada"
-
-def get_multiple_search_variants(query: str, num_variants: int = 3) -> List[str]:
-    """
-    📊 GENERAR MÚLTIPLES VARIANTES PARA BÚSQUEDAS DIVERSIFICADAS
-    
-    Args:
-        query: Query original del usuario  
-        num_variants: Número de variantes a generar
-        
-    Returns:
-        List[str]: Lista de keywords variantes
-    """
-    return intelligent_keyword_generator.get_multiple_search_variants(query, num_variants)
+        print(f"✅ FINAL RESULT: {result}")
+        print("-" * 50)
