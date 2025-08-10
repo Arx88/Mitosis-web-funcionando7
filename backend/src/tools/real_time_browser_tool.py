@@ -232,12 +232,49 @@ class RealTimeBrowserTool(BaseTool):
     def _initialize_websocket(self):
         """🔄 INICIALIZAR WEBSOCKET PARA EVENTOS EN TIEMPO REAL"""
         try:
+            print(f"🔌 [REAL_TIME_BROWSER] Inicializando WebSocket para task_id: {self.task_id}")
+            
             if WEBSOCKET_AVAILABLE and self.task_id:
-                self.websocket_manager = get_websocket_manager()
-                self._emit_progress("🔌 WebSocket inicializado para navegación en tiempo real")
-            else:
+                # Intentar múltiples métodos para obtener websocket_manager
+                try:
+                    # Método 1: get_websocket_manager
+                    self.websocket_manager = get_websocket_manager()
+                    if self.websocket_manager:
+                        print(f"✅ [REAL_TIME_BROWSER] WebSocket manager obtenido via get_websocket_manager")
+                        self._emit_progress("🔌 WebSocket inicializado para navegación en tiempo real")
+                        return
+                except Exception as e1:
+                    print(f"⚠️ [REAL_TIME_BROWSER] get_websocket_manager failed: {e1}")
+                
+                # Método 2: Importar directamente desde servidor
+                try:
+                    from ..websocket.websocket_manager import websocket_manager
+                    if websocket_manager and websocket_manager.is_initialized:
+                        self.websocket_manager = websocket_manager
+                        print(f"✅ [REAL_TIME_BROWSER] WebSocket manager obtenido via import directo")
+                        self._emit_progress("🔌 WebSocket inicializado para navegación en tiempo real")
+                        return
+                except Exception as e2:
+                    print(f"⚠️ [REAL_TIME_BROWSER] direct import failed: {e2}")
+                
+                # Método 3: Crear nuevo manager si es necesario
+                try:
+                    from ..websocket.websocket_manager import WebSocketManager
+                    self.websocket_manager = WebSocketManager()
+                    print(f"✅ [REAL_TIME_BROWSER] WebSocket manager creado directamente")
+                    self._emit_progress("🔌 WebSocket manager creado para navegación en tiempo real")
+                    return
+                except Exception as e3:
+                    print(f"⚠️ [REAL_TIME_BROWSER] WebSocketManager creation failed: {e3}")
+                
+                print(f"❌ [REAL_TIME_BROWSER] Todos los métodos WebSocket fallaron")
                 self._emit_progress("⚠️ WebSocket no disponible - usando logging básico")
+            else:
+                print(f"⚠️ [REAL_TIME_BROWSER] WebSocket no disponible: WEBSOCKET_AVAILABLE={WEBSOCKET_AVAILABLE}, task_id={self.task_id}")
+                self._emit_progress("⚠️ WebSocket no disponible - usando logging básico")
+                
         except Exception as e:
+            print(f"❌ [REAL_TIME_BROWSER] Error inicializando WebSocket: {str(e)}")
             self._emit_progress(f"⚠️ Error inicializando WebSocket: {str(e)}")
     
     
