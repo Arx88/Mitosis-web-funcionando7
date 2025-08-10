@@ -1362,25 +1362,26 @@ class RealTimeBrowserTool(BaseTool):
         self._emit_progress(f"📸 Hilo de captura automática iniciado (intervalo: {capture_interval}s)")
     
     async def _capture_screenshot_async(self, page, screenshot_index: int) -> Optional[str]:
-        """📸 CAPTURAR SCREENSHOT ASÍNCRONO Y RETORNAR PATH"""
+        """📸 CAPTURAR SCREENSHOT ASÍNCRONO CON VALIDACIÓN ROBUSTA Y MÚLTIPLES REINTENTOS"""
         
-        try:
-            # Crear directorio de screenshots si no existe
-            screenshots_dir = Path(f"/tmp/screenshots/{self.task_id}")
-            screenshots_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Generar nombre de archivo
-            timestamp = int(time.time() * 1000)
-            filename = f"real_navigation_{screenshot_index:03d}_{timestamp}.jpeg"
-            screenshot_path = screenshots_dir / filename
-            
-            # Capturar screenshot de mayor calidad y resolución
+        max_attempts = 3
+        for attempt in range(max_attempts):
             try:
+                # Crear directorio de screenshots si no existe
+                screenshots_dir = Path(f"/tmp/screenshots/{self.task_id}")
+                screenshots_dir.mkdir(parents=True, exist_ok=True)
+                
+                # Generar nombre de archivo
+                timestamp = int(time.time() * 1000)
+                filename = f"real_navigation_{screenshot_index:03d}_{timestamp}.jpeg"
+                screenshot_path = screenshots_dir / filename
+                
+                # 📸 Capturar screenshot con configuración optimizada
                 await page.screenshot(
                     path=str(screenshot_path),
-                    quality=70,  # Mayor calidad (aumentado de 30 a 70)
-                    type='jpeg',  # Usar JPEG para mejor compresión
-                    full_page=False,  # Captura solo viewport para mejor rendimiento y calidad
+                    quality=75,  # Buena calidad para visualización
+                    type='jpeg',  # JPEG para mejor compresión
+                    full_page=False,  # Solo viewport para consistencia
                     clip={
                         'x': 0,
                         'y': 0, 
@@ -1388,16 +1389,54 @@ class RealTimeBrowserTool(BaseTool):
                         'height': 1080   # Alto fijo para mejor visualización
                     }
                 )
+                
+                # 🔍 VALIDACIÓN RIGUROSA DEL SCREENSHOT
+                if screenshot_path.exists():
+                    file_size = screenshot_path.stat().st_size
+                    
+                    # Verificar tamaño mínimo (debe ser > 5KB para imagen válida)
+                    if file_size > 5000:
+                        # Verificar que es un JPEG válido
+                        try:
+                            with open(screenshot_path, 'rb') as f:
+                                header = f.read(3)
+                                if header.startswith(b'\xff\xd8\xff'):  # JPEG magic number
+                                    self._emit_progress(f"✅ Screenshot #{screenshot_index} validado: {filename} ({file_size} bytes, intento {attempt + 1})")
+                                    
+                                    # Retornar URL accesible para frontend
+                                    return f"/api/files/screenshots/{self.task_id}/{filename}"
+                                else:
+                                    self._emit_progress(f"❌ Screenshot #{screenshot_index} header JPEG inválido (intento {attempt + 1})")
+                        except Exception as e:
+                            self._emit_progress(f"❌ Error validando screenshot #{screenshot_index}: {e} (intento {attempt + 1})")
+                    else:
+                        self._emit_progress(f"❌ Screenshot #{screenshot_index} muy pequeño: {file_size} bytes (intento {attempt + 1})")
+                else:
+                    self._emit_progress(f"❌ Screenshot #{screenshot_index} no fue creado (intento {attempt + 1})")
+                
+                # Si llegamos aquí, el screenshot falló la validación
+                if attempt < max_attempts - 1:
+                    self._emit_progress(f"🔄 Reintentando screenshot #{screenshot_index} en 1 segundo...")
+                    await asyncio.sleep(1)  # Esperar antes del siguiente intento
+                    
             except Exception as e:
-                self._emit_progress(f"⚠️ Error en captura de screenshot: {str(e)}")
-                return None
-            
-            # Retornar URL accesible para frontend
-            return f"/api/files/screenshots/{self.task_id}/{filename}"
-            
-        except Exception as e:
-            self._emit_progress(f"⚠️ Error en captura async: {str(e)}")
-            return None
+                self._emit_progress(f"⚠️ Error capturando screenshot #{screenshot_index} (intento {attempt + 1}): {str(e)}")
+                if attempt < max_attempts - 1:
+                    await asyncio.sleep(1)  # Esperar antes del retry
+        
+        # Todos los intentos fallaron
+        self._emit_progress(f"❌ Screenshot #{screenshot_index} falló después de {max_attempts} intentos")
+        
+        # 🚨 EMITIR EVENTO DE ERROR PARA DEBUGGING
+        self._emit_browser_visual({
+            'type': 'screenshot_failed',
+            'message': f'❌ No se pudo capturar screenshot #{screenshot_index} después de {max_attempts} intentos',
+            'screenshot_index': screenshot_index,
+            'attempts': max_attempts,
+            'timestamp': time.time()
+        })
+        
+        return None
     
     def _emit_browser_visual(self, data: Dict[str, Any]):
         """📡 EMITIR EVENTO BROWSER_VISUAL AL FRONTEND"""
