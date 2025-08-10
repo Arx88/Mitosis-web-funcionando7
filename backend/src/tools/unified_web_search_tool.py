@@ -94,6 +94,7 @@ class UnifiedWebSearchTool(BaseTool):
         self.browser_manager = None
         self.websocket_manager = None
         self.task_id = None
+        self.feedback_system = None  # Sistema de feedback en tiempo real
         
     def _define_parameters(self) -> List[ParameterDefinition]:
         return [
