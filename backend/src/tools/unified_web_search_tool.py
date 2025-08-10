@@ -918,6 +918,24 @@ class UnifiedWebSearchTool(BaseTool):
                     page_data['content_length'] = content_length
                     pages_with_content.append(page_data)
                     print(f"✅ INCLUIDA: {page_url} - Content length: {content_length}")
+                    
+                    # 🔄 REGISTRAR EN SISTEMA DE FEEDBACK EN TIEMPO REAL
+                    if self.feedback_system and content_extracted:
+                        self.feedback_system.log_website_visit(
+                            page_url,
+                            page_data.get('title', 'Página sin título'),
+                            content_extracted,
+                            'web_search_result'
+                        )
+                        
+                        # Registrar información específica extraída
+                        if content_length > 100:  # Solo si hay contenido sustancial
+                            self.feedback_system.log_information_extracted(
+                                page_url,
+                                'Contenido web relevante',
+                                content_extracted,
+                                0.8  # Score de relevancia alto por ser contenido filtrado
+                            )
             
             self._emit_progress_eventlet(f"🔍 FILTRADO: {len(pages_with_content)} páginas con contenido real de {len(pages_visited)} visitadas")
             
