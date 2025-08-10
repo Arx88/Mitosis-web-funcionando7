@@ -1852,7 +1852,15 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
         finally:
             # Cerrar navegador
             if browser_manager:
-                browser_manager.close_browser()
+                try:
+                    browser_manager.close_browser()
+                except Exception:
+                    try:
+                        import asyncio
+                        if hasattr(browser_manager, 'close'):
+                            asyncio.run(browser_manager.close())
+                    except Exception:
+                        pass
         
     except Exception as e:
         logger.error(f"❌ Error en búsqueda web mejorada: {str(e)}")
