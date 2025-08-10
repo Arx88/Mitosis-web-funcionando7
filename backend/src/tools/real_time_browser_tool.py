@@ -1506,6 +1506,7 @@ class RealTimeBrowserTool(BaseTool):
                 })
                 
                 print(f"✅ [REAL_TIME_BROWSER] browser_visual event sent successfully")
+                return True  # Éxito
                 
             except Exception as e:
                 print(f"⚠️ Error emitiendo browser_visual: {str(e)}")
