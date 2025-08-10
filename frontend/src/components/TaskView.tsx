@@ -5,6 +5,7 @@ import { ChatInterface } from './ChatInterface';
 import { ThinkingAnimation } from './ThinkingAnimation';
 import { FilesModal } from './FilesModal';
 import { ShareModal } from './ShareModal';
+import RealTimeFeedbackPanel from './RealTimeFeedbackPanel';
 import { agentAPI, FileItem } from '../services/api';
 import { useIsolatedMemoryManager } from '../hooks/useIsolatedMemoryManager';
 import { usePlanManager } from '../hooks/usePlanManager';
