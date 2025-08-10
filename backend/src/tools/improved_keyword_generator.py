@@ -677,37 +677,17 @@ class IntelligentKeywordGenerator:
 
     def detect_granular_search_needs(self, query_text: str) -> List[Dict[str, str]]:
         """
-        🎯 DETECTOR GENÉRICO INTELIGENTE DE BÚSQUEDAS GRANULARES
+        🎯 DETECTOR GRANULAR MEJORADO - Detecta automáticamente necesidad de búsquedas múltiples
         
-        Analiza CUALQUIER consulta y determina automáticamente si necesita
-        múltiples búsquedas específicas, SIN hardcodear temas específicos
+        CORRECCIÓN CRÍTICA: Ahora detecta temas específicos que siempre necesitan granularidad,
+        sin requerir indicadores de "información completa" explícitos
         """
         query_lower = query_text.lower()
         searches = []
         
         print(f"🔍 ANALYZING QUERY FOR GRANULAR NEEDS: '{query_text}'")
         
-        # 🎯 STEP 1: DETECTAR SI LA CONSULTA SOLICITA INFORMACIÓN AMPLIA/COMPLETA
-        comprehensive_indicators = [
-            'información completa', 'datos completos', 'información sobre',
-            'investigar sobre', 'buscar información', 'análisis completo',
-            'estudiar', 'recopilar información', 'información relevante',
-            'aspectos importantes', 'características principales',
-            'investigar datos sobre', 'buscar datos sobre', 'análisis de',
-            'investigación sobre', 'estudio sobre', 'datos sobre',
-            'información específica sobre', 'investigar información sobre',
-            'incluyendo', 'que incluya', 'abarcando', 'cubriendo',
-            'información detallada', 'datos detallados', 'análisis detallado',
-            'informe sobre', 'reporte sobre', 'investigar', 'buscar datos'
-        ]
-        
-        is_comprehensive_request = any(indicator in query_lower for indicator in comprehensive_indicators)
-        
-        if not is_comprehensive_request:
-            print("❌ No es solicitud comprehensiva - búsqueda simple")
-            return []
-        
-        # 🎯 STEP 2: EXTRAER EL TEMA/SUJETO PRINCIPAL
+        # 🎯 STEP 1: EXTRAER EL TEMA/SUJETO PRINCIPAL PRIMERO
         main_subject = self._extract_main_subject_generic(query_text)
         
         if not main_subject:
@@ -716,14 +696,24 @@ class IntelligentKeywordGenerator:
             
         print(f"✅ TEMA PRINCIPAL DETECTADO: '{main_subject}'")
         
-        # 🎯 STEP 3: DETECTAR ASPECTOS ESPECÍFICOS MENCIONADOS
-        mentioned_aspects = self._extract_mentioned_aspects(query_text)
-        print(f"🎯 ASPECTOS MENCIONADOS: {mentioned_aspects}")
-        
-        # 🎯 STEP 4: GENERAR BÚSQUEDAS GRANULARES BASADAS EN TIPO DE TEMA
+        # 🎯 STEP 2: CLASIFICAR TIPO DE TEMA
         subject_type = self._classify_subject_type_generic(main_subject, query_text)
         print(f"📊 TIPO DE TEMA CLASIFICADO: {subject_type}")
         
+        # 🎯 STEP 3: NUEVO CRITERIO - DETECTAR SI EL TEMA INHERENTEMENTE NECESITA GRANULARIDAD
+        needs_granularity = self._subject_needs_granular_search(main_subject, subject_type, query_text)
+        print(f"🔍 NECESITA GRANULARIDAD: {needs_granularity}")
+        
+        if not needs_granularity:
+            # Solo retornar si NO es un tema que inherentemente necesita granularidad
+            print("❌ Tema no requiere búsquedas granulares - búsqueda simple")
+            return []
+        
+        # 🎯 STEP 4: DETECTAR ASPECTOS ESPECÍFICOS MENCIONADOS
+        mentioned_aspects = self._extract_mentioned_aspects(query_text)
+        print(f"🎯 ASPECTOS MENCIONADOS: {mentioned_aspects}")
+        
+        # 🎯 STEP 5: GENERAR BÚSQUEDAS GRANULARES BASADAS EN TIPO DE TEMA
         searches = self._generate_searches_by_type_generic(main_subject, subject_type, mentioned_aspects)
         
         print(f"✅ BÚSQUEDAS GRANULARES GENERADAS: {len(searches)}")
@@ -731,6 +721,95 @@ class IntelligentKeywordGenerator:
             print(f"   🎯 {search['category']}: {search['query']}")
         
         return searches if len(searches) > 1 else []
+    
+    def _subject_needs_granular_search(self, subject: str, subject_type: str, query_text: str) -> bool:
+        """
+        🎯 NUEVO MÉTODO - Determinar si un tema específico necesita búsquedas granulares automáticamente
+        
+        CRITERIOS:
+        1. Personas públicas conocidas (políticos, artistas, etc.)
+        2. Temas complejos (tecnología, economía, etc.) 
+        3. Obras de entretenimiento (series, películas, libros)
+        4. Eventos o fenómenos importantes
+        5. Solicitudes explícitas de información comprehensiva
+        """
+        subject_lower = subject.lower()
+        query_lower = query_text.lower()
+        
+        print(f"🔍 EVALUATING GRANULAR NEED FOR: '{subject}' (type: {subject_type})")
+        
+        # CRITERIO 1: PERSONAS PÚBLICAS CONOCIDAS - SIEMPRE necesitan granularidad
+        known_public_figures = [
+            # Políticos argentinos
+            'javier milei', 'milei', 'cristina fernández', 'cristina kirchner', 'alberto fernández',
+            'mauricio macri', 'sergio massa', 'patricia bullrich', 'horacio rodríguez larreta',
+            # Políticos internacionales  
+            'joe biden', 'donald trump', 'vladimir putin', 'xi jinping', 'emmanuel macron',
+            'elon musk', 'mark zuckerberg', 'bill gates', 'jeff bezos',
+            # Deportistas
+            'lionel messi', 'cristiano ronaldo', 'neymar', 'kylian mbappé',
+            # Artistas/músicos
+            'taylor swift', 'ed sheeran', 'billie eilish', 'coldplay', 'u2'
+        ]
+        
+        for figure in known_public_figures:
+            if figure in subject_lower:
+                print(f"✅ FIGURA PÚBLICA DETECTADA: {figure} - GRANULARIDAD REQUERIDA")
+                return True
+        
+        # CRITERIO 2: TIPOS DE TEMA QUE INHERENTEMENTE NECESITAN GRANULARIDAD
+        granular_subject_types = ['person', 'entertainment', 'music', 'technology', 'economics', 'literature', 'art']
+        
+        if subject_type in granular_subject_types:
+            print(f"✅ TIPO DE TEMA COMPLEJO: {subject_type} - GRANULARIDAD REQUERIDA")
+            return True
+        
+        # CRITERIO 3: TEMAS ESPECÍFICOS CONOCIDOS QUE SIEMPRE NECESITAN GRANULARIDAD
+        complex_topics = [
+            # Entretenimiento
+            'attack on titan', 'attack titan', 'shingeki no kyojin', 'game of thrones',
+            'breaking bad', 'the office', 'friends', 'stranger things',
+            # Música
+            'arctic monkeys', 'the beatles', 'radiohead', 'pink floyd',
+            # Tecnología 
+            'inteligencia artificial', 'machine learning', 'blockchain', 'bitcoin',
+            'chatgpt', 'openai', 'tesla', 'spacex',
+            # Conceptos complejos
+            'cambio climático', 'calentamiento global', 'crisis económica',
+            'guerra en ucrania', 'pandemia covid'
+        ]
+        
+        for topic in complex_topics:
+            if topic in subject_lower:
+                print(f"✅ TEMA COMPLEJO DETECTADO: {topic} - GRANULARIDAD REQUERIDA")
+                return True
+        
+        # CRITERIO 4: INDICADORES EXPLÍCITOS DE SOLICITUD COMPREHENSIVA
+        comprehensive_indicators = [
+            'información completa', 'datos completos', 'información sobre',
+            'investigar sobre', 'buscar información', 'análisis completo',
+            'estudiar', 'recopilar información', 'información relevante',
+            'aspectos importantes', 'características principales',
+            'información específica sobre', 'investigar información sobre',
+            'incluyendo', 'que incluya', 'abarcando', 'cubriendo',
+            'información detallada', 'datos detallados', 'análisis detallado',
+            'informe sobre', 'reporte sobre', 'investigar', 'buscar datos',
+            'biografía', 'trayectoria', 'historia', 'antecedentes',
+            'características', 'propiedades', 'aspectos'
+        ]
+        
+        has_comprehensive_request = any(indicator in query_lower for indicator in comprehensive_indicators)
+        if has_comprehensive_request:
+            print(f"✅ SOLICITUD COMPREHENSIVA DETECTADA - GRANULARIDAD REQUERIDA")
+            return True
+        
+        # CRITERIO 5: NOMBRES PROPIOS DE 2+ PALABRAS (probables personas/obras importantes)
+        if len(subject.split()) >= 2 and subject[0].isupper():
+            print(f"✅ NOMBRE PROPIO COMPUESTO: {subject} - GRANULARIDAD PROBABLE")
+            return True
+        
+        print(f"❌ NO REQUIERE GRANULARIDAD - Búsqueda simple suficiente")
+        return False
     
     def _extract_main_subject_generic(self, query_text: str) -> str:
         """🎯 Extraer el tema/sujeto principal de CUALQUIER consulta - VERSIÓN CORREGIDA"""
