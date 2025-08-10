@@ -111,118 +111,176 @@ const RealTimeFeedbackPanel: React.FC<RealTimeFeedbackPanelProps> = ({
   };
 
   return (
-    <Card className="h-full max-h-96 flex flex-col">
+    <Card className="h-full max-h-[600px] flex flex-col">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <span className="text-blue-500">🔄</span>
-          Información Recolectada en Tiempo Real
-          {isLoading && (
-            <div className="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+        <CardTitle className="text-sm font-semibold flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-blue-500">🔄</span>
+            Información Recolectada en Tiempo Real
+            {isLoading && (
+              <div className="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+            )}
+          </div>
+          
+          {showDocument && feedbackData?.has_data && (
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setActiveTab('live')}
+                className={`text-xs px-3 py-1 rounded-md transition-all ${
+                  activeTab === 'live' 
+                    ? 'bg-white shadow-sm text-gray-900' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                📊 En Vivo
+              </button>
+              <button
+                onClick={() => setActiveTab('document')}
+                className={`text-xs px-3 py-1 rounded-md transition-all ${
+                  activeTab === 'document' 
+                    ? 'bg-white shadow-sm text-gray-900' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                📄 Documento
+              </button>
+            </div>
           )}
         </CardTitle>
         
-        {currentSummary?.statistics && (
+        {feedbackData?.progress_summary && (
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="flex items-center gap-1">
-              <span className="text-blue-500">🌐</span>
-              <span>{currentSummary.statistics.sources_visited} sitios</span>
+              <span className="text-blue-500">📊</span>
+              <span>{feedbackData.progress_summary.total_data_collected} datos</span>
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-green-500">📊</span>
-              <span>{currentSummary.statistics.information_extracted} extracciones</span>
+              <span className="text-green-500">✅</span>
+              <span>{feedbackData.progress_summary.completed_steps} completados</span>
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-orange-500">📸</span>
-              <span>{currentSummary.statistics.screenshots_captured} capturas</span>
+              <span className="text-orange-500">🔄</span>
+              <span>{feedbackData.progress_summary.active_steps} activos</span>
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-purple-500">⚡</span>
-              <span>{currentSummary.statistics.steps_completed} pasos</span>
+              <span className="text-purple-500">🎯</span>
+              <span>{(feedbackData.progress_summary.collection_efficiency * 100).toFixed(0)}% eficiencia</span>
             </div>
           </div>
         )}
 
-        {currentSummary?.data_quality && (
+        {feedbackData?.progress_summary?.data_sources && feedbackData.progress_summary.data_sources.length > 0 && (
           <div className="text-xs text-gray-600 border-t pt-2">
             <div className="flex justify-between">
-              <span>Contenido total:</span>
+              <span>Fuentes:</span>
               <span className="font-medium">
-                {Math.round(currentSummary.data_quality.total_content_characters / 1000)}k caracteres
+                {feedbackData.progress_summary.data_sources.length} sitios únicos
               </span>
             </div>
-            <div className="flex justify-between">
-              <span>Eficiencia:</span>
-              <span className="font-medium">
-                {(currentSummary.data_quality.extraction_efficiency * 100).toFixed(1)}%
-              </span>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {feedbackData.progress_summary.data_sources.slice(0, 3).map((source, index) => (
+                <span key={index} className="bg-gray-100 px-2 py-1 rounded text-xs">
+                  {source.length > 20 ? source.substring(0, 20) + '...' : source}
+                </span>
+              ))}
+              {feedbackData.progress_summary.data_sources.length > 3 && (
+                <span className="text-gray-500 text-xs">
+                  +{feedbackData.progress_summary.data_sources.length - 3} más
+                </span>
+              )}
             </div>
           </div>
         )}
       </CardHeader>
       
       <CardContent className="flex-1 overflow-hidden p-3">
-        <div 
-          ref={feedbackRef}
-          className="h-full overflow-y-auto space-y-2 pr-2"
-          style={{ maxHeight: '250px' }}
-        >
-          {feedbackHistory.length === 0 ? (
-            <div className="text-center text-gray-500 text-sm py-8">
-              <div className="animate-pulse">
-                📡 Esperando información del agente...
-              </div>
-            </div>
-          ) : (
-            feedbackHistory.map((feedback, index) => (
-              <div 
-                key={index}
-                className="border-l-2 border-gray-200 pl-3 py-1 hover:bg-gray-50 rounded-r transition-colors"
-              >
-                <div className="flex items-start gap-2">
-                  <span className="text-lg flex-shrink-0">
-                    {getTypeIcon(feedback.type)}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className={`text-sm font-medium ${getTypeColor(feedback.type)}`}>
-                      {feedback.message}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {formatTime(feedback.timestamp)}
-                    </div>
-                    
-                    {/* Información adicional específica por tipo */}
-                    {feedback.data && feedback.type === 'website_visit' && feedback.data.content_preview && (
-                      <div className="text-xs text-gray-600 mt-1 bg-gray-100 p-2 rounded">
-                        <div className="font-medium">Vista previa:</div>
-                        <div className="truncate">{feedback.data.content_preview}</div>
-                      </div>
-                    )}
-                    
-                    {feedback.data && feedback.type === 'information_extraction' && (
-                      <div className="text-xs text-gray-600 mt-1">
-                        <span className="font-medium">Relevancia:</span> 
-                        <span className="ml-1 text-green-600">
-                          {(feedback.data.relevance_score * 100).toFixed(0)}%
-                        </span>
-                      </div>
-                    )}
-                    
-                    {feedback.data && feedback.type === 'step_progress' && (
-                      <div className="text-xs text-gray-600 mt-1">
-                        <div className="w-full bg-gray-200 rounded-full h-1">
-                          <div 
-                            className="bg-purple-500 h-1 rounded-full transition-all"
-                            style={{ width: `${feedback.data.completion_percentage}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+        {activeTab === 'live' ? (
+          <div 
+            ref={feedbackRef}
+            className="h-full overflow-y-auto space-y-3 pr-2"
+            style={{ maxHeight: '400px' }}
+          >
+            {!feedbackData?.has_data ? (
+              <div className="text-center text-gray-500 text-sm py-8">
+                <div className="animate-pulse">
+                  📡 Esperando información del agente...
+                </div>
+                <div className="text-xs text-gray-400 mt-2">
+                  Los datos aparecerán aquí cuando el agente comience a recolectar información
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ) : (
+              feedbackData.collected_data.map((item, index) => (
+                <div 
+                  key={item.id || index}
+                  className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="text-lg flex-shrink-0">
+                      {getDataTypeIcon(item.data_type)}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-1">
+                        <div className={`text-sm font-medium ${getDataTypeColor(item.data_type)}`}>
+                          {item.title}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {formatTimestamp(item.timestamp)}
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-gray-600 mb-2">
+                        <span className="font-medium">Fuente:</span> {item.source}
+                      </div>
+                      
+                      <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded">
+                        {item.content.length > 200 
+                          ? item.content.substring(0, 200) + '...' 
+                          : item.content
+                        }
+                      </div>
+                      
+                      {item.url && (
+                        <div className="text-xs text-blue-600 mt-2 truncate">
+                          <a href={item.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                            🔗 {item.url}
+                          </a>
+                        </div>
+                      )}
+                      
+                      {item.metadata && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          <span className="font-medium">Meta:</span> 
+                          <span className="ml-1">
+                            {Object.entries(item.metadata).map(([key, value]) => (
+                              <span key={key} className="inline-block mr-2">
+                                {key}: {String(value)}
+                              </span>
+                            ))}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="h-full overflow-y-auto space-y-2">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                📄 Documento de Recolección
+                <span className="text-xs text-gray-500">
+                  ({feedbackData?.data_count || 0} elementos)
+                </span>
+              </h3>
+              <div className="text-sm text-gray-700 whitespace-pre-wrap font-mono text-xs">
+                {feedbackData?.collection_document || 'No hay documento disponible aún...'}
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
