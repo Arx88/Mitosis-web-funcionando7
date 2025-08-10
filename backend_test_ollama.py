@@ -15,7 +15,7 @@ import threading
 import re
 
 # Configuration
-BACKEND_URL = "https://caaa931b-1cb9-4630-9533-408213260ef0.preview.emergentagent.com"
+BACKEND_URL = "https://3bd52d1d-dd28-43e1-9b39-ce3ad8c130e6.preview.emergentagent.com"
 
 class MitosisOllamaProcessingTester:
     def __init__(self):
