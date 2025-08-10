@@ -189,21 +189,33 @@ class RealTimeFeedbackSystem:
         }
         
     def _emit_feedback(self, feedback_data: Dict[str, Any]):
-        """Emite feedback en tiempo real via WebSocket"""
+        """Emite feedback en tiempo real via WebSocket y guarda en archivo"""
+        feedback_payload = {
+            **feedback_data,
+            'task_id': self.task_id,
+            'timestamp': time.time(),
+            'summary': self.generate_real_time_summary()
+        }
+        
+        # Emitir via WebSocket
         if self.websocket_manager:
             try:
                 self.websocket_manager.emit_to_task(
                     self.task_id,
                     'real_time_feedback',
-                    {
-                        **feedback_data,
-                        'task_id': self.task_id,
-                        'timestamp': time.time(),
-                        'summary': self.generate_real_time_summary()
-                    }
+                    feedback_payload
                 )
             except Exception as e:
                 print(f"Error emitting feedback: {e}")
+        
+        # Guardar en archivo para persistencia
+        try:
+            feedback_file = f"/tmp/feedback_{self.task_id}.json"
+            complete_report = self.get_complete_report()
+            with open(feedback_file, 'w') as f:
+                json.dump(complete_report, f, indent=2)
+        except Exception as e:
+            print(f"Error saving feedback to file: {e}")
                 
     def get_complete_report(self) -> Dict[str, Any]:
         """Genera un reporte completo de toda la información recolectada"""
