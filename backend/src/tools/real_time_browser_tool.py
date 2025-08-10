@@ -1309,44 +1309,65 @@ class RealTimeBrowserTool(BaseTool):
                         ).result(timeout=10)
                         
                         if screenshot_path:
-                            # Registrar screenshot
+                            # Registrar screenshot SOLO SI FUE VALIDADO
                             screenshot_data = {
                                 'index': screenshot_count,
                                 'path': screenshot_path,
                                 'url': page.url if hasattr(page, 'url') else 'unknown',
-                                'timestamp': time.time()
+                                'timestamp': time.time(),
+                                'validated': True  # Marcamos que fue validado
                             }
                             
                             results['screenshots'].append(screenshot_data)
                             
-                            # 📸 EMITIR EVENTO BROWSER_VISUAL INMEDIATO CON SCREENSHOT DE ALTA RESOLUCIÓN
-                            self._emit_browser_visual({
-                                'type': 'screenshot_captured_real',
-                                'message': f'📸 Screenshot #{screenshot_count + 1} - Navegación en tiempo real',
+                            # 📸 EMITIR EVENTO BROWSER_VISUAL INMEDIATO CON VALIDACIÓN
+                            browser_visual_data = {
+                                'type': 'screenshot_captured_validated',
+                                'message': f'📸 Screenshot #{screenshot_count + 1} - Navegación validada en tiempo real',
                                 'screenshot_url': screenshot_path,
                                 'screenshot_index': screenshot_count,
                                 'current_url': screenshot_data['url'],
                                 'timestamp': time.time(),
-                                'resolution': '1920x1080',  # Información de resolución
-                                'quality': 'high',  # Indicador de calidad
+                                'resolution': '1920x1080',
+                                'quality': 'high',
                                 'capture_type': 'real_time_navigation',
-                                'step_description': f'Captura automática durante navegación web paso {screenshot_count + 1}'
-                            })
+                                'step_description': f'Captura automática durante navegación web paso {screenshot_count + 1}',
+                                'validated': True,  # Indicar que fue validado
+                                'validation_passed': True
+                            }
+                            
+                            # 🚀 EMITIR CON MÚLTIPLES INTENTOS PARA GARANTIZAR ENTREGA
+                            self._emit_browser_visual_with_retry(browser_visual_data, max_retries=3)
                             
                             # 🚀 TAMBIÉN EMITIR COMO PROGRESS_UPDATE PARA MEJOR COMPATIBILIDAD
                             if self.websocket_manager:
                                 try:
-                                    self.websocket_manager.emit_to_task(self.task_id, 'progress_update', {
+                                    progress_data = {
                                         'type': 'navigation_screenshot',
-                                        'message': f'📸 Navegación web: Screenshot #{screenshot_count + 1} capturado',
+                                        'message': f'📸 Navegación web: Screenshot #{screenshot_count + 1} capturado y validado',
                                         'screenshot_url': screenshot_path,
                                         'current_url': screenshot_data['url'],
-                                        'timestamp': time.time()
-                                    })
+                                        'timestamp': time.time(),
+                                        'validated': True
+                                    }
+                                    self.websocket_manager.emit_to_task(self.task_id, 'progress_update', progress_data)
                                 except Exception as e:
                                     self._emit_progress(f"⚠️ Error emitiendo progress_update: {str(e)}")
                             
                             screenshot_count += 1
+                        else:
+                            # Screenshot falló validación - emitir evento de debug pero no incrementar contador
+                            self._emit_progress(f"⚠️ Screenshot #{screenshot_count} falló validación - no emitiendo evento")
+                            
+                            # 📊 EMITIR EVENTO DE DEBUGGING PARA TROUBLESHOOTING
+                            debug_data = {
+                                'type': 'screenshot_validation_failed',
+                                'message': f'⚠️ Screenshot #{screenshot_count} no pudo ser validado',
+                                'screenshot_index': screenshot_count,
+                                'current_url': page.url if hasattr(page, 'url') else 'unknown',
+                                'timestamp': time.time()
+                            }
+                            self._emit_browser_visual(debug_data)
                     
                     # Esperar antes de próxima captura
                     time.sleep(capture_interval)
