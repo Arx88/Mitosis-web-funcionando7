@@ -711,18 +711,26 @@ class UnifiedWebSearchTool(BaseTool):
         Usa el nuevo generador inteligente para detectar patrones específicos
         y generar búsquedas granulares de alta calidad
         """
+        print(f"🔍 _detect_granular_search_needs CALLED WITH: '{query}'")
+        
         try:
             # 🚀 USAR EL NUEVO DETECTOR GRANULAR INTELIGENTE
             granular_searches = detect_granular_search_needs(query)
+            
+            print(f"🔍 detect_granular_search_needs RETURNED: {len(granular_searches) if granular_searches else 0} searches")
             
             if granular_searches:
                 print(f"✅ GRANULAR SEARCHES DETECTED: {len(granular_searches)} búsquedas específicas")
                 for search in granular_searches:
                     print(f"   🎯 {search['category']}: {search['query']}")
                 return granular_searches
+            else:
+                print("❌ NO GRANULAR SEARCHES FROM INTELLIGENT DETECTOR")
             
         except Exception as e:
             print(f"⚠️ Error en detector granular inteligente: {e}")
+            import traceback
+            traceback.print_exc()
             # Continuar con lógica de fallback
         
         # 🔄 FALLBACK: LÓGICA ANTERIOR MEJORADA PARA CASOS NO CUBIERTOS
