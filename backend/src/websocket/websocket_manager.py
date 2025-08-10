@@ -629,6 +629,8 @@ class WebSocketManager:
     def send_browser_visual_event(self, task_id: str, event_data: Dict[str, Any]):
         """Send browser visual event for real-time web navigation visualization - CRITICAL FIX"""
         try:
+            logger.info(f"🎬 BROWSER VISUAL EVENT CALLED: task_id={task_id}, type={event_data.get('type', 'unknown')}")
+            
             # Asegurar campos requeridos con valores por defecto
             event_type = event_data.get('type', 'navigation_update')
             message = event_data.get('message', 'Browser activity')
@@ -645,6 +647,8 @@ class WebSocketManager:
                 'task_id': task_id,
                 **event_data  # Incluir cualquier dato adicional
             }
+            
+            logger.info(f"🎥 SENDING BROWSER VISUAL: {browser_visual_data}")
             
             # Enviar como evento browser_visual específico
             self.emit_to_task(task_id, 'browser_visual', browser_visual_data)
