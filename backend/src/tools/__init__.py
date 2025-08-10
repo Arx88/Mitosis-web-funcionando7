@@ -88,6 +88,12 @@ try:
 except ImportError:
     pass
 
+# Herramienta de búsqueda web con recolección en tiempo real
+try:
+    from .web_search_con_recoleccion import WebSearchConRecoleccionEnVivo
+except ImportError:
+    pass
+
 # Exportar interfaz principal
 __all__ = [
     # Arquitectura base
