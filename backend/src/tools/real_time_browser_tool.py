@@ -1459,7 +1459,26 @@ class RealTimeBrowserTool(BaseTool):
         
         return None
     
-    def _emit_browser_visual(self, data: Dict[str, Any]):
+    def _emit_browser_visual_with_retry(self, data: Dict[str, Any], max_retries: int = 3):
+        """📡 EMITIR EVENTO BROWSER_VISUAL CON REINTENTOS PARA GARANTIZAR ENTREGA"""
+        
+        for attempt in range(max_retries):
+            try:
+                success = self._emit_browser_visual(data)
+                if success:
+                    if attempt > 0:
+                        self._emit_progress(f"✅ Evento browser_visual entregado exitosamente en intento {attempt + 1}")
+                    return True
+            except Exception as e:
+                self._emit_progress(f"⚠️ Intento {attempt + 1} fallido para evento browser_visual: {e}")
+                
+            if attempt < max_retries - 1:
+                time.sleep(0.5)  # Esperar 500ms antes del siguiente intento
+        
+        self._emit_progress(f"❌ Evento browser_visual falló después de {max_retries} intentos")
+        return False
+
+    def _emit_browser_visual(self, data: Dict[str, Any]) -> bool:
         """📡 EMITIR EVENTO BROWSER_VISUAL AL FRONTEND"""
         
         # 🚀 LOGGING CRÍTICO: Verificar estado de websocket_manager
