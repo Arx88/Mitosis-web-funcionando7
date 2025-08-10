@@ -12,7 +12,7 @@ import subprocess
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://caa291c0-7fa9-4089-b57e-8fe9b9204de7.preview.emergentagent.com"
+BACKEND_URL = "https://0afa4b1f-9a9c-40fa-b778-bd5b7090ec0a.preview.emergentagent.com"
 
 class EnhancedValidationTester:
     def __init__(self):
