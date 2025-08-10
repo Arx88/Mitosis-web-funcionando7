@@ -43,6 +43,10 @@ except ImportError:
 # Import Ollama configuration functions
 from ..config.ollama_config import get_ollama_config, get_ollama_endpoint, get_ollama_model
 
+# 🧠 NUEVO: Importar sistema de planificación inteligente
+from ..services.intelligent_planner import get_intelligent_planner, IntelligentPlanner
+from ..services.real_time_feedback import get_feedback_manager, RealTimeFeedbackManager
+
 # 🔥 NUEVO: Importar sistema robusto de validación
 try:
     from .robust_validation_system import RobustValidationSystem
