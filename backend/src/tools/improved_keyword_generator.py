@@ -500,6 +500,9 @@ class IntelligentKeywordGenerator:
             match = re.search(subject_pattern, query_text, re.IGNORECASE)
             if match:
                 subject = match.group(0)
+                # ✅ CORRECCIÓN ESPECIAL: Normalizar "Attack Titan" a "Attack on Titan"
+                if subject.lower() == "attack titan":
+                    subject = "Attack on Titan"
                 print(f"✅ SUBJECT FOUND (Method 0 - Known Subjects): '{subject}'")
                 return subject.title()
         
