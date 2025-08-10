@@ -1628,6 +1628,101 @@ def improve_research_with_targeted_searches_fallback(result: dict, step_title: s
         logger.error(f"❌ Error en mejora de fallback: {str(e)}")
         return result
 
+def apply_basic_step_validation_fallback(result: dict, step_title: str, step_description: str, original_message: str) -> dict:
+    """
+    🔧 VALIDACIÓN BÁSICA DE FALLBACK
+    Se usa cuando el Enhanced Step Validator no está disponible
+    """
+    try:
+        logger.info("🔧 Aplicando validación básica de fallback")
+        
+        content = result.get('content', '') or result.get('summary', '')
+        
+        # Validación básica de longitud
+        if len(content) < 200:
+            logger.warning(f"⚠️ Contenido muy corto: {len(content)} caracteres")
+            result['validation_status'] = 'BASIC_WARNING_SHORT'
+        else:
+            logger.info(f"✅ Validación básica pasada: {len(content)} caracteres")
+            result['validation_status'] = 'BASIC_APPROVED'
+        
+        result['validation_type'] = 'basic_fallback'
+        return result
+        
+    except Exception as e:
+        logger.error(f"❌ Error en validación básica: {str(e)}")
+        result['validation_status'] = 'BASIC_ERROR'
+        result['validation_type'] = 'basic_fallback'
+        return result
+
+def extract_urls_from_content_fallback(content: str) -> list:
+    """
+    🔍 EXTRACTOR DE URLs BÁSICO DE FALLBACK
+    Extrae URLs del contenido usando regex básico
+    """
+    import re
+    try:
+        url_pattern = r'https?://[^\s<>"{}|\\^`[\]]+'
+        urls = re.findall(url_pattern, content)
+        return urls[:5] if urls else []
+    except Exception as e:
+        logger.error(f"❌ Error extrayendo URLs: {str(e)}")
+        return []
+
+def improve_research_with_targeted_searches_fallback(result: dict, step_title: str, step_description: str, original_message: str, task_id: str, tool_manager, validation_result: dict) -> dict:
+    """
+    🔄 MEJORADOR DE INVESTIGACIÓN CON BÚSQUEDAS ESPECÍFICAS DE FALLBACK
+    Intenta mejorar la investigación con búsquedas más específicas
+    """
+    try:
+        logger.info("🔄 Intentando mejorar investigación con búsquedas específicas")
+        
+        recommendations = validation_result.get('specific_recommendations', [])
+        
+        if not recommendations:
+            logger.warning("⚠️ No hay recomendaciones específicas para mejorar")
+            return result
+            
+        # Tomar la primera recomendación para hacer una búsqueda adicional
+        search_query = recommendations[0] if recommendations else f"{step_title} información detallada"
+        
+        if tool_manager:
+            try:
+                # Intentar búsqueda web adicional
+                additional_search = execute_enhanced_web_search_step(
+                    f"Búsqueda adicional: {step_title}", 
+                    search_query,
+                    tool_manager, 
+                    task_id, 
+                    original_message
+                )
+                
+                if additional_search.get('success') and additional_search.get('content'):
+                    # Combinar resultados
+                    original_content = result.get('content', '')
+                    additional_content = additional_search.get('content', '')
+                    
+                    combined_content = f"{original_content}\n\n--- INFORMACIÓN ADICIONAL ---\n\n{additional_content}"
+                    
+                    improved_result = result.copy()
+                    improved_result['content'] = combined_content
+                    improved_result['summary'] = f"Investigación mejorada - {len(combined_content)} caracteres"
+                    improved_result['improved'] = True
+                    improved_result['improvement_method'] = 'targeted_search'
+                    
+                    logger.info(f"✅ Investigación mejorada: {len(combined_content)} caracteres totales")
+                    return improved_result
+                    
+            except Exception as e:
+                logger.error(f"❌ Error en búsqueda adicional: {str(e)}")
+        
+        logger.warning("⚠️ No se pudo mejorar la investigación")
+        return result
+        
+    except Exception as e:
+        logger.error(f"❌ Error mejorando investigación: {str(e)}")
+        return result
+
 def enhance_political_research_result(result: dict, step_title: str, step_description: str, original_message: str, task_id: str, ollama_service, tool_manager) -> dict:
     """
     🔥 MEJORADOR DE RESULTADOS DE INVESTIGACIÓN POLÍTICA
