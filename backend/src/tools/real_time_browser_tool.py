@@ -1513,25 +1513,9 @@ class RealTimeBrowserTool(BaseTool):
                 self._emit_progress(f"❌ Error emitiendo browser_visual: {str(e)}")
                 return False  # Fallo
         else:
-            print(f"⚠️ [REAL_TIME_BROWSER] Cannot emit browser_visual: websocket_manager={self.websocket_manager is not None}, task_id={self.task_id}")
-            
-            # FALLBACK: Intentar usar método directo del servidor
-            try:
-                import server
-                if hasattr(server, 'socketio') and server.socketio and self.task_id:
-                    enhanced_data = {
-                        'task_id': self.task_id,
-                        'timestamp': data.get('timestamp', time.time()),
-                        **data
-                    }
-                    
-                    room = f"task_{self.task_id}"
-                    server.socketio.emit('browser_visual', enhanced_data, room=room)
-                    print(f"✅ [REAL_TIME_BROWSER] browser_visual sent via direct server fallback")
-                else:
-                    print(f"⚠️ [REAL_TIME_BROWSER] Direct server fallback also failed")
-            except Exception as fallback_error:
-                print(f"⚠️ [REAL_TIME_BROWSER] Fallback error: {fallback_error}")
+            print(f"❌ [REAL_TIME_BROWSER] No websocket_manager or task_id: manager={self.websocket_manager is not None}, task_id={self.task_id}")
+            self._emit_progress(f"⚠️ WebSocket no disponible: manager={self.websocket_manager is not None}, task_id={self.task_id}")
+            return False  # No disponible
     
     def _emit_progress(self, message: str):
         """📝 EMITIR MENSAJE DE PROGRESO"""
