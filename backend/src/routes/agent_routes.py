@@ -9714,18 +9714,72 @@ def execute_step_real_original(task_id: str, step_id: str, step: dict):
                 if not search_strategies:
                     search_strategies.append(f"{base_query} información detallada datos")
                 
-                # Usar la primera estrategia (más relevante)
-                intelligent_query = search_strategies[0]
-                logger.info(f"🎯 Query inteligente generado: '{intelligent_query}' (original: '{base_query}')")
-                
-                tool_params = {
-                    'query': intelligent_query,
-                    'max_results': 8,  # Más resultados para mayor diversidad
-                    'search_engine': 'bing',  # Especificar motor que funciona
-                    'extract_content': True,   # Extraer contenido de páginas
-                    'deep_search': True,       # Búsqueda profunda
-                    'quality_filter': True     # Filtrar por calidad de resultados
-                }
+                # 🔥 IMPLEMENTAR BÚSQUEDAS MÚLTIPLES PARA CASOS ESPECIALIZADOS
+                if any(word in content_lower for word in ['nombres', 'marca', 'épico', 'cool', 'memorable', 'branding']) and len(search_strategies) > 1:
+                    # EJECUTAR MÚLTIPLES BÚSQUEDAS ESPECÍFICAS 
+                    logger.info(f"🔍 EJECUTANDO {len(search_strategies)} BÚSQUEDAS ESPECÍFICAS para nombres de marca")
+                    
+                    all_results = []
+                    for i, query in enumerate(search_strategies[:4]):  # Máximo 4 búsquedas
+                        logger.info(f"🔍 Búsqueda {i+1}/{min(4, len(search_strategies))}: '{query}'")
+                        
+                        tool_params = {
+                            'query': query,
+                            'max_results': 5,  # Menos por búsqueda, más variedad
+                            'search_engine': 'bing',
+                            'extract_content': True,
+                            'deep_search': True,
+                            'quality_filter': True
+                        }
+                        
+                        try:
+                            single_result = tool_manager.execute_tool(tool, tool_params, task_id=task_id)
+                            if single_result and isinstance(single_result, dict):
+                                single_result['search_query'] = query
+                                single_result['search_number'] = i + 1
+                                all_results.append(single_result)
+                                logger.info(f"✅ Búsqueda {i+1} completada: {len(str(single_result))} caracteres")
+                        except Exception as e:
+                            logger.error(f"❌ Error en búsqueda {i+1}: {e}")
+                    
+                    # Combinar todos los resultados
+                    if all_results:
+                        combined_result = {
+                            'success': True,
+                            'summary': f'Resultados combinados de {len(all_results)} búsquedas específicas',
+                            'total_searches': len(all_results),
+                            'search_results': all_results,
+                            'total_content_length': sum(len(str(r)) for r in all_results)
+                        }
+                        logger.info(f"🎯 BÚSQUEDAS MÚLTIPLES COMPLETADAS: {len(all_results)} búsquedas, {combined_result['total_content_length']} caracteres totales")
+                        result = combined_result
+                    else:
+                        logger.error("❌ Todas las búsquedas múltiples fallaron, usando búsqueda estándar")
+                        # Fallback a búsqueda estándar
+                        intelligent_query = search_strategies[0]
+                        tool_params = {
+                            'query': intelligent_query,
+                            'max_results': 8,
+                            'search_engine': 'bing',
+                            'extract_content': True,
+                            'deep_search': True,
+                            'quality_filter': True
+                        }
+                        result = tool_manager.execute_tool(tool, tool_params, task_id=task_id)
+                else:
+                    # BÚSQUEDA ÚNICA ESTÁNDAR
+                    intelligent_query = search_strategies[0]
+                    logger.info(f"🎯 Query inteligente generado: '{intelligent_query}' (original: '{base_query}')")
+                    
+                    tool_params = {
+                        'query': intelligent_query,
+                        'max_results': 8,  # Más resultados para mayor diversidad
+                        'search_engine': 'bing',  # Especificar motor que funciona
+                        'extract_content': True,   # Extraer contenido de páginas
+                        'deep_search': True,       # Búsqueda profunda
+                        'quality_filter': True     # Filtrar por calidad de resultados
+                    }
+                    result = tool_manager.execute_tool(tool, tool_params, task_id=task_id)
             elif tool == 'analysis':
                 # 🧠 MAPEO INTELIGENTE: Usar Ollama para análisis real, no búsqueda web
                 mapped_tool = 'ollama_processing'  # Usar herramienta de procesamiento IA
