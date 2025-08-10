@@ -958,6 +958,15 @@ class UnifiedWebSearchTool(BaseTool):
                 if not screenshot_url and screenshots:
                     screenshot_url = screenshots[-1].get('path', '')
                 
+                # 🔄 REGISTRAR SCREENSHOT CON CONTEXTO EN SISTEMA DE FEEDBACK
+                if self.feedback_system and screenshot_url:
+                    self.feedback_system.log_screenshot_context(
+                        screenshot_url,
+                        page_url,
+                        page_data.get('title', 'Página sin título'),
+                        f'Captura durante navegación web - Resultado {i+1}'
+                    )
+                
                 # Buscar contenido extraído (ya está en page_data después del filtro)
                 content_extracted = page_data.get('content_extracted', '')
                 content_length = page_data.get('content_length', 0)
