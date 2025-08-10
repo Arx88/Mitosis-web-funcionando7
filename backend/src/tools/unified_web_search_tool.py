@@ -587,12 +587,18 @@ class UnifiedWebSearchTool(BaseTool):
         Implementa búsquedas específicas múltiples para información completa
         """
         
+        print(f"🔍 EXECUTE_SEARCH_WITH_VISUALIZATION INPUT: '{query}'")
+        
         # PASO 1: DETECTAR SI NECESITA BÚSQUEDAS GRANULARES
         granular_searches = self._detect_granular_search_needs(query)
+        
+        print(f"🔍 GRANULAR DETECTION RESULT: {len(granular_searches) if granular_searches else 0} searches")
         
         if granular_searches and len(granular_searches) > 1:
             # BÚSQUEDA GRANULAR MÚLTIPLE
             self._emit_progress_eventlet(f"🎯 BÚSQUEDA GRANULAR DETECTADA - {len(granular_searches)} búsquedas específicas")
+            for search in granular_searches:
+                self._emit_progress_eventlet(f"   🎯 {search['category']}: {search['query']}")
             return self._execute_granular_searches(granular_searches, search_engine, max_results, extract_content)
         else:
             # BÚSQUEDA SIMPLE TRADICIONAL
