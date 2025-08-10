@@ -1008,36 +1008,19 @@ class IntelligentKeywordGenerator:
     def _generate_intelligent_searches_with_llm(self, subject: str, subject_type: str, mentioned_aspects: List[str]) -> List[Dict[str, str]]:
         """🧠 USAR LLM PARA GENERAR BÚSQUEDAS GRANULARES INTELIGENTES"""
         
-        # Construir prompt inteligente para el LLM
-        aspects_text = f" Los siguientes aspectos fueron mencionados: {', '.join(mentioned_aspects)}." if mentioned_aspects else ""
+        # Construir prompt inteligente y conciso para el LLM
+        aspects_text = f" Aspectos mencionados: {', '.join(mentioned_aspects)}." if mentioned_aspects else ""
         
-        prompt = f"""Eres un experto investigador. Necesito generar 5 búsquedas web específicas y granulares para obtener información completa sobre: "{subject}".{aspects_text}
+        prompt = f"""Para el tema "{subject}", necesito 5 búsquedas web específicas y granulares.{aspects_text}
 
-Las búsquedas deben:
-1. Ser específicas y relevantes al tema
-2. Cubrir diferentes aspectos importantes del tema
-3. Usar palabras clave efectivas para motores de búsqueda
-4. Ser complementarias entre sí (no redundantes)
-5. Incluir información actualizada cuando sea relevante
-
-Formato de respuesta (JSON):
-{{
-  "searches": [
-    {{"category": "aspecto1", "query": "búsqueda específica 1"}},
-    {{"category": "aspecto2", "query": "búsqueda específica 2"}},
-    {{"category": "aspecto3", "query": "búsqueda específica 3"}},
-    {{"category": "aspecto4", "query": "búsqueda específica 4"}},
-    {{"category": "aspecto5", "query": "búsqueda específica 5"}}
-  ]
-}}
-
-Ejemplos de aspectos según el tipo de tema:
-- Personas: biografía, carrera, logros, controversias, actualidad
-- Tecnología: definición, aplicaciones, beneficios, riesgos, tendencias
-- Entretenimiento: trama, personajes, críticas, producción, impacto
-- Eventos: causas, desarrollo, consecuencias, análisis, cobertura
-
-Genera las búsquedas para "{subject}"."""
+Responde SOLO con JSON:
+{{"searches": [
+  {{"category": "aspecto1", "query": "búsqueda específica 1"}},
+  {{"category": "aspecto2", "query": "búsqueda específica 2"}},
+  {{"category": "aspecto3", "query": "búsqueda específica 3"}},
+  {{"category": "aspecto4", "query": "búsqueda específica 4"}},
+  {{"category": "aspecto5", "query": "búsqueda específica 5"}}
+]}}"""
 
         try:
             # Importar OllamaService para generar respuestas inteligentes
