@@ -45,7 +45,14 @@ class IntelligentKeywordGenerator:
                            'anime', 'manga', 'naruto', 'one', 'piece', 'dragon', 'ball', 'studio', 
                            'ghibli', 'miyazaki', 'otaku', 'cosplay'],
             'entretenimiento': ['netflix', 'disney', 'marvel', 'dc', 'comics', 'superhero', 'movie', 
-                               'film', 'serie', 'temporada', 'episodio', 'actor', 'actress', 'director']
+                               'film', 'serie', 'temporada', 'episodio', 'actor', 'actress', 'director'],
+            # 🎮 NUEVA CATEGORÍA: VIDEOJUEGOS
+            'videojuegos': ['age', 'empires', 'aoe', 'civilization', 'civ', 'total', 'war',
+                           'counter', 'strike', 'valorant', 'league', 'legends', 'dota', 'fortnite',
+                           'minecraft', 'overwatch', 'apex', 'call', 'duty', 'fifa', 'pes',
+                           'gameplay', 'gaming', 'jugadores', 'competitivo', 'ranking', 'stats',
+                           'mecánicas', 'expansiones', 'dlc', 'actualizaciones', 'parches', 'meta',
+                           'builds', 'estrategias', 'tutorial', 'guía', 'walkthrough', 'speedrun']
         }
         
         # Palabras meta que deben eliminarse COMPLETAMENTE
