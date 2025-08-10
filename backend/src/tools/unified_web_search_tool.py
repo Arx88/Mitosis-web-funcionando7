@@ -22,6 +22,9 @@ from .base_tool import BaseTool, ParameterDefinition, ToolExecutionResult, regis
 # 🧠 IMPORTAR GENERADOR INTELIGENTE DE KEYWORDS  
 from .improved_keyword_generator import get_intelligent_keywords, get_multiple_search_variants, detect_granular_search_needs
 
+# 🔄 IMPORTAR SISTEMA DE FEEDBACK EN TIEMPO REAL
+from .real_time_feedback_system import RealTimeFeedbackSystem
+
 try:
     from playwright.async_api import async_playwright
     PLAYWRIGHT_AVAILABLE = True
