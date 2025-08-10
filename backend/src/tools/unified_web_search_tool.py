@@ -2668,6 +2668,9 @@ except Exception as e:
         
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         
+        # 🚀 LOGGING CRÍTICO: Registrar SIEMPRE que este método se ejecuta
+        print(f"🔥 [BROWSER_VISUAL] MÉTODO EJECUTADO: {data}")
+        
         # PASO 1: LOG INICIAL de browser_visual
         try:
             with open('/tmp/websocket_comprehensive.log', 'a') as f:
@@ -2678,6 +2681,14 @@ except Exception as e:
                 f.flush()
         except Exception as log_error:
             print(f"❌ CRITICAL: Cannot write browser_visual log: {log_error}")
+        
+        # También escribir a websocket_debug.log para visibilidad
+        try:
+            with open('/tmp/websocket_debug.log', 'a') as f:
+                f.write(f"[{datetime.now()}] 🔥 BROWSER_VISUAL METHOD CALLED: task_id={getattr(self, 'task_id', 'NONE')}, data={data}\n")
+                f.flush()
+        except:
+            pass
         
         # PASO 2: Verificar task_id
         if not hasattr(self, 'task_id') or not self.task_id:
