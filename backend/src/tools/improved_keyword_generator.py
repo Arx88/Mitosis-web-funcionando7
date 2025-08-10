@@ -861,7 +861,25 @@ class IntelligentKeywordGenerator:
             r'\bmachine\s+learning\b',
             r'\bjavier\s+milei\b',
             r'\bcambio\s+climático\b',
-            r'\bcalentamiento\s+global\b'
+            r'\bcalentamiento\s+global\b',
+            # 🎮 VIDEOJUEGOS ESPECÍFICOS AGREGADOS
+            r'\bage\s+of\s+empires\b',
+            r'\bage\s+empires\b', 
+            r'\baoe\s*2?\b',  # Age of Empires 2, AoE, AoE2
+            r'\bcivilization\s*[ivx0-9]*\b',  # Civilization, Civ IV, etc.
+            r'\btotal\s+war\b',
+            r'\bcounter\s+strike\b',
+            r'\bcs:?go\b',  # CS:GO
+            r'\bcs2?\b',   # CS2
+            r'\bvalora[nt]+\b',
+            r'\bleague\s+of\s+legends\b',
+            r'\blol\b',    # League of Legends
+            r'\bcall\s+of\s+duty\b',
+            r'\bcod\b',    # Call of Duty
+            r'\bapex\s+legends\b',
+            r'\boverwatch\b',
+            r'\bfortnite\b',
+            r'\bminecraft\b'
         ]
         
         for subject_pattern in known_subjects:
