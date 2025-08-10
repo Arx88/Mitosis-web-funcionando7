@@ -1479,7 +1479,7 @@ class RealTimeBrowserTool(BaseTool):
         return False
 
     def _emit_browser_visual(self, data: Dict[str, Any]) -> bool:
-        """📡 EMITIR EVENTO BROWSER_VISUAL AL FRONTEND"""
+        """📡 EMITIR EVENTO BROWSER_VISUAL AL FRONTEND CON VERIFICACIÓN DE ENTREGA"""
         
         # 🚀 LOGGING CRÍTICO: Verificar estado de websocket_manager
         print(f"🔥 [REAL_TIME_BROWSER] _emit_browser_visual called: websocket_manager={self.websocket_manager is not None}, task_id={self.task_id}")
