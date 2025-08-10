@@ -10724,8 +10724,27 @@ def chat():
                     'estimated_wait_time': '2-3 minutos'
                 })
             
-            # Generate plan for the task
-            plan_response = generate_task_plan(message, task_id)
+            # 🧠 NUEVO: Usar planificador inteligente en lugar de sistema de templates
+            logger.info(f"🧠 Using intelligent planner for task request")
+            
+            # Obtener instancias de servicios
+            ollama_service = get_ollama_service()
+            feedback_manager = get_feedback_manager()
+            intelligent_planner = get_intelligent_planner(ollama_service)
+            
+            # Configurar WebSocket para feedback si disponible
+            if hasattr(current_app, 'websocket_manager') and current_app.websocket_manager:
+                feedback_manager.websocket_manager = current_app.websocket_manager
+            
+            # Generar plan inteligente
+            try:
+                plan_response = intelligent_planner.generate_intelligent_plan(message, task_id)
+                logger.info(f"✅ Intelligent plan generated with {len(plan_response.get('steps', []))} steps")
+            except Exception as plan_error:
+                logger.error(f"❌ Error generating intelligent plan: {plan_error}")
+                # Fallback to basic plan
+                plan_response = generate_task_plan(message, task_id)
+            
             
             # Generate enhanced title
             enhanced_title = generate_task_title_with_llm(message, task_id)
