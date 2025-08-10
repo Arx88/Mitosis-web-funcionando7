@@ -986,6 +986,20 @@ class IntelligentKeywordGenerator:
         subject_lower = subject.lower()
         query_lower = query_text.lower()
         
+        # 🎮 NUEVA CATEGORÍA CRÍTICA: VIDEOJUEGOS
+        videogame_indicators = [
+            'age of empires', 'age empires', 'aoe', 'civilization', 'total war',
+            'counter strike', 'valorant', 'league of legends', 'dota', 'fortnite',
+            'minecraft', 'call of duty', 'fifa', 'pes', 'overwatch', 'apex legends',
+            'mecánicas de juego', 'gameplay', 'jugabilidad', 'expansiones', 'dlc',
+            'estadísticas de jugadores', 'gaming', 'videojuego', 'video juego'
+        ]
+        
+        # Detectar videojuegos PRIMERO (alta prioridad)
+        if (any(indicator in subject_lower for indicator in videogame_indicators) or
+            any(indicator in query_lower for indicator in videogame_indicators)):
+            return 'videogames'
+        
         # Indicadores de tipo de tema
         if (any(indicator in query_lower for indicator in ['anime', 'manga', 'serie', 'película', 'film']) or
             any(name in subject_lower for name in ['attack on titan', 'attack titan', 'shingeki', 'naruto', 'one piece', 'dragon ball'])):
