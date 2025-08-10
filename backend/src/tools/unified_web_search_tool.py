@@ -20,7 +20,7 @@ from urllib.parse import urljoin
 from .base_tool import BaseTool, ParameterDefinition, ToolExecutionResult, register_tool
 
 # 🧠 IMPORTAR GENERADOR INTELIGENTE DE KEYWORDS  
-from .improved_keyword_generator import get_intelligent_keywords, get_multiple_search_variants
+from .improved_keyword_generator import get_intelligent_keywords, get_multiple_search_variants, detect_granular_search_needs
 
 try:
     from playwright.async_api import async_playwright
