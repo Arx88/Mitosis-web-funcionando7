@@ -39,38 +39,29 @@ interface RealTimeFeedbackPanelProps {
 
 const RealTimeFeedbackPanel: React.FC<RealTimeFeedbackPanelProps> = ({ 
   taskId, 
-  isVisible 
+  isVisible,
+  showDocument = false 
 }) => {
-  const [feedbackHistory, setFeedbackHistory] = useState<FeedbackData[]>([]);
-  const [currentSummary, setCurrentSummary] = useState<any>(null);
+  const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'live' | 'document'>('live');
   const feedbackRef = useRef<HTMLDivElement>(null);
 
-  // Función para obtener feedback del servidor
+  // Función para obtener feedback del servidor usando la ruta correcta
   const fetchFeedback = async () => {
     if (!taskId) return;
     
     try {
-      const response = await fetch(`/api/tasks/${taskId}/feedback`);
+      setIsLoading(true);
+      const response = await fetch(`/api/agent/get-task-feedback/${taskId}`);
       if (response.ok) {
-        const data = await response.json();
-        if (data.detailed_data && data.collection_summary) {
-          // Actualizar el resumen actual
-          setCurrentSummary(data.collection_summary);
-          
-          // Procesar actividades recientes como feedback
-          const recentFeedback = data.collection_summary.recent_activity?.map((activity: any) => ({
-            type: activity.type,
-            message: activity.description,
-            timestamp: activity.timestamp,
-            data: activity
-          })) || [];
-          
-          setFeedbackHistory(recentFeedback);
-        }
+        const data: FeedbackData = await response.json();
+        setFeedbackData(data);
       }
     } catch (error) {
       console.error('Error fetching feedback:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
