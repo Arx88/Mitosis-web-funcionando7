@@ -1251,29 +1251,99 @@ NO uses eventos específicos inventados."""
         
         print(f"🔄 Generando búsquedas fallback inteligentes para '{subject}'")
         
-        # Aspectos universales que aplican a casi cualquier tema
-        universal_aspects = [
-            ('información_general', f'{subject} información general descripción'),
-            ('historia_contexto', f'{subject} historia antecedentes contexto'),
-            ('características', f'{subject} características principales aspectos importantes'),
-            ('impacto_relevancia', f'{subject} importancia relevancia impacto significado'),
-            ('actualidad', f'{subject} noticias recientes actualidad 2025')
-        ]
+        # Detectar tipo de tema para fallback específico
+        subject_lower = subject.lower()
+        
+        # 🎮 FALLBACK ESPECIALIZADO PARA VIDEOJUEGOS
+        videogame_indicators = ['age of empires', 'age empires', 'aoe', 'civilization', 'total war', 
+                               'counter strike', 'valorant', 'league of legends', 'minecraft', 'fifa']
+        
+        if any(indicator in subject_lower for indicator in videogame_indicators):
+            print(f"🎮 Generating specialized gaming fallback for '{subject}'")
+            return [
+                {'category': 'historia_lore', 'query': f'{subject} historia lore argumento campaña'},
+                {'category': 'mecanicas_gameplay', 'query': f'{subject} mecánicas juego gameplay tutorial'},
+                {'category': 'expansiones_actualizaciones', 'query': f'{subject} expansiones DLC actualizaciones parches'},
+                {'category': 'comunidad_competitivo', 'query': f'{subject} estadísticas jugadores ranking competitivo'},
+                {'category': 'reviews_impacto', 'query': f'{subject} reviews críticas impacto gaming cultura'}
+            ]
+        
+        # 👤 FALLBACK PARA PERSONAS
+        person_indicators = ['milei', 'biden', 'trump', 'musk', 'presidente', 'político']
+        if any(indicator in subject_lower for indicator in person_indicators):
+            print(f"👤 Generating person fallback for '{subject}'")
+            return [
+                {'category': 'biografia', 'query': f'{subject} biografía historia personal vida'},
+                {'category': 'carrera_trayectoria', 'query': f'{subject} carrera trayectoria profesional'},
+                {'category': 'posiciones_ideologia', 'query': f'{subject} posiciones ideología declaraciones'},
+                {'category': 'noticias_actualidad', 'query': f'{subject} noticias actualidad 2025'},
+                {'category': 'controversias', 'query': f'{subject} controversias polémicas críticas'}
+            ]
+        
+        # 🎬 FALLBACK PARA ENTRETENIMIENTO 
+        entertainment_indicators = ['attack on titan', 'attack titan', 'anime', 'manga', 'serie', 'película']
+        if any(indicator in subject_lower for indicator in entertainment_indicators):
+            print(f"🎬 Generating entertainment fallback for '{subject}'")
+            return [
+                {'category': 'trama_historia', 'query': f'{subject} trama historia argumento sinopsis'},
+                {'category': 'personajes', 'query': f'{subject} personajes principales protagonistas'},
+                {'category': 'produccion', 'query': f'{subject} producción desarrollo creación'},
+                {'category': 'criticas_recepcion', 'query': f'{subject} críticas reviews recepción'},
+                {'category': 'impacto_cultural', 'query': f'{subject} impacto cultural legado'}
+            ]
+        
+        # 🎵 FALLBACK PARA MÚSICA
+        music_indicators = ['arctic monkeys', 'banda', 'música', 'cantante', 'artista']
+        if any(indicator in subject_lower for indicator in music_indicators):
+            print(f"🎵 Generating music fallback for '{subject}'")
+            return [
+                {'category': 'biografia_historia', 'query': f'{subject} biografía historia banda formación'},
+                {'category': 'discografia', 'query': f'{subject} discografía álbumes canciones populares'},
+                {'category': 'estilo_genero', 'query': f'{subject} estilo musical género influencias'},
+                {'category': 'conciertos_tours', 'query': f'{subject} conciertos tours presentaciones vivo'},
+                {'category': 'actualidad', 'query': f'{subject} actualidad nuevo material 2025'}
+            ]
+        
+        # 💻 FALLBACK PARA TECNOLOGÍA
+        tech_indicators = ['inteligencia artificial', 'machine learning', 'blockchain', 'bitcoin', 'tecnología']
+        if any(indicator in subject_lower for indicator in tech_indicators):
+            print(f"💻 Generating tech fallback for '{subject}'")
+            return [
+                {'category': 'definicion_concepto', 'query': f'{subject} definición concepto explicación'},
+                {'category': 'funcionamiento', 'query': f'{subject} cómo funciona aspectos técnicos'},
+                {'category': 'aplicaciones', 'query': f'{subject} aplicaciones usos casos reales'},
+                {'category': 'ventajas_desventajas', 'query': f'{subject} ventajas beneficios riesgos'},
+                {'category': 'tendencias_futuro', 'query': f'{subject} tendencias futuro 2025'}
+            ]
+        
+        # FALLBACK GENÉRICO MEJORADO
+        print(f"🔄 Using generic fallback for '{subject}'")
         
         # Si hay aspectos mencionados específicos, priorizarlos
         if mentioned_aspects:
             specific_searches = []
             for aspect in mentioned_aspects[:3]:  # Máximo 3 aspectos específicos
-                specific_searches.append((aspect, f'{subject} {aspect} información detallada'))
+                specific_searches.append({'category': aspect, 'query': f'{subject} {aspect} información detallada'})
             
-            # Combinar aspectos específicos con universales
-            all_aspects = specific_searches + universal_aspects[len(specific_searches):]
-        else:
-            all_aspects = universal_aspects
+            # Completar con aspectos universales
+            remaining_slots = 5 - len(specific_searches)
+            universal_aspects = [
+                {'category': 'historia_antecedentes', 'query': f'{subject} historia antecedentes origen'},
+                {'category': 'caracteristicas_aspectos', 'query': f'{subject} características aspectos importantes'},
+                {'category': 'impacto_relevancia', 'query': f'{subject} importancia relevancia significado'},
+                {'category': 'actualidad_noticias', 'query': f'{subject} actualidad noticias 2025'},
+                {'category': 'informacion_completa', 'query': f'{subject} información completa descripción'}
+            ]
+            
+            return specific_searches + universal_aspects[:remaining_slots]
         
+        # Aspectos universales que aplican a casi cualquier tema
         return [
-            {'category': category, 'query': query}
-            for category, query in all_aspects[:5]
+            {'category': 'informacion_general', 'query': f'{subject} información general descripción'},
+            {'category': 'historia_contexto', 'query': f'{subject} historia antecedentes contexto'},
+            {'category': 'caracteristicas', 'query': f'{subject} características principales aspectos importantes'},
+            {'category': 'impacto_relevancia', 'query': f'{subject} importancia relevancia impacto significado'},
+            {'category': 'actualidad', 'query': f'{subject} noticias recientes actualidad 2025'}
         ]
 
 # Funciones públicas para usar desde unified_web_search_tool.py
