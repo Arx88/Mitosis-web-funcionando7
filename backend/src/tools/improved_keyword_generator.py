@@ -1053,10 +1053,11 @@ Genera las búsquedas para "{subject}"."""
             ollama_service = OllamaService()
             
             # Generar respuesta usando el LLM
-            response = ollama_service.generate_completion(
+            response = ollama_service.generate_response(
                 prompt=prompt,
-                max_tokens=800,
-                temperature=0.7
+                context={'max_tokens': 800, 'temperature': 0.7},
+                use_tools=False,
+                task_id="search_generation"
             )
             
             if response and response.get('success') and response.get('content'):
