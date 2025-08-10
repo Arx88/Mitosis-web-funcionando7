@@ -1138,13 +1138,34 @@ La tarea se ejecutó correctamente y finalizó sin errores.
         logger.error(f"Error generating final report: {e}")
         return jsonify({"error": str(e)}), 500
 
-# ✅ ENDPOINT PARA SERVIR CAPTURAS DE PANTALLA - SEGÚN UpgardeRef.md SECCIÓN 4.1  
+# ✅ ENDPOINT PARA SERVIR CAPTURAS DE PANTALLA - MEJORADO PARA DIAGNÓSTICO
 @app.route('/api/files/screenshots/<task_id>/<filename>')
 def serve_screenshot(task_id, filename):
     """Serve screenshot files for real-time browser activity visualization"""
     try:
         screenshots_dir = f"/tmp/screenshots/{task_id}"
-        return send_from_directory(screenshots_dir, filename)
+        file_path = os.path.join(screenshots_dir, filename)
+        
+        # Verificar que el archivo existe y tiene contenido
+        if not os.path.exists(file_path):
+            logger.error(f"Screenshot file not found: {file_path}")
+            return jsonify({"error": "Screenshot not found"}), 404
+            
+        file_size = os.path.getsize(file_path)
+        if file_size == 0:
+            logger.error(f"Screenshot file is empty: {file_path}")
+            return jsonify({"error": "Screenshot file is empty"}), 404
+            
+        logger.info(f"Serving screenshot: {filename} (size: {file_size} bytes)")
+        
+        # Asegurar headers correctos para imágenes
+        response = send_from_directory(screenshots_dir, filename)
+        response.headers['Content-Type'] = 'image/jpeg'
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
+        
     except Exception as e:
         logger.error(f"Error serving screenshot {filename} for task {task_id}: {e}")
         return jsonify({"error": "Screenshot not found"}), 404
