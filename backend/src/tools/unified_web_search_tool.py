@@ -2660,10 +2660,11 @@ except Exception as e:
             self._emit_progress_eventlet(f"🌐 NAVEGACIÓN WEB: {description}")
     
     def _emit_browser_visual(self, data):
-        """🔥 LOGGING COMPREHENSIVO: Rastrear eventos browser_visual paso a paso"""
+        """🔥 EMIT BROWSER_VISUAL - VERSIÓN CORREGIDA PARA NAVEGACIÓN EN TIEMPO REAL"""
         
         # IMPORTAR PRIMERO ANTES DE USAR
         from datetime import datetime
+        import time
         
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         
