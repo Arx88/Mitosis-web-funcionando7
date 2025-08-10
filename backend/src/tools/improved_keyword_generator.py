@@ -1039,11 +1039,11 @@ class IntelligentKeywordGenerator:
                 ('legado', f'{subject} legado influencia impacto arte')
             ],
             'person_or_work': [
-                ('información', f'{subject} información general datos básicos'),
-                ('historia', f'{subject} historia orígenes desarrollo'),
-                ('características', f'{subject} características principales aspectos'),
-                ('impacto', f'{subject} importancia relevancia significado'),
-                ('actualidad', f'{subject} situación actual noticias recientes')
+                ('biografía', f'{subject} biografía historia personal política'),
+                ('trayectoria', f'{subject} trayectoria carrera política presidencial'),
+                ('ideología', f'{subject} ideología posiciones políticas propuestas'),
+                ('controversias', f'{subject} controversias polémicas críticas'),
+                ('actualidad', f'{subject} noticias recientes declaraciones 2025')
             ],
             'general_topic': [
                 ('definición', f'{subject} definición qué es conceptos'),
