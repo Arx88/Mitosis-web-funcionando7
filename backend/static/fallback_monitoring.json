@@ -115,5 +115,23 @@
     "attempts": 1,
     "is_fallback": false,
     "error_reason": null
+  },
+  {
+    "timestamp": "2025-08-10T10:37:33.487344",
+    "task_id": "task-1754822234843-1-1346",
+    "plan_source": "robust_direct_generation",
+    "success": true,
+    "attempts": 1,
+    "is_fallback": false,
+    "error_reason": null
+  },
+  {
+    "timestamp": "2025-08-10T10:40:02.669995",
+    "task_id": "task-1754822383976-2-1033",
+    "plan_source": "ai_generated_robust_attempt_2",
+    "success": true,
+    "attempts": 1,
+    "is_fallback": false,
+    "error_reason": null
   }
 ]
