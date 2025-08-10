@@ -27,7 +27,7 @@ import os
 from urllib.parse import urlparse
 
 # Configuration
-BACKEND_URL = "https://1c150135-aef6-469b-8b33-b4eca8ab0d6d.preview.emergentagent.com"
+BACKEND_URL = "https://62ce0bbb-d528-4241-84f3-572bb0f8170d.preview.emergentagent.com"
 
 class RealTimeBrowserNavigationTester:
     def __init__(self):
