@@ -903,18 +903,54 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
         }}
         ref={monitorRef}
       >
-        {/* Header del Monitor con indicador de tamaño */}
+        {/* Header del Monitor con indicador de tamaño y selector de vista */}
         <div className="flex flex-col h-full">
           <div className="px-3 py-2 bg-[#1a1a1a] border-b border-[rgba(255,255,255,0.08)]">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-300">Monitor de Ejecución</h3>
+              <div className="flex items-center gap-3">
+                <h3 className="text-sm font-medium text-gray-300">Monitor de Ejecución</h3>
+                
+                {/* Selector de vista: Terminal vs Feedback */}
+                <div className="flex bg-[#2a2a2a] rounded-lg p-1">
+                  <button
+                    onClick={() => setShowFeedbackPanel(false)}
+                    className={`text-xs px-3 py-1 rounded-md transition-all ${
+                      !showFeedbackPanel 
+                        ? 'bg-[#3a3a3a] shadow-sm text-white' 
+                        : 'text-gray-400 hover:text-gray-200'
+                    }`}
+                  >
+                    📺 Terminal
+                  </button>
+                  <button
+                    onClick={() => setShowFeedbackPanel(true)}
+                    className={`text-xs px-3 py-1 rounded-md transition-all ${
+                      showFeedbackPanel 
+                        ? 'bg-[#3a3a3a] shadow-sm text-white' 
+                        : 'text-gray-400 hover:text-gray-200'
+                    }`}
+                  >
+                    📊 Feedback
+                  </button>
+                </div>
+              </div>
               <div className="text-xs text-gray-500">
                 {Math.round(100 - chatWidthPercent)}%
               </div>
             </div>
           </div>
           <div className="flex-1 min-h-0">
-            {terminalView}
+            {showFeedbackPanel ? (
+              <div className="h-full p-2">
+                <RealTimeFeedbackPanel 
+                  taskId={task.id} 
+                  isVisible={true}
+                  showDocument={true}
+                />
+              </div>
+            ) : (
+              terminalView
+            )}
           </div>
         </div>
       </div>
