@@ -986,87 +986,179 @@ class IntelligentKeywordGenerator:
                 return 'general_topic'
     
     def _generate_searches_by_type_generic(self, subject: str, subject_type: str, mentioned_aspects: List[str]) -> List[Dict[str, str]]:
-        """🎯 Generar búsquedas específicas basadas en el tipo de tema"""
+        """🎯 GENERAR BÚSQUEDAS INTELIGENTES USANDO LLM - SIN PLANTILLAS HARDCODEADAS"""
         searches = []
         
-        # Plantillas por tipo de tema
-        search_templates = {
-            'entertainment': [
-                ('trama', f'{subject} trama historia argumento resumen'),
-                ('personajes', f'{subject} personajes principales protagonistas reparto'),
-                ('crítica', f'{subject} críticas reseñas puntuación recepción'),
-                ('contexto', f'{subject} contexto producción trasfondo'),
-                ('impacto', f'{subject} impacto cultural legado influencia')
-            ],
-            'music': [
-                ('historia', f'{subject} historia formación miembros banda'),
-                ('discografía', f'{subject} discografía álbumes canciones hits'),
-                ('estilo', f'{subject} estilo musical género evolución'),
-                ('logros', f'{subject} premios reconocimientos logros'),
-                ('actualidad', f'{subject} noticias recientes conciertos giras')
-            ],
-            'person': [
-                ('biografía', f'{subject} biografía vida personal historia'),
-                ('carrera', f'{subject} carrera trayectoria profesional'),
-                ('logros', f'{subject} logros reconocimientos premios'),
-                ('posiciones', f'{subject} posiciones ideología propuestas'),
-                ('actualidad', f'{subject} noticias recientes declaraciones 2025')
-            ],
-            'technology': [
-                ('definición', f'{subject} definición conceptos básicos explicación'),
-                ('aplicaciones', f'{subject} aplicaciones usos prácticos ejemplos'),
-                ('ventajas', f'{subject} ventajas beneficios impacto positivo'),
-                ('desafíos', f'{subject} desventajas riesgos limitaciones'),
-                ('futuro', f'{subject} tendencias futuro 2025 innovaciones')
-            ],
-            'economics': [
-                ('situación', f'{subject} situación actual estado 2025'),
-                ('causas', f'{subject} causas factores antecedentes'),
-                ('efectos', f'{subject} efectos consecuencias impacto'),
-                ('políticas', f'{subject} políticas medidas propuestas'),
-                ('perspectivas', f'{subject} perspectivas futuro pronósticos')
-            ],
-            'literature': [
-                ('trama', f'{subject} trama resumen argumento historia'),
-                ('personajes', f'{subject} personajes principales protagonistas'),
-                ('análisis', f'{subject} análisis literario temas símbolos'),
-                ('contexto', f'{subject} contexto histórico época ambientación'),
-                ('crítica', f'{subject} crítica literaria recepción reseñas')
-            ],
-            'art': [
-                ('biografía', f'{subject} biografía vida personal historia'),
-                ('obras', f'{subject} obras principales trabajos destacados'),
-                ('estilo', f'{subject} estilo artístico técnica características'),
-                ('contexto', f'{subject} contexto histórico época artística'),
-                ('legado', f'{subject} legado influencia impacto arte')
-            ],
-            'person_or_work': [
-                ('biografía', f'{subject} biografía historia personal política'),
-                ('trayectoria', f'{subject} trayectoria carrera política presidencial'),
-                ('ideología', f'{subject} ideología posiciones políticas propuestas'),
-                ('controversias', f'{subject} controversias polémicas críticas'),
-                ('actualidad', f'{subject} noticias recientes declaraciones 2025')
-            ],
-            'general_topic': [
-                ('definición', f'{subject} definición qué es conceptos'),
-                ('aspectos', f'{subject} aspectos principales características'),
-                ('importancia', f'{subject} importancia relevancia significado'),
-                ('contexto', f'{subject} contexto situación actual'),
-                ('perspectivas', f'{subject} análisis opiniones perspectivas')
-            ]
-        }
+        try:
+            # USAR LLM PARA GENERAR BÚSQUEDAS INTELIGENTES Y ADAPTATIVAS
+            searches = self._generate_intelligent_searches_with_llm(subject, subject_type, mentioned_aspects)
+            
+            if searches and len(searches) >= 3:
+                print(f"✅ LLM generó {len(searches)} búsquedas inteligentes para '{subject}'")
+                return searches
+            else:
+                print(f"⚠️ LLM generó pocas búsquedas ({len(searches)}), usando fallback")
+                
+        except Exception as e:
+            print(f"⚠️ Error usando LLM para búsquedas: {e}, usando fallback")
         
-        # Usar plantilla por defecto si no se encuentra el tipo
-        templates = search_templates.get(subject_type, search_templates['general_topic'])
+        # FALLBACK INTELIGENTE - Solo cuando el LLM falla
+        return self._generate_fallback_searches(subject, mentioned_aspects)
+    
+    def _generate_intelligent_searches_with_llm(self, subject: str, subject_type: str, mentioned_aspects: List[str]) -> List[Dict[str, str]]:
+        """🧠 USAR LLM PARA GENERAR BÚSQUEDAS GRANULARES INTELIGENTES"""
         
-        # Generar búsquedas
-        for category, query in templates:
-            searches.append({
-                'query': query,
-                'category': category
-            })
+        # Construir prompt inteligente para el LLM
+        aspects_text = f" Los siguientes aspectos fueron mencionados: {', '.join(mentioned_aspects)}." if mentioned_aspects else ""
         
-        return searches
+        prompt = f"""Eres un experto investigador. Necesito generar 5 búsquedas web específicas y granulares para obtener información completa sobre: "{subject}".{aspects_text}
+
+Las búsquedas deben:
+1. Ser específicas y relevantes al tema
+2. Cubrir diferentes aspectos importantes del tema
+3. Usar palabras clave efectivas para motores de búsqueda
+4. Ser complementarias entre sí (no redundantes)
+5. Incluir información actualizada cuando sea relevante
+
+Formato de respuesta (JSON):
+{{
+  "searches": [
+    {{"category": "aspecto1", "query": "búsqueda específica 1"}},
+    {{"category": "aspecto2", "query": "búsqueda específica 2"}},
+    {{"category": "aspecto3", "query": "búsqueda específica 3"}},
+    {{"category": "aspecto4", "query": "búsqueda específica 4"}},
+    {{"category": "aspecto5", "query": "búsqueda específica 5"}}
+  ]
+}}
+
+Ejemplos de aspectos según el tipo de tema:
+- Personas: biografía, carrera, logros, controversias, actualidad
+- Tecnología: definición, aplicaciones, beneficios, riesgos, tendencias
+- Entretenimiento: trama, personajes, críticas, producción, impacto
+- Eventos: causas, desarrollo, consecuencias, análisis, cobertura
+
+Genera las búsquedas para "{subject}"."""
+
+        try:
+            # Importar OllamaService para generar respuestas inteligentes
+            import sys
+            import os
+            sys.path.append('/app/backend')
+            
+            from backend.src.services.ollama_service import OllamaService
+            
+            print(f"🧠 Consultando LLM para generar búsquedas inteligentes sobre '{subject}'...")
+            
+            # Crear instancia del servicio Ollama
+            ollama_service = OllamaService()
+            
+            # Generar respuesta usando el LLM
+            response = ollama_service.generate_completion(
+                prompt=prompt,
+                max_tokens=800,
+                temperature=0.7
+            )
+            
+            if response and response.get('success') and response.get('content'):
+                content = response['content'].strip()
+                print(f"🔍 Respuesta LLM recibida: {content[:200]}...")
+                
+                # Parsear respuesta JSON del LLM
+                searches = self._parse_llm_search_response(content)
+                
+                if searches:
+                    print(f"✅ LLM generó {len(searches)} búsquedas inteligentes exitosamente")
+                    return searches
+                else:
+                    print("⚠️ Error parseando respuesta JSON del LLM")
+            else:
+                print("⚠️ LLM no generó respuesta válida")
+                
+        except ImportError:
+            print("⚠️ OllamaService no disponible")
+        except Exception as e:
+            print(f"⚠️ Error ejecutando LLM: {e}")
+        
+        return []
+    
+    def _parse_llm_search_response(self, llm_response: str) -> List[Dict[str, str]]:
+        """📝 Parsear respuesta JSON del LLM"""
+        import json
+        import re
+        
+        try:
+            # Intentar extraer JSON de la respuesta
+            # Buscar bloque JSON
+            json_match = re.search(r'\{.*"searches".*\}', llm_response, re.DOTALL)
+            
+            if json_match:
+                json_str = json_match.group(0)
+                data = json.loads(json_str)
+                
+                if 'searches' in data and isinstance(data['searches'], list):
+                    searches = []
+                    
+                    for search_item in data['searches']:
+                        if isinstance(search_item, dict) and 'category' in search_item and 'query' in search_item:
+                            searches.append({
+                                'category': search_item['category'].strip(),
+                                'query': search_item['query'].strip()
+                            })
+                    
+                    return searches[:5]  # Máximo 5 búsquedas
+            
+            # Fallback: intentar parsear línea por línea si no hay JSON válido
+            lines = llm_response.split('\n')
+            searches = []
+            
+            for line in lines:
+                if ':' in line and len(searches) < 5:
+                    parts = line.split(':', 1)
+                    if len(parts) == 2:
+                        category = parts[0].strip().replace('-', '').replace('*', '').strip()
+                        query = parts[1].strip()
+                        
+                        if len(category) > 0 and len(query) > 10:
+                            searches.append({
+                                'category': category,
+                                'query': query
+                            })
+            
+            return searches
+            
+        except Exception as e:
+            print(f"⚠️ Error parseando respuesta LLM: {e}")
+            return []
+    
+    def _generate_fallback_searches(self, subject: str, mentioned_aspects: List[str]) -> List[Dict[str, str]]:
+        """🛠️ FALLBACK INTELIGENTE cuando el LLM no funciona"""
+        
+        print(f"🔄 Generando búsquedas fallback inteligentes para '{subject}'")
+        
+        # Aspectos universales que aplican a casi cualquier tema
+        universal_aspects = [
+            ('información_general', f'{subject} información general descripción'),
+            ('historia_contexto', f'{subject} historia antecedentes contexto'),
+            ('características', f'{subject} características principales aspectos importantes'),
+            ('impacto_relevancia', f'{subject} importancia relevancia impacto significado'),
+            ('actualidad', f'{subject} noticias recientes actualidad 2025')
+        ]
+        
+        # Si hay aspectos mencionados específicos, priorizarlos
+        if mentioned_aspects:
+            specific_searches = []
+            for aspect in mentioned_aspects[:3]:  # Máximo 3 aspectos específicos
+                specific_searches.append((aspect, f'{subject} {aspect} información detallada'))
+            
+            # Combinar aspectos específicos con universales
+            all_aspects = specific_searches + universal_aspects[len(specific_searches):]
+        else:
+            all_aspects = universal_aspects
+        
+        return [
+            {'category': category, 'query': query}
+            for category, query in all_aspects[:5]
+        ]
 
 # Funciones públicas para usar desde unified_web_search_tool.py
 def get_intelligent_keywords(query_text: str) -> str:
