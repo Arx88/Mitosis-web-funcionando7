@@ -960,7 +960,9 @@ class IntelligentKeywordGenerator:
             return 'entertainment'
         elif any(indicator in query_lower for indicator in ['banda', 'música', 'cantante', 'artista musical']):
             return 'music'  
-        elif any(indicator in query_lower for indicator in ['presidente', 'político', 'líder', 'personalidad']):
+        elif (any(indicator in query_lower for indicator in ['presidente', 'político', 'líder', 'personalidad']) or
+              any(name in subject_lower for name in ['javier milei', 'milei', 'cristina fernández', 'alberto fernández', 
+                                                    'mauricio macri', 'sergio massa', 'biden', 'trump', 'putin'])):
             return 'person'
         elif any(indicator in query_lower for indicator in ['tecnología', 'ciencia', 'científico', 'técnico']):
             return 'technology'
