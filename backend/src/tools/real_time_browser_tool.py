@@ -164,31 +164,62 @@ class RealTimeBrowserTool(BaseTool):
             self._cleanup_resources()
     
     def _setup_x11_server(self):
-        """🖥️ CONFIGURAR SERVIDOR X11 VIRTUAL PARA NAVEGACIÓN VISIBLE"""
+        """🖥️ CONFIGURAR SERVIDOR X11 VIRTUAL PARA NAVEGACIÓN VISIBLE - VERSIÓN ROBUSTA"""
         try:
-            # Configurar display virtual
+            # Configurar display virtual GLOBALMENTE
             display_num = 99
-            os.environ['DISPLAY'] = f':{display_num}'
+            display_var = f':{display_num}'
+            os.environ['DISPLAY'] = display_var
             
-            # VERIFICAR SI YA HAY UN SERVIDOR X11 CORRIENDO
+            # 🔧 CONFIGURAR VARIABLE DISPLAY A NIVEL DE SISTEMA TAMBIÉN
             try:
-                # Verificar si el display :99 ya está en uso
-                result = subprocess.run(['xset', '-display', f':{display_num}', 'q'], 
-                                      capture_output=True, timeout=5)
-                if result.returncode == 0:
-                    self._emit_progress(f"✅ Servidor X11 virtual ya está corriendo en display :{display_num}")
-                    self._emit_browser_visual({
-                        'type': 'x11_server_ready',
-                        'message': '🖥️ Servidor X11 virtual detectado y listo - Navegación visible habilitada',
-                        'display': f':{display_num}',
-                        'resolution': '1920x1080',
-                        'reused_existing': True,
-                        'timestamp': time.time()
-                    })
-                    return  # Servidor ya existe, no necesitamos crear uno nuevo
-            except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError):
-                # xset no está disponible o display no existe, necesitamos crear servidor
-                pass
+                with open('/etc/environment', 'r') as f:
+                    env_content = f.read()
+                
+                if 'DISPLAY=' not in env_content:
+                    with open('/etc/environment', 'a') as f:
+                        f.write(f'\nDISPLAY={display_var}\n')
+                    self._emit_progress(f"✅ Variable DISPLAY configurada globalmente: {display_var}")
+            except Exception as e:
+                self._emit_progress(f"⚠️ No se pudo configurar DISPLAY global: {e}")
+            
+            # VERIFICAR SI YA HAY UN SERVIDOR X11 CORRIENDO - MÉTODO MEJORADO
+            server_running = False
+            try:
+                # Verificar proceso Xvfb
+                result = subprocess.run(['pgrep', '-f', f'Xvfb.*:{display_num}'], 
+                                      capture_output=True, text=True)
+                if result.returncode == 0 and result.stdout.strip():
+                    server_running = True
+                    xvfb_pid = result.stdout.strip()
+                    self._emit_progress(f"✅ Servidor Xvfb ya corriendo (PID: {xvfb_pid}) en display :{display_num}")
+            except Exception as e:
+                self._emit_progress(f"⚠️ Error verificando proceso Xvfb: {e}")
+            
+            # Verificar conectividad al display (solo si xset está disponible)
+            if server_running:
+                try:
+                    # Intentar instalar xset si no está disponible
+                    subprocess.run(['which', 'xset'], capture_output=True, check=True)
+                    
+                    result = subprocess.run(['xset', '-display', display_var, 'q'], 
+                                          capture_output=True, timeout=5)
+                    if result.returncode == 0:
+                        self._emit_progress(f"✅ Display {display_var} verificado y accesible")
+                        self._emit_browser_visual({
+                            'type': 'x11_server_ready',
+                            'message': '🖥️ Servidor X11 virtual detectado y listo - Navegación visible habilitada',
+                            'display': display_var,
+                            'resolution': '1920x1080',
+                            'reused_existing': True,
+                            'timestamp': time.time()
+                        })
+                        return
+                except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError):
+                    # xset no disponible, pero Xvfb está corriendo, asumimos que está bien
+                    if server_running:
+                        self._emit_progress(f"✅ Xvfb corriendo, continuando (xset no disponible)")
+                        return
             
             # CREAR NUEVO SERVIDOR X11 SOLO SI NO EXISTE UNO
             # Verificar si Xvfb está disponible
