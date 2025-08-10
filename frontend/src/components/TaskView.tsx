@@ -71,6 +71,7 @@ const TaskViewComponent: React.FC<TaskViewProps> = ({
   
   const [showFilesModal, setShowFilesModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showFeedbackPanel, setShowFeedbackPanel] = useState(false);
   
   // ========================================================================
   // ESTADO PARA REDIMENSIONAMIENTO RESPONSIVO
