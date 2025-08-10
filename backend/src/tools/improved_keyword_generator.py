@@ -158,10 +158,17 @@ class IntelligentKeywordGenerator:
         
         # VALIDACIÓN 2: Sin duplicaciones de palabras
         unique_words = list(dict.fromkeys(words))  # Mantener orden, remover duplicados
+        
+        # DEBUG: Imprimir para detectar problema
+        print(f"🐛 DEBUG DUPLICACIONES:")
+        print(f"   Palabras originales: {words}")
+        print(f"   Palabras únicas: {unique_words}")
+        print(f"   Longitud original: {len(words)}, Longitud única: {len(unique_words)}")
+        
         if len(unique_words) == len(words):
             approval_reasons.append("Sin duplicaciones")
         else:
-            rejection_reasons.append("Contiene palabras duplicadas")
+            rejection_reasons.append(f"Contiene palabras duplicadas: {words} → {unique_words}")
         
         # VALIDACIÓN 3: Preserva tema principal del contexto original
         main_subjects = self._extract_known_subjects(original_text)
