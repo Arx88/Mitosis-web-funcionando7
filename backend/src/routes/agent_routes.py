@@ -2107,7 +2107,7 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
             'summary': f'❌ Error en búsqueda múltiple: {str(e)}'
         }
 
-def generate_intelligent_specific_searches(title: str, description: str, original_message: str) -> list:
+def generate_intelligent_specific_searches(title: str, description: str, original_message: str) -> List[str]:
     """
     🧠 GENERADOR INTELIGENTE DE BÚSQUEDAS ESPECÍFICAS
     
