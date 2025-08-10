@@ -394,84 +394,95 @@ class IntelligentKeywordGenerator:
         return searches if len(searches) > 1 else []
     
     def _extract_main_subject_generic(self, query_text: str) -> str:
-        """🎯 Extraer el tema/sujeto principal de CUALQUIER consulta"""
+        """🎯 Extraer el tema/sujeto principal de CUALQUIER consulta - VERSIÓN CORREGIDA"""
         import re
         
-        # MÉTODO 1: Buscar después de palabras clave
+        print(f"🔍 EXTRACTING SUBJECT FROM: '{query_text}'")
+        
+        # MÉTODO 1: Buscar términos específicos después de palabras clave (MÁS PRECISO)
         subject_patterns = [
-            r'sobre\s+"([^"]+)"',  # sobre "tema"
-            r'sobre\s+([A-Z][a-zA-Z\s]+?)(?:\s*-|\.|$)',  # sobre Tema
-            r'información\s+(?:completa\s+)?sobre\s+([a-zA-Z\s]+?)(?:\s*-|\.|$)',
-            r'datos\s+(?:completos\s+)?sobre\s+([a-zA-Z\s]+?)(?:\s*-|\.|$)',
-            r'investigar\s+(?:sobre\s+)?([a-zA-Z\s]+?)(?:\s*-|\.|$)',
-            r'análisis\s+(?:de\s+)?([a-zA-Z\s]+?)(?:\s*-|\.|$)',
-            r'buscar\s+información\s+(?:completa\s+)?sobre\s+([a-zA-Z\s]+?)(?:\s*-|\.|$)'
+            # Patrones con delimitadores claros
+            r'sobre\s+"([^"]+)"',  # sobre "tema exacto"
+            r'sobre\s+([a-zA-Z][a-zA-Z\s]+?)\s*(?:-|\.|\||$)',  # sobre tema -
+            r'información\s+(?:completa\s+)?sobre\s+([a-zA-Z][a-zA-Z\s]+?)\s*(?:-|\.|\||$)',
+            r'datos\s+(?:completos\s+)?sobre\s+([a-zA-Z][a-zA-Z\s]+?)\s*(?:-|\.|\||$)',
+            r'investigar\s+(?:sobre\s+)?([a-zA-Z][a-zA-Z\s]+?)\s*(?:-|\.|\||$)',
+            r'buscar\s+información\s+(?:completa\s+)?sobre\s+([a-zA-Z][a-zA-Z\s]+?)\s*(?:-|\.|\||$)'
         ]
         
         for pattern in subject_patterns:
             match = re.search(pattern, query_text, re.IGNORECASE)
             if match:
                 subject = match.group(1).strip()
-                # Limpiar y validar
-                subject = re.sub(r'\s+', ' ', subject)  # Espacios múltiples
-                if len(subject) > 2 and not subject.lower() in ['información', 'datos', 'sobre']:
+                subject = re.sub(r'\s+', ' ', subject)  # Limpiar espacios múltiples
+                
+                # Validar que no sean palabras meta
+                meta_words = ['información', 'datos', 'sobre', 'análisis', 'buscar', 'completa', 'completar']
+                if (len(subject) > 3 and 
+                    not any(meta.lower() in subject.lower() for meta in meta_words) and
+                    not subject.lower() in ['y', 'el', 'la', 'los', 'las', 'de', 'del', 'con']):
+                    print(f"✅ SUBJECT FOUND (Method 1): '{subject}'")
                     return subject
         
         # MÉTODO 2: Buscar nombres propios (2+ palabras capitalizadas)
         proper_nouns = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b', query_text)
         for noun in proper_nouns:
-            if len(noun.split()) >= 2:  # Al menos 2 palabras
+            if len(noun.split()) >= 2:
+                print(f"✅ SUBJECT FOUND (Method 2 - Proper Nouns): '{noun}'")
                 return noun
         
-        # MÉTODO 3: Buscar frases importantes sin capitalización (ej: "cambio climático")
-        # Buscar después de palabras clave, incluso sin mayúsculas
-        lowercase_patterns = [
-            r'sobre\s+([a-z][a-z\s]+?)(?:\s*-|\.|,|y\s)',
-            r'información\s+sobre\s+([a-z][a-z\s]+?)(?:\s*-|\.|,|y\s)',
-            r'investigar\s+sobre\s+([a-z][a-z\s]+?)(?:\s*-|\.|,|y\s)',
-            r'datos\s+sobre\s+([a-z][a-z\s]+?)(?:\s*-|\.|,|y\s)'
+        # MÉTODO 3: Buscar términos compuestos comunes (sin capitalización)
+        # Términos compuestos importantes conocidos
+        known_compounds = [
+            r'\bcambio\s+climático\b',
+            r'\bcalentamiento\s+global\b',
+            r'\binteligencia\s+artificial\b',
+            r'\bmachine\s+learning\b',
+            r'\baprendizaje\s+automático\b',
+            r'\beconomía\s+argentina\b',
+            r'\beconomía\s+mundial\b',
+            r'\bcriptomonedas\b',
+            r'\benergía\s+renovable\b',
+            r'\bmedio\s+ambiente\b',
+            r'\brecursos\s+naturales\b',
+            r'\bdesarrollo\s+sostenible\b'
         ]
         
-        for pattern in lowercase_patterns:
-            match = re.search(pattern, query_text, re.IGNORECASE)
+        for compound_pattern in known_compounds:
+            match = re.search(compound_pattern, query_text, re.IGNORECASE)
             if match:
-                subject = match.group(1).strip()
-                # Filtrar palabras meta
-                if (len(subject) > 5 and 
-                    not any(meta in subject.lower() for meta in ['información', 'datos', 'sobre', 'análisis', 'buscar'])):
-                    return subject.title()  # Capitalizar primera letra de cada palabra
+                subject = match.group(0)
+                print(f"✅ SUBJECT FOUND (Method 3 - Known Compounds): '{subject}'")
+                return subject.title()
         
-        # MÉTODO 4: Buscar términos compuestos importantes
-        compound_terms = re.findall(r'\b[a-z]+\s+[a-z]+\b', query_text.lower())
-        important_compounds = []
+        # MÉTODO 4: Buscar cualquier término compuesto de 2+ palabras
+        compound_terms = re.findall(r'\b[a-zA-Z]{3,}\s+[a-zA-Z]{3,}(?:\s+[a-zA-Z]{3,})?\b', query_text)
         
         # Filtrar compuestos que no son palabras meta
-        meta_words = {'información sobre', 'datos sobre', 'buscar información', 'investigar sobre', 
-                     'análisis de', 'estudiar sobre', 'recopilar información'}
+        meta_phrases = {
+            'información sobre', 'datos sobre', 'buscar información', 'investigar sobre', 
+            'análisis de', 'estudiar sobre', 'recopilar información', 'información completa',
+            'datos completos', 'búsqueda web', 'realizar búsqueda'
+        }
         
         for compound in compound_terms:
-            if (compound not in meta_words and 
+            compound_lower = compound.lower()
+            if (compound_lower not in meta_phrases and 
                 len(compound) > 8 and  # Al menos 8 caracteres
-                not any(meta in compound for meta in ['información', 'datos', 'sobre', 'buscar'])):
-                important_compounds.append(compound.title())
-        
-        if important_compounds:
-            return important_compounds[0]
+                not any(meta in compound_lower for meta in ['información', 'datos', 'buscar', 'investigar', 'sobre', 'realizar'])):
+                print(f"✅ SUBJECT FOUND (Method 4 - Generic Compounds): '{compound}'")
+                return compound.title()
         
         # MÉTODO 5: Buscar nombres propios simples importantes
-        single_nouns = re.findall(r'\b[A-Z][a-z]{3,}\b', query_text)
-        important_single = []
-        
-        # Filtrar nombres comunes que no son temas
-        skip_words = {'Investigar', 'Buscar', 'Datos', 'Información', 'Análisis', 'Sobre', 'Para', 'Con'}
+        single_nouns = re.findall(r'\b[A-Z][a-z]{4,}\b', query_text)
+        skip_words = {'Investigar', 'Buscar', 'Datos', 'Información', 'Análisis', 'Sobre', 'Para', 'Con', 'Realizar'}
         
         for noun in single_nouns:
-            if noun not in skip_words and len(noun) > 3:
-                important_single.append(noun)
+            if noun not in skip_words:
+                print(f"✅ SUBJECT FOUND (Method 5 - Single Proper Noun): '{noun}'")
+                return noun
         
-        if important_single:
-            return important_single[0]  # Tomar el primero
-        
+        print("❌ NO SUBJECT EXTRACTED")
         return None
     
     def _extract_mentioned_aspects(self, query_text: str) -> List[str]:
