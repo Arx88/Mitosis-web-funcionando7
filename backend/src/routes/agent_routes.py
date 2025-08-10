@@ -2055,6 +2055,23 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
             consolidated_content = consolidate_multi_search_content(all_content, title, description)
             unique_sources = len(set(content['source'] for content in all_content if content.get('source')))
             
+            # 💡 GENERAR INSIGHTS EN TIEMPO REAL
+            feedback_manager.add_insight(
+                task_id=task_id,
+                step_id=step_id,
+                insight_type="data_summary",
+                title=f"Recolección completada: {len(specific_searches)} búsquedas",
+                content=f"Se recolectaron {total_results_count} resultados de {unique_sources} fuentes únicas. Contenido consolidado: {len(consolidated_content)} caracteres.",
+                confidence=0.9
+            )
+            
+            # ✅ MARCAR RECOLECCIÓN COMO COMPLETADA
+            feedback_manager.complete_step_collection(
+                task_id=task_id,
+                step_id=step_id,
+                summary=f"Búsqueda múltiple exitosa: {len(specific_searches)} búsquedas específicas, {total_results_count} resultados, {unique_sources} fuentes únicas"
+            )
+            
             logger.info(f"✅ BÚSQUEDA MÚLTIPLE COMPLETADA:")
             logger.info(f"   • {len(specific_searches)} búsquedas específicas ejecutadas")
             logger.info(f"   • {total_results_count} resultados totales recolectados")
