@@ -2,7 +2,7 @@
 
 ## 📊 Estado: ✅ COMPLETAMENTE OPERATIVO (Sistema Actualizado)
 **Última Actualización**: 2025-01-24 - Sesión E1 Agente Autónomo
-**URL Externa**: https://ad01276f-2e57-4cb2-85ba-0b92009c892c.preview.emergentagent.com
+**URL Externa**: https://1c150135-aef6-469b-8b33-b4eca8ab0d6d.preview.emergentagent.com
 
 ---
 
@@ -60,7 +60,7 @@ dist/                             # Build de producción OPTIMIZADO ✅
 - **Base de Datos**: MongoDB operacional con persistencia ✅
 - **WebSocket**: Eventos en tiempo real funcionando perfectamente ✅
 - **CORS**: Configuración ultra-dinámica para múltiples dominios ✅
-- **URL Externa**: https://ad01276f-2e57-4cb2-85ba-0b92009c892c.preview.emergentagent.com ✅
+- **URL Externa**: https://1c150135-aef6-469b-8b33-b4eca8ab0d6d.preview.emergentagent.com ✅
 
 ### ✅ NAVEGACIÓN WEB EN TIEMPO REAL - COMPLETAMENTE IMPLEMENTADA
 - **X11 Virtual**: ✅ Display :99 (PID 2085) - FUNCIONANDO PERFECTAMENTE
@@ -176,7 +176,7 @@ ENDPOINT                    STATUS    FUNCIÓN                 RESULTADO
 
 ### ✅ VARIABLES DE ENTORNO (AUTO-CONFIGURADAS)
 ```
-REACT_APP_BACKEND_URL=https://ad01276f-2e57-4cb2-85ba-0b92009c892c.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://1c150135-aef6-469b-8b33-b4eca8ab0d6d.preview.emergentagent.com
 MONGO_URL=mongodb://localhost:27017/mitosis
 OLLAMA_BASE_URL=https://e8da53409283.ngrok-free.app
 TAVILY_API_KEY=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
