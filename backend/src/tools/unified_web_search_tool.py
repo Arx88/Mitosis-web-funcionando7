@@ -553,7 +553,7 @@ class UnifiedWebSearchTool(BaseTool):
             if BROWSER_MANAGER_AVAILABLE and self.task_id:
                 try:
                     # Inicializar WebBrowserManager con browser-use para screenshots reales
-                    self.browser_manager = WebBrowserManager(self.task_id)
+                    self.browser_manager = WebBrowserManager(self.websocket_manager, self.task_id)
                     self._emit_progress_eventlet("📸 Browser Manager inicializado - Screenshots habilitados")
                 except Exception as browser_error:
                     self._emit_progress_eventlet(f"⚠️ Browser Manager error: {str(browser_error)}")
