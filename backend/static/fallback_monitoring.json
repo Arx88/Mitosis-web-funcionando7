@@ -421,5 +421,14 @@
     "attempts": 1,
     "is_fallback": false,
     "error_reason": null
+  },
+  {
+    "timestamp": "2025-08-10T15:24:50.823201",
+    "task_id": "test-browser-navigation-1754839475",
+    "plan_source": "ai_generated_robust_attempt_1",
+    "success": true,
+    "attempts": 1,
+    "is_fallback": false,
+    "error_reason": null
   }
 ]
