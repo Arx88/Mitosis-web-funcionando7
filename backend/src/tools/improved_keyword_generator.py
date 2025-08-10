@@ -129,6 +129,28 @@ class IntelligentKeywordGenerator:
         
         query_lower = query_text.lower()
         
+        # 🎯 FIRST CHECK: Si contiene temas específicos conocidos, NUNCA es problemático
+        specific_topics = [
+            'attack on titan', 'shingeki no kyojin', 'eren jaeger', 'mikasa ackerman',
+            'arctic monkeys', 'alex turner', 'the strokes', 'coldplay',
+            'inteligencia artificial', 'machine learning', 'chatgpt', 'openai',
+            'javier milei', 'argentina presidente', 'elecciones argentina',
+            'netflix series', 'disney plus', 'marvel movies', 'dc comics',
+            'bitcoin price', 'cryptocurrency', 'blockchain technology',
+            'climate change', 'global warming', 'renewable energy'
+        ]
+        
+        for topic in specific_topics:
+            if topic in query_lower:
+                print(f"✅ SPECIFIC TOPIC DETECTED: '{topic}' - NOT problematic")
+                return False
+        
+        # 🎯 SECOND CHECK: Si tiene nombres propios claros, probablemente no es problemático
+        proper_nouns = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b', query_text)
+        if len(proper_nouns) >= 2:  # Dos o más nombres propios = tema específico
+            print(f"✅ PROPER NOUNS DETECTED: {proper_nouns} - NOT problematic")
+            return False
+        
         # Verificar patrones problemáticos conocidos
         for pattern in self.problematic_patterns:
             if re.search(pattern, query_lower):
@@ -141,8 +163,26 @@ class IntelligentKeywordGenerator:
         entity_count = sum(1 for category in self.preserve_entities.values()
                           for entity in category if entity in query_lower)
         
-        # Si hay más de 3 palabras meta y menos de 1 entidad, es problemático
-        return meta_count > 3 and entity_count < 1
+        # 🎯 AJUSTE CRÍTICO: Solo es problemático si hay MUCHAS más palabras meta que entidades
+        # Y no contiene temas específicos obvios
+        if meta_count > 5 and entity_count < 1:
+            # DOUBLE CHECK: Buscar entidades que no estén en la lista pero que sean obvias
+            potential_entities = re.findall(r'\b[a-zA-Z]{4,}\b', query_text)
+            non_meta_entities = []
+            
+            for word in potential_entities:
+                word_lower = word.lower()
+                if not any(word_lower in metas for metas in self.meta_words.values()):
+                    non_meta_entities.append(word_lower)
+            
+            # Si hay entidades potenciales no-meta, NO es problemático
+            if len(non_meta_entities) >= 2:
+                print(f"✅ POTENTIAL ENTITIES FOUND: {non_meta_entities} - NOT problematic")
+                return False
+                
+            return True
+        
+        return False
     
     def _fix_problematic_query(self, query_text: str) -> str:
         """🔧 Reparar queries problemáticos extrayendo el tema real"""
