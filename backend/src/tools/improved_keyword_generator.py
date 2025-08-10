@@ -730,13 +730,39 @@ class IntelligentKeywordGenerator:
         1. Personas públicas conocidas (políticos, artistas, etc.)
         2. Temas complejos (tecnología, economía, etc.) 
         3. Obras de entretenimiento (series, películas, libros)
-        4. Eventos o fenómenos importantes
-        5. Solicitudes explícitas de información comprehensiva
+        4. VIDEOJUEGOS (Age of Empires, etc.) - NUEVO CRITERIO CRÍTICO
+        5. Eventos o fenómenos importantes
+        6. Solicitudes explícitas de información comprehensiva
         """
         subject_lower = subject.lower()
         query_lower = query_text.lower()
         
         print(f"🔍 EVALUATING GRANULAR NEED FOR: '{subject}' (type: {subject_type})")
+        
+        # 🎮 CRITERIO CRÍTICO NUEVO: VIDEOJUEGOS SIEMPRE NECESITAN GRANULARIDAD
+        videogame_indicators = [
+            # Términos específicos de videojuegos
+            'age of empires', 'age empires', 'aoe', 'civilization', 'civ', 'total war',
+            'counter strike', 'cs:go', 'cs2', 'valorant', 'league of legends', 'lol',
+            'dota', 'fortnite', 'minecraft', 'world of warcraft', 'wow', 'overwatch',
+            'call of duty', 'cod', 'battlefield', 'apex legends', 'fifa', 'pes',
+            'grand theft auto', 'gta', 'red dead redemption', 'the witcher',
+            # Contexto de videojuegos
+            'mecánicas de juego', 'mecánicas juego', 'gameplay', 'jugabilidad',
+            'expansiones', 'dlc', 'actualizaciones', 'parches', 'patches',
+            'estadísticas de jugadores', 'stats jugadores', 'ranking', 'competitivo',
+            'impacto cultural gaming', 'comunidad gaming', 'esports', 'e-sports',
+            'meta del juego', 'meta game', 'builds', 'estrategias juego'
+        ]
+        
+        # Detectar videojuegos o contexto gaming
+        is_videogame = (any(indicator in subject_lower for indicator in videogame_indicators) or
+                       any(indicator in query_lower for indicator in videogame_indicators))
+        
+        if is_videogame:
+            print(f"🎮 VIDEOJUEGO DETECTADO - GRANULARIDAD AUTOMÁTICA REQUERIDA")
+            print(f"🎯 Contexto gaming identificado en: '{subject}' o '{query_text[:50]}...'")
+            return True
         
         # CRITERIO 1: PERSONAS PÚBLICAS CONOCIDAS - SIEMPRE necesitan granularidad
         known_public_figures = [
@@ -758,7 +784,7 @@ class IntelligentKeywordGenerator:
                 return True
         
         # CRITERIO 2: TIPOS DE TEMA QUE INHERENTEMENTE NECESITAN GRANULARIDAD
-        granular_subject_types = ['person', 'entertainment', 'music', 'technology', 'economics', 'literature', 'art']
+        granular_subject_types = ['person', 'entertainment', 'music', 'technology', 'economics', 'literature', 'art', 'videogames', 'gaming']
         
         if subject_type in granular_subject_types:
             print(f"✅ TIPO DE TEMA COMPLEJO: {subject_type} - GRANULARIDAD REQUERIDA")
@@ -776,7 +802,10 @@ class IntelligentKeywordGenerator:
             'chatgpt', 'openai', 'tesla', 'spacex',
             # Conceptos complejos
             'cambio climático', 'calentamiento global', 'crisis económica',
-            'guerra en ucrania', 'pandemia covid'
+            'guerra en ucrania', 'pandemia covid',
+            # 🎮 VIDEOJUEGOS ESPECÍFICOS AGREGADOS
+            'age of empires 2', 'age empires 2', 'civilization 6', 'total war warhammer',
+            'counter strike 2', 'valorant competitive', 'league legends meta'
         ]
         
         for topic in complex_topics:
@@ -795,7 +824,10 @@ class IntelligentKeywordGenerator:
             'información detallada', 'datos detallados', 'análisis detallado',
             'informe sobre', 'reporte sobre', 'investigar', 'buscar datos',
             'biografía', 'trayectoria', 'historia', 'antecedentes',
-            'características', 'propiedades', 'aspectos'
+            'características', 'propiedades', 'aspectos',
+            # 🎮 INDICADORES GAMING ESPECÍFICOS
+            'mecánicas de juego', 'historia del juego', 'expansiones', 
+            'estadísticas de jugadores', 'impacto cultural', 'comunidad gaming'
         ]
         
         has_comprehensive_request = any(indicator in query_lower for indicator in comprehensive_indicators)
