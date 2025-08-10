@@ -208,8 +208,24 @@ class IntelligentKeywordGenerator:
         else:
             rejection_reasons.append("Query demasiado genérica")
         
-        # DECISIÓN DE APROBACIÓN: Debe pasar al menos 4 de las 6 validaciones
-        approved = len(approval_reasons) >= 4 and len(rejection_reasons) <= 2
+        # DECISIÓN DE APROBACIÓN: 
+        # 1. RECHAZOS AUTOMÁTICOS: Ciertas validaciones son OBLIGATORIAS
+        automatic_rejections = [
+            'Contiene palabras duplicadas',
+            'No preserva tema principal identificado',
+            'Longitud incorrecta'
+        ]
+        
+        has_automatic_rejection = any(
+            any(auto_reject in reason for auto_reject in automatic_rejections) 
+            for reason in rejection_reasons
+        )
+        
+        if has_automatic_rejection:
+            approved = False  # Rechazo automático
+        else:
+            # 2. APROBACIÓN NORMAL: Debe pasar al menos 4 de las 6 validaciones  
+            approved = len(approval_reasons) >= 4 and len(rejection_reasons) <= 2
         
         return {
             'approved': approved,
