@@ -1052,30 +1052,105 @@ class IntelligentKeywordGenerator:
         return self._generate_fallback_searches(subject, mentioned_aspects)
     
     def _generate_intelligent_searches_with_llm(self, subject: str, subject_type: str, mentioned_aspects: List[str]) -> List[Dict[str, str]]:
-        """🧠 USAR LLM PARA GENERAR BÚSQUEDAS GRANULARES INTELIGENTES"""
+        """🧠 USAR LLM PARA GENERAR BÚSQUEDAS GRANULARES INTELIGENTES Y ESPECÍFICAS"""
         
-        # Construir prompt inteligente y conciso para el LLM - CORREGIDO PARA EVITAR ALUCINACIONES
+        # Construir prompt inteligente y específico según el tipo de tema
         aspects_text = f" Aspectos mencionados: {', '.join(mentioned_aspects)}." if mentioned_aspects else ""
         
-        prompt = f"""Para el tema "{subject}", genera 5 búsquedas web efectivas pero GENERALES.{aspects_text}
+        # 🎮 PROMPT ESPECIALIZADO PARA VIDEOJUEGOS
+        if subject_type == 'videogames':
+            prompt = f"""Para el videojuego "{subject}", genera 5 búsquedas web específicas y efectivas que cubran diferentes aspectos del juego.{aspects_text}
 
-IMPORTANTE: No inventes eventos específicos, fechas exactas, o entrevistas particulares. Usa términos generales que permitan encontrar información actual.
+IMPORTANTE: Genera búsquedas ESPECÍFICAS y ÚTILES para obtener información real y detallada del videojuego.
+
+Aspectos típicos de videojuegos a cubrir:
+- Historia y lore del juego
+- Mecánicas de juego y gameplay
+- Expansiones, DLCs y actualizaciones
+- Comunidad, estadísticas de jugadores y competitivo
+- Impacto cultural y reviews
 
 Responde SOLO con JSON:
 {{"searches": [
-  {{"category": "aspecto1", "query": "búsqueda general efectiva 1"}},
-  {{"category": "aspecto2", "query": "búsqueda general efectiva 2"}},  
-  {{"category": "aspecto3", "query": "búsqueda general efectiva 3"}},
-  {{"category": "aspecto4", "query": "búsqueda general efectiva 4"}},
-  {{"category": "aspecto5", "query": "búsqueda general efectiva 5"}}
+  {{"category": "historia_lore", "query": "{subject} historia lore argumento campaña"}},
+  {{"category": "mecanicas_gameplay", "query": "{subject} mecánicas juego gameplay guía estrategia"}},
+  {{"category": "expansiones_dlc", "query": "{subject} expansiones DLC actualizaciones nuevas versiones"}},
+  {{"category": "comunidad_stats", "query": "{subject} estadísticas jugadores ranking competitivo comunidad"}},
+  {{"category": "impacto_reviews", "query": "{subject} reviews críticas impacto cultural gaming"}}
 ]}}
 
-Ejemplos de búsquedas GENERALES efectivas:
-- "{subject} biografía historia personal"
-- "{subject} últimas noticias 2025" 
-- "{subject} posiciones políticas ideología"
-- "{subject} controversias polémicas"
-- "{subject} declaraciones recientes actualidad"
+NO inventes nombres específicos de expansiones o fechas exactas."""
+
+        # 👤 PROMPT ESPECIALIZADO PARA PERSONAS
+        elif subject_type == 'person':
+            prompt = f"""Para la persona "{subject}", genera 5 búsquedas web específicas y efectivas.{aspects_text}
+
+IMPORTANTE: Usa términos generales que permitan encontrar información actual y verificable.
+
+Responde SOLO con JSON:
+{{"searches": [
+  {{"category": "biografia_personal", "query": "{subject} biografía historia personal vida"}},
+  {{"category": "carrera_trayectoria", "query": "{subject} carrera trayectoria profesional logros"}},
+  {{"category": "posiciones_ideologia", "query": "{subject} posiciones políticas ideología declaraciones"}},
+  {{"category": "noticias_actualidad", "query": "{subject} noticias recientes actualidad 2025"}},
+  {{"category": "controversias_debates", "query": "{subject} controversias polémicas debates críticas"}}
+]}}
+
+NO inventes eventos específicos o fechas exactas."""
+
+        # 🎬 PROMPT ESPECIALIZADO PARA ENTRETENIMIENTO
+        elif subject_type == 'entertainment':
+            prompt = f"""Para la obra de entretenimiento "{subject}", genera 5 búsquedas web específicas.{aspects_text}
+
+Responde SOLO con JSON:
+{{"searches": [
+  {{"category": "trama_historia", "query": "{subject} trama historia argumento sinopsis"}},
+  {{"category": "personajes", "query": "{subject} personajes principales protagonistas análisis"}},
+  {{"category": "produccion_desarrollo", "query": "{subject} producción desarrollo creación detrás escenas"}},
+  {{"category": "recepcion_criticas", "query": "{subject} críticas reviews recepción audiencia"}},
+  {{"category": "impacto_legado", "query": "{subject} impacto cultural legado influencia"}}
+]}}"""
+
+        # 🎵 PROMPT ESPECIALIZADO PARA MÚSICA
+        elif subject_type == 'music':
+            prompt = f"""Para el artista/banda "{subject}", genera 5 búsquedas web específicas.{aspects_text}
+
+Responde SOLO con JSON:
+{{"searches": [
+  {{"category": "biografia_historia", "query": "{subject} biografía historia formación banda"}},
+  {{"category": "discografia_canciones", "query": "{subject} discografía álbumes canciones populares"}},
+  {{"category": "estilo_influencias", "query": "{subject} estilo musical influencias género"}},
+  {{"category": "conciertos_giras", "query": "{subject} conciertos giras tours presentaciones vivo"}},
+  {{"category": "actualidad_proyectos", "query": "{subject} actualidad nuevo álbum proyectos 2025"}}
+]}}"""
+
+        # 💻 PROMPT ESPECIALIZADO PARA TECNOLOGÍA
+        elif subject_type == 'technology':
+            prompt = f"""Para el tema de tecnología "{subject}", genera 5 búsquedas web específicas.{aspects_text}
+
+Responde SOLO con JSON:
+{{"searches": [
+  {{"category": "definicion_concepto", "query": "{subject} definición concepto explicación básica"}},
+  {{"category": "funcionamiento_tecnico", "query": "{subject} cómo funciona aspectos técnicos"}},
+  {{"category": "aplicaciones_usos", "query": "{subject} aplicaciones usos casos reales ejemplos"}},
+  {{"category": "ventajas_desventajas", "query": "{subject} ventajas beneficios desventajas riesgos"}},
+  {{"category": "tendencias_futuro", "query": "{subject} tendencias futuro 2025 desarrollo"}}
+]}}"""
+
+        # 💰 PROMPT GENÉRICO PARA OTROS TEMAS
+        else:
+            prompt = f"""Para el tema "{subject}", genera 5 búsquedas web efectivas pero GENERALES.{aspects_text}
+
+IMPORTANTE: No inventes eventos específicos, fechas exactas, o detalles particulares. Usa términos generales que permitan encontrar información actual.
+
+Responde SOLO con JSON:
+{{"searches": [
+  {{"category": "informacion_general", "query": "{subject} información general descripción"}},
+  {{"category": "historia_antecedentes", "query": "{subject} historia antecedentes origen desarrollo"}},
+  {{"category": "caracteristicas_aspectos", "query": "{subject} características aspectos importantes"}},
+  {{"category": "impacto_relevancia", "query": "{subject} importancia relevancia impacto significado"}},
+  {{"category": "actualidad_tendencias", "query": "{subject} actualidad tendencias noticias 2025"}}
+]}}
 
 NO uses eventos específicos inventados."""
 
@@ -1087,7 +1162,7 @@ NO uses eventos específicos inventados."""
             
             from backend.src.services.ollama_service import OllamaService
             
-            print(f"🧠 Consultando LLM para generar búsquedas inteligentes sobre '{subject}'...")
+            print(f"🧠 Consultando LLM para generar búsquedas inteligentes sobre '{subject}' (tipo: {subject_type})...")
             
             # Crear instancia del servicio Ollama
             ollama_service = OllamaService()
