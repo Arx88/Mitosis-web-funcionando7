@@ -1310,6 +1310,9 @@ class RealTimeBrowserTool(BaseTool):
     def _emit_browser_visual(self, data: Dict[str, Any]):
         """📡 EMITIR EVENTO BROWSER_VISUAL AL FRONTEND"""
         
+        # 🚀 LOGGING CRÍTICO: Verificar estado de websocket_manager
+        print(f"🔥 [REAL_TIME_BROWSER] _emit_browser_visual called: websocket_manager={self.websocket_manager is not None}, task_id={self.task_id}")
+        
         if self.websocket_manager and self.task_id:
             try:
                 # Añadir task_id y timestamp si no están presentes
@@ -1318,6 +1321,8 @@ class RealTimeBrowserTool(BaseTool):
                     'timestamp': data.get('timestamp', time.time()),
                     **data
                 }
+                
+                print(f"✅ [REAL_TIME_BROWSER] Emiting browser_visual: {enhanced_data.get('message', 'No message')}")
                 
                 # Emitir evento browser_visual
                 self.websocket_manager.emit_to_task(self.task_id, 'browser_visual', enhanced_data)
@@ -1329,8 +1334,30 @@ class RealTimeBrowserTool(BaseTool):
                     **enhanced_data
                 })
                 
+                print(f"✅ [REAL_TIME_BROWSER] browser_visual event sent successfully")
+                
             except Exception as e:
                 print(f"⚠️ Error emitiendo browser_visual: {str(e)}")
+        else:
+            print(f"⚠️ [REAL_TIME_BROWSER] Cannot emit browser_visual: websocket_manager={self.websocket_manager is not None}, task_id={self.task_id}")
+            
+            # FALLBACK: Intentar usar método directo del servidor
+            try:
+                import server
+                if hasattr(server, 'socketio') and server.socketio and self.task_id:
+                    enhanced_data = {
+                        'task_id': self.task_id,
+                        'timestamp': data.get('timestamp', time.time()),
+                        **data
+                    }
+                    
+                    room = f"task_{self.task_id}"
+                    server.socketio.emit('browser_visual', enhanced_data, room=room)
+                    print(f"✅ [REAL_TIME_BROWSER] browser_visual sent via direct server fallback")
+                else:
+                    print(f"⚠️ [REAL_TIME_BROWSER] Direct server fallback also failed")
+            except Exception as fallback_error:
+                print(f"⚠️ [REAL_TIME_BROWSER] Fallback error: {fallback_error}")
     
     def _emit_progress(self, message: str):
         """📝 EMITIR MENSAJE DE PROGRESO"""
