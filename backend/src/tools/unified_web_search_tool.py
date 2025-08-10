@@ -2690,6 +2690,57 @@ except Exception as e:
                 pass
             print(f"⚠️ No task_id for browser_visual: {data}")
             return False
+
+        # ✅ CORRECCIÓN CRÍTICA: MÉTODO DIRECTO CON SERVIDOR SOCKETIO
+        try:
+            # Importar servidor Flask principal
+            import server
+            
+            if hasattr(server, 'socketio') and server.socketio:
+                enhanced_data = {
+                    **data,
+                    'task_id': self.task_id,
+                    'timestamp': datetime.now().isoformat(),
+                    'server_timestamp': time.time()
+                }
+                
+                room = f"task_{self.task_id}"
+                
+                # Emitir evento browser_visual directamente
+                server.socketio.emit('browser_visual', enhanced_data, room=room)
+                
+                # También emitir como task_update para compatibilidad
+                server.socketio.emit('task_update', {
+                    'type': 'browser_visual',
+                    'data': enhanced_data
+                }, room=room)
+                
+                print(f"✅ BROWSER_VISUAL EVENT SENT DIRECTLY: {enhanced_data.get('message', 'Screenshot capturado')} to room {room}")
+                
+                # Confirmar en terminal también
+                terminal_message = f"📸 NAVEGACIÓN VISUAL: {enhanced_data.get('message', 'Screenshot capturado')}"
+                self._emit_progress_eventlet(terminal_message)
+                
+                try:
+                    with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                        f.write(f"BROWSER_VISUAL_DIRECT_SUCCESS: Event sent to room {room}\n")
+                        f.write(f"=== EMIT_BROWSER_VISUAL END (DIRECT_SUCCESS) ===\n\n")
+                        f.flush()
+                except:
+                    pass
+                
+                return True
+            else:
+                print(f"⚠️ Server socketio not available for browser_visual")
+                
+        except Exception as direct_error:
+            print(f"⚠️ Direct socketio error: {direct_error}")
+            try:
+                with open('/tmp/websocket_comprehensive.log', 'a') as f:
+                    f.write(f"BROWSER_VISUAL_DIRECT_ERROR: {str(direct_error)}\n")
+                    f.flush()
+            except:
+                pass
         
         # PASO 3: Intentar método Flask SocketIO SEGURO (NEW)
         try:
