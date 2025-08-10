@@ -939,6 +939,16 @@ class UnifiedWebSearchTool(BaseTool):
             
             self._emit_progress_eventlet(f"🔍 FILTRADO: {len(pages_with_content)} páginas con contenido real de {len(pages_visited)} visitadas")
             
+            # 🔄 REGISTRAR PROGRESO EN SISTEMA DE FEEDBACK
+            if self.feedback_system:
+                completion_percentage = min(90.0, (len(pages_with_content) / max(max_results, 1)) * 80 + 10)
+                self.feedback_system.log_step_progress(
+                    "Procesando resultados web",
+                    f"Filtradas {len(pages_with_content)} páginas con contenido de {len(pages_visited)} visitadas",
+                    completion_percentage,
+                    f"Contenido total extraído: {sum(p.get('content_length', 0) for p in pages_with_content)} caracteres"
+                )
+            
             # Crear resultados basados SOLO en páginas con contenido real
             for i, page_data in enumerate(pages_with_content[:max_results]):
                 # Buscar screenshot correspondiente a esta página
