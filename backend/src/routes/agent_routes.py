@@ -2211,6 +2211,120 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
             'summary': f'❌ Error en búsqueda múltiple: {str(e)}'
         }
 
+def execute_web_search_con_recoleccion_en_vivo(title: str, description: str, tool_manager, task_id: str, original_message: str) -> dict:
+    """
+    🔍 BÚSQUEDA WEB CON RECOLECCIÓN DOCUMENTADA EN TIEMPO REAL
+    
+    Esta función utiliza la nueva herramienta que documenta en tiempo real
+    TODA la información que va recolectando, mostrando en el terminal del taskview
+    cada sitio visitado y el contenido extraído.
+    """
+    try:
+        logger.info(f"🔍 INICIANDO BÚSQUEDA WEB CON RECOLECCIÓN EN VIVO: {title}")
+        
+        # Generar query inteligente
+        raw_query = f"{title} {description} {original_message}".strip()
+        
+        # Extraer términos de búsqueda limpios
+        import re
+        
+        # Remover texto de instrucción común
+        clean_query = raw_query.lower()
+        instruction_words = [
+            'buscar', 'información', 'sobre', 'acerca', 'investigar', 'analizar',
+            'encontrar', 'obtener', 'datos', 'específicos', 'necesarios', 'web_search'
+        ]
+        
+        for word in instruction_words:
+            clean_query = re.sub(rf'\b{word}\b', '', clean_query, flags=re.IGNORECASE)
+        
+        # Limpiar espacios y caracteres extra
+        clean_query = ' '.join(clean_query.split())[:100]  # Limitar a 100 caracteres
+        
+        if not clean_query.strip():
+            clean_query = title[:50]  # Fallback al título
+        
+        logger.info(f"🎯 Query procesado: '{clean_query}'")
+        
+        # Usar la nueva herramienta de recolección en vivo
+        if tool_manager and hasattr(tool_manager, 'execute_tool'):
+            result = tool_manager.execute_tool('web_search_con_recoleccion', {
+                'query': clean_query,
+                'max_sitios': 6,  # Explorar 6 sitios para información completa
+                'profundidad_contenido': 'completo'
+            }, config={'task_id': task_id})
+            
+            if result and hasattr(result, 'success') and result.success:
+                # Extraer información de la respuesta
+                data = result.data
+                sitios_explorados = data.get('sitios_explorados', 0)
+                total_caracteres = data.get('contenido_total_caracteres', 0)
+                documento_path = data.get('documento_path', '')
+                
+                logger.info(f"✅ RECOLECCIÓN EN VIVO COMPLETADA:")
+                logger.info(f"   📊 Sitios explorados: {sitios_explorados}")
+                logger.info(f"   📄 Caracteres recolectados: {total_caracteres:,}")
+                logger.info(f"   📋 Documento generado: {documento_path}")
+                
+                # Notificar éxito al WebSocket
+                websocket_manager = get_websocket_manager()
+                if websocket_manager:
+                    websocket_manager.send_log_message(
+                        task_id, 
+                        "success", 
+                        f"✅ Recolección en vivo completada: {sitios_explorados} sitios, {total_caracteres:,} caracteres documentados"
+                    )
+                
+                return {
+                    'success': True,
+                    'type': 'web_search_con_recoleccion_en_vivo',
+                    'title': title,
+                    'content': f"Recolección en tiempo real completada exitosamente. Se exploraron {sitios_explorados} sitios web y se recolectaron {total_caracteres:,} caracteres de información. Todo el contenido ha sido documentado en tiempo real en: {documento_path}",
+                    'search_results': data.get('resultados_detallados', {}),
+                    'sitios_explorados': sitios_explorados,
+                    'total_caracteres': total_caracteres,
+                    'documento_path': documento_path,
+                    'query_usado': clean_query,
+                    'timestamp': data.get('timestamp', datetime.now().isoformat()),
+                    'summary': f"✅ Búsqueda con recolección en vivo: {sitios_explorados} sitios documentados, {total_caracteres:,} caracteres extraídos"
+                }
+            else:
+                error_message = result.error if hasattr(result, 'error') else "Error desconocido en herramienta"
+                logger.error(f"❌ Error en herramienta de recolección: {error_message}")
+                
+                return {
+                    'success': False,
+                    'error': error_message,
+                    'type': 'web_search_con_recoleccion_error',
+                    'summary': f'❌ Error en recolección en vivo: {error_message}'
+                }
+        else:
+            logger.error("❌ Tool manager no disponible")
+            return {
+                'success': False,
+                'error': 'Tool manager no disponible',
+                'type': 'tool_manager_error',
+                'summary': '❌ Error: Tool manager no disponible'
+            }
+    
+    except Exception as e:
+        logger.error(f"❌ Error en búsqueda web con recolección en vivo: {str(e)}")
+        
+        # Notificar error via WebSocket
+        websocket_manager = get_websocket_manager()
+        if websocket_manager:
+            websocket_manager.send_log_message(
+                task_id, 
+                "error", 
+                f"❌ Error en recolección en vivo: {str(e)}"
+            )
+        
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'web_search_con_recoleccion_error',
+            'summary': f'❌ Error en recolección en vivo: {str(e)}'
+        }
 def generate_intelligent_specific_searches(title: str, description: str, original_message: str) -> List[str]:
     """
     🧠 GENERADOR INTELIGENTE DE BÚSQUEDAS ESPECÍFICAS
