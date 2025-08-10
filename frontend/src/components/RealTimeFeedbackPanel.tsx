@@ -67,45 +67,46 @@ const RealTimeFeedbackPanel: React.FC<RealTimeFeedbackPanelProps> = ({
 
   useEffect(() => {
     if (isVisible && taskId) {
-      setIsLoading(true);
-      fetchFeedback().finally(() => setIsLoading(false));
+      fetchFeedback();
       
-      // Actualizar cada 3 segundos
-      const interval = setInterval(fetchFeedback, 3000);
+      // Actualizar cada 5 segundos para mostrar información en tiempo real
+      const interval = setInterval(fetchFeedback, 5000);
       return () => clearInterval(interval);
     }
   }, [taskId, isVisible]);
 
-  // Auto-scroll al final cuando hay nuevo feedback
+  // Auto-scroll al final cuando hay nueva información
   useEffect(() => {
     if (feedbackRef.current) {
       feedbackRef.current.scrollTop = feedbackRef.current.scrollHeight;
     }
-  }, [feedbackHistory]);
+  }, [feedbackData?.collected_data]);
 
   if (!isVisible) return null;
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
+  const getDataTypeIcon = (dataType: string) => {
+    switch (dataType) {
+      case 'search_result': return '🔍';
+      case 'scraped_content': return '📄';
       case 'website_visit': return '🌐';
-      case 'information_extraction': return '📊';
-      case 'step_progress': return '⚡';
-      case 'screenshot_with_context': return '📸';
-      default: return '📄';
+      case 'screenshot': return '📸';
+      case 'insight': return '💡';
+      default: return '📊';
     }
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'website_visit': return 'text-blue-600';
-      case 'information_extraction': return 'text-green-600';
-      case 'step_progress': return 'text-purple-600';
-      case 'screenshot_with_context': return 'text-orange-600';
+  const getDataTypeColor = (dataType: string) => {
+    switch (dataType) {
+      case 'search_result': return 'text-blue-600';
+      case 'scraped_content': return 'text-green-600';
+      case 'website_visit': return 'text-purple-600';
+      case 'screenshot': return 'text-orange-600';
+      case 'insight': return 'text-yellow-600';
       default: return 'text-gray-600';
     }
   };
 
-  const formatTime = (timestamp: number) => {
+  const formatTimestamp = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleTimeString();
   };
 
