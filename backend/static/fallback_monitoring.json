@@ -61,5 +61,41 @@
     "attempts": 1,
     "is_fallback": false,
     "error_reason": null
+  },
+  {
+    "timestamp": "2025-08-10T10:03:12.986027",
+    "task_id": "task-1754820170865-1-3111",
+    "plan_source": "ai_generated_robust_attempt_1",
+    "success": true,
+    "attempts": 1,
+    "is_fallback": false,
+    "error_reason": null
+  },
+  {
+    "timestamp": "2025-08-10T10:03:32.194916",
+    "task_id": "task-1754820188221-2-4429",
+    "plan_source": "ai_generated_robust_attempt_1",
+    "success": true,
+    "attempts": 1,
+    "is_fallback": false,
+    "error_reason": null
+  },
+  {
+    "timestamp": "2025-08-10T10:04:51.578797",
+    "task_id": "task-1754820276408-3-9854",
+    "plan_source": "ai_generated_robust_attempt_1",
+    "success": true,
+    "attempts": 1,
+    "is_fallback": false,
+    "error_reason": null
+  },
+  {
+    "timestamp": "2025-08-10T10:09:30.916329",
+    "task_id": "task-1754820376828-4-4499",
+    "plan_source": "ai_generated_robust_attempt_1",
+    "success": true,
+    "attempts": 1,
+    "is_fallback": false,
+    "error_reason": null
   }
 ]
