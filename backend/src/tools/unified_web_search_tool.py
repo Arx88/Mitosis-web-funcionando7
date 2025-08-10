@@ -2742,177 +2742,24 @@ except Exception as e:
             except:
                 pass
         
-        # PASO 3: Intentar método Flask SocketIO SEGURO (NEW)
+        # FALLBACK: Si el método directo falló, usar fallback simple
         try:
-            from flask import current_app
+            terminal_message = f"📸 NAVEGACIÓN VISUAL: {data.get('message', 'Screenshot capturado')}"
+            self._emit_progress_eventlet(terminal_message)
+            print(f"⚠️ BROWSER_VISUAL FALLBACK: {terminal_message}")
             
-            with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                f.write(f"BROWSER_VISUAL_STEP_3: Attempting Flask SAFE SocketIO method\n")
-                f.flush()
-            
-            # 🚀 CRITICAL FIX: Usar método seguro que verifica clientes listos
-            if hasattr(current_app, 'emit_browser_visual_safe'):
-                enhanced_data = {
-                    **data,
-                    'task_id': self.task_id,
-                    'timestamp': datetime.now().isoformat()
-                }
-                
+            try:
                 with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                    f.write(f"BROWSER_VISUAL_STEP_3_SAFE: Using safe emit method for task {self.task_id}\n")
+                    f.write(f"BROWSER_VISUAL_FALLBACK: Using terminal message as fallback\n")
+                    f.write(f"=== EMIT_BROWSER_VISUAL END (FALLBACK) ===\n\n")
                     f.flush()
-                
-                # Usar método seguro que verifica clientes
-                result = current_app.emit_browser_visual_safe(self.task_id, data)
-                
-                with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                    f.write(f"BROWSER_VISUAL_STEP_3_SAFE_RESULT: Safe emit result: {result}\n")
-                    f.flush()
-                
-                if result:
-                    print(f"✅ BROWSER_VISUAL EVENT SENT SAFELY: {data.get('type')} to task {self.task_id}")
-                    
-                    # Mensaje de confirmación en terminal
-                    terminal_message = f"📸 NAVEGACIÓN VISUAL: {data.get('message', 'Screenshot capturado')}"
-                    self._emit_progress_eventlet(terminal_message)
-                    
-                    with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                        f.write(f"=== EMIT_BROWSER_VISUAL END (SAFE_SUCCESS) ===\n\n")
-                        f.flush()
-                    
-                    return True
-                else:
-                    with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                        f.write(f"BROWSER_VISUAL_STEP_3_SAFE_FAIL: No ready clients for task {self.task_id}\n")
-                        f.flush()
-                    print(f"⚠️ No ready clients for browser_visual in task {self.task_id}")
+            except:
+                pass
             
-            # Fallback a método anterior si el seguro no está disponible
-            app_available = hasattr(current_app, 'socketio') and current_app.socketio
+            return False  # Indicar que el evento visual no se pudo enviar directamente
             
-            with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                f.write(f"BROWSER_VISUAL_STEP_3_FALLBACK: app_available={app_available}\n")
-                f.flush()
-            
-            if app_available:
-                enhanced_data = {
-                    **data,
-                    'task_id': self.task_id,
-                    'timestamp': datetime.now().isoformat()
-                }
-                
-                room = self.task_id
-                
-                with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                    f.write(f"BROWSER_VISUAL_STEP_3_FALLBACK_EMIT: room={room}, enhanced_data={enhanced_data}\n")
-                    f.flush()
-                
-                # Emitir browser_visual
-                result1 = current_app.socketio.emit('browser_visual', enhanced_data, room=room)
-                
-                # Emitir como task_update también
-                result2 = current_app.socketio.emit('task_update', {
-                    'type': 'browser_visual',
-                    'data': enhanced_data
-                }, room=room)
-                
-                with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                    f.write(f"BROWSER_VISUAL_STEP_3_FALLBACK_SUCCESS: Flask SocketIO emit results: {result1}, {result2}\n")
-                    f.flush()
-                
-                print(f"✅ BROWSER_VISUAL EVENT SENT via Flask SocketIO FALLBACK: {data.get('type')} to room {room}")
-                
-                # Mensaje de confirmación en terminal
-                terminal_message = f"📸 NAVEGACIÓN VISUAL: {data.get('message', 'Screenshot capturado')}"
-                self._emit_progress_eventlet(terminal_message)
-                
-                with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                    f.write(f"=== EMIT_BROWSER_VISUAL END (FALLBACK_SUCCESS) ===\n\n")
-                    f.flush()
-                
-                return True
-                
-        except RuntimeError as ctx_error:
-            # No hay contexto de aplicación
-            with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                f.write(f"BROWSER_VISUAL_STEP_3_CTX_ERROR: {str(ctx_error)}\n")
-                f.flush()
-            print(f"⚠️ No Flask app context: {ctx_error}")
-            
-        except Exception as socketio_error:
-            with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                f.write(f"BROWSER_VISUAL_STEP_3_ERROR: {str(socketio_error)}\n")
-                f.flush()
-            print(f"⚠️ SocketIO error: {socketio_error}")
-        
-        # PASO 4: FALLBACK - WebSocket Manager method
-        try:
-            with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                f.write(f"BROWSER_VISUAL_STEP_4: Attempting WebSocket Manager fallback\n")
-                f.flush()
-            
-            has_websocket_manager = hasattr(self, 'websocket_manager') and self.websocket_manager
-            
-            with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                f.write(f"BROWSER_VISUAL_STEP_4_CHECK: has_websocket_manager={has_websocket_manager}\n")
-                f.flush()
-            
-            if has_websocket_manager:
-                enhanced_data = {
-                    **data,
-                    'task_id': self.task_id,
-                    'timestamp': datetime.now().isoformat()
-                }
-                
-                result = self.websocket_manager.emit_to_task(self.task_id, 'browser_visual', enhanced_data)
-                
-                with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                    f.write(f"BROWSER_VISUAL_STEP_4_SUCCESS: WebSocket Manager emit result: {result}\n")
-                    f.flush()
-                
-                print(f"✅ BROWSER_VISUAL EVENT SENT via WebSocket Manager: {data.get('type')}")
-                
-                with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                    f.write(f"=== EMIT_BROWSER_VISUAL END (WEBSOCKET_MANAGER_SUCCESS) ===\n\n")
-                    f.flush()
-                
-                return True
-            else:
-                with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                    f.write(f"BROWSER_VISUAL_STEP_4_FAIL: WebSocket Manager not available\n")
-                    f.flush()
-                    
-        except Exception as wm_error:
-            with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                f.write(f"BROWSER_VISUAL_STEP_4_ERROR: {str(wm_error)}\n")
-                f.flush()
-            print(f"⚠️ WebSocket Manager error: {wm_error}")
-        
-        # PASO 5: FALLBACK FINAL - Solo mensaje de progreso
-        try:
-            with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                f.write(f"BROWSER_VISUAL_STEP_5: Final fallback - progress message only\n")
-                f.flush()
-            
-            message = f"📸 NAVEGACIÓN VISUAL: {data.get('message', 'Screenshot capturado')}"
-            self._emit_progress_eventlet(message)
-            print(f"⚠️ BROWSER_VISUAL FALLBACK: {message}")
-            
-            with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                f.write(f"BROWSER_VISUAL_STEP_5_SUCCESS: Fallback message sent\n")
-                f.write(f"=== EMIT_BROWSER_VISUAL END (FALLBACK_SUCCESS) ===\n\n")
-                f.flush()
-            
-            return False
-            
-        except Exception as fallback_error:
-            with open('/tmp/websocket_comprehensive.log', 'a') as f:
-                f.write(f"BROWSER_VISUAL_STEP_5_ERROR: {str(fallback_error)}\n")
-                f.write(f"=== EMIT_BROWSER_VISUAL END (COMPLETE_FAILURE) ===\n\n")
-                f.flush()
-            
-            error_msg = f"❌ Error emitiendo browser_visual: {str(fallback_error)}"
-            print(error_msg)
+        except Exception as final_error:
+            print(f"❌ Final fallback error: {final_error}")
             return False
 
     def _generate_completion_screenshot(self):
