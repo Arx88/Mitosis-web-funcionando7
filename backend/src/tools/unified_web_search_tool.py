@@ -473,6 +473,16 @@ class UnifiedWebSearchTool(BaseTool):
             # 🔄 INICIALIZAR VISUALIZACIÓN EN TIEMPO REAL
             visualization_initialized = self._initialize_real_time_components()
             
+            # 🔄 INICIALIZAR SISTEMA DE FEEDBACK EN TIEMPO REAL
+            if self.task_id and self.websocket_manager:
+                self.feedback_system = RealTimeFeedbackSystem(self.task_id, self.websocket_manager)
+                self.feedback_system.log_step_progress(
+                    "Iniciando búsqueda web", 
+                    f"Preparando búsqueda: {query[:100]}...", 
+                    10.0,
+                    "Sistema de feedback en tiempo real activado"
+                )
+            
             # 🔍 EJECUTAR BÚSQUEDA CON VISUALIZACIÓN PASO A PASO
             results = self._execute_search_with_visualization(
                 query, search_engine, max_results, extract_content
