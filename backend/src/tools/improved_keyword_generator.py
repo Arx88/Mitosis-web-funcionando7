@@ -1060,8 +1060,8 @@ Genera las búsquedas para "{subject}"."""
                 task_id="search_generation"
             )
             
-            if response and response.get('success') and response.get('content'):
-                content = response['content'].strip()
+            if response and isinstance(response, dict) and response.get('response'):
+                content = response['response'].strip()
                 print(f"🔍 Respuesta LLM recibida: {content[:200]}...")
                 
                 # Parsear respuesta JSON del LLM
