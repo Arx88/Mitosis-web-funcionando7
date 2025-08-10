@@ -1509,7 +1509,9 @@ class RealTimeBrowserTool(BaseTool):
                 return True  # Éxito
                 
             except Exception as e:
-                print(f"⚠️ Error emitiendo browser_visual: {str(e)}")
+                print(f"❌ [REAL_TIME_BROWSER] Error emiting browser_visual: {str(e)}")
+                self._emit_progress(f"❌ Error emitiendo browser_visual: {str(e)}")
+                return False  # Fallo
         else:
             print(f"⚠️ [REAL_TIME_BROWSER] Cannot emit browser_visual: websocket_manager={self.websocket_manager is not None}, task_id={self.task_id}")
             
