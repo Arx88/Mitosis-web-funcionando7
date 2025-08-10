@@ -133,35 +133,40 @@ class UnifiedWebSearchTool(BaseTool):
         ]
     
     def _extract_clean_keywords_static(self, query_text: str) -> str:
-        """🎯 EXTRACTOR INTELIGENTE DE KEYWORDS - SOLUCIÓN CORREGIDA COMPLETA"""
+        """🎯 EXTRACTOR INTELIGENTE DE KEYWORDS MEJORADO - BÚSQUEDAS SIN TEMPLATES"""
         
         if not query_text or len(query_text.strip()) < 3:
             return "información actualizada"
         
-        print(f"🧠 EXTRACTOR INTELIGENTE INPUT: '{query_text}'")
+        print(f"🧠 GENERADOR INTELIGENTE DE BÚSQUEDAS INPUT: '{query_text}'")
         
-        # 🚀 USAR SIEMPRE EL GENERADOR INTELIGENTE COMO PRIMERA OPCIÓN
+        # 🚀 USAR GENERADOR INTELIGENTE MEJORADO COMO PRIMERA OPCIÓN
         try:
-            result = get_intelligent_keywords(query_text)
-            print(f"✅ INTELLIGENT EXTRACTION SUCCESS: '{query_text}' → '{result}'")
+            # Importar el generador inteligente mejorado
+            from .improved_keyword_generator import IntelligentKeywordGenerator
+            generator = IntelligentKeywordGenerator()
+            
+            result = generator.get_intelligent_keywords(query_text)
+            print(f"✅ BÚSQUEDA INTELIGENTE GENERADA: '{query_text}' → '{result}'")
             
             # ✅ VALIDACIÓN MEJORADA: Verificar que el resultado sea útil y relevante
             if (result and len(result.strip()) > 3 and 
                 result.strip() != query_text.strip() and  # No devolver lo mismo
                 'realiza informe' not in result.lower() and
                 'utilizar herramienta' not in result.lower() and
-                'específica sobre' not in result.lower() and  # ✅ NUEVO: Evitar este problema
-                len(result.split()) >= 1):  # Al menos una palabra útil
+                'específica sobre' not in result.lower() and
+                'información actualizada' != result.strip() and  # No genérico
+                len(result.split()) >= 2):  # Al menos dos palabras útiles
                 
-                # ✅ VALIDACIÓN ADICIONAL: Verificar que no sea solo años o palabras genéricas
+                # ✅ VALIDACIÓN ADICIONAL: Verificar que tenga contenido específico
                 if not result.strip().isdigit() and result.strip() not in ['2025', '2024', 'sobre', 'información']:
                     return result
                 else:
-                    print(f"⚠️ Resultado solo numérico o muy genérico: '{result}', usando fallback")
+                    print(f"⚠️ Resultado muy genérico: '{result}', intentando múltiples búsquedas")
             else:
-                print(f"⚠️ Resultado inválido detectado: '{result}', usando fallback")
+                print(f"⚠️ Resultado inválido detectado: '{result}', usando sistema granular")
         except Exception as e:
-            print(f"⚠️ Error en generador inteligente: {e}, usando fallback")
+            print(f"⚠️ Error en generador inteligente: {e}, usando sistema de backup")
         
         # 🛠️ FALLBACK MEJORADO COMO RESPALDO
         print("🔄 Usando lógica de fallback mejorada")
