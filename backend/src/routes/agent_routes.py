@@ -216,7 +216,7 @@ PLAN_SCHEMA = {
                     },
                     "tool": {
                         "type": "string",
-                        "enum": ["web_search", "analysis", "creation", "planning", "delivery", "processing", "synthesis", "search_definition", "data_analysis", "shell", "research", "investigation", "web_scraping", "search", "mind_map", "spreadsheets", "database"]
+                        "enum": ["web_search", "analysis", "creation", "planning", "delivery", "processing", "synthesis", "search_definition", "data_analysis", "shell", "research", "investigation", "web_scraping", "search", "mind_map", "spreadsheets", "database", "browser.open", "browser.wait", "browser.capture_screenshot", "browser.close", "send_file"]
                     },
                     "estimated_time": {
                         "type": "string"
