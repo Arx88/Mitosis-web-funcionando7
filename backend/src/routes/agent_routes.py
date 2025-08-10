@@ -794,6 +794,32 @@ def get_task_feedback(task_id: str):
             'timestamp': datetime.now().isoformat()
         }), 500
 
+@agent_bp.route('/cleanup-task-feedback/<task_id>', methods=['POST'])
+def cleanup_task_feedback(task_id: str):
+    """
+    🧹 ENDPOINT PARA LIMPIAR DATOS DE FEEDBACK DE UNA TAREA COMPLETADA
+    """
+    try:
+        feedback_manager = get_feedback_manager()
+        feedback_manager.cleanup_task_data(task_id)
+        
+        return jsonify({
+            'success': True,
+            'task_id': task_id,
+            'message': 'Feedback data cleaned successfully',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error cleaning task feedback for {task_id}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'task_id': task_id,
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@agent_bp.route('/get-all-tasks', methods=['GET'])
 def get_all_tasks():
     """
     🔄 ENDPOINT PARA OBTENER TODAS LAS TAREAS
