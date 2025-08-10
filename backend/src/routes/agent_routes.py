@@ -2010,10 +2010,22 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
                         all_search_results.extend(search_results)
                         total_results_count += len(search_results)
                         
-                        # Extraer contenido de cada resultado
-                        for result in search_results:
+                        # Extraer contenido de cada resultado y mostrar en tiempo real
+                        for j, result in enumerate(search_results):
                             content_part = result.get('snippet', '') or result.get('content', '')
                             if content_part and len(content_part) > 50:
+                                # 📥 AGREGAR DATOS AL FEEDBACK EN TIEMPO REAL
+                                feedback_manager.add_collected_data(
+                                    task_id=task_id,
+                                    step_id=step_id,
+                                    source=f"Búsqueda {i}: {search_query[:30]}...",
+                                    data_type="search_result",
+                                    title=result.get('title', f'Resultado {j+1}'),
+                                    content=content_part,
+                                    url=result.get('url', ''),
+                                    metadata={'search_query': search_query, 'result_index': j+1}
+                                )
+                                
                                 all_content.append({
                                     'search_query': search_query,
                                     'content': content_part,
