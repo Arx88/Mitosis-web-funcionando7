@@ -291,9 +291,20 @@ class IntelligentKeywordGenerator:
         return unique_entities[:6]  # Máximo 6 entidades más importantes
     
     def _extract_main_concepts(self, query_text: str) -> List[str]:
-        """💡 Extraer conceptos principales del texto"""
+        """💡 Extraer conceptos principales del texto - CORREGIDO PARA FILTRAR MEJOR"""
         
         concepts = []
+        
+        # 🔥 LISTA AMPLIADA DE PALABRAS META QUE NUNCA DEBEN INCLUIRSE
+        extended_meta_filter = {
+            'investigar', 'información', 'específica', 'buscar', 'datos', 'sobre', 'acerca',
+            'realizar', 'generar', 'crear', 'análisis', 'informe', 'completo', 'completa',
+            'recopilar', 'obtener', 'utilizar', 'herramienta', 'web', 'search', 'incluyendo',
+            'mediante', 'para', 'con', 'del', 'las', 'los', 'una', 'actualizada', 'actuales',
+            'relevante', 'relevantes', 'importante', 'importantes', 'necesario', 'necesaria',
+            'completar', 'desarrollo', 'específicos', 'general', 'generales', 'relacionados',
+            'relacionadas', 'particular', 'particulares', 'diversos', 'diversas'
+        }
         
         # Extraer palabras significativas (4+ caracteres)
         words = re.findall(r'\b[a-záéíóúñA-ZÁÉÍÓÚÑ]{4,}\b', query_text)
@@ -301,10 +312,12 @@ class IntelligentKeywordGenerator:
         for word in words:
             word_lower = word.lower()
             
-            # Incluir si NO es palabra meta
-            is_meta = any(word_lower in meta_category for meta_category in self.meta_words.values())
+            # DOBLE FILTRO: palabras meta del objeto + lista extendida
+            is_meta_original = any(word_lower in meta_category for meta_category in self.meta_words.values())
+            is_meta_extended = word_lower in extended_meta_filter
             
-            if not is_meta and len(word_lower) >= 4:
+            # Solo incluir si NO es palabra meta en ninguna de las listas
+            if not is_meta_original and not is_meta_extended and len(word_lower) >= 4:
                 concepts.append(word_lower)
         
         return concepts[:8]  # Máximo 8 conceptos
