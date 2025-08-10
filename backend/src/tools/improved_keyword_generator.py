@@ -602,7 +602,8 @@ class IntelligentKeywordGenerator:
         query_lower = query_text.lower()
         
         # Indicadores de tipo de tema
-        if any(indicator in query_lower for indicator in ['anime', 'manga', 'serie', 'película', 'film']):
+        if (any(indicator in query_lower for indicator in ['anime', 'manga', 'serie', 'película', 'film']) or
+            any(name in subject_lower for name in ['attack on titan', 'shingeki', 'naruto', 'one piece', 'dragon ball'])):
             return 'entertainment'
         elif any(indicator in query_lower for indicator in ['banda', 'música', 'cantante', 'artista musical']):
             return 'music'  
