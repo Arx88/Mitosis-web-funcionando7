@@ -3440,6 +3440,94 @@ def execute_browser_step(step_title: str, step_description: str, tool_manager, t
             'summary': f'❌ Error en {tool_name}: {str(e)}'
         }
 
+def execute_browser_step(step_title: str, step_description: str, tool_manager, task_id: str, tool_name: str, step: dict) -> dict:
+    """
+    🌐 EJECUTOR DE HERRAMIENTAS DE NAVEGADOR CON VISUALIZACIÓN EN TIEMPO REAL
+    
+    Ejecuta herramientas de navegador (browser.open, browser.wait, browser.capture_screenshot, 
+    browser.close, send_file) con visualización en tiempo real usando WebBrowserManager.
+    """
+    try:
+        logger.info(f"🌐 Ejecutando herramienta de navegador: {tool_name}")
+        logger.info(f"   📝 Título: {step_title}")
+        logger.info(f"   📄 Descripción: {step_description}")
+        
+        # Verificar que tool_manager esté disponible
+        if not tool_manager:
+            return {
+                'success': False,
+                'error': 'Tool manager no disponible',
+                'type': 'browser_tool_error',
+                'summary': '❌ Error: Tool manager no disponible'
+            }
+        
+        # Extraer parámetros del paso si están disponibles
+        step_params = step.get('parameters', {})
+        
+        # Configurar parámetros específicos por herramienta
+        tool_params = {'task_id': task_id}
+        
+        if tool_name == 'browser.open':
+            # Extraer URL de la descripción si no está en parámetros
+            url = step_params.get('url')
+            if not url:
+                # Buscar URL en la descripción
+                import re
+                url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+[^\s<>"{}|\\^`\[\].,)]'
+                urls = re.findall(url_pattern, step_description)
+                url = urls[0] if urls else 'https://example.com'
+            tool_params['url'] = url
+            
+        elif tool_name == 'browser.wait':
+            timeout = step_params.get('timeout', 10)
+            tool_params['timeout'] = timeout
+            
+        elif tool_name == 'browser.capture_screenshot':
+            full_page = step_params.get('full_page', True)
+            tool_params['full_page'] = full_page
+            
+        elif tool_name == 'send_file':
+            file_path = step_params.get('file_path', 'screenshot.png')
+            tool_params['file_path'] = file_path
+        
+        logger.info(f"   🔧 Parámetros: {tool_params}")
+        
+        # Ejecutar la herramienta específica
+        result = tool_manager.execute_tool(tool_name, tool_params, config={'task_id': task_id})
+        
+        # Procesar resultado
+        if result and result.get('success', False):
+            logger.info(f"✅ Herramienta {tool_name} ejecutada exitosamente")
+            return {
+                'success': True,
+                'type': 'browser_tool_success',
+                'tool_used': tool_name,
+                'content': result.get('message', f'Herramienta {tool_name} ejecutada exitosamente'),
+                'summary': f'✅ {tool_name}: {result.get("message", "Completado")}',
+                'data': result.get('data', {}),
+                'screenshot_path': result.get('data', {}).get('screenshot_path', ''),
+                'url': result.get('data', {}).get('url', ''),
+                'timestamp': result.get('data', {}).get('timestamp', '')
+            }
+        else:
+            error_msg = result.get('error', 'Error desconocido en herramienta de navegador') if result else 'Sin respuesta de la herramienta'
+            logger.error(f"❌ Error en {tool_name}: {error_msg}")
+            return {
+                'success': False,
+                'error': error_msg,
+                'type': 'browser_tool_error',
+                'summary': f'❌ Error en {tool_name}: {error_msg}'
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ Error ejecutando herramienta de navegador {tool_name}: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'browser_tool_execution_error',
+            'summary': f'❌ Error en {tool_name}: {str(e)}'
+        }
+
 def execute_generic_step(title: str, description: str, ollama_service, original_message: str) -> dict:
     """Ejecutar paso genérico - GENERA CONTENIDO REAL ESPECÍFICO"""
     try:
