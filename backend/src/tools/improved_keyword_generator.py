@@ -468,15 +468,36 @@ class IntelligentKeywordGenerator:
         
         print(f"🔍 EXTRACTING SUBJECT FROM: '{query_text}'")
         
+        # 🎯 MÉTODO ESPECIAL: Detectar nombres compuestos específicos conocidos PRIMERO
+        known_subjects = [
+            r'\battack\s+on\s+titan\b',
+            r'\bshingeki\s+no\s+kyojin\b', 
+            r'\barctic\s+monkeys\b',
+            r'\bcoldplay\b',
+            r'\bthe\s+strokes\b',
+            r'\binteligencia\s+artificial\b',
+            r'\bmachine\s+learning\b',
+            r'\bjavier\s+milei\b',
+            r'\bcambio\s+climático\b',
+            r'\bcalentamiento\s+global\b'
+        ]
+        
+        for subject_pattern in known_subjects:
+            match = re.search(subject_pattern, query_text, re.IGNORECASE)
+            if match:
+                subject = match.group(0)
+                print(f"✅ SUBJECT FOUND (Method 0 - Known Subjects): '{subject}'")
+                return subject.title()
+        
         # MÉTODO 1: Buscar términos específicos después de palabras clave (MÁS PRECISO)
         subject_patterns = [
             # Patrones con delimitadores claros
             r'sobre\s+"([^"]+)"',  # sobre "tema exacto"
-            r'sobre\s+([a-zA-Z][a-zA-Z\s]+?)\s*(?:-|\.|\||$)',  # sobre tema -
-            r'información\s+(?:completa\s+)?sobre\s+([a-zA-Z][a-zA-Z\s]+?)\s*(?:-|\.|\||$)',
-            r'datos\s+(?:completos\s+)?sobre\s+([a-zA-Z][a-zA-Z\s]+?)\s*(?:-|\.|\||$)',
-            r'investigar\s+(?:sobre\s+)?([a-zA-Z][a-zA-Z\s]+?)\s*(?:-|\.|\||$)',
-            r'buscar\s+información\s+(?:completa\s+)?sobre\s+([a-zA-Z][a-zA-Z\s]+?)\s*(?:-|\.|\||$)'
+            r'sobre\s+([a-zA-Z][a-zA-Z\s]+?)\s*(?:\s+incluyendo|\s+con|\s+-|\s+y\s|\s+para|\.|$)',  # sobre tema ANTES de "incluyendo"
+            r'información\s+(?:completa\s+|específica\s+)?sobre\s+([a-zA-Z][a-zA-Z\s]+?)\s*(?:\s+incluyendo|\s+con|\s+-|\s+y\s|\s+para|\.|$)',
+            r'datos\s+(?:completos\s+)?sobre\s+([a-zA-Z][a-zA-Z\s]+?)\s*(?:\s+incluyendo|\s+con|\s+-|\s+y\s|\s+para|\.|$)',
+            r'investigar\s+(?:información\s+(?:específica\s+)?sobre\s+)?([a-zA-Z][a-zA-Z\s]+?)\s*(?:\s+incluyendo|\s+con|\s+-|\s+y\s|\s+para|\.|$)',
+            r'buscar\s+información\s+(?:completa\s+|específica\s+)?sobre\s+([a-zA-Z][a-zA-Z\s]+?)\s*(?:\s+incluyendo|\s+con|\s+-|\s+y\s|\s+para|\.|$)'
         ]
         
         for pattern in subject_patterns:
@@ -485,18 +506,19 @@ class IntelligentKeywordGenerator:
                 subject = match.group(1).strip()
                 subject = re.sub(r'\s+', ' ', subject)  # Limpiar espacios múltiples
                 
-                # Validar que no sean palabras meta
-                meta_words = ['información', 'datos', 'sobre', 'análisis', 'buscar', 'completa', 'completar']
+                # Validar que no sean palabras meta y que sea razonable
+                meta_words = ['información', 'datos', 'sobre', 'análisis', 'buscar', 'completa', 'completar', 'específica']
                 if (len(subject) > 3 and 
                     not any(meta.lower() in subject.lower() for meta in meta_words) and
-                    not subject.lower() in ['y', 'el', 'la', 'los', 'las', 'de', 'del', 'con']):
+                    not subject.lower() in ['y', 'el', 'la', 'los', 'las', 'de', 'del', 'con'] and
+                    len(subject.split()) <= 4):  # No más de 4 palabras
                     print(f"✅ SUBJECT FOUND (Method 1): '{subject}'")
                     return subject
         
         # MÉTODO 2: Buscar nombres propios (2+ palabras capitalizadas)
         proper_nouns = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b', query_text)
         for noun in proper_nouns:
-            if len(noun.split()) >= 2:
+            if len(noun.split()) >= 2 and len(noun.split()) <= 3:  # Entre 2 y 3 palabras
                 print(f"✅ SUBJECT FOUND (Method 2 - Proper Nouns): '{noun}'")
                 return noun
         
@@ -524,27 +546,18 @@ class IntelligentKeywordGenerator:
                 print(f"✅ SUBJECT FOUND (Method 3 - Known Compounds): '{subject}'")
                 return subject.title()
         
-        # MÉTODO 4: Buscar cualquier término compuesto de 2+ palabras
-        compound_terms = re.findall(r'\b[a-zA-Z]{3,}\s+[a-zA-Z]{3,}(?:\s+[a-zA-Z]{3,})?\b', query_text)
-        
-        # Filtrar compuestos que no son palabras meta
-        meta_phrases = {
-            'información sobre', 'datos sobre', 'buscar información', 'investigar sobre', 
-            'análisis de', 'estudiar sobre', 'recopilar información', 'información completa',
-            'datos completos', 'búsqueda web', 'realizar búsqueda'
-        }
-        
-        for compound in compound_terms:
-            compound_lower = compound.lower()
-            if (compound_lower not in meta_phrases and 
-                len(compound) > 8 and  # Al menos 8 caracteres
-                not any(meta in compound_lower for meta in ['información', 'datos', 'buscar', 'investigar', 'sobre', 'realizar'])):
-                print(f"✅ SUBJECT FOUND (Method 4 - Generic Compounds): '{compound}'")
-                return compound.title()
+        # MÉTODO 4: Buscar cualquier término compuesto de 2+ palabras ANTES DE "incluyendo"
+        compound_before_including = re.search(r'\b([a-zA-Z]{3,}\s+[a-zA-Z]{3,}(?:\s+[a-zA-Z]{3,})?)\s+incluyendo\b', query_text, re.IGNORECASE)
+        if compound_before_including:
+            subject = compound_before_including.group(1).strip()
+            meta_phrases = {'información sobre', 'datos sobre', 'buscar información', 'investigar sobre'}
+            if subject.lower() not in meta_phrases and len(subject) > 8:
+                print(f"✅ SUBJECT FOUND (Method 4 - Before Including): '{subject}'")
+                return subject.title()
         
         # MÉTODO 5: Buscar nombres propios simples importantes
         single_nouns = re.findall(r'\b[A-Z][a-z]{4,}\b', query_text)
-        skip_words = {'Investigar', 'Buscar', 'Datos', 'Información', 'Análisis', 'Sobre', 'Para', 'Con', 'Realizar'}
+        skip_words = {'Investigar', 'Buscar', 'Datos', 'Información', 'Análisis', 'Sobre', 'Para', 'Con', 'Realizar', 'Incluyendo'}
         
         for noun in single_nouns:
             if noun not in skip_words:
