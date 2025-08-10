@@ -4755,48 +4755,47 @@ def get_tool_manager():
     from ..tools.tool_manager import get_tool_manager as get_global_tool_manager
     return get_global_tool_manager()
 
-# ✅ FUNCIÓN HELPER PARA WebBrowserManager - ACTUALIZADA PARA BROWSER-USE
+# ✅ FUNCIÓN HELPER PARA WebBrowserManager - COMPATIBLE SYNC/ASYNC
 def create_web_browser_manager(task_id: str, browser_type: str = "browser-use"):
     """
-    Crear instancia de WebBrowserManager con integración browser-use y WebSocket
-    
-    Args:
-        task_id: ID de la tarea para tracking de eventos
-        browser_type: 'browser-use' (default), 'playwright' o 'selenium'
-    
-    Returns:
-        WebBrowserManager instance o None si no está disponible
+    Crear instancia de WebBrowserManager con integración WebSocket.
+    Preferir el gestor legacy (sincrónico) para garantizar emisión de eventos
+    de navegación en tiempo real desde rutas síncronas. Si no está disponible,
+    usar el gestor nuevo (async) con browser-use.
     """
-    if WebBrowserManager is None:
-        logger.warning("⚠️ WebBrowserManager no disponible - funcionalidad básica sin visualización en tiempo real")
-        return None
+    # 1) Obtener WebSocket manager
+    websocket_manager = get_websocket_manager()
+    if websocket_manager is None:
+        logger.warning("⚠️ WebSocketManager no disponible - WebBrowserManager funcionará sin eventos tiempo real")
     
+    # 2) Intentar usar el gestor legacy sincrónico primero (playwright)
     try:
-        # Obtener websocket manager
-        websocket_manager = get_websocket_manager()
-        if websocket_manager is None:
-            logger.warning("⚠️ WebSocketManager no disponible - WebBrowserManager funcionará sin eventos tiempo real")
-        
-        # Obtener OllamaService si está disponible
+        import web_browser_manager as legacy_wbm
+        LegacyWebBrowserManager = getattr(legacy_wbm, 'WebBrowserManager', None)
+        if LegacyWebBrowserManager:
+            bm = LegacyWebBrowserManager(config=None, websocket_manager=websocket_manager, task_id=task_id)
+            logger.info(f"✅ WebBrowserManager LEGACY (playwright) creado para task {task_id}")
+            return bm
+    except Exception as e:
+        logger.info(f"ℹ️ Legacy WebBrowserManager no disponible: {e}")
+    
+    # 3) Fallback: usar versión async con browser-use
+    try:
+        from ..services.ollama_service import OllamaService
+        from ..web_browser_manager import WebBrowserManager as AsyncWebBrowserManager
         ollama_service = None
         try:
-            from ..services.ollama_service import OllamaService
             ollama_service = OllamaService()
-            logger.info("✅ OllamaService obtenido para browser-use integration")
-        except Exception as e:
-            logger.warning(f"⚠️ OllamaService no disponible: {e}")
-        
-        # Crear instancia de WebBrowserManager con integración browser-use
-        browser_manager = WebBrowserManager(
+        except Exception as oe:
+            logger.warning(f"⚠️ OllamaService no disponible para WebBrowserManager async: {oe}")
+        bm = AsyncWebBrowserManager(
             websocket_manager=websocket_manager,
             task_id=task_id,
             ollama_service=ollama_service,
             browser_type=browser_type
         )
-        
-        logger.info(f"✅ WebBrowserManager creado para task {task_id} usando {browser_type}")
-        return browser_manager
-        
+        logger.info(f"✅ WebBrowserManager ASYNC (browser-use) creado para task {task_id}")
+        return bm
     except Exception as e:
         logger.error(f"❌ Error creando WebBrowserManager para task {task_id}: {e}")
         return None
