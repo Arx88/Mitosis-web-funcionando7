@@ -328,3 +328,68 @@
 ✅ Plan generation fixed - using Ollama directly for REAL plans
 [2025-08-10 12:25:27][INFO][Task:N/A] 🔄 Intentando importar las rutas REALES del agente con funcionalidad completa...
 [2025-08-10 12:25:27][INFO][Task:N/A] 📋 Importando rutas del agente...
+[2025-08-10 12:25:27][INFO][Task:N/A] ✅ RUTAS REALES DEL AGENTE CARGADAS EXITOSAMENTE - Sistema completo disponible
+✅ RUTAS REALES DEL AGENTE CARGADAS EXITOSAMENTE - Sistema completo disponible
+[2025-08-10 12:25:27][INFO][Task:N/A] 📡 Endpoints del agente disponibles:
+📡 Endpoints del agente disponibles:
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'GET', 'HEAD', 'OPTIONS'} /api/agent/health
+   - {'GET', 'HEAD', 'OPTIONS'} /api/agent/health
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/execute-step-detailed/<task_id>/<step_id>
+   - {'POST', 'OPTIONS'} /api/agent/execute-step-detailed/<task_id>/<step_id>
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/retry-step/<task_id>/<step_id>
+   - {'POST', 'OPTIONS'} /api/agent/retry-step/<task_id>/<step_id>
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'GET', 'HEAD', 'OPTIONS'} /api/agent/ollama-queue-status
+   - {'GET', 'HEAD', 'OPTIONS'} /api/agent/ollama-queue-status
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'GET', 'HEAD', 'OPTIONS'} /api/agent/get-all-tasks
+   - {'GET', 'HEAD', 'OPTIONS'} /api/agent/get-all-tasks
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'GET', 'HEAD', 'OPTIONS'} /api/agent/get-task-plan/<task_id>
+   - {'GET', 'HEAD', 'OPTIONS'} /api/agent/get-task-plan/<task_id>
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'GET', 'HEAD', 'OPTIONS'} /api/agent/get-task-execution-results/<task_id>
+   - {'GET', 'HEAD', 'OPTIONS'} /api/agent/get-task-execution-results/<task_id>
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'GET', 'HEAD', 'OPTIONS'} /api/agent/fallback-health
+   - {'GET', 'HEAD', 'OPTIONS'} /api/agent/fallback-health
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'GET', 'HEAD', 'OPTIONS'} /api/agent/system-diagnostics
+   - {'GET', 'HEAD', 'OPTIONS'} /api/agent/system-diagnostics
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/update-task-time/<task_id>
+   - {'POST', 'OPTIONS'} /api/agent/update-task-time/<task_id>
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/add-final-report-page/<task_id>
+   - {'POST', 'OPTIONS'} /api/agent/add-final-report-page/<task_id>
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'GET', 'HEAD', 'OPTIONS'} /api/agent/model-info
+   - {'GET', 'HEAD', 'OPTIONS'} /api/agent/model-info
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/force-step-failure/<task_id>/<step_id>
+   - {'POST', 'OPTIONS'} /api/agent/force-step-failure/<task_id>/<step_id>
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'GET', 'HEAD', 'OPTIONS'} /api/agent/status
+   - {'GET', 'HEAD', 'OPTIONS'} /api/agent/status
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/generate-suggestions
+   - {'POST', 'OPTIONS'} /api/agent/generate-suggestions
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/upload-files
+   - {'POST', 'OPTIONS'} /api/agent/upload-files
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'GET', 'HEAD', 'OPTIONS'} /api/agent/get-task-files/<task_id>
+   - {'GET', 'HEAD', 'OPTIONS'} /api/agent/get-task-files/<task_id>
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/ollama/check
+   - {'POST', 'OPTIONS'} /api/agent/ollama/check
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/ollama/models
+   - {'POST', 'OPTIONS'} /api/agent/ollama/models
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/config/apply
+   - {'POST', 'OPTIONS'} /api/agent/config/apply
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'GET', 'HEAD', 'OPTIONS'} /api/agent/config/current
+   - {'GET', 'HEAD', 'OPTIONS'} /api/agent/config/current
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/config/validate
+   - {'POST', 'OPTIONS'} /api/agent/config/validate
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/initialize-task
+   - {'POST', 'OPTIONS'} /api/agent/initialize-task
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/generate-plan
+   - {'POST', 'OPTIONS'} /api/agent/generate-plan
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/execute-step/<task_id>/<step_id>
+   - {'POST', 'OPTIONS'} /api/agent/execute-step/<task_id>/<step_id>
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/start-task-execution/<task_id>
+   - {'POST', 'OPTIONS'} /api/agent/start-task-execution/<task_id>
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/chat
+   - {'POST', 'OPTIONS'} /api/agent/chat
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'DELETE', 'OPTIONS'} /api/agent/delete-task/<task_id>
+   - {'DELETE', 'OPTIONS'} /api/agent/delete-task/<task_id>
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'GET', 'HEAD', 'OPTIONS'} /api/agent/config/ollama
+   - {'GET', 'HEAD', 'OPTIONS'} /api/agent/config/ollama
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/config/ollama
+   - {'POST', 'OPTIONS'} /api/agent/config/ollama
+[2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/config/ollama/reset
