@@ -1754,7 +1754,15 @@ def execute_enhanced_web_search_step(title: str, description: str, tool_manager,
         try:
             # Inicializar navegador para visualización en tiempo real
             if browser_manager:
-                browser_manager.initialize_browser()
+                # Compatibilidad para ambos gestores
+                if hasattr(browser_manager, 'initialize_browser'):
+                    browser_manager.initialize_browser()
+                elif hasattr(browser_manager, 'initialize'):
+                    import asyncio
+                    try:
+                        asyncio.run(browser_manager.initialize())
+                    except RuntimeError:
+                        pass
                 
                 # Enviar evento de inicio de búsqueda con navegación
                 if websocket_manager:
