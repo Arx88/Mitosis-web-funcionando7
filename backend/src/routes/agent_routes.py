@@ -9688,14 +9688,26 @@ def execute_step_real_original(task_id: str, step_id: str, step: dict):
                 search_strategies = []
                 content_lower = base_query.lower()
                 
-                # Estrategias específicas según tipo de contenido
-                if any(word in content_lower for word in ['2025', '2024', 'actual', 'reciente', 'último']):
+                # 🎯 ESTRATEGIAS ULTRA-ESPECÍFICAS PARA NOMBRES DE MARCA
+                if any(word in content_lower for word in ['nombres', 'marca', 'épico', 'cool', 'memorable', 'branding']):
+                    search_strategies.extend([
+                        "mejores nombres marcas épicas cool ejemplos famosos 2025",
+                        "nombres únicos memorables marcas exitosas tendencias",  
+                        "branding nombres creativos marcas iconicas ejemplos",
+                        "naming estrategias nombres impactantes marcas globales",
+                        "ejemplos nombres marcas cool startups unicornio",
+                        "tendencias naming 2025 nombres épicos memorables"
+                    ])
+                    logger.info(f"🎯 MODO ESPECIALIZADO: Búsqueda de nombres de marca con {len(search_strategies)} queries específicas")
+                
+                # Estrategias específicas según tipo de contenido  
+                elif any(word in content_lower for word in ['2025', '2024', 'actual', 'reciente', 'último']):
                     search_strategies.append(f"{base_query} 2025 actualizado reciente")
-                if any(word in content_lower for word in ['argentina', 'selección', 'futbol']):
+                elif any(word in content_lower for word in ['argentina', 'selección', 'futbol']):
                     search_strategies.append(f"{base_query} argentina estadísticas datos oficiales")
-                if any(word in content_lower for word in ['política', 'gobierno', 'milei']):
+                elif any(word in content_lower for word in ['política', 'gobierno', 'milei']):
                     search_strategies.append(f"{base_query} argentina política gobierno actualidad")
-                if any(word in content_lower for word in ['datos', 'información', 'análisis']):
+                elif any(word in content_lower for word in ['datos', 'información', 'análisis']):
                     search_strategies.append(f"{base_query} datos estadísticas fuentes oficiales")
                 
                 # Si no hay estrategias específicas, usar búsqueda estándar mejorada
