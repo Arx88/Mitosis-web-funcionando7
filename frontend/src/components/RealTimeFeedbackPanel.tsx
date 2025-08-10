@@ -1,35 +1,40 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
-interface FeedbackData {
-  type: string;
-  message: string;
-  data?: any;
+interface CollectedDataItem {
+  id: string;
+  source: string;
+  data_type: string;
+  title: string;
+  content: string;
+  url?: string;
+  metadata?: any;
   timestamp: number;
-  summary?: {
-    statistics: {
-      sources_visited: number;
-      information_extracted: number;
-      screenshots_captured: number;
-      steps_completed: number;
-    };
-    data_quality: {
-      total_content_characters: number;
-      average_relevance_score: number;
-      sources_per_minute: number;
-      extraction_efficiency: number;
-    };
-    recent_activity: Array<{
-      type: string;
-      description: string;
-      timestamp: number;
-    }>;
-  };
+}
+
+interface ProgressSummary {
+  total_data_collected: number;
+  active_steps: number;
+  completed_steps: number;
+  data_sources: string[];
+  collection_efficiency: number;
+}
+
+interface FeedbackData {
+  success: boolean;
+  task_id: string;
+  collected_data: CollectedDataItem[];
+  progress_summary: ProgressSummary;
+  collection_document: string;
+  data_count: number;
+  has_data: boolean;
+  timestamp: string;
 }
 
 interface RealTimeFeedbackPanelProps {
   taskId: string;
   isVisible: boolean;
+  showDocument?: boolean;
 }
 
 const RealTimeFeedbackPanel: React.FC<RealTimeFeedbackPanelProps> = ({ 
