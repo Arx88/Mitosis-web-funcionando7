@@ -700,15 +700,30 @@ class UnifiedWebSearchTool(BaseTool):
     
     def _detect_granular_search_needs(self, query: str) -> List[Dict[str, str]]:
         """
-        🎯 DETECTOR AUTOMÁTICO DE NECESIDAD DE BÚSQUEDAS GRANULARES
+        🎯 DETECTOR AUTOMÁTICO MEJORADO DE NECESIDAD DE BÚSQUEDAS GRANULARES
         
-        Analiza el query y determina si necesita múltiples búsquedas específicas
-        para obtener información completa
+        Usa el nuevo generador inteligente para detectar patrones específicos
+        y generar búsquedas granulares de alta calidad
         """
+        try:
+            # 🚀 USAR EL NUEVO DETECTOR GRANULAR INTELIGENTE
+            granular_searches = detect_granular_search_needs(query)
+            
+            if granular_searches:
+                print(f"✅ GRANULAR SEARCHES DETECTED: {len(granular_searches)} búsquedas específicas")
+                for search in granular_searches:
+                    print(f"   🎯 {search['category']}: {search['query']}")
+                return granular_searches
+            
+        except Exception as e:
+            print(f"⚠️ Error en detector granular inteligente: {e}")
+            # Continuar con lógica de fallback
+        
+        # 🔄 FALLBACK: LÓGICA ANTERIOR MEJORADA PARA CASOS NO CUBIERTOS
         query_lower = query.lower()
         searches = []
         
-        # 🔍 PATRÓN 1: INFORMACIÓN SOBRE PERSONAS/FIGURAS PÚBLICAS
+        # 🔍 PATRÓN FALLBACK 1: INFORMACIÓN SOBRE PERSONAS/FIGURAS PÚBLICAS GENÉRICAS
         if any(word in query_lower for word in ['información sobre', 'datos sobre', 'buscar información']):
             person_indicators = ['presidente', 'político', 'artista', 'cantante', 'actor', 'personalidad']
             subject = None
@@ -740,38 +755,19 @@ class UnifiedWebSearchTool(BaseTool):
                     {"query": f"{subject} noticias recientes 2025", "category": "noticias_recientes"}
                 ])
         
-        # 🔍 PATRÓN 2: INFORMACIÓN SOBRE BANDAS/MÚSICA  
-        elif any(word in query_lower for word in ['arctic monkeys', 'banda', 'discografía', 'música']):
-            band_name = "Arctic Monkeys"  # Detectar automáticamente
-            searches.extend([
-                {"query": f"{band_name} historia formación miembros", "category": "historia"},
-                {"query": f"{band_name} discografía álbumes completa", "category": "discografía"},
-                {"query": f"{band_name} estilo musical evolución", "category": "estilo_musical"},
-                {"query": f"{band_name} premios reconocimientos logros", "category": "premios"},
-                {"query": f"{band_name} noticias recientes 2025 conciertos", "category": "noticias_recientes"}
-            ])
-        
-        # 🔍 PATRÓN 3: INFORMACIÓN TÉCNICA/CIENTÍFICA
-        elif any(word in query_lower for word in ['inteligencia artificial', 'tecnología', 'ciencia']):
+        # 🔍 PATRÓN FALLBACK 2: INFORMACIÓN TÉCNICA/CIENTÍFICA GENÉRICA
+        elif any(word in query_lower for word in ['información técnica', 'tecnología sobre', 'ciencia sobre']):
             topic = self._extract_main_topic(query)
-            searches.extend([
-                {"query": f"{topic} definición conceptos básicos", "category": "conceptos"},
-                {"query": f"{topic} aplicaciones usos prácticos", "category": "aplicaciones"},
-                {"query": f"{topic} ventajas beneficios", "category": "ventajas"},
-                {"query": f"{topic} desventajas riesgos", "category": "desventajas"},
-                {"query": f"{topic} tendencias futuro 2025", "category": "tendencias"}
-            ])
+            if topic:
+                searches.extend([
+                    {"query": f"{topic} definición conceptos básicos", "category": "conceptos"},
+                    {"query": f"{topic} aplicaciones usos prácticos", "category": "aplicaciones"},
+                    {"query": f"{topic} ventajas beneficios", "category": "ventajas"},
+                    {"query": f"{topic} desventajas riesgos", "category": "desventajas"},
+                    {"query": f"{topic} tendencias futuro 2025", "category": "tendencias"}
+                ])
         
-        # 🔍 PATRÓN 4: DEPORTES/EQUIPOS
-        elif any(word in query_lower for word in ['selección', 'equipo', 'fútbol', 'deporte']):
-            team = self._extract_team_name(query)
-            searches.extend([
-                {"query": f"{team} plantilla jugadores actual 2025", "category": "plantilla"},
-                {"query": f"{team} historia títulos logros", "category": "historia"},
-                {"query": f"{team} estadísticas temporada 2024-2025", "category": "estadísticas"},
-                {"query": f"{team} últimos partidos resultados", "category": "resultados_recientes"},
-                {"query": f"{team} próximos partidos calendario", "category": "próximos_partidos"}
-            ])
+        print(f"🔄 FALLBACK GRANULAR: {len(searches)} búsquedas generadas para query: '{query}'")
         
         # Si no se detectó patrón específico, retornar lista vacía para búsqueda simple
         return searches if len(searches) > 1 else []
