@@ -31,7 +31,7 @@ Este documento registra el progreso de implementación del plan de mejoras defin
 - Ollama: ✅ Conectado (llama3.1:8b)
 - WebSockets: ✅ Habilitado con eventlet
 
-**URL Externa:** https://d0ae8b8a-2cb8-41b9-b9e7-9c5616783927.preview.emergentagent.com
+**URL Externa:** https://caa291c0-7fa9-4089-b57e-8fe9b9204de7.preview.emergentagent.com
 
 ---
 
@@ -253,7 +253,7 @@ Este documento registra el progreso de implementación del plan de mejoras defin
 - ✅ Validación completa de todas las APIs
 
 **URLs Verificadas**:
-- Frontend: https://d0ae8b8a-2cb8-41b9-b9e7-9c5616783927.preview.emergentagent.com
+- Frontend: https://caa291c0-7fa9-4089-b57e-8fe9b9204de7.preview.emergentagent.com
 - Backend API: http://localhost:8001
 - Ollama: https://66bd0d09b557.ngrok-free.app
 
