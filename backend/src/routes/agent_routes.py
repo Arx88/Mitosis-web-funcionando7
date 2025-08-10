@@ -3312,6 +3312,123 @@ Formato: Entrega profesional y completa.
             'summary': f'❌ Error en {tool_type}: {str(e)}'
         }
 
+def execute_browser_step(step_title: str, step_description: str, tool_manager, task_id: str, tool_name: str, step: dict) -> dict:
+    """
+    🌐 EJECUTOR DE HERRAMIENTAS DE NAVEGADOR CON VISUALIZACIÓN EN TIEMPO REAL
+    
+    Ejecuta herramientas de navegador (browser.open, browser.wait, browser.capture_screenshot, 
+    browser.close, send_file) con visualización en tiempo real usando WebBrowserManager.
+    
+    Args:
+        step_title: Título del paso
+        step_description: Descripción del paso
+        tool_manager: Manager de herramientas
+        task_id: ID de la tarea
+        tool_name: Nombre específico de la herramienta de navegador
+        step: Datos completos del paso
+        
+    Returns:
+        dict: Resultado de la ejecución de la herramienta de navegador
+    """
+    try:
+        logger.info(f"🌐 Ejecutando herramienta de navegador: {tool_name}")
+        
+        # Verificar que tool_manager esté disponible
+        if not tool_manager:
+            return {
+                'success': False,
+                'error': 'Tool manager no disponible',
+                'type': 'browser_tool_error',
+                'summary': '❌ Error: Tool manager no disponible'
+            }
+        
+        # Extraer parámetros del paso si están disponibles
+        step_params = step.get('parameters', {})
+        
+        # Ejecutar la herramienta específica de navegador
+        if tool_name == 'browser.open':
+            # Abrir página web
+            url = step_params.get('url', 'https://www.google.com')
+            result = tool_manager.execute_tool('browser.open', {
+                'url': url,
+                'task_id': task_id,
+                'step_title': step_title
+            })
+            
+        elif tool_name == 'browser.wait':
+            # Esperar en la página actual
+            wait_time = step_params.get('wait_time', 3)
+            result = tool_manager.execute_tool('browser.wait', {
+                'wait_time': wait_time,
+                'task_id': task_id,
+                'step_title': step_title
+            })
+            
+        elif tool_name == 'browser.capture_screenshot':
+            # Capturar screenshot
+            filename = step_params.get('filename', f'screenshot_{task_id}_{int(time.time())}.png')
+            result = tool_manager.execute_tool('browser.capture_screenshot', {
+                'filename': filename,
+                'task_id': task_id,
+                'step_title': step_title
+            })
+            
+        elif tool_name == 'browser.close':
+            # Cerrar navegador
+            result = tool_manager.execute_tool('browser.close', {
+                'task_id': task_id,
+                'step_title': step_title
+            })
+            
+        elif tool_name == 'send_file':
+            # Enviar archivo
+            file_path = step_params.get('file_path', '')
+            result = tool_manager.execute_tool('send_file', {
+                'file_path': file_path,
+                'task_id': task_id,
+                'step_title': step_title
+            })
+            
+        else:
+            return {
+                'success': False,
+                'error': f'Herramienta de navegador no reconocida: {tool_name}',
+                'type': 'browser_tool_error',
+                'summary': f'❌ Error: Herramienta {tool_name} no reconocida'
+            }
+        
+        # Procesar resultado
+        if result and result.get('success', False):
+            return {
+                'success': True,
+                'type': 'browser_tool',
+                'tool_used': tool_name,
+                'content': result.get('content', f'Herramienta {tool_name} ejecutada exitosamente'),
+                'summary': result.get('summary', f'✅ {tool_name} completado'),
+                'data': result.get('data', {}),
+                'file_created': result.get('file_created', False),
+                'file_path': result.get('file_path', ''),
+                'screenshot_url': result.get('screenshot_url', ''),
+                'execution_time': result.get('execution_time', 0)
+            }
+        else:
+            error_msg = result.get('error', 'Error desconocido en herramienta de navegador') if result else 'Sin respuesta de la herramienta'
+            return {
+                'success': False,
+                'error': error_msg,
+                'type': 'browser_tool_error',
+                'summary': f'❌ Error en {tool_name}: {error_msg}'
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ Error ejecutando herramienta de navegador {tool_name}: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'type': 'browser_tool_error',
+            'summary': f'❌ Error en {tool_name}: {str(e)}'
+        }
+
 def execute_generic_step(title: str, description: str, ollama_service, original_message: str) -> dict:
     """Ejecutar paso genérico - GENERA CONTENIDO REAL ESPECÍFICO"""
     try:
