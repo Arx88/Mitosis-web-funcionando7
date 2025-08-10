@@ -9025,11 +9025,16 @@ def execute_step_by_tool(step_data: dict) -> dict:
     return result
 
 def execute_task_steps_sequentially(task_id: str, steps: list):
-    """Execute task steps one by one with delays and enhanced logging - ENHANCED WEBSOCKET DEBUGGING"""
-    # 🚨 PASO 1: LOGGING AGRESIVO IMPLEMENTADO 🚨
+    """Execute task steps one by one with real-time feedback and enhanced logging"""
+    # 🚨 LOGGING INICIAL
     print(f"🚀 STARTING execute_task_steps_sequentially for task_id: {task_id}")
     print(f"📋 Total steps to execute: {len(steps)}")
     print(f"🔍 Steps details: {json.dumps(steps, indent=2, default=str)}")
+    
+    # 🧠 NUEVO: Obtener feedback manager para tracking en tiempo real
+    feedback_manager = get_feedback_manager()
+    if hasattr(current_app, 'websocket_manager') and current_app.websocket_manager:
+        feedback_manager.websocket_manager = current_app.websocket_manager
     
     # 🆕 OBTENER MENSAJE ORIGINAL DE LA TAREA PARA VALIDACIÓN DE RELEVANCIA
     original_message = ""
