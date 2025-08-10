@@ -9688,27 +9688,78 @@ def execute_step_real_original(task_id: str, step_id: str, step: dict):
                 search_strategies = []
                 content_lower = base_query.lower()
                 
-                # 🎯 ESTRATEGIAS ULTRA-ESPECÍFICAS PARA NOMBRES DE MARCA
-                if any(word in content_lower for word in ['nombres', 'marca', 'épico', 'cool', 'memorable', 'branding']):
-                    search_strategies.extend([
-                        "mejores nombres marcas épicas cool ejemplos famosos 2025",
-                        "nombres únicos memorables marcas exitosas tendencias",  
-                        "branding nombres creativos marcas iconicas ejemplos",
-                        "naming estrategias nombres impactantes marcas globales",
-                        "ejemplos nombres marcas cool startups unicornio",
-                        "tendencias naming 2025 nombres épicos memorables"
-                    ])
-                    logger.info(f"🎯 MODO ESPECIALIZADO: Búsqueda de nombres de marca con {len(search_strategies)} queries específicas")
+                # 🧠 SISTEMA INTELIGENTE: Usar IA para descomponer CUALQUIER investigación
+                # No hardcodear casos específicos, sino que el agente analice y entienda
+                should_use_intelligent_decomposition = True
                 
-                # Estrategias específicas según tipo de contenido  
-                elif any(word in content_lower for word in ['2025', '2024', 'actual', 'reciente', 'último']):
-                    search_strategies.append(f"{base_query} 2025 actualizado reciente")
-                elif any(word in content_lower for word in ['argentina', 'selección', 'futbol']):
-                    search_strategies.append(f"{base_query} argentina estadísticas datos oficiales")
-                elif any(word in content_lower for word in ['política', 'gobierno', 'milei']):
-                    search_strategies.append(f"{base_query} argentina política gobierno actualidad")
-                elif any(word in content_lower for word in ['datos', 'información', 'análisis']):
-                    search_strategies.append(f"{base_query} datos estadísticas fuentes oficiales")
+                if should_use_intelligent_decomposition:
+                    try:
+                        # 🤖 USAR OLLAMA PARA ANALIZAR Y GENERAR BÚSQUEDAS ESPECÍFICAS
+                        analysis_prompt = f"""
+Analiza esta tarea de investigación y descomponla en búsquedas web específicas y diversas.
+
+TAREA: "{title}"
+DESCRIPCIÓN: "{description}"
+
+Genera 4-6 consultas de búsqueda específicas que cubran todos los aspectos necesarios para completar esta investigación. Cada consulta debe ser diferente y enfocar un aspecto específico.
+
+Responde SOLO con las consultas, una por línea, sin explicaciones adicionales.
+
+Ejemplo formato:
+consulta específica 1 aquí
+consulta específica 2 aquí
+consulta específica 3 aquí
+"""
+                        
+                        # Ejecutar análisis con Ollama
+                        from ..tools.tool_manager import ToolManager
+                        tool_manager_instance = ToolManager()
+                        
+                        ollama_params = {
+                            'prompt': analysis_prompt,
+                            'model': 'gpt-oss:20b',
+                            'temperature': 0.7,
+                            'max_tokens': 500
+                        }
+                        
+                        logger.info(f"🧠 ANALIZANDO TAREA CON IA para generar búsquedas específicas...")
+                        ollama_result = tool_manager_instance.execute_tool('ollama_processing', ollama_params, task_id=task_id)
+                        
+                        if ollama_result and 'response' in ollama_result:
+                            generated_queries = ollama_result['response'].strip().split('\n')
+                            # Limpiar y filtrar queries válidas
+                            intelligent_queries = [q.strip() for q in generated_queries if q.strip() and len(q.strip()) > 10]
+                            
+                            if len(intelligent_queries) >= 3:
+                                search_strategies = intelligent_queries[:6]  # Máximo 6 búsquedas
+                                logger.info(f"🎯 IA GENERÓ {len(search_strategies)} BÚSQUEDAS ESPECÍFICAS INTELIGENTES")
+                                for i, query in enumerate(search_strategies, 1):
+                                    logger.info(f"   {i}. {query}")
+                            else:
+                                logger.warning("⚠️ IA generó pocas queries, usando fallback")
+                                
+                    except Exception as e:
+                        logger.error(f"❌ Error en análisis IA: {e}, usando estrategias básicas")
+                
+                # 🔄 FALLBACK: Estrategias básicas mejoradas si IA falla
+                if not search_strategies:
+                    # Estrategias específicas según tipo de contenido  
+                    if any(word in content_lower for word in ['2025', '2024', 'actual', 'reciente', 'último']):
+                        search_strategies.append(f"{base_query} 2025 actualizado reciente")
+                    elif any(word in content_lower for word in ['argentina', 'selección', 'futbol']):
+                        search_strategies.append(f"{base_query} argentina estadísticas datos oficiales")
+                    elif any(word in content_lower for word in ['política', 'gobierno', 'milei']):
+                        search_strategies.append(f"{base_query} argentina política gobierno actualidad")
+                    elif any(word in content_lower for word in ['datos', 'información', 'análisis']):
+                        search_strategies.append(f"{base_query} datos estadísticas fuentes oficiales")
+                    else:
+                        # Generar múltiples variaciones básicas pero inteligentes
+                        search_strategies = [
+                            f"{base_query} información detallada completa",
+                            f"{base_query} ejemplos casos reales",
+                            f"{base_query} tendencias actuales 2025",
+                            f"{base_query} datos específicos fuentes"
+                        ]
                 
                 # Si no hay estrategias específicas, usar búsqueda estándar mejorada
                 if not search_strategies:
