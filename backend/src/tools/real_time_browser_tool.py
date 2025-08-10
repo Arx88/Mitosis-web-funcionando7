@@ -24,6 +24,10 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 from pathlib import Path
 
+# 🔒 SEMÁFORO GLOBAL PARA NAVEGACIÓN ÚNICA
+_navigation_lock = threading.Lock()
+_active_navigation_count = 0
+
 from .base_tool import BaseTool, ParameterDefinition, ToolExecutionResult, register_tool
 
 try:
