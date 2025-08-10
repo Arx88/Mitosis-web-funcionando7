@@ -393,3 +393,385 @@
 [2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/config/ollama
    - {'POST', 'OPTIONS'} /api/agent/config/ollama
 [2025-08-10 12:25:27][INFO][Task:N/A]    - {'POST', 'OPTIONS'} /api/agent/config/ollama/reset
+   - {'POST', 'OPTIONS'} /api/agent/config/ollama/reset
+✅ Connected to MongoDB: mongodb://localhost:27017/task_manager
+✅ Connected to MongoDB: mongodb://localhost:27017/task_manager
+🚀 STARTING execute_task_steps_sequentially for task_id: task-1754828742641-1-1418
+📋 Total steps to execute: 4
+🔍 Steps details: [
+  {
+    "id": "step-1",
+    "title": "Buscar informaci\u00f3n sobre las mec\u00e1nicas b\u00e1sicas de Age of Empires 2",
+    "description": "Realizar una b\u00fasqueda web enfocada en los sistemas de juego, unidades, recursos y econom\u00eda de Age of Empires 2.",
+    "tool": "web_search",
+    "estimated_time": "10-12 minutos",
+    "complexity": "media",
+    "completed": false,
+    "active": true,
+    "status": "active"
+  },
+  {
+    "id": "step-2",
+    "title": "Recopilar datos sobre las expansiones oficiales y su contenido",
+    "description": "Investigar cada expansi\u00f3n (The Conquerors, Definitive Edition, etc.) y documentar nuevas unidades, civilizaciones y mec\u00e1nicas introducidas.",
+    "tool": "web_search",
+    "estimated_time": "12-15 minutos",
+    "complexity": "media",
+    "completed": false,
+    "active": false,
+    "status": "pending"
+  },
+  {
+    "id": "step-3",
+    "title": "Obtener estad\u00edsticas de jugadores y datos de esports",
+    "description": "Buscar y extraer datos de rankings, partidas profesionales y m\u00e9tricas de rendimiento de jugadores destacados en Age of Empires 2.",
+    "tool": "web_search",
+    "estimated_time": "15-18 minutos",
+    "complexity": "alta",
+    "completed": false,
+    "active": false,
+    "status": "pending"
+  },
+  {
+    "id": "step-4",
+    "title": "Analizar y sintetizar la informaci\u00f3n recopilada",
+    "description": "Procesar los datos obtenidos, estructurarlos y redactar un resumen claro y conciso sobre mec\u00e1nicas, expansiones y estad\u00edsticas.",
+    "tool": "analysis",
+    "estimated_time": "10-12 minutos",
+    "complexity": "alta",
+    "completed": false,
+    "active": false,
+    "status": "pending"
+  }
+]
+📝 Logging execution details to: /tmp/mitosis_execution_task-1754828742641-1-1418.log
+⚡ EXECUTING STEP 1/4: Buscar información sobre las mecánicas básicas de Age of Empires 2
+   Tool: web_search
+   Description: Realizar una búsqueda web enfocada en los sistemas de juego, unidades, recursos y economía de Age of...
+🔧 About to call execute_step_internal with step_id: step-1
+🧠 EXTRACTOR INTELIGENTE INPUT: 'Buscar información sobre las mecánicas básicas Age Empires Realizar una'
+🧠 INTELLIGENT GENERATOR INPUT: 'Buscar información sobre las mecánicas básicas Age Empires Realizar una'
+🔄 INTENTO 1/5: Generando query...
+✅ PROPER NOUNS DETECTED: ['Buscar', 'Age Empires Realizar'] - NOT problematic
+📝 QUERY CANDIDATA: 'age empires mecánicas age empires básicas'
+❌ QUERY RECHAZADA en intento 1: 'age empires mecánicas age empires básicas'
+❌ RAZONES DE RECHAZO: Contiene palabras duplicadas: ['age', 'empires', 'mecánicas', 'age', 'empires', 'básicas'] → ['age', 'empires', 'mecánicas', 'básicas'], No preserva tema principal identificado
+🔄 Generando nueva query (intento 2)...
+🔄 INTENTO 2/5: Generando query...
+📝 QUERY CANDIDATA: 'age empires mecánicas'
+❌ QUERY RECHAZADA en intento 2: 'age empires mecánicas'
+❌ RAZONES DE RECHAZO: No preserva tema principal identificado
+🔄 Generando nueva query (intento 3)...
+🔄 INTENTO 3/5: Generando query...
+📝 QUERY CANDIDATA: 'Age of Empires'
+❌ QUERY RECHAZADA en intento 3: 'Age of Empires'
+❌ RAZONES DE RECHAZO: No preserva tema principal identificado
+🔄 Generando nueva query (intento 4)...
+🔄 INTENTO 4/5: Generando query...
+📝 QUERY CANDIDATA: 'age empires'
+❌ QUERY RECHAZADA en intento 4: 'age empires'
+❌ RAZONES DE RECHAZO: No preserva tema principal identificado
+🔄 Generando nueva query (intento 5)...
+🔄 INTENTO 5/5: Generando query...
+📝 QUERY CANDIDATA: 'Age of Empires información actualizada'
+❌ QUERY RECHAZADA en intento 5: 'Age of Empires información actualizada'
+❌ RAZONES DE RECHAZO: No preserva tema principal identificado, Contiene palabras meta: información, Query demasiado genérica
+🚨 EMERGENCY QUERY USADA: 'Age of Empires'
+✅ INTELLIGENT EXTRACTION SUCCESS: 'Buscar información sobre las mecánicas básicas Age Empires Realizar una' → 'Age of Empires'
+🔧 Query limpiado: 'Age of Empires' (original era muy largo)
+🌐 NAVEGACIÓN WEB: 🚀 WebSocket GLOBAL inicializado encontrado
+🔍 EXECUTE_SEARCH_WITH_VISUALIZATION INPUT: 'Age of Empires'
+🔍 _detect_granular_search_needs CALLED WITH: 'Age of Empires'
+🔍 ANALYZING QUERY FOR GRANULAR NEEDS: 'Age of Empires'
+🔍 EXTRACTING SUBJECT FROM: 'Age of Empires'
+✅ SUBJECT FOUND (Method 0 - Known Subjects): 'Age of Empires'
+✅ TEMA PRINCIPAL DETECTADO: 'Age Of Empires'
+📊 TIPO DE TEMA CLASIFICADO: videogames
+🔍 EVALUATING GRANULAR NEED FOR: 'Age Of Empires' (type: videogames)
+🎮 VIDEOJUEGO DETECTADO - GRANULARIDAD AUTOMÁTICA REQUERIDA
+🎯 Contexto gaming identificado en: 'Age Of Empires' o 'Age of Empires...'
+🔍 NECESITA GRANULARIDAD: True
+🎯 ASPECTOS MENCIONADOS: []
+⚠️ OllamaService no disponible
+⚠️ LLM generó pocas búsquedas (0), usando fallback
+🔄 Generando búsquedas fallback inteligentes para 'Age Of Empires'
+🎮 Generating specialized gaming fallback for 'Age Of Empires'
+✅ BÚSQUEDAS GRANULARES GENERADAS: 5
+   🎯 historia_lore: Age Of Empires historia lore argumento campaña
+   🎯 mecanicas_gameplay: Age Of Empires mecánicas juego gameplay tutorial
+   🎯 expansiones_actualizaciones: Age Of Empires expansiones DLC actualizaciones parches
+   🎯 comunidad_competitivo: Age Of Empires estadísticas jugadores ranking competitivo
+   🎯 reviews_impacto: Age Of Empires reviews críticas impacto gaming cultura
+🔍 detect_granular_search_needs RETURNED: 5 searches
+✅ GRANULAR SEARCHES DETECTED: 5 búsquedas específicas
+   🎯 historia_lore: Age Of Empires historia lore argumento campaña
+   🎯 mecanicas_gameplay: Age Of Empires mecánicas juego gameplay tutorial
+   🎯 expansiones_actualizaciones: Age Of Empires expansiones DLC actualizaciones parches
+   🎯 comunidad_competitivo: Age Of Empires estadísticas jugadores ranking competitivo
+   🎯 reviews_impacto: Age Of Empires reviews críticas impacto gaming cultura
+🔍 GRANULAR DETECTION RESULT: 5 searches
+🌐 NAVEGACIÓN WEB: 🎯 BÚSQUEDA GRANULAR DETECTADA - 5 búsquedas específicas
+🌐 NAVEGACIÓN WEB:    🎯 historia_lore: Age Of Empires historia lore argumento campaña
+🌐 NAVEGACIÓN WEB:    🎯 mecanicas_gameplay: Age Of Empires mecánicas juego gameplay tutorial
+🌐 NAVEGACIÓN WEB:    🎯 expansiones_actualizaciones: Age Of Empires expansiones DLC actualizaciones parches
+🌐 NAVEGACIÓN WEB:    🎯 comunidad_competitivo: Age Of Empires estadísticas jugadores ranking competitivo
+🌐 NAVEGACIÓN WEB:    🎯 reviews_impacto: Age Of Empires reviews críticas impacto gaming cultura
+🌐 NAVEGACIÓN WEB: 🔎 Búsqueda 1/5: historia_lore
+🌐 NAVEGACIÓN WEB:    🔍 Query: Age Of Empires historia lore argumento campaña
+🌐 NAVEGACIÓN WEB: 🎭 Iniciando búsqueda Playwright en subprocess separado (solución event loop)...
+🌐 NAVEGACIÓN WEB: 🌐 Ejecutando navegación Playwright: 'Age Of Empires historia lore argumento campaña' en bing
+🌐 NAVEGACIÓN WEB: ✅ Navegación Playwright EXITOSA: 2 resultados reales encontrados
+🌐 NAVEGACIÓN WEB:    🔗 URL navegada: https://www.bing.com/search?q=Age+Of+Empires+historia+lore+argumento+campa%C3%B1a&count=20
+🌐 NAVEGACIÓN WEB:    📄 1. Age Calculator | https://www.bing.com/ck/a?!&&p=a36c13001...
+🌐 NAVEGACIÓN WEB:    📄 2. Age Calculator (How old am I?) | https://www.bing.com/ck/a?!&&p=a51597bb1...
+🌐 NAVEGACIÓN WEB:    ✅ 2 resultados para historia_lore
+🌐 NAVEGACIÓN WEB: 🔎 Búsqueda 2/5: mecanicas_gameplay
+🌐 NAVEGACIÓN WEB:    🔍 Query: Age Of Empires mecánicas juego gameplay tutorial
+🌐 NAVEGACIÓN WEB: 🎭 Iniciando búsqueda Playwright en subprocess separado (solución event loop)...
+🌐 NAVEGACIÓN WEB: 🌐 Ejecutando navegación Playwright: 'Age Of Empires mecánicas juego gameplay tutorial' en bing
+🌐 NAVEGACIÓN WEB: ✅ Navegación Playwright EXITOSA: 2 resultados reales encontrados
+🌐 NAVEGACIÓN WEB:    🔗 URL navegada: https://www.bing.com/search?q=Age+Of+Empires+mec%C3%A1nicas+juego+gameplay+tutorial&count=20
+🌐 NAVEGACIÓN WEB:    📄 1. Age Calculator | https://www.bing.com/ck/a?!&&p=65b9e782a...
+🌐 NAVEGACIÓN WEB:    📄 2. Age Calculator (How old am I?) | https://www.bing.com/ck/a?!&&p=64a79390f...
+🌐 NAVEGACIÓN WEB:    ✅ 2 resultados para mecanicas_gameplay
+🌐 NAVEGACIÓN WEB: 🔎 Búsqueda 3/5: expansiones_actualizaciones
+🌐 NAVEGACIÓN WEB:    🔍 Query: Age Of Empires expansiones DLC actualizaciones parches
+🌐 NAVEGACIÓN WEB: 🎭 Iniciando búsqueda Playwright en subprocess separado (solución event loop)...
+🌐 NAVEGACIÓN WEB: 🌐 Ejecutando navegación Playwright: 'Age Of Empires expansiones DLC actualizaciones parches' en bing
+🌐 NAVEGACIÓN WEB: ✅ Navegación Playwright EXITOSA: 2 resultados reales encontrados
+🌐 NAVEGACIÓN WEB:    🔗 URL navegada: https://www.bing.com/search?q=Age+Of+Empires+expansiones+DLC+actualizaciones+parches&count=20
+🌐 NAVEGACIÓN WEB:    📄 1. Age Calculator | https://www.bing.com/ck/a?!&&p=cb506eb38...
+🌐 NAVEGACIÓN WEB:    📄 2. Age Calculator (How old am I?) | https://www.bing.com/ck/a?!&&p=2124a5e67...
+🌐 NAVEGACIÓN WEB:    ✅ 2 resultados para expansiones_actualizaciones
+🌐 NAVEGACIÓN WEB: 🔎 Búsqueda 4/5: comunidad_competitivo
+🌐 NAVEGACIÓN WEB:    🔍 Query: Age Of Empires estadísticas jugadores ranking competitivo
+🌐 NAVEGACIÓN WEB: 🎭 Iniciando búsqueda Playwright en subprocess separado (solución event loop)...
+🌐 NAVEGACIÓN WEB: 🌐 Ejecutando navegación Playwright: 'Age Of Empires estadísticas jugadores ranking competitivo' en bing
+🌐 NAVEGACIÓN WEB: ✅ Navegación Playwright EXITOSA: 2 resultados reales encontrados
+🌐 NAVEGACIÓN WEB:    🔗 URL navegada: https://www.bing.com/search?q=Age+Of+Empires+estad%C3%ADsticas+jugadores+ranking+competitivo&count=20
+🌐 NAVEGACIÓN WEB:    📄 1. Age Calculator | https://www.bing.com/ck/a?!&&p=982ee313e...
+🌐 NAVEGACIÓN WEB:    📄 2. Age Calculator (How old am I?) | https://www.bing.com/ck/a?!&&p=f6d044e4c...
+🌐 NAVEGACIÓN WEB:    ✅ 2 resultados para comunidad_competitivo
+🌐 NAVEGACIÓN WEB: 🔎 Búsqueda 5/5: reviews_impacto
+🌐 NAVEGACIÓN WEB:    🔍 Query: Age Of Empires reviews críticas impacto gaming cultura
+🌐 NAVEGACIÓN WEB: 🎭 Iniciando búsqueda Playwright en subprocess separado (solución event loop)...
+🌐 NAVEGACIÓN WEB: 🌐 Ejecutando navegación Playwright: 'Age Of Empires reviews críticas impacto gaming cultura' en bing
+🌐 NAVEGACIÓN WEB: ✅ Navegación Playwright EXITOSA: 2 resultados reales encontrados
+🌐 NAVEGACIÓN WEB:    🔗 URL navegada: https://www.bing.com/search?q=Age+Of+Empires+reviews+cr%C3%ADticas+impacto+gaming+cultura&count=20
+🌐 NAVEGACIÓN WEB:    📄 1. Age Calculator | https://www.bing.com/ck/a?!&&p=70bac221c...
+🌐 NAVEGACIÓN WEB:    📄 2. Age Calculator (How old am I?) | https://www.bing.com/ck/a?!&&p=692148f4a...
+🌐 NAVEGACIÓN WEB:    ✅ 2 resultados para reviews_impacto
+🌐 NAVEGACIÓN WEB: 📊 TOTAL: 10 resultados de 5 búsquedas granulares
+🌐 NAVEGACIÓN WEB:    🎯 Categorías cubiertas: historia_lore, mecanicas_gameplay, expansiones_actualizaciones, comunidad_competitivo, reviews_impacto
+🔧 execute_step_internal returned: {'success': True, 'agent_approved': True, 'evaluation': {'step_completed': True, 'should_continue': False, 'reason': 'Búsqueda completada: 8 fuentes (score: 100%)', 'feedback': 'Validación robusta exitosa', 'validation_mode': 'moderate', 'completeness_score': 100, 'validation_system': 'robust'}, 'data': {'success': True, 'tool_used': 'web_search', 'original_tool': 'web_search', 'strategy': 'lenient', 'timestamp': '2025-08-10T12:27:24.232006', 'execution_time': 53.73111271858215, 'tool_name': 'web_search', 'parameters': {'query': 'Buscar información sobre las mecánicas básicas Age Empires Realizar una', 'num_results': 8, 'max_results': 8, 'search_engine': 'bing', 'extract_content': True}, 'query': 'Age of Empires', 'search_engine': 'bing', 'results_count': 8, 'results': [{'title': 'Age Calculator', 'url': 'https://www.bing.com/ck/a?!&&p=a36c13001675f179cda81a5254c013d9ea6c2132343d7354f85d06fff306a403JmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=2b998ae3-6724-6a68-2557-9ca766406b42&u=a1aHR0cHM6Ly93d3cuY2FsY3VsYXRvci5uZXQvYWdlLWNhbGN1bGF0b3IuaHRtbA&ntb=1', 'snippet': 'This free age calculator computes age in terms of years, months, weeks, days, hours, minutes, and seconds, given a date of birth.', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828799.960097, 'search_category': 'historia_lore', 'granular_search': True, 'search_query_used': 'Age Of Empires historia lore argumento campaña'}, {'title': 'Age Calculator (How old am I?)', 'url': 'https://www.bing.com/ck/a?!&&p=a51597bb1f1679be836ea4e65f167f4645b382a75448cfa514a9c9b62c1a490dJmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=2b998ae3-6724-6a68-2557-9ca766406b42&u=a1aHR0cHM6Ly93d3cuZ2lnYWNhbGN1bGF0b3IuY29tL2NhbGN1bGF0b3JzL2FnZS1jYWxjdWxhdG9yLnBocA&ntb=1', 'snippet': 'Calculate how old you are or how old is someone else based on the date of birth (DoB) or the year you were born in. If you are asking yourself how old am I and need an answer accurate to the …', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828799.9857917, 'search_category': 'historia_lore', 'granular_search': True, 'search_query_used': 'Age Of Empires historia lore argumento campaña'}, {'title': 'Age Calculator', 'url': 'https://www.bing.com/ck/a?!&&p=65b9e782a0c9b43a07c822fc107cdd7c96cde4a18c174513b814ccb56b09965cJmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=34f225f7-c5ce-6415-387d-33b3c4d8654e&u=a1aHR0cHM6Ly93d3cuY2FsY3VsYXRvci5uZXQvYWdlLWNhbGN1bGF0b3IuaHRtbA&ntb=1', 'snippet': 'This free age calculator computes age in terms of years, months, weeks, days, hours, minutes, and seconds, given a date of birth.', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828810.5820386, 'search_category': 'mecanicas_gameplay', 'granular_search': True, 'search_query_used': 'Age Of Empires mecánicas juego gameplay tutorial'}, {'title': 'Age Calculator (How old am I?)', 'url': 'https://www.bing.com/ck/a?!&&p=64a79390f917498ae067419cbd9cfc717bfa24f512ef4f43995d9fbd862dfb49JmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=34f225f7-c5ce-6415-387d-33b3c4d8654e&u=a1aHR0cHM6Ly93d3cuZ2lnYWNhbGN1bGF0b3IuY29tL2NhbGN1bGF0b3JzL2FnZS1jYWxjdWxhdG9yLnBocA&ntb=1', 'snippet': 'Calculate how old you are or how old is someone else based on the date of birth (DoB) or the year you were born in. If you are asking yourself how old am I and need an answer accurate to …', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828810.6456513, 'search_category': 'mecanicas_gameplay', 'granular_search': True, 'search_query_used': 'Age Of Empires mecánicas juego gameplay tutorial'}, {'title': 'Age Calculator', 'url': 'https://www.bing.com/ck/a?!&&p=cb506eb38de4e58b1e0b86666405f3813f1248fa99f33667de72efa6d8fc0bcfJmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=22987907-fb1d-651a-1286-6f43fa08648a&u=a1aHR0cHM6Ly93d3cuY2FsY3VsYXRvci5uZXQvYWdlLWNhbGN1bGF0b3IuaHRtbA&ntb=1', 'snippet': 'This free age calculator computes age in terms of years, months, weeks, days, hours, minutes, and seconds, given a date of birth.', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828821.2443361, 'search_category': 'expansiones_actualizaciones', 'granular_search': True, 'search_query_used': 'Age Of Empires expansiones DLC actualizaciones parches'}, {'title': 'Age Calculator (How old am I?)', 'url': 'https://www.bing.com/ck/a?!&&p=2124a5e671c80f9a8355332a811911f97f254af4502f80a939285a16a4dd53cdJmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=22987907-fb1d-651a-1286-6f43fa08648a&u=a1aHR0cHM6Ly93d3cuZ2lnYWNhbGN1bGF0b3IuY29tL2NhbGN1bGF0b3JzL2FnZS1jYWxjdWxhdG9yLnBocA&ntb=1', 'snippet': 'Calculate how old you are or how old is someone else based on the date of birth (DoB) or the year you were born in. If you are asking yourself how old am I and need an answer accurate to …', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828821.270727, 'search_category': 'expansiones_actualizaciones', 'granular_search': True, 'search_query_used': 'Age Of Empires expansiones DLC actualizaciones parches'}, {'title': 'Age Calculator', 'url': 'https://www.bing.com/ck/a?!&&p=982ee313ebef15bcc93e8329fdee59265e1451d6987f6d5b08d3db9aa3c5858eJmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=0fc5191e-6ff4-6940-193a-0f5a6ea2689e&u=a1aHR0cHM6Ly93d3cuY2FsY3VsYXRvci5uZXQvYWdlLWNhbGN1bGF0b3IuaHRtbA&ntb=1', 'snippet': 'This free age calculator computes age in terms of years, months, weeks, days, hours, minutes, and seconds, given a date of birth.', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828831.945889, 'search_category': 'comunidad_competitivo', 'granular_search': True, 'search_query_used': 'Age Of Empires estadísticas jugadores ranking competitivo'}, {'title': 'Age Calculator (How old am I?)', 'url': 'https://www.bing.com/ck/a?!&&p=f6d044e4c3158e01c681720c83f5dcec352a4689e103efc70745d7fe4e036235JmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=0fc5191e-6ff4-6940-193a-0f5a6ea2689e&u=a1aHR0cHM6Ly93d3cuZ2lnYWNhbGN1bGF0b3IuY29tL2NhbGN1bGF0b3JzL2FnZS1jYWxjdWxhdG9yLnBocA&ntb=1', 'snippet': 'Calculate how old you are or how old is someone else based on the date of birth (DoB) or the year you were born in. If you are asking yourself how old am I and need an answer accurate to …', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828832.0451522, 'search_category': 'comunidad_competitivo', 'granular_search': True, 'search_query_used': 'Age Of Empires estadísticas jugadores ranking competitivo'}], 'search_results': [{'title': 'Age Calculator', 'url': 'https://www.bing.com/ck/a?!&&p=a36c13001675f179cda81a5254c013d9ea6c2132343d7354f85d06fff306a403JmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=2b998ae3-6724-6a68-2557-9ca766406b42&u=a1aHR0cHM6Ly93d3cuY2FsY3VsYXRvci5uZXQvYWdlLWNhbGN1bGF0b3IuaHRtbA&ntb=1', 'snippet': 'This free age calculator computes age in terms of years, months, weeks, days, hours, minutes, and seconds, given a date of birth.', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828799.960097, 'search_category': 'historia_lore', 'granular_search': True, 'search_query_used': 'Age Of Empires historia lore argumento campaña'}, {'title': 'Age Calculator (How old am I?)', 'url': 'https://www.bing.com/ck/a?!&&p=a51597bb1f1679be836ea4e65f167f4645b382a75448cfa514a9c9b62c1a490dJmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=2b998ae3-6724-6a68-2557-9ca766406b42&u=a1aHR0cHM6Ly93d3cuZ2lnYWNhbGN1bGF0b3IuY29tL2NhbGN1bGF0b3JzL2FnZS1jYWxjdWxhdG9yLnBocA&ntb=1', 'snippet': 'Calculate how old you are or how old is someone else based on the date of birth (DoB) or the year you were born in. If you are asking yourself how old am I and need an answer accurate to the …', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828799.9857917, 'search_category': 'historia_lore', 'granular_search': True, 'search_query_used': 'Age Of Empires historia lore argumento campaña'}, {'title': 'Age Calculator', 'url': 'https://www.bing.com/ck/a?!&&p=65b9e782a0c9b43a07c822fc107cdd7c96cde4a18c174513b814ccb56b09965cJmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=34f225f7-c5ce-6415-387d-33b3c4d8654e&u=a1aHR0cHM6Ly93d3cuY2FsY3VsYXRvci5uZXQvYWdlLWNhbGN1bGF0b3IuaHRtbA&ntb=1', 'snippet': 'This free age calculator computes age in terms of years, months, weeks, days, hours, minutes, and seconds, given a date of birth.', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828810.5820386, 'search_category': 'mecanicas_gameplay', 'granular_search': True, 'search_query_used': 'Age Of Empires mecánicas juego gameplay tutorial'}, {'title': 'Age Calculator (How old am I?)', 'url': 'https://www.bing.com/ck/a?!&&p=64a79390f917498ae067419cbd9cfc717bfa24f512ef4f43995d9fbd862dfb49JmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=34f225f7-c5ce-6415-387d-33b3c4d8654e&u=a1aHR0cHM6Ly93d3cuZ2lnYWNhbGN1bGF0b3IuY29tL2NhbGN1bGF0b3JzL2FnZS1jYWxjdWxhdG9yLnBocA&ntb=1', 'snippet': 'Calculate how old you are or how old is someone else based on the date of birth (DoB) or the year you were born in. If you are asking yourself how old am I and need an answer accurate to …', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828810.6456513, 'search_category': 'mecanicas_gameplay', 'granular_search': True, 'search_query_used': 'Age Of Empires mecánicas juego gameplay tutorial'}, {'title': 'Age Calculator', 'url': 'https://www.bing.com/ck/a?!&&p=cb506eb38de4e58b1e0b86666405f3813f1248fa99f33667de72efa6d8fc0bcfJmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=22987907-fb1d-651a-1286-6f43fa08648a&u=a1aHR0cHM6Ly93d3cuY2FsY3VsYXRvci5uZXQvYWdlLWNhbGN1bGF0b3IuaHRtbA&ntb=1', 'snippet': 'This free age calculator computes age in terms of years, months, weeks, days, hours, minutes, and seconds, given a date of birth.', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828821.2443361, 'search_category': 'expansiones_actualizaciones', 'granular_search': True, 'search_query_used': 'Age Of Empires expansiones DLC actualizaciones parches'}, {'title': 'Age Calculator (How old am I?)', 'url': 'https://www.bing.com/ck/a?!&&p=2124a5e671c80f9a8355332a811911f97f254af4502f80a939285a16a4dd53cdJmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=22987907-fb1d-651a-1286-6f43fa08648a&u=a1aHR0cHM6Ly93d3cuZ2lnYWNhbGN1bGF0b3IuY29tL2NhbGN1bGF0b3JzL2FnZS1jYWxjdWxhdG9yLnBocA&ntb=1', 'snippet': 'Calculate how old you are or how old is someone else based on the date of birth (DoB) or the year you were born in. If you are asking yourself how old am I and need an answer accurate to …', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828821.270727, 'search_category': 'expansiones_actualizaciones', 'granular_search': True, 'search_query_used': 'Age Of Empires expansiones DLC actualizaciones parches'}, {'title': 'Age Calculator', 'url': 'https://www.bing.com/ck/a?!&&p=982ee313ebef15bcc93e8329fdee59265e1451d6987f6d5b08d3db9aa3c5858eJmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=0fc5191e-6ff4-6940-193a-0f5a6ea2689e&u=a1aHR0cHM6Ly93d3cuY2FsY3VsYXRvci5uZXQvYWdlLWNhbGN1bGF0b3IuaHRtbA&ntb=1', 'snippet': 'This free age calculator computes age in terms of years, months, weeks, days, hours, minutes, and seconds, given a date of birth.', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828831.945889, 'search_category': 'comunidad_competitivo', 'granular_search': True, 'search_query_used': 'Age Of Empires estadísticas jugadores ranking competitivo'}, {'title': 'Age Calculator (How old am I?)', 'url': 'https://www.bing.com/ck/a?!&&p=f6d044e4c3158e01c681720c83f5dcec352a4689e103efc70745d7fe4e036235JmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=0fc5191e-6ff4-6940-193a-0f5a6ea2689e&u=a1aHR0cHM6Ly93d3cuZ2lnYWNhbGN1bGF0b3IuY29tL2NhbGN1bGF0b3JzL2FnZS1jYWxjdWxhdG9yLnBocA&ntb=1', 'snippet': 'Calculate how old you are or how old is someone else based on the date of birth (DoB) or the year you were born in. If you are asking yourself how old am I and need an answer accurate to …', 'source': 'bing', 'method': 'playwright_subprocess_real', 'timestamp': 1754828832.0451522, 'search_category': 'comunidad_competitivo', 'granular_search': True, 'search_query_used': 'Age Of Empires estadísticas jugadores ranking competitivo'}], 'extract_content': True, 'visualization_enabled': False, 'screenshots_generated': False, 'strategy_used': 'lenient', 'attempt_number': 1, 'evaluation': {'step_completed': True, 'should_continue': False, 'reason': 'Búsqueda exitosa: 8 resultados encontrados', 'strategy': 'lenient'}}}
+✅ execute_step_internal completed for step 1 - AGENT APPROVED
+💾 Database updated: 1/4 steps completed, current_step: 1
+⚡ EXECUTING STEP 2/4: Recopilar datos sobre las expansiones oficiales y su contenido
+   Tool: web_search
+   Description: Investigar cada expansión (The Conquerors, Definitive Edition, etc.) y documentar nuevas unidades, c...
+🔧 About to call execute_step_internal with step_id: step-2
+🧠 EXTRACTOR INTELIGENTE INPUT: 'Recopilar datos sobre las expansiones oficiales contenido Investigar cada expansión'
+🧠 INTELLIGENT GENERATOR INPUT: 'Recopilar datos sobre las expansiones oficiales contenido Investigar cada expansión'
+🔄 INTENTO 1/5: Generando query...
+✅ PROPER NOUNS DETECTED: ['Recopilar', 'Investigar'] - NOT problematic
+📝 QUERY CANDIDATA: 'one expansiones oficiales tenido cada'
+❌ QUERY RECHAZADA en intento 1: 'one expansiones oficiales tenido cada'
+❌ RAZONES DE RECHAZO: No preserva tema principal identificado
+🔄 Generando nueva query (intento 2)...
+🔄 INTENTO 2/5: Generando query...
+📝 QUERY CANDIDATA: 'one expansiones'
+❌ QUERY RECHAZADA en intento 2: 'one expansiones'
+❌ RAZONES DE RECHAZO: No preserva tema principal identificado
+🔄 Generando nueva query (intento 3)...
+🔄 INTENTO 3/5: Generando query...
+📝 QUERY CANDIDATA: 'Recopilar'
+❌ QUERY RECHAZADA en intento 3: 'Recopilar'
+❌ RAZONES DE RECHAZO: Longitud incorrecta: 1 palabras, Pocos términos específicos reconocibles
+🔄 Generando nueva query (intento 4)...
+🔄 INTENTO 4/5: Generando query...
+📝 QUERY CANDIDATA: 'recopilar expansiones oficiales contenido'
+✅ QUERY APROBADA en intento 4: 'recopilar expansiones oficiales contenido'
+✅ RAZONES DE APROBACIÓN: Longitud apropiada, Sin duplicaciones, Preserva tema principal, Sin palabras meta, Términos específicos: 4, Query específica
+✅ INTELLIGENT EXTRACTION SUCCESS: 'Recopilar datos sobre las expansiones oficiales contenido Investigar cada expansión' → 'recopilar expansiones oficiales contenido'
+🔧 Query limpiado: 'recopilar expansiones oficiales contenido' (original era muy largo)
+🌐 NAVEGACIÓN WEB: 🚀 WebSocket GLOBAL inicializado encontrado
+🔍 EXECUTE_SEARCH_WITH_VISUALIZATION INPUT: 'recopilar expansiones oficiales contenido'
+🔍 _detect_granular_search_needs CALLED WITH: 'recopilar expansiones oficiales contenido'
+🔍 ANALYZING QUERY FOR GRANULAR NEEDS: 'recopilar expansiones oficiales contenido'
+🔍 EXTRACTING SUBJECT FROM: 'recopilar expansiones oficiales contenido'
+❌ NO SUBJECT EXTRACTED
+❌ No se pudo extraer tema principal
+🔍 detect_granular_search_needs RETURNED: 0 searches
+❌ NO GRANULAR SEARCHES FROM INTELLIGENT DETECTOR
+🔄 FALLBACK GRANULAR: 0 búsquedas generadas para query: 'recopilar expansiones oficiales contenido'
+🔍 GRANULAR DETECTION RESULT: 0 searches
+🌐 NAVEGACIÓN WEB: 🚀 INICIANDO NAVEGACIÓN WEB EN TIEMPO REAL...
+🌐 NAVEGACIÓN WEB: 🔍 Consulta: 'recopilar expansiones oficiales contenido'
+🌐 NAVEGACIÓN WEB: 🌐 Motor de búsqueda: bing
+🌐 NAVEGACIÓN WEB: 🎬 Activando navegación en tiempo real con screenshots continuos...
+🌐 NAVEGACIÓN WEB: ✅ RealTimeBrowserTool importado exitosamente
+🌐 NAVEGACIÓN WEB: ✅ Instancia RealTimeBrowserTool creada
+🌐 NAVEGACIÓN WEB: 🌐 Preparando navegación: Buscar información sobre 'recopilar expansiones oficiales contenido' en bing y e...
+[REAL_TIME_BROWSER] 🖥️ Iniciando nuevo servidor X11 virtual en display :99
+[REAL_TIME_BROWSER] ❌ Error configurando X11: Fallo al iniciar servidor Xvfb
+[REAL_TIME_BROWSER] ⚠️ Continuando con servidor X11 existente...
+[REAL_TIME_BROWSER] 🔌 WebSocket inicializado para navegación en tiempo real
+[REAL_TIME_BROWSER] 🔄 Creando nuevo event loop
+[REAL_TIME_BROWSER] 📸 Hilo de captura automática iniciado (intervalo: 1s)
+[REAL_TIME_BROWSER] 🔒 Servidor X11 virtual creado por nosotros cerrado
+🌐 NAVEGACIÓN WEB: ✅ Navegación en tiempo real ejecutada
+🌐 NAVEGACIÓN WEB: ✅ Navegación en tiempo real completada: 14 screenshots capturados
+🌐 NAVEGACIÓN WEB: 📊 Procesando navegación CORRECTA: 0 páginas visitadas, 14 screenshots
+🌐 NAVEGACIÓN WEB: 🔍 FILTRADO: 0 páginas con contenido real de 0 visitadas
+🌐 NAVEGACIÓN WEB:    📸 Screenshot único 1: https://www.bing.com/...
+🌐 NAVEGACIÓN WEB: ✅ Extracción CORREGIDA completada: 1 resultados con navegación en tiempo real
+🔍 SOURCES DEBUG: Final results summary:
+🔍 SOURCES DEBUG: Total results: 1
+🔍 SOURCES DEBUG: Unique domains: 1
+🔍 SOURCES DEBUG: Domains visited: ['www.bing.com']
+🚨 SOURCE DIVERSITY PROBLEM: Only Bing sources detected!
+🌐 NAVEGACIÓN WEB: 📊 Extracción completada: 1 resultados obtenidos
+🔧 execute_step_internal returned: {'success': True, 'agent_approved': True, 'evaluation': {'step_completed': True, 'should_continue': False, 'reason': 'Búsqueda aceptable: 1 fuentes (score: 90.0%)', 'feedback': 'Validación robusta exitosa', 'validation_mode': 'moderate', 'completeness_score': 90.0, 'validation_system': 'robust'}, 'data': {'success': True, 'tool_used': 'web_search', 'original_tool': 'web_search', 'strategy': 'lenient', 'timestamp': '2025-08-10T12:28:03.693538', 'execution_time': 39.453683853149414, 'tool_name': 'web_search', 'parameters': {'query': 'Recopilar datos sobre las expansiones oficiales contenido Investigar cada expansión', 'num_results': 8, 'max_results': 8, 'search_engine': 'bing', 'extract_content': True}, 'query': 'recopilar expansiones oficiales contenido', 'search_engine': 'bing', 'results_count': 1, 'results': [{'title': 'Captura navegación bing #1', 'url': 'https://www.bing.com/', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "recopilar expansiones oficiales contenido" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828742641-1-1418/real_navigation_000_1754828847656.jpeg', 'screenshot_captured': True, 'timestamp': 1754828848.1463578, 'navigation_data': {'screenshot_index': 0, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}], 'search_results': [{'title': 'Captura navegación bing #1', 'url': 'https://www.bing.com/', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "recopilar expansiones oficiales contenido" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828742641-1-1418/real_navigation_000_1754828847656.jpeg', 'screenshot_captured': True, 'timestamp': 1754828848.1463578, 'navigation_data': {'screenshot_index': 0, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}], 'extract_content': True, 'visualization_enabled': False, 'screenshots_generated': True, 'strategy_used': 'lenient', 'attempt_number': 1, 'evaluation': {'step_completed': True, 'should_continue': False, 'reason': 'Búsqueda exitosa: 1 resultados encontrados', 'strategy': 'lenient'}}}
+✅ execute_step_internal completed for step 2 - AGENT APPROVED
+💾 Database updated: 2/4 steps completed, current_step: 2
+⚡ EXECUTING STEP 3/4: Obtener estadísticas de jugadores y datos de esports
+   Tool: web_search
+   Description: Buscar y extraer datos de rankings, partidas profesionales y métricas de rendimiento de jugadores de...
+🔧 About to call execute_step_internal with step_id: step-3
+🧠 EXTRACTOR INTELIGENTE INPUT: 'Obtener estadísticas jugadores datos esports Buscar extraer datos rankings, partidas'
+🧠 INTELLIGENT GENERATOR INPUT: 'Obtener estadísticas jugadores datos esports Buscar extraer datos rankings, partidas'
+🔄 INTENTO 1/5: Generando query...
+✅ PROPER NOUNS DETECTED: ['Obtener', 'Buscar'] - NOT problematic
+📝 QUERY CANDIDATA: 'jugadores ranking estadísticas esports extraer'
+❌ QUERY RECHAZADA en intento 1: 'jugadores ranking estadísticas esports extraer'
+❌ RAZONES DE RECHAZO: No preserva tema principal identificado
+🔄 Generando nueva query (intento 2)...
+🔄 INTENTO 2/5: Generando query...
+📝 QUERY CANDIDATA: 'jugadores ranking'
+❌ QUERY RECHAZADA en intento 2: 'jugadores ranking'
+❌ RAZONES DE RECHAZO: No preserva tema principal identificado
+🔄 Generando nueva query (intento 3)...
+🔄 INTENTO 3/5: Generando query...
+📝 QUERY CANDIDATA: 'Obtener'
+❌ QUERY RECHAZADA en intento 3: 'Obtener'
+❌ RAZONES DE RECHAZO: Longitud incorrecta: 1 palabras, Pocos términos específicos reconocibles
+🔄 Generando nueva query (intento 4)...
+🔄 INTENTO 4/5: Generando query...
+📝 QUERY CANDIDATA: 'jugadores esports extraer rankings'
+❌ QUERY RECHAZADA en intento 4: 'jugadores esports extraer rankings'
+❌ RAZONES DE RECHAZO: No preserva tema principal identificado
+🔄 Generando nueva query (intento 5)...
+🔄 INTENTO 5/5: Generando query...
+📝 QUERY CANDIDATA: 'Obtener información actualizada'
+✅ QUERY APROBADA en intento 5: 'Obtener información actualizada'
+✅ RAZONES DE APROBACIÓN: Longitud apropiada, Sin duplicaciones, Preserva tema principal, Términos específicos: 3
+✅ INTELLIGENT EXTRACTION SUCCESS: 'Obtener estadísticas jugadores datos esports Buscar extraer datos rankings, partidas' → 'Obtener información actualizada'
+🔧 Query limpiado: 'Obtener información actualizada' (original era muy largo)
+🌐 NAVEGACIÓN WEB: 🚀 WebSocket GLOBAL inicializado encontrado
+🔍 EXECUTE_SEARCH_WITH_VISUALIZATION INPUT: 'Obtener información actualizada'
+🔍 _detect_granular_search_needs CALLED WITH: 'Obtener información actualizada'
+🔍 ANALYZING QUERY FOR GRANULAR NEEDS: 'Obtener información actualizada'
+🔍 EXTRACTING SUBJECT FROM: 'Obtener información actualizada'
+✅ SUBJECT FOUND (Method 5 - Single Proper Noun): 'Obtener'
+✅ TEMA PRINCIPAL DETECTADO: 'Obtener'
+📊 TIPO DE TEMA CLASIFICADO: general_topic
+🔍 EVALUATING GRANULAR NEED FOR: 'Obtener' (type: general_topic)
+❌ NO REQUIERE GRANULARIDAD - Búsqueda simple suficiente
+🔍 NECESITA GRANULARIDAD: False
+❌ Tema no requiere búsquedas granulares - búsqueda simple
+🔍 detect_granular_search_needs RETURNED: 0 searches
+❌ NO GRANULAR SEARCHES FROM INTELLIGENT DETECTOR
+🔄 FALLBACK GRANULAR: 0 búsquedas generadas para query: 'Obtener información actualizada'
+🔍 GRANULAR DETECTION RESULT: 0 searches
+🌐 NAVEGACIÓN WEB: 🚀 INICIANDO NAVEGACIÓN WEB EN TIEMPO REAL...
+🌐 NAVEGACIÓN WEB: 🔍 Consulta: 'Obtener información actualizada'
+🌐 NAVEGACIÓN WEB: 🌐 Motor de búsqueda: bing
+🌐 NAVEGACIÓN WEB: 🎬 Activando navegación en tiempo real con screenshots continuos...
+🌐 NAVEGACIÓN WEB: ✅ RealTimeBrowserTool importado exitosamente
+🌐 NAVEGACIÓN WEB: ✅ Instancia RealTimeBrowserTool creada
+🌐 NAVEGACIÓN WEB: 🌐 Preparando navegación: Buscar información sobre 'Obtener información actualizada' en bing y explorar lo...
+[REAL_TIME_BROWSER] 🖥️ Iniciando nuevo servidor X11 virtual en display :99
+[REAL_TIME_BROWSER] ❌ Error configurando X11: Fallo al iniciar servidor Xvfb
+[REAL_TIME_BROWSER] ⚠️ Continuando con servidor X11 existente...
+[REAL_TIME_BROWSER] 🔌 WebSocket inicializado para navegación en tiempo real
+[REAL_TIME_BROWSER] 🔄 Creando nuevo event loop
+[REAL_TIME_BROWSER] 📸 Hilo de captura automática iniciado (intervalo: 1s)
+[REAL_TIME_BROWSER] 🔍 EXTRAYENDO términos de: 'Buscar información sobre 'Obtener información actualizada' en bing y explorar los primeros resultados con screenshots continuos'
+[REAL_TIME_BROWSER] ✅ PATRÓN ESPECÍFICO detectado: 'Obtener información actualizada'
+[REAL_TIME_BROWSER] 🔍 Probando selector 1: input[name="q"]
+[REAL_TIME_BROWSER] ✅ Campo de búsqueda encontrado con: input[name="q"]
+[REAL_TIME_BROWSER] 🔄 Limpiando campo de búsqueda...
+[REAL_TIME_BROWSER] ⌨️ Escribiendo términos: 'Obtener información actualizada'
+[REAL_TIME_BROWSER] ✅ Términos de búsqueda escritos correctamente
+[REAL_TIME_BROWSER] 🔍 Enviando búsqueda con Enter...
+[REAL_TIME_BROWSER] ✅ Búsqueda enviada con Enter exitosamente
+[REAL_TIME_BROWSER] ✅ Encontrados 10 resultados con: .b_algo h2 a
+[REAL_TIME_BROWSER] 🔗 DEBUG Link 1: obtener información actualizada - Traduc... -> https://www.bing.com/ck/a?!&&p=4e348485a15d53943fea59c8a3b03...
+[REAL_TIME_BROWSER] 🔗 DEBUG Link 2: obtener información actualizada translat... -> https://www.bing.com/ck/a?!&&p=d96a3cec044a268a4d1b4ac221295...
+[REAL_TIME_BROWSER] 🔗 DEBUG Link 3: Modelo de carta solicitando información ... -> https://www.bing.com/ck/a?!&&p=9c7227e22f4b7c68bd4bae929afa4...
+[REAL_TIME_BROWSER] 🎯 Explorando hasta 3 sitios web diferentes para mayor diversidad
+[REAL_TIME_BROWSER] 🎯 DEBUG: Procesando enlace 1: obtener información actualizada - Traduc... -> https://www.bing.com/ck/a?!&&p=4e348485a15d53943fea59c8a3b03...
+🔍 SOURCES DEBUG: About to navigate to DIVERSE source #1: www.bing.com
+[REAL_TIME_BROWSER] 🌐 Navegando directamente a: https://www.bing.com/ck/a?!&&p=4e348485a15d53943fe...
+[REAL_TIME_BROWSER] ⚠️ Error explorando resultado 1: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.bing.com/ck/a?!&&p=4e348485a15d53943fea59c8a3b037c7c1898e0110ce81230be118d2b96a35a9JmltdHM9MTc1NDc4NDAwMA&ptn=3&ver=2&hsh=4&fclid=39c37e2a-c702-6904-371c-686ec6a368c0&u=a1aHR0cHM6Ly93d3cubGluZ3VlZS5lcy9lc3Bhbm9sLWluZ2xlcy90cmFkdWNjaW9uL29idGVuZXIraW5mb3JtYWNpJUMzJUIzbithY3R1YWxpemFkYS5odG1s&ntb=1", waiting until "networkidle"
+
+[REAL_TIME_BROWSER] 🔍 DEBUG: Usando selector h3 a, encontrados: 0
+[REAL_TIME_BROWSER] 🔍 DEBUG: Usando selector amplio, encontrados: 71
+[REAL_TIME_BROWSER] 🎯 DEBUG: Procesando enlace 2: Traductor... -> https://www.DeepL.com/translator?utm_source=lingueees&utm_me...
+🔍 SOURCES DEBUG: About to navigate to DIVERSE source #1: www.deepl.com
+[REAL_TIME_BROWSER] 🌐 Navegando directamente a: https://www.DeepL.com/translator?utm_source=lingue...
+[REAL_TIME_BROWSER] ✅ Navegación exitosa a dominio real: www.deepl.com
+[REAL_TIME_BROWSER] 📄 Extrayendo contenido detallado de www.deepl.com...
+[REAL_TIME_BROWSER] 📊 Contenido extraído de www.deepl.com:
+[REAL_TIME_BROWSER]    📝 Caracteres: 757
+[REAL_TIME_BROWSER]    🎯 Método: article-content
+[REAL_TIME_BROWSER]    ⭐ Calidad: medium
+[REAL_TIME_BROWSER] 📄 Contenido extraído: 757 caracteres de DeepL Translate: The world's m...
+[REAL_TIME_BROWSER] 🔄 Volviendo a resultados para siguiente enlace (1/6 completados)...
+[REAL_TIME_BROWSER] ⚠️ Error explorando resultado 2: Timeout 30000ms exceeded.
+[REAL_TIME_BROWSER] 🔍 DEBUG: Usando selector h3 a, encontrados: 0
+[REAL_TIME_BROWSER] ⚠️ Error capturando screenshot: 
+[REAL_TIME_BROWSER] 🔍 DEBUG: Usando selector amplio, encontrados: 71
+[REAL_TIME_BROWSER] 🎯 DEBUG: Procesando enlace 3: Write... -> https://www.DeepL.com/write?utm_source=lingueees&utm_medium=...
+🔍 SOURCES DEBUG: About to navigate to DIVERSE source #2: www.deepl.com
+[REAL_TIME_BROWSER] 🌐 Navegando directamente a: https://www.DeepL.com/write?utm_source=lingueees&u...
+[REAL_TIME_BROWSER] ⚠️ Error capturando screenshot: 
+[REAL_TIME_BROWSER] ⚠️ Error capturando screenshot: 
+[REAL_TIME_BROWSER] ⚠️ Error explorando resultado 3: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.deepl.com/write?utm_source=lingueees&utm_medium=linguee&utm_content=header_write", waiting until "networkidle"
+
+[REAL_TIME_BROWSER] ⚠️ Error capturando screenshot: 
+[REAL_TIME_BROWSER] ⚠️ Error en captura de screenshot: Page.screenshot: Timeout 30000ms exceeded.
+Call log:
+  - taking page screenshot
+
+[REAL_TIME_BROWSER] ⚠️ Error en captura de screenshot: Page.screenshot: Internal error: cannot register cleanup after operation has finished.
+[REAL_TIME_BROWSER] ⚠️ Error en captura de screenshot: Page.screenshot: Target page, context or browser has been closed
+Call log:
+  - taking page screenshot
+
+[REAL_TIME_BROWSER] 🔒 Servidor X11 virtual creado por nosotros cerrado
+🌐 NAVEGACIÓN WEB: ✅ Navegación en tiempo real ejecutada
+🌐 NAVEGACIÓN WEB: ✅ Navegación en tiempo real completada: 95 screenshots capturados
+🌐 NAVEGACIÓN WEB: 📊 Procesando navegación CORRECTA: 3 páginas visitadas, 95 screenshots
+🔍 SOURCES DEBUG: Processing page: https://www.bing.com
+🔍 SOURCES DEBUG: Processing page: https://www.bing.com/search?q=Obtener+informaci%C3%B3n+actualizada&search=Submit&form=QBLH&rdr=1&rdrig=A5801C35A4CF4D559FA58FF164AD235D
+🔍 SOURCES DEBUG: Processing page: https://www.deepl.com/en/translator?utm_source=lingueees&utm_medium=linguee&utm_content=header_translator
+✅ INCLUIDA: https://www.deepl.com/en/translator?utm_source=lingueees&utm_medium=linguee&utm_content=header_translator - Content length: 757
+🌐 NAVEGACIÓN WEB: 🔍 FILTRADO: 1 páginas con contenido real de 3 visitadas
+🌐 NAVEGACIÓN WEB:    📄 Resultado real 1: DeepL Translate: The world's most accurate transla... [Screenshot: ✅]
+🌐 NAVEGACIÓN WEB:    📸 Screenshot único 2: https://www.bing.com/...
+🌐 NAVEGACIÓN WEB:    📸 Screenshot único 3: https://www.bing.com/search?q=Obtener+informaci%C3...
+🌐 NAVEGACIÓN WEB:    📸 Screenshot único 4: https://www.bing.com/search?q=Obtener+informaci%C3...
+🌐 NAVEGACIÓN WEB:    📸 Screenshot único 5: https://www.linguee.es/espanol-ingles/traduccion/o...
+🌐 NAVEGACIÓN WEB: ✅ Extracción CORREGIDA completada: 5 resultados con navegación en tiempo real
+🔍 SOURCES DEBUG: Final results summary:
+🔍 SOURCES DEBUG: Total results: 5
+🔍 SOURCES DEBUG: Unique domains: 3
+🔍 SOURCES DEBUG: Domains visited: ['www.deepl.com', 'www.linguee.es', 'www.bing.com']
+✅ GOOD SOURCE DIVERSITY: 3 different domains
+🌐 NAVEGACIÓN WEB: 📊 Extracción completada: 5 resultados obtenidos
+🔧 execute_step_internal returned: {'success': True, 'agent_approved': True, 'evaluation': {'step_completed': True, 'should_continue': False, 'reason': 'Búsqueda completada: 5 fuentes (score: 100%)', 'feedback': 'Validación robusta exitosa', 'validation_mode': 'moderate', 'completeness_score': 100, 'validation_system': 'robust'}, 'data': {'success': True, 'tool_used': 'web_search', 'original_tool': 'web_search', 'strategy': 'lenient', 'timestamp': '2025-08-10T12:31:10.734576', 'execution_time': 187.03272676467896, 'tool_name': 'web_search', 'parameters': {'query': 'Obtener estadísticas jugadores datos esports Buscar extraer datos rankings, partidas', 'num_results': 8, 'max_results': 8, 'search_engine': 'bing', 'extract_content': True}, 'query': 'Obtener información actualizada', 'search_engine': 'bing', 'results_count': 5, 'results': [{'title': "DeepL Translate: The world's most accurate translator", 'url': 'https://www.deepl.com/en/translator?utm_source=lingueees&utm_medium=linguee&utm_content=header_translator', 'snippet': "Contenido real extraído de DeepL Translate: The world's most accurate translator: Millions translate with DeepL every day. Popular: Spanish to English, French to English, and Japanese to English. Translation modes Translate text 35 languages Translate files .pdf, .docx, .pptx DeepL...", 'source': 'bing', 'method': 'real_time_navigation', 'screenshot_url': '/api/files/screenshots/task-1754828742641-1-1418/real_navigation_039_1754828943637.jpeg', 'screenshot_captured': True, 'timestamp': 1754828973.48047, 'content_extracted': True, 'content_preview': 'Millions translate with DeepL every day. Popular: Spanish to English, French to English, and Japanese to English. Translation modes Translate text 35 languages Translate files .pdf, .docx, .pptx DeepL Write AI-powered edits Translate text Select source language. Currently selected: Detect language S', 'content_length': 757, 'navigation_data': {'pages_visited': 1, 'screenshots_taken': 95, 'actions_performed': 3, 'real_time_capture': True, 'page_index': 0, 'has_real_content': True}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #2', 'url': 'https://www.bing.com/', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Obtener información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828742641-1-1418/real_navigation_000_1754828887138.jpeg', 'screenshot_captured': True, 'timestamp': 1754828887.629144, 'navigation_data': {'screenshot_index': 0, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #3', 'url': 'https://www.bing.com/search?q=Obtener+informaci%C3%B3n+actualizada&search=Submit&form=QBLH', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Obtener información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828742641-1-1418/real_navigation_009_1754828900625.jpeg', 'screenshot_captured': True, 'timestamp': 1754828901.4378002, 'navigation_data': {'screenshot_index': 9, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/search?q=Obtener+informaci%C3%B3n+actualizada&search=Submit&form=QBLH'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #4', 'url': 'https://www.bing.com/search?q=Obtener+informaci%C3%B3n+actualizada&search=Submit&form=QBLH&rdr=1&rdrig=A5801C35A4CF4D559FA58FF164AD235D', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Obtener información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828742641-1-1418/real_navigation_011_1754828903753.jpeg', 'screenshot_captured': True, 'timestamp': 1754828904.0670688, 'navigation_data': {'screenshot_index': 11, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/search?q=Obtener+informaci%C3%B3n+actualizada&search=Submit&form=QBLH&rdr=1&rdrig=A5801C35A4CF4D559FA58FF164AD235D'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #5', 'url': 'https://www.linguee.es/espanol-ingles/traduccion/obtener+informaci%C3%B3n+actualizada.html', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Obtener información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828742641-1-1418/real_navigation_015_1754828908417.jpeg', 'screenshot_captured': True, 'timestamp': 1754828909.836975, 'navigation_data': {'screenshot_index': 15, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.linguee.es/espanol-ingles/traduccion/obtener+informaci%C3%B3n+actualizada.html'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}], 'search_results': [{'title': "DeepL Translate: The world's most accurate translator", 'url': 'https://www.deepl.com/en/translator?utm_source=lingueees&utm_medium=linguee&utm_content=header_translator', 'snippet': "Contenido real extraído de DeepL Translate: The world's most accurate translator: Millions translate with DeepL every day. Popular: Spanish to English, French to English, and Japanese to English. Translation modes Translate text 35 languages Translate files .pdf, .docx, .pptx DeepL...", 'source': 'bing', 'method': 'real_time_navigation', 'screenshot_url': '/api/files/screenshots/task-1754828742641-1-1418/real_navigation_039_1754828943637.jpeg', 'screenshot_captured': True, 'timestamp': 1754828973.48047, 'content_extracted': True, 'content_preview': 'Millions translate with DeepL every day. Popular: Spanish to English, French to English, and Japanese to English. Translation modes Translate text 35 languages Translate files .pdf, .docx, .pptx DeepL Write AI-powered edits Translate text Select source language. Currently selected: Detect language S', 'content_length': 757, 'navigation_data': {'pages_visited': 1, 'screenshots_taken': 95, 'actions_performed': 3, 'real_time_capture': True, 'page_index': 0, 'has_real_content': True}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #2', 'url': 'https://www.bing.com/', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Obtener información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828742641-1-1418/real_navigation_000_1754828887138.jpeg', 'screenshot_captured': True, 'timestamp': 1754828887.629144, 'navigation_data': {'screenshot_index': 0, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #3', 'url': 'https://www.bing.com/search?q=Obtener+informaci%C3%B3n+actualizada&search=Submit&form=QBLH', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Obtener información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828742641-1-1418/real_navigation_009_1754828900625.jpeg', 'screenshot_captured': True, 'timestamp': 1754828901.4378002, 'navigation_data': {'screenshot_index': 9, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/search?q=Obtener+informaci%C3%B3n+actualizada&search=Submit&form=QBLH'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #4', 'url': 'https://www.bing.com/search?q=Obtener+informaci%C3%B3n+actualizada&search=Submit&form=QBLH&rdr=1&rdrig=A5801C35A4CF4D559FA58FF164AD235D', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Obtener información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828742641-1-1418/real_navigation_011_1754828903753.jpeg', 'screenshot_captured': True, 'timestamp': 1754828904.0670688, 'navigation_data': {'screenshot_index': 11, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.bing.com/search?q=Obtener+informaci%C3%B3n+actualizada&search=Submit&form=QBLH&rdr=1&rdrig=A5801C35A4CF4D559FA58FF164AD235D'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}, {'title': 'Captura navegación bing #5', 'url': 'https://www.linguee.es/espanol-ingles/traduccion/obtener+informaci%C3%B3n+actualizada.html', 'snippet': 'Screenshot real capturado durante navegación de búsqueda "Obtener información actualizada" en bing.', 'source': 'bing', 'method': 'screenshot_extraction', 'screenshot_url': '/api/files/screenshots/task-1754828742641-1-1418/real_navigation_015_1754828908417.jpeg', 'screenshot_captured': True, 'timestamp': 1754828909.836975, 'navigation_data': {'screenshot_index': 15, 'real_time_capture': True, 'from_screenshot': True, 'url_captured': 'https://www.linguee.es/espanol-ingles/traduccion/obtener+informaci%C3%B3n+actualizada.html'}, 'real_time_navigation': True, 'visual_navigation_enabled': True, 'continuous_screenshots': True, 'x11_server_used': True}], 'extract_content': True, 'visualization_enabled': False, 'screenshots_generated': True, 'strategy_used': 'lenient', 'attempt_number': 1, 'evaluation': {'step_completed': True, 'should_continue': False, 'reason': 'Búsqueda exitosa: 5 resultados encontrados', 'strategy': 'lenient'}}}
