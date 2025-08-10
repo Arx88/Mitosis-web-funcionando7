@@ -9041,10 +9041,78 @@ def execute_step_real(task_id: str, step_id: str, step: dict):
         
         logger.info(f"✅ Paso ejecutado con sistema robusto - Éxito: {result.get('success', False)}")
         
+        # 🚀 CRITICAL FIX: INTEGRAR VALIDACIÓN SUPER ESTRICTA DIRECTAMENTE
+        step_id = step.get('id', '')
+        
+        # APLICAR VALIDACIÓN ENHANCED PARA PASO 1 (investigación)
+        if step_id.endswith('-1') and step.get('tool') == 'web_search':
+            try:
+                from .enhanced_step_validator import EnhancedStepValidator
+                enhanced_validator = EnhancedStepValidator()
+                
+                logger.info(f"🔍 APLICANDO VALIDACIÓN SUPER ESTRICTA para Paso 1: {title}")
+                
+                # Ejecutar validación Step 1 específica
+                enhanced_validation_result = enhanced_validator.validate_step_1_completion(
+                    title, result
+                )
+                
+                # Integrar resultado de validación en el result
+                if not isinstance(result, dict):
+                    result = {'summary': str(result), 'success': True}
+                
+                result['enhanced_validation'] = enhanced_validation_result
+                
+                if not enhanced_validation_result.get('meets_requirements', False):
+                    logger.warning(f"❌ VALIDACIÓN SUPER ESTRICTA FALLÓ - Step 1 no cumple requisitos")
+                    logger.warning(f"❌ Razón: {enhanced_validation_result.get('validation_summary', 'Criterios no cumplidos')}")
+                    result['success'] = False
+                    result['validation_failed'] = True
+                    result['requires_more_research'] = True
+                else:
+                    logger.info(f"✅ VALIDACIÓN SUPER ESTRICTA EXITOSA - Step 1 cumple todos los requisitos")
+                    
+            except ImportError as e:
+                logger.error(f"❌ Error importando EnhancedStepValidator: {e}")
+        
+        # APLICAR VALIDACIÓN ENHANCED PARA PASOS FINALES (creation/processing)  
+        elif step.get('tool') in ['creation', 'processing']:
+            try:
+                from .enhanced_step_validator import EnhancedStepValidator
+                enhanced_validator = EnhancedStepValidator()
+                
+                logger.info(f"🔍 APLICANDO VALIDACIÓN DE CONTENIDO FINAL para: {title}")
+                
+                # Validar calidad del contenido final
+                content_to_validate = str(result)
+                task_context = f"{title} - {description}" 
+                
+                enhanced_validation_result = enhanced_validator.validate_final_content_quality(
+                    title, content_to_validate, task_context
+                )
+                
+                # Integrar resultado de validación
+                if not isinstance(result, dict):
+                    result = {'summary': str(result), 'success': True}
+                
+                result['enhanced_validation'] = enhanced_validation_result
+                
+                if not enhanced_validation_result.get('meets_requirements', False):
+                    logger.warning(f"❌ VALIDACIÓN DE CONTENIDO FINAL FALLÓ - Contenido genérico detectado")
+                    logger.warning(f"❌ Razón: {enhanced_validation_result.get('validation_summary', 'Contenido insuficiente')}")
+                    result['success'] = False
+                    result['validation_failed'] = True  
+                    result['requires_better_content'] = True
+                else:
+                    logger.info(f"✅ VALIDACIÓN DE CONTENIDO FINAL EXITOSA - Contenido específico y completo")
+                    
+            except ImportError as e:
+                logger.error(f"❌ Error importando EnhancedStepValidator para contenido final: {e}")
+        
         # Emitir progreso de finalización
         emit_step_event(task_id, 'task_progress', {
             'step_id': step_id,
-            'activity': "Paso completado con sistema robusto",
+            'activity': "Paso completado con sistema robusto y validación estricta",
             'progress_percentage': 100,
             'timestamp': datetime.now().isoformat()
         })
