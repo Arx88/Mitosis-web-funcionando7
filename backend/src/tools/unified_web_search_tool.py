@@ -420,7 +420,7 @@ class UnifiedWebSearchTool(BaseTool):
         return ' '.join(filtered_words[:6]).lower() if filtered_words else "información actualidad"
 
     def _execute_tool(self, parameters: Dict[str, Any], config: Dict[str, Any] = None) -> ToolExecutionResult:
-        """🚀 EJECUTOR PRINCIPAL CON VISUALIZACIÓN EN TIEMPO REAL"""
+        """🚀 EJECUTOR PRINCIPAL CON VISUALIZACIÓN EN TIEMPO REAL Y FEEDBACK"""
         
         if not self.playwright_available:
             return ToolExecutionResult(
@@ -443,6 +443,27 @@ class UnifiedWebSearchTool(BaseTool):
         
         # Obtener task_id del config si está disponible
         self.task_id = config.get('task_id') if config else None
+        
+        # 🔥 INTEGRAR FEEDBACK MANAGER PARA RECOLECCIÓN DE DATOS EN TIEMPO REAL
+        feedback_manager = None
+        step_id = f"web-search-{int(time.time())}"
+        
+        if self.task_id:
+            try:
+                from ..services.real_time_feedback import get_feedback_manager
+                from ..websocket.websocket_manager import get_websocket_manager
+                websocket_manager = get_websocket_manager()
+                feedback_manager = get_feedback_manager(websocket_manager)
+                
+                # Iniciar recolección de datos para esta búsqueda
+                feedback_manager.start_data_collection_for_task(
+                    self.task_id, 
+                    step_id, 
+                    f"Búsqueda web: {query}"
+                )
+                
+            except Exception as e:
+                print(f"⚠️ Error inicializando feedback manager: {e}")
         
         # DEBUG: Escribir directamente a archivo para verificar task_id
         try:
