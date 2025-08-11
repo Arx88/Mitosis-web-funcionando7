@@ -375,11 +375,22 @@ class WebSearchConRecoleccionEnVivo(BaseTool):
                     f"🌐 Accediendo a: {fuente}"
                 )
             
+            # 🚀 EMIT WEBSOCKET EVENT: Navegando a sitio
+            self._emit_progress(f"🌐 NAVEGANDO a sitio {numero_sitio}: {fuente}")
+            self._emit_progress(f"   📍 URL: {url}")
+            
             logger.info(f"🌐 Navegando a sitio {numero_sitio}: {url}")
             
             # Navegar al sitio
             await page.goto(url, wait_until='networkidle', timeout=15000)
-            await asyncio.sleep(2)
+            await asyncio.sleep(1)
+            
+            # 🚀 TOMAR SCREENSHOT INMEDIATAMENTE AL LLEGAR
+            screenshot_path = await self._tomar_screenshot_sitio(page, numero_sitio, "navegacion")
+            if screenshot_path:
+                self._emit_progress(f"📸 Screenshot capturado: {screenshot_path}")
+            
+            await asyncio.sleep(1)
             
             # Obtener información básica del sitio
             titulo_pagina = await page.title()
