@@ -392,6 +392,81 @@ class RealTimeFeedbackManager:
             del self.task_progress[task_id]
         
         logger.info(f"🧹 Cleaned up feedback data for task {task_id}")
+    
+    def _update_data_md_file(self, task_id: str, entry: DataCollectionEntry):
+        """
+        🔥 CRÍTICO: Actualiza el archivo DATA.md en tiempo real y emite eventos WebSocket
+        para mostrar en terminal TaskView como se está agregando información.
+        """
+        try:
+            # Crear directorio para la tarea si no existe
+            task_dir = f"/app/generated_files/task_{task_id}"
+            os.makedirs(task_dir, exist_ok=True)
+            
+            data_md_path = os.path.join(task_dir, "DATA.md")
+            
+            # Contenido para agregar al DATA.md
+            timestamp_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            new_entry_content = f"""
+## {entry.title}
+**Fuente:** {entry.source}  
+**Tipo:** {entry.data_type}  
+**Timestamp:** {timestamp_str}  
+{f"**URL:** [{entry.url}]({entry.url})  " if entry.url else ""}
+
+{entry.content}
+
+---
+"""
+            
+            # Leer contenido existente o crear nuevo
+            if os.path.exists(data_md_path):
+                with open(data_md_path, 'r', encoding='utf-8') as f:
+                    existing_content = f.read()
+            else:
+                existing_content = f"""# DATA.md - Información Recolectada en Tiempo Real
+*Tarea ID: {task_id}*  
+*Iniciado: {timestamp_str}*
+
+---
+"""
+            
+            # Agregar nueva entrada
+            updated_content = existing_content + new_entry_content
+            
+            # Guardar archivo actualizado
+            with open(data_md_path, 'w', encoding='utf-8') as f:
+                f.write(updated_content)
+            
+            # 📡 Emitir evento WebSocket específico para mostrar en terminal
+            if self.websocket_manager:
+                self.websocket_manager.send_log_message(
+                    task_id,
+                    "info", 
+                    f"📝 DATA.md ACTUALIZADO: Agregada entrada '{entry.title}' | Archivo: {data_md_path}"
+                )
+                
+                # También enviar como browser_activity para visualización especial
+                self.websocket_manager.send_browser_activity(
+                    task_id=task_id,
+                    activity_type="data_md_update",
+                    url=data_md_path,
+                    title=f"DATA.md actualizado: {entry.title}",
+                    screenshot_url=""
+                )
+            
+            logger.info(f"📝 Updated DATA.md for task {task_id}: {data_md_path}")
+            
+        except Exception as e:
+            logger.error(f"❌ Error updating DATA.md for task {task_id}: {str(e)}")
+            
+            # Notificar error al frontend
+            if self.websocket_manager:
+                self.websocket_manager.send_log_message(
+                    task_id,
+                    "error",
+                    f"❌ Error actualizando DATA.md: {str(e)}"
+                )
 
 # Instancia global del gestor de feedback
 _feedback_manager_instance = None
