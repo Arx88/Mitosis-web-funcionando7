@@ -195,15 +195,18 @@ class WebSearchConRecoleccionEnVivo(BaseTool):
         }
         
         async with async_playwright() as p:
-            # Configurar navegador
+            # Configurar navegador para máxima compatibilidad con contenedores
             browser = await p.chromium.launch(
-                headless=False,  # Navegación visible
+                headless=True,  # Usar headless para contenedores, con screenshots
                 args=[
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
                     '--disable-dev-shm-usage',
-                    f'--display={os.environ.get("DISPLAY", ":99")}',
-                    '--window-size=1920,1080'
+                    '--disable-gpu',
+                    '--disable-web-security',
+                    '--disable-blink-features=AutomationControlled',
+                    '--window-size=1920,1080',
+                    f'--display={os.environ.get("DISPLAY", ":99")}'
                 ]
             )
             
