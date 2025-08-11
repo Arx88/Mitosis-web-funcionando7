@@ -100,6 +100,7 @@ class RealTimeFeedbackManager:
                           url: str = None, metadata: Dict[str, Any] = None) -> str:
         """
         Agrega datos recolectados y notifica al frontend inmediatamente.
+        TAMBIÉN actualiza DATA.md en tiempo real mostrando en terminal.
         
         Args:
             task_id: ID de la tarea
@@ -133,18 +134,21 @@ class RealTimeFeedbackManager:
         
         self.task_data_collections[task_id].append(entry)
         
+        # 🔥 CRÍTICO: Actualizar DATA.md en tiempo real
+        self._update_data_md_file(task_id, entry)
+        
         # Actualizar progreso
         if task_id in self.task_progress and step_id in self.task_progress[task_id]:
             self.task_progress[task_id][step_id]['data_collected'] += 1
             self.task_progress[task_id][step_id]['last_update'] = datetime.now().isoformat()
         
-        # Enviar actualización inmediata al frontend
+        # 📊 Enviar actualización inmediata al frontend con información de DATA.md
         self._send_feedback_update(
             task_id=task_id,
             step_id=step_id,
             update_type='data_collected',
-            title=f"📥 Información recolectada: {title}",
-            content=content[:200] + "..." if len(content) > 200 else content,
+            title=f"📥 Información agregada a DATA.md: {title}",
+            content=f"✅ AGREGADO A DATA.md:\n{content[:150]}..." if len(content) > 150 else f"✅ AGREGADO A DATA.md:\n{content}",
             data={
                 'entry_id': entry_id,
                 'source': source,
@@ -153,10 +157,19 @@ class RealTimeFeedbackManager:
                 'full_content': content,
                 'url': url,
                 'metadata': metadata,
+                'data_md_updated': True,
                 'collection_count': self.task_progress[task_id][step_id]['data_collected'] if task_id in self.task_progress and step_id in self.task_progress[task_id] else 1
             },
             progress_percentage=min(self.task_progress[task_id][step_id]['data_collected'] * 10, 90) if task_id in self.task_progress and step_id in self.task_progress[task_id] else 10
         )
+        
+        # 🔔 Enviar log específico para mostrar en terminal TaskView
+        if self.websocket_manager:
+            self.websocket_manager.send_log_message(
+                task_id, 
+                "info", 
+                f"📝 ACTUALIZANDO DATA.md con nueva información: {title} | Fuente: {source}"
+            )
         
         logger.info(f"📥 Added data entry for task {task_id}: {title}")
         return entry_id
