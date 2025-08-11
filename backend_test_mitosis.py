@@ -24,7 +24,7 @@ import re
 import subprocess
 
 # Configuration
-BACKEND_URL = "https://6a8ebd36-d236-431e-b793-03e2df3fe757.preview.emergentagent.com"
+BACKEND_URL = "https://bbad0cf5-836b-4d9c-b4b9-a02749bc41fc.preview.emergentagent.com"
 
 class MitosisAgentBehaviorTester:
     def __init__(self):
