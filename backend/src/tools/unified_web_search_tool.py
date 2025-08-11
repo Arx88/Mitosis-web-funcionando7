@@ -886,11 +886,55 @@ class UnifiedWebSearchTool(BaseTool):
             self._emit_progress_eventlet(f"   🔍 Query: {query}")
             
             try:
-                # Ejecutar búsqueda específica con menos resultados por búsqueda
+                # 🎬 USAR NAVEGACIÓN EN TIEMPO REAL PARA CADA BÚSQUEDA GRANULAR
                 results_per_search = max(2, max_results // len(searches))
-                category_results = self._run_playwright_fallback_search(
-                    query, search_engine, results_per_search
-                )
+                
+                # 🌐 NAVEGACIÓN EN TIEMPO REAL PARA BÚSQUEDA GRANULAR
+                if REAL_TIME_BROWSER_AVAILABLE and self.task_id:
+                    self._emit_progress_eventlet(f"🎬 Navegación en tiempo real para: {category}")
+                    
+                    try:
+                        from .real_time_browser_tool import RealTimeBrowserTool
+                        real_time_browser = RealTimeBrowserTool()
+                        
+                        # Preparar tarea de navegación específica para esta búsqueda granular
+                        search_url = f'https://www.{search_engine}.com'
+                        search_task = f"Buscar '{query}' en {search_engine} - categoría: {category}"
+                        
+                        # Ejecutar navegación en tiempo real
+                        navigation_result = real_time_browser._execute_tool(
+                            parameters={
+                                'task_description': search_task,
+                                'start_url': search_url,
+                                'capture_interval': 2,  # Screenshot cada 2 segundos
+                                'max_duration': 30      # 30 segundos por búsqueda granular
+                            },
+                            config={
+                                'task_id': self.task_id
+                            }
+                        )
+                        
+                        if navigation_result and hasattr(navigation_result, 'success') and navigation_result.success:
+                            navigation_data = navigation_result.data
+                            self._emit_progress_eventlet(f"✅ {navigation_data.get('screenshots_captured', 0)} screenshots capturados para {category}")
+                            
+                            # Extraer resultados de la navegación real
+                            category_results = self._extract_results_from_real_navigation(navigation_data, query, search_engine, results_per_search)
+                        else:
+                            self._emit_progress_eventlet(f"⚠️ Navegación tiempo real falló para {category}, usando fallback")
+                            category_results = self._run_playwright_fallback_search(
+                                query, search_engine, results_per_search
+                            )
+                    except Exception as e:
+                        self._emit_progress_eventlet(f"⚠️ Error navegación tiempo real {category}: {e}, usando fallback")
+                        category_results = self._run_playwright_fallback_search(
+                            query, search_engine, results_per_search
+                        )
+                else:
+                    # Fallback sin navegación en tiempo real
+                    category_results = self._run_playwright_fallback_search(
+                        query, search_engine, results_per_search
+                    )
                 
                 # Marcar resultados con la categoría
                 for result in category_results:
