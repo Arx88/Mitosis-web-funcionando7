@@ -523,6 +523,41 @@ class UnifiedWebSearchTool(BaseTool):
                 query, search_engine, max_results, extract_content
             )
             
+            # 🔥 COMPLETAR RECOLECCIÓN DE DATOS Y GENERAR DATA.md FINAL
+            if hasattr(self, 'feedback_manager') and self.feedback_manager:
+                try:
+                    # Completar la recolección de datos para este paso
+                    self.feedback_manager.complete_step_collection(
+                        self.task_id,
+                        self.current_step_id,
+                        f"Búsqueda completada: {len(results)} resultados recolectados para '{query}'"
+                    )
+                    
+                    # Generar documento final con toda la información recolectada
+                    final_document = self.feedback_manager.generate_collection_document(self.task_id)
+                    
+                    # Guardar documento final en archivo
+                    try:
+                        task_dir = f"/app/generated_files/task_{self.task_id}"
+                        final_doc_path = f"{task_dir}/DATA_FINAL.md"
+                        with open(final_doc_path, 'w', encoding='utf-8') as f:
+                            f.write(final_document)
+                        
+                        print(f"📄 Documento final generado: {final_doc_path}")
+                        
+                        # Notificar al frontend
+                        if hasattr(self, 'websocket_manager') and self.websocket_manager:
+                            self.websocket_manager.send_log_message(
+                                self.task_id,
+                                "info",
+                                f"📄 DATA.md COMPLETADO - Documento final generado con {len(results)} entradas"
+                            )
+                    except Exception as doc_error:
+                        print(f"⚠️ Error generando documento final: {doc_error}")
+                        
+                except Exception as complete_error:
+                    print(f"⚠️ Error completando recolección: {complete_error}")
+            
             # ✅ RESULTADO EXITOSO
             return ToolExecutionResult(
                 success=True,
@@ -535,6 +570,7 @@ class UnifiedWebSearchTool(BaseTool):
                     'extract_content': extract_content,
                     'visualization_enabled': visualization_initialized and (self.browser_manager is not None or self.websocket_manager is not None),
                     'screenshots_generated': any(r.get('screenshot_url') for r in results),
+                    'data_md_generated': hasattr(self, 'feedback_manager') and self.feedback_manager is not None,
                     'timestamp': datetime.now().isoformat()
                 }
             )
