@@ -453,9 +453,34 @@ class WebSearchConRecoleccionEnVivo(BaseTool):
                         'titulo_enlace': titulo_enlace,
                         'metodo_extraccion': metadatos.get('metodo_extraccion', 'unknown'),
                         'tiempo_carga': metadatos.get('tiempo_carga', 0),
-                        'profundidad': profundidad
+                        'profundidad': profundidad,
+                        'screenshots': sitio_info.get('screenshots', {})
                     }
                 )
+            
+            # 🚀 EMIT WEBSOCKET EVENT: Sitio documentado
+            self._emit_progress(f"✅ SITIO {numero_sitio} DOCUMENTADO COMPLETAMENTE")
+            self._emit_progress(f"   📖 Título: {titulo_pagina}")
+            self._emit_progress(f"   📏 Contenido: {len(contenido_extraido)} caracteres")
+            self._emit_progress(f"   🎯 Agregado a DATA.md en tiempo real")
+            
+            # 🚀 EMITIR EVENTO ESPECÍFICO DE RECOLECCIÓN DE DATOS
+            if self.websocket_manager and self.task_id:
+                try:
+                    self.websocket_manager.send_data_collection_update(
+                        task_id=self.task_id,
+                        step_id=f"sitio-{numero_sitio}",
+                        data_summary=f"Sitio {numero_sitio}: {titulo_pagina} - {len(contenido_extraido)} chars",
+                        partial_data={
+                            'numero_sitio': numero_sitio,
+                            'titulo': titulo_pagina,
+                            'url': url_final,
+                            'caracteres': len(contenido_extraido),
+                            'fuente': fuente
+                        }
+                    )
+                except Exception as e:
+                    logger.error(f"Error enviando data collection update: {e}")
             
             logger.info(f"✅ Sitio {numero_sitio} documentado: {titulo_pagina} ({len(contenido_extraido)} chars)")
             
