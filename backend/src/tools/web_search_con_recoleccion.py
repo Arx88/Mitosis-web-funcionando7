@@ -396,6 +396,10 @@ class WebSearchConRecoleccionEnVivo(BaseTool):
             titulo_pagina = await page.title()
             url_final = page.url  # Por si hubo redirects
             
+            # 🚀 EMIT WEBSOCKET EVENT: Información de la página
+            self._emit_progress(f"📄 PÁGINA CARGADA: {titulo_pagina}")
+            self._emit_progress(f"   🔗 URL final: {url_final}")
+            
             # Actualizar estado: extrayendo contenido
             if self.documento_en_vivo:
                 self.documento_en_vivo.actualizar_estado_navegacion(
@@ -403,8 +407,17 @@ class WebSearchConRecoleccionEnVivo(BaseTool):
                     f"📄 Procesando: {titulo_pagina[:50]}..."
                 )
             
+            # 🚀 EMIT WEBSOCKET EVENT: Iniciando extracción
+            self._emit_progress(f"🔍 EXTRAYENDO CONTENIDO de: {titulo_pagina[:60]}...")
+            
             # Extraer contenido según profundidad
             contenido_extraido = await self._extraer_contenido_completo(page, profundidad)
+            
+            # 🚀 EMIT WEBSOCKET EVENT: Contenido extraído
+            self._emit_progress(f"📊 CONTENIDO EXTRAÍDO: {len(contenido_extraido)} caracteres")
+            
+            # 🚀 TOMAR SCREENSHOT FINAL CON CONTENIDO
+            screenshot_final = await self._tomar_screenshot_sitio(page, numero_sitio, "contenido")
             
             # Obtener metadatos adicionales
             metadatos = await self._obtener_metadatos_sitio(page)
@@ -420,7 +433,11 @@ class WebSearchConRecoleccionEnVivo(BaseTool):
                 'contenido': contenido_extraido,
                 'caracteres': len(contenido_extraido),
                 'timestamp': datetime.now().isoformat(),
-                'metadatos': metadatos
+                'metadatos': metadatos,
+                'screenshots': {
+                    'navegacion': screenshot_path,
+                    'contenido': screenshot_final
+                }
             }
             
             # 🔥 PUNTO CLAVE: AGREGAR AL DOCUMENTO EN VIVO INMEDIATAMENTE
