@@ -1189,6 +1189,27 @@ class UnifiedWebSearchTool(BaseTool):
                 }
                 results.append(result)
                 
+                # 🔥 CRÍTICO: Agregar datos al feedback manager y DATA.md
+                if hasattr(self, 'feedback_manager') and self.feedback_manager:
+                    try:
+                        self.feedback_manager.add_collected_data(
+                            task_id=self.task_id,
+                            step_id=getattr(self, 'current_step_id', f'web-search-{int(time.time())}'),
+                            source=f"Navegación web - {search_engine}",
+                            data_type="search_result",
+                            title=result['title'],
+                            content=demo_content,
+                            url=result_url,
+                            metadata={
+                                'query': query,
+                                'result_index': i+1,
+                                'screenshot_url': result_screenshot_url,
+                                'extraction_method': 'browser_use_real_navigation'
+                            }
+                        )
+                    except Exception as fb_error:
+                        print(f"⚠️ Error agregando datos al feedback manager: {fb_error}")
+                
                 # 🔔 Notificar extracción de contenido con screenshot
                 self._emit_browser_activity('content_extracted', result_url, f'✅ Contenido extraído del resultado {i+1}', result_screenshot_url)
                 
