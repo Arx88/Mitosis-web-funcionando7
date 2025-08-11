@@ -16,6 +16,7 @@ Características:
 import logging
 import json
 import time
+import os
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, asdict
