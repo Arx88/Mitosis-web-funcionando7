@@ -720,6 +720,69 @@ class WebSearchConRecoleccionEnVivo(BaseTool):
         
         return resumen
     
+    async def _tomar_screenshot_sitio(self, page, numero_sitio: int, tipo: str) -> str:
+        """
+        📸 TOMAR SCREENSHOT DEL SITIO ACTUAL
+        
+        Args:
+            page: Página de Playwright
+            numero_sitio: Número del sitio
+            tipo: Tipo de screenshot ('navegacion', 'contenido')
+            
+        Returns:
+            Path del screenshot o string vacío si falla
+        """
+        try:
+            # Crear directorio de screenshots si no existe
+            screenshots_dir = f"/tmp/screenshots/{self.task_id}"
+            os.makedirs(screenshots_dir, exist_ok=True)
+            
+            # Generar nombre de archivo único
+            timestamp = int(time.time() * 1000)
+            filename = f"sitio_{numero_sitio}_{tipo}_{timestamp}.png"
+            screenshot_path = os.path.join(screenshots_dir, filename)
+            
+            # Tomar screenshot
+            await page.screenshot(
+                path=screenshot_path, 
+                quality=20, 
+                full_page=False,  # Solo viewport visible
+                type='png'
+            )
+            
+            # Verificar que el archivo se creó correctamente
+            if os.path.exists(screenshot_path) and os.path.getsize(screenshot_path) > 0:
+                # Retornar URL accesible para el frontend
+                url_screenshot = f"/api/files/screenshots/{self.task_id}/{filename}"
+                
+                # 🚀 EMITIR EVENTO BROWSER VISUAL 
+                if self.websocket_manager and self.task_id:
+                    try:
+                        self.websocket_manager.send_browser_visual_event(
+                            task_id=self.task_id,
+                            event_data={
+                                'type': 'screenshot_captured',
+                                'screenshot_url': url_screenshot,
+                                'url': page.url,
+                                'title': await page.title(),
+                                'sitio_numero': numero_sitio,
+                                'screenshot_tipo': tipo,
+                                'message': f'Screenshot capturado: Sitio {numero_sitio} ({tipo})'
+                            }
+                        )
+                    except Exception as e:
+                        logger.error(f"Error enviando browser visual event: {e}")
+                
+                logger.info(f"📸 Screenshot capturado: {screenshot_path}")
+                return url_screenshot
+            else:
+                logger.warning(f"❌ Screenshot no se pudo crear o está vacío: {screenshot_path}")
+                return ""
+                
+        except Exception as e:
+            logger.error(f"❌ Error tomando screenshot: {e}")
+            return ""
+    
     def _emit_progress(self, message: str):
         """Emitir mensaje de progreso."""
         logger.info(message)
