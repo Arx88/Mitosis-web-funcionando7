@@ -455,6 +455,10 @@ class UnifiedWebSearchTool(BaseTool):
                 websocket_manager = get_websocket_manager()
                 feedback_manager = get_feedback_manager(websocket_manager)
                 
+                # Almacenar en la instancia para usar en otros métodos
+                self.feedback_manager = feedback_manager
+                self.current_step_id = step_id
+                
                 # Iniciar recolección de datos para esta búsqueda
                 feedback_manager.start_data_collection_for_task(
                     self.task_id, 
@@ -462,8 +466,13 @@ class UnifiedWebSearchTool(BaseTool):
                     f"Búsqueda web: {query}"
                 )
                 
+                print(f"✅ Feedback manager inicializado para task {self.task_id}")
+                
             except Exception as e:
                 print(f"⚠️ Error inicializando feedback manager: {e}")
+                self.feedback_manager = None
+        else:
+            self.feedback_manager = None
         
         # DEBUG: Escribir directamente a archivo para verificar task_id
         try:
